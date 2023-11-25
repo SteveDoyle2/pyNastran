@@ -1240,9 +1240,6 @@ class PBARL(Property):
         #'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
         'L' : 4,
     }  # for GROUP="MSCBML0"
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.model = model
 
     @Property.clear_check
     def clear(self) -> None:
@@ -1693,8 +1690,7 @@ class CBARAO(Element):
     +--------+------+-------+------+-----+--------+-----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.scale = np.array([], dtype='|U3')
         self.g0 = np.array([], dtype='int32')

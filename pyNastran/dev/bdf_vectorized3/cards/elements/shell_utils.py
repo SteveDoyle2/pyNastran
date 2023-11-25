@@ -308,9 +308,8 @@ def shell_thickness(model: BDF,
             if tflag0_default or tflag1_default:
                 T = None
                 tflag = None
-        else:
+        if T is not None:
             nproperties, nnode = T.shape
-
     assert len(allowed_properties) > 0, allowed_properties
 
     for prop in allowed_properties:
@@ -345,6 +344,7 @@ def shell_thickness(model: BDF,
             Ti0 = Ti[i0, :].copy()
             inan0 = np.isnan(Ti0) | (Ti0 == 0.0)
             ti_all0 = ti_all[i0]
+            print('Ti0', Ti0)
             total_thickness0 = np.column_stack([ti_all0] * nnode)
             Ti0[inan0] = total_thickness0[inan0]
             thickness_mean = Ti0.mean(axis=1)

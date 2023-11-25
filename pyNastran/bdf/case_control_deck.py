@@ -122,6 +122,7 @@ class CaseControlDeck:
 
             'DFREQ' : 108,
             'MFREQ' : 111,
+            'MFREQI': 111,
             'SAERO' : 144,
             'FLUT' : 145, 'FLUTTER' : 145,
             'DIVERG' : 144, 'DIVERGE' : 144,

@@ -22,6 +22,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Property, get_print_card_8_16,
     hslice_by_idim, make_idim, searchsorted_filter,
     parse_property_check,
+    vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int,
@@ -666,8 +667,7 @@ def nonlinear_thickness(property_id: np.ndarray,
 
 
 class CompositeProperty(Property):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
         self.thickness = np.array([], dtype='float64')
         self.theta = np.array([], dtype='float64')
@@ -2021,8 +2021,7 @@ class PSHLN1(Property):
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.zeros((0, 2), dtype='int32')
-        self.coord_id = np.array([], dtype='int32')
-        self.thickness = np.array([], dtype='float64')
+        #self.thickness = np.array([], dtype='float64')
         self.analysis = np.array([], dtype='|U8')
 
         self.beh = np.zeros((0, 4), dtype='|U8')
@@ -2184,7 +2183,7 @@ class PSHLN1(Property):
         behxh = [beh3h, beh4h, beh6h, beh8h]
         integration = [int3, int4, int6, int8]
         integration_h = [int3h, int4h, int6h, int8h]
-        assert len(card) <= 28, f'len(PSHLN1 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 28, f'len(PSHLN1 card) = {len(card):d}\ncard={card}'  # 38
         self.cards.append((pid, (mid1, mid2), analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1
@@ -2249,11 +2248,13 @@ class PSHLN1(Property):
     def __apply_slice__(self, prop: PSHLN1, i: np.ndarray) -> None:
         prop.n = len(i)
         prop.property_id = self.property_id[i]
-        prop.material_id = self.material_id[i]
-        prop.coord_id = self.coord_id[i]
-        prop.stress_strain_output_location = self.stress_strain_output_location[i]
-        prop.thickness = self.thickness[i]
-        sdfasfd
+        prop.material_id = self.material_id[i, :]
+        prop.analysis = self.analysis[i]
+
+        prop.beh = self.beh[i, :]
+        prop.beh_h = self.beh_h[i, :]
+        prop.integration = self.integration[i, :]
+        prop.integration_h = self.integration_h[i, :]
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2282,7 +2283,7 @@ class PSHLN1(Property):
             property_ids, material_ids, self.analysis,
             self.beh, self.integration, self.beh_h, self.integration_h):
             list_fields = ['PSHLN1', pid, mid1, mid2, analysis, None, None, None, None]
-            values = (beh, integration, beh_h, integration_h)
+            #values = (beh, integration, beh_h, integration_h)
             for code, behx, intx, behxh, intxh in zip(codes, beh, integration, beh_h, integration_h):
                 if behx == '' and intx == '' and behx == '' and intxh == '':
                     continue
@@ -2439,7 +2440,6 @@ class PSHLN2(Property):
         #|         | 'C4' | BEH4 |  INT4  |  BEH4H | INT4H    |
         #|         | 'C6' | BEH6 |  INT6  |  BEH6H | INT6H    |
         #|         | 'C8' | BEH8 |  INT8  |  BEH8H | INT8H    |
-
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         #: The layer direction for BEHi=COMPS or AXCOMP. (Integer=1/2; Default=1)

@@ -43,9 +43,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PlateStressElement(Element):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -141,8 +138,7 @@ class CPLSTS3(PlateStressElement):
     +---------+-------+-------+----+----+----+-------+-------+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 3), dtype='int32')
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
@@ -281,8 +277,7 @@ class CPLSTS4(PlateStressElement):
 
     ['CPLSTS4', '1', '5', '17', '18', '19', '20', '0.0']
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 4), dtype='int32')
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
@@ -409,9 +404,6 @@ class CPLSTS4(PlateStressElement):
 
 class PPLANE(Property):
     """NX specific card"""
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -619,9 +611,6 @@ class PPLANE(Property):
 
 
 class PlateStrainElement(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
-
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -718,8 +707,7 @@ class CPLSTN3(PlateStrainElement):
     +---------+-------+-------+----+----+----+-------+-------+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 3), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
@@ -846,8 +834,7 @@ class CPLSTN4(PlateStrainElement):
 
     ['CPLSTN4', '1', '5', '17', '18', '19', '20', '0.0']
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 4), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
@@ -967,8 +954,7 @@ class CPLSTN6(PlateStrainElement):
     +---------+-------+-------+----+----+----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 6), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
@@ -1090,8 +1076,7 @@ class CPLSTN8(PlateStrainElement):
     +---------+-------+-------+-------+----+----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nodes = np.zeros((0, 8), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,

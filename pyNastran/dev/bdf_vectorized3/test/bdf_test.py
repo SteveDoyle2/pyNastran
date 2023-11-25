@@ -13,6 +13,7 @@ from pyNastran.utils.dev import get_files_of_type
 def run(regenerate=True, run_nastran=False, debug=False,
         sum_load: bool=True,
         run_nominal: bool=True,
+        run_equivalence: bool=True,
         xref: bool=True,
         crash_cards=None):
     """Runs the full BDF test suite"""
@@ -87,6 +88,7 @@ def run(regenerate=True, run_nastran=False, debug=False,
                                      size=size, is_double=is_double, post=post,
                                      encoding='latin1', crash_cards=crash_cards,
                                      run_nominal=run_nominal,
+                                     run_equivalence=run_equivalence,
                                      dev=True, pickle_obj=True)
     ntotal = len(files)
     nfailed = len(failed_files)
@@ -106,7 +108,7 @@ def main():
 
     #is_release = False
     msg = (
-        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe] [--skip_nominal]\n'
+        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe] [--skip_nominal] [--skip_equivalence]\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -121,7 +123,8 @@ def main():
         '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
         '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
         '                       (default=False -> on)\n'
-        '  --skip_nominal       obvious\n'
+        '  --skip_nominal       skips loading & comparison with the unvectorized model\n'
+        '  --skip_equivalence   skips nodal equivalencing\n'
         '  --safe               Use safe cross-reference (default=False)\n' % ver
     )
     if len(sys.argv) == 0:
@@ -134,6 +137,7 @@ def main():
     sum_load = not data['--sum_loads']
     xref = not data['--xref']
     run_nominal = not data['--skip_nominal']
+    run_equivalence = not data['--skip_equivalence']
 
     crash_cards = []
     if data['--crash_cards']:
@@ -141,6 +145,7 @@ def main():
     run(regenerate=regenerate, run_nastran=run_nastran,
         sum_load=sum_load,
         run_nominal=run_nominal,
+        run_equivalence=run_equivalence,
         xref=xref, crash_cards=crash_cards)
 
 if __name__ == '__main__':  # pragma: no cover

@@ -719,8 +719,7 @@ class QVOL(Load):
 
 
 class TEMPBC(VectorizedBaseCard):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.spc_id = np.array([], dtype='int32')
         #self.control_node = np.array([], dtype='int32')
         self.temperature = np.array([], dtype='float64')

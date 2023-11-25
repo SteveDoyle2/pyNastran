@@ -49,8 +49,7 @@ class XPOINT(VectorizedBaseCard):
     +--------+-----+------+-----+-----+-----+-----+-----+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.ids = np.array([], dtype='int32')
 
     def add(self, ids: np.ndarray, comment: str='') -> int:
@@ -897,8 +896,7 @@ class POINT(VectorizedBaseCard):
 
     """
     _id_name = 'node_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self._is_sorted = False
         self.node_id = np.array([], dtype='int32')
         self.cp = np.array([], dtype='int32')

@@ -46,9 +46,6 @@ class CBUSH(Element):
     |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
 
@@ -898,8 +895,7 @@ def _set_fields_pbush(list_fields: list[Any], var: str, fields: list[Any]):
 
 
 class CBUSH1D(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], cid: int=-1,

@@ -15,24 +15,16 @@ from typing import Union, Optional, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 import scipy
-import scipy.spatial
+from scipy.spatial import KDTree
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
 from pyNastran.femutils.utils import unique2d
-from pyNastran.utils import int_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import GRID
-
-SCIPY_VERSION = int_version('scipy', scipy.__version__)
-import scipy.spatial
-if SCIPY_VERSION > [1, 6, 0]:
-    KDTree = scipy.spatial.KDTree
-else:
-    KDTree = scipy.spatial.cKDTree
 
 
 def bdf_equivalence_nodes(bdf_filename: str,
@@ -231,20 +223,12 @@ def _eq_nodes_setup(bdf_filename,
     if node_set is not None:
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
-
-        #print(type(node_set))
         #print('*node_set', node_set)
         assert len(node_set) > 0, node_set
         assert isinstance(node_set, list), type(node_set)
     all_node_set = get_all_node_set(node_set)
 
     model = get_bdf_model(bdf_filename, xref=xref, log=log, debug=debug)
-
-    # quads / tris
-    #nids_quads = []
-    #eids_quads = []
-    #nids_tris = []
-    #eids_tris = []
 
     # map the node ids to the slot in the nids array
     renumber_nodes = False
@@ -625,9 +609,10 @@ def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
                     break
         #return nid_pairs2
         nid_pairs = nid_pairs2
-    nid_pairs3 = unique2d(nid_pairs2).tolist()
-    nid_pairs4 = [tuple(nid_pair) for nid_pair in nid_pairs3]
-    return nid_pairs4
+    nid_pairs3 = np.array(list(nid_pairs))
+    nid_pairs4 = unique2d(nid_pairs3).tolist()
+    nid_pairs5 = [tuple(nid_pair) for nid_pair in nid_pairs4]
+    return nid_pairs5
 
 def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          nids: NDArrayNint,
@@ -729,7 +714,8 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
     #log.info('building slots')
     slots = np.where(ieq[:, :] < nnodes)
     #log.info('building pairs')
-    nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, log, all_node_set, node_set=node_set)
+    nid_pairs_expected = _eq_nodes_find_pairs(
+        nids, slots, ieq, log, all_node_set, node_set=node_set)
     if is_not_node_set:
         #log.info('creating new pairs')
         nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(

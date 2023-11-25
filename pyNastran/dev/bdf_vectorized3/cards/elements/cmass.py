@@ -177,7 +177,9 @@ def point_centroid(model, nodes: np.ndarray) -> np.ndarray:
         inodei = inode[exist, i]
         centroid[exist, :] = xyz[inodei, :]
         node_count[exist] += 1
-    centroid /= node_count[:, np.newaxis]
+
+    inode_count = (node_count > 0)
+    centroid[inode_count, :] /= node_count[inode_count, np.newaxis]
     assert centroid.shape[0] == nodes.shape[0]
     return centroid
 

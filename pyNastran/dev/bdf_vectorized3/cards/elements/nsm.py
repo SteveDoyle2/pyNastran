@@ -34,8 +34,7 @@ class NSMi(VectorizedBaseCard):
     +-----+-----+------+----+-------+----+-------+----+-------+
     """
     _id_name = 'nsm_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U4')
         self.pid_eid = np.array([], dtype='int32')
@@ -215,8 +214,7 @@ class NSM1i(VectorizedBaseCard):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     _id_name = 'nsm_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U7')
         self.pid_eid = np.array([], dtype='int32')
@@ -453,8 +451,7 @@ class NSMADD(ADD):
     +--------+----+----+-----+
     """
     _id_name = 'nsm_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def clear(self) -> None:
         #self.nsm_id = np.array([], dtype='int32')
 
     #def __init__(self, model: BDF):

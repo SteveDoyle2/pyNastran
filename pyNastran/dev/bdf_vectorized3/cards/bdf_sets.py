@@ -797,8 +797,7 @@ class SUPORT(VectorizedBaseCard):
 
     """
     _id_name = 'suport_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         #self._is_sorted = False
         self.suport_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
@@ -1411,8 +1410,7 @@ class USET(VectorizedBaseCard):
 
 class RADSET(VectorizedBaseCard):
     _id_name = 'cavity_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.cavity_id = np.array([], dtype='int32')
 
     def add(self, cavity_ids: list[int], comment: str='') -> int:

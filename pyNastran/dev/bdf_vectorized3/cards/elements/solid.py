@@ -1340,14 +1340,14 @@ class PCOMPLS(Property):
         self.material_id = np.array([], dtype='int32')
 
         #material_id = np.zeros(ncards, dtype='int32')
-        coord_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
         #psdir = np.zeros(ncards, dtype='int32')
-        sb = np.array([], dtype='float64')
+        self.sb = np.array([], dtype='float64')
         #nb = np.zeros(ncards, dtype='float64')
         #tref = np.zeros(ncards, dtype='float64')
         #ge = np.zeros(ncards, dtype='float64')
-        analysis = np.array([], dtype='|U4')
-        direct = np.array([], dtype='int32')
+        self.analysis = np.array([], dtype='|U4')
+        self.direct = np.array([], dtype='int32')
 
         self.global_ply_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
@@ -1581,6 +1581,7 @@ class PCOMPLS(Property):
         prop.theta = hslice_by_idim(i, iply, self.theta)
 
         prop.nply = self.nply[i]
+        prop.write()
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

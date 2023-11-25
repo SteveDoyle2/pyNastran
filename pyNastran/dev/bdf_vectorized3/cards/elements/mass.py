@@ -9,6 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # double,
     integer_or_blank, double_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, parse_element_check, get_print_card_8_16)
@@ -37,8 +38,7 @@ class CONM1(Element):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.coord_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self._mass = np.zeros((0, 6, 6), dtype='float64')
@@ -76,32 +76,33 @@ class CONM1(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         m = np.zeros((6, 6), dtype='float64')
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', default=0)
 
-        m[0, 0] = double_or_blank(card, 4, 'M11', default=0.)
-        m[1, 0] = double_or_blank(card, 5, 'M21', default=0.)
-        m[1, 1] = double_or_blank(card, 6, 'M22', default=0.)
-        m[2, 0] = double_or_blank(card, 7, 'M31', default=0.)
-        m[2, 1] = double_or_blank(card, 8, 'M32', default=0.)
-        m[2, 2] = double_or_blank(card, 9, 'M33', default=0.)
-        m[3, 0] = double_or_blank(card, 10, 'M41', default=0.)
-        m[3, 1] = double_or_blank(card, 11, 'M42', default=0.)
-        m[3, 2] = double_or_blank(card, 12, 'M43', default=0.)
-        m[3, 3] = double_or_blank(card, 13, 'M44', default=0.)
-        m[4, 0] = double_or_blank(card, 14, 'M51', default=0.)
-        m[4, 1] = double_or_blank(card, 15, 'M52', default=0.)
-        m[4, 2] = double_or_blank(card, 16, 'M53', default=0.)
-        m[4, 3] = double_or_blank(card, 17, 'M54', default=0.)
-        m[4, 4] = double_or_blank(card, 18, 'M55', default=0.)
-        m[5, 0] = double_or_blank(card, 19, 'M61', default=0.)
-        m[5, 1] = double_or_blank(card, 20, 'M62', default=0.)
-        m[5, 2] = double_or_blank(card, 21, 'M63', default=0.)
-        m[5, 3] = double_or_blank(card, 22, 'M64', default=0.)
-        m[5, 4] = double_or_blank(card, 23, 'M65', default=0.)
-        m[5, 5] = double_or_blank(card, 24, 'M66', default=0.)
+        m[0, 0] = fdouble_or_blank(card, 4, 'M11', default=0.)
+        m[1, 0] = fdouble_or_blank(card, 5, 'M21', default=0.)
+        m[1, 1] = fdouble_or_blank(card, 6, 'M22', default=0.)
+        m[2, 0] = fdouble_or_blank(card, 7, 'M31', default=0.)
+        m[2, 1] = fdouble_or_blank(card, 8, 'M32', default=0.)
+        m[2, 2] = fdouble_or_blank(card, 9, 'M33', default=0.)
+        m[3, 0] = fdouble_or_blank(card, 10, 'M41', default=0.)
+        m[3, 1] = fdouble_or_blank(card, 11, 'M42', default=0.)
+        m[3, 2] = fdouble_or_blank(card, 12, 'M43', default=0.)
+        m[3, 3] = fdouble_or_blank(card, 13, 'M44', default=0.)
+        m[4, 0] = fdouble_or_blank(card, 14, 'M51', default=0.)
+        m[4, 1] = fdouble_or_blank(card, 15, 'M52', default=0.)
+        m[4, 2] = fdouble_or_blank(card, 16, 'M53', default=0.)
+        m[4, 3] = fdouble_or_blank(card, 17, 'M54', default=0.)
+        m[4, 4] = fdouble_or_blank(card, 18, 'M55', default=0.)
+        m[5, 0] = fdouble_or_blank(card, 19, 'M61', default=0.)
+        m[5, 1] = fdouble_or_blank(card, 20, 'M62', default=0.)
+        m[5, 2] = fdouble_or_blank(card, 21, 'M63', default=0.)
+        m[5, 3] = fdouble_or_blank(card, 22, 'M64', default=0.)
+        m[5, 4] = fdouble_or_blank(card, 23, 'M65', default=0.)
+        m[5, 5] = fdouble_or_blank(card, 24, 'M66', default=0.)
         self.cards.append((eid, nid, cid, m, comment))
         self.n += 1
         return self.n - 1
@@ -258,24 +259,25 @@ class CONM2(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', default=0)
-        mass = double_or_blank(card, 4, 'mass', default=0.)
+        mass = fdouble_or_blank(card, 4, 'mass', default=0.)
 
         X = [
-            double_or_blank(card, 5, 'x1', default=0.0),
-            double_or_blank(card, 6, 'x2', default=0.0),
-            double_or_blank(card, 7, 'x3', default=0.0),
+            fdouble_or_blank(card, 5, 'x1', default=0.0),
+            fdouble_or_blank(card, 6, 'x2', default=0.0),
+            fdouble_or_blank(card, 7, 'x3', default=0.0),
         ]
 
         I = [
-            double_or_blank(card, 9, 'I11', default=0.0),
-            double_or_blank(card, 10, 'I21', default=0.0),
-            double_or_blank(card, 11, 'I22', default=0.0),
-            double_or_blank(card, 12, 'I31', default=0.0),
-            double_or_blank(card, 13, 'I32', default=0.0),
-            double_or_blank(card, 14, 'I33', default=0.0),
+            fdouble_or_blank(card, 9, 'I11', default=0.0),
+            fdouble_or_blank(card, 10, 'I21', default=0.0),
+            fdouble_or_blank(card, 11, 'I22', default=0.0),
+            fdouble_or_blank(card, 12, 'I31', default=0.0),
+            fdouble_or_blank(card, 13, 'I32', default=0.0),
+            fdouble_or_blank(card, 14, 'I33', default=0.0),
         ]
         assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, nid, cid, mass, X, I, comment))

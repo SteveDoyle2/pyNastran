@@ -9,6 +9,7 @@ import numpy as np
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
@@ -189,14 +190,16 @@ class CELAS2(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         nids = [integer_or_blank(card, 3, 'g1', default=0),
                 integer_or_blank(card, 5, 'g2', default=0)]
         c1 = integer_or_blank(card, 4, 'c1', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
-        ge = double_or_blank(card, 7, 'ge', default=0.)
-        s = double_or_blank(card, 8, 's', default=0.)
+        ge = fdouble_or_blank(card, 7, 'ge', default=0.)
+        s = fdouble_or_blank(card, 8, 's', default=0.)
         assert len(card) <= 9, f'len(CELAS2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
         self.n += 1
@@ -499,18 +502,19 @@ class PELAS(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         pid = integer(card, 1, 'pid')
         k = double(card, 2, 'k')
-        ge = double_or_blank(card, 3, 'ge', default=0.)
-        s = double_or_blank(card, 4, 's', default=0.)
+        ge = fdouble_or_blank(card, 3, 'ge', default=0.)
+        s = fdouble_or_blank(card, 4, 's', default=0.)
         self.cards.append((pid, k, ge, s, comment))
         self.n += 1
         if card.field(5):
             comment = ''
             pid = integer(card, 5, 'pid')
             k = double(card, 6, 'k')
-            ge = double_or_blank(card, 7, 'ge', default=0.)
-            s = double_or_blank(card, 8, 's', default=0.)
+            ge = fdouble_or_blank(card, 7, 'ge', default=0.)
+            s = fdouble_or_blank(card, 8, 's', default=0.)
             self.cards.append((pid, k, ge, s, comment))
             self.n += 1
         assert len(card) <= 7, f'len(PELAS card) = {len(card):d}\ncard={card}'

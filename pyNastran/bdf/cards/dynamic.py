@@ -2415,7 +2415,8 @@ class TSTEPNL(BaseCard):
             # KSTEP=1      stiffness matrix will not be updated.
             # KSTEP=BLANK: the program will decide whether to update depending element type.
             # KSTEP=-1:    stiffness matrix will be forced to be updated
-            kstep = integer(card, 6, 'kstep')
+            kstep = integer_or_blank(card, 6, 'kstep')
+            assert kstep in {1, -1, None}, f'TSTEPNL method={method!r} and kstep={kstep}, which should be -1, 1 or blank'
         else:
             msg = 'invalid TSTEPNL Method.  method=%r; allowed_methods=[%s]' % (
                 method, ', '.join(cls.allowed_methods))

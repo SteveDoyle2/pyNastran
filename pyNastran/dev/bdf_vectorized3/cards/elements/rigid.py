@@ -6,8 +6,9 @@ import numpy as np
 from pyNastran.utils.numpy_utils import cast_ints # integer_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-VectorizedBaseCard, hslice_by_idim, make_idim,
-parse_element_check, get_print_card_8_16)
+    VectorizedBaseCard, hslice_by_idim, make_idim,
+    parse_element_check, get_print_card_8_16,
+    remove_unused_primary)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, blank,
     integer_or_blank, double_or_blank,
@@ -29,9 +30,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class RigidElement(VectorizedBaseCard):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        pass
 
     def slice_card_by_element_id(self, element_id: np.ndarray) -> RigidElement:
         assert self.n > 0, self.n
@@ -75,8 +78,7 @@ class RBAR(RigidElement):
 
     TREF was added in MSC 2021
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def add(self, eid: int, nids: list[int],
@@ -173,6 +175,9 @@ class RBAR(RigidElement):
         self.tref = tref
         self.n = len(element_id)
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes.ravel()
@@ -224,8 +229,7 @@ class RROD(RigidElement):
     | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
     +------+-----+----+----+-----+-----+-------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def add(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> int:
@@ -301,6 +305,9 @@ class RROD(RigidElement):
         self.alpha = alpha
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes.ravel()
@@ -347,8 +354,7 @@ class RBAR1(RigidElement):
     | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
     +-------+-----+----+----+-----+-------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def add(self, eid: int, nids: list[int],
@@ -424,6 +430,9 @@ class RBAR1(RigidElement):
         self.alpha = alpha
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes.ravel()
@@ -475,8 +484,7 @@ class RBE1(RigidElement):
     |      | UM  | 61  | 246 |       |     |     |     |
     +------+-----+-----+-----+-------+-----+-----+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def add(self, eid: int,
@@ -601,6 +609,10 @@ class RBE1(RigidElement):
         self.tref = tref
         self.alpha = alpha
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.dependent_node)
+        used_dict['node_id'].append(self.independent_node)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         for nodes in (self.dependent_node, self.independent_node):
@@ -690,8 +702,7 @@ class RBE2(RigidElement):
 
     TREF was added in MSC 2021
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def __apply_slice__(self, element: RBE2, i: np.ndarray):
@@ -790,6 +801,10 @@ class RBE2(RigidElement):
         self.alpha = alpha
         self.tref = tref
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.dependent_nodes.ravel())
+        used_dict['node_id'].append(self.independent_node)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         for nodes in (self.independent_node, self.dependent_nodes):
@@ -868,8 +883,7 @@ class RBE3(RigidElement):
     |      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
     +------+---------+---------+---------+------+--------+--------+------+--------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.element_id = np.array([])
 
     def __apply_slice__(self, element: RBE2, i: np.ndarray):
@@ -1108,6 +1122,9 @@ class RBE3(RigidElement):
         self.dependent_nodes = dependent_nodes
         self.dependent_dofs = dependent_dofs
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.dependent_nodes)
+        used_dict['node_id'].append(self.independent_nodes)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

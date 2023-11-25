@@ -28,7 +28,7 @@ from pyNastran.femutils.utils import vstack_lists
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
-    from pyNastran.bdf.bdf import BDF, PBARL, PBEAML
+    from pyNastran.bdf.bdf import BDF, PBARL, PBEAML, CROD
 
 from pyNastran.bdf.cards.materials import (
     MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D)
@@ -122,11 +122,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
                                                                BarTypes,
                                                                PinFlagRelaseMap]:
         """bar_nids, bar_types, nid_release_map"""
-        #lines_bar_y = []
-        #lines_bar_z = []
         log = model.log
         bar_types = _get_default_bar_types()
-        if 0:
+        if 0: # pragma: no cover
             node0 = len(bar_pid_to_eids)
             ugrid = None
             points_list = []
@@ -162,8 +160,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
     def _create_bar_yz_update(self, model: BDF,
                               node0: int,
-                              ugrid,
-                              points_list,
+                              ugrid: vtkUnstructuredGrid,
+                              points_list: list[np.ndarray],
                               bar_beam_eids: list[int],
                               bar_pid_to_eids: dict[int, list[int]]) -> None:
         if not node0:
@@ -205,26 +203,30 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 node2 = model.nodes[nid2]
 
                 i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
-                n1 = nodes[i1, :]
-                n2 = nodes[i2, :]
-                #centroid = (n1 + n2) / 2.
+                xyz1 = nodes[i1, :]
+                xyz2 = nodes[i2, :]
+                #centroid = (xyz1 + xyz2) / 2.
 
-                i = n2 - n1
+                i = xyz2 - xyz1
                 Li = norm(i)
                 ihat = i / Li
-
-                unused_v, wa, wb, xform = rotate_v_wa_wb(
-                    model, elem,
-                    n1, n2, node1, node2,
-                    ihat, i, eid, Li, model.log)
-                if wb is None:
-                    # one or more of v, wa, wb are bad
-                    continue
+                if pid_ref.type == 'PROD':
+                    xform = _rod_vector(elem, ihat)
+                    wa = np.zeros(3, dtype=ihat.dtype)
+                    wb = np.zeros(3, dtype=ihat.dtype)
+                else:
+                    unused_v, wa, wb, xform = rotate_v_wa_wb(
+                        model, elem,
+                        xyz1, xyz2, node1, node2,
+                        ihat, i, eid, Li, model.log)
+                    if wb is None:
+                        # one or more of v, wa, wb are bad
+                        continue
 
                 ugridi = None
                 node0b = add_3d_bar_element(
                     bar_type, ptype, pid_ref,
-                    n1+wa, n2+wb, xform,
+                    xyz1+wa, xyz2+wb, xform,
                     ugridi, node0b, points_list, add_to_ugrid=False)
 
             points_array = vstack_lists(points_list)
@@ -253,7 +255,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
             ugrid=ugrid,
         )
 
-def _apply_points_list(points_list, ugrid):
+def _apply_points_list(points_list: list[np.ndarray],
+                       ugrid: vtkUnstructuredGrid) -> None:
     if points_list:
         points_array = vstack_lists(points_list)
         points = numpy_to_vtk_points(points_array)
@@ -291,7 +294,7 @@ def _apply_points_list(points_list, ugrid):
                   #eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
     #return yhat, zhat
 
-def get_suport_node_ids(model, suport_id):
+def get_suport_node_ids(model: BDF, suport_id: int) -> np.ndarray:
     """gets the nodes where SUPORTs and SUPORT1s are defined"""
     node_ids = []
     # list
@@ -407,25 +410,31 @@ def get_material_arrays(model: BDF,
 def add_3d_bar_element(bar_type: str,
                        ptype: str,
                        pid_ref: Union[PBARL, PBEAML],
-                       n1: NDArray3float,
-                       n2: NDArray3float,
+                       xyz1: NDArray3float,
+                       xyz2: NDArray3float,
                        xform: NDArray33float,
                        ugrid: vtkUnstructuredGrid,
                        node0: int,
                        points_list: list[np.ndarray],
-                       add_to_ugrid: bool=True):
+                       add_to_ugrid: bool=True) -> int:
     """adds a 3d bar element to the unstructured grid"""
     if ptype == 'PBARL':
         dim1 = dim2 = pid_ref.dim
     elif ptype == 'PBEAML':
         dim1 = pid_ref.dim[0, :]
         dim2 = pid_ref.dim[-1, :]
+    elif ptype == 'PROD':
+        # assume a square
+        # it's fewer triangles to build a square rod than a circular rod
+        bar_type = 'BAR'
+        area = pid_ref.Area()
+        dim1 = dim2 = np.sqrt(area)
     else:
         #dim1 = dim2 = None
         return node0
 
     if bar_type == 'BAR':
-        pointsi = bar_faces(n1, n2, xform, dim1, dim2)
+        pointsi = bar_faces(xyz1, xyz2, xform, dim1, dim2)
         elem = vtkHexahedron()
         point_ids = elem.GetPointIds()
         point_ids.SetId(0, node0 + 0)
@@ -443,73 +452,73 @@ def add_3d_bar_element(bar_type: str,
         return node0
 
     if bar_type == 'ROD':
-        faces, pointsi, dnode = rod_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi, dnode = rod_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += dnode
     elif bar_type == 'TUBE':
-        faces, pointsi, dnode = tube_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi, dnode = tube_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += dnode
     elif bar_type == 'BOX':
-        faces, pointsi = box_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = box_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'L':
-        faces, pointsi = l_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = l_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 12, pointsi.shape
         node0 += 12
     elif bar_type == 'CHAN':
-        faces, pointsi = chan_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = chan_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'CHAN1':
-        faces, pointsi = chan1_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = chan1_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T':
-        faces, pointsi = t_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = t_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T1':
-        faces, pointsi = t1_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = t1_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T2':
-        faces, pointsi = t2_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = t2_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'I':
-        faces, pointsi = i_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = i_faces(xyz1, xyz2, xform, dim1, dim2)
         assert pointsi.shape[0] == 24, pointsi.shape
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     elif bar_type == 'I1':
-        faces, pointsi = i1_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = i1_faces(xyz1, xyz2, xform, dim1, dim2)
         assert pointsi.shape[0] == 24, pointsi.shape
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     elif bar_type == 'H':
-        faces, pointsi = h_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = h_faces(xyz1, xyz2, xform, dim1, dim2)
         assert pointsi.shape[0] == 24, pointsi.shape
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     elif bar_type == 'Z':
-        faces, pointsi = z_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = z_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 16
     elif bar_type == 'HEXA':
-        faces, pointsi = hexa_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = hexa_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 12
     elif bar_type == 'HAT':
-        faces, pointsi = hat_faces(n1, n2, xform, dim1, dim2)
+        faces, pointsi = hat_faces(xyz1, xyz2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     else:
@@ -543,7 +552,7 @@ def _create_bar_types_dict(model: BDF,
         'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
         'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
         'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
-        'bar', 'beam', 'pbcomp',
+        'rod', 'bar', 'beam', 'pbcomp',
     ]
 
     #debug = True
@@ -579,29 +588,34 @@ def _create_bar_types_dict(model: BDF,
         bar_nids.update([nid1, nid2])
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
-        n1 = node1.get_position()
-        n2 = node2.get_position()
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
 
         # wa/wb are not considered in i_offset
         # they are considered in ihat
-        i = n2 - n1
+        i = xyz2 - xyz1
         Li = norm(i)
         ihat = i / Li
 
-        if elem.pa != 0:
-            nid_release_map[nid1].append((eid, elem.pa))
-        if elem.pb != 0:
-            nid_release_map[nid2].append((eid, elem.pb))
+        if pid_ref.type == 'PROD':
+            xform = _rod_vector(elem, ihat)
+            wa = np.zeros(3, dtype=ihat.dtype)
+            wb = np.zeros(3, dtype=ihat.dtype)
+        else:
+            if elem.pa != 0:
+                nid_release_map[nid1].append((eid, elem.pa))
+            if elem.pb != 0:
+                nid_release_map[nid2].append((eid, elem.pb))
 
-        if isinstance(elem.offt, int):
-            continue
-        unused_v, wa, wb, xform = rotate_v_wa_wb(
-            model, elem,
-            n1, n2, node1, node2,
-            ihat, i, eid, Li, model.log)
-        if wb is None:
-            # one or more of v, wa, wb are bad
-            continue
+            if isinstance(elem.offt, int):
+                continue
+            unused_v, wa, wb, xform = rotate_v_wa_wb(
+                model, elem,
+                xyz1, xyz2, node1, node2,
+                ihat, i, eid, Li, model.log)
+            if wb is None:
+                # one or more of v, wa, wb are bad
+                continue
 
         yhat = xform[1, :]
         zhat = xform[2, :]
@@ -615,8 +629,8 @@ def _create_bar_types_dict(model: BDF,
             #print('  zhat = %s' % zhat)
             #print('  scale = %s' % scale)
         #if eid == 616211:
-            #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-                  #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+            #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s xyz%s=%s xyz%s=%s' % (
+                  #eid, yhat, zhat, v, i, nid1, xyz1, nid2, xyz2))
 
             #print('adding bar %s' % bar_type)
             #print('   centroid=%s' % centroid)
@@ -631,10 +645,10 @@ def _create_bar_types_dict(model: BDF,
         if bar_type in BEAM_GEOM_TYPES:
             node0 = add_3d_bar_element(
                 bar_type, ptype, pid_ref,
-                n1+wa, n2+wb, xform,
-                ugrid, node0, points_list)
+                xyz1+wa, xyz2+wb, xform,
+                ugrid, node0, points_list, add_to_ugrid=True)
 
-        centroid = (n1 + n2) / 2.
+        centroid = (xyz1 + xyz2) / 2.
         bari = bar_types[bar_type]
         bari[0].append(eid)
         bari[1].append((centroid, centroid + yhat * Li * scale))
@@ -653,6 +667,7 @@ def _get_default_bar_types() -> BarTypes:
         'ROD', 'TUBE', 'TUBE2', 'I', 'CHAN', 'T', 'BOX', 'BAR', 'CROSS', 'H',
         'T1', 'I1', 'CHAN1', 'Z', 'CHAN2', 'T2', 'BOX1', 'HEXA', 'HAT', 'HAT1',
         'DBOX',   # was 12
+        'rod',    # PROD
         'bar',    # PBAR
         'beam',   # PBEAM
         'pbcomp', # PBCOMP
@@ -666,3 +681,22 @@ def _get_default_bar_types() -> BarTypes:
         bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
         #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
     return bar_types
+
+def _rod_vector(elem: CROD, ihat: np.ndarray) -> np.ndarray:
+    """creates a vector normal to ihat"""
+    j1 = np.array([1., 0., 0.])
+    k1 = np.cross(ihat, j1)
+    normi = np.linalg.norm(k1)
+    if normi > 0.:
+        k1 /= normi
+        xform = np.vstack([ihat, j1, k1])
+        return xform
+
+    j2 = np.array([0., 1., 0.])
+    k2 = np.cross(ihat, j2)
+    normi = np.linalg.norm(k2)
+    k2 /= normi
+    assert normi > 0., k2
+    xform = np.vstack([ihat, j2, k2])
+    return xform
+

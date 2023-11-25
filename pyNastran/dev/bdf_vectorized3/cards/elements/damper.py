@@ -372,8 +372,7 @@ class CDAMP4(Element):
     | CDAMP4 | EID |  B  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.spoints = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, b: float, nids: list[int],

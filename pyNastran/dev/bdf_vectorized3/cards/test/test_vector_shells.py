@@ -1349,6 +1349,13 @@ class TestShells(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.1)
 
+        card_lines = [
+            'PSHLN1,1,,,NO',
+            '+       C3      DCTN    LDK                                             +',
+            '+       C4      DCT     L                                               +',
+            '+       C8      MB      Q'
+        ]
+        model.add_card_lines(card_lines, 'PSHLN1', comment='', has_none=True)
         model.setup()
         #t = pplane.total_thickness()
         #assert np.allclose(t, 1.0), t

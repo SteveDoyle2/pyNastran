@@ -6,16 +6,10 @@ from typing import Optional
 
 import numpy as np
 import scipy
+from scipy.spatial import KDTree
 
 from cpylog import get_logger2, SimpleLogger
-from pyNastran.utils import int_version, is_binary_file
-
-SCIPY_VERSION = int_version('scipy', scipy.__version__)
-import scipy.spatial
-if SCIPY_VERSION > [1, 6, 0]:
-    KDTree = scipy.spatial.KDTree
-else:
-    KDTree = scipy.spatial.cKDTree
+from pyNastran.utils import is_binary_file
 
 
 def read_stl(stl_filename: str, remove_elements_with_bad_normals: bool=False,

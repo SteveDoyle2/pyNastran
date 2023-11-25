@@ -9,6 +9,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.femutils.coord_transforms import (
     #xyz_to_rtz_array,
     #xyz_to_rtp_array, # xyz to xxx transforms
@@ -230,7 +231,7 @@ class COORD(VectorizedBaseCard):
             elif yaxis is not None:
                 j = yaxis / np.linalg.norm(yaxis)
                 khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-                k = khat / norm(khat)
+                k = khat / np.linalg.norm(khat)
                 i = np.cross(j, k)
 
         elif yzplane is not None:
@@ -356,6 +357,10 @@ class COORD(VectorizedBaseCard):
         return self.n - 1
 
     def add_cord1r_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
+        """
+        Creates the CORD1R card, which defines a rectangular coordinate
+        system using 3 GRIDs.
+        """
         ncoord = icard * 5
         cid = integer(card, 1 + ncoord, 'cid')
         grid_origin = integer(card, 2 + ncoord, 'g1')
@@ -368,6 +373,10 @@ class COORD(VectorizedBaseCard):
         return self.n - 1
 
     def add_cord1c_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
+        """
+        Creates the CORD1C card, which defines a rectangular coordinate
+        system using 3 GRIDs.
+        """
         ncoord = icard * 5
         cid = integer(card, 1 + ncoord, 'cid')
         grid_origin = integer(card, 2 + ncoord, 'g1')
@@ -380,6 +389,10 @@ class COORD(VectorizedBaseCard):
         return self.n - 1
 
     def add_cord1s_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
+        """
+        Creates the CORD1S card, which defines a rectangular coordinate
+        system using 3 GRIDs.
+        """
         ncoord = icard * 5
         cid = integer(card, 1 + ncoord, 'cid')
         grid_origin = integer(card, 2 + ncoord, 'g1')
@@ -428,6 +441,27 @@ class COORD(VectorizedBaseCard):
                    zaxis: np.ndarray | list[float],
                    xzplane: np.ndarray | list[float],
                    rid: int=0, setup: bool=True, comment: str='') -> int:
+        """
+        Creates the CORD2C card, which defines a rectangular coordinate
+        system using 3 vectors.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        rid : int; default=0
+            the referenced coordinate system that defines the system the
+            vectors
+        origin : list[float, float, float]
+            the origin of the coordinate system
+        zaxis : list[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : list[float, float, float]
+            a point on the xz plane
+        comment : str; default=''
+            a comment for the card
+
+        """
         origin, zaxis, xzplane = _default_cord2_axes(origin, zaxis, xzplane)
         cardi = (2, 'C', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
@@ -439,47 +473,53 @@ class COORD(VectorizedBaseCard):
                    zaxis: np.ndarray | list[float],
                    xzplane: np.ndarray | list[float],
                    rid: int=0, setup: bool=True, comment: str='') -> int:
+        """
+        Creates the CORD2S card, which defines a rectangular coordinate
+        system using 3 vectors.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        rid : int; default=0
+            the referenced coordinate system that defines the system the
+            vectors
+        origin : list[float, float, float]
+            the origin of the coordinate system
+        zaxis : list[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : list[float, float, float]
+            a point on the xz plane
+        comment : str; default=''
+            a comment for the card
+
+        """
         origin, zaxis, xzplane = _default_cord2_axes(origin, zaxis, xzplane)
         cardi = (2, 'S', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
         return self.n - 1
 
-    #def _add_cord2(self, coordtype: str, card: BDFCard, comment: str='') -> int:
-        #assert isinstance(coordtype, str), coordtype
-        #assert isinstance(card, BDFCard), card
-        #self.cards.append((2, coordtype, 0, card, comment))
-        #i = len(self.cards) - 1
-        #self.n += 1
-        #return i
-
     def add_cord2r_bdf(self, card: BDFCard, comment: str='') -> int:
-        cid, rid, origin, zaxis, xzplane = _parse_cord2x(card, 'CORD2R')
+        cid, rid, origin, zaxis, xzplane = _parse_cord2x(self.model, card, 'CORD2R')
         cardi = (2, 'R', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
         return self.n - 1
 
     def add_cord2c_bdf(self, card: BDFCard, comment: str='') -> int:
-        cid, rid, origin, zaxis, xzplane = _parse_cord2x(card, 'CORD2C')
+        cid, rid, origin, zaxis, xzplane = _parse_cord2x(self.model, card, 'CORD2C')
         cardi = (2, 'C', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
         return self.n - 1
 
     def add_cord2s_bdf(self, card: BDFCard, comment: str='') -> int:
-        cid, rid, origin, zaxis, xzplane = _parse_cord2x(card, 'CORD2S')
+        cid, rid, origin, zaxis, xzplane = _parse_cord2x(self.model, card, 'CORD2S')
         cardi = (2, 'S', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
         return self.n - 1
-
-    #def add_cord2r(self, card: BDFCard, comment: str='') -> int:
-        #return self._add_cord2('R', card, comment)
-    #def add_cord2c(self, card: BDFCard, comment: str='') -> int:
-        #return self._add_cord2('C', card, comment)
-    #def add_cord2s(self, card: BDFCard, comment: str='') -> int:
-        #return self._add_cord2('S', card, comment)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -504,20 +544,20 @@ class COORD(VectorizedBaseCard):
             self.coord_id = np.hstack([self.coord_id, np.full(ncoords, -1, dtype='int32')])
             self.ref_coord_id = np.hstack([self.ref_coord_id, np.full(ncoords, -1, dtype='int32')])
 
-            self.e1 = np.vstack([self.e1, np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.e2 = np.vstack([self.e2, np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.e3 = np.vstack([self.e3, np.full((ncoords, 3), np.nan, dtype='float64')])
+            null = np.full((ncoords, 3), np.nan, dtype='float64')
+            self.e1 = np.vstack([self.e1, null])
+            self.e2 = np.vstack([self.e2, null])
+            self.e3 = np.vstack([self.e3, null])
 
-            self.origin   = np.vstack([self.origin,   np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.z_axis   = np.vstack([self.z_axis,   np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.xz_plane = np.vstack([self.xz_plane, np.full((ncoords, 3), np.nan, dtype='float64')])
+            self.origin   = np.vstack([self.origin, null])
+            self.z_axis   = np.vstack([self.z_axis, null])
+            self.xz_plane = np.vstack([self.xz_plane, null])
 
             #TT = np.array([ones], dtype='float64')
-
             self.is_resolved = np.hstack([self.is_resolved, np.full(ncoords, False, dtype='bool')])
-            self.i = np.vstack([self.i, np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.j = np.vstack([self.j, np.full((ncoords, 3), np.nan, dtype='float64')])
-            self.k = np.vstack([self.k, np.full((ncoords, 3), np.nan, dtype='float64')])
+            self.i = np.vstack([self.i, null])
+            self.j = np.vstack([self.j, null])
+            self.k = np.vstack([self.k, null])
             self.T = np.vstack([self.T, np.full((ncoords, 3, 3), np.nan, dtype='float64')])
             #self.is_resolved[0] = True
             ncoords_actual = len(self.coord_id)
@@ -957,7 +997,7 @@ class COORD(VectorizedBaseCard):
                         zaxis[0], zaxis[1], zaxis[2],
                         xzplane[0], xzplane[1], xzplane[2],
                     )
-                    assert rid != -1
+                    assert rid != '-1'
                 bdf_file.write(msg)
         else:
             for icoord, coord_type, cid, rid, nodesi, origin, zaxis, xzplane in zip(
@@ -976,7 +1016,7 @@ class COORD(VectorizedBaseCard):
                               zaxis[0], zaxis[1], zaxis[2],
                               xzplane[0], xzplane[1], xzplane[2],
                               ]
-                    assert rid != -1
+                    assert rid != '-1'
                 bdf_file.write(print_card(fields))
         return
 
@@ -1145,10 +1185,10 @@ class COORD(VectorizedBaseCard):
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
-        for i, icoord, nodes in zip(count(), self.icoord, self.nodes):
-            if icoord == 2:
-                continue
-            asdf
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
 def axes_to_coord_vectors(origin, zaxis, xzplane, msg: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     kaxis = zaxis - origin
@@ -1205,28 +1245,31 @@ def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
     #cid = integer(card, 1, 'cid')
     #return cid, grid_origin, grid_zaxis, grid_xzplane
 
-def _parse_cord2x(card: BDFCard,
+def _parse_cord2x(model: BDF,
+                  card: BDFCard,
                   card_type: str) -> tuple[int, int,
                                            np.ndarray, np.ndarray, np.ndarray]:
+    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+
     cid = integer(card, 1, 'cid')
 
     #: reference coordinate system ID
     rid = integer_or_blank(card, 2, 'rid', default=0)
 
     #: origin in a point relative to the rid coordinate system
-    origin = np.array([double_or_blank(card, 3, 'e1x', default=0.0),
-                       double_or_blank(card, 4, 'e1y', default=0.0),
-                       double_or_blank(card, 5, 'e1z', default=0.0)],
+    origin = np.array([fdouble_or_blank(card, 3, 'e1x', default=0.0),
+                       fdouble_or_blank(card, 4, 'e1y', default=0.0),
+                       fdouble_or_blank(card, 5, 'e1z', default=0.0)],
                       dtype='float64')
     #: z-axis in a point relative to the rid coordinate system
-    zaxis = np.array([double_or_blank(card, 6, 'e2x', default=0.0),
-                      double_or_blank(card, 7, 'e2y', default=0.0),
-                      double_or_blank(card, 8, 'e2z', default=0.0)],
+    zaxis = np.array([fdouble_or_blank(card, 6, 'e2x', default=0.0),
+                      fdouble_or_blank(card, 7, 'e2y', default=0.0),
+                      fdouble_or_blank(card, 8, 'e2z', default=0.0)],
                      dtype='float64')
     #: a point on the xz-plane relative to the rid coordinate system
-    xzplane = np.array([double_or_blank(card, 9, 'e3x', default=0.0),
-                        double_or_blank(card, 10, 'e3y', default=0.0),
-                        double_or_blank(card, 11, 'e3z', default=0.0)],
+    xzplane = np.array([fdouble_or_blank(card, 9, 'e3x', default=0.0),
+                        fdouble_or_blank(card, 10, 'e3y', default=0.0),
+                        fdouble_or_blank(card, 11, 'e3z', default=0.0)],
                        dtype='float64')
     assert len(card) <= 12, f'len({card_type} card) = {len(card):d}\ncard={card}'
     return cid, rid, origin, zaxis, xzplane

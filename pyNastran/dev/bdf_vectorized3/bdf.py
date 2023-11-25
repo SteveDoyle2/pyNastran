@@ -4722,11 +4722,10 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_CAERO', 'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
             #'add_DEQATN', 'add_DTABLE',
-            #'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_FLFACT', 'add_FLUTTER',
             #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
-            #'add_SET', 'add_SEUSET', 'add_SPLINE', 'add_TF', 'add_TRIM',
-            #'add_TSTEP', 'add_TSTEPNL',
+            #'add_SET', 'add_SEUSET', 'add_SPLINE', 'add_TRIM',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
             #'add_convection_property', x'add_creep_material',

@@ -2054,13 +2054,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             text.append(texti)
         self.gui.mark_nodes(nids, result_name, text)
 
-    def _fill_bar_yz(self, unused_dim_max, model, icase, cases, form, debug=False):
+    def _fill_bar_yz(self, unused_dim_max: float,
+                     model: BDF, icase: int,
+                     cases, form,
+                     debug: bool=False) -> int:
         """
         plots the y, z vectors for CBAR & CBEAM elements
         """
+        include_rod = False
         card_types = ['CBAR', 'CBEAM']
+        if include_rod:
+            card_types.append('CROD')
         out = model.get_card_ids_by_card_types(card_types=card_types)
         bar_beam_eids = out['CBAR'] + out['CBEAM']
+        if include_rod:
+            bar_beam_eids += out['CROD']
 
         bar_pid_to_eids = get_beam_sections_map(model, bar_beam_eids)
         bar_nids = get_bar_nids(model, bar_beam_eids)

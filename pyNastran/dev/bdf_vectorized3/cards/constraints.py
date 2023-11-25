@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import remove_unused_primary, get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
@@ -27,7 +27,7 @@ from .grid import parse_node_check
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class SPC(VectorizedBaseCard):
@@ -181,6 +181,14 @@ class SPC(VectorizedBaseCard):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        node_ids = used_dict['node_id']
+        spc_ids = used_dict['spc_id']
+
+        #nids_to_remove = np.intersect1d
+        ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
+        return ncards_removed
+
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         if np.abs(self.enforced).max() == 0.:
             return
@@ -313,6 +321,12 @@ class SPC1(VectorizedBaseCard):
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        #node_ids = used_dict['node_id']
+        spc_ids = used_dict['spc_id']
+        ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
+        return ncards_removed
 
     def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> None:
         """
@@ -568,12 +582,6 @@ def where_not(base_vector: np.ndarray, iwhere: np.ndarray) -> np.ndarray:
 
 
 class ADD(VectorizedBaseCard):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.sid = np.array([], dtype='int32')
-        #self.sids = np.array([], dtype='int32')
-        #self.nsids = np.array([], dtype='int32')
-
     def clear(self) -> None:
         self.sid = np.array([], dtype='int32')
         self.sids = np.array([], dtype='int32')
@@ -664,10 +672,6 @@ class SPCADD(ADD):
     +--------+----+----+-----+
     """
     _id_name = 'spc_id'
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.sid = np.array([], dtype='int32')
-        #self.spc_ids = np.array([], dtype='int32')
     @property
     def spc_id(self):
         return self.sid

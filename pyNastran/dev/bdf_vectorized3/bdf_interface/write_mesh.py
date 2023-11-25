@@ -903,7 +903,7 @@ class Writer:
         """Writes the load cards sorted by ID"""
         model = self.model
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        #if self.load_combinations or self.loads or self.tempds or self.cyjoin:
+        #if self.load_combinations or self.loads or self.cyjoin:
         if any(load.n for load in model.load_cards):
             bdf_file.write('$LOADS\n')
             model.load.write_file(bdf_file, size=size, is_double=is_double)
@@ -922,15 +922,17 @@ class Writer:
             model.pload2.write_file(bdf_file, size=size, is_double=is_double)
             model.pload4.write_file(bdf_file, size=size, is_double=is_double)
             model.sload.write_file(bdf_file, size=size, is_double=is_double)
-            model.tempd.write_file(bdf_file, size=size, is_double=is_double)  # default temp
-            model.temp.write_file(bdf_file, size=size, is_double=is_double)
             model.spcd.write_file(bdf_file, size=size, is_double=is_double)
             model.deform.write_file(bdf_file, size=size, is_double=is_double)
 
             # axisymmetric loads
             #bdf_file.write(model.ploadx1.write(size=size))
 
-            # thermal loads
+            # static thermal loads
+            model.tempd.write_file(bdf_file, size=size, is_double=is_double)  # default temp
+            model.temp.write_file(bdf_file, size=size, is_double=is_double)
+
+            # dynamic thermal loads
             #bdf_file.write(model.dtemp.write(size=size))  # has nodes
             model.qhbdy.write_file(bdf_file, size=size, is_double=is_double)
             model.qbdy1.write_file(bdf_file, size=size, is_double=is_double)
@@ -945,6 +947,7 @@ class Writer:
             # rotational forces - static
             model.rforce.write_file(bdf_file, size=size, is_double=is_double)
             model.rforce1.write_file(bdf_file, size=size, is_double=is_double)
+            #model.rforce2.write_file(bdf_file, size=size, is_double=is_double)
 
         if any(card.n for card in model.dynamic_cards):
             model.tic.write_file(bdf_file, size=size, is_double=is_double)
@@ -957,8 +960,10 @@ class Writer:
             model.darea.write_file(bdf_file, size=size, is_double=is_double)
             model.tload1.write_file(bdf_file, size=size, is_double=is_double)
             model.tload2.write_file(bdf_file, size=size, is_double=is_double)
+            #model.tload3.write_file(bdf_file, size=size, is_double=is_double)
             model.rload1.write_file(bdf_file, size=size, is_double=is_double)
             model.rload2.write_file(bdf_file, size=size, is_double=is_double)
+            #model.rloadex.write_file(bdf_file, size=size, is_double=is_double)
 
             # random loads
             model.randps.write_file(bdf_file, size=size, is_double=is_double)
@@ -1028,6 +1033,7 @@ class Writer:
         if is_contacta or is_contactb:
             bdf_file.write('$CONTACT\n')
             # msc contact
+            #model.bcbody.write_file(bdf_file, size=size, is_double=is_double)
             #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
                 #bdf_file.write(bcbody.write_card(size, is_double))
 
@@ -1059,7 +1065,6 @@ class Writer:
                       size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the coordinate cards in a sorted order"""
-        #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
         if model.coord.coord_id.max() > 0:
             bdf_file.write('$COORDS\n')
@@ -1072,7 +1077,6 @@ class Writer:
         """Writes the dynamic cards sorted by ID"""
         model = self.model
         model.tic.write_file(bdf_file, size=size, is_double=is_double, write_card_header=is_double)
-        #model.tf.write_file(bdf_file, size=size, is_double=is_double, write_card_header=is_double)
 
         #bdf_file.write(model.tic.write(size=size))
         is_dynamic = (
@@ -1141,6 +1145,7 @@ class Writer:
 
         model.dresp1.write_file(bdf_file, size=size, is_double=is_double)
         model.dresp2.write_file(bdf_file, size=size, is_double=is_double)  # poorly supported
+        #model.dresp3.write_file(bdf_file, size=size, is_double=is_double)
         model.dconstr.write_file(bdf_file, size=size, is_double=is_double)
         model.dconadd.write_file(bdf_file, size=size, is_double=is_double)
 

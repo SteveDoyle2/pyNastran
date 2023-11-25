@@ -35,12 +35,6 @@ def get_bdf_model(bdf_filename: BDF_FILETYPE,
                   validate: bool=True,
                   log=None, debug: bool=False) -> BDF:
     if isinstance(bdf_filename, (str, StringIO, PurePath)):
-        #model = read_bdf(bdf_filename=bdf_filename, validate=True, xref=True,
-                        #punch=False, skip_cards=None,
-                        #read_cards=None,
-                        #encoding=None, log=None,
-                        #debug=True, mode='msc')
-
         xref = True
         model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
@@ -51,9 +45,6 @@ def get_bdf_model(bdf_filename: BDF_FILETYPE,
         model = bdf_filename
         if xref:
             model.cross_reference(run_geom_check=xref)
-    #elif isinstance(bdf_filename, StringIO):
-        #model = BDF(log=log, debug=debug)
-        #model.read_bdf(bdf_filename, xref=xref)
     else:  # pragma: no cover
         raise NotImplementedError(bdf_filename)
     return model
@@ -195,8 +186,6 @@ def _eq_nodes_setup(bdf_filename,
     if node_set is not None:
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
-
-        #print(type(node_set))
         #print('*node_set', node_set)
         assert len(node_set) > 0, node_set
         assert isinstance(node_set, list), type(node_set)
@@ -322,7 +311,6 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
         xyz2 = xyz_cid0[i2, :]
         dxyz = xyz2 - xyz1
         normi = np.linalg.norm(dxyz)
-        #assert len(normi) == len(nid_pairs_array)
         if normi <= tol:
             #iupdate = (normi <= tol)
             for nid1, nid2 in nid_pairs_array:
@@ -343,19 +331,6 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
             assert nid1 in all_node_set, 'nid1=%s all_node_set=%s' % (nid1, all_node_set)
             assert nid2 in all_node_set, 'nid2=%s all_node_set=%s' % (nid2, all_node_set)
 
-    #if np.any(iupdate):
-        #print(grid.write())
-        #inode_update = inode[iupdate, :]
-        #for i1, i2 in inode_update:
-            #grid.node_id[i2] = grid.node_id[i1]
-            #grid.xyz[i2, :] = grid.xyz[i1, :]
-            #grid.cp[i2] = grid.cp[i1]
-            #grid.cd[i2] = grid.cd[i1]
-            #grid.seid[i2] = grid.seid[i1]
-            #grid.ps[i2] = grid.ps[i1]
-        #print('---------------\nnew:')
-        #print(grid.write())
-
     update_cards(model, nid_old_to_new)
     return
 
@@ -366,13 +341,13 @@ def update_cards(model: BDF,
     log.warning('update_cards')
     skip_cards = {
         'GRID', 'SPOINT', 'EPOINT',
-        'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
+        'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
         'MATT1', 'MATT2', 'MATT8',
         'MATS1',
         'PELAS', 'PELAST',
         'PDAMP', 'PDAMPT',
         'PBUSH', 'PBUSHT', 'PBUSH1D',
-        'PMASS', 'PGAP', 'PVISC',
+        'PMASS', 'PGAP', 'PVISC', 'PFAST',
         'PROD', 'PTUBE',
         'PBAR', 'PBARL',
         'PBEAM', 'PBEAML', 'PBCOMP', 'PBEND', 'PBEAM3',
@@ -382,11 +357,11 @@ def update_cards(model: BDF,
         'CELAS3', 'CELAS4',
         'CDAMP3', 'CDAMP4',
         'CMASS3', 'CMASS4',
-        'BCONP', 'BFRIC',
         'SPCADD', 'MPCADD', 'SET1',
+        #  optimization
         'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
         'DCONSTR', 'DCONADD', 'DSCREEN',
-        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD',
+        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD', 'DEFORM',
         # thermal
         'RADM', 'TEMPD', 'RADSET',
         # time/freq/random loads
@@ -428,14 +403,3 @@ def update_cards(model: BDF,
         except AttributeError:
             print(card.get_stats())
             raise
-
-#def _update_grid(node1: GRID, node2: GRID):
-    #"""helper method for _eq_nodes_final"""
-    #node2.nid = node1.nid
-    #node2.xyz = node1.xyz
-    #node2.cp = node1.cp
-    #assert node2.cd == node1.cd
-    #assert node2.ps == node1.ps
-    #assert node2.seid == node1.seid
-    #node1.cp_ref = None
-    #node2.cp_ref = None

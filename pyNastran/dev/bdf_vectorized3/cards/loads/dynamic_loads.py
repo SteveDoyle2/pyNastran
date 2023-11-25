@@ -256,8 +256,7 @@ class DAREA(VectorizedBaseCard):
     | DAREA |  3  | 6  | 2  | 8.2 | 15 | 1  | 10.1 |
     +-------+-----+----+----+-----+----+----+------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> DAREA:
@@ -405,9 +404,7 @@ class TLOAD1(VectorizedBaseCard):
     | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID |
     +--------+-----+----------+-------+------+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-
+    def clear(self) -> None:
         #: Set identification number
         self.load_id = np.array([], dtype='int32')
 
@@ -655,8 +652,7 @@ class TLOAD2(VectorizedBaseCard):
     +--------+-----+----------+-------+------+-----+-----+--------+---------+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> TLOAD2:
@@ -909,8 +905,7 @@ class RLOAD1(VectorizedBaseCard):
 
     NX allows DELAY and DPHASE to be floats
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> RLOAD1:
@@ -1140,8 +1135,7 @@ class RLOAD2(VectorizedBaseCard):
 
     NX allows DELAY and DPHASE to be floats
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> RLOAD2:
@@ -1442,8 +1436,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
     GRID       NID       X     Y     Z
     GRID       913      50.  0.19  -39.9
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.lseq_id = np.array([], dtype='int32')
         self.excite_id = np.array([], dtype='int32')
         self.load_id = np.array([], dtype='int32')

@@ -18,7 +18,14 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
         'material_id': [],
         'spc_id': [],          # SPCADD -> SPC
         'mpc_id': [],          # MPCADD -> MPC
+
+        'desvar_id': [],       # DVPREL1/DVPREL2 -> DESVAR
         'dconstr_id': [],      # DCONADD -> DCONSTR
+        'dvprel_id': [],       # DVPREL2 -> DVPREL1
+        'dvmrel_id': [],       # DVMREL2 -> DVMREL1
+        'dvcrel_id': [],       # DVCREL2 -> DVCREL1
+        'dresp_id': [],        # DVPREL1/DVPREL2 -> DRESP1/DRESP2
+
         'tablem_id': [],       # MATTx  -> TABLEMx
         'tabled_id': [],       # TLOADx -> TABLEDx
         'contact_set_id': [],  # BCTADD -> BCTSET
@@ -27,6 +34,16 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
     }
     #for card in model._cards_to_setup:
         #print(card)
+
+
+    for subcase_id, subcase in model.subcases.items():
+        if 'SPC' in subcase:
+            spc_id, _options = subcase['SPC']
+            used_dict['spc_id'].append(spc_id)
+        if 'MPC' in subcase:
+            mpc_id, _options = subcase['MPC']
+            used_dict['mpc_id'].append(mpc_id)
+
     for card in cards:
         #print(card.type)
         if hasattr(card, 'set_used'):
@@ -49,7 +66,7 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
             card.remove_unused(used_arrays)
         else:
             log.error(f'{card.type} does not support remove_unused')
-            #raise RuntimeError(card.type)
+            raise RuntimeError(card.type)
     return model
 
 def to_dict_array(card, used_dict: dict[str, list[np.ndarray]]) -> dict[str, np.ndarray]:

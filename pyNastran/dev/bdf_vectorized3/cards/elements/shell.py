@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # string, # double,
     integer_or_blank, double_or_blank,
     integer_double_or_blank, blank, integer_types)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -41,7 +42,7 @@ NUMPY_FLOATS = {'float32', 'float64'}
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     #from pyNastran.bdf.cards.materials import MAT1, MAT8
@@ -531,15 +532,16 @@ class CTRIA3(ShellElement):
             integer(card, 5, 'n3'),
         ]
         if len(card) > 6:
+            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
             theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', default=0.0)
-            zoffset = double_or_blank(card, 7, 'zoffset', default=0.0)
+            zoffset = fdouble_or_blank(card, 7, 'zoffset', default=0.0)
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
             tflag = integer_or_blank(card, 10, 'tflag', default=0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
+            T1 = fdouble_or_blank(card, 11, 'T1')
+            T2 = fdouble_or_blank(card, 12, 'T2')
+            T3 = fdouble_or_blank(card, 13, 'T3')
             assert len(card) <= 14, f'len(CTRIA3 card) = {len(card):d}\ncard={card}\n tflag={tflag} T123=[{T1}, {T2}, {T3}]'
         else:
             theta_mcid = 0.0
@@ -632,6 +634,11 @@ class CTRIA3(ShellElement):
         element.zoffset = self.zoffset[i]
         element.T = self.T[i, :]
         element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     def card_headers(self, size: int=8) -> list[str]:
         theta_mcid = 'th_mcid' if size == 8 else 'theta_mcid'
@@ -850,15 +857,16 @@ class CTRIAR(ShellElement):
             integer(card, 5, 'n3'),
         ]
 
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', default=0.0)
-        zoffset = double_or_blank(card, 7, 'zoffset', default=0.0)
+        zoffset = fdouble_or_blank(card, 7, 'zoffset', default=0.0)
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
 
         tflag = integer_or_blank(card, 10, 'tflag', default=0)
-        T1 = double_or_blank(card, 11, 'T1')
-        T2 = double_or_blank(card, 12, 'T2')
-        T3 = double_or_blank(card, 13, 'T3')
+        T1 = fdouble_or_blank(card, 11, 'T1')
+        T2 = fdouble_or_blank(card, 12, 'T2')
+        T3 = fdouble_or_blank(card, 13, 'T3')
         assert len(card) <= 14, f'len(CTRIAR card) = {len(card):d}\ncard={card}'
 
         card = (eid, pid, nids,
@@ -868,17 +876,6 @@ class CTRIAR(ShellElement):
         self.cards.append(card)
         self.n += 1
         return self.n - 1
-
-    def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
-        element.element_id = self.element_id[i]
-        element.property_id = self.property_id[i]
-        element.nodes = self.nodes[i, :]
-        element.tflag = self.tflag[i]
-        element.mcid = self.mcid[i]
-        element.theta = self.theta[i]
-        element.zoffset = self.zoffset[i]
-        element.T = self.T[i, :]
-        element.n = len(self.element_id)
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -938,6 +935,22 @@ class CTRIAR(ShellElement):
         self.theta = theta
         self.zoffset = zoffset
         self.T = T
+
+    def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        element.tflag = self.tflag[i]
+        element.mcid = self.mcid[i]
+        element.theta = self.theta[i]
+        element.zoffset = self.zoffset[i]
+        element.T = self.T[i, :]
+        element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     def convert(self, xyz_scale: float=1.0,
                 **kwargs):
@@ -1076,14 +1089,15 @@ class CQUAD4(ShellElement):
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),]
         if len(card) > 7:
+            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
-            zoffset = double_or_blank(card, 8, 'zoffset', default=np.nan)
+            zoffset = fdouble_or_blank(card, 8, 'zoffset', default=np.nan)
             blank(card, 9, 'blank')
             tflag = integer_or_blank(card, 10, 'tflag', default=0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
-            T4 = double_or_blank(card, 14, 'T4')
+            T1 = fdouble_or_blank(card, 11, 'T1')
+            T2 = fdouble_or_blank(card, 12, 'T2')
+            T3 = fdouble_or_blank(card, 13, 'T3')
+            T4 = fdouble_or_blank(card, 14, 'T4')
             assert len(card) <= 15, f'len(CQUAD4 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0
@@ -1143,14 +1157,6 @@ class CQUAD4(ShellElement):
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
-    def convert(self, xyz_scale: float=1.0,
-                **kwargs):
-        self.zoffset *= xyz_scale
-
-        # T is a thickness if tflag == 0 (unless T=nan)
-        itflag = (self.tflag == 0)
-        self.T[itflag] *= xyz_scale
-
     def __apply_slice__(self, element: CQUAD4, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
@@ -1162,6 +1168,19 @@ class CQUAD4(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
         self.check_types()
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
+
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
 
     def check_types(self):
         super().check_types()
@@ -1417,17 +1436,6 @@ class CQUADR(ShellElement):
         self.tflag = np.array([], dtype='int32')
         self.T = np.zeros((0, 4), dtype='float64')
 
-    def __apply_slice__(self, element: CQUADR, i: np.ndarray) -> None:  # ignore[override]
-        element.element_id = self.element_id[i]
-        element.property_id = self.property_id[i]
-        element.nodes = self.nodes[i, :]
-        element.tflag = self.tflag[i]
-        element.mcid = self.mcid[i]
-        element.theta = self.theta[i]
-        element.zoffset = self.zoffset[i]
-        element.T = self.T[i, :]
-        element.n = len(self.element_id)
-
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0., tflag: int=0,
             T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
@@ -1487,14 +1495,15 @@ class CQUADR(ShellElement):
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),]
 
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
-        zoffset = double_or_blank(card, 8, 'zoffset', default=0.0)
+        zoffset = fdouble_or_blank(card, 8, 'zoffset', default=0.0)
 
         tflag = integer_or_blank(card, 10, 'tflag', default=0)
-        T1 = double_or_blank(card, 11, 'T1')
-        T2 = double_or_blank(card, 12, 'T2')
-        T3 = double_or_blank(card, 13, 'T3')
-        T4 = double_or_blank(card, 14, 'T4')
+        T1 = fdouble_or_blank(card, 11, 'T1')
+        T2 = fdouble_or_blank(card, 12, 'T2')
+        T3 = fdouble_or_blank(card, 13, 'T3')
+        T4 = fdouble_or_blank(card, 14, 'T4')
         assert len(card) <= 15, f'len(CQUADR card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
         self.n += 1
@@ -1537,6 +1546,22 @@ class CQUADR(ShellElement):
               tflag=None, T=None) -> None:
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
+
+    def __apply_slice__(self, element: CQUADR, i: np.ndarray) -> None:  # ignore[override]
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        element.tflag = self.tflag[i]
+        element.mcid = self.mcid[i]
+        element.theta = self.theta[i]
+        element.zoffset = self.zoffset[i]
+        element.T = self.T[i, :]
+        element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     def convert(self, xyz_scale: float=1.0,
                 **kwargs):
@@ -1728,12 +1753,13 @@ class CTRIA6(ShellElement):
             integer_or_blank(card, 8, 'n6', default=0),
         ]
         if len(card) > 9:
+            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
             theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', default=0.0)
-            zoffset = double_or_blank(card, 10, 'zoffset', default=0.0)
+            zoffset = fdouble_or_blank(card, 10, 'zoffset', default=0.0)
 
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
+            T1 = fdouble_or_blank(card, 11, 'T1')
+            T2 = fdouble_or_blank(card, 12, 'T2')
+            T3 = fdouble_or_blank(card, 13, 'T3')
             tflag = integer_or_blank(card, 14, 'tflag', default=0)
             assert len(card) <= 15, f'len(CTRIA6 card) = {len(card):d}\ncard={card}'
         else:
@@ -1750,18 +1776,6 @@ class CTRIA6(ShellElement):
         self.cards.append(card)
         self.n += 1
         return self.n - 1
-
-    def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
-        assert element.type == 'CTRIA6'
-        element.element_id = self.element_id[i]
-        element.property_id = self.property_id[i]
-        element.nodes = self.nodes[i, :]
-        element.tflag = self.tflag[i]
-        element.mcid = self.mcid[i]
-        element.theta = self.theta[i]
-        element.zoffset = self.zoffset[i]
-        element.T = self.T[i, :]
-        element.n = len(self.element_id)
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1829,6 +1843,23 @@ class CTRIA6(ShellElement):
         self.tflag = tflag
         self.T = T
         self.n = nelements
+
+    def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
+        assert element.type == 'CTRIA6'
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        element.tflag = self.tflag[i]
+        element.mcid = self.mcid[i]
+        element.theta = self.theta[i]
+        element.zoffset = self.zoffset[i]
+        element.T = self.T[i, :]
+        element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     def convert(self, xyz_scale: float=1.0, **kwargs):
         self.zoffset *= xyz_scale
@@ -2022,12 +2053,13 @@ class CQUAD8(ShellElement):
                 integer_or_blank(card, 9, 'n7', default=0),
                 integer_or_blank(card, 10, 'n8', default=0),]
         if len(card) > 11:
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
-            T4 = double_or_blank(card, 14, 'T4')
+            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            T1 = fdouble_or_blank(card, 11, 'T1')
+            T2 = fdouble_or_blank(card, 12, 'T2')
+            T3 = fdouble_or_blank(card, 13, 'T3')
+            T4 = fdouble_or_blank(card, 14, 'T4')
             theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', default=0.0)
-            zoffset = double_or_blank(card, 16, 'zoffset', default=0.0)
+            zoffset = fdouble_or_blank(card, 16, 'zoffset', default=0.0)
             tflag = integer_or_blank(card, 17, 'tflag', default=0)
             assert len(card) <= 18, f'len(CQUAD8 card) = {len(card):d}\ncard={card}'
         else:
@@ -2046,17 +2078,6 @@ class CQUAD8(ShellElement):
         self.cards.append(card)
         self.n += 1
         return self.n - 1
-
-    def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
-        element.element_id = self.element_id[i]
-        element.property_id = self.property_id[i]
-        element.nodes = self.nodes[i, :]
-        element.tflag = self.tflag[i]
-        element.mcid = self.mcid[i]
-        element.theta = self.theta[i]
-        element.zoffset = self.zoffset[i]
-        element.T = self.T[i, :]
-        element.n = len(self.element_id)
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -2152,6 +2173,22 @@ class CQUAD8(ShellElement):
         self.tflag = tflag
         self.T = T
         self.n = nelements
+
+    def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        element.tflag = self.tflag[i]
+        element.mcid = self.mcid[i]
+        element.theta = self.theta[i]
+        element.zoffset = self.zoffset[i]
+        element.T = self.T[i, :]
+        element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     def convert(self, xyz_scale: float=1.0, **kwargs):
         self.zoffset *= xyz_scale
@@ -2335,14 +2372,6 @@ class CQUAD(ShellElement):
         self.n += 1
         return self.n - 1
 
-    def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:  # ignore[override]
-        element.element_id = self.element_id[i]
-        element.property_id = self.property_id[i]
-        element.nodes = self.nodes[i, :]
-        element.mcid = self.mcid[i]
-        element.theta = self.theta[i]
-        element.n = len(self.element_id)
-
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
@@ -2373,6 +2402,19 @@ class CQUAD(ShellElement):
         self.nodes = nodes
         self.mcid = mcid
         self.theta = theta
+
+    def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:  # ignore[override]
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        element.mcid = self.mcid[i]
+        element.theta = self.theta[i]
+        element.n = len(self.element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

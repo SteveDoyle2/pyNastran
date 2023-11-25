@@ -7,7 +7,9 @@ import numpy as np
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string_or_blank,
+    integer_double_or_blank, blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
@@ -105,23 +107,26 @@ class MAT1(Material):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        idouble_or_blank = integer_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         mid = integer(card, 1, 'mid')
-        E = double_or_blank(card, 2, 'E')
-        G = double_or_blank(card, 3, 'G')
-        nu = double_or_blank(card, 4, 'nu')
+        E = idouble_or_blank(card, 2, 'E')
+        G = idouble_or_blank(card, 3, 'G')
+        nu = idouble_or_blank(card, 4, 'nu')
         if E is None and G is None and nu is None:
             E = G = nu = 0.
             self.model.log.warning(f'MAT1; mid={mid} E=G=nu=0.')
         else:
             E, G, nu = mat1_E_G_nu(E, G, nu)
 
-        rho = double_or_blank(card, 5, 'rho', default=0.)
-        alpha = double_or_blank(card, 6, 'a', default=0.0)
-        tref = double_or_blank(card, 7, 'tref', default=0.0)
-        ge = double_or_blank(card, 8, 'ge', default=0.0)
-        St = double_or_blank(card, 9, 'St', default=0.0)
-        Sc = double_or_blank(card, 10, 'Sc', default=0.0)
-        Ss = double_or_blank(card, 11, 'Ss', default=0.0)
+        rho = fdouble_or_blank(card, 5, 'rho', default=0.)
+        alpha = fdouble_or_blank(card, 6, 'a', default=0.0)
+        tref = fdouble_or_blank(card, 7, 'tref', default=0.0)
+        ge = fdouble_or_blank(card, 8, 'ge', default=0.0)
+        St = fdouble_or_blank(card, 9, 'St', default=0.0)
+        Sc = fdouble_or_blank(card, 10, 'Sc', default=0.0)
+        Ss = fdouble_or_blank(card, 11, 'Ss', default=0.0)
         mcsid = integer_or_blank(card, 12, 'mcsid', default=0)
         assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
@@ -1882,13 +1887,14 @@ class MAT10(Material):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         mid = integer(card, 1, 'mid')
-        bulk = double_or_blank(card, 2, 'bulk')
-        rho = double_or_blank(card, 3, 'rho', default=0.0)
-        c = double_or_blank(card, 4, 'c', default=np.nan)
-        ge = double_or_blank(card, 5, 'ge', default=0.0)
+        bulk = fdouble_or_blank(card, 2, 'bulk')
+        rho = fdouble_or_blank(card, 3, 'rho', default=0.0)
+        c = fdouble_or_blank(card, 4, 'c', default=np.nan)
+        ge = fdouble_or_blank(card, 5, 'ge', default=0.0)
 
-        alpha_gamma = double_or_blank(card, 6, 'gamma', default=np.nan)
+        alpha_gamma = fdouble_or_blank(card, 6, 'gamma', default=np.nan)
         tid_bulk = integer_or_blank(card, 10, 'tid_bulk', default=0)
         tid_rho = integer_or_blank(card, 11, 'tid_rho', default=0)
         tid_ge = integer_or_blank(card, 13, 'tid_ge', default=0)
@@ -2456,13 +2462,19 @@ class MATORT(Material):
             iyield: int=1, ihard: int=1, sy: float=0.0,
             y1: float=0.0, y2: float=0.0, y3: float=0.0,
             yshear1: float=0.0, yshear2: float=0.0, yshear3: float=0.0,
-            option: str='ELEM',
+            option: str='ELEM', file_=None,
+            xyz1: Optional[list[float]]=None,
+            xyz2: Optional[list[float]]=None,
             comment: str=''):
+        if xyz1 is None:
+            xyz1 = [0., 0., 0.]
+        if xyz2 is None:
+            xyz2 = [0., 0., 0.]
         self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
                            alpha1, alpha2, alpha3, tref, ge,
                            iyield, ihard, sy, y1, y2, y3,
                            yshear1, yshear2, yshear3,
-                           option,
+                           option, file_, xyz1, xyz2,
                            comment))
         self.n += 1
         return self.n - 1
@@ -2473,6 +2485,7 @@ class MATORT(Material):
         #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
         #|        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
         #|        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         mid = integer(card, 1, 'mid')
         E1 = double_or_blank(card, 2, 'E1')
         E2 = double_or_blank(card, 3, 'E2')
@@ -2481,15 +2494,15 @@ class MATORT(Material):
         nu12 = double_or_blank(card, 5, 'nu12')
         nu23 = double_or_blank(card, 6, 'nu23')
         nu31 = double_or_blank(card, 7, 'nu31')
-        rho = double_or_blank(card, 8, 'rho', default=0.)
+        rho = fdouble_or_blank(card, 8, 'rho', default=0.)
         #-------------------------
         G12 = double_or_blank(card, 9, 'G12')
         G23 = double_or_blank(card, 10, 'G23')
         G31 = double_or_blank(card, 11, 'G31')
 
-        alpha1 = double_or_blank(card, 12, 'a1', default=0.0)
-        alpha2 = double_or_blank(card, 13, 'a2', default=0.0)
-        alpha3 = double_or_blank(card, 14, 'a3', default=0.0)
+        alpha1 = fdouble_or_blank(card, 12, 'a1', default=0.0)
+        alpha2 = fdouble_or_blank(card, 13, 'a2', default=0.0)
+        alpha3 = fdouble_or_blank(card, 14, 'a3', default=0.0)
 
         tref = double_or_blank(card, 15, 'tref', default=0.0)
         ge = double_or_blank(card, 16, 'ge', default=0.0)
@@ -2497,11 +2510,11 @@ class MATORT(Material):
         #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
         iyield = integer_or_blank(card, 17, 'iyield', default=1)
         ihard = integer_or_blank(card, 18, 'ihard', default=1)
-        sy = double_or_blank(card, 19, 'sy', default=0.0)
+        sy = fdouble_or_blank(card, 19, 'sy', default=0.0)
         #
-        y1 = double_or_blank(card, 21, 'y1', default=0.0)
-        y2 = double_or_blank(card, 22, 'y2', default=0.0)
-        y3 = double_or_blank(card, 23, 'y3', default=0.0)
+        y1 = fdouble_or_blank(card, 21, 'y1', default=0.0)
+        y2 = fdouble_or_blank(card, 22, 'y2', default=0.0)
+        y3 = fdouble_or_blank(card, 23, 'y3', default=0.0)
         #24
         #--------------------
         #|        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
@@ -2511,13 +2524,21 @@ class MATORT(Material):
         #--------------------
         # 33
         option = string_or_blank(card, 33, 'option', default='ELEM')
+        file_ = blank(card, 34, 'file')
+        x1 = double_or_blank(card, 35, 'x1', default=0.0)
+        y1 = double_or_blank(card, 36, 'y1', default=0.0)
+        z1 = double_or_blank(card, 37, 'z1', default=0.0)
+
+        x2 = double_or_blank(card, 38, 'x2', default=0.0)
+        y2 = double_or_blank(card, 39, 'y2', default=0.0)
+        z2 = double_or_blank(card, 40, 'z2', default=0.0)
         #|        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
-        assert len(card) <= 34, f'len(MATORT card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 41, f'len(MATORT card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
                            alpha1, alpha2, alpha3, tref, ge,
                            iyield, ihard, sy, y1, y2, y3,
                            yshear1, yshear2, yshear3,
-                           option,
+                           option, file_, (x1, y1, z1), (x2, y2, z2),
                            comment))
         self.n += 1
         return self.n - 1
@@ -2553,13 +2574,17 @@ class MATORT(Material):
         yshear2 = np.zeros(ncards, dtype='float64')
         yshear3 = np.zeros(ncards, dtype='float64')
         option = np.zeros(ncards, dtype='|U8')
+        file_ = np.zeros(ncards, dtype='|U8')
+
+        xyz1 = np.zeros((ncards, 3), dtype='float64')
+        xyz2 = np.zeros((ncards, 3), dtype='float64')
 
         for icard, card in enumerate(self.cards):
             (mid, E1i, E2i, E3i, nu12i, nu23i, nu31i, rhoi, G12i, G23i, G31i,
              alpha1i, alpha2i, alpha3i, trefi, gei,
              iyieldi, ihardi, syi, y1i, y2i, y3i,
              yshear1i, yshear2i, yshear3i,
-             optioni,
+             optioni, filei, xyz1i, xyz2i,
              comment) = card
             material_id[icard] = mid
             E1[icard] = E1i
@@ -2590,12 +2615,15 @@ class MATORT(Material):
             yshear2[icard] = yshear2i
             yshear3[icard] = yshear3i
             option[icard] = optioni
+            #file_
+            xyz1[icard, :] = xyz1i
+            xyz2[icard, :] = xyz2i
 
         self._save(material_id, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option,)
+                   option, xyz1, xyz2)
         self.sort()
         self.cards = []
 
@@ -2603,7 +2631,7 @@ class MATORT(Material):
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option,):
+                   option, xyz1, xyz2):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
         self.E1 = E1
@@ -2632,6 +2660,9 @@ class MATORT(Material):
         self.yshear2 = yshear2
         self.yshear3 = yshear3
         self.option = option
+        #self.file_
+        self.xyz1 = xyz1
+        self.xyz2 = xyz2
 
         assert len(self.material_id) > 0, self.material_id
         #self.model.log.warning('saved MATORT')
@@ -2665,6 +2696,9 @@ class MATORT(Material):
         mat.yshear2 = self.yshear2[i]
         mat.yshear3 = self.yshear3[i]
         mat.option = self.option[i]
+        #mat.file_
+        mat.xyz1 = self.xyz1[i]
+        mat.xyz2 = self.xyz2[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -2696,18 +2730,21 @@ class MATORT(Material):
         yshear1s = array_default_float(self.yshear1, default=0., size=size, is_double=False)
         yshear2s = array_default_float(self.yshear2, default=0., size=size, is_double=False)
         yshear3s = array_default_float(self.yshear3, default=0., size=size, is_double=False)
+        xyz1s = array_default_float(self.xyz1, default=0., size=size, is_double=False)
+        xyz2s = array_default_float(self.xyz2, default=0., size=size, is_double=False)
+
         for mid, e1, e2, e3, g12, g23, g31, nu12, nu23, nu31, \
             rho, alpha1, alpha2, alpha3, tref, ge, \
             iyield, ihard, sy, y1, y2, y3, \
             yshear1, yshear2, yshear3, \
-            option \
+            option, xyz1, xyz2 \
             in zip_longest(self.material_id, self.E1, self.E2, self.E3,
                            self.G12, self.G23, self.G31,
-                           self.nu12, self.nu23, self.nu31, self.rho,
+                           self.nu12, self.nu23, self.nu31, rhos,
                            alpha1s, alpha2s, alpha3s, trefs, ges,
                            iyields, ihards, sys, y1s, y2s, y3s,
                            yshear1s, yshear2s, yshear3s,
-                           self.option,):
+                           self.option, xyz1s, xyz2s):
 
             #rho = set_blank_if_default(rho, 0.)
             #a1 = set_blank_if_default(alpha1, 0.)
@@ -2716,11 +2753,13 @@ class MATORT(Material):
             #tref = set_blank_if_default(tref, 0.)
             #ge = set_blank_if_default(ge, 0.)
 
+            x1, y1, z1 = xyz1
+            x2, y2, z2 = xyz2
             list_fields = ['MATORT', mid, e1, e2, e3, nu12, nu23, nu31, rho,
                            g12, g23, g31, alpha1, alpha2, alpha3, tref, ge,
                            iyield, ihard, sy, None, y1, y2, y3, None,
                            yshear1, yshear2, yshear3, None, None, None, None, None,
-                           option,
+                           option, file_, x1, y1, z1, x2, y2, z2,
                            ]
             bdf_file.write(print_card(list_fields))
         return
@@ -3229,7 +3268,7 @@ class MATHE(Material):
             c03 = double_or_blank(card, 28, 'c03', default=0.)
             assert len(card) <= 29, f'len(MATHE card) = {len(card):d}\ncard={card}'
         else:  # pragma: no cover
-            raise NotImplementedError((model, card))
+            raise NotImplementedError((hyperelastic_model, card))
         self.cards.append((mid, hyperelastic_model, k, rho, texp,
                            c10, c01,
                            c20, c11, c02,

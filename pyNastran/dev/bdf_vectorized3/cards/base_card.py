@@ -676,3 +676,26 @@ def get_print_card_8_16(size: int) -> Callable[list]:
     else:
         print_card = print_card_16
     return print_card
+
+
+def remove_unused_primary(card, used_ids: np.ndarray, ids: np.ndarray,
+                          ids_str: str) -> int:
+    """
+    spc_ids = used_dict['spc_id']
+    ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
+    """
+    spc_id = np.intersect1d(used_ids, ids)
+    removed_id = np.setdiff1d(ids, used_ids)
+    ncards_removed = len(ids) - len(spc_id)
+    if ncards_removed:
+        if len(spc_id) == 0:
+            card.model.log.info(f'removing {card.type} removed spc_id={removed_id}; ncards={ncards_removed}')
+            card.clear()
+        else:
+            try:
+                card.slice_card_by_id(spc_id, assume_sorted=True, sort_ids=False)
+            except IndexError:
+                raise RuntimeError(card.get_stats())
+            except ValueError:
+                raise RuntimeError(f'{card.type} {ids_str} is empty...n={card.n}')
+    return ncards_removed

@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_string_or_blank, fields)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.utils.numpy_utils import (
     integer_types,
 )
@@ -861,14 +862,15 @@ class PLOAD4(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
-        p1 = double_or_blank(card, 3, 'p1', default=0.0)
+        p1 = fdouble_or_blank(card, 3, 'p1', default=0.0)
         pressures = [
             p1,
-            double_or_blank(card, 4, 'p2', default=np.nan),
-            double_or_blank(card, 5, 'p3', default=np.nan),
-            double_or_blank(card, 6, 'p4', default=np.nan),
+            fdouble_or_blank(card, 4, 'p2', default=np.nan),
+            fdouble_or_blank(card, 5, 'p3', default=np.nan),
+            fdouble_or_blank(card, 6, 'p4', default=np.nan),
         ]
 
         eids = [eid]

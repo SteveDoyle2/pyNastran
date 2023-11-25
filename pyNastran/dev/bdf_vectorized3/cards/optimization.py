@@ -5,11 +5,14 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
-from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim #, BaseCard, _node_ids, expand_thru
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    hslice_by_idim, remove_unused_primary) #, BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
     integer_string_or_blank, integer_double_or_blank, interpret_value)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -174,8 +177,7 @@ class DESVAR(VectorizedBaseCard):
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
     _id_name = 'desvar_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.desvar_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.xinit = np.array([], dtype='float64')
@@ -221,12 +223,14 @@ class DESVAR(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
         xinit = double(card, 3, 'xinit')
-        xlb = double_or_blank(card, 4, 'xlb', -1e20)
-        xub = double_or_blank(card, 5, 'xub', 1e20)
-        delx = double_or_blank(card, 6, 'delx', default=np.nan)
+        xlb = fdouble_or_blank(card, 4, 'xlb', -1e20)
+        xub = fdouble_or_blank(card, 5, 'xub', 1e20)
+        delx = fdouble_or_blank(card, 6, 'delx', default=np.nan)
         ddval = integer_or_blank(card, 7, 'ddval', default=0)
         assert len(card) <= 8, f'len(DESVAR card) = {len(card):d}\ncard={card}'
         self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
@@ -304,6 +308,12 @@ class DESVAR(VectorizedBaseCard):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        desvar_id = used_dict['desvar_id']
+        ncards_removed = remove_unused_primary(self, desvar_id, self.desvar_id, 'desvar_id')
+        return ncards_removed
+
     def index(self, desvar_id: np.ndarray) -> np.ndarray:
         assert len(self.desvar_id) > 0, self.desvar_id
         desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
@@ -362,8 +372,7 @@ class DLINK(VectorizedBaseCard):
     +-------+------+-------+--------+-------+------+----+------+----+
     """
     _id_name = 'dlink_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dlink_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.xinit = np.array([], dtype='float64')
@@ -611,6 +620,13 @@ class DVGRID(VectorizedBaseCard):
         self.coefficient = coefficient
         self.dxyz = dxyz
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
         used_dict['coord_id'].append(self.coord_id)
@@ -647,6 +663,7 @@ class DVGRID(VectorizedBaseCard):
         return
 
 
+FLOAT_RESPONSE_TYPES = {'DIVERG'}
 class DRESP1(VectorizedBaseCard):
     """
     +--------+-------+---------+---------+--------+--------+-------+------+-------+
@@ -660,8 +677,7 @@ class DRESP1(VectorizedBaseCard):
     +--------+-------+---------+---------+--------+--------+-------+------+-------+
     """
     _id_name = 'dresp_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dresp_id = np.array([], dtype='int32')
 
     def add(self, dresp_id: int, label: str,
@@ -778,10 +794,16 @@ class DRESP1(VectorizedBaseCard):
         attb = integer_double_string_or_blank(card, 7, 'attb', default='')
 
         atti_list = []
-        for i in range(8, len(card)):
-            #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
-            attii = integer_string_or_blank(card, i, 'atti_%d' % (i + 1))
-            atti_list.append(attii)
+        if response_type in FLOAT_RESPONSE_TYPES:
+            for i in range(8, len(card)):
+                attii = double(card, i, 'atti_%d' % (i + 1))
+                atti_list.append(attii)
+        else:
+            for i in range(8, len(card)):
+                #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
+                # DIVERG -> Mach Number
+                attii = integer_string_or_blank(card, i, 'atti_%d' % (i + 1))
+                atti_list.append(attii)
         #if len(atti_list) == 0:
             #['DRESP1', '10', 'WEIGHT', 'WEIGHT']
             #self.model.log.debug(card)
@@ -814,7 +836,9 @@ class DRESP1(VectorizedBaseCard):
         attb_float = np.full(ncards, np.nan, dtype='float64')
         attb_str = np.zeros(ncards, dtype='|U8')
 
-        attis = []
+        atti_ints = []
+        atti_strs = []
+        atti_floats = []
         iatti = np.zeros((ncards, 2), dtype='int32')
         atti0 = 0
         for icard, card in enumerate(self.cards):
@@ -853,18 +877,31 @@ class DRESP1(VectorizedBaseCard):
             atti1 = atti0 + natti
             if response_typei == 'WEIGHT' and attii == ['ALL']:
                 attii = [-1]
-            attis.extend(attii)
+
+            if len(attii):
+                if isinstance(attii[0], int):
+                    assert response_typei not in FLOAT_RESPONSE_TYPES, response_typei
+                    atti_ints.extend(attii)
+                elif isinstance(attii[0], str):
+                    assert response_typei in {'VOLUME'}, response_typei
+                    atti_strs.extend(attii)
+                else:
+                    assert isinstance(attii[0], float), attii
+                    assert response_typei in FLOAT_RESPONSE_TYPES, response_typei
+                    atti_floats.extend(attii)
             iatti[icard, :] = [atti0, atti1]
             atti1 = atti0
 
         idtype = self.model.idtype
-        atti = np.array(attis, dtype=idtype)
+        atti_float = np.array(atti_floats, dtype=idtype)
+        atti_int = np.array(atti_ints, dtype=idtype)
+        atti_str = np.array(atti_strs, dtype='U8')
         ##xinit = np.clip(xinit, xlb, xub)
 
         self._save(dresp_id, label, response_type, property_type, region,
                    atta_type, atta_float, atta_int, atta_str,
                    attb_type, attb_float, attb_int, attb_str,
-                   iatti, atti)
+                   iatti, atti_int)
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit >= xlb, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
@@ -910,7 +947,6 @@ class DRESP1(VectorizedBaseCard):
             'TACCL', 'TDISP', 'TSPCF', 'TVELO'}
         for response_type, (iatti0, iatti1) in zip(self.response_type, self.iatti):
             if response_type in grid_flags:
-                iatti0, iatti1 = iatti
                 nodes = self.atti[iatti0:iatti1]
 
                 for i, nid1 in enumerate(nodes):
@@ -1029,8 +1065,7 @@ class DRESP2(VectorizedBaseCard):
     C1, C2, C3 are MSC specific
     """
     _id_name = 'dresp_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dresp_id = np.array([], dtype='int32')
 
         #: user-defined name for printing purposes
@@ -1359,8 +1394,7 @@ class DCONSTR(VectorizedBaseCard):
     +---------+------+-----+------------+------------+-------+--------+
     """
     _id_name = 'dconstr_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dconstr_id = np.array([], dtype='int32')
         self.dresp_id = np.array([], dtype='int32')
 
@@ -1490,8 +1524,7 @@ class DVPREL1(VectorizedBaseCard):
     +---------+--------+--------+--------+-----------+-------+--------+-----+
     """
     _id_name = 'dvprel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvprel_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.property_type = np.array([], dtype='|U8')
@@ -1665,16 +1698,16 @@ class DVPREL1(VectorizedBaseCard):
               p_min, p_max, c0, ndesvar,
               desvar_id, coefficients) -> None:
         if len(self.dvprel_id) != 0:
-             dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
-             property_id = np.hstack([self.property_id, property_id])
-             property_type = np.hstack([self.property_type, property_type])
-             field_num = np.hstack([self.field_num, field_num])
-             p_min = np.hstack([self.p_min, p_min])
-             p_max = np.hstack([self.p_max, p_max])
-             c0 = np.hstack([self.c0, c0])
-             ndesvar = np.hstack([self.ndesvar, ndesvar])
-             desvar_id = np.hstack([self.desvar_id, desvar_id])
-             coefficients = np.hstack([self.coefficients, coefficients])
+            dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
+            property_id = np.hstack([self.property_id, property_id])
+            property_type = np.hstack([self.property_type, property_type])
+            field_num = np.hstack([self.field_num, field_num])
+            p_min = np.hstack([self.p_min, p_min])
+            p_max = np.hstack([self.p_max, p_max])
+            c0 = np.hstack([self.c0, c0])
+            ndesvar = np.hstack([self.ndesvar, ndesvar])
+            desvar_id = np.hstack([self.desvar_id, desvar_id])
+            coefficients = np.hstack([self.coefficients, coefficients])
         self.dvprel_id = dvprel_id
         self.property_id = property_id
         self.property_type = property_type
@@ -1707,6 +1740,11 @@ class DVPREL1(VectorizedBaseCard):
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        dvprel_id = used_dict['dvprel_id']
+        ncards_removed = remove_unused_primary(self, dvprel_id, self.dvprel_id, 'dvprel_id')
+        return ncards_removed
 
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
@@ -1775,8 +1813,7 @@ class DVPREL2(VectorizedBaseCard):
     +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
     """
     _id_name = 'dvprel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvprel_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.property_type = np.array([], dtype='|U8')
@@ -2050,8 +2087,7 @@ class DVMREL1(VectorizedBaseCard):
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
     _id_name = 'dvmrel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2289,8 +2325,7 @@ class DVMREL2(VectorizedBaseCard):
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
     _id_name = 'dvmrel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2573,8 +2608,7 @@ class DVCREL1(VectorizedBaseCard):
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
     _id_name = 'dvcrel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')
@@ -2805,8 +2839,7 @@ class DVCREL2(VectorizedBaseCard):
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
     _id_name = 'dvcrel_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')

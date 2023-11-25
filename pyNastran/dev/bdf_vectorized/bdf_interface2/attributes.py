@@ -563,6 +563,7 @@ class BDFAttributes:
             'BUCK': 105,
             'DFREQ': 108,
             'MFREQ': 111,
+            'MFREQI': 111,
             'MTRAN': 112,
             'DCEIG': 107,
             'MCEIG': 110,

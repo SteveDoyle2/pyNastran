@@ -301,13 +301,15 @@ def faces_to_element_facelist(faces: Faces, node0: int) -> vtkIdList:
 
 def get_bar_type(ptype: str, pid_ref) -> str:
     """helper method for _get_bar_yz_arrays"""
-    if ptype in ['PBAR', 'PBEAM']:
+    if ptype in {'PROD'}:
+        bar_type = 'rod'
+    elif ptype in {'PBAR', 'PBEAM'}:
         bar_type = 'bar'
     #if ptype == 'PBAR':
         #bar_type = 'pbar'
     #elif ptype == 'PBEAM':
         #bar_type = 'pbeam'
-    elif ptype in ['PBARL', 'PBEAML']:
+    elif ptype in {'PBARL', 'PBEAML'}:
         bar_type = pid_ref.Type
     elif ptype == 'PBCOMP':
         bar_type = 'pbcomp'

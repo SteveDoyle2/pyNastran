@@ -1402,8 +1402,10 @@ def fix_loadtype_rload1(load_type: Union[int, str]) -> str:
         load_type = 'VELO'
     elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
+    elif load_type in {'FORCE'}:
+        load_type = 'FORCE'
     else:
-        msg = f'invalid RLOAD1 type  Type={load_type!r}\n'
+        msg = f'invalid RLOAD1 type; load_type={load_type!r}\n'
         raise RuntimeError(msg)
     return load_type
 
@@ -1417,7 +1419,7 @@ def fix_loadtype_rload2(load_type: Union[int, str]) -> str:
     elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
     else:
-        msg = f'invalid RLOAD2 type  Type={load_type!r}\n'
+        msg = f'invalid RLOAD2 type; load_type={load_type!r}\n'
         raise RuntimeError(msg)
     return load_type
 

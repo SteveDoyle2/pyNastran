@@ -867,8 +867,8 @@ class BDFAttributes:
         loads = [
             self.dload,
             self.darea,
-            self.tload1, self.tload2,
-            self.rload1, self.rload2,
+            self.tload1, self.tload2, # self.tload1,
+            self.rload1, self.rload2, # self.rloadex
 
             # random loads
             self.randps, self.acsrce,

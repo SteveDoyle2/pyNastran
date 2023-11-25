@@ -5,7 +5,7 @@ from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.base_card import expand_thru_by
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_float_8 # , print_card_8, print_field_8
+from pyNastran.bdf.field_writer_8 import print_float_8 # set_string8_blank_if_default, print_card_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -14,6 +14,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     components_or_blank,
     string, integer_or_string, fields,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 #from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
 from pyNastran.utils.numpy_utils import (
@@ -38,12 +39,16 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class Load(VectorizedBaseCard):
     _id_name = 'load_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
 
     def _geom_check(self) -> None:
         pass
+
+    #def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        #element_id = used_dict['load_id']
+        #ncards_removed = remove_unused_primary(self, element_id, self.element_id, 'element_id')
+        #return ncards_removed
 
     def slice_card_by_load_id(self, load_id: np.ndarray) -> Load0:
         assert len(self.load_id) > 0, self
@@ -74,19 +79,13 @@ class DEFORM(Load):
      | DEFORM | 100 | 32  | -2.6 | 5  | .9 | 6  | .9 |
      +--------+-----+-----+------+----+----+----+----+
     """
-    def slice_card_by_index(self, i: np.ndarray) -> DEFORM:
-        load = DEFORM(self.model)
-        self.__apply_slice__(load, i)
-        return
+    #def slice_card_by_index(self, i: np.ndarray) -> DEFORM:
+        #load = DEFORM(self.model)
+        #self.__apply_slice__(load, i)
+        #return
 
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         self.enforced *= xyz_scale
-
-    def __apply_slice__(self, load: DEFORM, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.elements = self.elements[i]
-        load.enforced = self.enforced[i]
 
     def add(self, sid: int, eid: int, deformation: float,
             comment: str='') -> int:
@@ -141,7 +140,6 @@ class DEFORM(Load):
             self.n += 1
         return self.n - 1
 
-
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
@@ -161,6 +159,12 @@ class DEFORM(Load):
         self.load_id = load_id
         self.elements = elements
         self.enforced = enforced
+
+    def __apply_slice__(self, load: DEFORM, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.elements = self.elements[i]
+        load.enforced = self.enforced[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         """CTUBE/CROD/CONROD/CBAR/CBEAM"""
@@ -338,6 +342,7 @@ class SPCD(Load):
 
 class Load0(Load):
     def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
         self.mag = np.array([], dtype='float64')
@@ -368,13 +373,15 @@ class Load0(Load):
         self.n += 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', default=0)
         mag = double(card, 4, 'mag')
-        xyz = [double_or_blank(card, 5, 'X1', default=0.0),
-               double_or_blank(card, 6, 'X2', default=0.0),
-               double_or_blank(card, 7, 'X3', default=0.0)]
+        xyz = [fdouble_or_blank(card, 5, 'X1', default=0.0),
+               fdouble_or_blank(card, 6, 'X2', default=0.0),
+               fdouble_or_blank(card, 7, 'X3', default=0.0)]
         assert len(card) <= 8, 'len(%s card) = %d\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
@@ -704,7 +711,7 @@ class FORCE(Load0):
 
     def sum_forces_moments(self) -> np.ndarray:
         grid = self.model.grid
-        xyz_cid0 = grid.xyz_cid0()
+        #xyz_cid0 = grid.xyz_cid0()
         nid = grid.node_id
 
         nloads = len(self.load_id)
@@ -1051,12 +1058,14 @@ class GRAV(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
-        N = [double_or_blank(card, 4, 'N1', default=0.0),
-             double_or_blank(card, 5, 'N2', default=0.0),
-             double_or_blank(card, 6, 'N3', default=0.0), ]
+        N = [fdouble_or_blank(card, 4, 'N1', default=0.0),
+             fdouble_or_blank(card, 5, 'N2', default=0.0),
+             fdouble_or_blank(card, 6, 'N3', default=0.0), ]
         main_bulk = integer_or_blank(card, 7, 'mb', default=0)
         assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         #assert not np.allclose(max(abs(N)), 0.), ('GRAV N is a zero vector, '
@@ -1856,6 +1865,7 @@ class TEMP(Load):
         temperature = np.array(temperatures, dtype='float64')
         self._save(load_id, node_id, temperature, nnodes)
         assert len(self.load_id) == self.n
+        self.sort()
         self.cards = []
 
     def _save(self, load_id, node_id, temperature, nnodes):
@@ -1952,6 +1962,7 @@ class TEMPD(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         #fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
         #sid = force_integer(card, 1, 'sid')
         #sid = integer(card, 1, 'sid')
@@ -1966,7 +1977,7 @@ class TEMPD(Load):
         for i in range(ntemps):
             n = i * 2 + 1
             load_id = integer(card, n, 'sid' + str(i))
-            temperature = double(card, n + 1, 'T' + str(i))
+            temperature = fdouble_or_blank(card, n + 1, 'T' + str(i))
             self.cards.append((load_id, temperature, comment))
             comment = ''
             self.n += 1
@@ -1984,6 +1995,7 @@ class TEMPD(Load):
             temperature[icard] = temperaturei
         self._save(load_id, temperature)
         assert len(self.load_id) == self.n
+        self.sort()
         self.cards = []
 
     def _save(self, load_id, temperature) -> None:
