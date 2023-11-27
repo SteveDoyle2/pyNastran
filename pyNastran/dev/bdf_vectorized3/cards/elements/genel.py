@@ -67,8 +67,19 @@ class GENEL(Element):
         #z = None
         #return GENEL(eid, ul, ud, k, z, s=None, comment='')
 
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.ns = np.array([], dtype='int32')
+        self.nud = np.array([], dtype='int32')
+        self.nul = np.array([], dtype='int32')
+        self.nz = np.array([], dtype='int32')
+        self.nk = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.z = np.array([], dtype='float64')
+        self.s = np.array([], dtype='float64')
+        self.ul = np.zeros((0, 2), dtype='int32')
+        self.ud = np.zeros((0, 2), dtype='int32')
         #self.property_id = np.array([], dtype='int32')
 
     #def __init__(self, eid, ul, ud, k, z, s=None, comment=''):
@@ -126,37 +137,6 @@ class GENEL(Element):
         #cls_obj = self.slice_card_by_index(i)
         #assert cls_obj.n > 0, cls_obj
         #return cls_obj
-
-    def __apply_slice__(self, element: GENEL, i: np.ndarray) -> None:
-        #print('set_id', self.set_id)
-        #print('is_skin', self.is_skin)
-        #print('num_ids', self.num_ids)
-        #print('ids', self.ids)
-        #print('i = ', i)
-        #self.set_id = np.zeros(ncards, dtype='int32')
-        #self.is_skin = np.zeros(ncards, dtype='bool')
-        #self.num_ids = np.zeros(ncards, dtype='int32')
-        #self.ids = np.array([], dtype='int32')
-
-        element.element_id = self.element_id[i]
-
-        element.k = hslice_by_idim(i, self.idim_k, self.k)
-        element.s = hslice_by_idim(i, self.idim_s, self.s)
-        element.z = hslice_by_idim(i, self.idim_z, self.z)
-
-        element.ul = hslice_by_idim(i, self.idim_ul, self.ul)
-        element.ud = hslice_by_idim(i, self.idim_ud, self.ud)
-
-        element.nk = self.nk[i]
-        element.ns = self.ns[i]
-        element.nz = self.nz[i]
-        element.nul = self.nul[i]
-        element.nud = self.nud[i]
-
-        element.n = len(self.element_id)
-        #print('--------------------------------------')
-        #print(self)
-        assert element.n > 0, element.element_id
 
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
@@ -299,6 +279,37 @@ class GENEL(Element):
         self.s = s
         self.ul = ul
         self.ud = ud
+
+    def __apply_slice__(self, element: GENEL, i: np.ndarray) -> None:
+        #print('set_id', self.set_id)
+        #print('is_skin', self.is_skin)
+        #print('num_ids', self.num_ids)
+        #print('ids', self.ids)
+        #print('i = ', i)
+        #self.set_id = np.zeros(ncards, dtype='int32')
+        #self.is_skin = np.zeros(ncards, dtype='bool')
+        #self.num_ids = np.zeros(ncards, dtype='int32')
+        #self.ids = np.array([], dtype='int32')
+
+        element.element_id = self.element_id[i]
+
+        element.k = hslice_by_idim(i, self.idim_k, self.k)
+        element.s = hslice_by_idim(i, self.idim_s, self.s)
+        element.z = hslice_by_idim(i, self.idim_z, self.z)
+
+        element.ul = hslice_by_idim(i, self.idim_ul, self.ul)
+        element.ud = hslice_by_idim(i, self.idim_ud, self.ud)
+
+        element.nk = self.nk[i]
+        element.ns = self.ns[i]
+        element.nz = self.nz[i]
+        element.nul = self.nul[i]
+        element.nud = self.nud[i]
+
+        element.n = len(self.element_id)
+        #print('--------------------------------------')
+        #print(self)
+        assert element.n > 0, element.element_id
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

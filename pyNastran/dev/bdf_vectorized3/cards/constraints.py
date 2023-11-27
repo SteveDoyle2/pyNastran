@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.dev.bdf_vectorized3.cards.base_card import remove_unused_primary, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import remove_unused_primary, remove_unused_duplicate
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
@@ -44,8 +44,12 @@ class SPC(VectorizedBaseCard):
      +-----+-----+----+----+------+----+----+----+
     """
     _id_name = 'spc_id'
-    def clear(self):
-        self.spc_id = np.array([])
+    def clear(self) -> None:
+        self.n = 0
+        self.spc_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.components = np.array([], dtype='int32')
+        self.enforced = np.array([], dtype='float64')
 
     def slice_card_by_index(self, i: np.ndarray, **kwargs) -> SPC:
         spc = SPC(self.model)
@@ -59,13 +63,6 @@ class SPC(VectorizedBaseCard):
         spc.components = self.components[i]
         spc.enforced = self.enforced[i]
         return spc
-
-    def clear(self) -> None:
-        self.spc_id = np.array([], dtype='int32')
-        self.node_id = np.array([], dtype='int32')
-        self.components = np.array([], dtype='int32')
-        self.enforced = np.array([], dtype='float64')
-        self.n = 0
 
     def add(self, spc_id: int, nodes: list[int], components: list[str],
             enforced: list[float], comment: str='') -> int:
@@ -182,11 +179,11 @@ class SPC(VectorizedBaseCard):
         used_dict['node_id'].append(self.node_id)
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
-        node_ids = used_dict['node_id']
+        #node_ids = used_dict['node_id']
         spc_ids = used_dict['spc_id']
 
         #nids_to_remove = np.intersect1d
-        ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
+        ncards_removed = remove_unused_duplicate(self, spc_ids, self.spc_id, 'spc_id')
         return ncards_removed
 
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
@@ -295,8 +292,13 @@ class SPC1(VectorizedBaseCard):
 
     """
     _id_name = 'spc_id'
-    def clear(self):
-        self.spc_id = np.array([])
+    def clear(self) -> None:
+        self.n = 0
+        self.spc_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.components = np.array([], dtype='int32')
+        self.nnodes = np.array([], dtype='int32')
+        self.enforced = np.array([], dtype='float64')
 
     def slice_card_by_id(self, spc_id: int, **kwargs) -> SPC1:
         i = np.where(spc_id == self.spc_id)[0]
@@ -325,7 +327,7 @@ class SPC1(VectorizedBaseCard):
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         #node_ids = used_dict['node_id']
         spc_ids = used_dict['spc_id']
-        ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
+        ncards_removed = remove_unused_duplicate(self, spc_ids, self.spc_id, 'spc_id')
         return ncards_removed
 
     def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> None:
@@ -396,24 +398,20 @@ class SPC1(VectorizedBaseCard):
             nid2 = nid_old_to_new.get(nid1, nid1)
             nodes[i] = nid2
 
-    def clear(self) -> None:
-        self.spc_id = np.array([], dtype='int32')
-        self.node_id = np.array([], dtype='int32')
-        self.components = np.array([], dtype='int32')
-        self.nnodes = np.array([], dtype='int32')
-        self.enforced = np.array([], dtype='float64')
-        self.n = 0
-
     @property
     def inode(self) -> np.ndarray:
         return make_idim(self.n, self.nnodes)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.spc_id.max(), self.node_id.max())
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         spc_str = array_str(self.spc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -452,8 +450,9 @@ class MPC(VectorizedBaseCard):
     +-----+-----+----+----+-----+----+----+----+-----+
     """
     _id_name = 'mpc_id'
-    def clear(self):
-        self.mpc_id = np.array([])
+    def clear(self) -> None:
+        self.n = 0
+        self.mpc_id = np.array([], dtype='int32')
 
     def add(self, mpc_id: int,
             nodes: list[int], components: list[str], coefficients: list[float],
@@ -503,37 +502,61 @@ class MPC(VectorizedBaseCard):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        self.mpc_id = np.zeros(ncards, dtype='int32')
-        self.idim = np.zeros((ncards, 2), dtype='int32')
         all_nodes = []
         all_components = []
         all_coefficients = []
         idim0 = 0
+
+        mpc_id = np.zeros(ncards, dtype='int32')
+        nnode = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            (mpc_id, nodes, components, coefficients, comment) = card
+            (mpc_idi, nodes, components, coefficients, comment) = card
 
             nnodes = len(nodes)
             idim1 = idim0 + nnodes
-            self.mpc_id[icard] = mpc_id
-            self.idim[icard, :] = [idim0, idim1]
+            mpc_id[icard] = mpc_idi
+            #idim[icard, :] = [idim0, idim1]
+            nnode[icard] = len(nodes)
             all_nodes.extend(nodes)
             all_components.extend(components)
             all_coefficients.extend(coefficients)
             idim0 = idim1
-        self.node_id = np.array(all_nodes, dtype=idtype)
-        self.components = np.array(all_components, dtype='int32')
-        self.coefficients = np.array(all_coefficients, dtype='float64')
+
+        node_id = np.array(all_nodes, dtype=idtype)
+        components = np.array(all_components, dtype='int32')
+        coefficients = np.array(all_coefficients, dtype='float64')
+        self._save(mpc_id, nnode, node_id, components, coefficients)
         #assert len(self.mpc_id) == len(self.node_id)
         #assert len(self.mpc_id) == len(self.components)
         #assert len(self.mpc_id) == len(self.coefficients)
         self.cards = []
+
+    def _save(self, mpc_id, nnode, node_id, components, coefficients) -> None:
+        if len(self.mpc_id) != 0:
+            asdf
+        self.mpc_id = mpc_id
+        self.nnode = nnode
+        self.node_id = node_id
+        self.components = components
+        self.coefficients = coefficients
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    @property
+    def idim(self) -> np.ndarray:
+        return make_idim(self.n, self.nnode)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.mpc_id.max(), self.node_id.max())
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.mpc_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         mpc_str = array_str(self.mpc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -703,8 +726,6 @@ class SPCADD(ADD):
             return
         print_card, size = get_print_card_size(size, self.max_id)
 
-        #print_card = get_print_card_8_16(size)
-
         spc_ids = array_str(self.spc_ids, size=size)
         for spc_id, idim in zip(self.spc_id, self.idim):
             idim0, idim1 = idim
@@ -819,7 +840,8 @@ class MPCADD(ADD):
 
 
 class CommonSet(VectorizedBaseCard):
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         self.node_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
 

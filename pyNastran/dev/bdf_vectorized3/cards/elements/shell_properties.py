@@ -1189,6 +1189,9 @@ class PCOMP(CompositeProperty):
             self.z0[inan] = -total_thickness[inan] / 2
         #x = 1
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
     def convert(self, xyz_scale: float=1.0,
                 nsm_per_area_scale: float=1.0,
                 temperature_scale: float=1.0, **kwargs):
@@ -1740,6 +1743,8 @@ class PCOMPG(CompositeProperty):
         self.sout = sout
         self.theta = theta
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def convert(self, xyz_scale: float=1.0,
                 nsm_per_area_scale: float=1.0,

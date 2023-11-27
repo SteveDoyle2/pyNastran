@@ -14,6 +14,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_string, fields, integer_types, float_types)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
     parse_load_check)
@@ -38,6 +39,7 @@ class QHBDY(Load):
         'AREA8' : (5, 8), # 5-8
     }
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> PLOAD1:
@@ -174,6 +176,17 @@ class QHBDY(Load):
         load.grids = hslice_by_idim(i, self.inode, self.grids)
         load.ngrid = self.ngrid[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.grids), filter_node0=False,
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        grids = self.grids[self.grids > 0]
+        used_dict['node_id'].append(grids)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.grids
@@ -212,6 +225,7 @@ class QBDY1(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, qflux: float, eids: list[int],
@@ -292,6 +306,16 @@ class QBDY1(VectorizedBaseCard):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        element_id = self.model.shell_element_ids
+        geom_check(self,
+                   missing,
+                   element_id=(element_id, self.elements),
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.elements)
+
     @property
     def ielement(self) -> np.ndarray:
         #print('ielement =', self.nelement, self.elements)
@@ -324,6 +348,7 @@ class QBDY2(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, eid: int, qfluxs: list[float],
@@ -404,6 +429,16 @@ class QBDY2(VectorizedBaseCard):
         load.qflux = hslice_by_idim(i, self.iflux, self.qflux)
         load.nflux = self.nflux[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        element_id = self.model.shell_element_ids
+        geom_check(self,
+                   missing,
+                   element_id=(element_id, self.element_id), filter_node0=False,
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
     @property
     def iflux(self) -> np.ndarray:
         return make_idim(self.n, self.nflux)
@@ -435,6 +470,7 @@ class QBDY3(Load):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.q0 = np.array([], dtype='float64')
         self.control_node = np.array([], dtype='int32')
@@ -540,6 +576,17 @@ class QBDY3(Load):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.control_node), filter_node0=False,
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.control_node)
+        used_dict['element_id'].append(self.elements)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.control_node
@@ -587,6 +634,7 @@ class QVOL(Load):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.qvol = np.array([], dtype='float64')
         self.control_node = np.array([], dtype='int32')
@@ -684,6 +732,19 @@ class QVOL(Load):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        element_id = self.model.shell_element_ids
+        geom_check(self,
+                   missing,
+                   node=(nid, self.control_node), filter_node0=False,
+                   element_id=(element_id, self.elements),
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.control_node)
+        used_dict['element_id'].append(self.elements)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.control_node
@@ -720,6 +781,7 @@ class QVOL(Load):
 
 class TEMPBC(VectorizedBaseCard):
     def clear(self) -> None:
+        self.n = 0
         self.spc_id = np.array([], dtype='int32')
         #self.control_node = np.array([], dtype='int32')
         self.temperature = np.array([], dtype='float64')
@@ -794,6 +856,16 @@ class TEMPBC(VectorizedBaseCard):
         load.nodes = hslice_by_idim(i, self.inode, self.nodes)
         load.nnode = self.nnode[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes), filter_node0=False,
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes
@@ -837,6 +909,7 @@ class RADM(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.rad_mid = np.array([], dtype='int32')
         self.absorptivity = np.array([], dtype='float64')
         self.nemissivity = np.array([], dtype='int32')
@@ -896,6 +969,9 @@ class RADM(VectorizedBaseCard):
         self.nemissivity = nemissivity
         self.emissivity = emissivity
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
     @property
     def iemissivity(self) -> np.ndarray:
         return make_idim(self.n, self.nemissivity)
@@ -926,6 +1002,7 @@ class RADBC(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.node_id = np.array([], dtype='int32')
         self.factor_ambient = np.array([], dtype='float64')
         self.control_node = np.array([], dtype='int32')
@@ -1002,6 +1079,21 @@ class RADBC(VectorizedBaseCard):
         load.control_node = self.control_node[i]
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        element_id = self.model.shell_element_ids
+        card_nodes = np.hstack([self.node_id, self.control_node])
+        geom_check(self,
+                   missing,
+                   node=(nid, card_nodes), filter_node0=False,
+                   element_id=(element_id, self.elements),
+                   )
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['node_id'].append(self.control_node)
+        used_dict['element_id'].append(self.elements)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

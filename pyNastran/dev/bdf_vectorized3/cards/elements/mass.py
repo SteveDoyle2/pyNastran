@@ -38,9 +38,11 @@ class CONM1(Element):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    @Element.clear_check
     def clear(self) -> None:
-        self.coord_id = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
         self._mass = np.zeros((0, 6, 6), dtype='float64')
 
     def add(self, eid: int, nid: int, mass_matrix: np.ndarray,
@@ -133,6 +135,10 @@ class CONM1(Element):
         self.coord_id = coord_id
         self._mass = mass
         self.n = len(element_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -228,6 +234,14 @@ class CONM2(Element):
     +-------+--------+-------+-------+---------+------+------+------+
 
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self._mass = np.array([], dtype='float64')
+        self.coord_id = np.array([], dtype='float64')
+        self.node_id = np.array([], dtype='int32')
+        self.xyz_offset = np.zeros((0, 3), dtype='float64')
+        self.inertia = np.zeros((0, 6), dtype='float64')
 
     def add(self, eid: int, nid: int, mass: float, cid: int=0,
             X: Optional[list[float]]=None, I: Optional[list[float]]=None,
@@ -328,6 +342,10 @@ class CONM2(Element):
         self.xyz_offset = xyz_offset
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

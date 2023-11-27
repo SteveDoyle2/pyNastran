@@ -28,8 +28,15 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CFAST(Element):
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.fast_type = np.array([], dtype='int32')
+        self.ids = np.zeros((0, 2), dtype='int32')
+        self.fastener_node = np.array([], dtype='int32')
+        self.fastener_xyz = np.zeros((0, 3), dtype='float64')
 
     def add(self, eid: int, pid: int, fast_type: str,
             ids: list[int],
@@ -143,6 +150,11 @@ class CFAST(Element):
         elem.fastener_xyz = self.fastener_xyz[i, :]
         elem.n = len(i)
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['node_id'].append(self.fastener_node)
+
     def set_from_op2(self, element_id, property_id, gs, elem_grid_flag, nodes):
         assert element_id.min() > 0, element_id
         assert property_id.min() > 0, property_id
@@ -204,15 +216,16 @@ class PFAST(Property):
     |PFAST |  7  | 1.1 | 70   |       | 100000. | 46000. | 12300. |     |
     +------+-----+-----+------+-------+---------+--------+--------+-----+
     """
+    @Property.clear_check
     def clear(self) -> None:
-        self.property_id = np.zeros(0, dtype='int32')
-        self.diameter = np.zeros(0, dtype='float64')
+        self.property_id = np.array([], dtype='int32')
+        self.diameter = np.array([], dtype='float64')
         self.kt = np.zeros((0, 3), dtype='float64')
         self.kr = np.zeros((0, 3), dtype='float64')
-        self._mass = np.zeros(0, dtype='float64')
-        self.ge = np.zeros(0, dtype='float64')
-        self.mflag = np.zeros(0, dtype='int32')
-        self.coord_id = np.zeros(0, dtype='int32')
+        self._mass = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.mflag = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
 
     def add(self, pid: int, d: int,
             kt1: float, kt2: float, kt3: float,
@@ -337,10 +350,12 @@ class PFAST(Property):
         prop.kt = self.kt[i]
         prop.kr = self.kr[i]
         prop.coord_id = self.coord_id[i]
-        prop.coord_id = self.coord_id[i]
         prop.mflag = self.mflag[i]
         prop.ge = self.ge[i]
         prop.n = len(i)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['coord_id'].append(self.coord_id)
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

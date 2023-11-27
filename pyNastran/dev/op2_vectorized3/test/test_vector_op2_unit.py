@@ -958,7 +958,7 @@ class TestOP2(unittest.TestCase):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         #model.safe_cross_reference()
-        save_load_deck(model, run_test_bdf=False, run_mass_properties=False)
+        save_load_deck(model, run_test_bdf=False, run_mass_properties=False, run_remove_unused=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1324,7 +1324,7 @@ class TestOP2(unittest.TestCase):
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False, run_remove_unused=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,

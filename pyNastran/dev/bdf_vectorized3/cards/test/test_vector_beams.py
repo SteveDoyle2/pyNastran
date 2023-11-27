@@ -1326,7 +1326,7 @@ class TestBeams(unittest.TestCase):
                                       bit=None, pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
         #model.uncross_reference()
         model.cross_reference()
-        cbeam = model.cbeam.slice_card_by_index(cbeam_index-1)
+        cbeam = model.cbeam.slice_card_by_index(cbeam_index)
 
         cg = cbeam.center_of_mass()
         centroid = cbeam.centroid()

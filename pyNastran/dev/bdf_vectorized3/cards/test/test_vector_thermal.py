@@ -37,6 +37,11 @@ class TestThermal(unittest.TestCase):
         model.add_grid(13, [1., 1., 0.])
         model.add_grid(14, [0., 1., 0.])
         model.add_grid(15, [0., 2., 0.])
+        model.add_grid(16, [0., 3., 0.])
+        model.add_grid(33, [0., 4., 0.])
+        model.add_grid(57, [0., 5., 0.])
+        model.add_grid(1000, [0., 6., 0.])
+        model.add_grid(1001, [0., 7., 0.])
 
         eid = 1
         pid = 1

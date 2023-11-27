@@ -2494,7 +2494,8 @@ class CAABSF(Element):
     | CAABSF |  EID  |  PID  | N1 | N2 | N3 | N4 |
     +--------+-------+-------+----+----+----+----+
     """
-    type = 'CAABSF'
+    #type = 'CAABSF'
+    @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
@@ -2576,6 +2577,10 @@ class CAABSF(Element):
         self.property_id = property_id
         self.nodes = nodes
         self.n = nelements
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

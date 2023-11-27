@@ -54,7 +54,15 @@ class MONPNT1(VectorizedBaseCard):
     """
     _id_name = 'name'
     def clear(self) -> None:
+        self.n = 0
         self.name = np.array([], dtype='int32')
+        self.label = np.array([], dtype='|U72')
+        #self.table = np.array([], dtype='|U8')
+        self.axes = np.array([], dtype='|U8')
+        self.comp = np.array([], dtype='|U8')
+        self.xyz = np.zeros((0, 3), dtype='float64')
+        self.cp = np.array([], dtype='int32')
+        self.cd = np.array([], dtype='int32')
 
     #def __len__(self) -> int:
         #return len(self.name)
@@ -162,6 +170,12 @@ class MONPNT1(VectorizedBaseCard):
         monitor.xyz = self.xyz[i, :]
         monitor.cd = self.cd[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        # comp
+        used_dict['coord_id'].append(self.cp)
+        cd = self.cd[self.cd >= 0]
+        used_dict['coord_id'].append(cd)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
                           #msg=f'no materials for {self.type}')
@@ -217,6 +231,7 @@ class MONPNT2(VectorizedBaseCard):
     """NX/MSC Nastran card"""
     _id_name = 'name'
     def clear(self) -> None:
+        self.n = 0
         self.name = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U72')
         self.table = np.array([], dtype='|U8')
@@ -305,6 +320,9 @@ class MONPNT2(VectorizedBaseCard):
         monitor.nddl_item = self.nddl_item[i]
         monitor.element_id = self.element_id[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
     #def geom_check(self, missing: dict[str, np.ndarray]):
         ##mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
                           ##msg=f'no materials for {self.type}')
@@ -349,6 +367,7 @@ class MONPNT3(VectorizedBaseCard):
     _id_name = 'name'
 
     def clear(self) -> None:
+        self.n = 0
         self.name = np.array([], dtype='|U8')
         self.label = np.array([], dtype='|U72')
         self.axes = np.array([], dtype='int32')
@@ -439,6 +458,10 @@ class MONPNT3(VectorizedBaseCard):
         self.xyz = xyz
         self.cd = cd
         self.xflag = xflag
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['coord_id'].append(self.cp)
+        used_dict['coord_id'].append(self.cd)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],

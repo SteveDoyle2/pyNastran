@@ -39,6 +39,15 @@ class CONROD(Element):
     | CONROD | EID | N1  | N2 | MID | A | J | C | NSM |
     +--------+-----+-----+----+-----+---+---+---+-----+
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.A = np.array([], dtype='float64')
+        self.J = np.array([], dtype='float64')
+        self.c = np.array([], dtype='float64')
+        self.nsm = np.array([], dtype='float64')
 
     def add(self, eid: int, mid: int, nodes: list[int],
             A: float=0.0, j: float=0.0, c: float=0.0, nsm: float=0.0,
@@ -235,6 +244,12 @@ class CROD(Element):
     | CROD | EID | PID | N1 | N2 |
     +------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nodes: list[int], comment: str='') -> int:
         """
         Creates a CROD card
@@ -557,6 +572,12 @@ class CTUBE(Element):
     | CTUBE | EID | PID | N1 | N2 |
     +-------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CTUBE card

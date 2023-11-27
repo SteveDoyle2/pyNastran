@@ -1691,6 +1691,7 @@ class CBARAO(Element):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.scale = np.array([], dtype='|U3')
         self.g0 = np.array([], dtype='int32')

@@ -31,6 +31,13 @@ class CELAS1(Element):
     | CELAS1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int],
             c1: int=0, c2: int=0, comment: str='') -> int:
         """
@@ -159,6 +166,13 @@ class CELAS2(Element):
     | CELAS2 | EID |  K  | G1 | C1 | G2 | C2 | GE | S  |
     +--------+-----+-----+----+----+----+----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, k: float, nids: list[int],
             c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> int:
         """
@@ -287,6 +301,12 @@ class CELAS3(Element):
     | CELAS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.spoints = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CELAS3 card
@@ -386,6 +406,12 @@ class CELAS4(Element):
     | CELAS4 | EID |  K  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.spoints = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, k: float, nids: list[int], comment: str='') -> int:
         """
         Creates a CELAS4 card
@@ -472,6 +498,7 @@ class PELAS(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.k = np.array([], dtype='float64')
@@ -560,6 +587,9 @@ class PELAS(Property):
     def validate(self) -> None:
         return
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['pelast_id'].append(self.property_id)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -583,6 +613,7 @@ class PELAST(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.array = np.array([], dtype='int32')
         self.table_k: np.array = np.array([], dtype='int32')
@@ -657,6 +688,9 @@ class PELAST(Property):
         self.table_k = table_k
         self.table_ge = table_ge
         self.table_k_nonlinear = table_k_nonlinear
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass

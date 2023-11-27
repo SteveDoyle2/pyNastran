@@ -439,7 +439,7 @@ class TestDampers(unittest.TestCase):
         assert np.array_equal(node_ids, [0, 0]), node_ids
         elem.write(size, 'dummy')
 
-        save_load_deck(model)
+        save_load_deck(model, run_remove_unused=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_node_check, get_print_card_8_16,
-    hslice_by_idim, make_idim)
+    hslice_by_idim, make_idim, remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -798,6 +798,7 @@ class SUPORT(VectorizedBaseCard):
     """
     _id_name = 'suport_id'
     def clear(self) -> None:
+        self.n = 0
         #self._is_sorted = False
         self.suport_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
@@ -973,6 +974,12 @@ class SUPORT(VectorizedBaseCard):
         #self.__apply_slice__(grid, i)
         #return grid
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        suport_id = used_dict['suport_id']
+        ncards_removed = remove_unused_duplicate(
+            self, suport_id, self.suport_id, 'suport_id')
+        return ncards_removed
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -1108,6 +1115,7 @@ class SUPORT(VectorizedBaseCard):
 class USET(VectorizedBaseCard):
     _id_name = 'name'
     def clear(self) -> None:
+        self.n = 0
         #self._is_sorted = False
         self.name = np.array([], dtype='|U8')
         self.component = np.array([], dtype='int32')
@@ -1411,6 +1419,7 @@ class USET(VectorizedBaseCard):
 class RADSET(VectorizedBaseCard):
     _id_name = 'cavity_id'
     def clear(self) -> None:
+        self.n = 0
         self.cavity_id = np.array([], dtype='int32')
 
     def add(self, cavity_ids: list[int], comment: str='') -> int:
@@ -1525,6 +1534,7 @@ class SET1(VectorizedBaseCard):
     """
     _id_name = 'set_id'
     def clear(self) -> None:
+        self.n = 0
         self.set_id = np.array([], dtype='int32')
         self.is_skin = np.array([], dtype='bool')
         self.ids = np.array([], dtype='int32')
@@ -1741,6 +1751,7 @@ class SET3(VectorizedBaseCard):
     """
     _id_name = 'set_id'
     def clear(self) -> None:
+        self.n = 0
         self.set_id = np.array([], dtype='int32')
         self.desc = np.array([], dtype='|U5')  #  POINT
         self.ids = np.array([], dtype='int32')
@@ -1840,6 +1851,9 @@ class SET3(VectorizedBaseCard):
         #assert isinstance(prop.ndim, np.ndarray), prop.ndim
         #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -1881,6 +1895,7 @@ def split_set3_ids(idsi: list[int, str]) -> list[int]:
 class SESET(VectorizedBaseCard):
     _id_name = 'seid'
     def clear(self) -> None:
+        self.n = 0
         self.seid = np.array([], dtype='int32')
         self.ids = np.array([], dtype='int32')
         self.num_ids = np.array([], dtype='int32')

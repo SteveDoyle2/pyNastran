@@ -46,6 +46,7 @@ class CBUSH(Element):
     |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
+    @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
 
@@ -444,7 +445,6 @@ class PBUSH(Property):
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
-
         self.k_fields = np.zeros((0, 6), dtype='float64')
         self.b_fields = np.zeros((0, 6), dtype='float64')
         self.ge_fields = np.zeros((0, 6), dtype='float64')
@@ -586,6 +586,21 @@ class PBUSH(Property):
                    _mass, alpha, tref, coincident_length)
         self.cards = []
 
+    def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
+              _mass, alpha, tref, coincident_length) -> None:
+        self.property_id = property_id
+        self.k_fields = k_fields
+        self.b_fields = b_fields
+        self.ge_fields = ge_fields
+        self.rcv_fields = rcv_fields
+        self._mass = _mass
+        self.alpha = alpha
+        self.tref = tref
+        self.coincident_length = coincident_length
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['pbusht_id'].append(self.property_id)
+
     def convert(self,
                 xyz_scale: float=1.0,
                 mass_scale: float=1.0,
@@ -604,19 +619,6 @@ class PBUSH(Property):
         self.coincident_length *= temperature_scale
         self.tref *= xyz_scale
         self.alpha *= alpha_scale
-
-    def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
-              _mass, alpha, tref, coincident_length) -> None:
-        self.property_id = property_id
-        self.k_fields = k_fields
-        self.b_fields = b_fields
-        self.ge_fields = ge_fields
-        self.rcv_fields = rcv_fields
-        self._mass = _mass
-        self.alpha = alpha
-        self.tref = tref
-        self.coincident_length = coincident_length
-
 
     @classmethod
     def _read_var(cls, card, var_prefix, istart, iend):
@@ -838,6 +840,12 @@ class PBUSHT(Property):
         prop.kn_tables = self.kn_tables[i, :]
         prop.n = len(i)
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['tabled_id'].append(self.k_tables.ravel())
+        used_dict['tabled_id'].append(self.b_tables.ravel())
+        used_dict['tabled_id'].append(self.ge_tables.ravel())
+        used_dict['tabled_id'].append(self.kn_tables.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -895,6 +903,7 @@ def _set_fields_pbush(list_fields: list[Any], var: str, fields: list[Any]):
 
 
 class CBUSH1D(Element):
+    @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
 
@@ -1408,6 +1417,8 @@ class PBUSH1D(Property):
                    #property_id=(pids, self.property_id)
         #)
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

@@ -8,7 +8,7 @@ RUN_OP2 = False
 
 
 class TestConstraints(unittest.TestCase):
-    def test_support_01(self):
+    def test_suport_01(self):
         model = BDF(debug=False)
         suport = model.suport
 
@@ -157,8 +157,8 @@ class TestConstraints(unittest.TestCase):
         model.setup(run_geom_check=True)
         msg_actual = mpc.write(size=8)
         self.assertEqual(
-           #'MPC            1    1002       1      1.    1000       1  -3.861\n',
-            'MPC            1    1002       1      1.    1000       1-3.86100\n',
+           'MPC            1    1002       1      1.    1000       1  -3.861\n',
+            #'MPC            1    1002       1      1.    1000       1-3.86100\n',
             msg_actual)
 
     def test_mpc_02(self):

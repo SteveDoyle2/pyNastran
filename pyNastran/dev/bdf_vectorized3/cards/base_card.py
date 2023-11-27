@@ -104,13 +104,16 @@ class VectorizedBaseCard:
         self.model = model
         self.cards: list[tuple] = []
         self.comment: dict[int, str] = {}
-        self.n = 0
         self.debug = False
         self.write_default_fields = True
         self.id = np.array([], dtype='int32')
         self.comment: dict[int, str] = {}
+        #self.n = 0
         if hasattr(self, 'clear'):
             self.clear()
+        #else:
+            #self.n = 0
+        assert self.n >= 0
 
     def __len__(self) -> int:
         return self.n
@@ -305,6 +308,7 @@ class VectorizedBaseCard:
         assert len(self_ids), self_ids
         i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
         assert len(i) > 0, i
+        assert i.min() >= 0, i
         if sort_index:
             i.sort()
             imax = i[-1]
@@ -374,7 +378,7 @@ class VectorizedBaseCard:
             if not np.array_equal(actual_ids, ids):
                 print(self.type)
                 print(f'self.{self._id_name}= {self_ids}')
-                print(f'{self._id_name} = {ids}')
+                print(f'{self._id_name}     = {ids}')
                 missing = np.setdiff1d(self_ids, ids)
                 assert len(missing) > 0, missing
 
@@ -684,6 +688,7 @@ def remove_unused_primary(card, used_ids: np.ndarray, ids: np.ndarray,
     spc_ids = used_dict['spc_id']
     ncards_removed = remove_unused_primary(self, spc_ids, self.spc_id, 'spc_id')
     """
+    assert len(ids) == len(np.unique(ids)), f'{card.type}: did you mean to use remove_unused_duplicate?'
     spc_id = np.intersect1d(used_ids, ids)
     removed_id = np.setdiff1d(ids, used_ids)
     ncards_removed = len(ids) - len(spc_id)
@@ -698,4 +703,16 @@ def remove_unused_primary(card, used_ids: np.ndarray, ids: np.ndarray,
                 raise RuntimeError(card.get_stats())
             except ValueError:
                 raise RuntimeError(f'{card.type} {ids_str} is empty...n={card.n}')
+    return ncards_removed
+
+def remove_unused_duplicate(card, used_ids: np.ndarray, ids: np.ndarray,
+                            ids_str: str) -> int:
+    """FORCE, FORCE1, LOAD, ..."""
+    index = np.array([i for i, load_id in enumerate(ids)])
+    if len(index):
+        card.__apply_slice__(card, index)
+        ncards_removed = len(index)
+    else:
+        card.clear()
+        ncards_removed = 0
     return ncards_removed

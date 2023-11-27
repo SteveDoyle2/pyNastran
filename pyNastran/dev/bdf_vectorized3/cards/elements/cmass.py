@@ -24,6 +24,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CMASS1(Element):
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int],
             c1: int=0, c2: int=0, comment: str='') -> int:
         """
@@ -195,6 +202,13 @@ class CMASS2(Element):
     +--------+-----+-----+----+----+----+----+
 
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self._mass = np.array([], dtype='float64')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, mass: float, nids: list[int],
             c1: int, c2: int, comment: str='') -> int:
         """
@@ -296,6 +310,12 @@ class CMASS2(Element):
 
 
 class CMASS3(Element):
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.spoints = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CMASS3 card
@@ -409,6 +429,12 @@ class CMASS4(Element):
     +--------+-----+-----+----+----+
 
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self._mass = np.array([], dtype='float64')
+        self.spoints = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, mass: float, nids: list[int], comment: str='') -> int:
         """
         Creates a CMASS4 card
@@ -568,6 +594,9 @@ class PMASS(Property):
         prop.property_id = self.property_id[i]
         prop._mass = self._mass[i]
         prop.n = len(i)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

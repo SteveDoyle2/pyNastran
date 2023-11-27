@@ -26,14 +26,13 @@ from .solid_volume import volume_ctetra, volume_cpenta, volume_cpyram, volume_ch
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
 class SolidElement(Element):
-    def clear(self):
-        self.nnode = 0
-        self.nnode_base = 0
+    nnode = 0
+    nnode_base = 0
 
     @Element.clear_check
     def clear(self) -> None:
@@ -142,10 +141,11 @@ class SolidElement(Element):
 
 
 class CTETRA(SolidElement):
-    def clear(self):
+    nnode = 10
+    nnode_base = 4
+    def clear(self) -> None:
+        self.n = 0
         self.nodes = np.zeros((0, 10), dtype='int32')
-        self.nnode = 10
-        self.nnode_base = 4
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -338,10 +338,11 @@ class CPENTA(SolidElement):
     +--------+-----+-----+----+----+----+----+----+----+
 
     """
-    def clear(self):
+    nnode = 15
+    nnode_base = 6
+    def clear(self) -> None:
+        self.n = 0
         self.nodes = np.zeros((0, 15), dtype='int32')
-        self.nnode = 15
-        self.nnode_base = 6
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -478,10 +479,11 @@ class CPENTA(SolidElement):
 
 
 class CPYRAM(SolidElement):
-    def clear(self):
+    nnode = 13
+    nnode_base = 5
+    def clear(self) -> None:
+        self.n = 0
         self.nodes = np.zeros((0, 13), dtype='int32')
-        self.nnode = 13
-        self.nnode_base = 5
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -593,10 +595,11 @@ class CPYRAM(SolidElement):
         return out
 
 class SolidHex(SolidElement):
-    def clear(self):
+    nnode_base = 8
+    nnode = 20
+    def clear(self) -> None:
+        self.n = 0
         self.nodes = np.zeros((0, 20), dtype='int32')
-        self.nnode_base = 8
-        self.nnode = 20
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -1032,8 +1035,8 @@ class PLSOLID(Property):
 
 
 class PCOMPS(Property):
+    @Property.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -1334,8 +1337,8 @@ class PCOMPLS(Property):
     |         | 100  |   175  |   .7   |  77.7  |        |
     +---------+------+--------+--------+--------+--------+
     """
+    @Property.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
 

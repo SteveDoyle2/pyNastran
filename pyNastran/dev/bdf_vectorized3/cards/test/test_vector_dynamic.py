@@ -339,6 +339,7 @@ class TestDynamic(unittest.TestCase):
         components = 2
         delays = 1.5
         delayi = model.add_delay(delay_id, nodes, components, delays)
+        model.add_grid(nodes, [0., 0., 0.])
 
         if TEST_DYNAMIC:
             x1 = 0.1
@@ -447,6 +448,7 @@ class TestDynamic(unittest.TestCase):
         components = 2
         delays = 1.5
         delayi = model.add_delay(delay_id, nodes, components, delays)
+        model.add_grid(nodes, [0., 0., 0.])
 
         model.pop_parse_errors()
 
@@ -889,8 +891,8 @@ class TestDynamic(unittest.TestCase):
         model.pop_parse_errors()
         model.setup()
 
-        card1 = rforce1.slice_card_by_index([rforce1_id1-1]).write(size=8)
-        card2 = rforce1.slice_card_by_index([rforce1_id2-1]).write(size=8)
+        card1 = rforce1.slice_card_by_index([rforce1_id1]).write(size=8)
+        card2 = rforce1.slice_card_by_index([rforce1_id2]).write(size=8)
         rforce1.write(size=16, is_double=False)
         rforce1.write(size=16, is_double=True)
         #rforce1.raw_fields()

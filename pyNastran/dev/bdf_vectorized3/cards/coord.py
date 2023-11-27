@@ -533,8 +533,8 @@ class COORD(VectorizedBaseCard):
 
         dn = self.n - ncoords
         i0 = len(self.icoord)
+        idtype = self.model.idtype
         if dn:
-            idtype = self.model.idtype
             self.coord_type = np.hstack([self.coord_type, np.zeros(ncoords, dtype='|U1')])
             self.icoord = np.hstack([self.icoord, np.zeros(ncoords, dtype='int8')])
 

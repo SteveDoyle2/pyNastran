@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class RigidElement(VectorizedBaseCard):
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
@@ -79,6 +80,7 @@ class RBAR(RigidElement):
     TREF was added in MSC 2021
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def add(self, eid: int, nids: list[int],
@@ -230,6 +232,7 @@ class RROD(RigidElement):
     +------+-----+----+----+-----+-----+-------+
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def add(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> int:
@@ -355,6 +358,7 @@ class RBAR1(RigidElement):
     +-------+-----+----+----+-----+-------+
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def add(self, eid: int, nids: list[int],
@@ -485,6 +489,7 @@ class RBE1(RigidElement):
     +------+-----+-----+-----+-------+-----+-----+-----+
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def add(self, eid: int,
@@ -703,6 +708,7 @@ class RBE2(RigidElement):
     TREF was added in MSC 2021
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def __apply_slice__(self, element: RBE2, i: np.ndarray):
@@ -884,6 +890,7 @@ class RBE3(RigidElement):
     +------+---------+---------+---------+------+--------+--------+------+--------+
     """
     def clear(self) -> None:
+        self.n = 0
         self.element_id = np.array([])
 
     def __apply_slice__(self, element: RBE2, i: np.ndarray):

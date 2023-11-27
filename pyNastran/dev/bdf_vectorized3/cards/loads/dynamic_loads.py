@@ -28,7 +28,8 @@ from pyNastran.bdf.cards.loads.dloads import (
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim,
     hslice_by_idim, vslice_by_idim,
-    parse_load_check, # get_print_card_8_16,
+    remove_unused_primary, remove_unused_duplicate,
+    parse_load_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
@@ -57,6 +58,7 @@ class DLOAD(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.nloads = np.array([], dtype='int32')
         self.load_ids = np.array([], dtype='int32')
@@ -147,6 +149,15 @@ class DLOAD(VectorizedBaseCard):
     @property
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['load_id'].append(self.load_ids)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_primary(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
 
     @property
     def max_id(self) -> int:
@@ -257,6 +268,7 @@ class DAREA(VectorizedBaseCard):
     +-------+-----+----+----+-----+----+----+------+
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> DAREA:
@@ -352,6 +364,9 @@ class DAREA(VectorizedBaseCard):
         self.component = component
         self.scale = scale
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -405,6 +420,7 @@ class TLOAD1(VectorizedBaseCard):
     +--------+-----+----------+-------+------+-----+
     """
     def clear(self) -> None:
+        self.n = 0
         #: Set identification number
         self.load_id = np.array([], dtype='int32')
 
@@ -578,6 +594,20 @@ class TLOAD1(VectorizedBaseCard):
         self.us0 = us0
         self.vs0 = vs0
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        # TODO: self.excite_id
+        delay = self.delay_int[self.delay_int > 0]
+        used_dict['delay_id'].append(delay)
+        table = self.tabled_id
+        tabled = table[table > 0]
+        used_dict['tabled_id'].append(tabled)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_duplicate(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
+
     @property
     def max_id(self):
         return max(self.load_id.max(),
@@ -589,6 +619,8 @@ class TLOAD1(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         #array_str, array_default_int
@@ -653,12 +685,13 @@ class TLOAD2(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
-    def slice_card_by_index(self, i: np.ndarray) -> TLOAD2:
-        load = TLOAD2(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> TLOAD2:
+        #load = TLOAD2(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: TLOAD2, i: np.ndarray) -> None:
         load.n = len(i)
@@ -838,6 +871,11 @@ class TLOAD2(VectorizedBaseCard):
         self.us0 = us0
         self.vs0 = vs0
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        # TODO: self.excite_id
+        delay = self.delay_int[self.delay_int > 0]
+        used_dict['delay_id'].append(delay)
+
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(),
@@ -906,12 +944,13 @@ class RLOAD1(VectorizedBaseCard):
     NX allows DELAY and DPHASE to be floats
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
-    def slice_card_by_index(self, i: np.ndarray) -> RLOAD1:
-        load = RLOAD1(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> RLOAD1:
+        #load = RLOAD1(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: RLOAD1, i: np.ndarray) -> None:
         #self.model.log.info(self.dphase_int)
@@ -1068,6 +1107,16 @@ class RLOAD1(VectorizedBaseCard):
         self.tabled_d_int = tabled_d_int
         self.tabled_d_float = tabled_d_float
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        # TODO: excite_id
+        delay = self.delay_int[self.delay_int > 0]
+        dphase = self.dphase_int[self.dphase_int > 0]
+        used_dict['delay_id'].append(delay)
+        used_dict['dphase_id'].append(dphase)
+        for table in (self.tabled_c_int, self.tabled_d_int):
+            tabled = table[table > 0]
+            used_dict['tabled_id'].append(tabled)
+
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.excite_id.max(),
@@ -1136,12 +1185,13 @@ class RLOAD2(VectorizedBaseCard):
     NX allows DELAY and DPHASE to be floats
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
-    def slice_card_by_index(self, i: np.ndarray) -> RLOAD2:
-        load = RLOAD2(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> RLOAD2:
+        #load = RLOAD2(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: RLOAD2, i: np.ndarray) -> None:
         self.model.log.info(self.dphase_int)
@@ -1326,6 +1376,16 @@ class RLOAD2(VectorizedBaseCard):
         self.tabled_phi_int = tabled_phi_int
         self.tabled_phi_float = tabled_phi_float
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        # TODO: excite_id
+        delay = self.delay_int[self.delay_int > 0]
+        dphase = self.dphase_int[self.dphase_int > 0]
+        used_dict['delay_id'].append(delay)
+        used_dict['dphase_id'].append(dphase)
+        for table in (self.tabled_b_int, self.tabled_phi_int):
+            tabled = table[table > 0]
+            used_dict['tabled_id'].append(tabled)
+
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.excite_id.max(),
@@ -1437,15 +1497,16 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
     GRID       913      50.  0.19  -39.9
     """
     def clear(self) -> None:
+        self.n = 0
         self.lseq_id = np.array([], dtype='int32')
         self.excite_id = np.array([], dtype='int32')
         self.load_id = np.array([], dtype='int32')
         self.temperature_id = np.array([], dtype='int32')
 
-    def slice_card_by_index(self, i: np.ndarray) -> LSEQ:
-        load = LSEQ(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> LSEQ:
+        #load = LSEQ(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: LSEQ, i: np.ndarray) -> None:
         load.n = len(i)
@@ -1548,6 +1609,7 @@ class TIC(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.tic_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
 
@@ -1603,6 +1665,9 @@ class TIC(VectorizedBaseCard):
         self.component = component
         self.u0 = u0
         self.v0 = v0
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -1707,6 +1772,7 @@ class TF(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.tf_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
@@ -1852,6 +1918,16 @@ class TF(VectorizedBaseCard):
         tf.a = vslice_by_idim(i, inode, self.a)
         tf.nnode = self.nnode[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        tf_id = used_dict['tf_id']
+        ncards_removed = remove_unused_primary(
+            self, tf_id, self.tf_id, 'tf_id')
+        return ncards_removed
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
         nodes = np.hstack([self.node_id, self.nodes.ravel()])
@@ -1938,6 +2014,7 @@ class DELAY(VectorizedBaseCard):
         #super().__init__(model)
         #self._is_sorted = False
     def clear(self) -> None:
+        self.n = 0
         self.delay_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
 
@@ -1953,42 +2030,14 @@ class DELAY(VectorizedBaseCard):
         #tic = self.slice_card_by_index(inid)
         #return grid
 
-    def slice_card_by_index(self, i: np.ndarray) -> DELAY:
-        """uses a node_index to extract DELAYs"""
-        assert len(self.node_id) > 0, self.node_id
-        i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
-        i.sort()
-        delay = DELAY(self.model)
-        self.__apply_slice__(delay, i)
-        return delay
-
-    def __apply_slice__(self, delay: DELAY, i: np.ndarray) -> None:
-        delay.n = len(i)
-        delay._is_sorted = self._is_sorted
-        delay.node_id = self.node_id[i]
-        delay.delay_id = self.delay_id[i]
-        delay.delay = self.delay[i]
-        delay.component = self.component[i]
-
-    @property
-    def max_id(self) -> int:
-        return max(self.delay_id.max(), self.node_id.max(),)
-
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        if len(self.delay_id) == 0:
-            return
-
-        print_card, size = get_print_card_size(size, self.max_id)
-        delay_ids = array_str(self.delay_id, size=size)
-        node_id = array_str(self.node_id, size=size)
-        components = array_default_int(self.component, size=size, default=0)
-
-        for sid, nid, comp, delay in zip_longest(delay_ids, node_id, components, self.delay):
-            list_fields = ['DELAY', sid, nid, comp, delay]
-            bdf_file.write(print_card(list_fields))
-        return
+    #def slice_card_by_index(self, i: np.ndarray) -> DELAY:
+        #"""uses a node_index to extract DELAYs"""
+        #assert len(self.node_id) > 0, self.node_id
+        #i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
+        #i.sort()
+        #delay = DELAY(self.model)
+        #self.__apply_slice__(delay, i)
+        #return delay
 
     def add(self, sid: int, nid: int, component: int=0,
             delay: float=0.0, comment: str='') -> int:
@@ -2065,6 +2114,42 @@ class DELAY(VectorizedBaseCard):
         self.component = component
         self.delay = delay
 
+    def __apply_slice__(self, delay: DELAY, i: np.ndarray) -> None:
+        delay.n = len(i)
+        delay.node_id = self.node_id[i]
+        delay.delay_id = self.delay_id[i]
+        delay.delay = self.delay[i]
+        delay.component = self.component[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        delay_id = used_dict['delay_id']
+        ncards_removed = remove_unused_duplicate(
+            self, delay_id, self.delay_id, 'delay_id')
+        return ncards_removed
+
+    @property
+    def max_id(self) -> int:
+        return max(self.delay_id.max(), self.node_id.max(),)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.delay_id) == 0:
+            return
+
+        print_card, size = get_print_card_size(size, self.max_id)
+        delay_ids = array_str(self.delay_id, size=size)
+        node_id = array_str(self.node_id, size=size)
+        components = array_default_int(self.component, size=size, default=0)
+
+        for sid, nid, comp, delay in zip_longest(delay_ids, node_id, components, self.delay):
+            list_fields = ['DELAY', sid, nid, comp, delay]
+            bdf_file.write(print_card(list_fields))
+        return
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -2108,8 +2193,10 @@ class DPHASE(VectorizedBaseCard):
         #self._is_sorted = False
 
     def clear(self) -> None:
+        self.n = 0
         self.dphase_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
+        self.component = np.array([], dtype='int32')
 
         # sid : int
         #     DPHASE id that is referenced by a RLOADx or ACSRCE card
@@ -2137,42 +2224,14 @@ class DPHASE(VectorizedBaseCard):
         #tic = self.slice_card_by_index(inid)
         #return grid
 
-    def slice_card_by_index(self, i: np.ndarray) -> DPHASE:
-        """uses a node_index to extract DELAYs"""
-        assert len(self.node_id) > 0, self.node_id
-        i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
-        i.sort()
-        dphase = DPHASE(self.model)
-        self.__apply_slice__(dphase, i)
-        return dphase
-
-    def __apply_slice__(self, dphase: DPHASE, i: np.ndarray) -> None:
-        dphase.n = len(i)
-        dphase._is_sorted = self._is_sorted
-        dphase.dphase_id = self.dphase_id[i]
-        dphase.node_id = self.node_id[i]
-        dphase.component = self.component[i]
-        dphase.phase_lead = self.phase_lead[i]
-
-    @property
-    def max_id(self) -> int:
-        return max(self.dphase_id.max(), self.node_id.max(),)
-
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        if len(self.dphase_id) == 0:
-            return
-
-        print_card, size = get_print_card_size(size, self.max_id)
-        dphase_ids = array_str(self.dphase_id, size=size)
-        node_id = array_str(self.node_id, size=size)
-        components = array_default_int(self.component, size=size, default=0)
-
-        for sid, nid, comp, phase_lead in zip_longest(dphase_ids, node_id, components, self.phase_lead):
-            list_fields = ['DPHASE', sid, nid, comp, phase_lead]
-            bdf_file.write(print_card(list_fields))
-        return
+    #def slice_card_by_index(self, i: np.ndarray) -> DPHASE:
+        #"""uses a node_index to extract DELAYs"""
+        #assert len(self.node_id) > 0, self.node_id
+        #i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
+        #i.sort()
+        #dphase = DPHASE(self.model)
+        #self.__apply_slice__(dphase, i)
+        #return dphase
 
     def add(self, sid: int, nid: int, component: int=0,
             phase_lead: float=0.0, comment: str=''):
@@ -2250,6 +2309,23 @@ class DPHASE(VectorizedBaseCard):
         self.component = component
         self.phase_lead = phase_lead
 
+    def __apply_slice__(self, dphase: DPHASE, i: np.ndarray) -> None:
+        dphase.n = len(i)
+        #dphase._is_sorted = self._is_sorted
+        dphase.dphase_id = self.dphase_id[i]
+        dphase.node_id = self.node_id[i]
+        dphase.component = self.component[i]
+        dphase.phase_lead = self.phase_lead[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        dphase_id = used_dict['dphase_id']
+        ncards_removed = remove_unused_duplicate(
+            self, dphase_id, self.dphase_id, 'dphase_id')
+        return ncards_removed
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -2276,6 +2352,26 @@ class DPHASE(VectorizedBaseCard):
         #inid = np.searchsorted(self.node_id, node_id)
         #return inid
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dphase_id.max(), self.node_id.max(),)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.dphase_id) == 0:
+            return
+
+        print_card, size = get_print_card_size(size, self.max_id)
+        dphase_ids = array_str(self.dphase_id, size=size)
+        node_id = array_str(self.node_id, size=size)
+        components = array_default_int(self.component, size=size, default=0)
+
+        for sid, nid, comp, phase_lead in zip_longest(dphase_ids, node_id, components, self.phase_lead):
+            list_fields = ['DPHASE', sid, nid, comp, phase_lead]
+            bdf_file.write(print_card(list_fields))
+        return
+
 
 class QVECT(VectorizedBaseCard):
     """
@@ -2294,6 +2390,7 @@ class QVECT(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> QVECT:
@@ -2504,6 +2601,7 @@ class ACSRCE(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, excite_id: int, rho: float, b: float,
@@ -2647,8 +2745,19 @@ class ACSRCE(VectorizedBaseCard):
         load.dphase_int = self.dphase_int[i]
 
         load.power_float = self.power_float[i]
-        load.delay_float = self.delay_float[i, :]
+        load.delay_float = self.delay_float[i]
         load.dphase_float = self.dphase_float[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['???'].append(self.excite_id)
+        used_dict['delay_id'].append(self.delay_int[self.delay_int > 0])
+        used_dict['dphase_id'].append(self.dphase_int[self.dphase_int > 0])
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_duplicate(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
 
     def get_load_at_freq(self, freq: np.ndarray) -> np.ndarray:  # pragma: no cover
         r"""
@@ -2719,6 +2828,7 @@ class RANDPS(VectorizedBaseCard):
     """
 
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> RANDPS:

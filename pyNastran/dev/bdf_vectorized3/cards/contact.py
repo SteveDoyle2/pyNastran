@@ -7,7 +7,7 @@ import numpy as np
 #from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
+from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thru,
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim)
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -19,7 +19,8 @@ from pyNastran.bdf.bdf_interface.assign_type_force import lax_double_or_blank
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    remove_unused_primary, remove_unused_duplicate)
 from .constraints import ADD
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -36,7 +37,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ElementPropertyNodeSet(VectorizedBaseCard):
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         self.sid = np.array([], dtype='int32')
         self.n_ids = np.array([], dtype='int32')
         self.ids = np.array([], dtype='int32')
@@ -143,13 +145,14 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
         #self.sort()
         #self.cards = []
 
-    def __apply_slice__(self, eset: ElementPropertySet, i: np.ndarray) -> None:
+    def __apply_slice__(self, eset: ElementPropertyNodeSet, i: np.ndarray) -> None:
         self._slice_comment(eset, i)
         eset.n = len(i)
         eset.sid = self.sid[i]
+
+        i_id = self.i_id # [i, :]
+        eset.ids = hslice_by_idim(i, i_id, self.ids)
         eset.n_ids = self.n_ids[i]
-        eset.ids = self.ids[i]
-        raise RuntimeError(i)
 
     @property
     def max_id(self) -> int:
@@ -158,6 +161,12 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
     @property
     def i_id(self) -> np.ndarray:
         return make_idim(self.n, self.n_ids)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        contact_id = used_dict['contact_id']
+        ncards_removed = remove_unused_duplicate(
+            self, contact_id, self.sid, 'contact_id')
+        return ncards_removed
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -258,7 +267,6 @@ class BSURF(ElementSet):
                    missing,
                    element_id=(eid, self.element_id),)
 
-
 class BSURFS(ElementSet):
     def geom_check(self, missing: dict[str, np.ndarray]):
         eid = self.model.solid_element_ids
@@ -335,7 +343,8 @@ class BGSET(VectorizedBaseCard):
     |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
     +-------+------+------+------+---------+----+------+------+----+
     """
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         #self.sid = np.array([], dtype='int32')
         #self.nelement = np.array([], dtype='int32')
         #self.element_id = np.array([], dtype='int32')
@@ -534,7 +543,8 @@ class BCTSET(VectorizedBaseCard):
     |        |  etc. |      |       |       |       |       |       |
     +--------+-------+------+-------+-------+-------+-------+-------+
     """
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         #self.sid = np.array([], dtype='int32')
         #self.nelement = np.array([], dtype='int32')
         #self.element_id = np.array([], dtype='int32')
@@ -728,6 +738,12 @@ class BCTSET(VectorizedBaseCard):
         bctset.max_search_distances = hslice_by_idim(i, isource, self.max_search_distances)
         bctset.frictions = hslice_by_idim(i, isource, self.frictions)
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        contact_id = used_dict['contact_id']
+        ncards_removed = remove_unused_primary(
+            self, contact_id, self.contact_id, 'contact_id')
+        return ncards_removed
+
     @property
     def isource(self) -> np.ndarray:
         return make_idim(self.n, self.nsource)
@@ -847,6 +863,12 @@ class BCTADD(ADD):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['contact_id'].append(self.contact_ids)
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        contact_id = used_dict['contact_id']
+        ncards_removed = remove_unused_primary(
+            self, contact_id, self.bctadd_id, 'contact_id')
+        return ncards_removed
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -891,7 +913,8 @@ class BCONP(VectorizedBaseCard):
 
     """
     _id_name = 'contact_id'
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         self.contact_id = np.array([], dtype='int32')
         self.slave_id = np.array([], dtype='int32')
         self.master_id = np.array([], dtype='int32')
@@ -907,6 +930,12 @@ class BCONP(VectorizedBaseCard):
         self.cards.append((contact_id, slave, master, sfac, fric_id, ptype, cid, comment))
         self.n += 1
         return self.n - 1
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['contact_id'].append(self.master_id)
+        used_dict['contact_id'].append(self.slave_id)
+        used_dict['bfric_id'].append(self.friction_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     #def remove_unused(self)
     def add_card(self, card: BDFCard, comment: str='') -> int:
@@ -943,8 +972,8 @@ class BCONP(VectorizedBaseCard):
             self.model.log.debug(f'parse {self.type}')
 
         ncards = len(self.cards)
-        idtype = self.model.idtype
-        fdtype = self.model.fdtype
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
         contact_id = np.zeros(ncards, dtype='int32')
         slave_id = np.zeros(ncards, dtype='int32')
         master_id = np.zeros(ncards, dtype='int32')
@@ -1051,7 +1080,8 @@ class BFRIC(VectorizedBaseCard):
 
     """
     _id_name = 'friction_id'
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         self.friction_id = np.array([], dtype='int32')
         self.fstiff = np.array([], dtype='float64')
         self.mu1 = np.array([], dtype='float64')
@@ -1145,6 +1175,9 @@ class BFRIC(VectorizedBaseCard):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
     @property
     def max_id(self) -> int:
         return self.friction_id.max()
@@ -1175,7 +1208,8 @@ class BCRPARA(VectorizedBaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     _id_name = 'contact_region_id'
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         #: CRID Contact region ID. (Integer > 0)
         self.contact_region_id = np.array([], dtype='int32')
 
@@ -1335,6 +1369,15 @@ class BCRPARA(VectorizedBaseCard):
         bcrpara.surface_type = self.surface_type[i]
         bcrpara.grid_point = self.grid_point[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.grid_point)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        contact_id = used_dict['contact_id']
+        ncards_removed = remove_unused_primary(
+            self, contact_id, self.contact_region_id, 'contact_id')
+        return ncards_removed
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nids = self.model.grid.node_id
         geom_check(self,
@@ -1388,7 +1431,8 @@ class BEDGE(VectorizedBaseCard):
 
     """
     _id_name = 'bedge_id'
-    def clear(self):
+    def clear(self) -> None:
+        self.n = 0
         self.bedge_id = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
         self.nelement = np.array([], dtype='int32')
@@ -1499,6 +1543,9 @@ class BEDGE(VectorizedBaseCard):
         self.element_id = element_id
         self.nodes = nodes
         self.n = len(self.bedge_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

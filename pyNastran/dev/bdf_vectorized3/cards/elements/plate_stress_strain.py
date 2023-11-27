@@ -138,8 +138,14 @@ class CPLSTS3(PlateStressElement):
     +---------+-------+-------+----+----+----+-------+-------+-----+
 
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
+        self.tflag = np.array([], dtype='int32')
+        self.T = np.zeros((0, 3), dtype='float64')
+        self.theta = np.array([], dtype='float64')
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -277,8 +283,14 @@ class CPLSTS4(PlateStressElement):
 
     ['CPLSTS4', '1', '5', '17', '18', '19', '20', '0.0']
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
+        self.tflag = np.array([], dtype='int32')
+        self.T = np.zeros((0, 4), dtype='float64')
+        self.theta = np.array([], dtype='float64')
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -707,8 +719,12 @@ class CPLSTN3(PlateStrainElement):
     +---------+-------+-------+----+----+----+-------+-------+-----+
 
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
+        self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             comment: str='') -> int:
@@ -834,8 +850,12 @@ class CPLSTN4(PlateStrainElement):
 
     ['CPLSTN4', '1', '5', '17', '18', '19', '20', '0.0']
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
+        self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             comment: str='') -> int:
@@ -954,8 +974,12 @@ class CPLSTN6(PlateStrainElement):
     +---------+-------+-------+----+----+----+----+----+----+
 
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
+        self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             comment: str='') -> int:
@@ -1076,8 +1100,12 @@ class CPLSTN8(PlateStrainElement):
     +---------+-------+-------+-------+----+----+----+----+----+
 
     """
+    @Element.clear_check
     def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
+        self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             comment: str='') -> int:
@@ -1200,7 +1228,7 @@ class CPLSTS6(PlateStrainElement):
     +---------+-------+-----+-------+-------+----+----+----+----+
 
     """
-    @Property.clear_check
+    @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')

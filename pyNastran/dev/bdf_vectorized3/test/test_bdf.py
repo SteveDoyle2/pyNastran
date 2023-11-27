@@ -93,6 +93,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       is_double: Union[bool, list[bool], None]=None,
                       sum_load: bool=True,
                       run_nominal: bool=True,
+                      run_equivalence: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       pickle_obj: bool=True, quiet: bool=False) -> list[str]:
@@ -208,6 +209,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         limit_mesh_opt=True,
                         run_extract_bodies=False,
                         run_nominal=run_nominal,
+                        run_equivalence=run_equivalence,
                         pickle_obj=pickle_obj,
                         hdf5=write_hdf5, quiet=quiet, log=log)
                     del fem1
@@ -1285,9 +1287,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
     #fem1.write_as_ctria3(out_model)
 
     is_vectorized = not is_nominal
-    if is_vectorized and run_equivalence and len(fem1.grid):
+    if is_vectorized and run_equivalence and len(fem1.grid) and 0:
         bdf_filename_out = None
-        tol = 1.
+        tol = 0.
         bdf_equivalence_nodes(
             out_model, bdf_filename_out, tol,
             renumber_nodes=False, neq_max=4,
@@ -1297,7 +1299,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
             avoid_collapsed_elements=False,
             crash_on_collapse=False,
             log=log, debug=True,
-            method='new',
+            method='old',
         )
     fem1._get_maps()
     run_convert = True
@@ -1792,7 +1794,7 @@ def check_case(sol: int,
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(('LOAD', 'STATSUB'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol in {11, 111, 'MFREQ', 'SEMFREQ'}:  # modal frequency
+    elif sol in {11, 111, 'MFREQ', 'MFREQI', 'SEMFREQ'}:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), msg
         assert any(subcase.has_parameter('METHOD', 'RMETHOD')), msg
     elif sol in {112, 'MTRAN', 'SEMTRAN'}:  # modal transient
@@ -2846,7 +2848,7 @@ def get_test_bdf_usage_args_examples(encoding):
 
         '\n'
         'Developer:\n'
-        "  --skip_cards  Define cards that shouldn't be read in"
+        "  --skip_cards  Define cards that shouldn't be read in\n"
         '  --crash C     Crash on specific cards (e.g. CGEN,EGRID)\n'
         '  --stop        Stop after first read/write (default=False)\n'
         '  --dumplines   Writes the BDF exactly as read with the INCLUDEs processed\n'

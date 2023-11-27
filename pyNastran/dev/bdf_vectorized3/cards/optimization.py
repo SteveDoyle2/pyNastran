@@ -94,6 +94,7 @@ class MODTRAK(VectorizedBaseCard):
     """
     _id_name = 'modtrak_id'
     def clear(self) -> None:
+        self.n = 0
         self.modtrak_id = np.array([], dtype='int32')
         self.low_range = np.array([], dtype='int32')
         self.high_range = np.array([], dtype='int32')
@@ -141,6 +142,9 @@ class MODTRAK(VectorizedBaseCard):
         self.high_range = high_range
         self.mt_filter = mt_filter
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
     #def geom_check(self, missing: dict[str, np.ndarray]):
         #pass
 
@@ -178,6 +182,7 @@ class DESVAR(VectorizedBaseCard):
     """
     _id_name = 'desvar_id'
     def clear(self) -> None:
+        self.n = 0
         self.desvar_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.xinit = np.array([], dtype='float64')
@@ -308,6 +313,8 @@ class DESVAR(VectorizedBaseCard):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['ddval_id'].append(self.ddval[self.ddval > 0])
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         desvar_id = used_dict['desvar_id']
@@ -373,6 +380,7 @@ class DLINK(VectorizedBaseCard):
     """
     _id_name = 'dlink_id'
     def clear(self) -> None:
+        self.n = 0
         self.dlink_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.xinit = np.array([], dtype='float64')
@@ -493,6 +501,10 @@ class DLINK(VectorizedBaseCard):
         self.independent_desvars = independent_desvars
         self.coefficients = coefficients
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['desvar_id'].append(self.dependent_desvar)
+        used_dict['desvar_id'].append(self.independent_desvars)
+
     @property
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.nindependent_desvars)
@@ -535,6 +547,7 @@ class DVGRID(VectorizedBaseCard):
 
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
+        self.n = 0
         self.desvar_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -620,6 +633,10 @@ class DVGRID(VectorizedBaseCard):
         self.coefficient = coefficient
         self.dxyz = dxyz
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -678,6 +695,7 @@ class DRESP1(VectorizedBaseCard):
     """
     _id_name = 'dresp_id'
     def clear(self) -> None:
+        self.n = 0
         self.dresp_id = np.array([], dtype='int32')
 
     def add(self, dresp_id: int, label: str,
@@ -937,6 +955,48 @@ class DRESP1(VectorizedBaseCard):
         self.iatti = iatti
         self.atti = atti
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        skip_response_types = {
+            'WEIGHT', 'COMPLIAN', 'DWEIGHT', 'FLUTTER', 'LAMA', 'EIGN', 'CEIG', 'STABDER',
+            'STRESS', 'STRAIN', 'FORCE', 'CSTRESS', 'CSTRAIN', 'CFAILURE',
+        }
+
+        for dresp_id, label, response_type, property_type, region, \
+            atta_type, atta_int, atta_float, atta_str, \
+            attb_type, attb_int, attb_float, attb_str, iatti in zip_longest(
+                self.dresp_id, self.label, self.response_type, self.property_type, self.region,
+                self.atta_type, self.atta_int, self.atta_float, self.atta_str,
+                self.attb_type, self.attb_int, self.attb_float, self.attb_str, self.iatti):
+            iatti0, iatti1 = iatti
+            atti = self.atti[iatti0:iatti1]
+            if atta_type == 'i':
+                atta = atta_int
+            elif atta_type == 'f':
+                atta = atta_float
+            else:
+                atta = atta_str
+
+            if atta_type == 'i':
+                attb = attb_int
+            elif atta_type == 'f':
+                attb = attb_float
+            else:
+                attb = attb_str
+
+            if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
+                atti_list = ['ALL']
+                #print(self.response_type, self.atti)
+                #iatti_all = (self.response_type == 'WEIGHT') & (self.atti == -1)
+                #attis[iatti_all] = 'ALL'
+            else:
+                atti_list = atti.tolist()
+
+            if response_type.upper() in skip_response_types:
+                continue
+            raise RuntimeError(response_type)
+        #used_dict['node_id'].append(self.node_id)
+        #used_dict['coord_id'].append(self.coord_id)
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         grid_flags = {
@@ -1066,6 +1126,7 @@ class DRESP2(VectorizedBaseCard):
     """
     _id_name = 'dresp_id'
     def clear(self) -> None:
+        self.n = 0
         self.dresp_id = np.array([], dtype='int32')
 
         #: user-defined name for printing purposes
@@ -1300,6 +1361,46 @@ class DRESP2(VectorizedBaseCard):
         self.nparam_values = nparam_values
         self.param_values = param_values
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        iparam_value = 0
+
+        deqatn_id = self.dequation_id[self.dequation_id > 0]
+        used_dict['deqatn_id'].append(deqatn_id)
+
+        for (dresp_id, label, deqatn_id, deqatn_str,
+             region, method, iparam) in zip_longest(
+            self.dresp_id, self.label,
+            self.dequation_id, self.dequation_str,
+            self.region, self.method,
+            self.iparam):
+
+            iparam0, iparam1 = iparam
+            param_types = self.param_type[iparam0:iparam1]
+            nparam_values = self.nparam_values[iparam0:iparam1]
+
+            deqatn = deqatn_str if deqatn_id == -1 else deqatn_id
+            list_fields = ['DRESP2', dresp_id, label, deqatn,
+                           region, method,]
+
+            for param_type, nvalues in zip(param_types, nparam_values):
+                values_list2 = self.param_values[iparam_value:iparam_value + nvalues]
+                #fields2 = [param_type] + values_list2.tolist()
+                (i, j) = DRESP2_PACK_LENGTH[param_type]
+                if param_type == 'DRESP1':
+                    id_type = 'dresp_id'
+                elif param_type == 'DESVAR':
+                    id_type = 'desvar_id'
+                elif param_type == 'DNODE':
+                    id_type = 'desvar_id'
+                    # should be (GRID, COMPONENT); only want GRID
+                    values_list2 = values_list2[::2]
+                else:  # pragma: no cover
+                    raise NotImplementedError(param_type)
+
+                used_dict[id_type].append(values_list2)
+                #list_fields += build_table_lines(fields2, nstart=i, nend=j)
+                iparam_value += nvalues
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         #self.model.log.warning('skipping DRESP2 nodal equivalence')
@@ -1395,6 +1496,7 @@ class DCONSTR(VectorizedBaseCard):
     """
     _id_name = 'dconstr_id'
     def clear(self) -> None:
+        self.n = 0
         self.dconstr_id = np.array([], dtype='int32')
         self.dresp_id = np.array([], dtype='int32')
 
@@ -1485,6 +1587,11 @@ class DCONSTR(VectorizedBaseCard):
         self.upper_table = upper_table
         self.upper_allowable = upper_allowable
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['tabled_id'].append(self.lower_table)
+        used_dict['tabled_id'].append(self.upper_table)
+        used_dict['dresp_id'].append(self.dresp_id)
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1525,6 +1632,7 @@ class DVPREL1(VectorizedBaseCard):
     """
     _id_name = 'dvprel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvprel_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.property_type = np.array([], dtype='|U8')
@@ -1814,6 +1922,7 @@ class DVPREL2(VectorizedBaseCard):
     """
     _id_name = 'dvprel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvprel_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.property_type = np.array([], dtype='|U8')
@@ -2088,6 +2197,7 @@ class DVMREL1(VectorizedBaseCard):
     """
     _id_name = 'dvmrel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2326,6 +2436,7 @@ class DVMREL2(VectorizedBaseCard):
     """
     _id_name = 'dvmrel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2609,6 +2720,7 @@ class DVCREL1(VectorizedBaseCard):
     """
     _id_name = 'dvcrel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')
@@ -2767,6 +2879,14 @@ class DVCREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        dvcrel_id = used_dict['dvcrel_id']
+        ncards_removed = remove_unused_primary(self, dvcrel_id, self.dvcrel_id, 'dvcrel_id')
+        return ncards_removed
+
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
         for etype in np.unique(self.element_type):
@@ -2840,6 +2960,7 @@ class DVCREL2(VectorizedBaseCard):
     """
     _id_name = 'dvcrel_id'
     def clear(self) -> None:
+        self.n = 0
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')
@@ -3109,6 +3230,7 @@ class DSCREEN(VectorizedBaseCard):
     """
     _id_name = 'dscreen_id'
     def clear(self) -> None:
+        self.n = 0
         self.dscreen_id = np.array([], dtype='int32')
         self.response_type = np.array([], dtype='|U8')
         self.trs = np.array([], dtype='float64')
@@ -3181,6 +3303,9 @@ class DSCREEN(VectorizedBaseCard):
         self.response_type = response_type
         self.trs = trs
         self.nstr = nstr
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
 
     #def geom_check(self, missing: dict[str, np.ndarray]):
         #pass

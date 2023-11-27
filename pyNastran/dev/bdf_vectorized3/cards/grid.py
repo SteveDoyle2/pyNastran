@@ -50,6 +50,7 @@ class XPOINT(VectorizedBaseCard):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.ids = np.array([], dtype='int32')
 
     def add(self, ids: np.ndarray, comment: str='') -> int:
@@ -277,6 +278,7 @@ class GRID(VectorizedBaseCard):
         self.clear()
 
     def clear(self) -> None:
+        self.n = 0
         self.node_id = np.array([], dtype='int32')
         self.cp = np.array([], dtype='int32')
         self.cd = np.array([], dtype='int32')
@@ -898,6 +900,7 @@ class POINT(VectorizedBaseCard):
     _id_name = 'node_id'
     def clear(self) -> None:
         self._is_sorted = False
+        self.n = 0
         self.node_id = np.array([], dtype='int32')
         self.cp = np.array([], dtype='int32')
         self.xyz = np.zeros((0, 3), dtype='float64')

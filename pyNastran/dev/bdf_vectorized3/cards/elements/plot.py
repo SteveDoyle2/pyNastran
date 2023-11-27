@@ -53,6 +53,9 @@ class PlotElement(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
@@ -91,6 +94,11 @@ class PLOTEL(PlotElement):
     +--------+-----+-----+-----+
 
     """
+    def clear(self) -> None:
+        self.n = 0
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
@@ -171,6 +179,11 @@ class PLOTEL3(PlotElement):
     +---------+-----+-----+-----+-----+
 
     """
+    def clear(self) -> None:
+        self.n = 0
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 3), dtype='int32')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL3"""
         eid = integer(card, 1, 'eid')
@@ -238,6 +251,11 @@ class PLOTEL4(PlotElement):
     +---------+-----+-----+-----+-----+-----+
 
     """
+    def clear(self) -> None:
+        self.n = 0
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 4), dtype='int32')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL4"""
         eid = integer(card, 1, 'eid')
@@ -284,6 +302,11 @@ class PLOTEL6(PlotElement):
     +---------+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    def clear(self) -> None:
+        self.n = 0
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 6), dtype='int32')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL6"""
         eid = integer(card, 1, 'eid')
@@ -334,6 +357,11 @@ class PLOTEL8(PlotElement):
     +---------+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    def clear(self) -> None:
+        self.n = 0
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 8), dtype='int32')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL8"""
         eid = integer(card, 1, 'eid')

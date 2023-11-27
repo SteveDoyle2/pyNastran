@@ -35,6 +35,7 @@ class NSMi(VectorizedBaseCard):
     """
     _id_name = 'nsm_id'
     def clear(self) -> None:
+        self.n = 0
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U4')
         self.pid_eid = np.array([], dtype='int32')
@@ -154,6 +155,32 @@ class NSMi(VectorizedBaseCard):
         self.value = value
         self.nvalue = nvalue
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        properties = {
+            'PROD', 'PTUBE',
+            'PBAR', 'PBARL',
+            'PBEAM', 'PBEAML',
+            'PSHELL', 'PSHEAR',
+        }
+        elements = {
+            #'CQUAD4', 'CQUAD8', 'CQUADR',
+            #'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'ELEMENT', 'CONROD',
+        }
+        pids_used = []
+        eids_used = []
+        for nsm_type, pid_eid in zip_longest(self.nsm_type, self.pid_eid):
+            if nsm_type in properties:
+                pids_used.append(pid_eid)
+            elif nsm_type in elements:
+                eids_used.append(pid_eid)
+            else:  # pragma: no cover
+                raise NotImplementedError(nsm_type)
+        if len(pids_used):
+            used_dict['property_id'] = np.unique(pids_used)
+        if len(eids_used):
+            used_dict['element_id'] = np.unique(eids_used)
+
     @property
     def ivalue(self) -> np.ndarray:
         return make_idim(self.n, self.nvalue)
@@ -215,6 +242,7 @@ class NSM1i(VectorizedBaseCard):
     """
     _id_name = 'nsm_id'
     def clear(self) -> None:
+        self.n = 0
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U7')
         self.pid_eid = np.array([], dtype='int32')
@@ -295,6 +323,34 @@ class NSM1i(VectorizedBaseCard):
         elem.pid_eid = hslice_by_idim(i, ielement, self.pid_eid)
         elem.npid_eid = self.npid_eid[i]
         elem.n = len(i)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        properties = {
+            'PROD', 'PTUBE',
+            'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+            'PSHELL', 'PSHEAR',
+        }
+        elements = {
+            #'CQUAD4', 'CQUAD8', 'CQUADR',
+            #'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'ELEMENT', 'CONROD',
+        }
+        pids_used = []
+        eids_used = []
+        insm = self.ielement
+        for nsm_type, (insm0, insm1) in zip_longest(
+                self.nsm_type, insm):
+            ids = self.pid_eid[insm0:insm1].tolist()
+            if nsm_type in properties:
+                pids_used.extend(ids)
+            elif nsm_type in elements:
+                eids_used.extend(ids)
+            else:
+                raise NotImplementedError(nsm_type)
+        if len(pids_used):
+            used_dict['property_id'] = np.unique(pids_used)
+        if len(eids_used):
+            used_dict['element_id'] = np.unique(eids_used)
 
     @property
     def ielement(self) -> np.ndarray:
@@ -397,7 +453,7 @@ class NSML1(NSM1i):
         print_card = get_print_card_8_16(size)
 
         nsm_str = array_str(self.nsm_id, size=size)
-        pid_eid_str = array_str(self.pid_eid, size=size)
+        #pid_eid_str = array_str(self.pid_eid, size=size)
         insm = self.ielement
         for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
                 nsm_str, self.nsm_type, self.value, insm):
@@ -451,13 +507,6 @@ class NSMADD(ADD):
     +--------+----+----+-----+
     """
     _id_name = 'nsm_id'
-    #def clear(self) -> None:
-        #self.nsm_id = np.array([], dtype='int32')
-
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.sid = np.array([], dtype='int32')
-        #self.spc_ids = np.array([], dtype='int32')
     @property
     def nsm_id(self):
         return self.sid
@@ -475,6 +524,9 @@ class NSMADD(ADD):
     @property
     def nnsm(self):
         return self.nsids
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['nsm_id'] = self.nsm_ids
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

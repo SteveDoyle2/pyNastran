@@ -25,7 +25,10 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rectangular
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
-    parse_load_check, get_print_card_8_16) # , searchsorted_filter
+    parse_load_check, remove_unused_duplicate,
+    remove_unused_primary,
+    #get_print_card_8_16,
+    ) # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int,
     get_print_card_size)
@@ -40,6 +43,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class Load(VectorizedBaseCard):
     _id_name = 'load_id'
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
 
     def _geom_check(self) -> None:
@@ -166,6 +170,15 @@ class DEFORM(Load):
         load.elements = self.elements[i]
         load.enforced = self.enforced[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.elements.ravel())
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_duplicate(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         """CTUBE/CROD/CONROD/CBAR/CBEAM"""
         model = self.model
@@ -180,11 +193,15 @@ class DEFORM(Load):
                    missing,
                    element_id=(uelements, self.elements))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.elements.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         load_ids = array_str(self.load_id, size=size)
         elements = array_str(self.elements, size=size)
@@ -319,6 +336,9 @@ class SPCD(Load):
         self.enforced = enforced
         self.n = nloads
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes
@@ -326,11 +346,15 @@ class SPCD(Load):
             nid2 = nid_old_to_new.get(nid1, nid1)
             nodes[i] = nid2
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.nodes.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         load_ids = array_str(self.load_id, size=size)
         node_ids = array_str(self.nodes, size=size)
         components = array_default_int(self.components, default=0, size=size)
@@ -342,6 +366,7 @@ class SPCD(Load):
 
 class Load0(Load):
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -423,6 +448,14 @@ class Load0(Load):
         self.xyz = xyz
         self.n = nloads
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        return remove_unused_duplicate(self, load_id, self.load_id, 'load_id')
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -443,6 +476,10 @@ class Load0(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -451,6 +488,7 @@ class Load0(Load):
         load_ids = array_str(self.load_id, size=size)
         node_ids = array_default_int(self.node_id, default=0, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        print_card, size = get_print_card_size(size, self.max_id)
         if size == 8:
             for sid, nid, cid, mag, xyz in zip(load_ids, node_ids, coord_ids, self.mag, self.xyz):
                 msg = '%-8s%8s%8s%8s%8s%8s%8s%8s\n' % (
@@ -459,7 +497,6 @@ class Load0(Load):
                     print_float_8(xyz[1]), print_float_8(xyz[2]))
                 bdf_file.write(msg)
         else:
-            print_card = get_print_card_8_16(size)
             for sid, nid, cid, mag, xyz in zip(load_ids, node_ids, coord_ids, self.mag, self.xyz):
                 fields = [card_class, sid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                 bdf_file.write(print_card(fields))
@@ -467,6 +504,7 @@ class Load0(Load):
 
 class Load1(Load):
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='float64')
@@ -537,6 +575,10 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -553,6 +595,10 @@ class Load1(Load):
                    node=(nid, self.node_id),
                    )
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -561,13 +607,13 @@ class Load1(Load):
         load_ids = array_str(self.load_id, size=size)
         node_id = array_default_int(self.node_id, default=0, size=size)
         node_ids = array_default_int(self.nodes, default=0, size=size)
+        print_card, size = get_print_card_size(size, self.max_id)
         if size == 8:
             for sid, nid, mag, nodes in zip(load_ids, node_id, self.mag, node_ids):
                 msg = '%-8s%8s%8s%8s%8s%8s\n' % (
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[1])
                 bdf_file.write(msg)
         else:
-            print_card = get_print_card_8_16(size)
             for sid, nid, mag, nodes in zip(load_ids, node_id, self.mag, node_ids):
                 fields = [card_class, sid, nid, mag, nodes[0], nodes[1]]
                 bdf_file.write(print_card(fields))
@@ -576,6 +622,7 @@ class Load1(Load):
 
 class Load2(Load):
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='float64')
@@ -649,6 +696,10 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.nodes.ravel()
@@ -668,6 +719,10 @@ class Load2(Load):
                    missing,
                    node=(nid, nodes),)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -676,13 +731,13 @@ class Load2(Load):
         load_ids = array_str(self.load_id, size=size)
         node_id_ = array_str(self.node_id, size=size)
         node_ids_ = array_default_int(self.nodes, default=0, size=size)
+        print_card, size = get_print_card_size(size, self.max_id)
         if size == 8:
             for sid, nid, mag, nodes in zip(load_ids, node_id_, self.mag, node_ids_):
                 msg = '%-8s%8s%8s%8s%8s%8s%8s%8s\n' % (
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[2], nodes[1], nodes[3])
                 bdf_file.write(msg)
         else:
-            print_card = get_print_card_8_16(size)
             for sid, nid, mag, nodes in zip(load_ids, node_id_, self.mag, node_ids_):
                 fields = [card_class, sid, nid, mag, nodes[0], nodes[2], nodes[1], nodes[3]]
                 bdf_file.write(print_card(fields))
@@ -1016,22 +1071,6 @@ class GRAV(Load):
     +------+-----+-----+------+-----+-----+------+-----+
 
     """
-    def slice_card_by_index(self, i: np.ndarray) -> GRAV:
-        load = GRAV(self.model)
-        self.__apply_slice__(load, i)
-        return load
-
-    def convert(self, accel_scale: float=1.0, **kwargs) -> None:
-        self.scale *= accel_scale
-
-    def __apply_slice__(self, load: GRAV, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.coord_id = self.coord_id[i]
-        load.scale = self.scale[i]
-        load.main_bulk = self.main_bulk[i]
-        load.N = self.N[i, :]
-
     def add(self, sid: int, scale: float, N: np.ndarray,
             cid: int=0, mb: int=0, comment: str='') -> int:
         """
@@ -1122,17 +1161,40 @@ class GRAV(Load):
         self.N = N
         self.n = nloads
 
+    #def slice_card_by_index(self, i: np.ndarray) -> GRAV:
+        #load = GRAV(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
+
+    def __apply_slice__(self, load: GRAV, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.main_bulk = self.main_bulk[i]
+        load.N = self.N[i, :]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['coord_id'].append(self.coord_id)
+
+    def convert(self, accel_scale: float=1.0, **kwargs) -> None:
+        self.scale *= accel_scale
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         cid = self.model.coord.coord_id
         geom_check(self,
                    missing,
                    coord=(cid, self.coord_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.coord_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         #array_str, array_default_int
         load_ids = array_default_int(self.load_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -1169,10 +1231,10 @@ class ACCEL(Load):
     +-------+------+------+--------+------+-----+-----+--------+-----+
 
     """
-    def slice_card_by_index(self, i: np.ndarray) -> ACCEL:
-        load = ACCEL(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> ACCEL:
+        #load = ACCEL(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: ACCEL, i: np.ndarray) -> None:
         load.n = len(i)
@@ -1300,6 +1362,9 @@ class ACCEL(Load):
         self.N = N
         self.n = nloads
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['coord_id'].append(self.coord_id)
+
     @property
     def iloc(self) -> np.ndarray:
         return make_idim(self.n, self.nloc)
@@ -1308,7 +1373,7 @@ class ACCEL(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         load_ids = array_default_int(self.load_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -1342,6 +1407,10 @@ class ACCEL1(Load):
         load.coord_id = self.coord_id[i]
         load.scale = self.scale[i]
         load.N = self.N[i, :]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['coord_id'].append(self.coord_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -1455,11 +1524,15 @@ class ACCEL1(Load):
         assert isinstance(self.nnodes.tolist()[0], int), self.nnodes[0]
         return make_idim(self.n, self.nnodes)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.nodes.max(), self.coord_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         load_ids = array_default_int(self.load_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -1488,6 +1561,7 @@ class LOAD(Load):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.nloads = np.array([], dtype='int32')
         self.load_ids = np.array([], dtype='int32')
@@ -1568,16 +1642,29 @@ class LOAD(Load):
         load.scale_factors = hslice_by_idim(i, iload, self.scale_factors)
         load.nloads = self.nloads[i]
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['load_id'].append(self.load_ids)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_primary(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
+
     @property
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.load_ids.max())
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         #get_reduced_loads(self, filter_zero_scale_factors=False)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, scale, iload in zip(self.load_id, self.scale, self.iload):
             iload0, iload1 = iload
@@ -1788,6 +1875,7 @@ class TEMP(Load):
 
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.temperature = np.array([], dtype='float64')
@@ -1883,6 +1971,9 @@ class TEMP(Load):
         load.nnodes = self.load_id[i]
         load.node_id = self.node_id[i]
         load.temperature = self.temperature[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -2013,6 +2104,9 @@ class TEMPD(Load):
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         pass
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['load_id'].append(self.load_id)
+
     def convert(self, temperature_scale: float=1.0, **kwargs) -> None:
         self.temperature *= temperature_scale
 
@@ -2140,18 +2234,21 @@ class SLOAD(Load):
         self.mags = mags
         self.n = nloads
 
+    def __apply_slice__(self, load: SLOAD, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nodes = self.nodes
+        load.mags = self.mags
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['spoint_id'].append(self.nodes)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
         used_spoints = np.unique(self.nodes)
         geom_check(self,
                    missing,
                    spoint=(spoint, used_spoints), )
-
-    def __apply_slice__(self, load: SLOAD, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.nodes = self.nodes
-        load.mags = self.mags
 
     def sum_forces_moments(self) -> np.ndarray:
         #spoint = self.model.spoint
@@ -2186,6 +2283,7 @@ class SLOAD(Load):
 
 class RFORCE(Load):
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -2381,6 +2479,16 @@ class RFORCE(Load):
     #def convert(self, accel_scale: float=1.0, **kwargs) -> None:
         #self.scale *= accel_scale
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_duplicate(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
+
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
         nodes = self.node_id
@@ -2402,11 +2510,16 @@ class RFORCE(Load):
         force_moment = np.zeros((len(self.load_id), 6), dtype='float64')
         return force_moment
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+        #print_card = get_print_card_8_16(size)
         #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)
@@ -2435,6 +2548,7 @@ class RFORCE1(Load):
     +---------+------+----+---------+---+----+----+----+--------+
     """
     def clear(self) -> None:
+        self.n = 0
         self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -2444,27 +2558,7 @@ class RFORCE1(Load):
         self.racc = np.array([], dtype='float64')
         self.main_bulk = np.array([], dtype='int32')
         self.group_id = np.array([], dtype='int32')
-
-    def slice_card_by_index(self, i: np.ndarray) -> RFORCE1:
-        load = RFORCE1(self.model)
-        self.__apply_slice__(load, i)
-        return load
-
-    def __apply_slice__(self, load: RFORCE1, i: np.ndarray) -> None:
-        #self.model.log.info(self.dphase_int)
-        #self.model.log.info(i)
-        assert len(i) > 0
-        load.n = len(i)
-
-        load.load_id = self.load_id[i]
-        load.node_id = self.node_id[i]
-        load.coord_id = self.coord_id[i]
-        load.scale = self.scale[i]
-        load.r = self.r[i, :]
-        load.method = self.method[i]
-        load.racc = self.racc[i]
-        load.main_bulk = self.main_bulk[i]
-        load.group_id = self.group_id[i]
+        self.n = 0
 
     def add(self, sid: int, nid: int, scale: float,
             group_id: int, cid: int=0, r123: Optional[list[float]]=None,
@@ -2607,6 +2701,7 @@ class RFORCE1(Load):
             load_id = np.hstack([self.load_id, load_id])
             node_id = np.hstack([self.node_id, node_id])
             coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
             r = np.vstack([self.r, r])
             method = np.hstack([self.method, method])
             racc = np.hstack([self.racc, racc])
@@ -2622,6 +2717,37 @@ class RFORCE1(Load):
         self.racc = racc
         self.main_bulk = main_bulk
         self.group_id = group_id
+
+    #def slice_card_by_index(self, i: np.ndarray) -> RFORCE1:
+        #load = RFORCE1(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
+
+    def __apply_slice__(self, load: RFORCE1, i: np.ndarray) -> None:
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
+        assert len(i) > 0
+        load.n = len(i)
+
+        load.load_id = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.r = self.r[i, :]
+        load.method = self.method[i]
+        load.racc = self.racc[i]
+        load.main_bulk = self.main_bulk[i]
+        load.group_id = self.group_id[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_duplicate(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -2644,6 +2770,10 @@ class RFORCE1(Load):
         force_moment = np.zeros((len(self.load_id), 6), dtype='float64')
         return force_moment
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         cid = self.model.coord.coord_id
@@ -2657,7 +2787,8 @@ class RFORCE1(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+        #print_card = get_print_card_8_16(size)
 
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)

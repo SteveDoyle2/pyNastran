@@ -37,6 +37,13 @@ class CDAMP1(Element):
     | CDAMP1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], c1: int=0, c2: int=0,
             comment: str='') -> int:
         """
@@ -178,6 +185,13 @@ class CDAMP2(Element):
     | CDAMP2 | EID |  B  | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.b = np.array([], dtype='float64')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.components = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, b: float, nids: list[int],
             c1: int=0, c2: int=0, comment: str='') -> int:
         """
@@ -275,6 +289,12 @@ class CDAMP3(Element):
     | CDAMP3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.spoints = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int],
             comment: str='') -> int:
         """
@@ -372,7 +392,10 @@ class CDAMP4(Element):
     | CDAMP4 | EID |  B  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
-    def clear(self) -> None:
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.b = np.array([], dtype='float64')
         self.spoints = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, b: float, nids: list[int],
@@ -462,8 +485,8 @@ class CDAMP4(Element):
 
 class CDAMP5(Element):
     """
-    Defines a damping element that refers to a material property entry and connection to
-    grid or scalar points.
+    Defines a damping element that refers to a material property entry and
+    connection to grid or scalar points.
 
     +--------+-----+-----+----+----+
     |    1   |  2  |  3  |  4 |  5 |
@@ -471,6 +494,12 @@ class CDAMP5(Element):
     | CDAMP5 | EID | PID | N1 | N2 |
     +--------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CDAMP5 card
@@ -550,6 +579,7 @@ class PDAMP(Property):
     | PDAMP |  1   | 2.0 |      |    |      |    |      |    |
     +-------+------+-----+------+----+------+----+------+----+
     """
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.b = np.array([], dtype='float64')
@@ -627,6 +657,12 @@ class PDAMP(Property):
     def validate(self) -> None:
         return
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['pdampt_id'].append(self.property_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -653,6 +689,7 @@ class PDAMP5(Property):
     | PDAMP5 |  1   | 2   |  2.0 |    |      |    |      |    |
     +--------+------+-----+------+----+------+----+------+----+
     """
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
@@ -745,6 +782,7 @@ class PDAMP5(Property):
 
 
 class PDAMPT(Property):
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.table_b = np.array([], dtype='int32')
@@ -795,6 +833,9 @@ class PDAMPT(Property):
         self.property_id = property_id
         self.table_b = table_b
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['tabled_id'].append(self.table_b)
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -817,6 +858,12 @@ class CVISC(Element):
     | CVISC  | EID | PID | G1 | G2 |
     +--------+-----+-----+----+----+
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CVISC card
@@ -952,6 +999,7 @@ class PVISC(Property):
     +-------+------+-----+------+------+-----+-----+
     """
 
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.cr = np.array([], dtype='float64')
@@ -1000,6 +1048,9 @@ class PVISC(Property):
         self.cr = cr
         self.ce = ce
         self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -1153,6 +1204,9 @@ class CGAP(Element):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         coords = self.coord_id[self.coord_id >= 0]
         used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        g0 = self.g0[self.g0 > 0]
+        used_dict['node_id'].append(g0)
         used_dict['coord_id'].append(coords)
 
     def __apply_slice__(self, elem: CGAP, i: np.ndarray) -> None:
@@ -1442,6 +1496,9 @@ class PGAP(Property):
         self.tmax = tmax
         self.mar = mar
         self.trmin = trmin
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
 
     def convert(self, xyz_scale: float=1.0,
                 force_scale: float=1.0,

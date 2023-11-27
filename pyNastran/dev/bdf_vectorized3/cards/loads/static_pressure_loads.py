@@ -25,7 +25,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     hslice_by_idim, make_idim, searchsorted_filter, get_print_card_8_16,
-    parse_load_check)
+    parse_load_check, remove_unused_duplicate,)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_float, array_str, array_default_int, array_default_float,
     get_print_card_size)
@@ -120,6 +120,11 @@ class PLOAD(Load):
         self.pressure = pressure
         self.node_id = node_id
         self.n = nloads
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        nodes = self.node_id.ravel()
+        nodes2 = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes2)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -312,15 +317,6 @@ class PLOAD1(Load):
         self.pressure = pressure
         self.n = nloads
 
-    def convert(self, force_scale: float=1.0,
-                pressure_scale: float=1.0, **kwargs) -> None:
-        x1 = self.x.min(axis=1)
-        x2 = self.x.max(axis=1)
-        is_fixed = (x1 == x2)
-        is_dist = ~is_fixed
-        self.pressure[is_fixed] *= force_scale
-        self.pressure[is_dist] *= pressure_scale
-
     def __apply_slice__(self, load: PLOAD1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -329,6 +325,22 @@ class PLOAD1(Load):
         load.scale = self.scale[i]
         load.x = self.x[i, :]
         load.pressure = self.pressure[i, :]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        return remove_unused_duplicate(self, load_id, self.load_id, 'load_id')
+
+    def convert(self, force_scale: float=1.0,
+                pressure_scale: float=1.0, **kwargs) -> None:
+        x1 = self.x.min(axis=1)
+        x2 = self.x.max(axis=1)
+        is_fixed = (x1 == x2)
+        is_dist = ~is_fixed
+        self.pressure[is_fixed] *= force_scale
+        self.pressure[is_dist] *= pressure_scale
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
@@ -703,6 +715,9 @@ class PLOAD2(Load):
         idim = self.idim
         load.element_ids = hslice_by_idim(i, idim, self.element_ids)
 
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_ids)
+
     @property
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
@@ -975,6 +990,13 @@ class PLOAD4(Load):
         self.nvector = nvector
         self.nelement = nelement
         self.n = nloads
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        nodes = self.nodes_g1_g34.ravel()
+        coords = self.coord_id
+        used_dict['node_id'].append(nodes[nodes > 0])
+        used_dict['coord_id'].append(coords[coords >= 0])
+        used_dict['element_id'].append(self.element_ids)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
