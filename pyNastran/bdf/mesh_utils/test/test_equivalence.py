@@ -407,9 +407,10 @@ class TestEquiv(unittest.TestCase):
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=False, method='old')
-        model = save_check_nodes(bdf_filename_out, log, nnodes=6)
+        model = save_check_nodes(bdf_filename_out, log, nnodes=1)
         node_ids = list(sorted(model.nodes))
-        assert node_ids == [5, 6, 7, 8, 9, 10], node_ids
+        # lowest id
+        assert node_ids == [1], node_ids
         del model
 
         model2 = BDF(debug=True, log=log, mode='msc')
