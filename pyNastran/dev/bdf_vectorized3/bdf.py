@@ -713,28 +713,28 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'QVOL',
 
             # aero cards
-            #'AERO',  ## aero
-            #'AEROS',  ## aeros
-            #'GUST',  ## gusts
+            'AERO',  ## aero
+            'AEROS',  ## aeros
+            'GUST',  ## gusts
             #'FLUTTER',   ## flutters
             #'FLFACT',   ## flfacts
             #'MKAERO1', 'MKAERO2',  ## mkaeros
-            #'AECOMP', 'AECOMPL',   ## aecomps
-            #'AEFACT',   ## aefacts
-            #'AELINK',   ## aelinks
-            #'AELIST',   ## aelists
-            #'AEPARM',   ## aeparams
-            #'AESTAT',   ## aestats
-            #'AESURF',  ## aesurf
-            #'AESURFS', ## aesurfs
-            #'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', ## caeros
-            #'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
+            'AECOMP', 'AECOMPL',   ## aecomps
+            'AEFACT',   ## aefacts
+            'AELINK',   ## aelinks
+            'AELIST',   ## aelists
+            'AEPARM',   ## aeparams
+            'AESTAT',   ## aestats
+            'AESURF',  ## aesurf
+            'AESURFS', ## aesurfs
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', ## caeros
+            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
             #'AEFORCE', 'UXVEC', 'GUST2',
 
-            #'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
+            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE6', 'SPLINE7',
             #'TRIM', 'TRIM2',  ## trims
-            #'CSSCHD',  ## csschds
+            'CSSCHD',  ## csschds
             #'DIVERG',  ## divergs
 
             'MONPNT1', 'MONPNT2', 'MONPNT3', # 'MONDSP1', ## monitor_points
@@ -2678,48 +2678,48 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RELEASE': partial(self._prepare_card_by_method, self.release.add_card),
 
             # aero
-            #'CAERO1': partial(self._prepare_card, self.caero1),
-            #'CAERO2': partial(self._prepare_card, self.caero2),
-            #'CAERO3': partial(self._prepare_card, self.caero3),
-            #'CAERO4': partial(self._prepare_card, self.caero4),
-            #'CAERO5': partial(self._prepare_card, self.caero5),
-            #'CAERO7': partial(self._prepare_card, self.caero7), # zona
+            'CAERO1': partial(self._prepare_card, self.caero1),
+            'CAERO2': partial(self._prepare_card, self.caero2),
+            'CAERO3': partial(self._prepare_card, self.caero3),
+            'CAERO4': partial(self._prepare_card, self.caero4),
+            'CAERO5': partial(self._prepare_card, self.caero5),
+            'CAERO7': partial(self._prepare_card, self.caero7), # zona
 
-            #'AESURF': partial(self._prepare_card, self.aesurf),
-            #'AESURFS' : partial(self._prepare_card, self.aesurfs),
-            #'AEPARM': partial(self._prepare_card, self.aeparm),
-            #'AESTAT': partial(self._prepare_card, self.aestat),
+            'AESURF': partial(self._prepare_card, self.aesurf),
+            'AESURFS' : partial(self._prepare_card, self.aesurfs),
+            'AEPARM': partial(self._prepare_card, self.aeparm),
+            'AESTAT': partial(self._prepare_card, self.aestat),
 
-            #'PAERO1': partial(self._prepare_card, self.paero1),
-            #'PAERO2': partial(self._prepare_card, self.paero2),
-            #'PAERO3': partial(self._prepare_card, self.paero3),
-            #'PAERO4': partial(self._prepare_card, self.paero4),
-            #'PAERO5': partial(self._prepare_card, self.paero5),
+            'PAERO1': partial(self._prepare_card, self.paero1),
+            'PAERO2': partial(self._prepare_card, self.paero2),
+            'PAERO3': partial(self._prepare_card, self.paero3),
+            'PAERO4': partial(self._prepare_card, self.paero4),
+            'PAERO5': partial(self._prepare_card, self.paero5),
 
-            #'SPLINE1': partial(self._prepare_card, self.spline1),
-            #'SPLINE2': partial(self._prepare_card, self.spline2),
-            #'SPLINE3': partial(self._prepare_card, self.spline3),
-            #'SPLINE4': partial(self._prepare_card, self.spline4),
-            #'SPLINE5': partial(self._prepare_card, self.spline5),
+            'SPLINE1': partial(self._prepare_card, self.spline1),
+            'SPLINE2': partial(self._prepare_card, self.spline2),
+            'SPLINE3': partial(self._prepare_card, self.spline3),
+            'SPLINE4': partial(self._prepare_card, self.spline4),
+            'SPLINE5': partial(self._prepare_card, self.spline5),
 
-            #'AELIST': partial(self._prepare_card, self.aelist),    # aesurf boxes
-            #'AEFACT' : partial(self._prepare_card, self.aefact),   # caero paneling
-            #'AELINK': partial(self._prepare_card, self.aelink),    # control surface linkage
-            #'AECOMP': partial(self._prepare_card, self.aecomp),    # monpntx set1/aelist ids
-            #'AECOMPL': partial(self._prepare_card, self.aecompl),  # groups AECOMP/AECOMPLs
+            'AELIST': partial(self._prepare_card, self.aelist),    # aesurf boxes
+            'AEFACT' : partial(self._prepare_card, self.aefact),   # caero paneling
+            'AELINK': partial(self._prepare_card, self.aelink),    # control surface linkage
+            'AECOMP': partial(self._prepare_card, self.aecomp),    # monpntx set1/aelist ids
+            'AECOMPL': partial(self._prepare_card, self.aecompl),  # groups AECOMP/AECOMPLs
 
             # aero loads------------------------
             # sol 144 - trim/divergence
-            #'CSSCHD': partial(self._prepare_card, self.csschd),
-            #'TRIM': partial(self._prepare_card, self.trim),
+            'CSSCHD': partial(self._prepare_card, self.csschd),
+            'TRIM': partial(self._prepare_card, self.trim),
             #'TRIM2': partial(self._prepare_card, self.trim2),
             # diverg
 
             # sol 145 - flutter
-            #'FLFACT' : partial(self._prepare_card, self.flfact),
+            'FLFACT' : partial(self._prepare_card, self.flfact),
 
             # sol 146 - gust
-            #'GUST' : partial(self._prepare_card, self.gust),
+            'GUST' : partial(self._prepare_card, self.gust),
 
             'MONPNT1' : partial(self._prepare_card, self.monpnt1),
             'MONPNT2' : partial(self._prepare_card, self.monpnt2),

@@ -221,13 +221,13 @@ class Writer:
         self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        #write_aero_in_flutter, write_aero_in_gust = self.find_aero_location()
-        #self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter,
-                            #is_long_ids=is_long_ids)
-        #self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
+        write_aero_in_flutter, write_aero_in_gust = self.find_aero_location()
+        self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter,
+                            is_long_ids=is_long_ids)
+        self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
 
         self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -829,14 +829,12 @@ class Writer:
         if model.aeros or len(model.trim) or model.divergs or len(model.csschd):
             bdf_file.write('$STATIC AERO\n')
             model.trim.write(size=size)
-            model.trim2.write(size=size)
+            #model.trim2.write(size=size)
             model.csschd.write(size=size)
 
             # static aero
             if model.aeros:
                 bdf_file.write(model.aeros.write_card(size, is_double))
-            for (unused_id, trim) in sorted(model.trims.items()):
-                bdf_file.write(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(model.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
 

@@ -112,12 +112,12 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     #RSSCON,
 )
 from pyNastran.dev.bdf_vectorized3.cards.monitor import MONPNT1, MONPNT2, MONPNT3
-#from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
-    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
-    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-    #AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
-    #GUST, AESURF, AESURFS, CSSCHD, TRIM)
+from pyNastran.dev.bdf_vectorized3.cards.aero import (
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+    AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
+    GUST, AESURF, AESURFS, CSSCHD, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
@@ -263,38 +263,38 @@ class BDFAttributes:
         self.monpnt3 = MONPNT3(self)
 
         # aero geometry
-        #self.caero1 = CAERO1(self)
-        #self.caero2 = CAERO2(self)
-        #self.caero3 = CAERO3(self)
-        #self.caero4 = CAERO4(self)
-        #self.caero5 = CAERO5(self)
-        #self.caero7 = CAERO7(self)  # zona
+        self.caero1 = CAERO1(self)
+        self.caero2 = CAERO2(self)
+        self.caero3 = CAERO3(self)
+        self.caero4 = CAERO4(self)
+        self.caero5 = CAERO5(self)
+        self.caero7 = CAERO7(self)  # zona
 
-        #self.paero1 = PAERO1(self)
-        #self.paero2 = PAERO2(self)
-        #self.paero3 = PAERO3(self)
-        #self.paero4 = PAERO4(self)
-        #self.paero5 = PAERO5(self)
+        self.paero1 = PAERO1(self)
+        self.paero2 = PAERO2(self)
+        self.paero3 = PAERO3(self)
+        self.paero4 = PAERO4(self)
+        self.paero5 = PAERO5(self)
 
-        #self.spline1 = SPLINE1(self)
-        #self.spline2 = SPLINE2(self)
-        #self.spline3 = SPLINE3(self)
-        #self.spline4 = SPLINE4(self)
-        #self.spline5 = SPLINE5(self)  #  faked
+        self.spline1 = SPLINE1(self)
+        self.spline2 = SPLINE2(self)
+        self.spline3 = SPLINE3(self)
+        self.spline4 = SPLINE4(self)
+        self.spline5 = SPLINE5(self)  #  faked
 
-        #self.aefact = AEFACT(self)  # caero fractions
-        #self.aelist = AELIST(self)  # box ids for control surfaces
-        #self.aecomp = AECOMP(self)  # for monitor points
-        #self.aecompl = AECOMPL(self)  # for monitor points
-        #self.aeparm = AEPARM(self)
-        #self.aelink = AELINK(self)  # links control surfaces
-        #self.aestat = AESTAT(self)  # degrees of freedom
+        self.aefact = AEFACT(self)  # caero fractions
+        self.aelist = AELIST(self)  # box ids for control surfaces
+        self.aecomp = AECOMP(self)  # for monitor points
+        self.aecompl = AECOMPL(self)  # for monitor points
+        self.aeparm = AEPARM(self)
+        self.aelink = AELINK(self)  # links control surfaces
+        self.aestat = AESTAT(self)  # degrees of freedom
 
         # flutter
-        #self.flfact = FLFACT(self)  # Mach, Vel, rho for FLUTTER
+        self.flfact = FLFACT(self)  # Mach, Vel, rho for FLUTTER
 
         #  gust
-        #self.gust = GUST(self)
+        self.gust = GUST(self)
 
         #-------------------------------------------------
         # visc
@@ -588,15 +588,14 @@ class BDFAttributes:
         # aero model
         #self.aefacts = {}
 
-        #self.aesurf = AESURF(self)
-        #self.aesurfs = AESURFS(self)
-        #self.csschd = CSSCHD(self)
-        #self.trim = TRIM(self)
+        self.aesurf = AESURF(self)
+        self.aesurfs = AESURFS(self)
+        self.csschd = CSSCHD(self)
+        self.trim = TRIM(self)
         #self.trim2 = TRIM(self)
 
         # static aero
         self.aeros = None
-        self.trims = {}
         self.divergs = {}
 
         #  flutter
@@ -942,37 +941,37 @@ class BDFAttributes:
     @property
     def aero_elements(self) -> list[Any]:
         elements = [
-            #self.caero1, self.caero2, self.caero3, self.caero4, self.caero5,
-            #self.caero7,
+            self.caero1, self.caero2, self.caero3, self.caero4, self.caero5,
+            self.caero7,
         ]
         return elements
     @property
     def aero_properties(self) -> list[Any]:
         properties = [
-            #self.paero1, self.paero2, self.paero3, self.paero4, self.paero5,
+            self.paero1, self.paero2, self.paero3, self.paero4, self.paero5,
         ]
         return properties
     @property
     def aero_splines(self) -> list[Any]:
         splines = [
-            #self.spline1, self.spline2, self.spline3,
-            #self.spline4, self.spline5,
+            self.spline1, self.spline2, self.spline3,
+            self.spline4, self.spline5,
         ]
         return splines
 
     @property
     def aero_loads(self) -> list[Any]:
         loads = [
-            #self.gust, self.csschd, self.trim, self.trim2, # self.diverg,
+            self.gust, self.csschd, self.trim, # self.trim2, # self.diverg,
         ]
         return loads
 
     @property
     def aero_objects(self) -> list[Any]:
         aero = [
-            #self.aecomp, self.aecompl, self.aesurf, self.aesurfs, self.aestat,
-            #self.aelist, self.aeparm, self.aelink,
-            #self.aefact, self.flfact,
+            self.aecomp, self.aecompl, self.aesurf, self.aesurfs, self.aestat,
+            self.aelist, self.aeparm, self.aelink,
+            self.aefact, self.flfact,
             ] + self.aero_elements + \
             self.aero_properties + self.aero_splines + self.monitor_point_cards + \
             self.aero_loads
