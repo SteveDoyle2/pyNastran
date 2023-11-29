@@ -270,10 +270,11 @@ class CDAMP2(Element):
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
+        bs = array_float(self.b, size=size, is_double=False)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         components_ = array_default_int(self.components, default=0, size=size)
-        for eid, b, nodes, components in zip(element_id, self.b,
-                                                    nodes_, components_):
+        for eid, b, nodes, components in zip(element_id, bs,
+                                             nodes_, components_):
             list_fields = ['CDAMP2', eid, b,
                            nodes[0], components[0],
                            nodes[1], components[1]]
@@ -476,8 +477,9 @@ class CDAMP4(Element):
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
+        bs = array_float(self.b, size=size, is_double=False)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
-        for eid, b, spoints in zip(element_id, self.b, spoints_):
+        for eid, b, spoints in zip(element_id, bs, spoints_):
             list_fields = ['CDAMP4', eid, b, spoints[0], spoints[1]]
             bdf_file.write(print_card(list_fields))
         return

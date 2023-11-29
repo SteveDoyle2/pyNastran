@@ -453,10 +453,12 @@ MISSING_CARDS = {
 OBJ_CARDS = {
     'PARAM', 'MDLPRM', 'TSTEP', 'TSTEP1', 'TSTEPNL',
     'NLPCI', 'NLPARM',
-    'AERO', 'AEROS',
     'EIGR', 'EIGRL', 'EIGB',
     'EIGC', 'EIGP', 'NXSTRAT',
     'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
+    # aero
+    'AERO', 'AEROS',
+    'MKAERO1', 'MKAERO2',
     # contact
     'BCTPARA', 'BCTPARM',
     # optimization
@@ -718,7 +720,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'GUST',  ## gusts
             #'FLUTTER',   ## flutters
             #'FLFACT',   ## flfacts
-            #'MKAERO1', 'MKAERO2',  ## mkaeros
+            'MKAERO1', 'MKAERO2',  ## mkaeros
             'AECOMP', 'AECOMPL',   ## aecomps
             'AEFACT',   ## aefacts
             'AELINK',   ## aelinks
@@ -3345,7 +3347,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 card_idi = add_card_function(class_instance)
                 if card_name not in OBJ_CARDS:
                     if not isinstance(card_idi, int):
-                        msg = f'card_name={card_name!r} card_idi={card_idi}'
+                        msg = (f'card_name={card_name!r} card_idi={card_idi}; '
+                               '\nvalue should be an int or defined in OBJ_CARDS')
                         raise TypeError(msg)
 
             except TypeError:

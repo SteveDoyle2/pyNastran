@@ -700,7 +700,7 @@ class BDFAttributes:
 
         # ------ SOL 145 ------
         #: stores AERO
-        self.aero = None  # type: Optional[AERO]
+        self.aero: Optional[AERO] = None
 
         #: stores FLFACT
         self.flfacts = {}  # type: dict[int, FLFACT]
@@ -709,7 +709,7 @@ class BDFAttributes:
         self.flutters = {} # type: dict[int, FLUTTER]
 
         #: mkaeros
-        self.mkaeros = []  # type: list[Union[MKAERO1,MKAERO2]]
+        self.mkaeros: list[Union[MKAERO1, MKAERO2]] = []
 
         # ------ SOL 146 ------
         #: stores GUST cards

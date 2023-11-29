@@ -1530,6 +1530,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
 
     fem2 = BDFv(debug=debug, log=log)
     fem2.idtype = 'int64'
+    #fem2.is_lax_parser = True # should be fixed by now...
     if not quiet:
         fem2.log.info('starting fem2')
     if skip_cards:

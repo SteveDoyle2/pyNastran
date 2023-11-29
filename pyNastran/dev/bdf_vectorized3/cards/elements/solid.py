@@ -884,10 +884,11 @@ class PSOLID(Property):
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)
+        fctns = array_default_str(self.fctn, default='SMECH', size=size)
         coord_id = array_default_int(self.coord_id, default=-1, size=size)
         for pid, mid, cordm, integ, stress, isop, fctn in zip(property_id, material_id, coord_id,
                                                               self.integ, self.stress, self.isop, self.fctn):
-            fctn = set_blank_if_default(fctn, 'SMECH')
+            #fctn = set_blank_if_default(fctn, 'SMECH')
             fields = ['PSOLID', pid, mid, cordm, integ, stress, isop, fctn]
             bdf_file.write(print_card(fields))
         return

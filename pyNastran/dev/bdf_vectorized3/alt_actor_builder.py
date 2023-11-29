@@ -461,6 +461,7 @@ def create_caero(gui: MainWindow,
     caero = model.caero1
     n = len(caero.element_id)
     if n == 0:
+        #print('no caero1')
         return
 
     log = model.log
@@ -493,7 +494,7 @@ def create_caero(gui: MainWindow,
     dxyz43 = np.zeros((n, 3), dtype=fdtype)
     dxyz12[:, 0] = caero.x12
     dxyz43[:, 0] = caero.x43
-    coord = model.coord.slice_card_by_coord_id(local_coord_id)
+    coord = model.coord.slice_card_by_id(local_coord_id)
     #print(coord.i)
     #dxyz12_global = coord.transform_local_xyz_to_global(dxyz12, local_coord_id)
     #dxyz43_global = coord.transform_local_xyz_to_global(dxyz43, local_coord_id)
@@ -528,6 +529,7 @@ def create_caero(gui: MainWindow,
         #p1, p2, p3, p4 = self.get_points()
         #x, y = self.xy
         if nchord == 0:
+            log.warning(f'CAERO1: eid={eid} nchord=0')
             continue
             lchord_ref = aefact.slice_card_by_id(lchord)
             x = lchord_ref.fractions
@@ -536,6 +538,7 @@ def create_caero(gui: MainWindow,
             x = np.linspace(0., 1., nchord + 1)
 
         if nspan == 0:
+            log.warning(f'CAERO1: eid={eid} nspan=0')
             continue
             lspan_ref = aefact.slice_card_by_id(lchord)
             y = lspan_ref.fractions
@@ -583,6 +586,8 @@ def create_caero(gui: MainWindow,
     _build_quads(gui, name,
                  aero_xyz, aero_elements,
                  line_width=5, color=YELLOW_FLOAT,
+                 #representation='wire+surf',
+                 representation='wire',
                  is_visible=False)
     create_aesurf(gui, model,
                   aero_xyz,
@@ -827,7 +832,8 @@ def get_aecomp_set1_nids_by_index(iaecomp: int,
                                   set1: SET1) -> np.ndarray:
     ilist0, ilist1 = aecomp.ilist[iaecomp, :]
     set1_ids = aecomp.lists[ilist0:ilist1]
-    set1 = set1.slice_card_by_set_id(set1_ids)
+    #set1 = set1.slice_card_by_set_id(set1_ids)
+    set1 = set1.slice_card_by_id(set1_ids)
     nids = np.unique(set1.ids)
     return nids
 

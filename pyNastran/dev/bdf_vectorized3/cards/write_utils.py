@@ -111,7 +111,7 @@ def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> 
     str_array[inan] = ''
     return str_array
 
-def array_default_float(ndarray: np.ndarray, default=0.,
+def array_default_float(ndarray: np.ndarray, default: float=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     idefault = (ndarray == default)

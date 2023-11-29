@@ -30,7 +30,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_property_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_float_nan)
+    array_str, array_float,
+    array_default_int, array_default_float, array_default_str,
+    array_float_nan)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.femutils.utils import hstack_lists
 
@@ -3523,7 +3525,7 @@ class PAERO4(PAERO):
             gapocs = self.gapocs[idoc1:idoc2]
             for doc, caoc, gapoc in zip(docs, caocs, gapocs):
                 list_fields += [doc, caoc, gapoc]
-            lines.append(print_card(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
 
@@ -4532,9 +4534,10 @@ class SPLINE1(VectorizedBaseCard):
 
         nelements = array_default_int(self.nelement, default=0, size=size)
         melements = array_default_int(self.melement, default=0, size=size)
+        dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, \
             method, usage, nelement, melement in zip(\
-                spline_ids, caero_ids, boxs, set_ids, self.dz,
+                spline_ids, caero_ids, boxs, set_ids, dzs,
                 self.method, self.usage, nelements, melements):
             #dz = set_blank_if_default(self.dz, 0.)
             #method = set_blank_if_default(self.method, 'IPS')
@@ -5549,12 +5552,13 @@ class SPLINE5(VectorizedBaseCard):
         cids = array_str(self.coord_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
+        dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
         for eid, caero, aelist, setg, dz, dtor, \
             cid, method, usage, ftype, rcore in zip(
-                spline_ids, caero_ids, aelists, set_ids, self.dz, self.dtor,
+                spline_ids, caero_ids, aelists, set_ids, dzs, self.dtor,
                 cids, self.method, self.usage, self.ftype, self.rcore):
 
-            dz = set_blank_if_default(dz, 0.)
+            #dz = set_blank_if_default(dz, 0.)
             usage = set_blank_if_default(usage, 'BOTH')
 
              # TODO: add
@@ -6183,15 +6187,18 @@ class AESURF(VectorizedBaseCard):
 
         tqllims = array_float_nan(self.tqllim, size=size, is_double=False)
         tqulims = array_float_nan(self.tqulim, size=size, is_double=False)
+
+        effs = array_default_float(self.eff, default=0., size=size, is_double=False)
+        ldws = array_default_str(self.ldw, default='LDW', size=size)
         for aesurf_id, label, cid1, aelist_id1, \
             cid2, aelist_id2, eff, ldw, crefc, crefs, \
             pllim, pulim, hmllim, hmulim, \
             tqllim, tqulim in zip(
                 aesurf_id_, self.label, cid1_, aelist_id1_, cid2_, aelist_id2_,
-                self.eff, self.ldw, self.refc, self.refs,
+                effs, ldws, self.refc, self.refs,
                 self.pllim, self.pulim, hmllims, hmulims, tqllims, tqulims):
-            eff = set_blank_if_default(eff, 1.0)
-            ldw = set_blank_if_default(ldw, 'LDW')
+            #eff = set_blank_if_default(eff, 1.0)
+            #ldw = set_blank_if_default(ldw, 'LDW')
             crefc = set_blank_if_default(crefc, 1.0)
             crefs = set_blank_if_default(crefs, 1.0)
 

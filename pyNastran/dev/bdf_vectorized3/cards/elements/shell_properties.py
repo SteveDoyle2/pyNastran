@@ -25,7 +25,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int,
+    array_str,
+    array_default_int, array_default_float,
     get_print_card,
     #print_card_8_comment, print_card_16_comment,
 )
@@ -1761,14 +1762,19 @@ class PCOMPG(CompositeProperty):
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         property_id = array_str(self.property_id, size=size)
+
+        nsms = array_default_float(self.nsm, default=0., size=size, is_double=False)
+        shear_bondings = array_default_float(self.shear_bonding, default=0., size=size, is_double=False)
+        trefs = array_default_float(self.tref, default=0., size=size, is_double=False)
+        ges = array_default_float(self.ge, default=0., size=size, is_double=False)
         for pid, nsm, sb, failure_theory, ge, tref, lam, z0, \
-            ilayer in zip_longest(property_id, self.nsm, self.shear_bonding,
-                                  self.failure_theory, self.tref, self.ge, self.lam, self.z0,
+            ilayer in zip_longest(property_id, nsms, shear_bondings,
+                                  self.failure_theory, trefs, ges, self.lam, self.z0,
                                   self.ilayer):
-            nsm2 = set_blank_if_default(nsm, 0.0)
-            sb2 = set_blank_if_default(sb, 0.0)
-            tref2 = set_blank_if_default(tref, 0.0)
-            ge2 = set_blank_if_default(ge, 0.0)
+            #nsm = set_blank_if_default(nsm, 0.0)
+            #sb = set_blank_if_default(sb, 0.0)
+            #tref = set_blank_if_default(tref, 0.0)
+            #ge = set_blank_if_default(ge, 0.0)
 
             ilayer0, ilayer1 = ilayer
             global_ids = self.global_ply_id[ilayer0 : ilayer1].tolist()
@@ -1782,7 +1788,7 @@ class PCOMPG(CompositeProperty):
 
             #ndim = self.valid_types[beam_type]
             #assert len(dim) == ndim, 'PCOMP ndim=%s len(dims)=%s' % (ndim, len(dim))
-            list_fields = ['PCOMPG', pid, z02, nsm2, sb2, failure_theory, tref2, ge2, lam]
+            list_fields = ['PCOMPG', pid, z02, nsm, sb, failure_theory, tref, ge, lam]
             for (global_id, mid, t, theta, sout) in zip(global_ids, material_ids, thicknesses,
                                                         thetas, souts):
                 #theta = set_blank_if_default(theta, 0.0)

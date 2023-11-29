@@ -891,8 +891,8 @@ class Writer:
         if (write_aero_in_gust and model.aero) or len(model.gust):
             bdf_file.write('$GUST\n')
             if write_aero_in_gust:
-                for (unused_id, aero) in sorted(model.aero.items()):
-                    bdf_file.write(aero.write_card(size, is_double))
+                if model.aero is not None:
+                    bdf_file.write(model.aero.write_card(size, is_double))
             bdf_file.write(model.gust.write(size=size))
 
     def _write_loads(self, bdf_file: TextIOLike,

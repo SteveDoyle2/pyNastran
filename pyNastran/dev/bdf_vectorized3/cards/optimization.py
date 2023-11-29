@@ -1884,17 +1884,18 @@ class DVPREL1(VectorizedBaseCard):
         property_ids = array_str(self.property_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
 
+        c0s = array_default_float(self.c0, default=0., size=size, is_double=False)
         for dvprel_id, pid, prop_type, \
             prop_name, field_num, \
             p_min, p_max, c0, idesvar in zip_longest(dvprel_ids, property_ids, self.property_type,
                                                   self.property_name, self.field_num,
-                                                  self.p_max, self.p_min, self.c0, self.idesvar):
+                                                  self.p_max, self.p_min, c0s, self.idesvar):
             idesvar0, idesvar1 = idesvar
             desvars = desvar_ids[idesvar0:idesvar1]
             coeffs = self.coefficients[idesvar0:idesvar1]
             pname_fid = prop_name if prop_name else field_num
             p_max = set_blank_if_default(p_max, 1e20)
-            c0 = set_blank_if_default(c0, 0.)
+            #c0 = set_blank_if_default(c0, 0.)
             list_fields = ['DVPREL1', dvprel_id, prop_type, pid,
                            pname_fid, p_min, p_max, c0, None]
             for (dvid, coeff) in zip_longest(desvars, coeffs):

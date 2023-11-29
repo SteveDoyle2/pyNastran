@@ -6,13 +6,19 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, searchsorted_filter,
+    parse_element_check, parse_property_check,
+)
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
     integer_or_blank, double_or_blank)
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, array_default_float,
+    get_print_card
+)
 from .utils import get_density_from_material
 from .shell import quad_area, quad_centroid
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -108,12 +114,10 @@ class CSHEAR(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
-
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodess = array_str(self.nodes, size=size).tolist()
@@ -267,16 +271,24 @@ class PSHEAR(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self):
+        return max(self.property_id.max(), self.material_id.max())
+
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
-        for pid, mid, t, nsm, f1, f2 in zip_longest(self.property_id, self.material_id, self.t, self.nsm, self.f1, self.f2):
-            nsm = set_blank_if_default(nsm, 0.0)
+        print_card = get_print_card(size, self.max_id)
+
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        nsms = array_default_float(self.nsm, default=0.0, size=size, is_double=False)
+        for pid, mid, t, nsm, f1, f2 in zip_longest(property_ids, material_ids, self.t, nsms, self.f1, self.f2):
+            #nsm = set_blank_if_default(nsm, 0.0)
             list_fields = ['PSHEAR', pid, mid, t, nsm,
                            f1, f2]
-            msg = print_card_8(list_fields)
+            msg = print_card(list_fields)
             bdf_file.write(msg)
         return
 

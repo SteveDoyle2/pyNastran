@@ -15,7 +15,9 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float,
+    array_default_int, array_default_float)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 if TYPE_CHECKING:  # pragma: no cover
@@ -227,7 +229,7 @@ class CELAS2(Element):
         k = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
-        ge = np.zeros(ncards, dtype='int32')
+        ge = np.zeros(ncards, dtype='float64')
         s = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -282,10 +284,13 @@ class CELAS2(Element):
         element_id = array_str(self.element_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         components_ = array_default_int(self.components, default=0, size=size)
-        for eid, k, nodes, components, ge, s in zip(element_id, self.k,
-                                                    nodes_, components_, self.ge, self.s):
-            ge = set_blank_if_default(ge, 0.)
-            s = set_blank_if_default(s, 0.)
+        ks = array_float(self.k, size=size, is_double=False)
+        ges = array_default_float(self.ge, size=size, is_double=False)
+        ss = array_default_float(self.s, size=size, is_double=False)
+        for eid, k, nodes, components, ge, s in zip(element_id, ks,
+                                                    nodes_, components_, ges, ss):
+            #ge = set_blank_if_default(ge, 0.)
+            #s = set_blank_if_default(s, 0.)
             list_fields = ['CELAS2', eid, k,
                            nodes[0], components[0],
                            nodes[1], components[1], ge, s]
@@ -486,8 +491,9 @@ class CELAS4(Element):
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
+        ks = array_float(self.k, size=size, is_double=False)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
-        for eid, k, spoints in zip(element_id, self.k, spoints_):
+        for eid, k, spoints in zip(element_id, ks, spoints_):
             list_fields = ['CELAS4', eid, k, spoints[0], spoints[1]]
             bdf_file.write(print_card(list_fields))
         return
@@ -600,9 +606,12 @@ class PELAS(Property):
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
-        for pid, k, ge, s in zip(property_id, self.k, self.ge, self.s):
-            ge = set_blank_if_default(ge, 0.)
-            s = set_blank_if_default(s, 0.)
+        ks = array_float(self.k, size=size, is_double=False)
+        ges = array_default_float(self.ge, default=0., size=size, is_double=False)
+        ss = array_default_float(self.s, default=0., size=size, is_double=False)
+        for pid, k, ge, s in zip(property_id, ks, ges, ss):
+            #ge = set_blank_if_default(ge, 0.)
+            #s = set_blank_if_default(s, 0.)
             list_fields = ['PELAS', pid, k, ge, s]
             bdf_file.write(print_card(list_fields))
         return

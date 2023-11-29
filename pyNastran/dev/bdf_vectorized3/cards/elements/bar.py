@@ -1462,11 +1462,12 @@ class PBARL(Property):
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         groups = array_default_str(self.group, default='MSCBML0', size=size)
+        nsms = array_default_float(self.nsm, default=0.0, size=size)
         for pid, mid, beam_type, ndimi, idim, group, nsm in zip(property_ids, material_ids,
                                                                 self.Type, self.ndim,
                                                                 self.idim,
-                                                                groups, self.nsm):
-            nsm = set_blank_if_default(nsm, 0.)
+                                                                groups, nsms):
+            #nsm = set_blank_if_default(nsm, 0.)
             idim0, idim1 = idim
             dim = self.dims[idim0 : idim1].tolist()
             ndim = self.valid_types[beam_type]
