@@ -52,13 +52,13 @@ class ABCOQSET(VectorizedBaseCard):
     +-------+-----+-----+------+------+-----+-----+-----+-----+
     """
     _id_name = 'node_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
         #self._is_sorted = False
-        self.clear()
+        #self.clear()
 
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.component = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
 
@@ -303,13 +303,13 @@ class SuperBCQSET(VectorizedBaseCard):
     +--------+------+-----+----+-----+------+-----+-----+-----+
     """
     _id_name = 'seid'
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        #self._is_sorted = False
-        self.clear()
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+        ##self._is_sorted = False
+        #self.clear()
 
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.seid = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
@@ -575,8 +575,8 @@ class SEQSET(SuperBCQSET):
 class RELEASE(VectorizedBaseCard):
     _id_name = 'seid'
 
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.seid = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
@@ -797,8 +797,8 @@ class SUPORT(VectorizedBaseCard):
 
     """
     _id_name = 'suport_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         #self._is_sorted = False
         self.suport_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
@@ -1114,8 +1114,8 @@ class SUPORT(VectorizedBaseCard):
 
 class USET(VectorizedBaseCard):
     _id_name = 'name'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         #self._is_sorted = False
         self.name = np.array([], dtype='|U8')
         self.component = np.array([], dtype='int32')
@@ -1418,8 +1418,8 @@ class USET(VectorizedBaseCard):
 
 class RADSET(VectorizedBaseCard):
     _id_name = 'cavity_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.cavity_id = np.array([], dtype='int32')
 
     def add(self, cavity_ids: list[int], comment: str='') -> int:
@@ -1533,8 +1533,8 @@ class SET1(VectorizedBaseCard):
     +------+--------+--------+-----+------+-----+-----+------+-----+
     """
     _id_name = 'set_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.set_id = np.array([], dtype='int32')
         self.is_skin = np.array([], dtype='bool')
         self.ids = np.array([], dtype='int32')
@@ -1750,8 +1750,8 @@ class SET3(VectorizedBaseCard):
 
     """
     _id_name = 'set_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.set_id = np.array([], dtype='int32')
         self.desc = np.array([], dtype='|U5')  #  POINT
         self.ids = np.array([], dtype='int32')
@@ -1894,8 +1894,8 @@ def split_set3_ids(idsi: list[int, str]) -> list[int]:
 
 class SESET(VectorizedBaseCard):
     _id_name = 'seid'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.seid = np.array([], dtype='int32')
         self.ids = np.array([], dtype='int32')
         self.num_ids = np.array([], dtype='int32')

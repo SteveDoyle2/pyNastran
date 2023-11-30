@@ -34,8 +34,8 @@ class NSMi(VectorizedBaseCard):
     +-----+-----+------+----+-------+----+-------+----+-------+
     """
     _id_name = 'nsm_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U4')
         self.pid_eid = np.array([], dtype='int32')
@@ -241,8 +241,8 @@ class NSM1i(VectorizedBaseCard):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     _id_name = 'nsm_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U7')
         self.pid_eid = np.array([], dtype='int32')

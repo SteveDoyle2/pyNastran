@@ -2197,8 +2197,8 @@ class DVMREL1(VectorizedBaseCard):
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
     _id_name = 'dvmrel_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2436,8 +2436,8 @@ class DVMREL2(VectorizedBaseCard):
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
     _id_name = 'dvmrel_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.dvmrel_id = np.array([], dtype='int32')
 
         self.material_id = np.array([], dtype='int32')
@@ -2720,8 +2720,8 @@ class DVCREL1(VectorizedBaseCard):
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
     _id_name = 'dvcrel_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')
@@ -2960,8 +2960,8 @@ class DVCREL2(VectorizedBaseCard):
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
     _id_name = 'dvcrel_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.dvcrel_id = np.array([], dtype='int32')
 
         self.element_id = np.array([], dtype='int32')
@@ -3230,8 +3230,8 @@ class DSCREEN(VectorizedBaseCard):
 
     """
     _id_name = 'dscreen_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.dscreen_id = np.array([], dtype='int32')
         self.response_type = np.array([], dtype='|U8')
         self.trs = np.array([], dtype='float64')

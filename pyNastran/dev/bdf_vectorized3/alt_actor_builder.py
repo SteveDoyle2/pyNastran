@@ -458,8 +458,10 @@ def create_caero(gui: MainWindow,
                  model: BDF,
                  grid_id: np.ndarray,
                  xyz_cid0: np.ndarray):
-    caero = model.caero1
-    n = len(caero.element_id)
+    caero1 = model.caero1
+    caero2 = model.caero2
+    n = len(caero1)
+    assert len(caero2) == 0, caero2
     if n == 0:
         #print('no caero1')
         return
@@ -472,28 +474,28 @@ def create_caero(gui: MainWindow,
     else:
         local_coord_id = 0
         log.error('missing AERO/AEROS; assuming AERO/AEROS acid=0')
-    log.info(f'local_coord_id={local_coord_id}')
+    #log.info(f'local_coord_id={local_coord_id}')
 
-    fdtype = caero.p1.dtype
+    fdtype = caero1.p1.dtype
     p1_global = np.zeros((n, 3), dtype=fdtype)
     p4_global = np.zeros((n, 3), dtype=fdtype)
-    for cp in np.unique(caero.cp):
-        log.info(f'CAERO: cp={cp}')
-        icp = np.where(cp == caero.cp)[0]
-        p1_global[icp, :] = model.coord.transform_local_xyz_to_global(caero.p1[icp, :], cp)
-        p4_global[icp, :] = model.coord.transform_local_xyz_to_global(caero.p4[icp, :], cp)
+    for cp in np.unique(caero1.cp):
+        #log.info(f'CAERO: cp={cp}')
+        icp = np.where(cp == caero1.cp)[0]
+        p1_global[icp, :] = model.coord.transform_local_xyz_to_global(caero1.p1[icp, :], cp)
+        p4_global[icp, :] = model.coord.transform_local_xyz_to_global(caero1.p4[icp, :], cp)
 
     #62 + 28 = 90
     #if local_coord_id == 0 and 0:
         #p2_global = p1_global.copy()
         #p3_global = p4_global.copy()
-        #p2_global[:, 0] += caero.x12
-        #p3_global[:, 0] += caero.x43
+        #p2_global[:, 0] += caero1.x12
+        #p3_global[:, 0] += caero1.x43
     #else:
     dxyz12 = np.zeros((n, 3), dtype=fdtype)
     dxyz43 = np.zeros((n, 3), dtype=fdtype)
-    dxyz12[:, 0] = caero.x12
-    dxyz43[:, 0] = caero.x43
+    dxyz12[:, 0] = caero1.x12
+    dxyz43[:, 0] = caero1.x43
     coord = model.coord.slice_card_by_id(local_coord_id)
     #print(coord.i)
     #dxyz12_global = coord.transform_local_xyz_to_global(dxyz12, local_coord_id)
@@ -508,7 +510,7 @@ def create_caero(gui: MainWindow,
     p2_global = p1_global + dxyz12_global
     p3_global = p4_global + dxyz43_global
 
-    aefact = None
+    aefact = model.aefact
     points = []
     elements = []
     ipoint = 0
@@ -517,8 +519,8 @@ def create_caero(gui: MainWindow,
     elements_total = np.zeros((n, 4), dtype='int32')
     element_id = []
     for ielement, eid, p1, p2, p3, p4, nspan, nchord, lspan, lchord in zip(
-        count(), caero.element_id, p1_global, p2_global, p3_global, p4_global,
-        caero.nspan, caero.nchord, caero.lspan, caero.lchord):
+        count(), caero1.element_id, p1_global, p2_global, p3_global, p4_global,
+        caero1.nspan, caero1.nchord, caero1.lspan, caero1.lchord):
         xyz_total[ipoint, :] = p1
         xyz_total[ipoint+1, :] = p2
         xyz_total[ipoint+2, :] = p3
@@ -529,26 +531,29 @@ def create_caero(gui: MainWindow,
         #p1, p2, p3, p4 = self.get_points()
         #x, y = self.xy
         if nchord == 0:
-            log.warning(f'CAERO1: eid={eid} nchord=0')
-            continue
             lchord_ref = aefact.slice_card_by_id(lchord)
+            #log.warning(f'CAERO1: eid={eid} nchord=0')
+            #raise RuntimeError(f'CAERO1: eid={eid} nchord=0')
+            #continue
             x = lchord_ref.fractions
-            nchord = len(x) - 1
+            nchord = len(x) - 1  # elements, not nodes
         else:
             x = np.linspace(0., 1., nchord + 1)
 
         if nspan == 0:
-            log.warning(f'CAERO1: eid={eid} nspan=0')
-            continue
             lspan_ref = aefact.slice_card_by_id(lchord)
+            #log.warning(f'CAERO1: eid={eid} nspan=0')
+            #raise RuntimeError(f'CAERO1: eid={eid} nspan=0')
+            #continue
             y = lspan_ref.fractions
-            nspan = len(y) - 1
+            nspan = len(y) - 1  # elements, not nodes
         else:
             y = np.linspace(0., 1., nspan + 1)
 
         if nchord < 1 or nspan < 1:
-            msg = 'CAERO1 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
-                eid, nchord, nspan, lchord, lspan)
+            msg = (f'CAERO1 eid={eid} '
+                   f'nchord={nchord} nspan={nspan} '
+                   f'lchord={lchord} lspan={lspan}')
             raise RuntimeError(msg)
 
         nelementsi = nchord * nspan
@@ -558,11 +563,16 @@ def create_caero(gui: MainWindow,
         # aero panel forces
         #
         # this gives us chordwise panels and chordwise nodes
-        pointsi, elementsi = points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+        pointsi, elementsi = points_elements_from_quad_points(
+            p1, p4, p3, p2, y, x, dtype='int32')
         points.append(pointsi)
         elements.append(elementsi + ipoint_subpanel)
         npoints = len(pointsi)
         ipoint_subpanel += npoints
+
+    if len(xyz_total) == 0:
+        log.warning(f'CAERO1: no panels/subpanels')
+        return
 
     name = 'caero'
     _build_quads(gui, name,
@@ -571,6 +581,7 @@ def create_caero(gui: MainWindow,
                  is_visible=True, representation='wire')
 
     if len(points) == 0:
+        log.warning(f'CAERO1: no subpanels?')
         return
     aero_element_ids = np.hstack(element_id)
     aero_xyz = np.vstack(points)
@@ -632,7 +643,8 @@ def create_aesurf(gui: MainWindow,
             #if iaelist_id == 1: # and aelist_id is None:
                 #continue
             aelisti = aelist.slice_card_by_aelist_id(aelist_id)
-            assert aelist_ids == aelist_id, f'AESURF label={label!r} aelist_id{local_aelist_ids+1} not found'
+            aelist_idi = aelisti.aelist_id
+            assert aelist_idi == aelist_id, f'AESURF label={label!r} aelist_id{local_aelist_ids+1} not found'
 
             aero_element_idsj = aelisti.elements
             j = np.searchsorted(aero_element_ids, aero_element_idsj)
@@ -728,16 +740,20 @@ def create_monpnt1(gui: MainWindow,
                     grid_id, xyz_cid0,
                     name, label, aecomp_name, xyz_global)
             elif list_type == 'AELIST':
-                log.warning(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type=AELIST') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} '
+                            f'because AECOMP={aecomp_name!r} has a list_type=AELIST') # \nkeys={keys}
                 #_create_monpnt_aecomp_aelist(
                     #gui, model, iaecomp,
                     #aero_xyz, aero_element_ids, aero_elements,
                     #name, label, aecomp_name, xyz_global)
             elif list_type == 'CAERO':
-                log.warning(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type=CAERO') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} because '
+                            f'AECOMP={aecomp_name!r} has a list_type=CAERO') # \nkeys={keys}
             else:  # pragma: no cover
-                log.warning(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
-                raise RuntimeError(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} because '
+                            f'AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
+                raise RuntimeError(f'skipping MONPNT1: {name!r} label={label!r} '
+                                   f'because AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
         elif aecomp_name in all_aecompl_names:
             aecomp_names = get_aecomp_from_aecompl(
                 aecomp_name,
@@ -754,16 +770,21 @@ def create_monpnt1(gui: MainWindow,
                     #gui, model, iaecomp,
                     #grid_id, xyz_cid0,
                     #name, label, aecomp_name, xyz_global)
-                log.warning(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type=SET1') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} '
+                            f'because AECOMPs={aecomp_names} has a list_type=SET1') # \nkeys={keys}
             elif list_type == 'AELIST':
-                log.warning(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type=AELIST') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} '
+                            f'because AECOMPs={aecomp_names} has a list_type=AELIST') # \nkeys={keys}
             elif list_type == 'CAERO':
-                log.warning(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type=CAERO') # \nkeys={keys}
+                log.warning(f'skipping MONPNT1: {name!r} label={label!r} '
+                            f'because AECOMPs={aecomp_names} has a list_type=CAERO') # \nkeys={keys}
             else:  # pragma: no cover
-                raise RuntimeError(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type={list_type!r}') # \nkeys={keys}
+                raise RuntimeError(f'skipping MONPNT1: {name!r} label={label!r} '
+                                   f'because AECOMPs={aecomp_names} has a list_type={list_type!r}') # \nkeys={keys}
 
         else:  # pragma: no cover
-            log.warning(f'skipping because MONPNT1={name!r} AECOMP/L={aecomp_name!r} does not exist') # \nkeys={keys}
+            log.warning(f'skipping MONPNT1: {name!r} label={label!r} '
+                        f'because AECOMP/L={aecomp_name!r} does not exist') # \nkeys={keys}
             continue
     return
 

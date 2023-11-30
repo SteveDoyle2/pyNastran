@@ -1065,9 +1065,9 @@ class RLOAD1(VectorizedBaseCard):
         # td : int/float; default=0
         #     TABLEDi id that defines D(f) for all degrees of freedom in EXCITEID entry
         tabled_c_int = np.zeros(ncards, dtype='int32')
-        tabled_d_int = np.full(ncards, np.nan, dtype='float64')
+        tabled_c_float = np.full(ncards, np.nan, dtype='float64')
 
-        tabled_c_float = np.zeros(ncards, dtype='int32')
+        tabled_d_int = np.zeros(ncards, dtype='int32')
         tabled_d_float = np.full(ncards, np.nan, dtype='float64')
 
         assert ncards > 0, ncards
@@ -2978,7 +2978,8 @@ def _write_int_float(value_int: int, value_float: float) -> Union[int, float]:
         value = value_float
     return value
 
-def array_int_float(delay_int: np.ndarray, delay_float: np.ndarray,
+def array_int_float(delay_int: np.ndarray,
+                    delay_float: np.ndarray,
                     size: int=8, is_double: bool=False) -> np.ndarray:
     delay_ids = array_str(delay_int, size=size)
     delay_floats = array_float(delay_float, size=size, is_double=is_double)

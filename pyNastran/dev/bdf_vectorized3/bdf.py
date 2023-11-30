@@ -55,7 +55,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import 
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
 
-#from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D, GENEL
+#from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D
 #from pyNastran.bdf.cards.properties.properties import PRAC2D, PRAC3D
 #from pyNastran.bdf.cards.properties.solid import PIHEX
 #from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
@@ -64,11 +64,11 @@ from .cards.elements.beam import BEAMOR
 #from pyNastran.bdf.cards.elements.solid import (
     #CIHEX1, CIHEX2, CHEXA1, CHEXA2,
 #)
-#from pyNastran.bdf.cards.elements.rigid import RBAR1, RSPLINE, RSSCON
+#from pyNastran.bdf.cards.elements.rigid import RSPLINE, RSSCON
 
 #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     #AXIF, RINGFL,
-    #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
+    #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 #from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
 #from pyNastran.bdf.cards.elements.shell_nasa95 import (
     #CTRSHL, CQUAD1, PQUAD1)
@@ -83,7 +83,7 @@ from .cards.elements.beam import BEAMOR
 #from .cards.properties.bars import PBRSECT, PBEAM3
 #from .cards.properties.beam import PBCOMP, PBMSECT
 ## CMASS5
-from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
+#from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
 #from .cards.coordinate_systems import (#CORD3G,
                                        #transform_coords_vectorized,
                                        #CORDx)
@@ -110,16 +110,9 @@ from pyNastran.bdf.cards.materials import NXSTRAT
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
-from pyNastran.bdf.cards.aero.aero import (
-    #AESURF,
-    AELINK, AESURFS,
-    #CAERO2, CAERO3, CAERO4, CAERO5,
-    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONDSP1,
-    #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-)
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
-from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+from pyNastran.bdf.cards.aero.aero import MONDSP1
+from pyNastran.bdf.cards.aero.static_loads import AEROS, DIVERG
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2, FLUTTER, GUST
 from pyNastran.bdf.cards.optimization import DOPTPRM
     #TOPVAR, DDVAL,
     #DRESP3,
@@ -134,7 +127,7 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
 #)
 #from .cards.bdf_sets import (
     #SET2,
-    # SEUSET,  SEUSET1
+    #SEUSET, SEUSET1
     #SEQSEP
 #)
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
@@ -735,7 +728,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE6', 'SPLINE7',
-            #'TRIM', 'TRIM2',  ## trims
+            'TRIM', # 'TRIM2',  ## trims
             'CSSCHD',  ## csschds
             #'DIVERG',  ## divergs
 
@@ -4720,18 +4713,17 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
-            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF',
-            #'add_CAERO', 'add_DIVERG',
-            # 'add_CSSCHD', 'add_DDVAL',
+            #'add_AELIST', 'add_AEPARM',
+            #'add_DIVERG',
+            #'add_DDVAL',
             #'add_DEQATN', 'add_DTABLE',
             #'add_FLFACT', 'add_FLUTTER',
-            #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
-            #'add_PAERO', 'add_PARAM', 'add_PHBDY',
-            #'add_SET', 'add_SEUSET', 'add_SPLINE', 'add_TRIM',
+            #'add_GUST', 'add_NLPARM', 'add_NLPCI',
+            #'add_PARAM', 'add_PHBDY',
+            #'add_SET', 'add_SEUSET',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            #'add_convection_property', x'add_creep_material',
+            #'add_convection_property', 'add_creep_material',
             #'add_material_dependence', 'add_method',
             #'add_random_table',
             #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',

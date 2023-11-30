@@ -339,8 +339,8 @@ def update_cards(model: BDF,
                  nid_old_to_new: dict[int, int]) -> None:
     log = model.log
     log.warning('update_cards')
-    skip_cards = {
-        'GRID', 'SPOINT', 'EPOINT',
+
+    no_equiv_cards = {
         'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
         'MATT1', 'MATT2', 'MATT8',
         'MATS1',
@@ -353,26 +353,37 @@ def update_cards(model: BDF,
         'PBEAM', 'PBEAML', 'PBCOMP', 'PBEND', 'PBEAM3',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
         'PSOLID', 'PLSOLID',
-        'CBARAO',
-        'CELAS3', 'CELAS4',
-        'CDAMP3', 'CDAMP4',
-        'CMASS3', 'CMASS4',
-        'SPCADD', 'MPCADD', 'SET1',
-        #  optimization
-        'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
-        'DCONSTR', 'DCONADD', 'DSCREEN',
-        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD', 'DEFORM',
-        # thermal
-        'RADM', 'TEMPD', 'RADSET',
-        # time/freq/random loads
-        'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'ACSRCE',
-        'DLOAD', 'LSEQ',
+        # aero
+        'PAERO1',
+        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4',
+        'AESURF', 'AESURFS', 'AESTAT',
+        # loads
+        'GRAV',
         # acoustic
         'PAABSF',
         # contact
         'BSURF', 'BSURFS', 'BCPROP', 'BCPROPS', 'BCTSET',
         'BGADD', 'BCTADD', 'BFRIC', 'BCONP',
     }
+    skip_cards = {
+        'GRID', 'SPOINT', 'EPOINT',
+        'CBARAO',
+        'CELAS3', 'CELAS4',
+        'CDAMP3', 'CDAMP4',
+        'CMASS3', 'CMASS4',
+        'SPCADD', 'MPCADD', 'SET1',
+        # aero
+        'AELIST', 'CAERO1',
+        #  optimization
+        'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
+        'DCONSTR', 'DCONADD', 'DSCREEN',
+        'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD', 'DEFORM',
+        # thermal
+        'RADM', 'TEMPD', 'RADSET',
+        # time/freq/random loads
+        'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'ACSRCE',
+        'DLOAD', 'LSEQ',
+    } | no_equiv_cards
     grid = model.grid
     ids = np.unique(grid.node_id)
 

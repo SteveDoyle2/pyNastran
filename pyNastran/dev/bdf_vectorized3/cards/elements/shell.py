@@ -399,6 +399,7 @@ class ShellElement(Element):
         if mcid is not None:
             assert mcid.min() >= -1, nodes
 
+        idtype = element_id.dtype
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -406,6 +407,7 @@ class ShellElement(Element):
         if zoffset is None:
             zoffset = np.full(nelements, np.nan, dtype='float64')
         assert zoffset is not None
+        fdtype = zoffset.dtype.name
         assert zoffset.dtype.name in NUMPY_FLOATS, zoffset.dtype.name
         self.zoffset = zoffset
 
@@ -414,11 +416,11 @@ class ShellElement(Element):
         self.theta = theta
 
         if mcid is None:
-            mcid = np.full(nelements, -1, dtype=theta.dtype)
+            mcid = np.full(nelements, -1, dtype=idtype)
         self.mcid = mcid
 
         if tflag is None:
-            tflag = np.zeros(nelements, dtype=element_id.dtype)
+            tflag = np.zeros(nelements, dtype=idtype)
         else:
             utflag = np.unique(tflag)
             assert tflag.min() in {0, 1}, utflag
@@ -427,7 +429,7 @@ class ShellElement(Element):
 
         nbase_nodes = self.base_nodes.shape[1]
         if T is None:
-            T = np.zeros((nelements, nbase_nodes), dtype=theta.dtype)
+            T = np.zeros((nelements, nbase_nodes), dtype=fdtype)
         assert T.shape == (nelements, nbase_nodes), T.shape
         self.T = T
 

@@ -173,7 +173,16 @@ def _load_h5_psolid(prop: PSOLID, property_id, data, domain_id) -> None:
     integ = data['IN']
     stress = data['STRESS']
     isop = data['ISOP']
-    fctn = data['FCTN']
+
+    nproperties = len(property_id)
+    mapper = {
+        b'SMEC': 'SMECH',
+    }
+    fctn = map_table_string_by_bytes_map(
+        data['FCTN'],
+        nproperties,
+        mapper,
+    )
     prop._save(property_id, material_id, coord_id, integ, stress, isop, fctn)
     prop.domain_id = domain_id
     #return prop
@@ -353,6 +362,16 @@ def map_table_string_by_float_map(float_array: np.ndarray,
     for soi in np.unique(float_array):
         so_stri = str_map[soi]
         iso = np.where(float_array == soi)[0]
+        str_array[iso] = so_stri
+    return str_array
+
+def map_table_string_by_bytes_map(bytes_array: np.ndarray,
+                                  n: int,
+                                  str_map: dict[float, str]) -> np.ndarray:
+    str_array = np.zeros(n, dtype='|U8')
+    for soi in np.unique(bytes_array):
+        so_stri = str_map[soi]
+        iso = np.where(bytes_array == soi)[0]
         str_array[iso] = so_stri
     return str_array
 

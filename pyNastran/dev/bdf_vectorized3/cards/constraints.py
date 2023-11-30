@@ -44,8 +44,8 @@ class SPC(VectorizedBaseCard):
      +-----+-----+----+----+------+----+----+----+
     """
     _id_name = 'spc_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spc_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.components = np.array([], dtype='int32')
@@ -292,8 +292,8 @@ class SPC1(VectorizedBaseCard):
 
     """
     _id_name = 'spc_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spc_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.components = np.array([], dtype='int32')
@@ -450,8 +450,8 @@ class MPC(VectorizedBaseCard):
     +-----+-----+----+----+-----+----+----+----+-----+
     """
     _id_name = 'mpc_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.mpc_id = np.array([], dtype='int32')
 
     def add(self, mpc_id: int,
@@ -840,8 +840,8 @@ class MPCADD(ADD):
 
 
 class CommonSet(VectorizedBaseCard):
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.node_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
 

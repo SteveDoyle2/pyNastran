@@ -7069,7 +7069,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        self.suport.add(nodes, components, comment=comment)
+        self.suport.add_set(nodes, components, comment=comment)
         #suport = SUPORT(nodes, Cs, comment=comment)
         #self._add_methods._add_suport_object(suport)
         #return suport

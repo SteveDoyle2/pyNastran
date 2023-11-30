@@ -53,8 +53,8 @@ class MONPNT1(VectorizedBaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     """
     _id_name = 'name'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.name = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U72')
         #self.table = np.array([], dtype='|U8')
@@ -230,8 +230,8 @@ class MONPNT1(VectorizedBaseCard):
 class MONPNT2(VectorizedBaseCard):
     """NX/MSC Nastran card"""
     _id_name = 'name'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.name = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U72')
         self.table = np.array([], dtype='|U8')
@@ -366,8 +366,8 @@ class MONPNT3(VectorizedBaseCard):
     """MSC Nastran specific card"""
     _id_name = 'name'
 
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.name = np.array([], dtype='|U8')
         self.label = np.array([], dtype='|U72')
         self.axes = np.array([], dtype='int32')

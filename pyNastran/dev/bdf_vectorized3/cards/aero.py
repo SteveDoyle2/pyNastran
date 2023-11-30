@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default # pr
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     double, double_or_blank,
-    string, double_string_or_blank, string_or_blank, # integer_double_or_blank,
+    string, double_string_or_blank, string_or_blank, integer_double_or_blank,
     parse_components, # components_or_blank,
     fields, interpret_value)
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
@@ -73,8 +73,8 @@ class AECOMP(VectorizedBaseCard):
 
     """
     _id_name = 'name'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.name = np.array([], dtype='|U8')
         self.list_type = np.array([], dtype='|U8')
         self.nlists = np.array([], dtype='int32')
@@ -256,8 +256,8 @@ class AECOMPL(VectorizedBaseCard):
     +---------+--------+--------+--------+---------+--------+--------+--------+--------+
     """
     _id_name = 'name'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.name = np.array([], dtype='|U8')
         self.nlabels = np.array([], dtype='int32')
         self.labels = np.array([], dtype='|U8')
@@ -410,8 +410,8 @@ class CAERO1(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, igroup: int,
@@ -941,8 +941,8 @@ class CAERO2(VectorizedBaseCard):
     +--------+-----+-----+----+-----+------+-----+------+------+
     """
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.igroup = np.array([], dtype='int32')
@@ -1333,8 +1333,8 @@ class CAERO3(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.p1 = np.zeros((0, 3), dtype='float64')
@@ -1670,8 +1670,8 @@ class CAERO4(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int,
@@ -2084,8 +2084,8 @@ class CAERO5(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int,
@@ -2335,8 +2335,8 @@ class CAERO5(VectorizedBaseCard):
 
 class CAERO7(VectorizedBaseCard):
     _id_name = 'element_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
 
     def add(self, eid: int, label: str,
@@ -2740,8 +2740,8 @@ class CAERO7(VectorizedBaseCard):
 
 class PAERO(VectorizedBaseCard):
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PAERO:
@@ -2776,8 +2776,8 @@ class PAERO1(PAERO):
 
     """
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.caero_body_id = np.array([], dtype='int32')
 
@@ -2921,8 +2921,8 @@ class PAERO2(PAERO):
 
     """
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.caero_body_id = np.array([], dtype='int32')
 
@@ -3163,8 +3163,8 @@ class PAERO3(PAERO):
 
     """
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
         self.caero_body_id = np.array([], dtype='int32')
 
@@ -3332,8 +3332,8 @@ class PAERO4(PAERO):
 
     """
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
 
     def add(self, pid: int,
@@ -3544,8 +3544,8 @@ class PAERO5(PAERO):
     +--------+-------+--------+--------+---------+-------+-------+-------+
     """
     _id_name = 'property_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.property_id = np.array([], dtype='int32')
 
     def add(self, pid: int, caoci: list[float],
@@ -3741,8 +3741,8 @@ class AELIST(VectorizedBaseCard):
 
     """
     _id_name = 'aelist_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aelist_id = np.array([], dtype='int32')
         self.nelements = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
@@ -4064,8 +4064,8 @@ class AEFACT(VectorizedBaseCard):
 
     """
     _id_name = 'aefact_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aefact_id = np.array([], dtype='int32')
         self.nfractions = np.array([], dtype='int32')
         self.fractions = np.array([], dtype='float64')
@@ -4193,8 +4193,8 @@ class FLFACT(VectorizedBaseCard):
     +--------+-----+-------+------+-------+----+--------+
     """
     _id_name = 'flfact_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.flfact_id = np.array([], dtype='int32')
         self.nfactors = np.array([], dtype='int32')
         self.factors = np.array([], dtype='float64')
@@ -4359,8 +4359,8 @@ class SPLINE1(VectorizedBaseCard):
 
     """
     _id_name = 'spline_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spline_id = np.array([], dtype='int32')
         self.caero_id = np.array([], dtype='int32')
 
@@ -4572,8 +4572,8 @@ class SPLINE2(VectorizedBaseCard):
 
     """
     _id_name = 'spline_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spline_id = np.array([], dtype='int32')
         self.caero_id = np.array([], dtype='int32')
 
@@ -4844,8 +4844,8 @@ class SPLINE3(VectorizedBaseCard):
 
     """
     _id_name = 'spline_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spline_id = np.array([], dtype='int32')
         self.caero_id = np.array([], dtype='int32')
 
@@ -5184,8 +5184,8 @@ class SPLINE4(VectorizedBaseCard):
 
     """
     _id_name = 'spline_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spline_id = np.array([], dtype='int32')
         self.caero_id = np.array([], dtype='int32')
 
@@ -5249,7 +5249,7 @@ class SPLINE4(VectorizedBaseCard):
         nelements = integer_or_blank(card, 9, 'nelements', default=10)
         melements = integer_or_blank(card, 10, 'melements', default=10)
         ftype = string_or_blank(card, 11, 'ftype', default='WF2')
-        rcore = double_or_blank(card, 12, 'rcore')
+        rcore = double_or_blank(card, 12, 'rcore', default=np.nan)
         assert len(card) <= 13, f'len(SPLINE4) card = {len(card):d}\ncard={card}'
         #return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        #nelements, melements, ftype=ftype, rcore=rcore,
@@ -5362,13 +5362,15 @@ class SPLINE4(VectorizedBaseCard):
 
         nelements = array_default_int(self.nelement, default=0, size=size)
         melements = array_default_int(self.melement, default=0, size=size)
+        dzs = array_float(self.dz, size=size)
+        rcores = array_float_nan(self.rcore, size=size, is_double=False)
         for eid, caero, aelist, setg, dz, \
-            method, usage, nelement, melement, ftype, rcore, in zip(
-                spline_ids, caero_ids, aelist_ids, set_ids, self.dz,
-                self.method, self.usage, nelements, melements, self.ftype, self.rcore):
+            method, usage, nelement, melement, ftype, rcore in zip(
+                spline_ids, caero_ids, aelist_ids, set_ids, dzs,
+                self.method, self.usage, nelements, melements, self.ftype, rcores):
 
             list_fields = ['SPLINE4', eid, caero, aelist, None,
-                           setg, dz, method, usage, nelements, melements,
+                           setg, dz, method, usage, nelement, melement,
                            ftype, rcore]
             bdf_file.write(print_card(list_fields))
         return
@@ -5394,8 +5396,8 @@ class SPLINE5(VectorizedBaseCard):
 
     """
     _id_name = 'spline_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.spline_id = np.array([], dtype='int32')
         self.caero_id = np.array([], dtype='int32')
 
@@ -5584,8 +5586,8 @@ class GUST(VectorizedBaseCard):
     | GUST | 133 |   61  | 1.0 | 0.  | 1.+4 |
     +------+-----+-------+-----+-----+------+
     """
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.gust_id = np.array([], dtype='int32')
 
     #def __len__(self) -> int:
@@ -5720,8 +5722,8 @@ class AESTAT(VectorizedBaseCard):
     | AESTAT | 5001 | ANGLEA |
     +--------+------+--------+
     """
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aestat_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
 
@@ -5819,8 +5821,8 @@ class AEPARM(VectorizedBaseCard):
     +--------+----+--------+-------+
     """
     _id_name = 'aeparm_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aeparm_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.units = np.array([], dtype='|U8')
@@ -5929,8 +5931,8 @@ class AEPARM(VectorizedBaseCard):
 
 class AESURF(VectorizedBaseCard):
     _id_name = 'aesurf_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aesurf_id = np.array([], dtype='int32')
 
     def add(self, aesurf_id: int, label: str,
@@ -6050,8 +6052,8 @@ class AESURF(VectorizedBaseCard):
         hmllim = np.zeros(ncards, dtype='float64')
 
         hmulim = np.zeros(ncards, dtype='float64')
-        tqllim = np.zeros(ncards, dtype='float64')
-        tqulim = np.zeros(ncards, dtype='float64')
+        tqllim = np.zeros(ncards, dtype='int32')
+        tqulim = np.zeros(ncards, dtype='int32')
 
         for icard, card in enumerate(self.cards):
             (aesurf_idi, labeli, cid1i, alid1i, cid2i, alid2i, effi, ldwi,
@@ -6072,6 +6074,8 @@ class AESURF(VectorizedBaseCard):
             hmllim[icard] = hmllimi
             hmulim[icard] = hmulimi
 
+            tqllimi = 0 if tqllimi is None else tqllimi
+            tqulimi = 0 if tqulimi is None else tqulimi
             tqllim[icard] = tqllimi
             tqulim[icard] = tqulimi
 
@@ -6185,8 +6189,8 @@ class AESURF(VectorizedBaseCard):
         hmllims = array_float_nan(self.hmllim, size=size, is_double=False)
         hmulims = array_float_nan(self.hmulim, size=size, is_double=False)
 
-        tqllims = array_float_nan(self.tqllim, size=size, is_double=False)
-        tqulims = array_float_nan(self.tqulim, size=size, is_double=False)
+        tqllims = array_str(self.tqllim, size=size)
+        tqulims = array_str(self.tqulim, size=size)
 
         effs = array_default_float(self.eff, default=0., size=size, is_double=False)
         ldws = array_default_str(self.ldw, default='LDW', size=size)
@@ -6231,8 +6235,8 @@ class AESURFS(VectorizedBaseCard):
     +---------+------+-------+---+-------+---+-------+
     """
     _id_name = 'aesurfs_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.aesurfs_id = np.array([], dtype='int32')
 
     def add(self, aesurfs_id: int, label: str,
@@ -6370,9 +6374,13 @@ class CSSCHD(VectorizedBaseCard):
     +--------+-----+-------+--------+-------+-------+
     """
     _id_name = 'csschd_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.csschd_id = np.array([], dtype='int32')
+        self.aesurf_id = np.array([], dtype='int32')
+        self.lalpha = np.array([], dtype='int32')
+        self.lmach = np.array([], dtype='int32')
+        self.lschd = np.array([], dtype='int32')
 
     def add(self, sid: int, aesurf_id: int,
             lschd: int, lalpha: int=None, lmach: int=None,  # aefact
@@ -6397,6 +6405,9 @@ class CSSCHD(VectorizedBaseCard):
             a comment for the card
 
         """
+        #assert lalpha is None or isinstance(lalpha, integer_types), lalpha
+        #assert lmach is None or isinstance(lmach, integer_types), lmach
+        #assert lschd is None or isinstance(lschd, integer_types), lschd
         card = (sid, aesurf_id, lalpha, lmach, lschd, comment)
         self.cards.append(card)
         self.n += 1
@@ -6537,8 +6548,8 @@ class TRIM(VectorizedBaseCard):
     +------+--------+------+--------+--------+-----+--------+-----+----------+
     """
     _id_name = 'trim_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.trim_id = np.array([], dtype='int32')
         self.mach = np.array([], dtype='float64')
         self.q = np.array([], dtype='float64')
@@ -6744,7 +6755,7 @@ class TRIM(VectorizedBaseCard):
             #caero=(model.caero1.caero_id, caero_ids),
         )
 
-    def verify_trim(self):
+    def verify_trim(self, suport1_id: int) -> None:
         """
         Magic function that makes TRIM cards not frustrating.
 
@@ -6828,42 +6839,60 @@ class TRIM(VectorizedBaseCard):
             #return
         #suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True
         #suport = []
+        #if 'SUPORT1' in subcase:
+            #suport_id = subcase.get_int_parameter('SUPORT1')[0]
+            #suport1 = fem.suport1[suport_id]
+
         suport = self.model.suport
-        suport1 = None
+
+        suport_ids = np.unique(suport.suport_id)
         nsuport_dofs = 0
         nsuport1_dofs = 0
         suport_dofs = set()
-        #assert isinstance(suport, list), type(suport)
-        #for suporti in suport:
-        for (inode0, inode1) in suport.inode:
-            nodes = suport.node[inode0:inode1]
-            components = suport.component[inode0:inode1].astype('|U8')
-            for nid, cs in zip(nodes, components):
-                for ci in str(cs):
-                    #print('  SUPORT: nid=%r C=%r' % (nid, ci))
-                    dof = (nid, ci)
-                    if dof in suport_dofs:
-                        msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
-                            str(dof), str(suport_dofs))
-                        raise RuntimeError(msg)
-                    suport_dofs.add(dof)
-                    nsuport_dofs += 1
+
+        #for (inode0, inode1) in suport.inode:
+            #nodes = suport.node[inode0:inode1]
+            #components = suport.component[inode0:inode1].astype('|U8')
+            #for nid, cs in zip(nodes, components):
+                #for ci in str(cs):
+                    ##print('  SUPORT: nid=%r C=%r' % (nid, ci))
+                    #dof = (nid, ci)
+                    #if dof in suport_dofs:
+                        #msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                            #str(dof), str(suport_dofs))
+                        #raise RuntimeError(msg)
+                    #suport_dofs.add(dof)
+                    #nsuport_dofs += 1
 
         suport_dof_msg2 = ''
-        if suport1:
-            #unused_conid = suport1.conid
-            nids = suport1.node_ids
+        if 0 in suport_ids:
+            suport_id = 0
+            suport0 = suport.slice_card_by_id(suport_id) # , assume_sorted=True, sort_ids=False
             suport_dof_msg = ''
-            for nid, components in zip(nids, suport1.Cs):
-                for componenti in components:
+            for nid, component in zip(suport0.node_id, suport0.component):
+                for componenti in str(component):
                     dof = (nid, componenti)
                     suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
                     if dof in suport_dofs:
                         msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
                         raise RuntimeError(msg)
                     suport_dofs.add(dof)
-                    nsuport1_dofs += 1
+                    nsuport_dofs += 1
             suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
+
+        if suport1_id > 0:
+            suport1 = suport.slice_card_by_id(suport1_id) # , assume_sorted=True, sort_ids=False
+            suport1_dof_msg = ''
+            for nid, component in zip(suport1.node_id, suport1.component):
+                for componenti in str(component):
+                    dof = (nid, componenti)
+                    suport1_dof_msg += '    (%s, %s)\n' % (nid, componenti)
+                    if dof in suport1_dofs:
+                        msg = 'dof=%s suport1_dofs=%s' % (str(dof), str(suport_dofs))
+                        raise RuntimeError(msg)
+                    suport_dofs.add(dof)
+                    nsuport1_dofs += 1
+            suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport1_dof_msg.rstrip(',')
 
         aesurf_names = self.model.aesurf.label.tolist()
         aestat_labels = self.model.aestat.label.tolist()

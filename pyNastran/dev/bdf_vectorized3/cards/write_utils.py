@@ -47,6 +47,7 @@ def get_print_card_size(size: int, max_int: int) -> tuple[Callable, int]:
     #return str_array
 
 def array_str(ndarray: np.ndarray, size: int=8) -> np.ndarray:
+    assert ndarray.dtype.name not in {'float32', 'float64'}, ndarray.dtype.name
     if size == 8:
         str_array = ndarray.astype('|U8')
     else:
@@ -54,6 +55,7 @@ def array_str(ndarray: np.ndarray, size: int=8) -> np.ndarray:
     return str_array
 
 def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.ndarray:
+    assert ndarray.dtype.name not in {'float32', 'float64'}, ndarray.dtype.name
     idefault = np.where(ndarray == default)
     if size == 8:
         str_array = ndarray.astype('|U8')
@@ -64,6 +66,7 @@ def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.nd
 
 def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
+    assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -86,6 +89,7 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.n
 
 def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
+    assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     inan = np.isnan(ndarray)
     ivalue = ~inan
     if size == 8:
@@ -114,6 +118,7 @@ def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> 
 def array_default_float(ndarray: np.ndarray, default: float=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
+    assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     idefault = (ndarray == default)
     ivalue = ~idefault
     if size == 8:
@@ -142,6 +147,7 @@ def array_default_float(ndarray: np.ndarray, default: float=0.,
 def array_default_float_nan(ndarray: np.ndarray, default=0.,
                             size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
+    assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     idefault = (np.isnan(ndarray) | (ndarray == default))
     ivalue = ~idefault
     if size == 8:
@@ -169,6 +175,7 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
 
 def array_default_floats(ndarray: np.ndarray, defaults: np.ndarray,
                          size: int=8, is_double: float=False) -> np.ndarray:
+    assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     values_str = array_float(ndarray, size=size, is_double=is_double)
     defaults_str = array_float(defaults, size=size, is_double=is_double)
     idefault = (values_str == defaults_str)
@@ -176,6 +183,7 @@ def array_default_floats(ndarray: np.ndarray, defaults: np.ndarray,
     return values_str
 
 def array_default_str(ndarray: np.ndarray, default: str='', size: int=8) -> np.ndarray:
+    assert np.dtype.name not in {'float32', 'float64'}, np.dtype.name
     idefault = np.where(ndarray == default)
     val0 = ndarray.ravel()[0]
     assert isinstance(val0, str), f'array is not made of unicode strings (e.g., "|U8"); dtype="{ndarray.dtype}"'

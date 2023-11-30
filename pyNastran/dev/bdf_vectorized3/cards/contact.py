@@ -37,8 +37,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ElementPropertyNodeSet(VectorizedBaseCard):
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.sid = np.array([], dtype='int32')
         self.n_ids = np.array([], dtype='int32')
         self.ids = np.array([], dtype='int32')
@@ -343,8 +343,8 @@ class BGSET(VectorizedBaseCard):
     |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
     +-------+------+------+------+---------+----+------+------+----+
     """
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         #self.sid = np.array([], dtype='int32')
         #self.nelement = np.array([], dtype='int32')
         #self.element_id = np.array([], dtype='int32')
@@ -543,8 +543,8 @@ class BCTSET(VectorizedBaseCard):
     |        |  etc. |      |       |       |       |       |       |
     +--------+-------+------+-------+-------+-------+-------+-------+
     """
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         #self.sid = np.array([], dtype='int32')
         #self.nelement = np.array([], dtype='int32')
         #self.element_id = np.array([], dtype='int32')
@@ -913,8 +913,8 @@ class BCONP(VectorizedBaseCard):
 
     """
     _id_name = 'contact_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.contact_id = np.array([], dtype='int32')
         self.slave_id = np.array([], dtype='int32')
         self.master_id = np.array([], dtype='int32')
@@ -1080,8 +1080,8 @@ class BFRIC(VectorizedBaseCard):
 
     """
     _id_name = 'friction_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.friction_id = np.array([], dtype='int32')
         self.fstiff = np.array([], dtype='float64')
         self.mu1 = np.array([], dtype='float64')
@@ -1208,8 +1208,8 @@ class BCRPARA(VectorizedBaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     _id_name = 'contact_region_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         #: CRID Contact region ID. (Integer > 0)
         self.contact_region_id = np.array([], dtype='int32')
 
@@ -1431,8 +1431,8 @@ class BEDGE(VectorizedBaseCard):
 
     """
     _id_name = 'bedge_id'
+    @VectorizedBaseCard.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.bedge_id = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
         self.nelement = np.array([], dtype='int32')

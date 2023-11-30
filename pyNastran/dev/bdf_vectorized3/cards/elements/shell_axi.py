@@ -473,7 +473,7 @@ class CTRIAX(AxisymmetricShellElement):
                 theta[icard] = theta_mcid
             else:
                 mcid[icard] = theta_mcid
-        self._save(element_id, property_id, nodes, mcid, theta)
+        self._save(element_id, property_id, nodes, theta, mcid)
         self.sort()
         self.cards = []
 
@@ -486,8 +486,8 @@ class CTRIAX(AxisymmetricShellElement):
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
-            mcid = np.hstack([self.mcid, mcid])
             theta = np.hstack([self.theta, theta])
+            mcid = np.hstack([self.mcid, mcid])
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes

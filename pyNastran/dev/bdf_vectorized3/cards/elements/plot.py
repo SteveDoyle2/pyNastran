@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer,
     #double,
-    integer_or_blank,
+    #integer_or_blank,
     #double_or_blank,
 )
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
@@ -94,8 +94,8 @@ class PLOTEL(PlotElement):
     +--------+-----+-----+-----+
 
     """
+    @PlotElement.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
@@ -179,8 +179,8 @@ class PLOTEL3(PlotElement):
     +---------+-----+-----+-----+-----+
 
     """
+    @PlotElement.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
 
@@ -251,8 +251,8 @@ class PLOTEL4(PlotElement):
     +---------+-----+-----+-----+-----+-----+
 
     """
+    @PlotElement.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
 
@@ -302,8 +302,8 @@ class PLOTEL6(PlotElement):
     +---------+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    @PlotElement.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
 
@@ -357,8 +357,8 @@ class PLOTEL8(PlotElement):
     +---------+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    @PlotElement.clear_check
     def clear(self) -> None:
-        self.n = 0
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
 
