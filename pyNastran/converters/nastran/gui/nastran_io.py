@@ -131,6 +131,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.gui_objects.types import KeysMap
     #from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 DESIRED_RESULTS = [
@@ -3439,7 +3440,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
-    def _plot_pressures(self, model: BDF, cases, form0,
+    def _plot_pressures(self, model: BDF,
+                        cases: CasesDict,
+                        form0,
                         icase: int, subcase_id: int) -> int:
         """
         pressure act normal to a shell (as opposed to anti-normal to a
@@ -3485,8 +3488,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             icase += 1
         return icase
 
-    def _plot_applied_loads(self, model, cases, form0, icase, subcase_id,
-                            xref_loads=True, colormap='jet'):
+    def _plot_applied_loads(self, model,
+                            cases: CasesDict,
+                            form0, icase: int,
+                            subcase_id: int,
+                            xref_loads: bool=True,
+                            colormap: str='jet') -> int:
         """
         Applied loads include:
         ----------------------
@@ -3616,7 +3623,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, results_filename: str):
+    def load_nastran_results(self, results_filename: str) -> None:
         """
         Loads the Nastran results into the GUI
         """
@@ -3698,7 +3705,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.create_group_with_name(name, eids)
         #self.post_group_by_name(name)
 
-    def _load_nastran_results_str(self, results_filename: str, log) -> None:
+    def _load_nastran_results_str(self, results_filename: str, log) -> Optional[OP2]:
         print("trying to read...%s" % results_filename)
         ext = os.path.splitext(results_filename)[1].lower()
 
@@ -3755,9 +3762,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return model
 
     def _fill_op2_output(self, op2_filename: str,
-                         cases: dict[int, Any],
+                         cases: CasesDict,
                          model: OP2,
-                         form, icase: int, log):
+                         form,
+                         icase: int,
+                         log: SimpleLogger):
         """
         SOL 101 (Static)
         ----------------
@@ -3833,33 +3842,34 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                                            disp_dict, header_dict, keys_map,
                                            log)
 
+            # TODO: why is this disp_dict and does it matter?
             icase = self._fill_grid_point_forces(cases, model, key, icase,
                                                  disp_dict, header_dict, keys_map)
 
             # stress
             icase = self._fill_op2_centroidal_stress(
                 cases, model, times, key, icase,
-                stress_dict, header_dict, keys_map)
+                stress_dict, header_dict, keys_map, log)
 
             # stress
             icase = self._fill_op2_centroidal_strain(
                 cases, model, times, key, icase,
-                strain_dict, header_dict, keys_map)
+                strain_dict, header_dict, keys_map, log)
 
             # force
             icase = self._fill_op2_centroidal_force(
                 cases, model, times, key, icase,
-                force_dict, header_dict, keys_map)
+                force_dict, header_dict, keys_map, log)
 
             # strain energy
             icase = self._fill_op2_centroidal_strain_energy(
                 cases, model, times, key, icase,
-                strain_energy_dict, header_dict, keys_map)
+                strain_energy_dict, header_dict, keys_map, log)
 
             # force
             icase = self._fill_op2_gpstress(
                 cases, model, times, key, icase,
-                gpstress_dict, header_dict, keys_map)
+                gpstress_dict, header_dict, keys_map, log)
 
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
@@ -4035,10 +4045,13 @@ def jsonify(comment_lower: str) -> str:
     rhs = sline[1].rstrip()
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
-def _build_sort1_table(key_itime, keys_map, header_dict,
+def _build_sort1_table(key_itime,
+                       keys_map: KeysMap,
+                       header_dict: dict[tuple[str, int], str],
                        form, form_results, form_resultsi,
                        disp_dict, stress_dict, strain_dict, force_dict,
-                       strain_energy_dict, gpstress_dict, log):
+                       strain_energy_dict, gpstress_dict,
+                       log: SimpleLogger):
     """combines the SORT1-based OP2 results into a SORT1 table"""
     is_results = False
     form_resultsi_subcase = []
@@ -4054,7 +4067,12 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
     count_old = key0[3]
     ogs_old = key0[4]
     subtitle_old = key0[5]
-    subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
+
+    keys_mapi = keys_map[key0]
+    subtitle_old = keys_mapi.subtitle
+    label_old = keys_mapi.label
+    superelement_adaptivity_index_old = keys_mapi.superelement_adaptivity_index
+    unused_pval_step_old = keys_mapi.pval_step
     del label_old
     del superelement_adaptivity_index_old
 
@@ -4071,8 +4089,22 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
         ogs = key[4]
         #print('*ogs =', ogs)
         #subtitle = key[4]
+
         try:
-            subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
+            mapped_key = keys_map[key]
+        except Exception:
+            continue
+            subcase_id = subcase_id_old
+            subtitle = subtitle_old + '?'
+            superelement_adaptivity_index = '?'
+            raise
+
+        try:
+            subtitle = mapped_key.subtitle
+            #unused_label = mapped_key.label
+            superelement_adaptivity_index = mapped_key.superelement_adaptivity_index
+            #unused_pval_step = mapped_key.pval_step
+            #subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = mapped_key
         except Exception:
             subcase_id = subcase_id_old
             subtitle = subtitle_old + '?'
@@ -4099,8 +4131,9 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
             ogs_old = ogs
 
 
+        key_itimei = (key, itime)
         try:
-            header = header_dict[(key, itime)]
+            header = header_dict[key_itimei]
         except KeyError:  # this hits for strain energy
             msg = 'Missing (key, itime) in header_dict\n'
             msg += '  key=%s\n' % str(key)
@@ -4135,12 +4168,12 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
 
         form_outi = []
         form_out = (header, None, form_outi)
-        disp_formi = disp_dict[(key, itime)]
-        stress_formi = stress_dict[(key, itime)]
-        strain_formi = strain_dict[(key, itime)]
-        force_formi = force_dict[(key, itime)]
-        strain_energy_formi = strain_energy_dict[(key, itime)]
-        gpstress_formi = gpstress_dict[(key, itime)]
+        disp_formi = disp_dict[key_itimei]
+        stress_formi = stress_dict[key_itimei]
+        strain_formi = strain_dict[key_itimei]
+        force_formi = force_dict[key_itimei]
+        strain_energy_formi = strain_energy_dict[key_itimei]
+        gpstress_formi = gpstress_dict[key_itimei]
         if disp_formi:
             form_outi += disp_formi
             #form_outi.append(('Disp', None, disp_formi))
@@ -4196,8 +4229,11 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
     #print('form_results =', form_results)
     return form
 
-def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
-                     cases, form0, icase):
+def _build_materials(model: BDF,
+                     pcomp: dict[str, np.ndarray],
+                     pshell: dict[str, np.ndarray],
+                     is_pshell_pcomp: tuple[bool, bool],
+                     cases, form0, icase: int) -> int:
     """
     creates:
       - Thickness
@@ -4361,7 +4397,8 @@ def _add_material_mid_e11_e22(model: BDF, icase: int,
 
     return icase
 
-def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,
+def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray,
+                        nelements: int,
                         cases, form0, icase: int) -> int:
     """
     Creates the optimization visualization.  Supports:
@@ -4482,7 +4519,7 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
             #raise NotImplementedError(sebulk)
     #model.write_bdf('spike.bdf')
 
-def _create_masses(gui: NastranIO, model: BDF, node_ids: np.ndarray,
+def _create_masses(gui: MainWindow, model: BDF, node_ids: np.ndarray,
                    create_secondary_actors: bool=True) -> int:
     """
     Count the masses.

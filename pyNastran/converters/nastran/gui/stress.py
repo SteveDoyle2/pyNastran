@@ -2,19 +2,31 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
+
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
 
+from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
+from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
+
 
 if TYPE_CHECKING: # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
 
 
-def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
-                           form_dict, header_dict, keys_map, is_stress):
+def get_rod_stress_strains(eids: np.ndarray,
+                           cases: CasesDict,
+                           model: OP2,
+                           times: np.ndarray,
+                           key: NastranKey,
+                           icase: int,
+                           form_dict, header_dict,
+                           keys_map: KeysMap,
+                           log: SimpleLogger,
+                           is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -49,10 +61,10 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (rod)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -107,8 +119,9 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in rod_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
         scalars = case.data
         scalars_array.append(scalars)
 
@@ -127,8 +140,16 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
                                        name='Rod')
     return icase
 
-def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
-                           form_dict, header_dict, keys_map, is_stress):
+def get_bar_stress_strains(eids: np.ndarray,
+                           cases: CasesDict,
+                           model: OP2,
+                           times: np.ndarray,
+                           key: NastranKey,
+                           icase: int,
+                           form_dict, header_dict,
+                           keys_map: KeysMap,
+                           log: SimpleLogger,
+                           is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -160,10 +181,10 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -256,8 +277,9 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
 
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         #nnodes_per_element = case.nnodes
         #nelements_nnodes = nnodes_nlayers // 2
@@ -302,8 +324,16 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
                                        name='Bar')
     return icase
 
-def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
-                            form_dict, header_dict, keys_map, is_stress):
+def get_beam_stress_strains(eids: np.ndarray,
+                            cases: CasesDict,
+                            model: OP2,
+                            times: np.ndarray,
+                            key: NastranKey,
+                            icase: int,
+                            form_dict, header_dict,
+                            keys_map: KeysMap,
+                            log: SimpleLogger,
+                            is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -336,10 +366,10 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (beam)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
 
         i2 = np.hstack([i, i + 1]).T.flatten()
@@ -414,7 +444,7 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
     scalars_array = []
     for case in beam_cases:
         if case.is_complex:
-            model.log.warning(f'skipping complex Beam {word}')
+            log.warning(f'skipping complex Beam {word}')
             continue
 
         #ntimes, nelements, nresults = case.data.shape
@@ -422,8 +452,9 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
 
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         #nnodes_per_element = case.nnodes
         #nelements_nnodes = nnodes_nlayers // 2
@@ -462,8 +493,16 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
             icase += 1
     return icase
 
-def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
-                             form_dict, header_dict, keys_map, is_stress: bool,
+def get_plate_stress_strains(eids: np.ndarray,
+                             cases: CasesDict,
+                             model: OP2,
+                             times: np.ndarray,
+                             key: NastranKey,
+                             icase: int,
+                             form_dict, header_dict,
+                             keys_map: KeysMap,
+                             log: SimpleLogger,
+                             is_stress: bool,
                              prefix: str=''):
     """
     helper method for _fill_op2_time_centroidal_stress.
@@ -474,7 +513,6 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
     """
-    log = model.log
     analysis_code = key[1]
     #print("***stress eids=", eids)
     subcase_id = key[0]
@@ -545,10 +583,10 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -619,8 +657,9 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         nnodes_per_element = case.nnodes_per_element
         nelements_nnodes = nnodes_nlayers // 2
@@ -687,9 +726,17 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
     res.form_names = np.array(form_names)
     return icase
 
-def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
-                                       form_dict, header_dict, keys_map,
-                                       composite_data_dict, log, is_stress=True):
+def get_composite_plate_stress_strains(eids: np.ndarray,
+                                       cases: CasesDict,
+                                       model: OP2,
+                                       times: np.ndarray,
+                                       key: NastranKey,
+                                       icase: int,
+                                       form_dict, header_dict,
+                                       keys_map: KeysMap,
+                                       composite_data_dict,
+                                       log: SimpleLogger,
+                                       is_stress: bool=True) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the stress/strain for each layer.
@@ -708,8 +755,8 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
         #print(element_type, ueids)
         i = np.searchsorted(eids, ueids)
         if len(i) != len(np.unique(i)):
-            model.log.error(f' duplicate eids for composite {element_type}...'
-                            f'i={i} eids={eids} ueids={ueids}')
+            log.error(f' duplicate eids for composite {element_type}...'
+                      f'i={i} eids={eids} ueids={ueids}')
             continue
         plates_ieids.append(i)
         #for itime2, header in enumerate(headers):
@@ -844,8 +891,16 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
                 icase += 1
     return icase
 
-def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
-                             form_dict, header_dict, keys_map, is_stress):
+def get_solid_stress_strains(eids: np.ndarray,
+                             cases: CasesDict,
+                             model: OP2,
+                             times: np.ndarray,
+                             key: NastranKey,
+                             icase: int,
+                             form_dict, header_dict,
+                             keys_map: KeysMap,
+                             log: SimpleLogger,
+                             is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -871,7 +926,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             continue
         case = result[key]
         if isinstance(case, RealSolidArrayNx):
-            model.log.info(f'converting {case.class_name}')
+            log.info(f'converting {case.class_name}')
             case = case.to_real_solid_array()
             result[key] = case
 
@@ -892,10 +947,10 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (solid)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -963,7 +1018,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
     scalars_array = []
     for case in solid_cases:
         #if case.is_complex:
-            #model.log.warning(f'skipping complex Rod {word}')
+            #log.warning(f'skipping complex Rod {word}')
             #continue
 
         #ntimes, nelements, nresults = case.data.shape
@@ -971,8 +1026,9 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
 
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         #nnodes_per_element = case.nnodes
         #nelements_nnodes = nnodes_nlayers // 2
@@ -1007,8 +1063,16 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
                                        name='Solid')
     return icase
 
-def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
-                              form_dict, header_dict, keys_map, is_stress):
+def get_spring_stress_strains(eids: np.ndarray,
+                              cases: CasesDict,
+                              model: OP2,
+                              times: np.ndarray,
+                              key: NastranKey,
+                              icase: int,
+                              form_dict, header_dict,
+                              keys_map: KeysMap,
+                              log: SimpleLogger,
+                              is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -1076,8 +1140,9 @@ def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in spring_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
         scalars = case.data
         scalars_array.append(scalars)
 
@@ -1097,9 +1162,14 @@ def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
                                        name='Spring')
     return icase
 
-def add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+def add_simple_methods_to_form(icase: int,
+                               cases: CasesDict,
+                               key: NastranKey,
+                               subcase_id: int,
+                               word: str,
+                               res, case,
                                form_dict, header_dict,
-                               methods, name):
+                               methods, name: str) -> int:
     times = case._times
     nmethods = len(methods)
     if nmethods == 1:
@@ -1130,7 +1200,7 @@ def add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                 icase += 1
     return icase
 
-def concatenate_scalars(scalars_array):
+def concatenate_scalars(scalars_array: list[np.ndarray]) -> np.ndarray:
     if len(scalars_array) == 1:
         scalars_array = scalars_array[0]
     else:

@@ -3,13 +3,21 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.nastran.gui.results import SimpleTableResults # , LayeredTableResults
 from .stress import add_simple_methods_to_form, concatenate_scalars
+#from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict # , Case, Cases
+from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap
 
 if TYPE_CHECKING: # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
 
 
-def get_spring_force(eids, cases, model: OP2, times, key, icase,
-                     form_dict, header_dict, keys_map):
+def get_spring_force(eids: np.ndarray,
+                     cases,
+                     model: OP2,
+                     times: np.ndarray, key, icase: int,
+                     form_dict, header_dict,
+                     keys_map: KeysMap,
+                     log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -40,10 +48,10 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (spring)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         spring_cases.append(case)
         spring_ieids.append(i)
@@ -66,8 +74,9 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in spring_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
         scalars = case.data
         scalars_array.append(scalars)
 
@@ -82,13 +91,18 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Spring')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Spring')
     return icase
 
-def get_bar_force(eids, cases, model: OP2, times, key, icase,
-                  form_dict, header_dict, keys_map):
+def get_bar_force(eids: np.ndarray, cases,
+                  model: OP2,
+                  times: np.ndarray, key, icase: int,
+                  form_dict, header_dict,
+                  keys_map: KeysMap,
+                  log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -115,10 +129,10 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -169,8 +183,9 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
 
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         #nnodes_per_element = case.nnodes
         #nelements_nnodes = nnodes_nlayers // 2
@@ -193,14 +208,21 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Bar ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Bar')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Bar')
     return icase
 
 
-def get_plate_force(eids, cases, model: OP2, times, key, icase,
-                    form_dict, header_dict, keys_map):
+def get_plate_force(eids: np.ndarray, cases,
+                    model: OP2,
+                    times: np.ndarray,
+                    key,
+                    icase: int,
+                    form_dict, header_dict,
+                    keys_map: KeysMap,
+                    log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -296,8 +318,9 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in plate_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         nnodes = case.nnodes_per_element
         if nnodes == 1:
@@ -317,7 +340,8 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Plate ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Plate')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Plate')
     return icase

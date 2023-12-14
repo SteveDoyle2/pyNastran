@@ -8,7 +8,9 @@ from pyNastran.femutils.utils import pivot_table
 from pyNastran.utils.locale import func_str
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
+from pyNastran.op2.op2_interface.types import KeyMap, KeysMap
 if TYPE_CHECKING: # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
 
 float_types = (float, np.float32, np.float64)
@@ -20,7 +22,8 @@ int_types = (int, np.int32, np.int64)
     #header_dict, keys_map)
 
 class StressObject:
-    def __init__(self, model: Any, key: str, all_eids: Any, is_stress: bool=True) -> None:
+    def __init__(self, model: Any, key: str, all_eids: Any,
+                 is_stress: bool=True) -> None:
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
@@ -28,6 +31,7 @@ class StressObject:
         self.keys_map = {}  # type: dict[str, str]
         self.composite_ieids = {}  # type: dict[str, str]
         self.is_stress = is_stress
+        assert is_stress in {True, False}, is_stress
 
         self.composite_data_dict = create_composite_plates(model, key, is_stress, self.keys_map)
         #self.plates_data_dict = create_plates(model, key, is_stress)
@@ -262,7 +266,7 @@ def create_plates(model: Any, key: str, is_stress: bool) -> dict[str, Any]:
             #del obj_dict[case_key]
     return isotropic_data_dict
 
-def create_composite_plates(model, key, is_stress, keys_map):
+def create_composite_plates(model, key, is_stress: bool, keys_map: KeysMap):
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         cplates = [
@@ -293,8 +297,9 @@ def create_composite_plates(model, key, is_stress, keys_map):
         composite_data_dict[element_type] = {}
         for case_key, case in obj_dict.items():
             if case_key == key:
-                keys_map[key] = (case.subtitle, case.label,
-                                 case.superelement_adaptivity_index, case.pval_step)
+                keys_map[key] = KeyMap(case.subtitle, case.label,
+                                       case.superelement_adaptivity_index,
+                                       case.pval_step)
                 #data_dict[element_type] = [ueids, data]
                 case_to_delete = case_key
                 cases_to_delete.append(case_to_delete)
@@ -394,10 +399,15 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     return header.strip('; ')
 
 
-def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
+def get_rod_stress_strain(model: OP2,
+                          key,
+                          is_stress: bool,
+                          vm_word: str,
+                          itime: int,
                           oxx, txy,
                           max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map):
+                          eids, header_dict, keys_map,
+                          log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
@@ -417,14 +427,14 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
             msg = 'i%s (rod)=%s is not unique' % (case.element_name, str(i))
             print('  eids = %s\n' % str(list(eids)))
             print('  eidsi = %s\n' % str(list(eidsi)))
-            model.log.warning(msg)
+            log.warning(msg)
             continue
             #raise RuntimeError(msg)
 
         try:
             is_element_on[i] = 1
         except IndexError:
-            model.log.warning('missing %ss' % case.element_name)
+            log.warning('missing %ss' % case.element_name)
             continue
 
         try:
@@ -435,8 +445,9 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
             raise
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
         oxx[i] = case.data[itime, :, 0]
@@ -466,10 +477,13 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
     del rods
     return vm_word
 
-def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
+def get_bar_stress_strain(model: OP2, key,
+                          is_stress: bool, vm_word: str, itime: int,
                           oxx,
                           max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map):
+                          eids, header_dict,
+                          keys_map: KeysMap,
+                          log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         bars = model.cbar_stress
@@ -484,8 +498,9 @@ def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
             #s1a = case.data[itime, :, 0]
             #s2a = case.data[itime, :, 1]
             #s3a = case.data[itime, :, 2]
@@ -547,10 +562,15 @@ def try_except_return3(func):
     return try_except_func
 
 @try_except_return3
-def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
+def get_bar100_stress_strain(model: OP2,
+                             key,
+                             is_stress: bool, vm_word: str, itime: int,
                              oxx,
                              max_principal, min_principal, ovm, is_element_on,
-                             eids, header_dict, keys_map):
+                             eids: np.ndarray,
+                             header_dict,
+                             keys_map: KeysMap,
+                             log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         bars2 = model.cbar_stress_10nodes
@@ -565,8 +585,9 @@ def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
 
             #  0    1    2    3    4     5     6     7     8
             # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
@@ -607,10 +628,13 @@ def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
     del bars2
     return vm_word
 
-def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
+def get_beam_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itime: int,
                            oxx,
                            max_principal, min_principal, ovm, is_element_on,
-                           header_dict, keys_map, eid_map):
+                           header_dict,
+                           keys_map: KeysMap,
+                           eid_map,
+                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         beams = model.cbeam_stress
@@ -631,8 +655,9 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
             sxc = case.data[itime, :, 0]
             sxd = case.data[itime, :, 1]
             sxe = case.data[itime, :, 2]
@@ -650,7 +675,7 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
                 try:
                     eid2 = eid_map[eid]
                 except KeyError:
-                    model.log.warning('eid=%s is missing' % eid)
+                    log.warning('eid=%s is missing' % eid)
                     continue
 
                 is_element_on[eid2] = 1.
@@ -671,9 +696,12 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
     del beams
     return vm_word
 
-def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
+def get_plate_stress_strain(model: OP2, key,
+                            is_stress: bool, vm_word: str, itime: int,
                             oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
-                            eids, header_dict, keys_map):
+                            eids: np.ndarray,
+                            header_dict, keys_map: KeysMap,
+                            log: SimpleLogger) -> str:
     """
     helper method for _fill_op2_time_centroidal_stress.  Gets the max/min stress across all
     layers.
@@ -718,7 +746,7 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
 
             msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
             #raise RuntimeError(msg)
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
@@ -750,8 +778,9 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
         oxxi = case.data[itime, j, 1]
         oyyi = case.data[itime, j, 2]
         txyi = case.data[itime, j, 3]
@@ -808,9 +837,10 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
 def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itime: int,
                             oxx, oyy, ozz, txy, tyz, txz,
                             max_principal, mid_principal, min_principal, ovm, is_element_on,
-                            eids, header_dict, keys_map):
+                            eids: np.ndarray,
+                            header_dict, keys_map: KeysMap,
+                            log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
-    log = model.log
     if is_stress:
         solids = [(model.ctetra_stress),
                   (model.cpenta_stress),
@@ -828,7 +858,7 @@ def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itim
             continue
 
         if isinstance(case, RealSolidArrayNx):
-            model.log.info(f'converting {case.class_name}')
+            log.info(f'converting {case.class_name}')
             case = case.to_real_solid_array()
             result[key] = case
 
@@ -877,11 +907,11 @@ def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itim
     return vm_word
 
 def _get_solid_stress_strain_real(case: RealSolidArray,
-                                  eidsi,
+                                  eidsi: np.ndarray,
                                   nnodes_per_element: int,
                                   key: str, itime: int,
                                   header_dict,
-                                  keys_map):
+                                  keys_map: KeysMap) -> None:
 
     ntotal = len(eidsi)  * nnodes_per_element
 
@@ -899,8 +929,9 @@ def _get_solid_stress_strain_real(case: RealSolidArray,
     dt = case._times[itime]
     header = _get_nastran_header(case, dt, itime)
     header_dict[(key, itime)] = header
-    keys_map[key] = (case.subtitle, case.label,
-                     case.superelement_adaptivity_index, case.pval_step)
+    keys_map[key] = KeyMap(case.subtitle, case.label,
+                           case.superelement_adaptivity_index,
+                           case.pval_step)
     oxxi = case.data[itime, j, 0]
     oyyi = case.data[itime, j, 1]
     ozzi = case.data[itime, j, 2]

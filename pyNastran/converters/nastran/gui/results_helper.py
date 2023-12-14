@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING # Union,
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -18,7 +18,8 @@ from pyNastran.op2.result_objects.stress_object import (
     get_plate_stress_strain, get_solid_stress_strain
 )
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
-from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, KeysMap, Case, Cases
+from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, Case, Cases
+from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap
 
 from .geometry_helper import NastranGuiAttributes
 from .stress import (
@@ -29,19 +30,21 @@ from .stress import (
 from .force import get_spring_force, get_bar_force, get_plate_force
 
 if TYPE_CHECKING: # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     #from pyNastran.op2.result_objects.design_response import Desvars
 
-GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
+#from pyNastran.converters.nastran.gui.types import
+#GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
 
 Form = tuple[str, Optional[int], Any]
 FormDict = dict[tuple[Any, Any], Form]
 HeaderDict = dict[tuple[Any, Any], str]
-KeysMap = dict[str, Any]
 Case = tuple[GuiResult, tuple[int, str]]
 Cases = dict[int, Case]
+
 
 class NastranGuiResults(NastranGuiAttributes):
     """Defines OP2 specific methods NastranIO"""
@@ -52,7 +55,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                 model: OP2, key, icase: int,
                                 form_dict: FormDict,
                                 header_dict: HeaderDict,
-                                keys_map: KeysMap):
+                                keys_map: KeysMap) -> int:
         if key not in model.grid_point_forces:
             return icase
         grid_point_forces = model.grid_point_forces[key]
@@ -75,8 +78,9 @@ class NastranGuiResults(NastranGuiAttributes):
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         icase += 1
         return icase
@@ -84,11 +88,12 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_oug_oqg(self, cases: Cases, model: OP2, key, icase: int,
                           form_dict: FormDict,
                           header_dict: HeaderDict,
-                          keys_map: KeysMap, log) -> int:
+                          keys_map: KeysMap,
+                          log: SimpleLogger) -> int:
         """
         loads nodal results vector results (e.g., displacements/temperatures)
         """
-        settings = self.gui.settings  # type: Settings
+        settings: Settings = self.gui.settings
         nnodes = self.nnodes
         node_ids = self.node_ids
 
@@ -117,16 +122,17 @@ class NastranGuiResults(NastranGuiAttributes):
                            times: np.ndarray, key, icase: int,
                            form_dict: FormDict,
                            header_dict: HeaderDict,
-                           keys_map: KeysMap) -> int:
+                           keys_map: KeysMap,
+                           log: SimpleLogger) -> int:
         """Creates the time accurate grid point stress objects"""
         if key in model.grid_point_stress_discontinuities:
             case = model.grid_point_stress_discontinuities[key]
             del case
-            self.log.warning('skipping grid_point_stress_discontinuities')
+            log.warning('skipping grid_point_stress_discontinuities')
         if key in model.grid_point_stresses_volume_principal:
             case = model.grid_point_stresses_volume_principal[key]
             del case
-            self.log.warning('skipping grid_point_stresses_volume_principal')
+            log.warning('skipping grid_point_stresses_volume_principal')
 
         icase = _fill_op2_grid_point_surface_stresses(
             self.element_ids,
@@ -145,7 +151,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                            times: np.ndarray, key, icase: int,
                                            form_dict: FormDict,
                                            header_dict: HeaderDict,
-                                           keys_map: KeysMap) -> int:
+                                           keys_map: KeysMap,
+                                           log: SimpleLogger) -> int:
         """Creates the time accurate strain energy objects"""
         case = None
 
@@ -226,8 +233,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label,
-                                 case.superelement_adaptivity_index, case.pval_step)
+                keys_map[key] = KeyMap(case.subtitle, case.label,
+                                       case.superelement_adaptivity_index,
+                                       case.pval_step)
 
                 if case.is_complex:
                     continue
@@ -251,7 +259,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
                 if len(i) != len(np.unique(i)):
                     msg = 'Strain Energy i%s=%s is not unique because there are missing elements' % (name, str(i))
-                    model.log.warning(msg)
+                    log.warning(msg)
                     continue
 
                 # verifies the try-except is what we think it is (missing elements)
@@ -262,7 +270,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     percent[i] = data[itime, :itotal, 1]
                     strain_energy_density[i] = data[itime, :itotal, 2]
                 except IndexError:
-                    model.log.warning('error reading Strain Energy')
+                    log.warning('error reading Strain Energy')
                     continue
 
             # helicopter.dat
@@ -295,9 +303,11 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _create_op2_time_centroidal_force_arrays(self, model: OP2, nelements: int,
-                                                 key, itime,
+                                                 key,
+                                                 itime: int,
                                                  header_dict: HeaderDict,
-                                                 keys_map: KeysMap):
+                                                 keys_map: KeysMap,
+                                                 log: SimpleLogger) -> Any:
         """
         creates the following force outputs:
          - fx, fy, fz, mx, my, mz
@@ -325,8 +335,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 case = res_type[key]
                 if case.is_complex:
                     continue
-                keys_map[key] = (case.subtitle, case.label,
-                                 case.superelement_adaptivity_index, case.pval_step)
+                keys_map[key] = KeyMap(case.subtitle, case.label,
+                                       case.superelement_adaptivity_index,
+                                       case.pval_step)
                 data = case.data
                 if case.nonlinear_factor is None:
                     unused_ntimes = data.shape[:1]
@@ -362,8 +373,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     dt = case._times[itime]
                     header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
-                    keys_map[key] = (case.subtitle, case.label,
-                                     case.superelement_adaptivity_index, case.pval_step)
+                    keys_map[key] = KeyMap(case.subtitle, case.label,
+                                           case.superelement_adaptivity_index,
+                                           case.pval_step)
 
                     #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
                     # shear1, shear2, axial, torque]
@@ -399,14 +411,15 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label,
-                                 case.superelement_adaptivity_index, case.pval_step)
+                keys_map[key] = KeyMap(case.subtitle, case.label,
+                                       case.superelement_adaptivity_index,
+                                       case.pval_step)
 
                 j = np.searchsorted(self.element_ids, ueids)
                 di = j[1:-1] - j[0:-2]
                 if len(di) == 0:
                     # pload1
-                    self.log_error('Error loading CBAR-100 forces; failed slicing element_ids')
+                    log.error('Error loading CBAR-100 forces; failed slicing element_ids')
                 else:
                     is_element_on[j] = 1.
 
@@ -467,18 +480,21 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise NotImplementedError(case)
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
-    def _fill_op2_time_centroidal_force(self, cases: Cases, model: OP2,
+    def _fill_op2_time_centroidal_force(self,
+                                        cases: Cases,
+                                        model: OP2,
                                         key: tuple[Any, int], icase: int, itime: int,
                                         form_dict: dict[Any, Any],
                                         #form_dict: dict[tuple[Any, int], Any],
                                         header_dict: dict[Any, Any],
-                                        keys_map: dict[Any, Any]) -> int:
+                                        keys_map: dict[Any, Any],
+                                        log: SimpleLogger) -> int:
         """
         Creates the time accurate force objects
         """
         nelements = self.nelements
         out = self._create_op2_time_centroidal_force_arrays(
-            model, nelements, key, itime, header_dict, keys_map)
+            model, nelements, key, itime, header_dict, keys_map, log)
         found_force, fx, fy, fz, rx, ry, rz, is_element_on = out
 
         #new_cases = True
@@ -491,7 +507,7 @@ class NastranGuiResults(NastranGuiAttributes):
             num_off = 0
             if itime == 0 and is_element_on.min() == 0.0:
                 icase = self.save_filtered_forces(key, itime, icase, is_element_on,
-                                                  subcase_id, cases, form_dict)
+                                                  subcase_id, cases, form_dict, log)
 
             is_fx = np.any(np.isfinite(fx)) and np.nanmin(fx) != np.nanmax(fx)
             is_fy = np.any(np.isfinite(fy)) and np.nanmin(fy) != np.nanmax(fy)
@@ -503,24 +519,25 @@ class NastranGuiResults(NastranGuiAttributes):
             if is_fx or is_rx and not num_off == nelements:
                 # header = _get_nastran_header(case, dt, itime)
                 header = header_dict[(key, itime)]
+                form_dicti = form_dict[(key, itime)]
                 if is_fx:
                     fx_res = GuiResult(subcase_id, header=f'Axial: {header}', title='Axial',
                                        location='centroid', scalar=fx)
-                    form_dict[(key, itime)].append(('Axial', icase, []))
+                    form_dicti.append(('Axial', icase, []))
                     cases[icase] = (fx_res, (subcase_id, 'Axial'))
                     icase += 1
 
                 if is_fy:
                     fy_res = GuiResult(subcase_id, header=f'ShearY: {header}', title='ShearY',
                                        location='centroid', scalar=fy)
-                    form_dict[(key, itime)].append(('ShearY', icase, []))
+                    form_dicti.append(('ShearY', icase, []))
                     cases[icase] = (fy_res, (subcase_id, 'ShearY'))
                     icase += 1
 
                 if is_fz:
                     fz_res = GuiResult(subcase_id, header=f'ShearZ: {header}', title='ShearZ',
                                        location='centroid', scalar=fz)
-                    form_dict[(key, itime)].append(('ShearZ', icase, []))
+                    form_dicti.append(('ShearZ', icase, []))
                     cases[icase + 2] = (fz_res, (subcase_id, 'ShearZ'))
                     icase += 1
 
@@ -532,9 +549,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     mz_res = GuiResult(subcase_id, header=f'BendingZ: {header}', title='BendingZ',
                                        location='centroid', scalar=rz)
 
-                    form_dict[(key, itime)].append(('Torsion', icase, []))
-                    form_dict[(key, itime)].append(('BendingY', icase + 1, []))
-                    form_dict[(key, itime)].append(('BendingZ', icase + 2, []))
+                    form_dicti.append(('Torsion', icase, []))
+                    form_dicti.append(('BendingY', icase + 1, []))
+                    form_dicti.append(('BendingZ', icase + 2, []))
                     cases[icase] = (mx_res, (subcase_id, 'Torsion'))
                     cases[icase + 1] = (my_res, (subcase_id, 'BendingY'))
                     cases[icase + 2] = (mz_res, (subcase_id, 'BendingZ'))
@@ -590,18 +607,20 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases[icase + 4] = (is_my_res, (subcase_id, 'IsBendingY'))
                 cases[icase + 5] = (is_mz_res, (subcase_id, 'IsBendingZ'))
 
-                form_dict[(key, itime)].append(('IsAxial', icase, []))
-                form_dict[(key, itime)].append(('IsShearY', icase + 1, []))
-                form_dict[(key, itime)].append(('IsShearZ', icase + 2, []))
-                form_dict[(key, itime)].append(('IsTorsion', icase + 3, []))
-                form_dict[(key, itime)].append(('IsBendingY', icase + 4, []))
-                form_dict[(key, itime)].append(('IsBendingZ', icase + 5, []))
+                form_dicti.append(('IsAxial', icase, []))
+                form_dicti.append(('IsShearY', icase + 1, []))
+                form_dicti.append(('IsShearZ', icase + 2, []))
+                form_dicti.append(('IsTorsion', icase + 3, []))
+                form_dicti.append(('IsBendingY', icase + 4, []))
+                form_dicti.append(('IsBendingZ', icase + 5, []))
                 icase += 6
         return icase
 
     def save_filtered_forces(self, key, itime: int, icase: int,
                              is_element_on: bool, subcase_id: int,
-                             cases: Cases, form_dict: FormDict):
+                             cases: Cases,
+                             form_dict: FormDict,
+                             log: SimpleLogger) -> int:
         ioff = np.where(is_element_on == 0)[0]
         num_off = len(ioff)
 
@@ -620,7 +639,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if eids_off:
             print('force_eids_off = %s; n=%s' % (eids_off, num_off))
-            self.log_error('force_eids_off = %s; n=%s' % (eids_off, num_off))
+            log.error('force_eids_off = %s; n=%s' % (eids_off, num_off))
         force_on_res = GuiResult(subcase_id, header='Force - IsElementOn',
                                  title='Force\nIsElementOn',
                                  location='centroid', scalar=is_element_on)
@@ -685,7 +704,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     times: np.ndarray, key, icase_old: int,
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
-                                    keys_map: KeysMap) -> int:
+                                    keys_map: KeysMap,
+                                    log: SimpleLogger) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
         log = model.log
@@ -696,10 +716,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
                         cases, model, key, icase_old, itime,
-                        form_dict, header_dict, keys_map,
+                        form_dict, header_dict, keys_map, log,
                         is_stress=True)
                 except IndexError:
-                    self.log.error('problem getting stress...')
+                    log.error('problem getting stress...')
                     #raise
                     break
             if icase == icase_old:
@@ -710,10 +730,10 @@ class NastranGuiResults(NastranGuiAttributes):
         if nastran_settings.plate_stress:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=True)
+                form_dict, header_dict, keys_map, log, is_stress=True)
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=True,
+                form_dict, header_dict, keys_map, log, is_stress=True,
                 prefix='modal_contribution',
             )
 
@@ -721,36 +741,36 @@ class NastranGuiResults(NastranGuiAttributes):
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
-                self.stress[key].composite_data_dict, self.log, is_stress=True)
+                self.stress[key].composite_data_dict, log, is_stress=True)
 
         if nastran_settings.rod_stress:
             try:
                 icase = get_rod_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=True)
+                    form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
         if nastran_settings.bar_stress:
             try:
                 icase = get_bar_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=True)
+                    form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
         if nastran_settings.beam_stress:
             try:
                 icase = get_beam_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=True)
+                    form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
 
         icase = get_solid_stress_strains(
             eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=True)
+            form_dict, header_dict, keys_map, log, is_stress=True)
         icase = get_spring_stress_strains(
             eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=True)
+            form_dict, header_dict, keys_map, log, is_stress=True)
         return icase
 
 
@@ -758,7 +778,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                    times: np.ndarray, key, icase: int,
                                    form_dict: FormDict,
                                    header_dict: HeaderDict,
-                                   keys_map: KeysMap) -> int:
+                                   keys_map: KeysMap,
+                                   log: SimpleLogger) -> int:
         """Creates the time accurate force objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.force:
@@ -766,43 +787,43 @@ class NastranGuiResults(NastranGuiAttributes):
                 try:
                     icase = self._fill_op2_time_centroidal_force(
                         cases, model, key, icase, itime,
-                        form_dict, header_dict, keys_map)
+                        form_dict, header_dict, keys_map, log)
                 except IndexError:
-                    self.log.error('problem getting force...')
+                    log.error('problem getting force...')
                     break
 
         eids = self.element_ids
         if nastran_settings.bar_force:
             icase = get_bar_force(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map)
+                form_dict, header_dict, keys_map, log)
 
         if nastran_settings.beam_force:
             #icase = get_beam_force(
                 #eids, cases, model, times, key, icase,
                 #force_dict, header_dict, keys_map)
             if key in model.cbeam_force:
-                model.log.warning('skipping nastran beam force')
+                log.warning('skipping nastran beam force')
 
         if nastran_settings.plate_force:
             icase = get_plate_force(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map)
+                form_dict, header_dict, keys_map, log)
 
         if nastran_settings.spring_force:
             icase = get_spring_force(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map)
+                form_dict, header_dict, keys_map, log)
 
         if nastran_settings.cbush_force:
             if key in model.cbush_force:
-                model.log.warning('skipping nastran bush force')
+                log.warning('skipping nastran bush force')
         #if key in model.bush1d_force:
-            #model.log.warning('skipping nastran bush1d force')
+            #log.warning('skipping nastran bush1d force')
 
         if nastran_settings.gap_force:
             if key in model.cgap_force:
-                model.log.warning('skipping nastran gap force')
+                log.warning('skipping nastran gap force')
 
         return icase
 
@@ -810,28 +831,28 @@ class NastranGuiResults(NastranGuiAttributes):
                                     times: np.ndarray, key, icase: int,
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
-                                    keys_map: KeysMap) -> int:
+                                    keys_map: KeysMap,
+                                    log: SimpleLogger) -> int:
         """Creates the time accurate strain objects"""
-        log = self.log
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.strain:
             for itime, unused_dt in enumerate(times):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
                         cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                        is_stress=False)
+                        log, is_stress=False)
                 except IndexError:
-                    self.log.error('problem getting strain...')
+                    log.error('problem getting strain...')
                     break
 
         eids = self.element_ids
         if nastran_settings.composite_plate_strain:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=False)
+                form_dict, header_dict, keys_map, log, is_stress=False)
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=False,
+                form_dict, header_dict, keys_map, log, is_stress=False,
                 prefix='modal_contribution',
             )
 
@@ -845,7 +866,7 @@ class NastranGuiResults(NastranGuiAttributes):
             try:
                 icase = get_rod_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=False)
+                    form_dict, header_dict, keys_map, log, is_stress=False)
             except Exception as e:
                 log.error(str(e))
 
@@ -853,23 +874,24 @@ class NastranGuiResults(NastranGuiAttributes):
             try:
                 icase = get_bar_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=False)
+                    form_dict, header_dict, keys_map, log, is_stress=False)
             except Exception as e:
                 log.error(str(e))
+
         if nastran_settings.beam_strain:
             try:
                 icase = get_beam_stress_strains(
                     eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, is_stress=False)
+                    form_dict, header_dict, keys_map, log, is_stress=False)
             except Exception as e:
                 log.error(str(e))
 
         icase = get_solid_stress_strains(
             eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=False)
+            form_dict, header_dict, keys_map, log, is_stress=False)
         icase = get_spring_stress_strains(
             eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=False)
+            form_dict, header_dict, keys_map, log, is_stress=False)
 
         return icase
 
@@ -878,10 +900,10 @@ class NastranGuiResults(NastranGuiAttributes):
                                          form_dict: FormDict,
                                          header_dict: HeaderDict,
                                          keys_map: KeysMap,
+                                         log: SimpleLogger,
                                          is_stress: bool=True) -> int:
         """Creates the time accurate stress objects"""
         log = model.log
-        log_error = self.log_error
 
         #new_cases = True
         #assert isinstance(subcase_id, int), type(subcase_id)
@@ -922,7 +944,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx, txy,
                 max_principal, min_principal, ovm, is_element_on,
-                eids, header_dict, keys_map)
+                eids, header_dict, keys_map, log)
         except Exception as e:
             log.error(str(e))
 
@@ -931,7 +953,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
-                eids, header_dict, keys_map)
+                eids, header_dict, keys_map, log)
         except Exception as e:
             log.error(str(e))
 
@@ -940,7 +962,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
-                eids, header_dict, keys_map)
+                eids, header_dict, keys_map, log)
         except Exception as e:
             log.error(str(e))
 
@@ -949,7 +971,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
-                header_dict, keys_map, self.eid_map)
+                header_dict, keys_map, self.eid_map, log)
         except Exception as e:
             log.error(str(e))
         #-------------------------------------------------------------
@@ -957,7 +979,7 @@ class NastranGuiResults(NastranGuiAttributes):
             vm_word = get_plate_stress_strain(
                 model, key, is_stress, vm_word, itime,
                 oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
-                eids, header_dict, keys_map)
+                eids, header_dict, keys_map, log)
         except Exception as e:
             log.error(str(e))
 
@@ -985,7 +1007,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx, oyy, ozz, txy, tyz, txz,
                 max_principal, mid_principal, min_principal, ovm, is_element_on,
-                eids, header_dict, keys_map)
+                eids, header_dict, keys_map, log)
         except Exception as e:
             log.error(str(e))
 
@@ -1017,7 +1039,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
-                print_empty_elements(self.model, eids, is_element_on, log_error)
+                print_empty_elements(self.model, eids, is_element_on, log)
 
                 is_element_on = np.isfinite(oxx)
                 is_element_on = is_element_on.astype('|i1')
@@ -1157,7 +1179,8 @@ def _fill_nastran_displacements(cases: Cases, model: OP2, key, icase: int,
                                 keys_map: KeysMap,
                                 xyz_cid0: np.ndarray,
                                 nnodes: int, node_ids: np.ndarray,
-                                log, dim_max: float=1.0,
+                                log: SimpleLogger,
+                                dim_max: float=1.0,
                                 prefix: str='') -> int:
     """
     loads the nodal displacements/velocity/acceleration/eigenvector/spc/mpc forces
@@ -1217,7 +1240,8 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
                                    keys_map: KeysMap,
                                    xyz_cid0: np.ndarray,
                                    nnodes: int, node_ids: np.ndarray,
-                                   log, dim_max: float=1.0) -> int:
+                                   log: SimpleLogger,
+                                   dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
     if t123_offset == 0:
         title1 = name + ' T_XYZ'
@@ -1266,8 +1290,9 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
             # mode = 2; freq = 75.9575 Hz
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
 
             #if tnorm_abs_max == 0.0:
                 #scale = self.displacement_scale_factor
@@ -1299,8 +1324,9 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
 
             #tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
             #tnorm_abs_max = tnorm.max()
@@ -1343,8 +1369,9 @@ def _fill_nastran_temperatures(cases: Cases, model: OP2, key, icase: int,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
 
             loads = case.data[itime, :, :]
             nxyz = norm(loads[:, :3], axis=1)
@@ -1360,8 +1387,8 @@ def _fill_nastran_temperatures(cases: Cases, model: OP2, key, icase: int,
 
 def print_empty_elements(model: BDF,
                          element_ids: np.ndarray,
-                         is_element_on: bool, log_error):
-    """prints the first 20 elements that aren't supportedas part of the stress results"""
+                         is_element_on: bool, log: SimpleLogger):
+    """prints the first 20 elements that aren't supported as part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
     eids_off = []
     for eid in element_ids[ioff]:
@@ -1370,7 +1397,7 @@ def print_empty_elements(model: BDF,
             eids_off.append(eid)
 
     print('stress_eids_off = %s' % np.array(element_ids[ioff]))
-    log_error('stress_eids_off = %s' % element_ids[ioff])
+    log.error('stress_eids_off = %s' % element_ids[ioff])
 
     for eid in eids_off[:20]:
         element = model.elements[eid]
@@ -1732,8 +1759,9 @@ def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
     #print(case.get_stats())
     #eids_all = self.element_ids
     nelements = len(eids_all)
-    keys_map[key] = (case.subtitle, case.label,
-                     case.superelement_adaptivity_index, case.pval_step)
+    keys_map[key] = KeyMap(case.subtitle, case.label,
+                           case.superelement_adaptivity_index,
+                           case.pval_step)
     subcase_id = key[0]
 
 
@@ -1824,8 +1852,9 @@ def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
         return icase
     nnodes = len(nids)
 
-    keys_map[key] = (case.subtitle, case.label,
-                     case.superelement_adaptivity_index, case.pval_step)
+    keys_map[key] = KeyMap(case.subtitle, case.label,
+                           case.superelement_adaptivity_index,
+                           case.pval_step)
     subcase_id = key[0]
 
     nids2 = case.node
