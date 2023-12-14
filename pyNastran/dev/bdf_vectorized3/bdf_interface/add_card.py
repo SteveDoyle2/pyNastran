@@ -27,6 +27,10 @@ from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
 from pyNastran.bdf.cards.contact import BCTPARA, BCTPARM
+from pyNastran.bdf.cards.bdf_tables import (
+    TABLED1, TABLED2, TABLED3, TABLED4,
+    TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,

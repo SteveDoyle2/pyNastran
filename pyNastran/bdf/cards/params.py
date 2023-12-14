@@ -133,7 +133,7 @@ PARAMS = (
     ('EST', 2),
     ('EXTBEMI', 0, [0, 1]),
     ('EXTBEMO', 0, [0, 1]),
-    ('EXTDR', 'NO', ['NO']), # missing values?
+    ('EXTDR', 'NO', ['YES', 'NO']), # missing values?
     ('EXTDROUT', 'NO', ['NO', 'MATRIXDB', 'DMIGDB', 'DMIGOP2']),  # missing values?
     ('EXTDRUNT', 31),
     ('EXTOUT', 'NO', ['NO', 'MATRIXDB', 'DMIGDB', 'DMIGOP2', 'DMIGPCH']),
@@ -310,7 +310,7 @@ class PARAM(BaseCard):
     type = 'PARAM'
     _field_map = {1: 'key'}
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value) -> None:
         if n - 2 >= 0:
             try:
                 self.values[n - 2] = value
@@ -327,7 +327,7 @@ class PARAM(BaseCard):
         values = -1
         return PARAM(key, values, comment='')
 
-    def __init__(self, key, values, comment=''):
+    def __init__(self, key: str, values, comment: str=''):
         """
         Creates a PARAM card
 
@@ -356,7 +356,7 @@ class PARAM(BaseCard):
             #assert not isinstance(values[0], tuple), values
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PARAM card from ``BDF.add_card(...)``
 
@@ -403,7 +403,11 @@ class PARAM(BaseCard):
             if value in {'SMEAR', 'SMEARED'}:  # assume
                 value = 'YES'
             assert value in {'YES', 'NO', 'NONSMEAR'}, 'value=%r' % value
-
+        elif key == 'LIMITER':
+            value1 = string_or_blank(card, 2, 'value', default='ROE')
+            value2 = blank(card, 3, 'blank', default=None)
+            if value1 in 'ROE-SCHEME':
+                value1 = 'ROE'
         elif key == 'POST':
             value = integer_or_blank(card, 2, 'value', default=1)
         elif key == 'UNITSYS':

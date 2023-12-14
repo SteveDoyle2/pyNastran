@@ -233,7 +233,7 @@ class Writer:
         #self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -748,7 +748,23 @@ class Writer:
     def _write_tables(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
-        pass
+        model = self.model
+        #if self.tables or
+        if model.tables_d or model.tables_m: # or self.tables_sdamping:
+            bdf_file.write('$TABLES\n')
+            #for (unused_id, table) in sorted(self.tables.items()):
+                #bdf_file.write(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(model.tables_d.items()):
+                bdf_file.write(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(model.tables_m.items()):
+                bdf_file.write(table.write_card(size, is_double))
+            #for (unused_id, table) in sorted(self.tables_sdamping.items()):
+                #bdf_file.write(table.write_card(size, is_double))
+
+        #if self.random_tables:
+            #bdf_file.write('$RANDOM TABLES\n')
+            #for (unused_id, table) in sorted(self.random_tables.items()):
+                #bdf_file.write(table.write_card(size, is_double))
 
     def _write_thermal(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
@@ -828,16 +844,15 @@ class Writer:
         model = self.model
         if model.aeros or len(model.trim) or model.divergs or len(model.csschd):
             bdf_file.write('$STATIC AERO\n')
-            model.trim.write(size=size)
-            #model.trim2.write(size=size)
-            model.csschd.write(size=size)
+            model.trim.write_file(bdf_file, size=size, is_double=is_double)
+            #model.trim2.write_file(bdf_file, size=size, is_double=is_double)
+            model.csschd.write_file(bdf_file, size=size, is_double=is_double)
 
             # static aero
             if model.aeros:
                 bdf_file.write(model.aeros.write_card(size, is_double))
             for (unused_id, diverg) in sorted(model.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
-
 
     def _write_flutter(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
@@ -846,31 +861,30 @@ class Writer:
         """Writes the flutter cards"""
         model = self.model
 
-        bdf_file.write(model.paero1.write(size=size))
-        bdf_file.write(model.paero2.write(size=size))
-        bdf_file.write(model.paero3.write(size=size))
-        bdf_file.write(model.paero4.write(size=size))
-        bdf_file.write(model.paero5.write(size=size))
+        model.paero1.write_file(bdf_file, size=size, is_double=is_double)
+        model.paero2.write_file(bdf_file, size=size, is_double=is_double)
+        model.paero3.write_file(bdf_file, size=size, is_double=is_double)
+        model.paero4.write_file(bdf_file, size=size, is_double=is_double)
+        model.paero5.write_file(bdf_file, size=size, is_double=is_double)
 
-        bdf_file.write(model.caero1.write(size=size))
-        bdf_file.write(model.caero2.write(size=size))
-        bdf_file.write(model.caero3.write(size=size))
-        bdf_file.write(model.caero4.write(size=size))
-        bdf_file.write(model.caero5.write(size=size))
-        bdf_file.write(model.caero7.write(size=size))  # zona
+        model.caero1.write_file(bdf_file, size=size, is_double=is_double)
+        model.caero2.write_file(bdf_file, size=size, is_double=is_double)
+        model.caero3.write_file(bdf_file, size=size, is_double=is_double)
+        model.caero4.write_file(bdf_file, size=size, is_double=is_double)
+        model.caero5.write_file(bdf_file, size=size, is_double=is_double)
+        model.caero7.write_file(bdf_file, size=size, is_double=is_double)  # zona
 
-        bdf_file.write(model.spline1.write(size=size))
-        bdf_file.write(model.spline2.write(size=size))
-        bdf_file.write(model.spline3.write(size=size))
-        bdf_file.write(model.spline4.write(size=size))
-        bdf_file.write(model.spline5.write(size=size))
+        model.spline1.write_file(bdf_file, size=size, is_double=is_double)
+        model.spline2.write_file(bdf_file, size=size, is_double=is_double)
+        model.spline3.write_file(bdf_file, size=size, is_double=is_double)
+        model.spline4.write_file(bdf_file, size=size, is_double=is_double)
+        model.spline5.write_file(bdf_file, size=size, is_double=is_double)
         #bdf_file.write(model.spline6.write(size=size))
 
-        bdf_file.write(model.aesurf.write(size=size))
-        bdf_file.write(model.aecomp.write(size=size))  # helper for AECOMP
-        bdf_file.write(model.aecompl.write(size=size))  # helper for AECOMPL
-        bdf_file.write(model.aelist.write(size=size))  # aero boxes for AESURF
-        bdf_file.write(model.flfact.write(size=size))  # Mach, vel, rho for FLUTTER
+        model.aecomp.write_file(bdf_file, size=size, is_double=is_double)  # helper for AECOMP
+        model.aecompl.write_file(bdf_file, size=size, is_double=is_double)  # helper for AECOMPL
+        model.aelist.write_file(bdf_file, size=size, is_double=is_double)  # aero boxes for AESURF
+        model.flfact.write_file(bdf_file, size=size, is_double=is_double)  # Mach, vel, rho for FLUTTER
         #bdf_file.write(model.aefact.write(size=size))  #
 
         if (write_aero_in_flutter and model.aero) or model.flutters or model.mkaeros:

@@ -202,7 +202,7 @@ class AxiShellElement(Element):
     @property
     def all_properties(self) -> list[Any]:
         model = self.model
-        if self.type in ['CQUADX4', 'CQUADX8']:
+        if self.type in {'CQUADX4', 'CQUADX8'}:
             ## TODO: CQUADX4: PMIC not supported
             all_props = [model.psolid, model.plsolid]
         else:
@@ -349,7 +349,6 @@ class AxiShellElement(Element):
             #msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             #raise TypeError(msg)
 
-
     def set_from_op2(self, element_id, property_id, nodes, zoffset=None,
                      tflag=None, T=None, theta=None, mcid=None):
         #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
@@ -491,15 +490,15 @@ class CTRIAX(AxisymmetricShellElement):
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.mcid = mcid
         self.theta = theta
+        self.mcid = mcid
 
     def __apply_slice__(self, element: CTRIAX, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
-        element.mcid = self.mcid[i]
         element.theta = self.theta[i]
+        element.mcid = self.mcid[i]
         element.n = len(self.element_id)
 
     @property
@@ -790,7 +789,7 @@ class CQUADX(AxiShellElement):
                 theta[icard] = theta_mcid
             else:
                 mcid[icard] = theta_mcid
-        self._save(element_id, property_id, nodes, mcid, theta)
+        self._save(element_id, property_id, nodes, theta, mcid)
         self.sort()
         self.cards = []
 

@@ -28,15 +28,19 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
+ELEMENT_TABLES = {'FORCE', 'STRESS', 'STRAIN'}
 ELEMENT_TYPES = {
-    'CELAS1', 'CELAS2', 'CELAS3',
-    'CBUSH', 'CBUSH1D', 'CGAP',
-    'CONROD', 'CROD', 'CTUBE',
-    'CBAR', 'CBEAM', 'CBEND',
-    'CQUAD4', 'CTRIA3', 'CSHEAR', # 'CQUAD144',
-    'CHEXA', 'CPYRAM', 'CPENTA', 'CTETRA',
-    'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
-    'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
+    #'CELAS1', 'CELAS2', 'CELAS3',
+    #'CBUSH', 'CBUSH1D', 'CGAP',
+    #'CONROD', 'CROD', 'CTUBE',
+    #'CBAR', 'CBEAM', 'CBEND',
+    #'CQUAD4', 'CTRIA3', 'CSHEAR',
+    'BEAM', 'QUAD4', # 'CQUAD144',
+    'CQUAD4',
+    'CQUADR', 'CQUADX4', 'QUAD144',
+    #'CHEXA', 'CPYRAM', 'CPENTA', 'CTETRA',
+    #'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
+    #'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
 }
 class MONPNT1(VectorizedBaseCard):
     """
@@ -294,8 +298,8 @@ class MONPNT2(VectorizedBaseCard):
             label[icard] = labeli
             table[icard] = tablei
             element_type[icard] = element_typei
-            assert tablei in {'STRESS', 'FORCE', 'STRAIN'}, card
-            assert element_typei in ELEMENT_TYPES, card
+            assert tablei in ELEMENT_TABLES, f'table={tablei}; card={card}'
+            assert element_typei in ELEMENT_TYPES, f'element_type={element_typei}; card={card}'
             nddl_item[icard] = nddl_itemi
             element_id[icard] = eid
         self._save(name, label, table, element_type, nddl_item, element_id)

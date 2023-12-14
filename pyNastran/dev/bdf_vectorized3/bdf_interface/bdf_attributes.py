@@ -604,6 +604,10 @@ class BDFAttributes:
         self.mkaeros = []
 
         # ----------------------------------------------------------------
+        # tables
+        self.tables_d: dict[int, Any] = {}
+        self.tables_m: dict[int, Any] = {}
+
         # matrices
         #: direct matrix input - DMIG
         self.dmi: dict[str, DMI]= {}

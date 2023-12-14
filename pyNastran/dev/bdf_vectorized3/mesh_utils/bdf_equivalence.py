@@ -355,8 +355,9 @@ def update_cards(model: BDF,
         'PSOLID', 'PLSOLID',
         # aero
         'PAERO1',
-        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4',
+        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6',
         'AESURF', 'AESURFS', 'AESTAT',
+        'AEFACT',
         # loads
         'GRAV',
         # acoustic
@@ -373,7 +374,9 @@ def update_cards(model: BDF,
         'CMASS3', 'CMASS4',
         'SPCADD', 'MPCADD', 'SET1',
         # aero
-        'AELIST', 'CAERO1',
+        'AELIST',
+        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7',
+        'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         #  optimization
         'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
         'DCONSTR', 'DCONADD', 'DSCREEN',

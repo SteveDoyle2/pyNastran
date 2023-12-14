@@ -637,7 +637,6 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float,
 
 
 def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type (BDFCard, int, str, Optional[Union[float, str]]) -> Optional[Union[float, str]]
     """
     Casts a value to an double/string/blank
 

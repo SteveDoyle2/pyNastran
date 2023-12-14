@@ -839,10 +839,11 @@ class AnimationWindow(PyDialog):
         """opens a file dialog"""
         default_filename = ''
         file_types = 'Delimited Text (*.txt; *.dat; *.csv)'
-        dirname = open_file_dialog(self, 'Select a CSV File', default_filename, file_types)
-        if not dirname:
+        #filt       = 'Delimited Text (*.txt; *.dat; *.csv)'
+        fname, filt = open_file_dialog(self, 'Select a CSV File', default_filename, file_types)
+        if not fname:
             return
-        self.csv_profile_browse_button.setText(dirname)
+        self.csv_profile_browse_button.setText(fname)
 
     def on_default_title(self):
         """sets the default gif name"""
@@ -1001,13 +1002,14 @@ class AnimationWindow(PyDialog):
         grid_scale.addWidget(self.animation_profile_label, 0, 0)
         grid_scale.addWidget(self.animation_profile_edit, 0, 1)
 
-        #grid_scale.addWidget(self.csv_profile, 1, 0)
-        #grid_scale.addWidget(self.csv_profile_edit, 1, 1)
-        #grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
-
         self.csv_profile = QLabel("CSV profile:")
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_button = QPushButton('Browse')
+
+        if 0:
+            grid_scale.addWidget(self.csv_profile, 1, 0)
+            grid_scale.addWidget(self.csv_profile_edit, 1, 1)
+            grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
 
         #box_time = QVBoxLayout()
         # TODO: It's super annoying that the animate time box doesn't

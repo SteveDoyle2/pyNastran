@@ -137,11 +137,13 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 #from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     #PHBDY, CONV, CONVM, TEMPBC)
 #from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
-#from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
-                               #TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                               #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
-                               #TABRND1, TABRNDG,
-                               #DTABLE)
+from pyNastran.bdf.cards.bdf_tables import (
+    TABLED1, TABLED2, TABLED3, TABLED4,
+    TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+    #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+    #TABRND1, TABRNDG,
+    #DTABLE,
+)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCPARA, BCTPARA, BLSEG, BCTPARM, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
@@ -456,6 +458,9 @@ OBJ_CARDS = {
     'BCTPARA', 'BCTPARM',
     # optimization
     'DOPTPRM',
+    # tables
+    'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+    'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
 }
 
 
@@ -841,8 +846,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RINGAX', 'POINTAX',
             #------------------------------------------------------------------
             ## tables
-            #'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
-            #'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
+            'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
+            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
             # nonlinear elastic temperature dependent materials (e.g. creep)
             # sees TABLES1
@@ -2263,16 +2268,16 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TABLEH1' : (TABLEH1, add_methods._add_table_object),
 
             # dynamic tables
-            #'TABLED1' : (TABLED1, add_methods._add_tabled_object),
-            #'TABLED2' : (TABLED2, add_methods._add_tabled_object),
-            #'TABLED3' : (TABLED3, add_methods._add_tabled_object),
-            #'TABLED4' : (TABLED4, add_methods._add_tabled_object),
+            'TABLED1' : (TABLED1, add_methods._add_tabled_object),
+            'TABLED2' : (TABLED2, add_methods._add_tabled_object),
+            'TABLED3' : (TABLED3, add_methods._add_tabled_object),
+            'TABLED4' : (TABLED4, add_methods._add_tabled_object),
 
             # material tables
-            #'TABLEM1' : (TABLEM1, add_methods._add_tablem_object),
-            #'TABLEM2' : (TABLEM2, add_methods._add_tablem_object),
-            #'TABLEM3' : (TABLEM3, add_methods._add_tablem_object),
-            #'TABLEM4' : (TABLEM4, add_methods._add_tablem_object),
+            'TABLEM1' : (TABLEM1, add_methods._add_tablem_object),
+            'TABLEM2' : (TABLEM2, add_methods._add_tablem_object),
+            'TABLEM3' : (TABLEM3, add_methods._add_tablem_object),
+            'TABLEM4' : (TABLEM4, add_methods._add_tablem_object),
 
             # other tables
             #'TABDMP1' : (TABDMP1, add_methods._add_table_sdamping_object),
@@ -3336,7 +3341,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
             try:
-                class_instance = card_class.add_card(card_obj, comment=comment)
+                if self.is_lax_parser and hasattr(card_class, 'add_card_lax'):
+                    class_instance = card_class.add_card_lax(card_obj, comment=comment)
+                else:
+                    class_instance = card_class.add_card(card_obj, comment=comment)
                 card_idi = add_card_function(class_instance)
                 if card_name not in OBJ_CARDS:
                     if not isinstance(card_idi, int):

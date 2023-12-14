@@ -1,7 +1,7 @@
+# coding: utf-8
 """
 creates the pyNastranGUI
 """
-# coding: utf-8
 
 # we're intentionally putting this here to validate the imports
 # before doing lots of work

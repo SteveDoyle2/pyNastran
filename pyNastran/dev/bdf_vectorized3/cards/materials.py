@@ -6,8 +6,10 @@ import numpy as np
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, double_or_blank, string_or_blank,
-    integer_double_or_blank, blank,
+    integer, double, # string,
+    integer_or_blank, double_or_blank, string_or_blank,
+    integer_double_or_blank, # blank,
+    double_string_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
@@ -1148,15 +1150,25 @@ class MAT8(Material):
     Defines the material property for an orthotropic material for
     isoparametric shell elements.
 
-    +------+-----+-----+------+------+-----+-----+-----+-----+
-    |  1   |  2  |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
-    +======+=====+=====+======+======+=====+=====+=====+=====+
-    | MAT8 | MID | E1  |  E2  | NU12 | G12 | G1Z | G2Z | RHO |
-    +------+-----+-----+------+------+-----+-----+-----+-----+
-    |      | A1  |  A2 | TREF |  Xt  |  Xc |  Yt |  Yc |  S  |
-    +------+-----+-----+------+------+-----+-----+-----+-----+
-    |      | GE1 | F12 | STRN |      |     |     |     |     |
-    +------+-----+-----+------+------+-----+-----+-----+-----+
+    +------+-------+--------+------+------+------+------+------+-------+
+    |  1   |   2   |    3   |  4   |  5   |  6   |  7   |  8   |   9   |
+    +======+=======+========+======+======+======+======+======+=======+
+    | MAT8 |  MID  |   E1   |  E2  | NU12 | G12  | G1Z  | G2Z  |  RHO  |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      |  A1   |   A2   | TREF |  Xt  |  Xc  |  Yt  |  Yc  |   S   |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      |  GE1  |  F12   | STRN |      |      |      |      |       |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      | HFAIL |  HF1   | HF2  | HF3  | HF4  | HF10 | HF11 |       |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      | HTAPE |  HT1   | HT2  | HT3  | HT4  | HT5  | HT6  | HT10  |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      |       |  H11   | HT12 |      |      |      |      |       |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      | HFABR |  HFB1  | HFB2 | HFB3 | HFB4 | HFB5 | HFB6 | HFB10 |
+    +------+-------+--------+------+------+------+------+------+-------+
+    |      | HFB11 | HFBT12 |      |      |      |      |      |       |
+    +------+-------+--------+------+------+------+------+------+-------+
 
     """
     @Material.clear_check
@@ -1211,8 +1223,11 @@ class MAT8(Material):
         #self.S = np.hstack([self.S, [S]])
         #self.f12 = np.hstack([self.f12, [F12]])
         #self.strn = np.hstack([self.strn, [strn]])
+        hf = None
+        ht = None
+        hfb = None
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
-                           xt, xc, yt, yc, s, ge, f12, strn, comment))
+                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb, comment))
         self.n += 1
         return self.n - 1
 
@@ -1235,12 +1250,97 @@ class MAT8(Material):
         yt = double_or_blank(card, 14, 'Yt', default=0.0)
         yc = double_or_blank(card, 15, 'Yc', default=yt)
         s = double_or_blank(card, 16, 'S', default=0.0)
-        ge = double_or_blank(card, 17, 'ge', default=0.0)
-        f12 = double_or_blank(card, 18, 'F12', default=0.0)
-        strn = double_or_blank(card, 19, 'strn', default=0.0)
-        assert len(card) <= 20, f'len(MAT8 card) = {len(card):d}\ncard={card}'
+        ge = double_string_or_blank(card, 17, 'ge', default=0.0)
+
+        hf = None
+        ht = None
+        hfb = None
+        if isinstance(ge, float):
+            f12 = double_or_blank(card, 18, 'F12', default=0.0)
+            strn = double_or_blank(card, 19, 'strn', default=0.0)
+            assert len(card) <= 20, f'len(MAT8 card) = {len(card):d}\ncard={card}'
+        else:
+            #|      | HFAIL |  HF1   | HF2  | HF3  | HF4  | HF10 | HF11 |       |
+            #|      | HTAPE |  HT1   | HT2  | HT3  | HT4  | HT5  | HT6  | HT10  |
+            #|      |       |  H11   | HT12 |      |      |      |      |       |
+            #|      | HFABR |  HFB1  | HFB2 | HFB3 | HFB4 | HFB5 | HFB6 | HFB10 |
+            #|      | HFB11 | HFBT12 |      |      |      |      |      |       |
+            flag = ge.upper()
+            ge = np.nan
+            f12 = np.nan
+            strn = np.nan
+            assert flag in {'HFAIL', 'HTAPE', 'HFABR'}, flag
+            ifield = 17
+
+            if flag == 'HFAIL':
+                #Keyword indicating that Hashin failure criterion, to calculate its four failure indices.
+                #HF1 Maximum fiber tensile stress, no default
+                #HF2 Maximum fiber compressive stress, default=HF1
+                #HF3 Maximum matrix tensile stress, no default
+                #HF4 Maximum matrix compressive stress, default=HF3
+                #HF10 Maximum in-plane shear stress, no default
+                #HF11 Maximum transverse shear stress, default=HF10
+                hf1 = double(card, ifield+1, 'HF1')
+                hf2 = double_or_blank(card, ifield+2, 'HF2', default=hf1)
+                hf3 = double(card, ifield+3, 'HF3')
+                hf4 = double_or_blank(card, ifield+4, 'HF4', default=hf3)
+                hf10 = double(card, ifield+5, 'HF10')
+                hf11 = double_or_blank(card, ifield+6, 'HF11', default=hf10)
+                ifield += 8
+                flag = string_or_blank(card, ifield, 'HTAPE/HFABR', default='')
+                hf = [hf1, hf2, hf3, hf4, hf10, hf11]
+
+            if flag == 'HTAPE':
+                #Keyword indicating that Hashin-Tape criterion, a variant of the Hashin criterion,
+                #adapted for tape type of materials are calculated.
+                #HT1 Maximum tape fiber tensile stress, no default
+                #HT2 Maximum tape fiber compressive stress, default=HT1
+                #HT3 Maximum tape cross-fiber tensile stress, no default
+                #HT4 Maximum tape cross-fiber compressive stress, default=HT3
+                #HT5 Maximum fiber tensile stress for matrix compression; Required if HT6=1.0, otherwise not used.
+                #HT6 Contribution factor for HT5 (Real, 0.0 or 1.0, default = 0.0)
+                #HT10 Maximum in-plane shear stress, no default
+                #HT11 Maximum transverse shear stress, default=HT10
+                #HT12 Maximum z-x transverse shear stress, default=HT11
+                ht1 = double(card, ifield+1, 'HT1')
+                ht2 = double_or_blank(card, ifield+2, 'HT2', default=ht1)
+                ht3 = double(card, ifield+3, 'HT3')
+                ht4 = double_or_blank(card, ifield+4, 'HT4', default=ht3)
+
+                ht6 = double_or_blank(card, ifield+6, 'HT6', default=0.0)
+                assert ht6 in {0.0, 1.0}, ht6
+                ht5 = double_or_blank(card, ifield+5, 'HT5', default=np.nan)
+                ht10 = double(card, ifield+7, 'HT10')
+                ht11 = double_or_blank(card, ifield+8, 'HT11', default=ht10)
+                ht12 = double_or_blank(card, ifield+9, 'HT12', default=ht11)
+                ht = [ht1, ht2, ht3, ht4, ht5, ht6, ht10, ht11, ht12]
+                flag = string_or_blank(card, ifield, 'HFABR', default='')
+
+            if flag == 'HFABR':
+                # Keyword indicating that Hashin-Fabric criterion, a variant of the Hashin criterion,
+                # adapted for fabric type of materials are calculated.
+                #HFB1 Maximum first fiber tensile stress, no default
+                #HFB2 Maximum first fiber compressive stress, default=HFB1
+                #HFB3 Maximum second cross-fiber tensile stress, no default
+                #HFB4 Maximum second cross-fiber compressive stress, default=HFB3
+                #HFB5 Maximum thickness tensile stress, no default
+                #HFB6 Maximum thickness compressive stress, default=HFB5
+                #HFB10 Maximum in-plane shear stress, no default
+                #HFB11 Maximum transverse shear stress, default=HFB10
+                #HFB12 Maximum z-x transverse shear stress, default=HFB11
+                hfb1 = double(card, ifield+1, 'HFB1')
+                hfb2 = double_or_blank(card, ifield+2, 'HFB2', default=hfb1)
+                hfb3 = double(card, ifield+3, 'HFB3')
+                hfb4 = double_or_blank(card, ifield+4, 'HFB4', default=hfb3)
+                hfb5 = double(card, ifield+5, 'HFB5')
+                hfb6 = double_or_blank(card, ifield+6, 'HFB6', default=hfb5)
+                hfb10 = double(card, ifield+7, 'HFB10')
+                hfb11 = double_or_blank(card, ifield+8, 'HFB11', default=hfb10)
+                hfb12 = double_or_blank(card, ifield+9, 'HFB12', default=hfb11)
+                hfb = [hfb1, hfb2, hfb3, hfb4, hfb5, hfb6, hfb10, hfb11, hfb12]
+
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
-                           xt, xc, yt, yc, s, ge, f12, strn, comment))
+                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb, comment))
         self.n += 1
         return self.n - 1
 
@@ -1268,9 +1368,13 @@ class MAT8(Material):
         f12 = np.zeros(ncards, dtype='float64')
         strn = np.zeros(ncards, dtype='float64')
 
+        hf = np.full((ncards, 6), np.nan, dtype='float64')
+        ht = np.full((ncards, 9), np.nan, dtype='float64')
+        hfb = np.full((ncards, 9), np.nan, dtype='float64')
+
         for icard, card in enumerate(self.cards):
             (mid, e11, e22, nu12i, g12, g1z, g2z, rhoi, alphai, trefi,
-             xt, xc, yt, yc, s, gei, f12i, strni, comment) = card
+             xt, xc, yt, yc, s, gei, f12i, strni, hfi, hti, hfbi, comment) = card
             material_id[icard] = mid
             E11[icard] = e11
             E22[icard] = e22
@@ -1289,14 +1393,22 @@ class MAT8(Material):
             S[icard] = s              ## shear allowable
             f12[icard] = f12i
             strn[icard] = strni
+            if hfi is not None:
+                hf[icard, :] = hfi
+            if hti is not None:
+                ht[icard, :] = hti
+            if hfbi is not None:
+                hfbi[icard, :] = hfbi
+
         self._save(material_id, E11, E22, G12, G13, G23, nu12,
-                   rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn)
+                   rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn,
+                   hf=hf, ht=ht, hfb=hfb)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, E11, E22, G12, G13, G23, nu12,
               rho, alpha, tref, ge,
-              Xt, Xc, Yt, Yc, S, f12, strn):
+              Xt, Xc, Yt, Yc, S, f12, strn, hf=None, ht=None, hfb=None):
         if len(self.material_id) != 0:
             raise NotImplementedError()
         nmaterials = len(material_id)
@@ -1319,6 +1431,9 @@ class MAT8(Material):
         self.S = S
         self.f12 = f12
         self.strn = strn
+        self.hf = hf
+        self.ht = ht
+        self.hfb = hfb
         self.n = nmaterials
 
     def __apply_slice__(self, mat: MAT8, i: np.ndarray) -> None:  # ignore[override]
@@ -1343,6 +1458,9 @@ class MAT8(Material):
         mat.S = self.S[i]
         mat.f12 = self.f12[i]
         mat.strn = self.strn[i]
+        mat.hf = self.hf[i]
+        mat.ht = self.ht[i]
+        mat.hfb = self.hfb[i]
 
     def convert(self, stiffness_scale: float=1.0,
                 density_scale: float=1.0,
@@ -2524,7 +2642,7 @@ class MATORT(Material):
         #--------------------
         # 33
         option = string_or_blank(card, 33, 'option', default='ELEM')
-        file_ = blank(card, 34, 'file')
+        file_ = string_or_blank(card, 34, 'file', default='')
         x1 = double_or_blank(card, 35, 'x1', default=0.0)
         y1 = double_or_blank(card, 36, 'y1', default=0.0)
         z1 = double_or_blank(card, 37, 'z1', default=0.0)
@@ -2615,7 +2733,7 @@ class MATORT(Material):
             yshear2[icard] = yshear2i
             yshear3[icard] = yshear3i
             option[icard] = optioni
-            #file_
+            file_[icard] = filei
             xyz1[icard, :] = xyz1i
             xyz2[icard, :] = xyz2i
 
@@ -2623,7 +2741,7 @@ class MATORT(Material):
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option, xyz1, xyz2)
+                   option, file_, xyz1, xyz2)
         self.sort()
         self.cards = []
 
@@ -2631,7 +2749,7 @@ class MATORT(Material):
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option, xyz1, xyz2):
+                   option, file_, xyz1, xyz2):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
         self.E1 = E1
@@ -2659,8 +2777,8 @@ class MATORT(Material):
         self.yshear1 = yshear1
         self.yshear2 = yshear2
         self.yshear3 = yshear3
+        self.file_ = file_
         self.option = option
-        #self.file_
         self.xyz1 = xyz1
         self.xyz2 = xyz2
 
@@ -2696,7 +2814,7 @@ class MATORT(Material):
         mat.yshear2 = self.yshear2[i]
         mat.yshear3 = self.yshear3[i]
         mat.option = self.option[i]
-        #mat.file_
+        mat.file_ = self.file_[i]
         mat.xyz1 = self.xyz1[i]
         mat.xyz2 = self.xyz2[i]
 
@@ -2737,14 +2855,14 @@ class MATORT(Material):
             rho, alpha1, alpha2, alpha3, tref, ge, \
             iyield, ihard, sy, y1, y2, y3, \
             yshear1, yshear2, yshear3, \
-            option, xyz1, xyz2 \
+            file_, option, xyz1, xyz2 \
             in zip_longest(self.material_id, self.E1, self.E2, self.E3,
                            self.G12, self.G23, self.G31,
                            self.nu12, self.nu23, self.nu31, rhos,
                            alpha1s, alpha2s, alpha3s, trefs, ges,
                            iyields, ihards, sys, y1s, y2s, y3s,
                            yshear1s, yshear2s, yshear3s,
-                           self.option, xyz1s, xyz2s):
+                           self.file_, self.option, xyz1s, xyz2s):
 
             #rho = set_blank_if_default(rho, 0.)
             #a1 = set_blank_if_default(alpha1, 0.)

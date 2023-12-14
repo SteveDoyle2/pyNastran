@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from itertools import count
+from itertools import count, zip_longest
 from typing import Optional, TYPE_CHECKING
 import numpy as np
 
@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default # pr
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     double, double_or_blank,
-    string, double_string_or_blank, string_or_blank, integer_double_or_blank,
+    string, double_string_or_blank, string_or_blank, # integer_double_or_blank,
     parse_components, # components_or_blank,
     fields, interpret_value)
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
@@ -40,7 +40,7 @@ from pyNastran.femutils.utils import hstack_lists
 if TYPE_CHECKING:
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
@@ -132,13 +132,9 @@ class AECOMP(VectorizedBaseCard):
         #return AECOMP(name, list_type, lists, comment=comment)
         return self.n - 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         name = np.zeros(ncards, dtype='|U8')
         list_type = np.zeros(ncards, dtype='|U8')
         nlists = np.zeros(ncards, dtype='int32')
@@ -286,13 +282,9 @@ class AECOMPL(VectorizedBaseCard):
         #return AECOMPL(name, labels, comment=comment)
         return self.n - 1
 
-    def parse_cards(self) -> int:
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         name = np.zeros(ncards, dtype='|U8')
         nlabels = np.zeros(ncards, dtype='int32')
         #all_labels = np.array([], dtype='|U8')
@@ -513,7 +505,7 @@ class CAERO1(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
@@ -1037,7 +1029,7 @@ class CAERO2(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
@@ -1402,7 +1394,7 @@ class CAERO3(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
@@ -1434,7 +1426,18 @@ class CAERO3(VectorizedBaseCard):
 
     def _save(self, element_id, property_id, p1, p4, x12, x43, cp,
               list_w, list_c1, list_c2):
-        assert len(self.element_id) == 0, self.element_id
+        if len(self.element_id) != 0:
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            p1 = np.vstack([self.p1, p1])
+            p4 = np.vstack([self.p4, p4])
+            x12 = np.hstack([self.x12, x12])
+            x43 = np.hstack([self.x43, x43])
+            cp = np.hstack([self.cp, cp])
+            list_w = np.hstack([self.list_w, list_w])
+            list_c1 = np.hstack([self.list_c1, list_c1])
+            list_c2 = np.hstack([self.list_c2, list_c2])
+
         self.element_id = element_id
         self.property_id = property_id
         self.p1 = p1
@@ -1754,7 +1757,7 @@ class CAERO4(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
@@ -2141,7 +2144,7 @@ class CAERO5(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
@@ -2409,7 +2412,7 @@ class CAERO7(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         element_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
@@ -2900,7 +2903,7 @@ class PAERO1(PAERO):
 
         for pid, (icaero1, icaero2) in zip(paero_ids, self.icaero_body_id):
             if icaero1 != icaero2:
-                list_fields = ['PAERO1', pid] + caero_body_ids[icaero1:icaero2]
+                list_fields = ['PAERO1', pid] + caero_body_ids[icaero1:icaero2].tolist()
             else:
                 list_fields = ['PAERO1', pid]
             bdf_file.write(print_card(list_fields))
@@ -2999,8 +3002,8 @@ class PAERO2(PAERO):
         AR = double(card, 4, 'AR')
         lrsb = integer_or_blank(card, 5, 'lrsb')
         lrib = integer_or_blank(card, 6, 'lrib')
-        lth1 = integer_or_blank(card, 7, 'lth1')
-        lth2 = integer_or_blank(card, 8, 'lth2')
+        lth1 = integer_or_blank(card, 7, 'lth1', default=0)
+        lth2 = integer_or_blank(card, 8, 'lth2', default=0)
         thi = []
         thn = []
         list_fields = [interpret_value(field, card) for field in card[9:]]
@@ -3019,7 +3022,7 @@ class PAERO2(PAERO):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         #caero_body_id = np.zeros(ncards, dtype='int32')
@@ -3169,7 +3172,7 @@ class PAERO3(PAERO):
         self.caero_body_id = np.array([], dtype='int32')
 
     def add(self, pid: int, nbox: int, ncontrol_surfaces: int,
-            x: list[float], y: list[float], comment: str='') -> PAERO3:
+            x: list[float], y: list[float], comment: str='') -> int:
         """
         Creates a PAERO3 card, which defines the number of Mach boxes
         in the flow direction and the location of cranks and control
@@ -3193,8 +3196,9 @@ class PAERO3(PAERO):
         """
         self.cards.append((pid, nbox, ncontrol_surfaces, x, y, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PAERO1 card from ``BDF.add_card(...)``
 
@@ -3237,7 +3241,7 @@ class PAERO3(PAERO):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         nbox = np.zeros(ncards, dtype='int32')
@@ -3305,7 +3309,9 @@ class PAERO3(PAERO):
         nboxes = array_str(self.nbox, size=size)
         ncontrol_surfaces = array_str(self.ncontrol_surface, size=size)
 
-        for pid, nboxi, ncontrol_surfacei, xi, yi in zip(paero_ids, nboxes, ncontrol_surfaces, self.x, self.y):
+        x = array_float_nan(self.x, size=size, is_double=False)
+        y = array_float_nan(self.y, size=size, is_double=False)
+        for pid, nboxi, ncontrol_surfacei, xi, yi in zip(paero_ids, nboxes, ncontrol_surfaces, x, y):
             list_fields = ['PAERO3', pid, nboxi, ncontrol_surfacei, None]
             for (xii, yii) in zip(xi, yi):
                 list_fields += [xii, yii]
@@ -3339,7 +3345,7 @@ class PAERO4(PAERO):
     def add(self, pid: int,
             docs: list[float], caocs: list[float], gapocs: list[float],
             cla: int=0, lcla: int=0,
-            circ: int=0, lcirc: int=0, comment: str='') -> PAERO4:
+            circ: int=0, lcirc: int=0, comment: str='') -> int:
         """
         Parameters
         ----------
@@ -3379,8 +3385,9 @@ class PAERO4(PAERO):
                 cla, lcla, circ, lcirc, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PAERO4 card from ``BDF.add_card(...)``
 
@@ -3421,7 +3428,7 @@ class PAERO4(PAERO):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         #caero_body_id = np.zeros(ncards, dtype='int32')
@@ -3552,7 +3559,7 @@ class PAERO5(PAERO):
             nalpha: int=0, lalpha: int=0,
             nxis: int=0, lxis: int=0,
             ntaus: int=0, ltaus: int=0,
-            comment='') -> PAERO5:
+            comment='') -> int:
         """Creates a PAERO5 card"""
         card = (pid, caoci,
                 nalpha, lalpha, nxis, lxis,
@@ -3560,8 +3567,9 @@ class PAERO5(PAERO):
                 comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PAERO5 card from ``BDF.add_card(...)``
 
@@ -3600,7 +3608,7 @@ class PAERO5(PAERO):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         ncaoci = np.zeros(ncards, dtype='int32')
@@ -3747,7 +3755,7 @@ class AELIST(VectorizedBaseCard):
         self.nelements = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
 
-    def add(self, sid: int, elements: list[int], comment: str='') -> AELIST:
+    def add(self, sid: int, elements: list[int], comment: str='') -> int:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -3764,8 +3772,9 @@ class AELIST(VectorizedBaseCard):
         """
         self.cards.append((sid, elements, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds an AELIST card from ``BDF.add_card(...)``
 
@@ -3786,7 +3795,7 @@ class AELIST(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         aelist_id = np.zeros(ncards, dtype='int32')
         nelements = np.zeros(ncards, dtype='int32')
@@ -3959,7 +3968,7 @@ class AELINK(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         aelink_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
@@ -4083,7 +4092,7 @@ class AEFACT(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
-    def add(self, sid: int, fractions: list[float], comment: str='') -> AEFACT:
+    def add(self, sid: int, fractions: list[float], comment: str='') -> int:
         """
         Creates an AEFACT card, which is used by the CAEROx / PAEROx card
         to adjust the spacing of the sub-paneleing (and grid point
@@ -4101,6 +4110,7 @@ class AEFACT(VectorizedBaseCard):
         """
         self.cards.append((sid, fractions, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
@@ -4115,7 +4125,7 @@ class AEFACT(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         aefact_id = np.zeros(ncards, dtype='int32')
         nfractions = np.zeros(ncards, dtype='int32')
@@ -4154,7 +4164,6 @@ class AEFACT(VectorizedBaseCard):
         ifraction = self.ifraction
         prop.fractions = hslice_by_idim(i, ifraction, self.fractions)
         prop.nfractions = self.nfractions[i]
-
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4207,7 +4216,7 @@ class FLFACT(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
-    def add(self, sid: int, factors: list[float], comment: str='') -> FLFACT:
+    def add(self, sid: int, factors: list[float], comment: str='') -> int:
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
@@ -4243,8 +4252,9 @@ class FLFACT(VectorizedBaseCard):
         """
         self.cards.append((sid, factors, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         field3 = double_string_or_blank(card, 3, 'THRU')
@@ -4270,7 +4280,7 @@ class FLFACT(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         flfact_id = np.zeros(ncards, dtype='int32')
         nfactors = np.zeros(ncards, dtype='int32')
@@ -4367,7 +4377,7 @@ class SPLINE1(VectorizedBaseCard):
     def add(self, eid: int, caero: int, box1: int, box2: int, setg: int,
             dz: float=0., method: str='IPS',
             usage: str='BOTH', nelements: int=10,
-            melements: int=10, comment: str='') -> SPLINE1:
+            melements: int=10, comment: str='') -> int:
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -4410,8 +4420,9 @@ class SPLINE1(VectorizedBaseCard):
                 nelements, melements, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -4440,14 +4451,11 @@ class SPLINE1(VectorizedBaseCard):
                 nelements, melements, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         spline_id = np.zeros(ncards, dtype='int32')
         caero_id = np.zeros(ncards, dtype='int32')
         #igroup = np.zeros(ncards, dtype='int32')
@@ -4580,7 +4588,7 @@ class SPLINE2(VectorizedBaseCard):
     #def add_spline1(self, eid: int, caero: int, box1: int, box2: int, setg: int,
                     #dz: float=0., method: str='IPS',
                     #usage: str='BOTH', nelements: int=10,
-                    #melements: int=10, comment: str='') -> SPLINE1:
+                    #melements: int=10, comment: str='') -> int:
         #"""
         #Creates a SPLINE1, which defines a surface spline.
 
@@ -4630,7 +4638,7 @@ class SPLINE2(VectorizedBaseCard):
             cid: int=0,
             dthx: float=0.0, dthy: float=0.0,
             usage: str='BOTH',
-            comment: str='') -> SPLINE2:
+            comment: str='') -> int:
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -4669,12 +4677,15 @@ class SPLINE2(VectorizedBaseCard):
             a comment for the card
 
         """
+        assert dthx is not None, dthx
+        assert dthy is not None, dthy
         card = (eid, caero, box1, box2, setg, dz, dtor, cid,
                 dthx, dthy, usage, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a SPLINE2 card from ``BDF.add_card(...)``
 
@@ -4705,14 +4716,11 @@ class SPLINE2(VectorizedBaseCard):
                 dthx, dthy, usage, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         spline_id = np.zeros(ncards, dtype='int32')
         caero_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -4773,12 +4781,15 @@ class SPLINE2(VectorizedBaseCard):
         elem.spline_id = self.spline_id[i]
         elem.caero_id = self.caero_id[i]
         elem.box_id = self.box_id[i, :]
-        elem.dz = self.dz[i]
-        elem.dtor = self.dtor[i]
-        elem.dtor = self.dtor[i]
-        elem.usage = self.usage[i]
+        elem.set_id = self.set_id[i]
+        elem.coord_id = self.coord_id[i]
+
         elem.dthx = self.dthx[i]
         elem.dthy = self.dthy[i]
+        elem.dz = self.dz[i]
+        elem.dtor = self.dtor[i]
+        #elem.dtor = self.dtor[i]
+        elem.usage = self.usage[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
@@ -4811,10 +4822,14 @@ class SPLINE2(VectorizedBaseCard):
         set_ids = array_str(self.set_id, size=size)
 
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        dzs = array_default_float(self.dz, default=0.0, size=size, is_double=False)
+        dtors = array_default_float(self.dtor, default=1.0, size=size, is_double=False)
+        dthxs = array_default_float(self.dthx, default=0.0, size=size, is_double=False)
+        dthys = array_default_float(self.dthy, default=0.0, size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, dtor, \
             cid, usage, dthx, dthy in zip(\
-                spline_ids, caero_ids, boxs, set_ids, self.dz, self.dtor,
-                coord_ids, self.usage, self.dthx, self.dthy):
+                spline_ids, caero_ids, boxs, set_ids, dzs, dtors,
+                coord_ids, self.usage, dthxs, dthys):
 
             list_fields = ['SPLINE2', eid, caero, box1, box2,
                            setg, dz, dtor, cid, dthx, dthy,
@@ -4863,7 +4878,7 @@ class SPLINE3(VectorizedBaseCard):
             nodes: list[int],
             displacement_components: list[int],
             coeffs: list[float],
-            usage: str='BOTH', comment: str='') -> SPLINE3:
+            usage: str='BOTH', comment: str='') -> int:
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -4914,8 +4929,9 @@ class SPLINE3(VectorizedBaseCard):
                 coeffs, usage, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a SPLINE3 card from ``BDF.add_card(...)``
 
@@ -4971,14 +4987,11 @@ class SPLINE3(VectorizedBaseCard):
                 coeffs, usage, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         spline_id = np.zeros(ncards, dtype='int32')
         caero_id = np.zeros(ncards, dtype='int32')
         components = np.zeros(ncards, dtype='int32')
@@ -5194,7 +5207,7 @@ class SPLINE4(VectorizedBaseCard):
             nelements: int=10, melements: int=10,
             ftype: Optional[str]='WF2',
             rcore: Optional[float]=None,
-            comment: str='') -> SPLINE4:
+            comment: str='') -> int:
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -5236,8 +5249,9 @@ class SPLINE4(VectorizedBaseCard):
                 comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         aelist = integer(card, 3, 'aelist')
@@ -5259,14 +5273,11 @@ class SPLINE4(VectorizedBaseCard):
                 comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         spline_id = np.zeros(ncards, dtype='int32')
         caero_id = np.zeros(ncards, dtype='int32')
         aelist_id = np.zeros(ncards, dtype='int32')
@@ -5415,14 +5426,15 @@ class SPLINE5(VectorizedBaseCard):
     def add(self, eid: int, caero: int, aelist: int, setg: int, thx, thy,
             dz: float=0.0, dtor: float=1.0, cid: int=0,
             usage: str='BOTH', method: str='BEAM',
-            ftype: str='WF2', rcore=None, comment: str='') -> SPLINE5:
+            ftype: str='WF2', rcore=None, comment: str='') -> int:
         """Creates a SPLINE5 card"""
         card = (eid, caero, aelist, setg, thx, thy, dz, dtor, cid,
                 usage, method, ftype, rcore, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a SPLINE5 card from ``BDF.add_card(...)``
 
@@ -5458,18 +5470,17 @@ class SPLINE5(VectorizedBaseCard):
                 usage, method, ftype, rcore, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         spline_id = np.zeros(ncards, dtype='int32')
         caero_id = np.zeros(ncards, dtype='int32')
         aelist_id = np.zeros(ncards, dtype='int32')
         set_id = np.zeros(ncards, dtype='int32')
+        thx = np.zeros(ncards, dtype='float64')
+        thy = np.zeros(ncards, dtype='float64')
         dz = np.zeros(ncards, dtype='float64')
         dtor = np.zeros(ncards, dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -5479,12 +5490,14 @@ class SPLINE5(VectorizedBaseCard):
         ftype = np.zeros(ncards, dtype='|U4')
         rcore = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, caero, aelist, setg, thx, thy, dzi, dtori, cidi,
+            (eid, caero, aelist, setg, thxi, thyi, dzi, dtori, cidi,
              usagei, methodi, ftypei, rcorei, comment) = card
             spline_id[icard] = eid
             caero_id[icard] = caero
             aelist_id[icard] = aelist
             set_id[icard] = setg
+            thx[icard] = thxi
+            thy[icard] = thyi
             dz[icard] = dzi
             dtor[icard] = dtori
             coord_id[icard] = cidi
@@ -5492,18 +5505,22 @@ class SPLINE5(VectorizedBaseCard):
             usage[icard] = usagei
             ftype[icard] = ftypei
             rcore[icard] = rcorei
-        self._save(spline_id, caero_id, aelist_id, set_id, dz, dtor,
+        self._save(spline_id, caero_id, aelist_id, set_id,
+                   thx, thy, dz, dtor,
                    coord_id, method, usage, ftype, rcore)
         self.sort()
         self.cards = []
 
-    def _save(self, spline_id, caero_id, aelist_id, set_id, dz, dtor,
+    def _save(self, spline_id, caero_id, aelist_id, set_id,
+              thx, thy, dz, dtor,
               coord_id, method, usage, ftype, rcord):
         assert len(self.spline_id) == 0, self.spline_id
         self.spline_id = spline_id
         self.caero_id = caero_id
         self.aelist_id = aelist_id
         self.set_id = set_id
+        self.thx = thx
+        self.thy = thy
         self.dz = dz
         self.dtor = dtor
         self.coord_id = coord_id
@@ -5517,12 +5534,17 @@ class SPLINE5(VectorizedBaseCard):
         elem.n = len(i)
         elem.spline_id = self.spline_id[i]
         elem.caero_id = self.caero_id[i]
-        elem.box_id = self.box_id[i, :]
+        elem.aelist_id = self.aelist_id[i]
+        elem.set_id = self.set_id[i]
+        elem.thx = self.thx[i]
+        elem.thy = self.thy[i]
         elem.dz = self.dz[i]
+        elem.dtor = self.dtor[i]
+        elem.coord_id = self.coord_id[i]
         elem.method = self.method[i]
         elem.usage = self.usage[i]
-        elem.nelement = self.nelement[i]
-        elem.melement = self.melement[i]
+        elem.ftype = self.ftype[i]
+        elem.rcord = self.rcord[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
@@ -5554,18 +5576,17 @@ class SPLINE5(VectorizedBaseCard):
         cids = array_str(self.coord_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
+        thxs = array_float(self.thx, size=size, is_double=False)
+        thys = array_float(self.thy, size=size, is_double=False)
         dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
-        for eid, caero, aelist, setg, dz, dtor, \
-            cid, method, usage, ftype, rcore in zip(
-                spline_ids, caero_ids, aelists, set_ids, dzs, self.dtor,
+        for eid, caero, aelist, setg, thx, thy, dz, dtor, \
+            cid, method, usage, ftype, rcore in zip_longest(
+                spline_ids, caero_ids, aelists, set_ids, thxs, thys, dzs, self.dtor,
                 cids, self.method, self.usage, self.ftype, self.rcore):
 
             #dz = set_blank_if_default(dz, 0.)
             usage = set_blank_if_default(usage, 'BOTH')
 
-             # TODO: add
-            thx = None
-            thy = None
             list_fields = ['SPLINE5', eid, caero, aelist, None,
                            setg, dz, dtor, cid, thx, thy,
                            None, usage, method, None, ftype, rcore]
@@ -5593,7 +5614,8 @@ class GUST(VectorizedBaseCard):
     #def __len__(self) -> int:
         #return len(self.name)
 
-    def add(self, sid: int, dload: int, wg: float, x0: float, V: Optional[float]=None, comment: str='') -> GUST:
+    def add(self, sid: int, dload: int, wg: float, x0: float,
+            V: Optional[float]=None, comment: str='') -> int:
         """
         Creates a GUST card, which defines a stationary vertical gust
         for use in aeroelastic response analysis.
@@ -5621,8 +5643,9 @@ class GUST(VectorizedBaseCard):
         """
         self.cards.append((sid, dload, wg, x0, V, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a GUST card from ``BDF.add_card(...)``
 
@@ -5643,13 +5666,11 @@ class GUST(VectorizedBaseCard):
         #return GUST(sid, dload, wg, x0, V=V, comment=comment)
         self.cards.append((sid, dload, wg, x0, V, comment))
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         gust_id = np.zeros(ncards, dtype='int32')
         dload_id = np.zeros(ncards, dtype='int32')
 
@@ -5730,7 +5751,7 @@ class AESTAT(VectorizedBaseCard):
     #def __len__(self) -> int:
         #return len(self.name)
 
-    def add(self, aestat_id: int, label: str, comment: str='') -> AESTAT:
+    def add(self, aestat_id: int, label: str, comment: str='') -> int:
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -5746,8 +5767,9 @@ class AESTAT(VectorizedBaseCard):
         """
         self.cards.append((aestat_id, label, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment='') -> None:
+    def add_card(self, card: BDFCard, comment='') -> int:
         """
         Adds an AESTAT card from ``BDF.add_card(...)``
 
@@ -5765,13 +5787,11 @@ class AESTAT(VectorizedBaseCard):
         #return AESTAT(aestat_id, label, comment=comment)
         self.cards.append((aestat_id, label, comment))
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         aestat_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         for icard, card in enumerate(self.cards):
@@ -5830,7 +5850,8 @@ class AEPARM(VectorizedBaseCard):
     #def __len__(self) -> int:
         #return len(self.name)
 
-    def add(self, aeparm_id: int, label: str, units: str, comment: str='') -> AEPARM:
+    def add(self, aeparm_id: int, label: str, units: str,
+            comment: str='') -> int:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -5848,8 +5869,9 @@ class AEPARM(VectorizedBaseCard):
         """
         self.cards.append((aeparm_id, label, units, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds an AEPARM card from ``BDF.add_card(...)``
 
@@ -5870,13 +5892,11 @@ class AEPARM(VectorizedBaseCard):
         #return AEPARM(aeparm_id, label, units, comment=comment)
         self.cards.append((aeparm_id, label, units, comment))
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         aeparm_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         units = np.zeros(ncards, dtype='|U8')
@@ -5943,7 +5963,7 @@ class AESURF(VectorizedBaseCard):
             pllim: float=-np.pi/2., pulim: float=np.pi/2.,
             hmllim=None, hmulim=None, # hinge moment lower/upper limits
             tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
-            comment='') -> AESURF:
+            comment='') -> int:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -5987,8 +6007,9 @@ class AESURF(VectorizedBaseCard):
                 tqllim, tqulim, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -6030,14 +6051,11 @@ class AESURF(VectorizedBaseCard):
                 tqllim, tqulim, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         aesurf_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         coord_id = np.zeros((ncards, 2), dtype='int32')
@@ -6197,7 +6215,7 @@ class AESURF(VectorizedBaseCard):
         for aesurf_id, label, cid1, aelist_id1, \
             cid2, aelist_id2, eff, ldw, crefc, crefs, \
             pllim, pulim, hmllim, hmulim, \
-            tqllim, tqulim in zip(
+            tqllim, tqulim in zip_longest(
                 aesurf_id_, self.label, cid1_, aelist_id1_, cid2_, aelist_id2_,
                 effs, ldws, self.refc, self.refs,
                 self.pllim, self.pulim, hmllims, hmulims, tqllims, tqulims):
@@ -6240,7 +6258,7 @@ class AESURFS(VectorizedBaseCard):
         self.aesurfs_id = np.array([], dtype='int32')
 
     def add(self, aesurfs_id: int, label: str,
-            list1: int, list2: int, comment: str='') -> AESURFS:
+            list1: int, list2: int, comment: str='') -> int:
         """
         Creates an AESURFS card
 
@@ -6260,8 +6278,9 @@ class AESURFS(VectorizedBaseCard):
         card = (aesurfs_id, label, list1, list2, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds an AESURFS card from ``BDF.add_card(...)``
 
@@ -6282,14 +6301,11 @@ class AESURFS(VectorizedBaseCard):
         card = (aesid, label, list1, list2, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         aesurfs_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         list1_id = np.zeros(ncards, dtype='int32')
@@ -6384,7 +6400,7 @@ class CSSCHD(VectorizedBaseCard):
 
     def add(self, sid: int, aesurf_id: int,
             lschd: int, lalpha: int=None, lmach: int=None,  # aefact
-            comment: str='') -> CSSCHD:
+            comment: str='') -> int:
         """
         Creates an CSSCHD card, which defines a specified control surface
         deflection as a function of Mach and alpha (used in SOL 144/146).
@@ -6411,9 +6427,9 @@ class CSSCHD(VectorizedBaseCard):
         card = (sid, aesurf_id, lalpha, lmach, lschd, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CSSCHD card from ``BDF.add_card(...)``
 
@@ -6435,14 +6451,11 @@ class CSSCHD(VectorizedBaseCard):
         card = (sid, aesurf_id, lalpha, lmach, lschd, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         csschd_id = np.zeros(ncards, dtype='int32')
         aesurf_id = np.zeros(ncards, dtype='int32')
         lalpha = np.zeros(ncards, dtype='int32')
@@ -6560,7 +6573,7 @@ class TRIM(VectorizedBaseCard):
 
     def add(self, sid: int, mach: float, q: float,
             labels: list[str], uxs: list[float], aeqr: float=1.0,
-            trim_type: int=1, comment: str='') -> None:
+            trim_type: int=1, comment: str='') -> int:
         """
         Creates a TRIM/TRIM2 card for a static aero (144) analysis.
 
@@ -6590,8 +6603,9 @@ class TRIM(VectorizedBaseCard):
         card = (sid, mach, q, labels, uxs, aeqr, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a TRIM card from ``BDF.add_card(...)``
 
@@ -6634,8 +6648,9 @@ class TRIM(VectorizedBaseCard):
         #return TRIM(sid, mach, q, labels, uxs, aeqr, comment=comment)
         self.cards.append((sid, mach, q, labels, uxs, aeqr, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card2(self, card, comment=''):
+    def add_card2(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a TRIM2 card from ``BDF.add_card(...)``
 
@@ -6665,14 +6680,11 @@ class TRIM(VectorizedBaseCard):
         #return TRIM2(sid, mach, q, labels, uxs, aeqr, comment=comment)
         self.cards.append((2, sid, mach, q, labels, uxs, aeqr, comment))
         self.n += 1
+        return self.n - 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         trim_id = np.zeros(ncards, dtype='int32')
         mach = np.zeros(ncards, dtype='float64')
         q = np.zeros(ncards, dtype='float64')
@@ -7001,10 +7013,10 @@ class TRIM(VectorizedBaseCard):
             return ''
         print_card = get_print_card_8_16(size)
 
-        trim_id_ = array_str(self.trim_id, size=size)
+        trim_ids = array_str(self.trim_id, size=size)
 
         for trim_id, mach, q, aeqr, (ilabel0, ilabel1) in zip(
-                trim_id_, self.mach, self.q, self.aeqr, self.ilabel):
+                trim_ids, self.mach, self.q, self.aeqr, self.ilabel):
 
             labels = self.label[ilabel0:ilabel1]
             uxs = self.ux[ilabel0:ilabel1]

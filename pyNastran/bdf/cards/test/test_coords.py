@@ -24,6 +24,15 @@ from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
 class TestCoords(unittest.TestCase):
     """tests the coordinate systems and their transforms"""
+    def test_ricoord(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        fields = ['CORD1R', '1', '1', '101', '2']
+        model.add_card(fields, 'CORD1R', comment='', ifile=None, is_list=True, has_none=True)
+
+        fields = ['CORD2C', '2', '1', '0.0', '424.264', '0.0', '0.0', '424.264', '100.', '424.264', '828.528', '0.0']
+        model.add_card(fields, 'CORD2C', comment='', ifile=None, is_list=True, has_none=True)
+        model.setup()
+
     def test_same(self):
         """simple coordinate equality test"""
         grids = [
@@ -1153,7 +1162,6 @@ class TestCoords(unittest.TestCase):
                 self.assertIsNone(matcid.thru)
                 self.assertIsNone(matcid.by)
 
-        
 def make_tri(model):
     model.add_grid(1, [0., 0., 0.])
     model.add_grid(3, [0., 0., 1.])

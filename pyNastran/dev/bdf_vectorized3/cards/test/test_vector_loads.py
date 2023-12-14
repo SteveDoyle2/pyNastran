@@ -1527,18 +1527,16 @@ class TestLoads(unittest.TestCase):
         table_id = 30000
         dload_id = 40000
 
-        RUN_TABLE = False
-        if RUN_TABLE:
-            theta = np.linspace(0., 1., num=50, endpoint=True)
-            y = np.sin(theta)
-            x = theta
-            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        theta = np.linspace(0., 1., num=50, endpoint=True)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
-            scale = 1.
-            scale_factors = 1.
-            load_ids = [40001]
-            model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
-            #model.add_darea(sid, p, c, scale)
+        scale = 1.
+        scale_factors = 1.
+        load_ids = [40001]
+        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
 
         sid = 40001
         excite_id = pload4_sid
@@ -1583,18 +1581,16 @@ class TestLoads(unittest.TestCase):
         table_id = 30000
         dload_id = 40000
 
-        RUN_TABLE = False
-        if RUN_TABLE:
-            theta = np.linspace(0., 1., num=50, endpoint=True)
-            y = np.sin(theta)
-            x = theta
-            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        theta = np.linspace(0., 1., num=50, endpoint=True)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
-            scale = 1.
-            scale_factors = 1.
-            load_ids = [40001]
-            model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
-            #model.add_darea(sid, p, c, scale)
+        scale = 1.
+        scale_factors = 1.
+        load_ids = [40001]
+        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
 
         tload_id = 40001
         darea_id = 40002
@@ -1643,12 +1639,10 @@ class TestLoads(unittest.TestCase):
 
         table_id = 30000
 
-        RUN_TABLE = False
-        if RUN_TABLE:
-            theta = np.linspace(0., 1., num=50, endpoint=True)
-            y = np.sin(theta)
-            x = theta
-            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        theta = np.linspace(0., 1., num=50, endpoint=True)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
 
         #dload_id = 40000
@@ -1703,14 +1697,13 @@ class TestLoads(unittest.TestCase):
         #pressures = 100.
         #model.add_pload4(pload4_sid, eids, pressures)
 
-        RUN_THERMAL = False
         table_id = 30000
-        if RUN_THERMAL:
-            theta = np.linspace(0., 1., num=50, endpoint=True)
-            y = np.sin(theta)
-            x = theta
-            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        theta = np.linspace(0., 1., num=50, endpoint=True)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
+        #RUN_THERMAL = False
         #dload_id = 40000
         #scale = 1.
         #scale_factors = 1.

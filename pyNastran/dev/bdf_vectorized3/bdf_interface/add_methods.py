@@ -254,3 +254,20 @@ class AddMethods():
         self.model.bctparm[key] = card
         self.model._type_to_id_map[card.type].append(key)
 
+    def _add_tabled_object(self, table: Union[TABLED1, TABLED2, TABLED3, TABLED4]) -> None:
+        """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
+        key = table.tid
+        assert key not in self.model.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
+            table, self.model.tables_d[key])
+        #assert key > 0; yes you can have negative tables...
+        self.model.tables_d[key] = table
+        self.model._type_to_id_map[table.type].append(key)
+
+    def _add_tablem_object(self, table: Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]) -> None:
+        """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
+        key = table.tid
+        assert key not in self.model.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
+            table, self.model.tables_m[key])
+        #assert key > 0; yes you can have negative tables...
+        self.model.tables_m[key] = table
+        self.model._type_to_id_map[table.type].append(key)

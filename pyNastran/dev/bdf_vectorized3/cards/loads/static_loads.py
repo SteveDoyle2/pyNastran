@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     components_or_blank,
     string, integer_or_string, fields,
 )
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 #from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
 from pyNastran.utils.numpy_utils import (
@@ -399,11 +399,12 @@ class Load0(Load):
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble = force_double if self.model.is_lax_parser else double
 
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', default=0)
-        mag = double(card, 4, 'mag')
+        mag = fdouble(card, 4, 'mag')
         xyz = [fdouble_or_blank(card, 5, 'X1', default=0.0),
                fdouble_or_blank(card, 6, 'X2', default=0.0),
                fdouble_or_blank(card, 7, 'X3', default=0.0)]

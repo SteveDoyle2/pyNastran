@@ -60,10 +60,10 @@ def force_double(card: BDFCard, ifield: int, fieldname: str) -> float:
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-    if svalue.isdigit():  # 1, not +1, or -1
-        # if only int
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not an integer).\n'
-                          'card=%s' % (fieldname, svalue, ifield, card))
+    #if svalue.isdigit():  # 1, not +1, or -1
+        ## if only int
+        #raise SyntaxError('%s = %r (field #%s) on card must be a float (not an integer).\n'
+                          #'card=%s' % (fieldname, svalue, ifield, card))
 
     try:
         # 1.0, 1.0E+3, 1.0E-3

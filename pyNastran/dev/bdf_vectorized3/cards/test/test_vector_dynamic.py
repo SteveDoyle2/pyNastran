@@ -230,11 +230,10 @@ class TestDynamic(unittest.TestCase):
                                  comment='dload')
 
         delayi = model.add_delay(delay_id, nodes, components, delays)
-        if TEST_DYNAMIC:
-            x1 = 0.1
-            x = np.linspace(0., 1.)
-            y = np.sin(x)
-            tabled2 = model.add_tabled2(tid, x1, x, y, comment='tabled2')
+        x1 = 0.1
+        x = np.linspace(0., 1.)
+        y = np.sin(x)
+        tabled2 = model.add_tabled2(tid, x1, x, y, comment='tabled2')
 
         model.pop_parse_errors()
 
@@ -341,11 +340,10 @@ class TestDynamic(unittest.TestCase):
         delayi = model.add_delay(delay_id, nodes, components, delays)
         model.add_grid(nodes, [0., 0., 0.])
 
-        if TEST_DYNAMIC:
-            x1 = 0.1
-            x = np.linspace(0., 1.)
-            y = np.sin(x)
-            tabled2i = model.add_tabled2(tid, x1, x, y, comment='tabled2')
+        x1 = 0.1
+        x = np.linspace(0., 1.)
+        y = np.sin(x)
+        tabled2i = model.add_tabled2(tid, x1, x, y, comment='tabled2')
 
         model.setup()
         model.pop_parse_errors()
@@ -537,13 +535,11 @@ class TestDynamic(unittest.TestCase):
         phase_leads = 2.0
         delay = model.add_dphase(sid, nodes, components, phase_leads)
 
-        TEST_DYNAMIC = False
-        if TEST_DYNAMIC:
-            tid = power
-            x1 = 1.
-            x = np.linspace(0., 1.) + 10.
-            y = np.sin(x) + 2.
-            model.add_tabled2(tid, x1, x, y, comment='tabled2')
+        tid = power
+        x1 = 1.
+        x = np.linspace(0., 1.) + 10.
+        y = np.sin(x) + 2.
+        model.add_tabled2(tid, x1, x, y, comment='tabled2')
         model.add_grid(4, [0., 0., 0.])
 
         model.validate()
@@ -688,11 +684,10 @@ class TestDynamic(unittest.TestCase):
                         cid=0, comment='')
 
         tabled2_id = 100
-        if TEST_DYNAMIC:
-            x1 = 0.
-            x = t = np.linspace(0., 1., num=11)
-            y = np.sin(t)
-            model.add_tabled2(tabled2_id, x1, x, y, extrap=0, comment='')
+        x1 = 0.
+        x = t = np.linspace(0., 1., num=11)
+        y = np.sin(t)
+        model.add_tabled2(tabled2_id, x1, x, y, extrap=0, comment='')
 
         tload_id = 12
         tload1a = model.add_tload1(tload_id, excite_id, tabled2_id, delay=0,

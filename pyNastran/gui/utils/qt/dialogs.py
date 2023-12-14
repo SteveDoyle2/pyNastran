@@ -2,11 +2,11 @@ from pyNastran.gui.qt_version import qt_version
 
 from qtpy.QtWidgets import QFileDialog, QWidget
 
+
 def open_file_dialog(self, title: str, default_filename: str,
                      file_types: str) -> tuple[str, str]:
     """
     Common method for opening files
-
 
     Parameters
     ----------
@@ -20,11 +20,23 @@ def open_file_dialog(self, title: str, default_filename: str,
         the wildcard
         'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch);;All files (*)'
 
+    Returns
+    -------
+    fname : str
+        the selected file
+    flt : str
+        the filter selection, '(*.bdf; *.dat; *.nas; *.ecd; *.pch)'
+
     """
-    options = QFileDialog.Options()
-    options |= QFileDialog.DontUseNativeDialog
-    fname, flt = QFileDialog.getOpenFileName(
-        self, title, default_filename, file_types, options=options)
+    if qt_version == 'pyqt6':
+        fname, flt = QFileDialog.getOpenFileName(
+            self, title, default_filename, file_types)
+    else:
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fname, flt = QFileDialog.getOpenFileName(
+            self, title, default_filename, file_types, options=options)
+
     #flt = str(filt).strip()
     return fname, flt
 

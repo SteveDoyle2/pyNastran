@@ -344,7 +344,7 @@ def shell_thickness(model: BDF,
             Ti0 = Ti[i0, :].copy()
             inan0 = np.isnan(Ti0) | (Ti0 == 0.0)
             ti_all0 = ti_all[i0]
-            print('Ti0', Ti0)
+            #print('Ti0', Ti0)
             total_thickness0 = np.column_stack([ti_all0] * nnode)
             Ti0[inan0] = total_thickness0[inan0]
             thickness_mean = Ti0.mean(axis=1)
@@ -362,7 +362,7 @@ def shell_thickness(model: BDF,
             # find the blanks and set them to 1.0
             #n1 = i1.sum()
             Ti1 = Ti[i1, :].copy()
-            inan1 = np.isnan(Ti1) | (Ti0 == 0.0)
+            inan1 = np.isnan(Ti1) | (Ti1 == 0.0)
             #ti_all1 = np.ones(n1)# ti_all[i1]
             #relative_thickness1 = np.ones((n1, nnode))
             Ti1[inan1] = 1.
