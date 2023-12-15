@@ -8,6 +8,18 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class TestCoords(unittest.TestCase):
+    def test_ricoord(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        fields = ['CORD1R', '1', '1', '101', '2']
+        model.add_card(fields, 'CORD1R', comment='', ifile=None, is_list=True, has_none=True)
+
+        fields = ['CORD2C', '2', '1', '0.0', '424.264', '0.0', '0.0', '424.264', '100.', '424.264', '828.528', '0.0']
+        model.add_card(fields, 'CORD2C', comment='', ifile=None, is_list=True, has_none=True)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 1.])
+        model.add_grid(101, [1., 0., 0.])
+        model.cross_reference()
+
     def test_same(self):  # passes
         grids = [
             [1, 0, 0., 0., 1.],
