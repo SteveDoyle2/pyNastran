@@ -32,6 +32,21 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         NastranIO.__init__(self)
         self.build_fmts(['nastran'], stop_on_failure=True)
 
+    def write_result_cases(self):
+        case_id0 = 0
+        for case_id, (result_case, flag) in self.result_cases.items():
+            if hasattr(result_case, 'headers'):
+                if result_case.headers:
+                    print(case_id, flag, result_case.headers)
+                else:
+                    print(case_id, flag, result_case.__class__.__name__, result_case.methods)
+            elif hasattr(result_case, 'header'):
+                print(case_id, flag, result_case.header)
+            else:
+                raise RuntimeError(result_case)
+            assert case_id == case_id0, (case_id, case_id0)
+            case_id0 += 1
+
 PKG_PATH = pyNastran.__path__[0]
 STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
@@ -178,6 +193,8 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
         assert len(test.models['main'].elements) > 0
+        #test.write_result_cases()
+        assert len(test.result_cases) == 694, len(test.result_cases)
 
         test.on_rcycle_results()
         test.on_update_legend(
@@ -448,6 +465,10 @@ class TestNastranGUI(unittest.TestCase):
         #test.load_nastran_geometry(bdf_filename)
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
+        #test.write_result_cases()
+
+        #print(test.result_cases[154])
+        #print(test.result_cases[160])
         assert len(test.result_cases) == 236, len(test.result_cases)
         #print(test.result_cases)
 

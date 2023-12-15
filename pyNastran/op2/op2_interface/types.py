@@ -19,7 +19,7 @@ class KeyMap:
     def __repr__(self) -> str:
         msg = 'KeyMap:\n'
         if self.subtitle:
-            msg += f'  subtitle: {subtitle.label!r}\n'
+            msg += f'  subtitle: {self.subtitle!r}\n'
         if self.label:
             msg += f'  label: {self.label!r}\n'
         if self.superelement_adaptivity_index:

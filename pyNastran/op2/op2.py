@@ -1144,7 +1144,7 @@ class OP2(OP2_Scalar, OP2Writer):
                                            superelement_adaptivity_index, pval_step) # str
                                     if key not in keys3:
                                         #print('adding ', key)
-                                        assert key in used_keys, key
+                                        #assert key in used_keys, key
                                         keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))

@@ -741,7 +741,8 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     helper method for _fill_op2_time_centroidal_stress.
     Gets the stress/strain for each layer.
     """
-    icase0 = icase
+    #assert len(cases) == icase
+    #icase0 = icase
     subcase_id = key[0]
 
     if is_stress:
@@ -761,8 +762,8 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             'CQUADR' : model.cquadr_composite_strain,
         }
 
-    for cases in case_map.values():
-        for case_key, case in cases.items():
+    for res_cases in case_map.values():
+        for case_key, case in res_cases.items():
             if case_key != key or key in keys_map:
                 continue
             keys_map[key] = KeyMap(case.subtitle, case.label,
@@ -902,6 +903,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                 form_name2 = f'{element_type} Composite Plate {word}: {method} ({layer_name})'
                 form_names.append(form_name2)
                 icase += 1
+    #assert len(cases) == icase
     return icase
 
 def get_solid_stress_strains(eids: np.ndarray,

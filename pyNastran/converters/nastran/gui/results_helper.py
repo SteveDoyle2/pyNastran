@@ -712,6 +712,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     log: SimpleLogger) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
+        #ncases_old = len(cases)
+        #assert icase_old == ncases_old
         #icasei = icase_old
         log = model.log
         nastran_settings: NastranSettings = self.settings.nastran_settings
@@ -749,6 +751,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
+            #assert len(cases) == icase
 
         if nastran_settings.composite_plate_stress:
             try:
@@ -760,6 +763,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
+            #assert len(cases) == icase
 
         if nastran_settings.rod_stress:
             try:
