@@ -19,7 +19,7 @@ from pyNastran.op2.result_objects.stress_object import (
 )
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, Case, Cases
-from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap
+from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
 
 from .geometry_helper import NastranGuiAttributes
 from .stress import (
@@ -616,7 +616,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 6
         return icase
 
-    def save_filtered_forces(self, key, itime: int, icase: int,
+    def save_filtered_forces(self, key: NastranKey,
+                             itime: int, icase: int,
                              is_element_on: bool, subcase_id: int,
                              cases: Cases,
                              form_dict: FormDict,
@@ -651,7 +652,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
 
     def _fill_op2_time_centroidal_composite_stress(self, cases: Cases, model: OP2,
-                                                   key, icase: int, itime: int,
+                                                   key: NastranKey,
+                                                   icase: int, itime: int,
                                                    form_dict: FormDict,
                                                    header_dict: HeaderDict,
                                                    keys_map: KeysMap,
@@ -701,13 +703,16 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_centroidal_stress(self, cases: Cases, model: OP2,
-                                    times: np.ndarray, key, icase_old: int,
+                                    times: np.ndarray,
+                                    key: NastranKey,
+                                    icase_old: int,
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
                                     log: SimpleLogger) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
+        #icasei = icase_old
         log = model.log
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.stress:
@@ -728,20 +733,33 @@ class NastranGuiResults(NastranGuiAttributes):
         #self.settings.nastran_plate_stress
         eids = self.element_ids
         if nastran_settings.plate_stress:
-            icase = get_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, log, is_stress=True)
-            icase = get_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, log, is_stress=True,
-                prefix='modal_contribution',
-            )
+            try:
+                icase = get_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, log, is_stress=True)
+                #assert icase >= icasei
+                #icasei = icase
+
+                icase = get_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, log, is_stress=True,
+                    prefix='modal_contribution',
+                )
+            except Exception as e:
+                log.error(str(e))
+            #assert icase >= icasei
+            #icasei = icase
 
         if nastran_settings.composite_plate_stress:
-            icase = get_composite_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map,
-                self.stress[key].composite_data_dict, log, is_stress=True)
+            try:
+                icase = get_composite_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map,
+                    self.stress[key].composite_data_dict, log, is_stress=True)
+            except Exception as e:
+                log.error(str(e))
+            #assert icase >= icasei
+            #icasei = icase
 
         if nastran_settings.rod_stress:
             try:
@@ -750,6 +768,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
+            #assert icase >= icasei
+            #icasei = icase
+
         if nastran_settings.bar_stress:
             try:
                 icase = get_bar_stress_strains(
@@ -757,6 +778,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
+            #assert icase >= icasei
+            #icasei = icase
+
         if nastran_settings.beam_stress:
             try:
                 icase = get_beam_stress_strains(
@@ -764,18 +788,29 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=True)
             except Exception as e:
                 log.error(str(e))
+            #assert icase >= icasei
+            #icasei = icase
 
-        icase = get_solid_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, log, is_stress=True)
-        icase = get_spring_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, log, is_stress=True)
+        if 1:
+            icase = get_solid_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            #assert icase >= icasei
+            #icasei = icase
+
+            icase = get_spring_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            #assert icase >= icasei
+            #icasei = icase
+
         return icase
 
 
     def _fill_op2_centroidal_force(self, cases: Cases, model: OP2,
-                                   times: np.ndarray, key, icase: int,
+                                   times: np.ndarray,
+                                   key: NastranKey,
+                                   icase: int,
                                    form_dict: FormDict,
                                    header_dict: HeaderDict,
                                    keys_map: KeysMap,
@@ -828,7 +863,9 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_centroidal_strain(self, cases: Cases, model: OP2,
-                                    times: np.ndarray, key, icase: int,
+                                    times: np.ndarray,
+                                    key: NastranKey,
+                                    icase: int,
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
@@ -847,20 +884,26 @@ class NastranGuiResults(NastranGuiAttributes):
 
         eids = self.element_ids
         if nastran_settings.composite_plate_strain:
-            icase = get_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, log, is_stress=False)
-            icase = get_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, log, is_stress=False,
-                prefix='modal_contribution',
-            )
+            try:
+                icase = get_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, log, is_stress=False)
+                icase = get_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, log, is_stress=False,
+                    prefix='modal_contribution',
+                )
+            except Exception as e:
+                log.error(str(e))
 
         if nastran_settings.composite_plate_strain:
-            icase = get_composite_plate_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map,
-                self.strain[key].composite_data_dict, log, is_stress=False)
+            try:
+                icase = get_composite_plate_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map,
+                    self.strain[key].composite_data_dict, log, is_stress=False)
+            except Exception as e:
+                log.error(str(e))
 
         if nastran_settings.rod_strain:
             try:
@@ -896,7 +939,8 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases: Cases, model: OP2,
-                                         key, icase: int, itime: int,
+                                         key: NastranKey,
+                                         icase: int, itime: int,
                                          form_dict: FormDict,
                                          header_dict: HeaderDict,
                                          keys_map: KeysMap,
@@ -1173,7 +1217,9 @@ def fill_responses(cases: Cases, model: OP2, icase: int) -> tuple[int, list[Form
     return icase, form_optimization
 
 
-def _fill_nastran_displacements(cases: Cases, model: OP2, key, icase: int,
+def _fill_nastran_displacements(cases: Cases, model: OP2,
+                                key: NastranKey,
+                                icase: int,
                                 form_dict: FormDict,
                                 header_dict: HeaderDict,
                                 keys_map: KeysMap,
@@ -1234,7 +1280,9 @@ def _fill_nastran_displacements(cases: Cases, model: OP2, key, icase: int,
     return icase
 
 def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offset,
-                                   cases: Cases, model: OP2, key, icase: int,
+                                   cases: Cases, model: OP2,
+                                   key: NastranKey,
+                                   icase: int,
                                    form_dict: FormDict,
                                    header_dict: HeaderDict,
                                    keys_map: KeysMap,
@@ -1341,7 +1389,9 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
         nastran_res.save_defaults()
     return icase
 
-def _fill_nastran_temperatures(cases: Cases, model: OP2, key, icase: int,
+def _fill_nastran_temperatures(cases: Cases, model: OP2,
+                               key: NastranKey,
+                               icase: int,
                                form_dict: FormDict,
                                header_dict: HeaderDict,
                                keys_map: KeysMap,
@@ -1500,7 +1550,7 @@ def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
     return t123, tnorm, ntimes
 
 
-def _get_times(model: OP2, key: str) -> tuple[bool, bool, bool, np.ndarray]:
+def _get_times(model: OP2, key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
     """
     Get the times/frequencies/eigenvalues/loadsteps used on a given
     subcase
@@ -1541,7 +1591,9 @@ def _get_times(model: OP2, key: str) -> tuple[bool, bool, bool, np.ndarray]:
             #return is_data, is_static, is_real, times
     return is_data, is_static, is_real, times
 
-def get_tnorm_abs_max(case, t123, tnorm, itime):
+def get_tnorm_abs_max(case, t123: np.ndarray,
+                      tnorm: np.ndarray,
+                      itime: int) -> float:
     """
     The normalization value is consistent for static, frequency, transient,
     and load step cases, but is independent for modal cases.
@@ -1737,7 +1789,8 @@ def _get_stress_times(model: OP2, isubcase: int) -> tuple[bool, bool, bool, Any]
     return is_data, is_static, is_real, times
 
 def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
-                                          times, key, icase: int,
+                                          times, key: NastranKey,
+                                          icase: int,
                                           form_dict: FormDict,
                                           header_dict: HeaderDict,
                                           keys_map: KeysMap) -> int:
@@ -1839,8 +1892,12 @@ def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
             icase += 1
     return icase
 
-def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
-                                                times, key, icase: int,
+def _fill_op2_grid_point_stresses_volume_direct(nids: np.ndarray,
+                                                cases,
+                                                model: OP2,
+                                                times: np.ndarray,
+                                                key: NastranKey,
+                                                icase: int,
                                                 form_dict: FormDict,
                                                 header_dict: HeaderDict,
                                                 keys_map: KeysMap) -> int:
@@ -1901,4 +1958,3 @@ def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
             formi.append((header, icase, []))
             icase += 1
     return icase
-

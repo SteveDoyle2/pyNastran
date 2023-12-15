@@ -2625,6 +2625,7 @@ def build_normals_quality(settings: Settings,
     )
 
     #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
+    is_element_quality = area is not None and nastran_settings.is_element_quality
     if is_shell:
         if make_offset_normals_dim:
             nx_res = GuiResult(
@@ -2641,7 +2642,7 @@ def build_normals_quality(settings: Settings,
                                     colormap=colormap, data_format='%.1f',
                                     uname='NormalResult')
 
-        if nastran_settings.is_element_quality:
+        if is_element_quality:
             area_res = GuiResult(0, header='Area', title='Area',
                                  location='centroid', scalar=area)
             min_edge_length_res = GuiResult(
@@ -2692,7 +2693,7 @@ def build_normals_quality(settings: Settings,
             form_checks.append(('Normal', icase + 4, []))
             icase += 5
 
-        if nastran_settings.is_element_quality:
+        if is_element_quality:
             cases[icase] = (area_res, (0, 'Area'))
             cases[icase + 1] = (min_edge_length_res, (0, 'Min Edge Length'))
             cases[icase + 2] = (min_theta_res, (0, 'Min Interior Angle'))
@@ -2809,7 +2810,7 @@ def build_normals_quality(settings: Settings,
             form_checks.append(('ElementDim', icase, []))
             icase += 1
 
-        if nastran_settings.is_element_quality:
+        if is_element_quality:
             min_edge_length_res = GuiResult(
                 0, header='Min Edge Length', title='Min Edge Length',
                 location='centroid', scalar=min_edge_length)

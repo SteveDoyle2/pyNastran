@@ -323,7 +323,8 @@ class Op2Codes:
         #if self.analysis_code in [1]:
             #fmts = ('int32', 'int64')
         if self.analysis_code in [1, 2, 5, 6, 8, 9, 10]:
-            # 3 - modes
+            # 1 - statics
+            # 2 - modes
             # 5 - freq
             # 6 - transient
             # 8 - post-buckling

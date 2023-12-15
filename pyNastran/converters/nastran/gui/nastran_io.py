@@ -131,7 +131,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.gui_objects.types import KeysMap
+    from pyNastran.converters.nastran.gui.types import KeysMap, NastranKey
     #from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 DESIRED_RESULTS = [
@@ -522,7 +522,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         self.gui.format = 'nastran'
 
-    def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
+    def load_nastran_geometry_vectorized(self, bdf_filename: str, plot: bool=True) -> None:
         """
         The entry point for Nastran geometry loading.
 
@@ -542,6 +542,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             self.gui.scalar_bar_actor.Modified()
 
         model = self._get_model_vectorized(bdf_filename)
+        log = model.log
 
         nnodes = len(model.grid)
         nspoints = len(model.spoints)
@@ -788,7 +789,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             thickness[ipid, iply+1] = prop.Thickness(iply)
                             theta[ipid, iply+1] = prop.Theta(iply)
                     else:
-                        self.log.error(f'skipping setting mids (vectorized) for {prop.type}')
+                        log.error(f'skipping setting mids (vectorized) for {prop.type}')
                     iupid += 1
 
             if len(model.conrod):
@@ -3817,7 +3818,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         header_dict = {}
         keys_map = {}
-        key_itime = []
+        key_itimes = []
 
         icase, form_optimization = fill_responses(cases, model, icase)
         for key in keys:
@@ -3851,7 +3852,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 cases, model, times, key, icase,
                 stress_dict, header_dict, keys_map, log)
 
-            # stress
+            # strain
             icase = self._fill_op2_centroidal_strain(
                 cases, model, times, key, icase,
                 strain_dict, header_dict, keys_map, log)
@@ -3878,11 +3879,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if ncases:
                 for itime, unused_dt in enumerate(times):
                     new_key = (key, itime)
-                    key_itime.append(new_key)
+                    key_itimes.append(new_key)
 
         # ----------------------------------------------------------------------
         #print('Key,itime:')
-        #for key_itimei in key_itime:
+        #for key_itimei in key_itimes:
             #print('  %s' % str(key_itimei))
 
         unused_form_out = []
@@ -3891,17 +3892,18 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         basename = os.path.basename(op2_filename).rstrip()
         form_results = (basename + '-Results', None, form_optimization)
 
-        if len(key_itime) == 0:
+        if len(key_itimes) == 0:
             #print('header_dict =', header_dict)
-            #print('key_itime =', key_itime)
+            #print('key_itimes =', key_itimes)
             if form_optimization:
                 form.append(form_results)
             else:
                 log.error('No OP2 results were found')
             return form
 
+        #assert len(keys_map) == 3, keys_map
         form = _build_sort1_table(
-            key_itime, keys_map, header_dict,
+            key_itimes, keys_map, header_dict,
             form, form_results, form_resultsi,
             disp_dict, stress_dict, strain_dict, force_dict,
             strain_energy_dict, gpstress_dict,
@@ -4045,7 +4047,7 @@ def jsonify(comment_lower: str) -> str:
     rhs = sline[1].rstrip()
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
-def _build_sort1_table(key_itime,
+def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
                        keys_map: KeysMap,
                        header_dict: dict[tuple[str, int], str],
                        form, form_results, form_resultsi,
@@ -4053,16 +4055,18 @@ def _build_sort1_table(key_itime,
                        strain_energy_dict, gpstress_dict,
                        log: SimpleLogger):
     """combines the SORT1-based OP2 results into a SORT1 table"""
+    #print('stress_dict.keys():')
+    #for (key, itime), value in stress_dict.items():
+        #print(f'  key={key} itime={itime}: {value}')
+
     is_results = False
     form_resultsi_subcase = []
     #for key, value in header_dict.items():
         #print(key, value)
-    # (isubcase, analysis_code, sort_method,
-    #  count, ogs, superelement_adaptivity_index) = key
-    key_itime0 = key_itime[0]
+    # (isubcase, analysis_code, sort_method, count, ogs, # int
+    #  superelement_adaptivity_index) = key  # str
+    key_itime0 = key_itimes[0]
     key0 = key_itime0[0]
-    # (isubcase, analysis_code, sort_method,
-    #  count, ogs, superelement_adaptivity_index, pval_step) = key
     subcase_id_old = key0[0]
     count_old = key0[3]
     ogs_old = key0[4]
@@ -4080,9 +4084,10 @@ def _build_sort1_table(key_itime,
     # in sorted order
     #
     # TODO: consider pval_step
-    for key, itime in key_itime:
-        # (isubcase, analysis_code, sort_method,
-        #  count, ogs, superelement_adaptivity_index, pval_step) = key
+    for key_itime in key_itimes:
+        key, itime = key_itime
+        # (isubcase, analysis_code, sort_method, count, ogs,
+        #  superelement_adaptivity_index, pval_step) = key
         #print('key =', key)
         subcase_id = key[0]
         count = key[3]
@@ -4093,7 +4098,7 @@ def _build_sort1_table(key_itime,
         try:
             mapped_key = keys_map[key]
         except Exception:
-            continue
+            #continue
             subcase_id = subcase_id_old
             subtitle = subtitle_old + '?'
             superelement_adaptivity_index = '?'
@@ -4131,9 +4136,8 @@ def _build_sort1_table(key_itime,
             ogs_old = ogs
 
 
-        key_itimei = (key, itime)
         try:
-            header = header_dict[key_itimei]
+            header = header_dict[key_itime]
         except KeyError:  # this hits for strain energy
             msg = 'Missing (key, itime) in header_dict\n'
             msg += '  key=%s\n' % str(key)
@@ -4168,12 +4172,12 @@ def _build_sort1_table(key_itime,
 
         form_outi = []
         form_out = (header, None, form_outi)
-        disp_formi = disp_dict[key_itimei]
-        stress_formi = stress_dict[key_itimei]
-        strain_formi = strain_dict[key_itimei]
-        force_formi = force_dict[key_itimei]
-        strain_energy_formi = strain_energy_dict[key_itimei]
-        gpstress_formi = gpstress_dict[key_itimei]
+        disp_formi = disp_dict[key_itime]
+        stress_formi = stress_dict[key_itime]
+        strain_formi = strain_dict[key_itime]
+        force_formi = force_dict[key_itime]
+        strain_energy_formi = strain_energy_dict[key_itime]
+        gpstress_formi = gpstress_dict[key_itime]
         if disp_formi:
             form_outi += disp_formi
             #form_outi.append(('Disp', None, disp_formi))

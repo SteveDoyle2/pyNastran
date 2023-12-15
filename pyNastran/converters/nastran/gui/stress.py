@@ -503,7 +503,7 @@ def get_plate_stress_strains(eids: np.ndarray,
                              keys_map: KeysMap,
                              log: SimpleLogger,
                              is_stress: bool,
-                             prefix: str=''):
+                             prefix: str='') -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the max/min stress for each layer.
@@ -741,9 +741,35 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     helper method for _fill_op2_time_centroidal_stress.
     Gets the stress/strain for each layer.
     """
+    icase0 = icase
     subcase_id = key[0]
 
-    plates_ieids = []
+    if is_stress:
+        case_map = {
+            # element_name
+            'CTRIA3' : model.ctria3_composite_stress,
+            'CQUAD4' : model.cquad4_composite_stress,
+            'CTRIAR' : model.ctriar_composite_stress,
+            'CQUADR' : model.cquadr_composite_stress,
+        }
+    else:
+        case_map = {
+            # element_name
+            'CTRIA3' : model.ctria3_composite_strain,
+            'CQUAD4' : model.cquad4_composite_strain,
+            'CTRIAR' : model.ctriar_composite_strain,
+            'CQUADR' : model.cquadr_composite_strain,
+        }
+
+    for cases in case_map.values():
+        for case_key, case in cases.items():
+            if case_key != key or key in keys_map:
+                continue
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
+
+    composite_plates_ieids = []
     for element_type, composite_data in composite_data_dict.items():
         try:
             element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
@@ -751,43 +777,30 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             print(composite_data)
             raise
 
-
         #print(element_type, ueids)
         i = np.searchsorted(eids, ueids)
         if len(i) != len(np.unique(i)):
             log.error(f' duplicate eids for composite {element_type}...'
                       f'i={i} eids={eids} ueids={ueids}')
             continue
-        plates_ieids.append(i)
+        composite_plates_ieids.append(i)
         #for itime2, header in enumerate(headers):
             #header_dict[(key, itime2)] = header
             #asdf
 
-    if not plates_ieids:
+    #  no elements
+    if not composite_plates_ieids:
         return icase
 
-    case_map = {
-        # is_stress, element_name
-        (True, 'CTRIA3') : model.ctria3_composite_stress,
-        (False, 'CTRIA3') : model.ctria3_composite_strain,
-
-        (True, 'CQUAD4') : model.cquad4_composite_stress,
-        (False, 'CQUAD4') : model.cquad4_composite_strain,
-
-        (True, 'CTRIAR') : model.ctriar_composite_stress,
-        (False, 'CTRIAR') : model.ctriar_composite_strain,
-        (True, 'CQUADR') : model.cquadr_composite_stress,
-        (False, 'CQUADR') : model.cquadr_composite_strain,
-    }
     try:
-        case_dict = case_map[(is_stress, element_type)]
+        case_dict = case_map[element_type]
     except KeyError:
         log.warning(f'skipping is_stress={is_stress} element_type={element_type}')
-        return icase
+        raise
+        #return icase
     case = case_dict[key]
 
-
-    plates_ieids = np.hstack(plates_ieids)
+    composite_plates_ieids = np.hstack(composite_plates_ieids)
     ieid_max = len(eids)
     #print('ieid_max =', ieid_max)
 
@@ -841,7 +854,6 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     if len(scalars_array) == 0:
         return icase
 
-    element_name = element_type
     try:
         scalars_array = concatenate_scalars(scalars_array)
     except ValueError:
@@ -854,7 +866,8 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     #titles = []  # legend title
     headers = [] # sidebar word
     res = LayeredTableResults(
-        subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
+        subcase_id, headers, composite_plates_ieids,
+        ieid_max, scalars_array, methods,
         data_formats=None,
         colormap='jet', uname='Composite Plate ' + word)
     form_names = res.form_names
@@ -886,7 +899,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer_name})', icase, []))
 
-                form_name2 = f'{element_name} Composite Plate {word}: {method} ({layer_name})'
+                form_name2 = f'{element_type} Composite Plate {word}: {method} ({layer_name})'
                 form_names.append(form_name2)
                 icase += 1
     return icase
