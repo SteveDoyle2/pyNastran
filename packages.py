@@ -48,16 +48,16 @@ EXCLUDE_WORDS = [
 
 # the packages that change requirements based on python version
 REQS = {
-    '3.8' : {
-        'numpy' : ('1.17', '>=1.17.3,!=1.19.4'),
-        'scipy' : ('1.3.2', '>=1.3.2'),
-        'matplotlib' : ('3.1.2', '>=3.1.2'),
-    },
-    '3.9' : {
-        'numpy' : ('1.19.3', '>=1.19.3,!=1.19.4'),
-        'scipy' : ('1.5.4', '>=1.5.4'),
-        'matplotlib' : ('3.4.0', '>=3.4.0'),
-    },
+    #'3.8' : {
+        #'numpy' : ('1.17', '>=1.17.3,!=1.19.4'),
+        #'scipy' : ('1.3.2', '>=1.3.2'),
+        #'matplotlib' : ('3.1.2', '>=3.1.2'),
+    #},
+    #'3.9' : {
+        #'numpy' : ('1.19.3', '>=1.19.3,!=1.19.4'),
+        #'scipy' : ('1.5.4', '>=1.5.4'),
+        #'matplotlib' : ('3.4.0', '>=3.4.0'),
+    #},
     '3.10' : {
         'numpy' : ('1.21.2', '>=1.21.2'),
         'scipy' : ('1.7.1', '>=1.7.1'),
@@ -402,7 +402,8 @@ def _add_pillow(all_reqs, install_requires):
 def _add_imageio(found_numpy, all_reqs, install_requires):
     # pip messes up dependency resolution if you use newer versions of numpy
     #imageio_str_ver = '>= 2.2.0, <3'
-    imageio_str_ver = '>= 2.2.0, <2.31.6'
+    #imageio_str_ver = '>= 2.2.0, <2.31.6'
+    imageio_str_ver = '>= 2.2.0'
 
     try:
         import imageio
