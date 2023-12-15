@@ -8,7 +8,7 @@ from pyNastran.femutils.utils import pivot_table
 from pyNastran.utils.locale import func_str
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
-from pyNastran.op2.op2_interface.types import KeyMap, KeysMap
+from pyNastran.op2.op2_interface.types import KeyMap, KeysMap, NastranKey
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
@@ -22,14 +22,16 @@ int_types = (int, np.int32, np.int64)
     #header_dict, keys_map)
 
 class StressObject:
-    def __init__(self, model: Any, key: str, all_eids: Any,
+    def __init__(self, model: OP2,
+                 key: NastranKey,
+                 all_eids: np.ndarray,
                  is_stress: bool=True) -> None:
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
-        self.header_dict = {}  # type: dict[Any, str]
-        self.keys_map = {}  # type: dict[str, str]
-        self.composite_ieids = {}  # type: dict[str, str]
+        self.header_dict: dict[Any, str] = {}
+        self.keys_map: dict[NastranKey, str] = {}
+        self.composite_ieids: dict[str, str] = {}
         self.is_stress = is_stress
         assert is_stress in {True, False}, is_stress
 
@@ -175,7 +177,7 @@ class StressObject:
         msg += '    composite_ieids = %s\n' % self.composite_ieids
         return msg
 
-def create_plates(model: Any, key: str, is_stress: bool) -> dict[str, Any]:
+def create_plates(model: Any, key: NastranKey, is_stress: bool) -> dict[str, Any]:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         plates = [
@@ -266,59 +268,72 @@ def create_plates(model: Any, key: str, is_stress: bool) -> dict[str, Any]:
             #del obj_dict[case_key]
     return isotropic_data_dict
 
-def create_composite_plates(model, key, is_stress: bool, keys_map: KeysMap):
-    """helper method for _fill_op2_time_centroidal_stress"""
+def create_composite_plates(model, key: NastranKey, is_stress: bool, keys_map: KeysMap):
+    """helper method for _fill_op2_time_centroidal_stress
+
+    Returns
+    -------
+    composite_data_dict: dict[key, value]
+         value: [o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
+
+    """
     if is_stress:
-        cplates = [
-            ('CTRIA3', model.ctria3_composite_stress),
-            ('CTRIA6', model.ctria6_composite_stress),
-            ('CTRIAR', model.ctriar_composite_stress),
-            ('CQUAD4', model.cquad4_composite_stress),
-            ('CQUAD8', model.cquad8_composite_stress),
-            ('CQUADR', model.cquadr_composite_stress),
-        ]
+        cplates_dict = {
+            'CTRIA3' : model.ctria3_composite_stress,
+            'CTRIA6' : model.ctria6_composite_stress,
+            'CTRIAR' : model.ctriar_composite_stress,
+            'CQUAD4' : model.cquad4_composite_stress,
+            'CQUAD8' : model.cquad8_composite_stress,
+            'CQUADR' : model.cquadr_composite_stress,
+        }
     else:
-        cplates = [
-            ('CTRIA3', model.ctria3_composite_strain),
-            ('CTRIA6', model.ctria6_composite_strain),
-            ('CTRIAR', model.ctriar_composite_strain),
-            ('CQUAD4', model.cquad4_composite_strain),
-            ('CQUAD8', model.cquad8_composite_strain),
-            ('CQUADR', model.cquadr_composite_strain),
-        ]
+        cplates_dict = {
+            'CTRIA3' : model.ctria3_composite_strain,
+            'CTRIA6' : model.ctria6_composite_strain,
+            'CTRIAR' : model.ctriar_composite_strain,
+            'CQUAD4' : model.cquad4_composite_strain,
+            'CQUAD8' : model.cquad8_composite_strain,
+            'CQUADR' : model.cquadr_composite_strain,
+        }
+    composite_data_dict = {}
+    ncases = sum([len(res_dict) for res_dict in cplates_dict.values()])
+    if ncases == 0:
+        return composite_data_dict
 
     #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
-    composite_data_dict = {}
-    for element_type, obj_dict in cplates:
+    for element_type, res_dict in cplates_dict.items():
         cases_to_delete = []
-        if len(obj_dict) == 0:
+        if len(res_dict) == 0:
             continue
 
         composite_data_dict[element_type] = {}
-        for case_key, case in obj_dict.items():
-            if case_key == key:
-                keys_map[key] = KeyMap(case.subtitle, case.label,
-                                       case.superelement_adaptivity_index,
-                                       case.pval_step)
-                #data_dict[element_type] = [ueids, data]
-                case_to_delete = case_key
-                cases_to_delete.append(case_to_delete)
+        for case_key, case in res_dict.items():
+            if case_key != key:
+                continue
+            print(f'adding key={key} to keys_map')
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
+            #data_dict[element_type] = [ueids, data]
+            case_to_delete = case_key
+            cases_to_delete.append(case_to_delete)
 
-                if case.is_von_mises:
-                    vm_word = 'vonMises'
-                else:
-                    vm_word = 'maxShear'
-                eidsi = case.element_layer[:, 0]
-                layers = case.element_layer[:, 1]
-                ntimes = case.data.shape[0]
-                data2, ueids = pivot_table(case.data, eidsi, layers)
+            if case.is_von_mises:
+                vm_word = 'vonMises'
+            else:
+                vm_word = 'maxShear'
+            eidsi = case.element_layer[:, 0]
+            layers = case.element_layer[:, 1]
+            ntimes = case.data.shape[0]
+            data2, ueids = pivot_table(case.data, eidsi, layers)
 
-                headers = []
-                for itime, dt in enumerate(case._times):
-                    header = _get_nastran_header(case, dt, itime)
-                    headers.append(header)
-                composite_data_dict[element_type][key] = [
-                    case.element_layer, ueids, data2, vm_word, ntimes, headers]
+            headers = []
+            for itime, dt in enumerate(case._times):
+                header = _get_nastran_header(case, dt, itime)
+                headers.append(header)
+            composite_data_dict[element_type][key] = [
+                case.element_layer, ueids, data2, vm_word, ntimes, headers]
+
         if len(composite_data_dict[element_type]) == 0:
             del composite_data_dict[element_type]
         #for case_key in cases_to_delete:
@@ -406,7 +421,7 @@ def get_rod_stress_strain(model: OP2,
                           itime: int,
                           oxx, txy,
                           max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map,
+                          eids, header_dict, keys_map: KeysMap,
                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
@@ -700,7 +715,8 @@ def get_plate_stress_strain(model: OP2, key,
                             is_stress: bool, vm_word: str, itime: int,
                             oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
                             eids: np.ndarray,
-                            header_dict, keys_map: KeysMap,
+                            header_dict,
+                            keys_map: KeysMap,
                             log: SimpleLogger) -> str:
     """
     helper method for _fill_op2_time_centroidal_stress.  Gets the max/min stress across all
@@ -838,7 +854,8 @@ def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itim
                             oxx, oyy, ozz, txy, tyz, txz,
                             max_principal, mid_principal, min_principal, ovm, is_element_on,
                             eids: np.ndarray,
-                            header_dict, keys_map: KeysMap,
+                            header_dict,
+                            keys_map: KeysMap,
                             log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
