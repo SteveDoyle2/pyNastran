@@ -1,8 +1,6 @@
 import unittest
 
-#from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_aero import *
-
-# good
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_aero import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_bars import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_beams import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_coords import *

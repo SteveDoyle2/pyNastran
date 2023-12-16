@@ -287,10 +287,10 @@ CPENTA_FACE_MAPPER = {
     (4, 0): np.array([0, 1, 4, 3]),  # bottom (flipped)
     (3, 1): np.array([0, 1, 4, 3]),
 
-    (0, 5): np.array([0, 2, 5, 3]),  # left-reverse
-    (2, 3): np.array([0, 2, 5, 3]),
-    (5, 0): np.array([0, 2, 5, 3]),  # left-reverse (flipped)
-    (3, 2): np.array([0, 2, 5, 3]),
+    (0, 5): np.array([0, 3, 5, 2]),  # left-reverse
+    (2, 3): np.array([0, 3, 5, 2]),
+    (5, 0): np.array([0, 3, 5, 2]),  # left-reverse (flipped)
+    (3, 2): np.array([0, 3, 5, 2]),
 
     (1, 5): np.array([1, 4, 5, 2]),  # right
     (2, 4): np.array([1, 4, 5, 2]),
@@ -298,31 +298,39 @@ CPENTA_FACE_MAPPER = {
     (4, 2): np.array([1, 4, 5, 2]),
 }
 CHEXA_FACE_MAPPER = {
+    # normals point inward
+
+    # top
     (7, 5) : np.array([7, 6, 5, 4]),
     (5, 7) : np.array([7, 6, 5, 4]),
     (6, 4) : np.array([7, 6, 5, 4]),
     (4, 6) : np.array([7, 6, 5, 4]),
 
+    # bottom
     (0, 2) : np.array([0, 1, 2, 3]),
     (2, 0) : np.array([0, 1, 2, 3]),
     (1, 3) : np.array([0, 1, 2, 3]),
     (3, 1) : np.array([0, 1, 2, 3]),
 
+    # left
     (0, 7) : np.array([0, 3, 7, 4]),
     (7, 0) : np.array([0, 3, 7, 4]),
     (3, 4) : np.array([0, 3, 7, 4]),
     (4, 3) : np.array([0, 3, 7, 4]),
 
+    # right
     (5, 2) : np.array([5, 6, 2, 1]),
     (2, 5) : np.array([5, 6, 2, 1]),
     (6, 1) : np.array([5, 6, 2, 1]),
     (1, 6) : np.array([5, 6, 2, 1]),
 
+    # front
     (4, 1) : np.array([4, 5, 1, 0]),
     (1, 4) : np.array([4, 5, 1, 0]),
     (5, 0) : np.array([4, 5, 1, 0]),
     (0, 5) : np.array([4, 5, 1, 0]),
 
+    # back
     (2, 7) : np.array([2, 6, 7, 3]),
     (7, 2) : np.array([2, 6, 7, 3]),
     (6, 3) : np.array([2, 6, 7, 3]),
@@ -593,6 +601,7 @@ class CPYRAM(SolidElement):
     def quality(self) -> Quality:
         out = pyram_quality(self)
         return out
+
 
 class SolidHex(SolidElement):
     nnode_base = 8

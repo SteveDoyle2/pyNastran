@@ -1370,6 +1370,10 @@ class ACCEL(Load):
     def iloc(self) -> np.ndarray:
         return make_idim(self.n, self.nloc)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.coord_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1579,7 +1583,6 @@ class LOAD(Load):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         scale = double(card, 2, 'scale')
-
         scale_factors = []
         load_ids = []
 
@@ -1692,10 +1695,24 @@ class LOAD(Load):
         #return get_loads_by_load_id(self)
 
     def get_loads_by_load_id(load: Union[LOAD, LOADSET]) -> dict[int, Loads]:
-        """"""
+        """
+        Gets all the loads by load_id.
+
+        Does NOT attach a scale factor...that's happens later
+        """
         model = load.model
         #uload_ids = np.unique(self.load_ids)
         loads_by_load_id = defaultdict(list)
+
+        if 0:  # pragma: no cover
+            # handles singular FORCE/PLOAD cards
+            for load in model.static_load_cards:
+                if len(load) == 0:
+                    continue
+                load_ids = np.unique(load.load_id)
+                for load_id in load_ids:
+                    loadi = load.slice_card_by_id(load_id, assume_sorted=True, sort_ids=False)
+                    loads_by_load_id[load_id].append(loadi)
 
         #print('all_laods =', model.loads)
         for loadi in model.load_cards:
@@ -1739,18 +1756,11 @@ class LOAD(Load):
     def get_reduced_loads(self,
                           remove_missing_loads: bool=False,
                           filter_zero_scale_factors: bool=False,
-                          stop_on_failure: bool=True) -> dict[int, Loads]:
-        return get_reduced_loads(
-            self, remove_missing_loads=remove_missing_loads,
-            filter_zero_scale_factors=filter_zero_scale_factors,
-            stop_on_failure=stop_on_failure)
-
-    def get_reduced_load_by_load_id(self,
-                                    load_id: int,
-                                    remove_missing_loads: bool=False,
-                                    filter_zero_scale_factors: bool=False,
-                                    stop_on_failure: bool=True) -> dict[int, Loads]:
+                          stop_on_failure: bool=True) -> dict[int, tuple[float, Loads]]:
         """
+        Takes a LOAD / LSEQ card and gets each referenced load.
+        Does NOT do summations.
+
         Parameters
         ----------
         resolve_load_card : bool; default=False
@@ -1760,6 +1770,52 @@ class LOAD(Load):
             Nastran sometimes ignores these loads leading to potentially incorrect results
         filter_zero_scale_factors: bool; default=False
             remove loads that are 0.0
+
+        Returns
+        -------
+        loads_dict: dict[load_id, tuple[float, Loads]]
+            load_id : int
+                the sub-load id
+            scale_factor: float
+                hopefully obvious :)
+            Loads:
+                FORCE, PLOAD4, etc.
+
+        """
+        return get_reduced_loads(
+            self, remove_missing_loads=remove_missing_loads,
+            filter_zero_scale_factors=filter_zero_scale_factors,
+            stop_on_failure=stop_on_failure)
+
+    def get_reduced_load_by_load_id(self,
+                                    load_id: int,
+                                    remove_missing_loads: bool=False,
+                                    filter_zero_scale_factors: bool=False,
+                                    stop_on_failure: bool=True) -> dict[int, tuple[float, Loads]]:
+        """
+        Takes a load_id and gets each referenced load.
+        Does NOT do summations.
+
+        Parameters
+        ----------
+        resolve_load_card : bool; default=False
+            ???
+        remove_missing_loads: bool; default=False
+            LOAD cards can reference loads (e.g., GRAV) that don't exist
+            Nastran sometimes ignores these loads leading to potentially incorrect results
+        filter_zero_scale_factors: bool; default=False
+            remove loads that are 0.0
+
+        Returns
+        -------
+        loads_dict: dict[load_id, tuple[float, Loads]]
+            load_id : int
+                the sub-load id
+            scale_factor: float
+                hopefully obvious :)
+            Loads:
+                FORCE, PLOAD4, etc.
+
         """
         load = self.slice_card_by_load_id(load_id)
         reduced_loads = get_reduced_loads(load)
@@ -1770,7 +1826,12 @@ def get_reduced_static_load_from_load_id(model: BDF,
                                          load_id: int,
                                          remove_missing_loads: bool=False,
                                          filter_zero_scale_factors: bool=False,
-                                         stop_on_failure: bool=True) -> list[StaticLoad]:
+                                         stop_on_failure: bool=True) -> list[tuple[float, StaticLoad]]:
+    """
+    How is this different than get_reduced_load_by_load_id?
+
+    Is it just extracting specific ids?
+    """
     #log = model.log
 
     load: LOAD = model.load
@@ -1803,6 +1864,9 @@ def get_reduced_loads(load: Union[LOAD, LSEQ],
                       filter_zero_scale_factors: bool=False,
                       stop_on_failure: bool=True) -> dict[int, Loads]:
     """
+    Takes a LOAD / LSEQ card and gets each referenced load.
+    Does NOT do summations.
+
     Parameters
     ----------
     resolve_load_card : bool; default=False
@@ -1812,9 +1876,22 @@ def get_reduced_loads(load: Union[LOAD, LSEQ],
         Nastran sometimes ignores these loads leading to potentially incorrect results
     filter_zero_scale_factors: bool; default=False
         remove loads that are 0.0
+
+    Returns
+    -------
+    loads_dict: dict[load_id, tuple[float, Loads]]
+        load_id : int
+            the sub-load id
+        scale_factor: float
+            hopefully obvious :)
+        Loads:
+            FORCE, PLOAD4, etc.
+
     """
     reduced_loads = {}
-    if load.n == 0:
+    nbasic_cards = [card.n for card in load.model.static_load_cards]
+    nbasic = sum(nbasic_cards)
+    if load.n == 0 and nbasic == 0:
         return reduced_loads
 
     stop_on_failure = True
@@ -1824,7 +1901,7 @@ def get_reduced_loads(load: Union[LOAD, LSEQ],
         reduced_loadsi = []
         iload0, iload1 = iload
         if global_scale == 0. and filter_zero_scale_factors:
-            print('continueA')
+            #print('continueA')
             continue
         scale_factors = global_scale * load.scale_factors[iload0:iload1]
         load_ids = load.load_ids[iload0:iload1]

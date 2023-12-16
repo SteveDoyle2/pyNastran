@@ -47,7 +47,7 @@ class AxisymmetricShellElement(Element):
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
-        self.nodes = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 0), dtype='int32')
 
     @property
     def all_properties(self) -> list[Any]:
@@ -189,7 +189,10 @@ class AxiShellElement(Element):
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
-        self.nodes = np.array([], dtype='int32')
+        if not hasattr(self, 'nodes'):
+            self.nodes = np.zeros((0, 0), dtype='int32')
+        else:
+            self.nodes = np.zeros((0, self.nodes.shape[1]), dtype='int32')
         self.property_id = np.array([], dtype='int32')
         #self.tflag = np.array([], dtype='int32')
         #self.T = np.array([], dtype='int32')
@@ -430,9 +433,15 @@ class CTRIAX(AxisymmetricShellElement):
 
     Theta/Mcid is MSC only!
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 6), dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0., comment: str='') -> int:
         """Creates a CTRIAX card"""
+        nids = add_empty_nodes(nids, self.nodes.shape[1])
         self.cards.append((eid, pid, nids, theta_mcid, comment))
         self.n += 1
         return self.n - 1
@@ -563,12 +572,17 @@ class CTRIAX6(Element):
     """
     @Element.clear_check
     def clear(self) -> None:
-        self.nodes = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 6), dtype='int32')
         self.material_id = np.array([], dtype='int32')
 
     def add(self, eid: int, mid: int, nids: list[int], theta: float=0.,
             comment: str='') -> int:
         """Creates a CTRIAX6 card"""
+        #add_empty_nodes(nids, self.nodes.shape[1])
+        if len(nids) == 3:
+            # don't do an inplace operation :)
+            n1, n2, n3 = nids
+            nids = [n1, 0, n2, 0, n3, 0]
         self.cards.append((eid, mid, nids, theta, comment))
         self.n += 1
         return self.n - 1
@@ -1379,3 +1393,11 @@ class CTRAX6(AxisymmetricShellElement):
     @property
     def midside_nodes(self) -> np.ndarray:
         return self.nodes[:, 3:]
+
+def add_empty_nodes(nids: list[int], nnodes_required: int) -> list[int]:
+    nnodes = len(nids)
+    if nnodes < nnodes_required:
+        extra_nodes = [0] * (nnodes_required - nnodes)
+        # gotta do a copy vs. inplace operation
+        nids = nids + extra_nodes
+    return nids

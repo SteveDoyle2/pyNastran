@@ -847,22 +847,29 @@ class BDFAttributes:
         return optimization
 
     @property
-    def load_cards(self) -> list[Any]:
+    def static_load_cards(self) -> list[Any]:
         loads = [
-            self.load, self.lseq,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
             self.pload, self.pload1, self.pload2, self.pload4,
             self.grav, self.accel, self.accel1,
             self.sload,
             self.temp, self.tempd,
-            #self.dtemp, # has nodes
-            self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3,
-            self.qvol, self.qvect,
             self.spcd, self.deform,
             self.rforce, self.rforce1,
             #self.ploadx1,
         ]
+        return loads
+
+    @property
+    def load_cards(self) -> list[Any]:
+        loads = [
+            self.load, self.lseq,
+
+            #self.dtemp, # has nodes
+            self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3,
+            self.qvol, self.qvect,
+        ] + self.static_load_cards
         return loads
 
     @property
@@ -1188,6 +1195,7 @@ class BDFAttributes:
         return is_thermal
 
     def self_static_loads_by_subcase_id(self, subcase_ids: list[int]=None) -> dict[int, Any]:
+        """intended for LOADSET in dynamic solution, not LOAD cards (so SOL 101)"""
         res = get_static_loads_by_subcase_id(self, subcase_ids=subcase_ids)
         return res
 

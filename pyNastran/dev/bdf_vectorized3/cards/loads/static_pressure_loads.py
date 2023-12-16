@@ -1201,7 +1201,17 @@ class PLOAD4(Load):
                    #element_id=(available_solid_eids, solid_eids))
 
     def area_centroid_normal_pressure(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """gets the area, centroid, normal, and pressure"""
+        """
+        Gets the area, centroid, normal, and pressure.
+        The normal acts in the direction of the pressure.
+        """
+        return self.face_area_centroid_normal_pressure()[1:]
+
+    def face_area_centroid_normal_pressure(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Gets the face,area, centroid, normal, and pressure.
+        The normal acts in the direction of the pressure.
+        """
         log = self.model.log
 
         xyz_cid0 = self.model.grid.xyz_cid0()
@@ -1257,7 +1267,7 @@ class PLOAD4(Load):
         load_pressure = applied_pressure[ithru_result, :]
 
         if np.all(is_shell_) and 0:
-            for card in self.shell_elements:
+            for card in shell_elements:
                 # TODO: use is_shell
                 i_lookup, i_all = searchsorted_filter(card.element_id, self.element_ids, msg=f'{card.type} eids', debug=True)
                 if len(i_lookup) == 0:
@@ -1276,7 +1286,7 @@ class PLOAD4(Load):
                 normal[i_lookup, :] = normali[i_all, :]
 
         elif np.all(is_solid) and 0:
-            for card in self.solid_elements:
+            for card in solid_elements:
                 # TODO: use is_shell
                 i_lookup, i_all = searchsorted_filter(card.element_id, self.element_ids, msg=f'{card.type} eids', debug=True)
                 if len(i_lookup) == 0:
@@ -1313,7 +1323,12 @@ class PLOAD4(Load):
             #print(self)
             #mixed
             #print('is_shell =', is_shell)
-            for card in self.shell_elements:
+            nelements = len(self.element_ids)
+            face_out = np.zeros((nelements, 4), dtype='int32')
+
+            shell_elements = [card for card in self.shell_elements if card.n > 0]
+            solid_elements = [card for card in self.solid_elements if card.n > 0]
+            for card in shell_elements:
                 # TODO: use is_shell
                 self.model.log.debug(card.type)
                 i_lookup, i_all = searchsorted_filter(card.element_id, self.element_ids, msg=f'{card.type} eids', debug=True)
@@ -1332,7 +1347,7 @@ class PLOAD4(Load):
                 centroid[i_lookup, :] = centroidi[i_all, :]
                 normal[i_lookup, :] = normali[i_all, :]
 
-            for card in self.solid_elements:
+            for card in solid_elements:
                 # TODO: use is_shell
                 i_lookup, i_all = searchsorted_filter(card.element_id, self.element_ids, msg=f'{card.type} eids', debug=True)
                 if len(i_lookup) == 0:
@@ -1350,10 +1365,15 @@ class PLOAD4(Load):
                     raise ValueError(msg)
 
                 #print(self)
-                areai, centroidi, normali, mean_pressurei = get_solid_face_area(
+                facei, areai, centroidi, normali, mean_pressurei = get_solid_face_area(
                     card.type, card,
                     nids, xyz_cid0, element_nodes,
                     g1, g34, load_pressurei)
+
+                if facei.shape[1] == 3:
+                    face_out[i_lookup, :3] = facei
+                else:
+                    face_out[i_lookup] = facei
                 area[i_lookup] = areai
                 mean_pressure[i_lookup] = mean_pressurei
                 assert len(areai) == len(mean_pressurei)
@@ -1382,7 +1402,7 @@ class PLOAD4(Load):
             raise RuntimeError('there are nan centroid', centroid)
         assert centroid.shape == normal.shape
 
-        return area, centroid, normal, mean_pressure
+        return face_out, area, centroid, normal, mean_pressure
 
     def sum_forces_moments(self):
         area, centroid, normal, mean_pressure = self.area_centroid_normal_pressure()
@@ -1454,7 +1474,12 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
                         nids, xyz_cid0,
                         element_nodes,
                         g1: np.ndarray, g34: np.ndarray,
-                        pressure: np.ndarray) -> list[Any]:
+                        pressure: np.ndarray) -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Returns
+    -------
+    face, area, centroid, normal, mean_pressure
+    """
     # we're at least using some loads
     nnodes = element.base_nodes.shape[1]
     nloads = len(g1)
@@ -1486,6 +1511,7 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
     #ig34 = np.array(ig34_list, dtype=nodes.dtype)
 
 
+    face_out_list = []
     face_list = []
     #print(ig1)
     #print(ig34)
@@ -1567,6 +1593,7 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
             #print(f'  enodes2={enodes2}')
         else:
             raise NotImplementedError(element_type)
+        face_out_list.append(facei)
         face_list.append(enodes2)
         assert len(face_list) > 0, face_list
         face = np.array(face_list, dtype=element_nodes.dtype)
@@ -1574,9 +1601,9 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
         #element_nodes = element.nodes[:, face]
         #print('element_nodes =', element_nodes)
         if element_type == 'CTETRA':
-            areai, centroidi, normali = _tri_area(nids, xyz_cid0, face)
+            areai, centroidi, normali = _solid_tri_area(nids, xyz_cid0, face)
         else:
-            areai, centroidi, normali = _quad_area(nids, xyz_cid0, face)
+            areai, centroidi, normali = _solid_quad_area(nids, xyz_cid0, face, g1, g34)
         #n1 = enodes[ig1i]
         #n1 = nodes[]
         area[i] = areai
@@ -1595,6 +1622,7 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
 
         nids = [ig1, ig34]
         nids.sort()
+        assert element_type in {'CPENTA'}, element_type
         if element_type == 'CPENTA':
             #if load.g34 is None:
                 #face_acn = elem.get_face_area_centroid_normal(g1)
@@ -1640,6 +1668,7 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
         enodes2 = enodes[facei]
         #print(enodes2)
         face_list.append(enodes2)
+        face_out_list.append(facei)
 
         assert len(facei) == 3, facei
         areai = 1.
@@ -1655,7 +1684,7 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
     assert len(face_list) > 0, face_list
 
     face = np.array(face_list)
-    log.debug('face = {face}')
+    log.debug(f'face = {face}')
 
     #if element_type == 'CHEXA':
         #face = np.array(face_list)
@@ -1696,10 +1725,14 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
         raise RuntimeError(f'there is nan normal; normal={normal}')
     if np.any(np.isnan(mean_pressure)):
         raise RuntimeError(f'there is nan pressure; mean_pressure={mean_pressure}')
-    return area, centroid, normal, mean_pressure
+
+    face_out = np.array(face_out_list)
+    assert face_out.max() < 8, face_out
+    return face_out, area, centroid, normal, mean_pressure
 
 
-def _tri_area(nids: np.ndarray, xyz_cid0: np.ndarray, face):
+def _solid_tri_area(nids: np.ndarray, xyz_cid0: np.ndarray,
+                    face: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     iface = np.searchsorted(nids, face)
     in1 = iface[:, 0]
     in2 = iface[:, 1]
@@ -1711,25 +1744,51 @@ def _tri_area(nids: np.ndarray, xyz_cid0: np.ndarray, face):
     n3 = xyz_cid0[in3, :]
     centroid = (n1 + n2 + n3) / 3.
     crossi = np.cross(n2-n1, n3-n1)
-    area = np.linalg.norm(crossi, axis=1)
+
+    norm = np.linalg.norm(crossi, axis=1)
+    normal = crossi / norm[:, np.newaxis]
+    area = 0.5 * norm
     assert len(area) == nelements, f'len(area)={len(area)}; nelmements={nelements}'
-    normal = crossi / area[:, np.newaxis]
     assert normal.shape == (nelements, 3), normal.shape
     return area, centroid, normal
 
-def _quad_area(nids: np.ndarray, xyz_cid0: np.ndarray, face):
+def _solid_quad_area(nids: np.ndarray,
+                     xyz_cid0: np.ndarray,
+                     face: np.ndarray,
+                     g1, g34) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     iface = np.searchsorted(nids, face)
     in1 = iface[:, 0]
     in2 = iface[:, 1]
     in3 = iface[:, 2]
     in4 = iface[:, 3]
-    n1 = xyz_cid0[in1, :]
-    n2 = xyz_cid0[in2, :]
-    n3 = xyz_cid0[in3, :]
-    n4 = xyz_cid0[in4, :]
-    centroid = (n1 + n2 + n3 + n4) / 4.
-    crossi = np.cross(n4-n2, n3-n1)
-    area = np.linalg.norm(crossi, axis=1)
-    normal = crossi / area[:, np.newaxis]
-    assert len(area) == len(n1)
+    xyz1 = xyz_cid0[in1, :]
+    xyz2 = xyz_cid0[in2, :]
+    xyz3 = xyz_cid0[in3, :]
+    xyz4 = xyz_cid0[in4, :]
+    centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+    # CPENTA
+    #[3, 4, 1, 0]
+    #a = p1 - p3
+    #b = p2 - p4
+    #a = array([-1.,  0.,  2.])
+    #b = array([1., 0., 2.])
+    #p1 = array([0., 0., 2.])
+    #p2 = array([1., 0., 2.])
+    #p3 = array([1., 0., 0.])
+    #p4 = array([0., 0., 0.])
+
+    # new
+    #face = [0, 1, 4, 3]
+    a = xyz3 - xyz1
+    b = xyz4 - xyz2
+
+    # per CPENTA - backwards face
+    #a = n1 - n3
+    #b = n2 - n4
+    crossi = np.cross(a, b)
+    norm = np.linalg.norm(crossi, axis=1)
+    normal = crossi / norm[:, np.newaxis]
+    area = 0.5 * norm
+    assert len(area) == len(xyz1)
     return area, centroid, normal
