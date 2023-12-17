@@ -255,8 +255,10 @@ class SPC(VectorizedBaseCard):
         no_enforced = self.enforced.max() == 0. and self.enforced.min() == 0.
         if no_enforced:
             for spc_id, node_id, components in zip(spc_str, node_str, components_str):
-                msg = 'SPC     %8s%8s%8s\n' % (spc_id, node_id, components)
-                bdf_file.write(msg)
+                list_fields = ['SPC', spc_id, node_id, components]
+                #msg = 'SPC     %8s%8s%8s\n' % (spc_id, node_id, components)
+                #bdf_file.write(msg)
+                bdf_file.write(print_card(list_fields))
         else:
             for spc_id, node_id, components, enforced in zip(spc_str, node_str, components_str, self.enforced):
                 list_fields = ['SPC', spc_id, node_id, components, enforced]

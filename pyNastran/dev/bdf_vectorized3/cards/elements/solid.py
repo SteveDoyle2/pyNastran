@@ -451,6 +451,8 @@ class CPENTA(SolidElement):
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
         nodes = self.base_nodes
+        #assert len(nid) > 0, nid
+        #assert len(nodes) > 0, nodes
 
         inode = np.searchsorted(nid, nodes)
         n1 = xyz[inode[:, 0], :]

@@ -116,7 +116,8 @@ from pyNastran.dev.bdf_vectorized3.cards.aero import (
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-    AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
+    AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, FLUTTER,
+    AEPARM, AELINK, AESTAT,
     GUST, AESURF, AESURFS, CSSCHD, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
@@ -140,7 +141,9 @@ from .breakdowns import (
 
 if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import PARAM, MDLPRM, FLUTTER
+    from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
     from pyNastran.bdf.case_control_deck import CaseControlDeck
+    from pyNastran.bdf.cards.bdf_tables import DTABLE
 
 class BDFAttributes:
     def __init__(self):
@@ -291,6 +294,7 @@ class BDFAttributes:
         self.aestat = AESTAT(self)  # degrees of freedom
 
         # flutter
+        self.flutter = FLUTTER(self)
         self.flfact = FLFACT(self)  # Mach, Vel, rho for FLUTTER
 
         #  gust
@@ -405,12 +409,12 @@ class BDFAttributes:
         self.cpenta = CPENTA(self)
         self.cpyram = CPYRAM(self)
         self.psolid = PSOLID(self)
-        self.plsolid = PLSOLID(self)
+        self.plsolid = PLSOLID(self)  # hyperelastic
         self.pcomps = PCOMPS(self)
         self.pcompls = PCOMPLS(self)
         #self.solid_properties = []
 
-        self.chexcz = CHEXCZ(self)
+        self.chexcz = CHEXCZ(self)   # cohesive zone
 
         # mass
         self.pmass = PMASS(self)
@@ -474,7 +478,6 @@ class BDFAttributes:
         #self.ploadx1 = PLOADX1(self)
 
         # other thermal...
-        #self.dtemp = DTEMP(self)
         self.qvect = QVECT(self)
         self.qhbdy = QHBDY(self)
         self.qbdy1 = QBDY1(self)
@@ -564,12 +567,15 @@ class BDFAttributes:
         self.nlpcis = {}
 
         # optimization
+        self.dequations: dict[int, DEQATN] = {}
+        self.dtable: Optional[DTABLE] = None
         self.modtrak = MODTRAK(self)
         self.desvar = DESVAR(self)
         self.dlink = DLINK(self)
         self.dvgrid = DVGRID(self)
         self.dresp1 = DRESP1(self)
         self.dresp2 = DRESP2(self)
+        #self.dresp3 = DRESP3(self)
         self.dconstr = DCONSTR(self)
 
         self.dvprel1 = DVPREL1(self)
@@ -600,7 +606,6 @@ class BDFAttributes:
 
         #  flutter
         self.aero = None
-        self.flutters = {}
         self.mkaeros = []
 
         # ----------------------------------------------------------------
@@ -877,7 +882,7 @@ class BDFAttributes:
         loads = [
             self.dload,
             self.darea,
-            self.tload1, self.tload2, # self.tload1,
+            self.tload1, self.tload2, # self.tload3,
             self.rload1, self.rload2, # self.rloadex
 
             # random loads
@@ -982,7 +987,7 @@ class BDFAttributes:
         aero = [
             self.aecomp, self.aecompl, self.aesurf, self.aesurfs, self.aestat,
             self.aelist, self.aeparm, self.aelink,
-            self.aefact, self.flfact,
+            self.aefact, self.flfact, self.flutter,
             ] + self.aero_elements + \
             self.aero_properties + self.aero_splines + self.monitor_point_cards + \
             self.aero_loads
@@ -1019,6 +1024,28 @@ class BDFAttributes:
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
                 self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge]
+    @property
+    def _cards_not_setup(self) -> list[Any]:
+        cards = [
+            # optimization
+            self.dequations, self.dtable, self.doptprm,
+            # tables,
+            self.tables_d, self.tables_m,
+            # modes
+            self.methods, self.cMethods,
+            # nonlinear
+            self.nlparms,
+            # transient
+            self.tsteps,
+            # frequency solutions
+            self.frequencies,
+            # nonlinear transient
+            self.tstepnls, self.nlpcis, self.nxstrats,
+            # aero
+            self.aeros, self.divergs, # trim
+            self.aero, self.mkaeros, # flutter
+        ]
+        return cards
 
     @property
     def _cards_to_setup(self) -> list[Any]:
@@ -1117,6 +1144,16 @@ class BDFAttributes:
             raise RuntimeError(f'Duplicate {msg}CAEROx IDs\n'
                                f'caero_ids={count_where}\ncount={count2}')
         return ucaero_ids
+
+    def dresp_ids(self) -> np.ndarray:
+        """DRESP1/DRESP2 can be duplicated"""
+        list_dresp_ids = [dresp.dresp_id for dresp in (self.dresp1, self.dresp2)]
+        if len(list_dresp_ids) == 0:
+            return np.array([], dtype='int32')
+        dresp_ids = np.hstack(list_dresp_ids)
+        udresp_ids = np.unique(dresp_ids)
+        return udresp_ids
+
     # ------------------------------------------------------------------------
 
     def set_as_msc(self) -> None:
@@ -1343,16 +1380,16 @@ class BDFAttributes:
                 continue
             nelement = len(card.element_id)
             if card_type in NO_MATERIAL_MASS:
-                property_id = np.zeros(nelement, dtype='float64')
-                material_id = np.zeros(nelement, dtype='float64')
-                mass = card.mass()
+                unused_property_id = np.zeros(nelement, dtype='float64')
+                unused_material_id = np.zeros(nelement, dtype='float64')
+                unused_mass = card.mass()
             elif card_type in NO_DETAILED_MASS:  # solids
-                property_id = card.property_id
-                material_id = card.mass_material_id()
-                mass = card.mass()
+                unused_property_id = card.property_id
+                unused_material_id = card.mass_material_id()
+                unused_mass = card.mass()
             else:
                 # shells
-                element_id, property_id, material_id = card.mass_material_id()
+                unused_element_id, unused_property_id, unused_material_id = card.mass_material_id()
 
             #card.get_detailed_mass()
             #if card.type in
@@ -1711,14 +1748,6 @@ class BDFAttributes:
             #raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
                            #% (sid, msg, _unique_keys(self.flfacts)))
 
-    def Flutter(self, fid: int, msg: str='') -> FLUTTER:
-        """gets a FLUTTER"""
-        try:
-            return self.flutters[fid]
-        except KeyError:
-            raise KeyError('fid=%s not found%s.  Allowed FLUTTERs=%s'
-                           % (fid, msg, _unique_keys(self.flutters)))
-
     def Element(self, element_id: int) -> list[Element]:
         elements = []
         for card in self.element_cards:
@@ -1791,13 +1820,55 @@ def check_property_ids(properties: list[Any], msg: str='') -> np.ndarray:
         #assert len(property_ids) == len(uproperty_ids)
     return uproperty_ids
 
+#def bincount(ids: np.ndarray):
+    #"""bin count is very not memory safe"""
+    #uids, index, inverse, counts = np.unique(ids,
+                             #return_index=True,
+                             #return_inverse=True,
+                             #return_counts=True)
+    #print('ids =', ids)
+    #print('uids =', uids)
+    #print('index =', index)
+    #print('inverse =', inverse)
+    #print('counts =', counts)
+    #count = np.bincount(property_ids)
+
+
 def _get_duplicate_cards(properties: list[Any],
                          property_ids: np.ndarray,
                          list_property_ids: list[np.ndarray],
                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
-    count = np.bincount(property_ids)
-    count_where = np.where(count > 1)[0]
-    count2 = count[count_where]
+    #print('property_ids -', property_ids)
+    #if properties.max() < 1_000_000_000:
+    #print('property_ids_og =', property_ids)
+    uids, index, count = np.unique(
+        property_ids,
+        return_index=True,
+        return_inverse=False,
+        return_counts=True)
+    count_inverse_where = np.where(count > 1)[0]
+    count_where = uids[count_inverse_where]
+    count2 = count[count_inverse_where]
+    #print('property_ids =', property_ids)
+    #print('uids =', uids)
+    #print('index =', index)
+    #print('inverse =', inverse)
+    #print('count =', count)
+    #print('count2', count2)
+    #print('count_inverse_where =', count_inverse_where)
+    #print('count_where =', count_where)
+
+    if 0:
+        # old method with a memory issue
+        count = np.bincount(property_ids)
+        count_where = np.where(count > 1)[0]
+        count2 = count[count_where]
+
+        print('*count', count)
+        print('*count_where', count_where)
+        print('*count2', count2)
+        aaa
+
     #print(len(properties))
     #print('--------------------------')
     assert len(properties) == len(list_property_ids)

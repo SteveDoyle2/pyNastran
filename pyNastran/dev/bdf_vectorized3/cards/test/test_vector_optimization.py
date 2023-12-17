@@ -24,7 +24,7 @@ class TestOpt(unittest.TestCase):
         """tests SOL 200"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'sol200', 'model_200.bdf')
-        unused_model = read_bdf(bdf_filename, xref=True, debug=False)
+        model = read_bdf(bdf_filename, xref=True, debug=False)
         op2_filename = os.path.join(MODEL_PATH, 'sol200', 'model_200.op2')
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
@@ -38,6 +38,7 @@ class TestOpt(unittest.TestCase):
             #for key, dresp in sorted(model.dresps.items()):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
+        print(str(model))
         os.remove('temp.debug')
 
     def test_opt_2(self):
@@ -154,7 +155,7 @@ class TestOpt(unittest.TestCase):
         #---------------------------------------------------
 
         model.validate()
-        model.cross_reference()
+        model.setup()
         RUN_OPT = False
         if RUN_OPT:
             model.update_model_by_desvars()
@@ -177,7 +178,7 @@ class TestOpt(unittest.TestCase):
         ddval.write_card(size=16, is_double=True)
         ddval.raw_fields()
         model.validate()
-        model.cross_reference()
+        model.setup()
         save_load_deck(model)
 
     def test_doptprm(self):
@@ -196,7 +197,7 @@ class TestOpt(unittest.TestCase):
         doptprm = model.add_doptprm(params, comment='doptprm')
         model.validate()
         model._verify_bdf(xref=False)
-        model.cross_reference()
+        model.setup()
         model._verify_bdf(xref=True)
 
         doptprm.comment = ''
@@ -453,7 +454,8 @@ class TestOpt(unittest.TestCase):
                                      validate=True, comment='dvprel2')
         equation_id = 101
         eqs = ['fstress(x,y) = x * y + 10.']
-        if 0:
+        RUN_DTABLE = True
+        if RUN_DTABLE:
             model.add_deqatn(equation_id, eqs, comment='deqatn')
             default_values = {'CAT': 42.0}
             model.add_dtable(default_values, comment='dtable')
@@ -571,7 +573,7 @@ class TestOpt(unittest.TestCase):
 
         model.validate()
         model._verify_bdf(xref=False)
-        model.cross_reference()
+        model.setup()
 
         model.setup()
 
@@ -728,7 +730,7 @@ class TestOpt(unittest.TestCase):
         model.mat10.write(size=16)
 
         model.validate()
-        model.cross_reference()
+        model.setup()
 
         #dvmrel1_1.raw_fields()
         #dvmrel1_8.raw_fields()
@@ -839,7 +841,7 @@ class TestOpt(unittest.TestCase):
         dvgrid_msg = model.dvgrid.write(size=8)
 
         model.validate()
-        model.cross_reference()
+        model.setup()
 
         #dvcrel1.raw_fields()
         model.dvcrel1.write(size=16)
@@ -908,7 +910,7 @@ class TestOpt(unittest.TestCase):
         model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
         #dvgrid.raw_fields()
         model.pop_parse_errors()
-        model.cross_reference()
+        model.setup()
         save_load_deck(model)
 
     def test_rod_dvprel(self):
@@ -968,7 +970,7 @@ class TestOpt(unittest.TestCase):
             model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
-        model.cross_reference()
+        model.setup()
         save_load_deck(model, xref='standard', punch=True)
 
     def test_cbar_dvprel(self):
@@ -1069,7 +1071,7 @@ class TestOpt(unittest.TestCase):
             model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
-        model.cross_reference()
+        model.setup()
         save_load_deck(model, xref='standard', punch=True)
 
     def test_shell_dvprel(self):
@@ -1141,10 +1143,10 @@ class TestOpt(unittest.TestCase):
             model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
-        model.cross_reference()
+        model.setup()
         save_load_deck(model, xref='standard', punch=True)
 
-    def _test_dtable(self):
+    def test_dtable(self):
         """
         tests:
          - DTABLE
@@ -1153,6 +1155,8 @@ class TestOpt(unittest.TestCase):
         """
         log = get_logger(level='warning')
         model = BDF(log=log)
+        dresp2 = model.dresp2
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1172,25 +1176,29 @@ class TestOpt(unittest.TestCase):
         params = {
             (0, 'DTABLE'): ['B1', 'C', 'A'],
         }
-        dresp2 = model.add_dresp2(dresp_id, label, dequation, region, params,
-                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True,
-                                  comment='')
+        dresp2_id = model.add_dresp2(dresp_id, label, dequation, region, params,
+                                     method='MIN', c1=1., c2=0.005, c3=10., validate=True,
+                                     comment='')
         eqs = [
             'f(a,b,c)=a+b+c'
         ]
         model.add_deqatn(dequation, eqs)
-        fields = dresp2.raw_fields()
-        #print(fields)
-        expected_fields = ['DRESP2', 42, 'cat', 1000, None, 'MIN', 1.0, 0.005, 10.0,
-                           'DTABLE', 'B1', 'C', 'A', None, None, None, None]
-        assert fields == expected_fields
-        #DRESP2        42     cat    1000
-        #          DTABLE      B1       C       A
-        #---------------------------------
-        dresp2.cross_reference(model)
-        str(dresp2)
-        fields = dresp2.raw_fields()
-        assert fields == expected_fields, fields
+        model.setup()
+
+        RUN_DRESP2 = False
+        if RUN_DRESP2:
+            fields = dresp2.raw_fields()
+            #print(fields)
+            expected_fields = ['DRESP2', 42, 'cat', 1000, None, 'MIN', 1.0, 0.005, 10.0,
+                               'DTABLE', 'B1', 'C', 'A', None, None, None, None]
+            assert fields == expected_fields
+            #DRESP2        42     cat    1000
+            #          DTABLE      B1       C       A
+            #---------------------------------
+            dresp2.cross_reference(model)
+            str(dresp2)
+            fields = dresp2.raw_fields()
+            assert fields == expected_fields, fields
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

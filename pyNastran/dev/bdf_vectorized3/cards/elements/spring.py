@@ -17,7 +17,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
-    array_default_int, array_default_float)
+    array_default_int, array_default_float,
+    get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 if TYPE_CHECKING:  # pragma: no cover
@@ -127,6 +128,10 @@ class CELAS1(Element):
                    missing,
                    node=(nid, self.nodes), filter_node0=True,
                    property_id=(pids, self.property_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -275,11 +280,15 @@ class CELAS2(Element):
                    missing,
                    node=(nid, self.nodes), filter_node0=True)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
@@ -383,6 +392,10 @@ class CELAS3(Element):
                    spoint=(spoint, self.spoints), filter_node0=True,
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.spoints.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -483,6 +496,10 @@ class CELAS4(Element):
         geom_check(self,
                    missing,
                    spoint=(spoint, self.spoints), filter_node0=True, )
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.spoints.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

@@ -298,7 +298,7 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
         np.linalg.norm(np.cross(-v14, v21), axis=1), # v41 x v21
         np.linalg.norm(np.cross(v32, -v21), axis=1), # v32 x v12
         np.linalg.norm(np.cross(v43, -v32), axis=1), # v43 x v23
-        np.linalg.norm(np.cross(v14, v43), axis=1),  # v14 x v43
+        np.linalg.norm(np.cross(v14,  v43), axis=1),  # v14 x v43
     ]).T
     assert areas.shape == (nelement, 4)
     #
@@ -309,10 +309,34 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     min_area = areas.min(axis=1)
     assert len(min_area) == nelement
 
-    area_ratioi1 = area / min_area
-    area_ratioi2 = max_area / area
+    is_nan_area_ratio = False
+    min_area_min = min_area.min()
+    if min_area_min > 0.0:
+        area_ratioi1 = area / min_area
+    else:
+        assert min_area_min == 0., min_area
+        area_ratioi1 = np.full(nelement, np.nan, dtype=area.dtype)
+        iarea = np.where(min_area != 0.)[0]
+        area_ratioi1[area] = area[area] / min_area[iarea]
+        is_nan_area_ratio = True
+        warnings.warn(f'invalid area_ratio for a quad/hexa/penta because min_area=0')
+
+    area_min = area.min()
+    if area_min > 0.0:
+        area_ratioi2 = max_area / area
+    else:
+        assert area_min == 0.0, area
+        area_ratioi2 = np.full(nelement, np.nan, dtype=area.dtype)
+        iarea = np.where(area != 0.)[0]
+        area_ratioi2[iarea] = max_area[iarea] / area[iarea]
+        is_nan_area_ratio = True
+        warnings.warn(f'invalid area_ratio for a quad/hexa/penta because area=0')
+
     area_ratios = np.array([area_ratioi1, area_ratioi2])
     area_ratio = area_ratios.max(axis=0)
+    if is_nan_area_ratio:
+        inan = np.isnan(area_ratio)
+        area_ratio[inan] = area_ratio[~inan].max() * 2
     assert area_ratio.shape == (nelement, )
     del area_ratios
 
@@ -336,8 +360,20 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     ne42 = np.linalg.norm(e42, axis=1)
     ne13 = np.linalg.norm(e13, axis=1)
     ne13_ne42 = ne13 * ne42
-    cos_skew1 = np.einsum('ij,ij->i', e13, e42) / ne13_ne42
-    cos_skew2 = np.einsum('ij,ij->i', e13, -e42) / ne13_ne42
+    ne13_ne42_min = ne13_ne42.min()
+    if ne13_ne42_min > 0.0:
+        cos_skew1 = np.einsum('ij,ij->i', e13,  e42) / ne13_ne42
+        cos_skew2 = np.einsum('ij,ij->i', e13, -e42) / ne13_ne42
+    #except FloatingPointError:
+    else:
+        assert ne13_ne42_min == 0.0, ne13_ne42_min
+        ine = np.where(ne13_ne42 != 0.)[0]
+        cos_skew1 = np.full(nelement, np.nan, dtype=area.dtype)
+        cos_skew2 = np.full(nelement, np.nan, dtype=area.dtype)
+        cos_skew1[ine] = np.einsum('ij,ij->i', e13[ine, :],  e42[ine, :]) / ne13_ne42[ine]
+        cos_skew2[ine] = np.einsum('ij,ij->i', e13[ine, :], -e42[ine, :]) / ne13_ne42[ine]
+        warnings.warn(f'invalid skew for a quad/hexa/penta because there are collapsed edges')
+
     skews = np.abs(np.arccos(np.clip([
         cos_skew1, cos_skew2], -1., 1.)))
     assert skews.shape == (2, nelement), skews.shape
@@ -443,7 +479,7 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
         #print(warp.tolist())
 
     test = False
-    if test:
+    if test:  # pragma: no cover
         from pyNastran.bdf.mesh_utils.delete_bad_elements import quad_quality as quad_quality_old
         for p1i, p2i, p3i, p4i, areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi, \
             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi in zip(

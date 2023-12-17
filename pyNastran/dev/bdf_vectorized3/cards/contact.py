@@ -180,18 +180,28 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
             ids0 = self.ids[i0:i1].tolist()
             set_to_ids[sid].append(ids0)
 
+        #bdf_file.write(f'$ {self.type}\n')
         for sid, ids_list in set_to_ids.items():
             ids = np.hstack(ids_list).tolist()
             singles, doubles = collapse_thru_packs(ids)
-            #print('singles/doubles', singles, doubles)
+            #print(f'sid={sid} singles/doubles', len(singles), len(doubles))
 
             if len(singles):
                 list_fields = [self.type, sid, ] + singles
-                bdf_file.write(print_card(list_fields))
+                if len(doubles):
+                    nfields = len(list_fields) - 1
+                    nleftover = (nfields % 8)
 
-            for double in doubles:
-                list_fields = [self.type, sid] + double
-                bdf_file.write(print_card(list_fields))
+                    if nleftover != 0:
+                        list_fields.extend(['']*(8-nleftover))
+                    for double in doubles:
+                        list_fields += double + [''] * 5
+                    bdf_file.write(print_card(list_fields))
+            else:
+                assert len(singles) == 0, singles
+                for double in doubles:
+                    list_fields = [self.type, sid] + double
+                    bdf_file.write(print_card(list_fields))
         return
 
     #def index(self, node_id: np.ndarray, safe: bool=False) -> np.ndarray:

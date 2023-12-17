@@ -194,7 +194,7 @@ class Writer:
             bdf_file.write(f'$pyNastran: version={model.nastran_format}\n')
             bdf_file.write(f'$pyNastran: punch={model.punch}\n')
             bdf_file.write(f'$pyNastran: encoding={encoding}\n')
-            bdf_file.write(f'$pyNastran: nnodes={model.grid.n:d}\n')
+            #bdf_file.write(f'$pyNastran: nnodes={model.grid.n:d}\n')
             #bdf_file.write(f'$pyNastran: nelements={len(self.elements):d}\n')
 
         if not model.punch:
@@ -250,9 +250,9 @@ class Writer:
         write_aero_in_flutter = False
         write_aero_in_gust = False
         if model.aero:
-            if len(model.flfact) or model.flutters or model.mkaeros:
+            if len(model.flfact) or len(model.flutter) or model.mkaeros:
                 write_aero_in_flutter = True
-            elif model.gust.n:
+            elif len(model.gust):
                 write_aero_in_gust = True
             else:
                 # an AERO card exists, but no FLUTTER, FLFACT, MKAEROx or GUST card
@@ -887,12 +887,11 @@ class Writer:
         model.flfact.write_file(bdf_file, size=size, is_double=is_double)  # Mach, vel, rho for FLUTTER
         #bdf_file.write(model.aefact.write(size=size))  #
 
-        if (write_aero_in_flutter and model.aero) or model.flutters or model.mkaeros:
+        if (write_aero_in_flutter and model.aero) or len(model.flutter) or model.mkaeros:
             bdf_file.write('$FLUTTER\n')
             if write_aero_in_flutter:
                 bdf_file.write(model.aero.write_card(size, is_double))
-            for (unused_id, flutter) in sorted(model.flutters.items()):
-                bdf_file.write(flutter.write_card(size, is_double))
+            model.flutter.write_file(bdf_file, size=size, is_double=is_double)
             for mkaero in model.mkaeros:
                 bdf_file.write(mkaero.write_card(size, is_double))
 
@@ -1158,6 +1157,10 @@ class Writer:
         model.dresp1.write_file(bdf_file, size=size, is_double=is_double)
         model.dresp2.write_file(bdf_file, size=size, is_double=is_double)  # poorly supported
         #model.dresp3.write_file(bdf_file, size=size, is_double=is_double)
+
+        for deqatn_id, deqatn in model.dequations.items():
+            bdf_file.write(deqatn.write_card(size=size, is_double=is_double))
+
         model.dconstr.write_file(bdf_file, size=size, is_double=is_double)
         model.dconadd.write_file(bdf_file, size=size, is_double=is_double)
 

@@ -5730,6 +5730,246 @@ class GUST(VectorizedBaseCard):
         return
 
 
+class FLUTTER(VectorizedBaseCard):
+    """
+    Defines data needed to perform flutter analysis.
+
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    |    1    |  2  |   3    |  4   |  5   |   6   |   7   |      8      |  9   |
+    +=========+=====+========+======+======+=======+=======+=============+======+
+    | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    | FLUTTER | 19  |   K    | 119  | 219  | 319   |   S   |      5      | 1.-4 |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    """
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.flutter_id = np.array([], dtype='int32')
+        self.method = np.array([], dtype='|U8')
+        self.density_flfact_id = np.array([], dtype='int32')
+        self.mach_flfact_id = np.array([], dtype='int32')
+        self.rfreq_flfact_id = np.array([], dtype='int32')
+        self.imethod = np.array([], dtype='|U8')
+        self.nvalue = np.array([], dtype='int32')
+        self.omax = np.array([], dtype='float64')
+        self.eps = np.array([], dtype='float64')
+
+    #def __len__(self) -> int:
+        #return len(self.name)
+
+    def add(self, sid: int, method: str,
+            density: int, mach: int, reduced_freq_velocity: int,
+            imethod: str='L',
+            nvalue=None, omax=None,
+            epsilon: float=1.0e-3, comment: str='',
+            validate: bool=False) -> int:
+        """
+        Creates a FLUTTER card, which is required for a flutter (SOL 145)
+        analysis.
+
+        Parameters
+        ----------
+        sid : int
+            flutter id
+        method : str
+            valid methods = [K, KE,
+                             PKS, PKNLS, PKNL, PKE]
+        density : int
+            defines a series of air densities in units of mass/volume
+            PARAM,WTMASS does not affect this
+            AERO affects this
+            references an FLFACT id
+        mach : int
+            defines a series of the mach numbers
+            references an FLFACT id
+        reduced_freq_velocity : int
+            Defines a series of either:
+               1) reduced frequencies - K, KE
+               2) velocities - PK, PKNL, PKS, PKNLS
+            depending on the method chosen.
+            references an FLFACT id
+        imethod : str; default='L'
+            Choice of interpolation method for aerodynamic matrix interpolation.
+            imethods :
+               1) L - linear
+               2) S - surface
+               3) TCUB - termwise cubic
+        nvalue : int
+            Number of eigenvalues beginning with the first eigenvalue for
+            output and plots
+        omax : float
+            For the PKS and PKNLS methods, OMAX specifies the maximum frequency, in
+            Hz., to be used in he flutter sweep.
+            MSC only.
+        epsilon : float; default=1.0e-3
+            Convergence parameter for k. Used in the PK and PKNL methods only
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, method,
+                           density, mach, reduced_freq_velocity,
+                           imethod, nvalue, omax,
+                           epsilon, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a GUST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        flutter_id = integer(card, 1, 'sid')
+        method = string_or_blank(card, 2, 'method (K, KE, PKS, PKNLS, PKNL, PK)', default='L')
+        density_id = integer(card, 3, 'density')
+        mach_id = integer(card, 4, 'mach')
+        reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
+
+        omax = None
+        imethod = string_or_blank(card, 6, 'imethod', default='L')
+        if method in ['K', 'KE']:
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+            assert imethod in ['L', 'S', 'TCUB'], 'imethod = %s' % imethod  # linear-surface
+        elif method in ['PKS', 'PKNLS']:
+            nvalue = None
+            omax = double_or_blank(card, 7, 'omax')
+        elif method == 'PKNL':
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+        elif method == 'PK':
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+        else:
+            raise NotImplementedError('FLUTTER method=%r' % method)
+
+        assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
+        epsilon = double_or_blank(card, 8, 'epsilon', default=1e-3)  # not defined in QRG
+        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
+        #return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
+                       #imethod=imethod, nvalue=nvalue, omax=omax,
+                       #epsilon=epsilon, comment=comment)
+        self.cards.append((flutter_id, method,
+                           density_id, mach_id, reduced_freq_velocity_id,
+                           nvalue, omax, epsilon, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        flutter_id = np.zeros(ncards, dtype='int32')
+        method = np.zeros(ncards, dtype='|U8')
+        density_flfact_id = np.zeros(ncards, dtype='int32')
+        mach_flfact_id = np.zeros(ncards, dtype='int32')
+        rfreq_flfact_id = np.zeros(ncards, dtype='int32')
+        imethod = np.zeros(ncards, dtype='|U8')
+        nvalue = np.zeros(ncards, dtype='int32')
+        omax = np.zeros(ncards, dtype='float64')
+        epsilon = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (flutter_idi, methodi,
+             density_flfact_idi, mach_flfact_idi, rfreq_flfact_idi,
+             nvaluei, omaxi, epsiloni, comment) = card
+            if nvaluei is None:
+                nvaluei = 0
+            if omaxi is None:
+                omaxi = 0
+            flutter_id[icard] = flutter_idi
+            method[icard] = methodi
+            density_flfact_id[icard] = density_flfact_idi
+            mach_flfact_id[icard] = mach_flfact_idi
+            rfreq_flfact_id[icard] = rfreq_flfact_idi
+            nvalue[icard] = nvaluei
+            omax[icard] = omaxi
+            epsilon[icard] = epsiloni
+        self._save(flutter_id, method,
+                   density_flfact_id, mach_flfact_id, rfreq_flfact_id,
+                   imethod, nvalue, omax, epsilon)
+        #self.sort()
+        self.cards = []
+
+    def _save(self, flutter_id, method,
+              density_flfact_id, mach_flfact_id, rfreq_flfact_id,
+              imethod, nvalue, omax, epsilon):
+        if len(self.flutter_id):
+            asdf
+            #gust_id = np.hstack([self.gust_id, gust_id])
+            #dload_id = np.hstack([self.dload_id, dload_id])
+            #wg = np.hstack([self.wg, wg])
+            #x0 = np.hstack([self.x0, x0])
+            #V = np.hstack([self.V, V])
+        self.flutter_id = flutter_id
+        self.method = method
+        self.density_flfact_id = density_flfact_id
+        self.mach_flfact_id = mach_flfact_id
+        self.rfreq_flfact_id = rfreq_flfact_id
+        self.imethod = imethod
+        self.nvalue = nvalue
+        self.omax = omax
+        self.epsilon = epsilon
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
+                          #msg=f'no materials for {self.type}')
+        #mids.sort()
+        coords = self.model.coord.coord_id
+        #all_aecomp_names = self.model.aecomp.name
+        #aecomp_names = np.unique(self.comp)
+        #ucoords = np.unique(np.hstack([self.cp, self.cd]))
+        #geom_check(self,
+                   #missing,
+                   #coord=(coords, ucoords),
+                   #aecomp=(all_aecomp_names, aecomp_names))
+
+    def _get_repr_nvalue_omax(self):
+        if self.method in ['K', 'KE']:
+            imethod = set_blank_if_default(self.imethod, 'L')
+            #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
+            return imethod, self.nvalue
+        elif self.method in ['PKS', 'PKNLS']:
+            return self.imethod, self.omax
+        # PK, PKNL
+        return self.imethod, self.nvalue
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.flutter_id) == 0:
+            return ''
+        print_card = get_print_card_8_16(size)
+
+        flutter_ids = array_str(self.flutter_id, size=size)
+        densities = array_str(self.density_flfact_id, size=size)
+        machs = array_str(self.mach_flfact_id, size=size)
+        rfreqs = array_str(self.rfreq_flfact_id, size=size)
+        epsilons = array_default_float(self.epsilon, default=1e-3, size=size, is_double=False)
+        imethods = array_default_str(self.imethod, default='L', size=size)
+
+        # mixed field based on method flag
+        iomax = (self.method == 'PKS') & (self.method == 'PKNLS')
+        invalue = ~iomax
+        omaxs = array_float_nan(self.omax, size=size, is_double=False)
+        nvalues = array_default_int(self.nvalue, default=0, size=size)
+        omaxs[invalue] = nvalues[invalue]
+
+        for flutter_id, method, density, mach, rfreq, \
+            imethod, nvalue_omax, epsilon in zip(
+                flutter_ids, self.method, densities, machs, rfreqs,
+                imethods, omaxs, epsilons):
+            #(imethod, nvalue) = self._get_repr_nvalue_omax()
+            #epsilon = set_blank_if_default(self.epsilon, 0.001)
+            list_fields = ['FLUTTER', flutter_id, method, density, mach,
+                           rfreq, imethod, nvalue_omax, epsilon]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class AESTAT(VectorizedBaseCard):
     """
     Specifies rigid body motions to be used as trim variables in static

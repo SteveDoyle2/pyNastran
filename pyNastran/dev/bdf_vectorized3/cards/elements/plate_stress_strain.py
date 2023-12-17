@@ -22,7 +22,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     #hslice_by_idim, make_idim, searchsorted_filter,
     parse_element_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_float, array_default_int)
+    array_str, array_float,
+    array_default_int, array_default_float, array_float_nan)
 from .utils import get_density_from_material
 from .shell import (
     tri_centroid, tri_area, # tri_area_centroid_normal, tri_quality_xyz, tri_quality_nodes,
@@ -129,14 +130,15 @@ class PlateStressElement(Element):
 
 class CPLSTS3(PlateStressElement):
     """
-    +---------+-------+-------+----+----+----+-------+-------+-----+
-    |    1    |   2   |   3   |  4 |  5 |  6 |   7   |   8   |  9  |
-    +=========+=======+=======+=====+===+====+=======+=======+=====+
-    | CPLSTS3 |  EID  |  PID  | N1 | N2 | N3 | THETA |       |     |
-    +---------+-------+-------+----+----+----+-------+-------+-----+
-    |         |       | TFLAG | T1 | T2 | T3 |       |       |     |
-    +---------+-------+-------+----+----+----+-------+-------+-----+
+    +---------+-------+-----+----+-------+----+-------+-------+-----+
+    |    1    |   2   |  3  | 4  |    5  |  6 |   7   |   8   |  9  |
+    +=========+=======+=====+====+=======+====+=======+=======+=====+
+    | CPLSTS3 |  EID  | PID | N1 |   N2  | N3 |       | THETA |     |
+    +---------+-------+-----+----+-------+----+-------+-------+-----+
+    |         |       |     |    | TFLAG | T1 |   T2  |   T3  |     |
+    +---------+-------+-----+----+-------+----+-------+-------+-----+
 
+    per NX 2019.2
     """
     @Element.clear_check
     def clear(self) -> None:
@@ -170,15 +172,17 @@ class CPLSTS3(PlateStressElement):
             integer(card, 5, 'n3'),
         ]
         if len(card) > 5:
-            theta = double_or_blank(card, 6, 'theta', 0.0)
+            blank(card, 6, 'blank')
+            theta = double_or_blank(card, 7, 'theta', default=0.0)
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
-
-            tflag = integer_or_blank(card, 10, 'tflag', 0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, f'len(CPLSTS3 card) = {len(card):d}\ncard={card}'
+            blank(card, 10, 'blank')
+            blank(card, 11, 'blank')
+            tflag = integer_or_blank(card, 12, 'tflag', default=0)
+            T1 = double_or_blank(card, 13, 'T1')
+            T2 = double_or_blank(card, 14, 'T2')
+            T3 = double_or_blank(card, 15, 'T3')
+            assert len(card) <= 16, f'len(CPLSTS3 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
             tflag = 0
@@ -262,9 +266,11 @@ class CPLSTS3(PlateStressElement):
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
-        #print(self.tflag, self.T)
+        thetas = array_default_float(self.theta, default=0.0, size=size, is_double=False)
+        Ts = array_float_nan(self.T, size=size, is_double=False)
+
         for eid, pid, (n1, n2, n3), theta, tflag, (t1, t2, t3) in zip_longest(
-            element_id, property_id, nodes, self.theta, self.tflag, self.T):
+            element_id, property_id, nodes, thetas, self.tflag, Ts):
             list_fields = ['CPLSTS3', eid, pid, n1, n2, n3, None, theta, None,
                             None, None, None, tflag, t1, t2, t3]
             bdf_file.write(print_card(list_fields))
@@ -406,8 +412,11 @@ class CPLSTS4(PlateStressElement):
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
+
+        thetas = array_default_float(self.theta, default=0.0, size=size, is_double=False)
+        Ts = array_float_nan(self.T, size=size, is_double=False)
         for eid, pid, (n1, n2, n3, n4), theta, tflag, (t1, t2, t3, t4) in zip_longest(
-            element_id, property_id, nodes, self.theta, self.tflag, self.T):
+            element_id, property_id, nodes, thetas, self.tflag, Ts):
             list_fields = ['CPLSTS4', eid, pid, n1, n2, n3, n4, theta,
                             None, None, None, None, tflag, t1, t2, t3, t4]
             bdf_file.write(print_card(list_fields))
@@ -1361,7 +1370,7 @@ class CPLSTS6(PlateStrainElement):
         tflags = array_default_int(self.tflag, size=size, default=0)
         for eid, pid, (n1, n2, n3, n4, n5, n6), theta, tflag, thickness in zip_longest(
             element_id, property_id, nodes, self.theta, tflags, self.thickness):
-            list_fields = ['CPLSTN6', eid, pid, n1, n2, n3, n4, n5, n6, '', '',
+            list_fields = ['CPLSTS6', eid, pid, n1, n2, n3, n4, n5, n6, '', '',
                            theta, tflag]
             if not np.all(np.isnan(thickness)):
                 t1, t2, t3, t4, t5, t6 = thickness

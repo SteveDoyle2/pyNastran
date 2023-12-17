@@ -929,7 +929,7 @@ class PCOMP(CompositeProperty):
         self.failure_theory = np.array([], dtype='|U8')
         self.tref = np.array([], dtype='float64')
         self.ge = np.array([], dtype='float64')
-        self.lam = np.array([], dtype='|U6')
+        self.lam = np.array([], dtype='|U8')
 
         self.nlayer = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
@@ -1109,6 +1109,11 @@ class PCOMP(CompositeProperty):
         nlayer = np.zeros(ncards, dtype='int32')
         #group = np.full(ncards, '', dtype='|U8')
 
+        map_ft = {
+            'HFAI': 'HFAIL',
+            'HTAP': 'HTAPE',
+            'HFAB': 'HFABR',
+        }
         mids_list = []
         thickness_list = []
         thetas_list = []
@@ -1122,9 +1127,32 @@ class PCOMP(CompositeProperty):
             failure_theory[icard] = fti
             tref[icard] = trefi
             ge[icard] = gei
+
+            #'MEM' All plies must be specified, but only membrane terms (MID1 on the
+            #      derived PSHELL entry) are computed.
+            #'BEND' All plies must be specified, but only bending terms (MID2 on the derived
+            #       PSHELL entry) are computed.
+            #'SMEAR' All plies must be specified, stacking sequence is ignored MID1=MID2 on
+            #        the derived PSHELL entry and MID3, MID4 and TS/T and 12I/T**3
+            #        terms are set to zero).
+            #'SMCORE' All plies must be specified, with the last ply specifying core properties and
+            #         the previous plies specifying face sheet properties. The stiffness matrix is
+            #         computed by placing half the face sheet thicknesses above the core and the
+            #         other half below with the result that the laminate is symmetric about the
+            #         mid-plane of the core. Stacking sequence is ignored in calculating the face
+            #         sheet stiffness.
             lam[icard] = lami
             assert lami in {'', 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'}, f'pid={pid} laminate={lami!r}'
-            assert fti in {'', 'HILL', 'HOFF', 'STRN', 'TSAI', 'HFAI', 'HFAB', 'HTAP'}, f'pid={pid} failure_theory={fti!r}'
+
+            #'HILL' for the Hill theory.
+            #'HOFF' for the Hoffman theory.
+            #'TSAI' for the Tsai-Wu theory.
+            #'STRN' for the Maximum Strain theory.
+            #'HFAIL' for the Hashin failure criterion
+            #'HTAPE' for the Hashin tape criterion
+            #'HFABR' for the Hashin fabric criterion
+            fti = map_ft.get(fti, fti)
+            assert fti in {'', 'HILL', 'HOFF', 'STRN', 'TSAI', 'HFAIL', 'HFABR', 'HTAPE'}, f'pid={pid} failure_theory={fti!r}'
             nlayersi = len(mids)
 
             property_id[icard] = pid
@@ -1619,7 +1647,6 @@ class PCOMPG(CompositeProperty):
         tref = double_or_blank(card, 6, 'tref', default=0.0)
         ge = double_or_blank(card, 7, 'ge', default=0.0)
         lam = string_or_blank(card, 8, 'lam', default='')
-        assert len(lam) <= 2, lam
 
         fields = card.fields(9)
 
@@ -1690,6 +1717,12 @@ class PCOMPG(CompositeProperty):
         thickness_list = []
         thetas_list = []
         sout_list = []
+
+        map_ft = {
+            'HFAI': 'HFAIL',
+            'HTAP': 'HTAPE',
+            'HFAB': 'HFABR',
+        }
         for icard, card in enumerate(self.cards):
             (pid, nsmi, sbi, fti, trefi, gei, lami, z0i,
              mids, thicknesses, thetas, souts, global_ply_ids, commment) = card
@@ -1699,6 +1732,18 @@ class PCOMPG(CompositeProperty):
             tref[icard] = trefi
             ge[icard] = gei
             lam[icard] = lami
+
+            assert lami in {'', 'MEM', 'BEND', 'SMEAR', 'SMCORE'}, f'pid={pid} laminate={lami!r}'
+
+            #'HILL' for the Hill theory
+            #'HOFF' for the Hoffman theory
+            #'TSAI' for the Tsai-Wu theory
+            #'STRN' for the Maximum Strain theory
+            #'HFAIL' for the Hashin failure criterion
+            #'HTAPE' for the Hashin tape criterion
+            #'HFABR' for the Hashin fabric criterion
+            fti = map_ft.get(fti, fti)
+            assert fti in {'', 'HILL', 'HOFF', 'STRN', 'TSAI', 'HFAIL', 'HFABR', 'HTAPE'}, f'pid={pid} failure_theory={fti!r}'
 
             nlayeri = len(mids)
             property_id[icard] = pid
@@ -2299,7 +2344,6 @@ class PSHLN1(Property):
                 if behx == '' and intx == '' and behx == '' and intxh == '':
                     continue
                 list_fields.extend([code, behx, intx, behxh, intxh, '', '', ''])
-            #print(print_card_8(list_fields))
             bdf_file.write(print_card(list_fields))
         return
 
@@ -2632,7 +2676,6 @@ class PSHLN2(Property):
                 if behx == '' and intx == '' and behx == '' and intxh == '':
                     continue
                 list_fields.extend([code, behx, intx, behxh, intxh, '', '', ''])
-            #print(print_card_8(list_fields))
             bdf_file.write(print_card(list_fields))
         return
 

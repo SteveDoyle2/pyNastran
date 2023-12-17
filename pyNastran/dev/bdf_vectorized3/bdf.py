@@ -49,8 +49,10 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 #from .write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, string)
-
+from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
+
+#-------------------------------
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
@@ -88,7 +90,7 @@ from .cards.elements.beam import BEAMOR
                                        #transform_coords_vectorized,
                                        #CORDx)
 #from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
-#from .cards.deqatn import DEQATN
+from .cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, ROTORG, ROTORD,
@@ -112,7 +114,7 @@ from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import MONDSP1
 from pyNastran.bdf.cards.aero.static_loads import AEROS, DIVERG
-from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2, FLUTTER, GUST
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
     #TOPVAR, DDVAL,
     #DRESP3,
@@ -142,7 +144,7 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
     #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
     #TABRND1, TABRNDG,
-    #DTABLE,
+    DTABLE,
 )
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCPARA, BCTPARA, BLSEG, BCTPARM, BCBODY)
@@ -461,6 +463,7 @@ OBJ_CARDS = {
     # tables
     'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
     'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+    'DTABLE',
 }
 
 
@@ -716,8 +719,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'AERO',  ## aero
             'AEROS',  ## aeros
             'GUST',  ## gusts
-            #'FLUTTER',   ## flutters
-            #'FLFACT',   ## flfacts
+            'FLUTTER',   ## flutters
+            'FLFACT',   ## flfacts
             'MKAERO1', 'MKAERO2',  ## mkaeros
             'AECOMP', 'AECOMPL',   ## aecomps
             'AEFACT',   ## aefacts
@@ -773,7 +776,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DMIAX',
 
             # optimization cards
-            #'DEQATN', 'DTABLE',
+            'DEQATN', 'DTABLE',
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', # 'DRESP3', 'TOPVAR',
             'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
@@ -2246,7 +2249,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # SOL 145
             'AERO' : (AERO, add_methods._add_aero_object),
-            'FLUTTER' : (FLUTTER, add_methods._add_flutter_object),
             'MKAERO1' : (MKAERO1, add_methods._add_mkaero_object),
             'MKAERO2' : (MKAERO2, add_methods._add_mkaero_object),
 
@@ -2257,6 +2259,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TSTEPNL' : (TSTEPNL, add_methods._add_tstepnl_object),
 
             # nx_opt
+            'DTABLE' : (DTABLE, add_methods._add_dtable_object),
             #'DVTREL1' : (DVTREL1, add_methods._add_dvtrel_object), # dvtrels
             #'GROUP' : (GROUP, add_methods._add_group_object), # group
             #'DMNCON' : (DMNCON, add_methods._add_dmncon_object), # dmncon
@@ -2717,6 +2720,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # sol 145 - flutter
             'FLFACT' : partial(self._prepare_card, self.flfact),
+            'FLUTTER' : partial(self._prepare_card, self.flutter),
 
             # sol 146 - gust
             'GUST' : partial(self._prepare_card, self.gust),
@@ -2758,7 +2762,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DMIJI' : self._prepare_dmiji,
             #'RINGFL' : self._prepare_ringfl,
 
-            #'DEQATN' : self._prepare_dequatn,
+            'DEQATN' : self._prepare_dequatn,
 
             #'TEMPAX' : self._prepare_tempax,
             #'CONVM' : self._prepare_convm,
@@ -3643,6 +3647,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 cid=1)
 
         """
+        asdf
         #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         # this is used when xref=False (only for vectorized=True)
         # we now require nids, where the other approach
@@ -4607,6 +4612,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.cards_to_read.update(REMOVED_CARDS)  # add
 
     def __repr__(self) -> str:
+        """prints the card count of the model"""
         msg = 'BDF:\n'
         cards = sorted(self._cards_to_setup, key=lambda card: card.type)
         #msg = '\n'.join([card for card in cards if card.n])
@@ -4614,6 +4620,37 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             if card.n == 0:
                 continue
             msg += str(card) + '\n'
+
+        card_count = {}
+        singletons = {'AERO', 'AEROS', 'DTABLE', 'DOPTPRM'}
+        for card in self._cards_not_setup:
+            if card is None:
+                continue
+            elif isinstance(card, list):
+                card_counti = defaultdict(int)
+                for cardi in card:
+                    card_counti[cardi.type] += 1
+                card_counti = dict(card_counti)
+                for name, counti in sorted(card_count.items()):
+                    card_count[name] = counti
+
+            elif isinstance(card, dict):
+                card_counti = defaultdict(int)
+                for cardi in card.values():
+                    card_counti[cardi.type] += 1
+                card_counti = dict(card_counti)
+                for name, counti in sorted(card_count.items()):
+                    card_count[name] = counti
+
+            elif card.type in singletons:
+                card_count[card.type] = 1
+            else:
+                raise RuntimeError(card)
+
+        if len(card_count):
+            msg = 'Vectorized ' + msg + 'Unvectorized:\n'
+            for name, counti in card_count.items():
+                msg += f'{name}: {counti}\n'
         return msg
 
 def _echo_card(card, card_obj):
@@ -4724,8 +4761,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_AELIST', 'add_AEPARM',
             #'add_DIVERG',
             #'add_DDVAL',
-            #'add_DEQATN', 'add_DTABLE',
-            #'add_FLFACT', 'add_FLUTTER',
+            #'add_FLFACT', ,
             #'add_GUST', 'add_NLPARM', 'add_NLPCI',
             #'add_PARAM', 'add_PHBDY',
             #'add_SET', 'add_SEUSET',
@@ -4858,62 +4894,62 @@ def _bool(value):
     return True if value == 'true' else False
 
 
-def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
-                                                  CORD2R, CORD2C, CORD2S]],
-                          cps_to_check: list[int],
-                          cps_checked: list[int],
-                          nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:
-    """helper method for ``transform_xyzcp_to_xyz_cid``"""
-    cord1s_to_update_temp = []
-    cord2s_to_update_list = []
-    for cp in sorted(cps_to_check):
-        coord = coords[cp]
-        if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
-            if coord.rid in cps_checked:
-                cord2s_to_update_list.append(cp)
-        elif coord.type in {'CORD1R', 'CORD1C', 'CORD1S'}:
-            cord1s_to_update_temp.append(cp)
-        else:
-            raise NotImplementedError(coord.rstrip())
+#def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
+                                                  #CORD2R, CORD2C, CORD2S]],
+                          #cps_to_check: list[int],
+                          #cps_checked: list[int],
+                          #nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:
+    #"""helper method for ``transform_xyzcp_to_xyz_cid``"""
+    #cord1s_to_update_temp = []
+    #cord2s_to_update_list = []
+    #for cp in sorted(cps_to_check):
+        #coord = coords[cp]
+        #if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
+            #if coord.rid in cps_checked:
+                #cord2s_to_update_list.append(cp)
+        #elif coord.type in {'CORD1R', 'CORD1C', 'CORD1S'}:
+            #cord1s_to_update_temp.append(cp)
+        #else:
+            #raise NotImplementedError(coord.rstrip())
 
-    cord1s_to_update_list = []
-    if cord1s_to_update_temp:
-        cord1s_to_update = set()
-        if len(nids_checked) == 0:
-            raise RuntimeError('len(nids_checked)=0...this should not happen.')
-        elif len(nids_checked) == 1:
-            pass
-        else:
-            nids_checked = [np.hstack(nids_checked)]
+    #cord1s_to_update_list = []
+    #if cord1s_to_update_temp:
+        #cord1s_to_update = set()
+        #if len(nids_checked) == 0:
+            #raise RuntimeError('len(nids_checked)=0...this should not happen.')
+        #elif len(nids_checked) == 1:
+            #pass
+        #else:
+            #nids_checked = [np.hstack(nids_checked)]
 
-        nids_checkedi = nids_checked[0]
-        if len(nids_checkedi) != 0:
-            # check the CORD1x cards
-            #
-            #print('nids_checked = ', nids_checkedi)
-            for cp in cord1s_to_update_temp:
-                coord = coords[cp]
-                nids = coord.node_ids
-                #print('cp=%s nids=%s' % (cp, nids))
-                for nid in nids:
-                    if nid not in nids_checkedi:
-                        #print('  nid=%s break...' % nid)
-                        break
-                else:
-                    #print('  passed')
-                    # all nids passed
-                    cord1s_to_update.add(cp)
-            cord1s_to_update_list = list(cord1s_to_update)
-            cord1s_to_update_list.sort()
+        #nids_checkedi = nids_checked[0]
+        #if len(nids_checkedi) != 0:
+            ## check the CORD1x cards
+            ##
+            ##print('nids_checked = ', nids_checkedi)
+            #for cp in cord1s_to_update_temp:
+                #coord = coords[cp]
+                #nids = coord.node_ids
+                ##print('cp=%s nids=%s' % (cp, nids))
+                #for nid in nids:
+                    #if nid not in nids_checkedi:
+                        ##print('  nid=%s break...' % nid)
+                        #break
+                #else:
+                    ##print('  passed')
+                    ## all nids passed
+                    #cord1s_to_update.add(cp)
+            #cord1s_to_update_list = list(cord1s_to_update)
+            #cord1s_to_update_list.sort()
 
-    ncoords = len(cord1s_to_update_list) + len(cord2s_to_update_list)
-    #if ncoords == 0:
-        #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
-            #cps_to_check, cord1s_to_update, cord2s_to_update)
-        #for cp in (cord1s_to_update + cord2s_to_update):
-            #msg += str(cp)
-        #raise RuntimeError(msg)
-    return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
+    #ncoords = len(cord1s_to_update_list) + len(cord2s_to_update_list)
+    ##if ncoords == 0:
+        ##msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
+            ##cps_to_check, cord1s_to_update, cord2s_to_update)
+        ##for cp in (cord1s_to_update + cord2s_to_update):
+            ##msg += str(cp)
+        ##raise RuntimeError(msg)
+    #return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
 
 class Zona():
     def __init__(self):

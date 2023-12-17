@@ -2171,7 +2171,7 @@ def _check_case_parameters(subcase: Subcase,
                            stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
     log = fem.log
-    if fem.sol in [401, 402] and 0:
+    if sol in [401, 402] and 0:
         # TSTEP references a TSTEP1, but not a TSTEP
         # TSTEP1s are stored in tstepnls
         if any(subcase.has_parameter('TIME', 'TSTEP')):
@@ -2183,6 +2183,38 @@ def _check_case_parameters(subcase: Subcase,
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
         else:
             raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+    elif sol in {109}:
+        #109 SEDTRAN Direct Transient Response
+        if 'TSTEP' in subcase:
+            tstep_id = subcase.get_parameter('TSTEP')[0]
+        else:  # pragma: no cover
+            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+
+        #tstep_id not in fem.tstepnls
+        if tstep_id not in fem.tsteps:
+            raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
+
+    elif sol in {129, 159}:
+        #129 NLTRAN Nonlinear or Linear Transient Response
+        #159 NLTCSH Transient Structural and/or Transient Heat Transfer
+        #    Analysis with Options: Linear or Nonlinear Analysis
+        if 'TSTEP' in subcase:
+            tstep_id = subcase.get_parameter('TSTEP')[0]
+        else:  # pragma: no cover
+            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+        if tstep_id not in fem.tstepnls and tstep_id not in fem.tsteps:
+            raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
+
+    #elif sol in {}:
+        # TSTEP
+        #Selects integration and output time steps for linear or nonlinear transient analyses.
+        #For SOL 401: Selects time stepping for static analyses.
+        #For SOL 402: Selects time stepping for static and transient analyses.
+        #For SOLs 601 and 701: Selects time stepping for advanced nonlinear analyses.
+
+        #n                        Sets the identification number of a TSTEP or TSTEPNL bulk entry.
+        #n (For SOLs 401 and 402) Sets the identification number of a TSTEP1 bulk entry.
+        #n (For SOLs 601 and 701) Sets the identification number of a TSTEP bulk entry.
     else:
         if any(subcase.has_parameter('TIME', 'TSTEP')):
             if 'TIME' in subcase:
@@ -2471,7 +2503,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
     if 'FMETHOD' in subcase and 0:
         # FLUTTER
         fmethod_id = subcase.get_parameter('FMETHOD')[0]
-        unused_fmethod = fem.flutters[fmethod_id]
+        unused_fmethod = fem.flutter.slice_card_by_id(fmethod_id)
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors, require_sol=False)
     return ierror

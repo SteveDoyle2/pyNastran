@@ -698,10 +698,14 @@ class COORD(VectorizedBaseCard):
             grid.sort()
         assert len(np.unique(self.coord_id)) == len(self.coord_id)
 
+        debug = False
+        if debug:
+            print(f'nresolved = {nresolved}')
         while nresolved < ncoords:
             i1 = np.where(self.icoord == 1)[0]
             i2 = np.where(self.icoord == 2)[0]
-            coord2_resolvable_rids = {rid for rid in self.ref_coord_id[i2] if rid in resolved}
+            coord2_resolvable_rids = {rid for rid in self.ref_coord_id[i2]
+                                      if rid in resolved}
             coord2_cids_to_resolve = [cid for cid, rid in zip(self.coord_id[i2], self.ref_coord_id[i2])
                                       if rid in coord2_resolvable_rids and cid not in resolved]
 
@@ -713,31 +717,39 @@ class COORD(VectorizedBaseCard):
             if len(coords_to_resolve) == 0:
                 raise RuntimeError(f'cannot resolve any coordinate systems...unresolved_cids={unresolved_cids}')
 
-            log.debug(f'to_resolve: coord1={np.array(coord1_cids_to_resolve)}; '
-                      f'coord2={np.array(coord2_cids_to_resolve)}')
-            #nresolved0 = nresolved
-            nresolved = self._resolve_cord1(coord1_cids_to_resolve, nresolved, resolved, grid,
-                                            unresolved_cids)
-            #if nresolved > nresolved0:
-                #log.debug(f'resolved CORD1x: {coord1_cids_to_resolve}')
+            if debug:
+                print('-----------------------')
+                n_to_resolve = len(coord1_cids_to_resolve) + len(coord2_cids_to_resolve)
+                log.debug(f'n={n_to_resolve} resolve this cycle: coord1={np.array(coord1_cids_to_resolve)}; '
+                          f'coord2={np.array(coord2_cids_to_resolve)}')
+            nresolved1 = nresolved
+            nresolved, cord1s_resolved = self._resolve_cord1(
+                coord1_cids_to_resolve, nresolved, resolved, grid,
+                unresolved_cids)
+            if debug:
+                if nresolved > nresolved1:
+                    log.debug(f'n={len(coord1_cids_to_resolve)}; resolved CORD1x={cord1s_resolved} -> {coord1_cids_to_resolve}')
+                    log.debug(f'n={len(unresolved_cids)}; unresolved_cids = {unresolved_cids}')
 
-            #nresolved0 = nresolved
-            nresolved = self._resolve_cord2(
+            nresolved2 = nresolved
+            nresolved, cord2s_resolved = self._resolve_cord2(
                 coord2_cids_to_resolve, resolved, nresolved, unresolved_cids,
                 rid_to_i_icoord_coordtype)
 
-            #if nresolved > nresolved0:
-                #log.debug(f'resolved CORD2x: {coord2_cids_to_resolve}')
-            if unresolved_cids:
-                log.debug(f'unresolved_cids = {unresolved_cids}')
+            if debug:
+                if nresolved > nresolved2:
+                    log.debug(f'n={len(coord2_cids_to_resolve)}; resolved CORD2x={cord2s_resolved} -> {coord2_cids_to_resolve}')
+                if unresolved_cids:
+                    log.debug(f'n={len(unresolved_cids)}; unresolved_cids = {unresolved_cids}')
 
         if 0 in resolved:
             # just limiting log messages
             resolved.remove(0)
-        if resolved:
-            log.info(f'resolved = {np.array(list(resolved))}')
+        if debug and resolved:
+            log.info(f'n={len(resolved)}; resolved={np.array(list(resolved))}')
         if unresolved_cids:
-            raise RuntimeError(f'unresolved_cids = {unresolved_cids}')
+            #print(f'unresolved_cids = {unresolved_cids}\n{self.write()}')
+            raise RuntimeError(f'unresolved_cids = {unresolved_cids}\n{self.write()}')
         assert np.all(np.isfinite(self.origin)), self.origin
         assert np.all(np.isfinite(self.e1)), self.e1
         assert np.all(np.isfinite(self.T)), self.T
@@ -777,9 +789,11 @@ class COORD(VectorizedBaseCard):
                 resolved += self.coord_id[izero].tolist()
         return nresolved
 
-    def _find_cord1s_to_resolve(self, grid: GRID, i1: np.ndarray, resolved: Set[int]) -> list[int]:
+    def _find_cord1s_to_resolve(self, grid: GRID, i1: np.ndarray, resolved: set[int]) -> list[int]:
         coord1_cids_to_resolve = []
         for cid, nodes in zip(self.coord_id[i1], self.nodes[i1, :]):
+            if cid in resolved:
+                continue
             inid = grid.index(nodes)
             cps_for_nodes = grid.cp[inid]
             is_resolved = [cpi in resolved for cpi in cps_for_nodes]
@@ -788,11 +802,12 @@ class COORD(VectorizedBaseCard):
         return coord1_cids_to_resolve
 
     def _resolve_cord1(self, coord1_cids_to_resolve: list[int],
-                       nresolved: int, resolved: Set[int], grid: GRID,
-                       unresolved_cids: Set[int]) -> int:
+                       nresolved: int, resolved: set[int], grid: GRID,
+                       unresolved_cids: set[int]) -> tuple[int, set[int]]:
         """resolve CORD1R, CORD1S, CORD1C"""
+        resolved1 = set()
         if not coord1_cids_to_resolve:
-            return nresolved
+            return nresolved, resolved1
         coord1_cids_to_resolve.sort()
         inids = np.searchsorted(self.coord_id, coord1_cids_to_resolve)
         for cidi, i in zip(coord1_cids_to_resolve, inids):
@@ -838,23 +853,27 @@ class COORD(VectorizedBaseCard):
             self.xyz_to_global_transform[cid] = beta
             self.is_resolved[i] = True
             resolved.add(cid)
+            resolved1.add(cid)
             if cid in unresolved_cids:
                 unresolved_cids.remove(cid)
             nresolved += 1
-        return nresolved
+        return nresolved, resolved1
 
     def _resolve_cord2(self, coord2_cids_to_resolve: list[int],
-                       resolved: Set[int], nresolved: int,
-                       unresolved_cids: Set[int],
-                       rid_to_i_icoord_coordtype: dict[int, Any]) -> int:
+                       resolved: set[int], nresolved: int,
+                       unresolved_cids: set[int],
+                       rid_to_i_icoord_coordtype: dict[int, Any]) -> tuple[int, set[int]]:
         """resolve CORD2R, CORD2S, CORD2C"""
         #log = self.model.log
         icid = np.searchsorted(self.coord_id, coord2_cids_to_resolve)
+        resolved2 = set()
         if len(icid) == 0:
-            return nresolved
+            return nresolved, resolved2
 
         for i in icid:
             cid = self.coord_id[i]
+            if cid in resolved:
+                continue
             rid = self.ref_coord_id[i]
             coord_type = self.coord_type[i]
             icoord = self.icoord[i]
@@ -963,8 +982,9 @@ class COORD(VectorizedBaseCard):
 
             #log.debug(f'resolved cid={cid}')
             resolved.add(cid)
+            resolved2.add(cid)
             unresolved_cids.remove(cid)
-        return nresolved
+        return nresolved, resolved2
 
     @property
     def max_id(self) -> int:

@@ -13,14 +13,17 @@ if TYPE_CHECKING:  # pragma: no cover
         AERO, AEROS,
         NLPARM, NLPCI,
         FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-        CAERO2, CAERO3, CAERO4, CAERO5,
-        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-        AESURF, AESURFS, TRIM, TRIM2, DIVERG, AESTAT,
-        FLUTTER, MKAERO1, MKAERO2, GUST,
+        #CAERO2, CAERO3, CAERO4, CAERO5,
+        #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+        #AESURF, AESURFS, TRIM, TRIM2, DIVERG, AESTAT,
+        #FLUTTER, MKAERO1, MKAERO2, GUST,
         DMIG, DMI, DMIAX, DMIJ, DMIJI, DMIK, DTI,
         #PACABS,
-        SUPORT, SUPORT1,)
+        DTABLE,
+        )
+    from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
+    #from pyNastran.dev.bdf_vectorized3.cards.import DEQATN
 
 class AddMethods():
     def __init__(self, model: BDF):
@@ -175,22 +178,9 @@ class AddMethods():
         self.model._type_to_id_map[diverg.type].append(key)
 
     # SOL 145 - flutter
-    def _add_flutter_object(self, flutter: FLUTTER) -> None:
-        """adds an FLUTTER object"""
-        key = flutter.sid
-        assert key not in self.model.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.model.flutters[key], flutter)
-        assert key > 0
-        self.model.flutters[key] = flutter
-        self.model._type_to_id_map[flutter.type].append(key)
-
     def _add_mkaero_object(self, mkaero: Union[MKAERO1, MKAERO2]) -> None:
         """adds an MKAERO1/MKAERO2 object"""
         self.model.mkaeros.append(mkaero)
-
-        # SOL 200
-    def _add_doptprm_object(self, doptprm: DOPTPRM) -> None:
-        """adds a DOPTPRM"""
-        self.model.doptprm = doptprm
 
     #  matricies
     def _add_dmi_object(self, dmi: DMI, allow_overwrites: bool=False) -> None:
@@ -271,3 +261,32 @@ class AddMethods():
         #assert key > 0; yes you can have negative tables...
         self.model.tables_m[key] = table
         self.model._type_to_id_map[table.type].append(key)
+
+    #-----------------------------------------------------------
+    # optimization
+    def _add_deqatn_object(self, deqatn: DEQATN, allow_overwrites: bool=False) -> None:
+        """adds an DEQATN object"""
+        key = deqatn.equation_id
+        assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
+        model = self.model
+        if key in model.dequations and not allow_overwrites:
+            if not deqatn.write_card() == model.dequations[key].write_card():
+                assert key not in model.dequations, 'id=%s old_eq=\n%snew_eq=\n%s' % (
+                    key, model.dequations[key], deqatn)
+        model.dequations[key] = deqatn
+        #model._type_to_id_map[deqatn.type].append(key)
+
+    def _add_dtable_object(self, dtable: DTABLE, allow_overwrites: bool=False) -> None:
+        """adds an DTABLE object"""
+        model = self.model
+        if model.dtable is not None:
+            if not dtable == model.dtable:
+                raise RuntimeError('DTABLE cannot be overwritten\nold:\n%s\nnew:\n%s',
+                                   model.dtable, dtable)
+        else:
+            self.model.dtable = dtable
+            #self.model._type_to_id_map[dtable.type].append(1)
+
+    def _add_doptprm_object(self, doptprm: DOPTPRM) -> None:
+        """adds a DOPTPRM"""
+        self.model.doptprm = doptprm

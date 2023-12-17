@@ -18,7 +18,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.base_card import BaseCard
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, DTABLE
 
 def pi(num):
     """weird way to multiply π by a number"""
@@ -159,7 +159,7 @@ class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
     _properties = ['dtable']
 
-    def __init__(self, equation_id, eqs, comment=''):
+    def __init__(self, equation_id: int, eqs: list[str], comment=''):
         """
         Creates a DEQATN card
 
@@ -191,10 +191,14 @@ class DEQATN(BaseCard):  # needs work...
         if comment:
             self.comment = comment
         self.dtable = None
-        self.func = None
+        self.dtable_ref = None
         self.equation_id = equation_id
         self.eqs = eqs
+
+        self.func = None
         self.func_str = ''
+        self.func_name = ''
+        self.nargs = 0
 
     @classmethod
     def _init_from_empty(cls):
@@ -258,11 +262,17 @@ class DEQATN(BaseCard):  # needs work...
             return x + 32.
 
         """
-        default_values = {}
-        if self.dtable is not None:
-            default_values = self.dtable_ref.default_values
-        func_name, nargs, func_str = fortran_to_python(
-            self.equation_id, self.eqs, default_values, str(self))
+        #default_values = {}
+        #if self.dtable is not None:
+            #default_values = self.dtable_ref.default_values
+        #func_name, nargs, func_str = fortran_to_python(
+            #self.equation_id, self.eqs, default_values, str(self))
+        func_name, nargs, func_str = _setup_deqatn(
+            self.equation_id, self.eqs,
+            self.dtable_ref,
+            str(self),
+        )
+
         self.func_str = func_str
         self.func_name = func_name
         try:
@@ -328,17 +338,24 @@ class DEQATN(BaseCard):  # needs work...
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        #self.evaluate(1, 2)
-        eqs = split_equations(self.eqs)
-        equation_line0 = eqs[0]
-        #assert len(equation_line0) <= 56, equation_line0
-        msg = 'DEQATN  %-8i%-56s\n' % (self.equation_id, equation_line0)
-        assert len(equation_line0) <= 56, equation_line0
-        for eq in eqs[1:]:
-            msg += '        %-64s\n' % eq
-            assert len(eq) <= 64, eq
-        #print(msg)
+        msg = write_deqatn(self.equation_id, self.eqs,
+                           size=size, is_double=is_double)
         return msg
+
+def write_deqatn(equation_id: int, eqs: list[str],
+                 size: int=8, is_double: bool=False) -> str:
+    """directly write a DEQATN"""
+    #self.evaluate(1, 2)
+    split_eqs = split_equations(eqs)
+    equation_line0 = split_eqs[0]
+    #assert len(equation_line0) <= 56, equation_line0
+    msg = 'DEQATN  %-8i%-56s\n' % (equation_id, equation_line0)
+    assert len(equation_line0) <= 56, equation_line0
+    for eq in split_eqs[1:]:
+        msg += '        %-64s\n' % eq
+        assert len(eq) <= 64, eq
+    #print(msg)
+    return msg
 
 def lines_to_eqs(eqs_in: list[str]) -> list[str]:
     """splits the equations"""
@@ -540,6 +557,18 @@ def split_to_equations(lines: list[str]) -> list[str]:
         else:
             equation_lines.append(line)
     return equation_lines
+
+def _setup_deqatn(equation_id: int,
+                  eqs: list[str],
+                  dtable_ref: Optional[DTABLE],
+                  comment: str):
+    default_values = {}
+    if dtable_ref is not None:
+        default_values = dtable_ref.default_values
+
+    func_name, nargs, func_str = fortran_to_python(
+        equation_id, eqs, default_values, comment)
+    return func_name, nargs, func_str
 
 def fortran_to_python(deqatn_id: int,
                       lines: list[str],

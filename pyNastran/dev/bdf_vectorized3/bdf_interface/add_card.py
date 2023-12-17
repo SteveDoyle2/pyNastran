@@ -9,6 +9,7 @@ import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf_interface.add_methods import AddMethods
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR
+from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
 
 from pyNastran.bdf.cards.dmig import DMIG, DMIG_UACCEL, DMI, DMIJ, DMIJI, DMIK, DMIAX, DTI, DTI_UNITS
 from pyNastran.bdf.cards.materials import NXSTRAT
@@ -30,7 +31,9 @@ from pyNastran.bdf.cards.contact import BCTPARA, BCTPARM
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+    DTABLE,
 )
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,

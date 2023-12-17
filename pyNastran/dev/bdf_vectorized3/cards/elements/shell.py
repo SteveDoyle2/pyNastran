@@ -22,6 +22,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int,
+    array_default_float, array_float_nan,
     print_card_8_comment, print_card_16_comment,
     get_print_card_size,
 )
@@ -458,10 +459,17 @@ class ShellElement(Element):
                        missing,
                        node=(nid, midside_nodes), filter_node0=True)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.mcid.max())
+
     @parse_element_check
     def write_file(self, file_obj: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            size = 16
         if size == 8:
             self.write_file_8(file_obj, write_card_header=write_card_header)
         else:
@@ -654,6 +662,7 @@ class CTRIA3(ShellElement):
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         size = 8
+        assert self.max_id < 100_000_000, self.max_id
         headers = self.card_headers()
         if write_card_header:
             bdf_file.write(print_card_8_comment(headers))
@@ -689,11 +698,10 @@ class CTRIA3(ShellElement):
             bdf_file.write(msg)
         return
 
+    @parse_element_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double: bool=False,
                       write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         size = 16
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -728,9 +736,8 @@ class CTRIA3(ShellElement):
                 T3 = set_blank_if_default(T3, 1.0)
 
                 row2_data = [theta_mcid, zoffset, tflag, T1, T2, T3]
-                row2 = [print_field_8(field) for field in row2_data]
-                msg = ('CTRIA3  %8s%8s%8s%8s%8s%8s%8s\n'
-                       '                %8s%8s%8s%8s\n' % tuple(row1 + row2)).rstrip(' \n') + '\n'
+                list_fields = ['CTRIA3'] + row1 + row2_data
+                msg = print_card_16(list_fields)
             bdf_file.write(msg)
         return
 
@@ -1198,11 +1205,18 @@ class CQUAD4(ShellElement):
             np.all(self.tflag == 0) and
             np.all(np.isnan(self.T))
         )
+
+        # turns mcids into theta_mcids
         mcids = array_default_int(self.mcid, default=-1, size=size)
+        thetas = array_default_float(self.theta, default=0.0, size=size)
         no_zoffset = np.all(np.isnan(self.zoffset))
-        no_mcid = np.all(mcids == '')
+        itheta = (mcids == '')
+        mcids[itheta] = thetas[itheta]
+        theta_mcids = mcids
+
+        no_theta_mcid = np.all(theta_mcids == '')
         #CQUAD4    307517     105  247597  262585  262586  247591      -1     0.0
-        return element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid
+        return element_id, property_id, remove_tflag, no_zoffset, theta_mcids, no_theta_mcid
 
     def card_headers(self, size: int=8) -> list[str]:
         theta_mcid = 'th_mcid' if size == 8 else 'theta_mcid'
@@ -1213,53 +1227,51 @@ class CQUAD4(ShellElement):
     @parse_element_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
-
+        assert self.max_id < 100_000_000, self.max_id
         headers = self.card_headers()
         if write_card_header:
             bdf_file.write(print_card_8_comment(headers))
-        element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid = self._setup_write()
+        element_id, property_id, remove_tflag, no_zoffset, theta_mcids, no_theta_mcid = self._setup_write(size=8)
+        #nodes_ = array_str(self.nodes, size=8)
         if remove_tflag:
-            if no_zoffset and no_mcid:
+            if no_zoffset and no_theta_mcid:
                 for eid, pid, nodes in zip_longest(element_id, property_id, self.nodes):
                     data = [eid, pid] + nodes.tolist()
                     msg = 'CQUAD4  %8s%8s%8d%8d%8d%8d\n' % tuple(data)
                     bdf_file.write(msg)
             elif no_zoffset:
-                for eid, pid, nodes, theta, mcid in zip(element_id, property_id, self.nodes, self.theta, mcids):
-                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid]
+                for eid, pid, nodes, theta_mcid in zip(element_id, property_id, self.nodes, theta_mcids):
+                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], theta_mcid]
                     msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s'  % tuple(data)).rstrip(' ') + '\n'
                     bdf_file.write(msg)
-            elif no_mcid:
-                for eid, pid, nodes, theta, zoffset in zip(element_id, property_id, self.nodes, self.theta, self.zoffset):
-                    zoffset = '' if np.isnan(zoffset) else zoffset
-                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], '', print_field_8(zoffset)]
+            elif no_theta_mcid:
+                zoffsets = array_float_nan(self.zoffset, size=8, is_double=False)
+                for eid, pid, nodes, zoffset in zip(element_id, property_id, self.nodes, zoffsets):
+                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], '', zoffset]
                     msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
                     bdf_file.write(msg)
             else:
-                for eid, pid, nodes, theta, mcid, zoffset in zip(element_id, property_id, self.nodes, self.theta, mcids, self.zoffset):
-                    zoffset = '' if np.isnan(zoffset) else zoffset
-                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid, print_field_8(zoffset)]
+                zoffsets = array_float_nan(self.zoffset, size=8, is_double=False)
+                for eid, pid, nodes, theta_mcid, zoffset in zip(element_id, property_id, self.nodes,
+                                                                theta_mcids, zoffsets):
+                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], theta_mcid, zoffset]
                     msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
                     bdf_file.write(msg)
         else:
-            for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip(element_id, property_id, self.nodes, self.theta,
-                                                                       mcids, self.zoffset, self.tflag, self.T):
-                zoffset = '' if np.isnan(zoffset) else zoffset
+            zoffsets = array_float_nan(self.zoffset, size=8, is_double=False)
+            for eid, pid, nodes, theta_mcid, zoffset, tflag, T in zip(element_id, property_id, self.nodes,
+                                                                      theta_mcids, zoffsets, self.tflag, self.T):
                 T1, T2, T3, T4 = T
-                if np.isnan(theta):
-                    theta_mcid = '%8s' % mcid
-                else:
-                    theta_mcid = print_field_8(theta)
 
                 row2_data = [theta_mcid, zoffset,  # actually part of line 1
                              tflag, T1, T2, T3, T4]
-                if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
+                if row2_data == ['', '0.', 0, 1.0, 1.0, 1.0, 1.0]:
                     data = [eid, pid] + nodes.tolist()
                     msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d\n' % tuple(data))
                     #return self.comment + msg
                 else:
                     #theta_mcid = self._get_theta_mcid_repr()
-                    zoffset = set_blank_if_default(zoffset, 0.0)
+                    #zoffset = set_blank_if_default(zoffset, 0.0)
                     tflag = set_blank_if_default(tflag, 0)
                     T1 = set_blank_if_default(T1, 1.0)
                     T2 = set_blank_if_default(T2, 1.0)
@@ -1284,7 +1296,7 @@ class CQUAD4(ShellElement):
         headers = self.card_headers(size=16)
         if write_card_header:
             bdf_file.write(print_card_16_comment(headers))
-        element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid = self._setup_write()
+        element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid = self._setup_write(size=16)
         if remove_tflag:
             if no_zoffset and no_mcid:
                 for eid, pid, nodes in zip_longest(element_id, property_id, self.nodes):

@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16, hslice_by_idim, make_idim, VectorizedBaseCard
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str # , array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float # , array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -487,14 +487,25 @@ class NSML(NSMi):
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
-        for nsm_id, nsm_type, pid_eid, value in zip_longest(nsm_str, self.nsm_type, pid_eid_str, self.value):
-            list_fields = (['NSML', nsm_id, nsm_type, pid_eid, value])
+        values = array_float(self.value, size=size, is_double=False)
+        for nsm_id, nsm_type, (ivalue0, ivalue1) in zip_longest(nsm_str, self.nsm_type, self.ivalue):
+            pid_eid_value = alternate_values_in_list(
+                pid_eid_str[ivalue0:ivalue1],
+                values[ivalue0:ivalue1])
+            list_fields = ['NSML', nsm_id, nsm_type] + pid_eid_value
             bdf_file.write(print_card(list_fields))
         return
 
 
 NSMs = Union[NSM, NSM1,
              NSML, NSML1]
+
+def alternate_values_in_list(pid_eid_str, values):
+    pid_eid_value = []
+    for pid_eid, value in zip(pid_eid_str, values):
+        pid_eid_value.append(pid_eid)
+        pid_eid_value.append(value)
+    return pid_eid_value
 
 class NSMADD(ADD):
     """
