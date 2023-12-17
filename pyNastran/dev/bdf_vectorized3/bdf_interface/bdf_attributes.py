@@ -125,7 +125,7 @@ from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DVPREL1, DVPREL2,
     DVMREL1, DVMREL2,
     DVCREL1, DVCREL2, DCONADD,
-    DSCREEN, # DDVAL,
+    DSCREEN, DDVAL,
     MODTRAK,
 )
 from .loads_summation import (
@@ -143,7 +143,12 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import PARAM, MDLPRM, FLUTTER
     from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
     from pyNastran.bdf.case_control_deck import CaseControlDeck
-    from pyNastran.bdf.cards.bdf_tables import DTABLE
+    from pyNastran.bdf.cards.bdf_tables import (
+        DTABLE,
+        TABLED1, TABLED2, TABLED3, TABLED4, # TABLED5,
+        TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABLES1, TABLEST, TABLEH1, TABLEHT,
+    )
 
 class BDFAttributes:
     def __init__(self):
@@ -586,7 +591,7 @@ class BDFAttributes:
         self.dvcrel2 = DVCREL2(self)
 
         self.dconadd = DCONADD(self)
-        #self.ddval = DDVAL(self)
+        self.ddval = DDVAL(self)
         self.dscreen = DSCREEN(self)
 
         # ---------------------------------------------------
@@ -610,8 +615,9 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         # tables
-        self.tables_d: dict[int, Any] = {}
-        self.tables_m: dict[int, Any] = {}
+        self.tables:   dict[int, Union[TABLES1, TABLEST, TABLEH1, TABLEHT]] = {}
+        self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
+        self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
 
         # matrices
         #: direct matrix input - DMIG
@@ -841,7 +847,7 @@ class BDFAttributes:
     @property
     def optimization_cards(self) -> list[Any]:
         optimization = [
-            self.desvar, self.dlink, self.dvgrid,
+            self.desvar, self.dlink, self.dvgrid, self.ddval,
             self.dresp1, self.dresp2, self.dconstr, self.dconadd,
             self.dvprel1, self.dvprel2,
             self.dvmrel1, self.dvmrel2,
@@ -1030,7 +1036,7 @@ class BDFAttributes:
             # optimization
             self.dequations, self.dtable, self.doptprm,
             # tables,
-            self.tables_d, self.tables_m,
+            self.tables, self.tables_d, self.tables_m,
             # modes
             self.methods, self.cMethods,
             # nonlinear
@@ -1591,6 +1597,7 @@ class BDFAttributes:
         return element_id, mass, centroid, inertia
 
     def length(self) -> float:
+        assert len(self.grid), 'No grids'
         NAN_LENGTHS = {'CBUSH', 'CBUSH1D'}
         length = 0.
         for card in self.element_cards:
@@ -1604,6 +1611,7 @@ class BDFAttributes:
         return length
 
     def area(self) -> float:
+        assert len(self.grid), 'No grids'
         area = 0.
         for card in self.element_cards:
             if card.n == 0 or card.type in NO_AREA:
@@ -1616,6 +1624,7 @@ class BDFAttributes:
         return area
 
     def volume(self) -> float:
+        assert len(self.grid), 'No grids'
         volume = 0.
         for card in self.element_cards:
             if card.n == 0 or card.type in NO_VOLUME:
@@ -1638,6 +1647,7 @@ class BDFAttributes:
         cards_to_read : set[str]
             cards that won't be included in element_ids
         """
+        assert len(self.grid), 'No grids'
         # list of elements that have no quality results
         NO_QUALITY = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',

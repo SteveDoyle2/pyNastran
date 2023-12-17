@@ -10,8 +10,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
-    integer_string_or_blank, integer_double_or_blank, interpret_value)
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+    integer_string_or_blank, integer_double_or_blank,
+    interpret_value)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -19,6 +20,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import build_table_lines
 
 from pyNastran.bdf.cards.optimization import build_table_lines, parse_table_fields, DRESP2_PACK_LENGTH
+from pyNastran.bdf.cards.base_card import expand_thru_by
+
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim, get_print_card_8_16,
     #hslice_by_idim,
@@ -228,11 +231,12 @@ class DESVAR(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble = force_double if self.model.is_lax_parser else double
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
 
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
-        xinit = double(card, 3, 'xinit')
+        xinit = fdouble(card, 3, 'xinit')
         xlb = fdouble_or_blank(card, 4, 'xlb', -1e20)
         xub = fdouble_or_blank(card, 5, 'xub', 1e20)
         delx = fdouble_or_blank(card, 6, 'delx', default=np.nan)
@@ -362,6 +366,163 @@ class DESVAR(VectorizedBaseCard):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                None, ddval]
                 bdf_file.write(print_card(list_fields))
+        return
+
+
+class DDVAL(VectorizedBaseCard):
+    """
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |   1   |  2  |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +=======+=====+=======+=======+=======+=======+=======+=======+=======+
+    | DDVAL | ID  | DVAL1 | DVAL2 | DVAL3 | DVAL4 | DVAL5 | DVAL6 | DVAL7 |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    | DDVAL | ID  | DVAL1 | THRU  | DVAL2 | BY    |  INC  |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    | DDVAL | 110 |  0.1  |  0.2  |  0.3  |  0.5  |  0.6  |  0.4  |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |       | .7  | THRU  |  1.0  |  BY   | 0.05  |       |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |       | 1.5 |  2.0  |       |       |       |       |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    """
+    _id_name = 'ddval_id'
+    def clear(self) -> None:
+        self.n = 0
+        self.ddval_id = np.array([], dtype='int32')
+        self.nddval = np.array([], dtype='int32')
+        self.value = np.array([], dtype='float64')
+
+    def add(self, desvar_id: int, label: str, xinit: float,
+            xlb: float=-1e20, xub: float=1e20,
+            delx=None, ddval: Optional[int]=None,
+            comment: str='') -> int:
+        """
+        Creates a DESVAR card
+
+        Parameters
+        ----------
+        desvar_id : int
+            design variable id
+        label : str
+            name of the design variable
+        xinit : float
+            the starting point value for the variable
+        xlb : float; default=-1.e20
+            the lower bound
+        xub : float; default=1.e20
+            the lower bound
+        delx : float; default=1.e20
+            fractional change allowed for design variables during
+            approximate optimization
+            NX  if blank : take from DOPTPRM; otherwise 1.0
+            MSC if blank : take from DOPTPRM; otherwise 0.5
+        ddval : int; default=None
+            int : DDVAL id
+                  allows you to set discrete values
+            None : continuous
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble = force_double if self.model.is_lax_parser else double
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
+        """
+        Adds a DDVAL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        oid = integer(card, 1, 'oid')
+        n = 1
+        ddvals = []
+        for i in range(2, len(card)):
+            ddval = integer_double_string_or_blank(card, i, 'DDVAL%s' % n)
+            if ddval is not None:
+                ddvals.append(ddval)
+        #return DDVAL(oid, ddvals, comment=comment)
+        self.cards.append((oid, ddvals, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        ddval_id = np.zeros(ncards, dtype='int32')
+        nddval = np.zeros(ncards, dtype='int32')
+        all_values_list = []
+        for icard, card in enumerate(self.cards):
+            ddval_idi, values, comment = card
+            ddval_id[icard] = ddval_idi
+
+            if not self.model.is_lax_parser:
+                for ddval in values:
+                    assert not isinstance(ddval, integer_types), f'DDVALs id={ddval_idi} have integer fields={values}'
+            values2 = expand_thru_by(values, require_int=False)
+            values2.sort()
+            all_values_list.extend(values2)
+            nddval[icard] = len(values2)
+
+        all_values = np.array(all_values_list, dtype='float64')
+        self._save(ddval_id, nddval, all_values)
+        self.sort()
+        self.cards = []
+
+    def _save(self, ddval_id, nddval, value):
+        if len(self.ddval_id) != 0:
+            ddval_id = np.hstack([self.ddval_id, ddval_id])
+            nddval = np.hstack([self.nddval, nddval])
+            value = np.hstack([self.value, value])
+        self.ddval_id = ddval_id
+        self.nddval = nddval
+        self.value = value
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    #def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['ddval_id'].append(self.ddval[self.ddval > 0])
+
+    #def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        #desvar_id = used_dict['desvar_id']
+        #ncards_removed = remove_unused_primary(self, desvar_id, self.desvar_id, 'desvar_id')
+        #return ncards_removed
+
+    #def index(self, desvar_id: np.ndarray) -> np.ndarray:
+        #assert len(self.desvar_id) > 0, self.desvar_id
+        #desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
+        #idesvar = np.searchsorted(self.desvar_id, desvar_id)
+        #return idesvar
+
+    @property
+    def iddval(self) -> np.ndarray:
+        return make_idim(self.n, self.nddval)
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.ddval_id) == 0:
+            return
+        print_card = get_print_card_8_16(size)
+
+        ddval_ids = array_str(self.ddval_id, size=size)
+        values = array_float(self.value, size=size, is_double=is_double).tolist()
+        for ddval_id, (iddval0, iddval1) in zip_longest(ddval_ids, self.iddval):
+            value = values[iddval0:iddval1]
+            list_fields = ['DDVAL', ddval_id] + value
+            bdf_file.write(print_card(list_fields))
         return
 
 

@@ -28,7 +28,10 @@ def make_idim(n: int, ndim: np.ndarray) -> np.ndarray:
         return idim
 
     assert isinstance(ndim, np.ndarray), ndim
+
+    # if this fails, self.n probably wasn't set right; should be the length of self.sid
     assert n == len(ndim), f'n={n:d} ndim={ndim}'
+
     csum = np.cumsum(ndim)
     idim[1:, 0] = csum[:-1]
     idim[:, 1] = csum

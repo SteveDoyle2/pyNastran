@@ -19,6 +19,9 @@ if TYPE_CHECKING:  # pragma: no cover
         #AESURF, AESURFS, TRIM, TRIM2, DIVERG, AESTAT,
         #FLUTTER, MKAERO1, MKAERO2, GUST,
         DMIG, DMI, DMIAX, DMIJ, DMIJI, DMIK, DTI,
+        TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABLES1, TABLEST, TABLEH1, TABLEHT,
         #PACABS,
         DTABLE,
         )
@@ -243,6 +246,17 @@ class AddMethods():
         key = card.csid
         self.model.bctparm[key] = card
         self.model._type_to_id_map[card.type].append(key)
+
+    def _add_table_object(self, table: Union[TABLEH1, TABLEHT, TABLES1, TABLEST]) -> None:
+        """adds a TABLES1, TABLEST object"""
+        key = table.tid
+        if key in self.model.tables:
+            if not table == self.model.tables[key]:
+                assert key not in self.model.tables, '\ntable=\n%s old_table=\n%s' % (
+                    table, self.model.tables[key])
+        assert key > 0
+        self.model.tables[key] = table
+        self.model._type_to_id_map[table.type].append(key)
 
     def _add_tabled_object(self, table: Union[TABLED1, TABLED2, TABLED3, TABLED4]) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""

@@ -749,21 +749,20 @@ class Writer:
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         model = self.model
-        #if self.tables or
-        if model.tables_d or model.tables_m: # or self.tables_sdamping:
+        if model.tables or model.tables_d or model.tables_m: # or model.tables_sdamping:
             bdf_file.write('$TABLES\n')
-            #for (unused_id, table) in sorted(self.tables.items()):
-                #bdf_file.write(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(model.tables.items()):
+                bdf_file.write(table.write_card(size, is_double))
             for (unused_id, table) in sorted(model.tables_d.items()):
                 bdf_file.write(table.write_card(size, is_double))
             for (unused_id, table) in sorted(model.tables_m.items()):
                 bdf_file.write(table.write_card(size, is_double))
-            #for (unused_id, table) in sorted(self.tables_sdamping.items()):
+            #for (unused_id, table) in sorted(model.tables_sdamping.items()):
                 #bdf_file.write(table.write_card(size, is_double))
 
-        #if self.random_tables:
+        #if model.random_tables:
             #bdf_file.write('$RANDOM TABLES\n')
-            #for (unused_id, table) in sorted(self.random_tables.items()):
+            #for (unused_id, table) in sorted(model.random_tables.items()):
                 #bdf_file.write(table.write_card(size, is_double))
 
     def _write_thermal(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
@@ -1149,7 +1148,7 @@ class Writer:
         """Writes the optimization cards sorted by ID"""
         model = self.model
         model.modtrak.write_file(bdf_file, size=size, is_double=is_double)
-        #model.ddval.write_file(bdf_file, size=size, is_double=is_double)
+        model.ddval.write_file(bdf_file, size=size, is_double=is_double)
         model.desvar.write_file(bdf_file, size=size, is_double=is_double)
         model.dlink.write_file(bdf_file, size=size, is_double=is_double)
         model.dvgrid.write_file(bdf_file, size=size, is_double=is_double)

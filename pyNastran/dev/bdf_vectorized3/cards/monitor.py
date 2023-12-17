@@ -386,7 +386,8 @@ class MONPNT3(VectorizedBaseCard):
         #return len(self.name)
 
     def add(self, name: str, label: str, axes: str,
-            grid_set: int, elem_set: int, xyz: list[float],
+            grid_set: int, xyz: list[float],
+            elem_set: int=0,
             cp: int=0, cd: Optional[int]=None,
             xflag='', comment: str='') -> int:
         """Creates a MONPNT3 card"""
@@ -407,7 +408,7 @@ class MONPNT3(VectorizedBaseCard):
 
         axes = parse_components(card, 9, 'axes')
         grid_set = integer(card, 10, 'grid_set')
-        elem_set = integer_or_blank(card, 11, 'elem_set')
+        elem_set = integer_or_blank(card, 11, 'elem_set', default=0)
         cp = integer_or_blank(card, 12, 'cp', default=0)
         xyz = [
             double_or_blank(card, 13, 'x', default=0.0),

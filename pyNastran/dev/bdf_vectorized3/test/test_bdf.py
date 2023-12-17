@@ -2163,6 +2163,17 @@ def _tstep_msg(fem: BDFs,
     return msg
 
 
+def _get_multi_parameter(subcase: Subcase, keys: list[str]) -> int:
+    """intended for TSTEP/TSTEPNL which points to a different place depending"""
+    idi = 0
+    for key in keys:
+        if key in subcase:
+            idi = subcase.get_parameter(key)[0]
+            break
+    if idi == 0:
+        raise RuntimeError(f'missing {keys} in case control deck\n{subcase}')
+    return idi
+
 def _check_case_parameters(subcase: Subcase,
                            fem: BDFv,
                            p0: np.ndarray,
@@ -2175,20 +2186,14 @@ def _check_case_parameters(subcase: Subcase,
         # TSTEP references a TSTEP1, but not a TSTEP
         # TSTEP1s are stored in tstepnls
         if any(subcase.has_parameter('TIME', 'TSTEP')):
-            if 'TSTEP' in subcase:
-                tstep_id = subcase.get_parameter('TSTEP')[0]
-            else:  # pragma: no cover
-                raise NotImplementedError(subcase)
+            tstep_id = _get_multi_parameter(subcase, ['TSTEP'])
             if tstep_id not in fem.tstepnls:
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
         else:
             raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
     elif sol in {109}:
         #109 SEDTRAN Direct Transient Response
-        if 'TSTEP' in subcase:
-            tstep_id = subcase.get_parameter('TSTEP')[0]
-        else:  # pragma: no cover
-            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+        tstep_id = _get_multi_parameter(subcase, ['TSTEP'])
 
         #tstep_id not in fem.tstepnls
         if tstep_id not in fem.tsteps:
@@ -2198,10 +2203,7 @@ def _check_case_parameters(subcase: Subcase,
         #129 NLTRAN Nonlinear or Linear Transient Response
         #159 NLTCSH Transient Structural and/or Transient Heat Transfer
         #    Analysis with Options: Linear or Nonlinear Analysis
-        if 'TSTEP' in subcase:
-            tstep_id = subcase.get_parameter('TSTEP')[0]
-        else:  # pragma: no cover
-            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+        tstep_id = _get_multi_parameter(subcase, ['TSTEP', 'TSTEPNL'])
         if tstep_id not in fem.tstepnls and tstep_id not in fem.tsteps:
             raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
@@ -2217,12 +2219,7 @@ def _check_case_parameters(subcase: Subcase,
         #n (For SOLs 601 and 701) Sets the identification number of a TSTEP bulk entry.
     else:
         if any(subcase.has_parameter('TIME', 'TSTEP')):
-            if 'TIME' in subcase:
-                tstep_id = subcase.get_parameter('TIME')[0]
-            elif 'TSTEP' in subcase:
-                tstep_id = subcase.get_parameter('TSTEP')[0]
-            else:  # pragma: no cover
-                raise NotImplementedError(subcase)
+            tstep_id = _get_multi_parameter(subcase, ['TIME', 'TSTEP'])
             if tstep_id not in fem.tsteps:
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 

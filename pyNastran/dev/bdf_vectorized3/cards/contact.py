@@ -6,7 +6,7 @@ import numpy as np
 
 #from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
-from pyNastran.bdf.cards.base_card import expand_thru
+from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thru,
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim)
@@ -83,7 +83,7 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
 
             #print(f'{irow:d}/{nrows:d} = {fieldsi}')
             if 'THRU' in fieldsi:
-                fieldsi = expand_thru(fieldsi, set_fields=True, sort_fields=False)
+                fieldsi = expand_thru_by(fieldsi, set_fields=True, sort_fields=False)
                 ids_list += fieldsi
             else:
                 for fieldi in fieldsi:
@@ -196,7 +196,8 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
                         list_fields.extend(['']*(8-nleftover))
                     for double in doubles:
                         list_fields += double + [''] * 5
-                    bdf_file.write(print_card(list_fields))
+                #print(print_card(list_fields))
+                bdf_file.write(print_card(list_fields))
             else:
                 assert len(singles) == 0, singles
                 for double in doubles:

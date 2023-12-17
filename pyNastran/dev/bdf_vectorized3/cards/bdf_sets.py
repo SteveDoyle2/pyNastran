@@ -448,7 +448,7 @@ class SuperBCQSET(VectorizedBaseCard):
         self.nnode = nnode
         self.node_id = node_id
         self.component = component
-        self.n = len(node_id)
+        self.n = len(seid)
         #self.sort()
         #self.cards = []
 
@@ -521,20 +521,25 @@ class SuperBCQSET(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         seid_comp_to_nids = defaultdict(lambda : defaultdict(list))
-        for seid, nid, comp in zip_longest(self.seid, self.node_id, self.component):
-            seid_comp_to_nids[seid][comp].append(nid)
+        for seid, (inode0, inode1) in zip_longest(self.seid, self.inode):
+            for nid, comp in zip(self.node_id[inode0:inode1], self.component[inode0:inode1]):
+                seid_comp_to_nids[seid][comp].append(nid)
 
         #bdf_file.write(comment)
         if self.type in {'SEBSET', 'SECSET', 'SEQSET',
                          'SEBSET1', 'SECSET1', 'SEQSET1'}:
-            class_name = self.type[0] + 'SET1'
+            # w're turning SEBSET -> SEBSET1
+            class_name = self.type + '1'
+            assert not class_name.endswith('11'), class_name
         else:  # pragma: no cover
             raise NotImplementedError(self.type)
 
         for seid, comp_to_nids in seid_comp_to_nids.items():
+            assert isinstance(seid, integer_types), seid
             for comp, nids in comp_to_nids.items():
                 node_id = array_str(np.array(nids), size=size).tolist()
                 list_fields = [class_name, seid, comp, ] + node_id
+                #print(print_card(list_fields))
                 bdf_file.write(print_card(list_fields))
         return
 

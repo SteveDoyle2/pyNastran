@@ -116,7 +116,7 @@ from pyNastran.bdf.cards.aero.aero import MONDSP1
 from pyNastran.bdf.cards.aero.static_loads import AEROS, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
-    #TOPVAR, DDVAL,
+    #TOPVAR,
     #DRESP3,
     #DSCREEN)
 #from .cards.optimization_nx import (
@@ -142,7 +142,8 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-    #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+    TABLES1, # TABDMP1,
+    TABLEST, TABLEH1, # TABLEHT,
     #TABRND1, TABRNDG,
     DTABLE,
 )
@@ -461,8 +462,9 @@ OBJ_CARDS = {
     # optimization
     'DOPTPRM',
     # tables
-    'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+    'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5',
     'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+    'TABLES1', 'TABLEST', 'TABLEH1', 'TABLEHT',
     'DTABLE',
 }
 
@@ -854,9 +856,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # nonlinear elastic temperature dependent materials (e.g. creep)
             # sees TABLES1
-            #'TABLEST',
+            'TABLEST',
             # material tables - stress (MATS1, CREEP, MATHP)
-            #'TABLES1',
+            'TABLES1',
 
             ## modal damping table - tables_sdamping
             #'TABDMP1',
@@ -868,7 +870,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TABRNDG',
 
             # ???
-            #'TABLEHT', 'TABLEH1',
+            #'TABLEHT',
+            'TABLEH1',
 
             #------------------------------------------------------------------
             #: methods
@@ -2265,10 +2268,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DMNCON' : (DMNCON, add_methods._add_dmncon_object), # dmncon
 
             # tables
-            #'TABLES1' : (TABLES1, add_methods._add_table_object),
-            #'TABLEST' : (TABLEST, add_methods._add_table_object),
+            'TABLES1' : (TABLES1, add_methods._add_table_object),
+            'TABLEST' : (TABLEST, add_methods._add_table_object),
             #'TABLEHT' : (TABLEHT, add_methods._add_table_object),
-            #'TABLEH1' : (TABLEH1, add_methods._add_table_object),
+            'TABLEH1' : (TABLEH1, add_methods._add_table_object),
 
             # dynamic tables
             'TABLED1' : (TABLED1, add_methods._add_tabled_object),
@@ -2745,7 +2748,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
             'DCONADD': partial(self._prepare_card, self.dconadd),
-            #'DDVAL': partial(self._prepare_card, self.ddval),
+            'DDVAL': partial(self._prepare_card, self.ddval),
             'DSCREEN': partial(self._prepare_card, self.dscreen),
 
             #'DTABLE' : (DTABLE, add_methods._add_dtable_object),
@@ -4760,7 +4763,6 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
 
             #'add_AELIST', 'add_AEPARM',
             #'add_DIVERG',
-            #'add_DDVAL',
             #'add_FLFACT', ,
             #'add_GUST', 'add_NLPARM', 'add_NLPCI',
             #'add_PARAM', 'add_PHBDY',

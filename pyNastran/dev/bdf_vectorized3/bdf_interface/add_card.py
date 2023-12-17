@@ -7912,11 +7912,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return monitor_point
 
     def add_monpnt3(self, name: str, label: str, axes: str,
-                    grid_set: int, elem_set: int, xyz: list[float],
+                    grid_set: int, xyz: list[float],
+                    elem_set: int=0,
                     cp: int=0, cd: Optional[int]=None,
                     xflag=None, comment: str='') -> int:
         """Creates a MONPNT3 card"""
-        monitor_point = self.monpnt3.add(name, label, axes, grid_set, elem_set, xyz,
+        monitor_point = self.monpnt3.add(name, label, axes, grid_set, xyz,
+                         elem_set=elem_set,
                          cp=cp, cd=cd, xflag=xflag, comment=comment)
         return monitor_point
 
