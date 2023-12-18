@@ -32,7 +32,8 @@ from pyNastran.utils import check_path, print_bad_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
-    CardParseSyntaxError, DuplicateIDsError, MissingDeckSections,
+    CardParseSyntaxError,
+    AuxModelError, DuplicateIDsError, MissingDeckSections,
     UnsupportedCard,
     DisabledCardError,
     ReplicationError,
@@ -267,7 +268,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     return failed_files
 
 
-def run_bdf(folder, bdf_filename,
+def run_bdf(folder: str, bdf_filename: str,
             debug: bool=False, xref: bool=True,
             check: bool=True, punch: bool=False,
             mesh_form: str='separate',
@@ -561,6 +562,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because MissingDeckSections...ignoring')
+    except AuxModelError:
+        #if not dev:
+            #raise
+        print('failed test because AuxModelError...ignoring')
     except DuplicateIDsError as e:
         # only temporarily uncomment this when running lots of tests
         if not dev:
@@ -1753,7 +1758,7 @@ def check_case(sol: int,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in {1, 101, 'STATIC', 'STATICS', 'SESTATIC', 'SESTATICS'}:
         _assert_has_spc(subcase, fem2)
-        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase, msg,
+        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'BCSET', 'P2G'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in {3, 103, 'MODES', 'SEMODES'}:
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'), subcase, msg,

@@ -960,6 +960,7 @@ class DRESP1(VectorizedBaseCard):
             a comment for the card
 
         """
+        fdouble = force_double if self.model.is_lax_parser else double
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         #label = loose_string(card, 2, 'label')
@@ -974,8 +975,11 @@ class DRESP1(VectorizedBaseCard):
 
         atti_list = []
         if response_type in FLOAT_RESPONSE_TYPES:
+            #name   atta     attb  atti
+            #----   -------- ----- -----------
+            #DIVERG mode_num blank mach_number
             for i in range(8, len(card)):
-                attii = double(card, i, 'atti_%d' % (i + 1))
+                attii = fdouble(card, i, 'atti_%d' % (i + 1))
                 atti_list.append(attii)
         else:
             for i in range(8, len(card)):
@@ -1015,6 +1019,7 @@ class DRESP1(VectorizedBaseCard):
         attb_float = np.full(ncards, np.nan, dtype='float64')
         attb_str = np.zeros(ncards, dtype='|U8')
 
+        atti_type = np.full(ncards, 'i', dtype='|U1')
         atti_ints = []
         atti_strs = []
         atti_floats = []
@@ -1052,27 +1057,42 @@ class DRESP1(VectorizedBaseCard):
                 attb_type[icard] = 'f'
                 attb_float[icard] = attbi
 
-            natti = len(attii)
-            atti1 = atti0 + natti
-            if response_typei == 'WEIGHT' and attii == ['ALL']:
+            if response_typei == 'WEIGHT' and attii in ([], ['ALL']):
                 attii = [-1]
 
-            if len(attii):
+            natti = len(attii)
+            atti1 = atti0 + natti
+            if natti:
                 if isinstance(attii[0], int):
                     assert response_typei not in FLOAT_RESPONSE_TYPES, response_typei
                     atti_ints.extend(attii)
+                    atti_type[icard] = 'i'
                 elif isinstance(attii[0], str):
                     assert response_typei in {'VOLUME'}, response_typei
                     atti_strs.extend(attii)
+                    atti_type[icard] = 's'
                 else:
                     assert isinstance(attii[0], float), attii
                     assert response_typei in FLOAT_RESPONSE_TYPES, response_typei
                     atti_floats.extend(attii)
-            iatti[icard, :] = [atti0, atti1]
+                    atti_type[icard] = 'f'
+            else:
+                print(card)
+                x = 1
+            iatti[icard, :] = [atti0, atti1]  # TODO: change this to natti
             atti1 = atti0
 
+        #if isinstance(attbi, int):
+            #atti_type[icard] = 'i'
+            #atti_int[icard] = attbi
+        #elif isinstance(attbi, str):
+            #atti_str[icard] = attii
+        #else:
+            #atti_float[icard] = attii
+
+
         idtype = self.model.idtype
-        atti_float = np.array(atti_floats, dtype=idtype)
+        atti_float = np.array(atti_floats, dtype='float64')
         atti_int = np.array(atti_ints, dtype=idtype)
         atti_str = np.array(atti_strs, dtype='U8')
         ##xinit = np.clip(xinit, xlb, xub)
@@ -1080,7 +1100,8 @@ class DRESP1(VectorizedBaseCard):
         self._save(dresp_id, label, response_type, property_type, region,
                    atta_type, atta_float, atta_int, atta_str,
                    attb_type, attb_float, attb_int, attb_str,
-                   iatti, atti_int)
+                   atti_type, atti_float, atti_int,
+                   iatti, )
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit >= xlb, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
@@ -1091,7 +1112,7 @@ class DRESP1(VectorizedBaseCard):
     def _save(self, dresp_id, label, response_type, property_type, region,
               atta_type, atta_float, atta_int, atta_str,
               attb_type, attb_float, attb_int, attb_str,
-              iatti, atti):
+              atti_type, atti_float, atti_int, iatti,):
         if len(self.dresp_id) != 0:
             assdf
 
@@ -1114,7 +1135,9 @@ class DRESP1(VectorizedBaseCard):
         self.attb_str = attb_str
 
         self.iatti = iatti
-        self.atti = atti
+        self.atti_type = atti_type
+        self.atti_float = atti_float
+        self.atti_int = atti_int
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         skip_response_types = {
@@ -1124,12 +1147,13 @@ class DRESP1(VectorizedBaseCard):
 
         for dresp_id, label, response_type, property_type, region, \
             atta_type, atta_int, atta_float, atta_str, \
-            attb_type, attb_int, attb_float, attb_str, iatti in zip_longest(
+            attb_type, attb_int, attb_float, attb_str, \
+            atti_type, iatti in zip_longest(
                 self.dresp_id, self.label, self.response_type, self.property_type, self.region,
                 self.atta_type, self.atta_int, self.atta_float, self.atta_str,
-                self.attb_type, self.attb_int, self.attb_float, self.attb_str, self.iatti):
+                self.attb_type, self.attb_int, self.attb_float, self.attb_str,
+                self.atti_type, self.iatti):
             iatti0, iatti1 = iatti
-            atti = self.atti[iatti0:iatti1]
             if atta_type == 'i':
                 atta = atta_int
             elif atta_type == 'f':
@@ -1137,12 +1161,21 @@ class DRESP1(VectorizedBaseCard):
             else:
                 atta = atta_str
 
-            if atta_type == 'i':
+            if attb_type == 'i':
                 attb = attb_int
-            elif atta_type == 'f':
+            elif attb_type == 'f':
                 attb = attb_float
             else:
                 attb = attb_str
+
+            if atti_type == 'i':
+                atti = self.atti_int[iatti0:iatti1]
+            elif atti_type == 'f':
+                atti = atti_float
+                atti = atti_float
+            else:
+                asdf
+                atti = atti_str
 
             if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
                 atti_list = ['ALL']
@@ -1184,18 +1217,20 @@ class DRESP1(VectorizedBaseCard):
         regions = array_default_int(self.region, default=-1, size=size)
         atta_ints = array_str(self.atta_int, size=size)
         attb_ints = array_str(self.attb_int, size=size)
-        attis = array_str(self.atti, size=size)
+        atti_ints = array_str(self.atti_int, size=size)
         atta_floats = array_float(self.atta_float, size=size, is_double=is_double)
         attb_floats = array_float(self.attb_float, size=size, is_double=is_double)
+        atti_floats = array_float(self.atti_float, size=size, is_double=is_double)
 
         for dresp_id, label, response_type, property_type, region, \
             atta_type, atta_int, atta_float, atta_str, \
-            attb_type, attb_int, attb_float, attb_str, iatti in zip_longest(
+            attb_type, attb_int, attb_float, attb_str, \
+            atti_type, iatti in zip_longest(
                 self.dresp_id, self.label, self.response_type, self.property_type, regions,
                 self.atta_type, atta_ints, atta_floats, self.atta_str,
-                self.attb_type, attb_ints, attb_floats, self.attb_str, self.iatti):
+                self.attb_type, attb_ints, attb_floats, self.attb_str,
+                self.atti_type, self.iatti):
             iatti0, iatti1 = iatti
-            atti = attis[iatti0:iatti1]
             if atta_type == 'i':
                 atta = atta_int
             elif atta_type == 'f':
@@ -1203,20 +1238,22 @@ class DRESP1(VectorizedBaseCard):
             else:
                 atta = atta_str
 
-            if atta_type == 'i':
+            if attb_type == 'i':
                 attb = attb_int
-            elif atta_type == 'f':
+            elif attb_type == 'f':
                 attb = attb_float
             else:
                 attb = attb_str
 
-            if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
-                atti_list = ['ALL']
-                #print(self.response_type, self.atti)
-                #iatti_all = (self.response_type == 'WEIGHT') & (self.atti == -1)
-                #attis[iatti_all] = 'ALL'
+            if atti_type == 'i':
+                atti_list = atti_ints[iatti0:iatti1].tolist()
+                if response_type == 'WEIGHT' and len(atti_list) == 1 and self.atti_int[iatti0] == -1:
+                    atti_list = ['ALL']
+            elif atti_type == 'f':
+                atti_list = atti_floats[iatti0:iatti1].tolist()
             else:
-                atti_list = atti.tolist()
+                raise RuntimeError(atti_type)
+
             list_fields = ['DRESP1', dresp_id, label, response_type, property_type,
                            region, atta, attb] + atti_list
             bdf_file.write(print_card(list_fields))

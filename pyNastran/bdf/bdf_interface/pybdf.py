@@ -33,7 +33,7 @@ from pyNastran.nptyping_interface import NDArrayN2int
 from pyNastran.utils import print_bad_path, _filename
 
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
-from pyNastran.bdf.errors import MissingDeckSections
+from pyNastran.bdf.errors import MissingDeckSections, AuxModelError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 
@@ -966,7 +966,7 @@ def _lines_to_decks(lines: list[str],
         # C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl\d200am1.dat
         # C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl\d200am2.dat
         log.warning('skipping auxmodel=%i' % auxmodel_id)
-        raise RuntimeError('lines in auxmodel %i is empty' % auxmodel_id)
+        raise AuxModelError('lines in auxmodel %i is empty' % auxmodel_id)
 
     for afpm_id, _lines in afpm_lines.items():
         log.warning('skipping AFPM=%i' % afpm_id)

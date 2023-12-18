@@ -1733,7 +1733,8 @@ class PCOMPG(CompositeProperty):
             ge[icard] = gei
             lam[icard] = lami
 
-            assert lami in {'', 'MEM', 'BEND', 'SMEAR', 'SMCORE'}, f'pid={pid} laminate={lami!r}'
+            # SYM not listed in QRG
+            assert lami in {'', 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'}, f'pid={pid} laminate={lami!r}'
 
             #'HILL' for the Hill theory
             #'HOFF' for the Hoffman theory

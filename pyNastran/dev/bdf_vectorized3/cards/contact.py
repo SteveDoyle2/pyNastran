@@ -892,10 +892,10 @@ class BCTADD(ADD):
 
         #self.get_reduced_spcs()
         bctadd_ids = array_str(self.bctadd_id, size=size)
-        bctset_idsi = array_str(self.contact_ids, size=size)
+        bctset_ids = array_str(self.contact_ids, size=size).tolist()
         for bctadd_id, idim in zip(bctadd_ids, self.idim):
             idim0, idim1 = idim
-            bctset_idsi = bctset_idsi[idim0:idim1].tolist()
+            bctset_idsi = bctset_ids[idim0:idim1]
             list_fields = ['BCTADD', bctadd_id] + bctset_idsi
             bdf_file.write(print_card(list_fields))
         return
