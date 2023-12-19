@@ -1594,9 +1594,10 @@ class PCOMPG(CompositeProperty):
             global_ply_ids: list[int], mids: list[int], thicknesses: list[float],
             thetas=None, souts=None,
             nsm: float=0.0, sb: float=0.0, ft: str='',
-            tref: float=0.0, ge: float=0.0, lam=None, z0=None,
+            tref: float=0.0, ge: float=0.0, lam: str='', z0=None,
             comment: str='') -> int:
         lam = lam if lam is not None else ''
+        ft = ft if ft is not None else ''
         z0 = z0 if z0 is not None else np.nan
 
         nlayers = len(thicknesses)
@@ -1612,31 +1613,6 @@ class PCOMPG(CompositeProperty):
         self.cards.append(cardi)
         self.n += 1
         return self.n - 1
-
-    def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
-        prop.n = len(i)
-        prop.property_id = self.property_id[i]
-        prop.z0 = self.z0[i]
-        prop.nsm = self.nsm[i]
-        prop.shear_bonding = self.shear_bonding[i]
-
-        # 'HILL' for the Hill theory.
-        # 'HOFF' for the Hoffman theory.
-        # 'TSAI' for the Tsai-Wu theory.
-        # 'STRN' for the Maximum Strain theory.
-        prop.failure_theory = self.failure_theory[i]
-        prop.tref = self.tref[i]
-        prop.ge = self.ge[i]
-        prop.lam = self.lam[i]
-
-        ilayer = self.ilayer # [i, :]
-        prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
-        prop.sout = hslice_by_idim(i, ilayer, self.sout)
-        prop.theta = hslice_by_idim(i, ilayer, self.theta)
-        prop.thickness = hslice_by_idim(i, ilayer, self.thickness)
-        prop.global_ply_id = hslice_by_idim(i, ilayer, self.global_ply_id)
-        prop.nlayer = self.nlayer[i]
-
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -1789,6 +1765,30 @@ class PCOMPG(CompositeProperty):
         self.thickness = thickness
         self.sout = sout
         self.theta = theta
+
+    def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+        prop.z0 = self.z0[i]
+        prop.nsm = self.nsm[i]
+        prop.shear_bonding = self.shear_bonding[i]
+
+        # 'HILL' for the Hill theory.
+        # 'HOFF' for the Hoffman theory.
+        # 'TSAI' for the Tsai-Wu theory.
+        # 'STRN' for the Maximum Strain theory.
+        prop.failure_theory = self.failure_theory[i]
+        prop.tref = self.tref[i]
+        prop.ge = self.ge[i]
+        prop.lam = self.lam[i]
+
+        ilayer = self.ilayer # [i, :]
+        prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
+        prop.sout = hslice_by_idim(i, ilayer, self.sout)
+        prop.theta = hslice_by_idim(i, ilayer, self.theta)
+        prop.thickness = hslice_by_idim(i, ilayer, self.thickness)
+        prop.global_ply_id = hslice_by_idim(i, ilayer, self.global_ply_id)
+        prop.nlayer = self.nlayer[i]
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['material_id'].append(self.material_id)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 import numpy as np
 
-#from pyNastran.utils.numpy_utils import integer_types, cast_ints
+from pyNastran.utils.numpy_utils import integer_types # , cast_ints
 #from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -394,6 +394,8 @@ class MONPNT3(VectorizedBaseCard):
         if cd is None:
             # ew can do this because this is MSC-specific
             cd = cp
+        elem_set = 0 if elem_set is None else elem_set
+        assert isinstance(elem_set, integer_types), elem_set
         self.cards.append((name, label, axes, grid_set, elem_set, xyz,
                            cp, cd, xflag, comment))
         self.n += 1

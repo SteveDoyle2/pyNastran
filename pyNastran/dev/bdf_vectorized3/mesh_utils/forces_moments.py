@@ -37,5 +37,7 @@ def get_temperatures_array(model: BDF, loadcase_id: int,
             if len(uspoint_id):
                 ispoint = np.searchsorted(spoint_id, uspoint_id)
                 itemp = np.searchsorted(temp.node_id, uspoint_id)
-                spoint_temps[ispoint] = temp.temperature[itemp]
+                temperaturei = temp.temperature[itemp]
+                assert len(ispoint) == len(itemp)
+                spoint_temps[ispoint] = temperaturei
     return temperature

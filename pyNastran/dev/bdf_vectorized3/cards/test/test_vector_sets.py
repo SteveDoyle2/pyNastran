@@ -43,8 +43,10 @@ class TestSets(unittest.TestCase):
 
         grid_set = 43
         elem_set = 44
-        model.add_monpnt3(name, label, axes, grid_set, elem_set,
-                          xyz, cp=0, cd=None,
+        model.add_monpnt3(name, label, axes, grid_set,
+                          xyz,
+                          elem_set=elem_set,
+                          cp=0, cd=None,
                           xflag=None, comment='monpnt3')
         #monpnt3.raw_fields()
         monpnt3.validate()
@@ -533,6 +535,7 @@ class TestSets(unittest.TestCase):
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
             model.add_grid(nid, [float(nid), 0., 0.])
+        model.setup()
         secset.validate()
         secset.write()
         save_load_deck(model)
@@ -561,6 +564,7 @@ class TestSets(unittest.TestCase):
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
             model.add_grid(nid, [float(nid), 0., 0.])
+        model.setup()
         seqset.validate()
         seqset.write()
         save_load_deck(model)

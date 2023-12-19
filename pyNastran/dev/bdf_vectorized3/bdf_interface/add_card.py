@@ -5172,7 +5172,7 @@ class AddThermal(BDFAttributes):
     def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
                   e1=None, e2=None, e3=None,
-                  comment: str='') -> PCONV:
+                  comment: str='') -> int:
         """
         Creates a PCONV card
 
@@ -5207,15 +5207,15 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        prop = PCONV(pconid, mid=mid,
-                     form=form, expf=expf, ftype=ftype,
-                     tid=tid, chlen=chlen, gidin=gidin,
-                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
-        self._add_methods._add_convection_property_object(prop)
+        prop = self.pconv.add(
+            pconid, mid=mid,
+            form=form, expf=expf, ftype=ftype,
+            tid=tid, chlen=chlen, gidin=gidin,
+            ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
         return prop
 
     def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
-                   expr=0.0, exppi=0.0, exppo=0.0, comment: str='') -> PCONVM:
+                   expr=0.0, exppi=0.0, exppo=0.0, comment: str='') -> int:
         """
         Creates a PCONVM card
 
@@ -5244,9 +5244,9 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        prop = PCONVM(pconid, mid, coef, form=form, flag=flag,
-                      expr=expr, exppi=exppi, exppo=exppo, comment=comment)
-        self._add_methods._add_convection_property_object(prop)
+        prop = self.pconvm.add(
+            pconid, mid, coef, form=form, flag=flag,
+            expr=expr, exppi=exppi, exppo=exppo, comment=comment)
         return prop
 
     def add_radset(self, cavity_ids: list[int], comment: str='') -> int:

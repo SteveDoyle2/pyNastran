@@ -1177,7 +1177,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                     raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
 
-            if run_mass and not is_nominal:
+            if run_mass and not is_nominal and len(fem1.grid):
                 fem1.length()
                 fem1.area()
                 fem1.volume()

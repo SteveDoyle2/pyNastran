@@ -772,22 +772,22 @@ class Writer:
         is_thermal = any([card.n > 0 for card in model.thermal_element_cards])
         if is_thermal:
             bdf_file.write('$THERMAL_ELEMENTS\n')
-            bdf_file.write(model.chbdye.write(size=size))
-            bdf_file.write(model.chbdyp.write(size=size))
-            bdf_file.write(model.chbdyg.write(size=size))
-            bdf_file.write(model.phbdy.write(size=size))
+            model.chbdye.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.chbdyp.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.chbdyg.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.phbdy.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         is_thermal = any([card.n > 0 for card in model.thermal_boundary_condition_cards])
-        if is_thermal and 0:
-            bdf_file.write(model.conv.write(size=size))
-            bdf_file.write(model.pconv.write(size=size))
-            bdf_file.write(model.convm.write(size=size))
-            bdf_file.write(model.pconvm.write(size=size))
+        if is_thermal:
+            model.conv.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.pconv.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.convm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.pconvm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
-        bdf_file.write(model.tempbc.write(size=size))
-        bdf_file.write(model.radbc.write(size=size))
-        bdf_file.write(model.radm.write(size=size))
-        bdf_file.write(model.radset.write(size=size))
+        model.radbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.radm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.radset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.tempbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
     def _write_thermal_materials(self, bdf_file: TextIOLike,
                                  size: int=8, is_double: bool=False,
@@ -829,12 +829,12 @@ class Writer:
             #for (unused_id, aecomp) in sorted(model.aecomps.items()):
                 #bdf_file.write(aecomp.write_card(size, is_double))
 
-            bdf_file.write(model.aeparm.write(size, is_double))
-            bdf_file.write(model.aestat.write(size, is_double))
-            bdf_file.write(model.aesurf.write(size, is_double))
-            bdf_file.write(model.aesurfs.write(size, is_double))
-            bdf_file.write(model.aefact.write(size=size))
-            bdf_file.write(model.aelink.write(size=size))
+            model.aeparm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.aestat.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.aesurf.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.aesurfs.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.aefact.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+            model.aelink.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
     def _write_static_aero(self, bdf_file: TextIOLike,
                            size: int=8, is_double: bool=False,

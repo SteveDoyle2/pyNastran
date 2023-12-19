@@ -1057,7 +1057,7 @@ class DRESP1(VectorizedBaseCard):
                 attb_type[icard] = 'f'
                 attb_float[icard] = attbi
 
-            if response_typei == 'WEIGHT' and attii in ([], ['ALL']):
+            if response_typei in {'WEIGHT', 'VOLUME'} and attii in ([], ['ALL']):
                 attii = [-1]
 
             natti = len(attii)
@@ -1247,7 +1247,7 @@ class DRESP1(VectorizedBaseCard):
 
             if atti_type == 'i':
                 atti_list = atti_ints[iatti0:iatti1].tolist()
-                if response_type == 'WEIGHT' and len(atti_list) == 1 and self.atti_int[iatti0] == -1:
+                if response_type in {'WEIGHT', 'VOLUME'} and len(atti_list) == 1 and self.atti_int[iatti0] == -1:
                     atti_list = ['ALL']
             elif atti_type == 'f':
                 atti_list = atti_floats[iatti0:iatti1].tolist()

@@ -11,7 +11,9 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string,
     integer_or_blank, double_or_blank, string_or_blank,
-    integer_or_string, fields, integer_types, float_types)
+    integer_or_string, fields,
+    #integer_types,
+    float_types)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check

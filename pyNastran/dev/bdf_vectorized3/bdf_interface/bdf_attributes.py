@@ -55,7 +55,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
-#from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
+from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
@@ -439,20 +439,20 @@ class BDFAttributes:
         self.nsml1 = NSML1(self)
 
         # thermal
-        #self.bdyor = None
-        #self.chbdye = CHBDYE(self)
-        #self.chbdyp = CHBDYP(self)
-        #self.chbdyg = CHBDYG(self)
-        #self.phbdy = PHBDY(self)
+        self.bdyor = None
+        self.chbdye = CHBDYE(self)
+        self.chbdyp = CHBDYP(self)
+        self.chbdyg = CHBDYG(self)
+        self.phbdy = PHBDY(self)
 
         #self.chacab = CHACAB(self)
         #self.chacbr = CHACBR(self)
 
         # thermal boundary conditions
-        #self.conv = CONV(self)
-        #self.pconv = PCONV(self)
-        #self.convm = CONVM(self)
-        #self.pconvm = PCONVM(self)
+        self.conv = CONV(self)
+        self.pconv = PCONV(self)
+        self.convm = CONVM(self)
+        self.pconvm = PCONVM(self)
 
         # loads
         self.load = LOAD(self)
@@ -925,16 +925,16 @@ class BDFAttributes:
     @property
     def thermal_element_cards(self) -> list[Any]:
         thermal_elements = [
-            #self.chbdye, self.chbdyg, self.chbdyp, self.phbdy,
+            self.chbdye, self.chbdyg, self.chbdyp, self.phbdy,
         ]
         return thermal_elements
 
     @property
     def thermal_boundary_condition_cards(self) -> list[Any]:
         boundary_conditions = [
-            #self.conv, self.pconv,
-            #self.convm, self.pconvm,
-            #self.tempbc,
+            self.conv, self.pconv,
+            self.convm, self.pconvm,
+            self.tempbc,
             self.radbc, self.radm, self.radset,
         ]
         return boundary_conditions
@@ -1647,7 +1647,7 @@ class BDFAttributes:
         cards_to_read : set[str]
             cards that won't be included in element_ids
         """
-        assert len(self.grid), 'No grids'
+        #assert len(self.grid), 'No grids'
         # list of elements that have no quality results
         NO_QUALITY = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',

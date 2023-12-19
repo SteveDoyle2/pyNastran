@@ -386,6 +386,8 @@ def update_cards(model: BDF,
         # time/freq/random loads
         'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'ACSRCE',
         'DLOAD', 'LSEQ',
+        # not supported
+        'SEBSET', 'SECSET', 'SEQSET',
     } | no_equiv_cards
     grid = model.grid
     ids = np.unique(grid.node_id)

@@ -136,8 +136,10 @@ from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPR
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 #from .bdf.cards.elements.thermal import BDYOR
 #from .cards.thermal.loads import (TEMPB3, TEMPRB)
-#from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                    #PHBDY, CONV, CONVM, TEMPBC)
+from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
+    CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+    PHBDY, CONV, CONVM, # TEMPBC,
+)
 #from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
@@ -751,9 +753,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # temperature cards
             'TEMP', 'TEMPD', # 'TEMPB3', 'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-            #'CHBDYE', 'CHBDYG', 'CHBDYP', 'BDYOR',
-            #'PCONV', 'PCONVM', 'PHBDY',
-            'RADBC', # 'CONV',
+            'CHBDYE', 'CHBDYG', 'CHBDYP', 'BDYOR',
+            'PCONV', 'PCONVM', 'PHBDY',
+            'RADBC', 'CONV',
             'RADM', # 'VIEW', 'VIEW3D',  # TODO: not validated
 
             #'RADCAV', ## radcavs
@@ -912,7 +914,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RADLST', 'RADMTX', #'RADBND',
             #'TEMPP1',
             #'TEMPRB',
-            #'CONVM',
+            'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
             #'CWELD', 'PWELD',
@@ -2496,17 +2498,17 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
 
             # thermal elements
-            #'CHBDYE': partial(self._prepare_card, self.chbdye),
-            #'CHBDYG': partial(self._prepare_card, self.chbdyg),
-            #'CHBDYP': partial(self._prepare_card, self.chbdyp),
-            #'PHBDY': partial(self._prepare_card, self.phbdy),
+            'CHBDYE': partial(self._prepare_card, self.chbdye),
+            'CHBDYG': partial(self._prepare_card, self.chbdyg),
+            'CHBDYP': partial(self._prepare_card, self.chbdyp),
+            'PHBDY': partial(self._prepare_card, self.phbdy),
             #'TEMPRB' : (TEMPRB, add_methods._add_thermal_load_object),
             #'TEMPB3' : (TEMPB3, add_methods._add_thermal_load_object),
 
-            #'CONV': partial(self._prepare_card, self.conv),
-            #'PCONV': partial(self._prepare_card, self.pconv),
-            #'CONVM': partial(self._prepare_card, self.convm),
-            #'PCONVM': partial(self._prepare_card, self.pconvm),
+            'CONV': partial(self._prepare_card, self.conv),
+            'PCONV': partial(self._prepare_card, self.pconv),
+            'CONVM': partial(self._prepare_card, self.convm),
+            'PCONVM': partial(self._prepare_card, self.pconvm),
 
             # static loads
             'LOAD' : partial(self._prepare_card, self.load),
