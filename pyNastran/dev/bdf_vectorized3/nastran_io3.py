@@ -1041,6 +1041,9 @@ def _load_stress_strain(element_cards: list,
     """
     loads:
     """
+    if not hasattr(model, 'celas1'):
+        return icase
+
     is_strain = not is_stress
     # collect all the stresses
     result_form = []
@@ -1140,7 +1143,7 @@ def _load_stress_strain(element_cards: list,
         if len(results_dicts2):
             name_results_dict[name] = results_dicts2
 
-    assert np.array_equal(all_element_ids, np.unique(all_element_ids))
+    #assert np.array_equal(all_element_ids, np.unique(all_element_ids))
     nelement0 = 0
     nelements = len(all_element_ids)
     oxx = np.full(nelements, np.nan, dtype='float64')
@@ -1154,32 +1157,191 @@ def _load_stress_strain(element_cards: list,
     von_mises = np.full(nelements, np.nan, dtype='float64')
 
     is_von_mises = True
+    model_etype_map = {
+        'CELAS1': model.celas1,
+        'CELAS2': model.celas2,
+        'CELAS3': model.celas3,
+        'CELAS4': model.celas4,
+
+        'CDAMP1': model.cdamp1,
+        'CDAMP2': model.cdamp2,
+        'CDAMP3': model.cdamp3,
+        'CDAMP4': model.cdamp4,
+
+        'CROD': model.crod,
+        'CTUBE': model.ctube,
+        'CONROD': model.conrod,
+
+        'CBAR': model.cbar,
+        'CBEAM': model.cbeam,
+
+        'CTETRA': model.ctetra,
+        'CPENTA': model.cpenta,
+        'CHEXA': model.chexa,
+        'CPYRAM': model.cpyram,
+
+        'CTRIA3': model.ctria3,
+        'CTRIA6': model.ctria6,
+        'CTRIAR': model.ctriar,
+
+        'CQUAD4': model.cquad4,
+        'CQUAD8': model.cquad8,
+        'CQUADR': model.cquadr,
+    }
     for element in element_cards:
         etype = element.type
-        if etype in name_results_dict:
-            results_cases = name_results_dict[etype]
-            #print(element)
-            if etype in {'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'}:
-                #oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises
-                for result in results_cases:
-                    is_von_mises = result.is_von_mises
-                    #if isinstance(result, RealSolidStressArray):
-                    elements = result.element_cid[:, 0]
-                    ielement = np.searchsorted(all_element_ids, elements)
-                    stress = result.data[:, ielement*5, :]
-                    stressi = stress[0, :, :]
-                    oxx[ielement] = stressi[:, 0]
-                    oyy[ielement] = stressi[:, 1]
-                    ozz[ielement] = stressi[:, 2]
-                    txy[ielement] = stressi[:, 3]
-                    tyz[ielement] = stressi[:, 4]
-                    txz[ielement] = stressi[:, 5]
-                    omax[ielement] = stressi[:, 6]
-                    #omid[ielement] = stressi[:, 7]
-                    omin[ielement] = stressi[:, 8]
-                    von_mises[ielement] = stressi[:, 9]
-            else:
-                raise NotImplementedError(etype)
+        # not added to gui yet
+        if etype in {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', }:
+            continue
+
+        if etype not in name_results_dict:
+            nelement0 += element.n
+            continue
+        results_cases = name_results_dict[etype]
+        model_element = model_etype_map[etype]
+        model_element_id = model_element.element_id
+        #print(element)
+        if etype in {'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'}:
+            #oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises
+            for result in results_cases:
+                if result.is_complex:
+                    continue
+                is_von_mises = result.is_von_mises
+                #if isinstance(result, RealSolidStressArray):
+                elements = result.element_cid[:, 0]
+                ielement0 = nelement0 + np.searchsorted(model_element_id, elements)
+
+                # keep only the centroidal nodes
+                nnodesi = result.nnodes_per_element
+                stress = result.data[:, 0::nnodesi, :]
+
+                stressi = stress[0, :, :]
+                oxx[ielement0] = stressi[:, 0]
+                oyy[ielement0] = stressi[:, 1]
+                ozz[ielement0] = stressi[:, 2]
+                txy[ielement0] = stressi[:, 3]
+                tyz[ielement0] = stressi[:, 4]
+                txz[ielement0] = stressi[:, 5]
+                omax[ielement0] = stressi[:, 6]
+                #omid[ielement0] = stressi[:, 7]
+                omin[ielement0] = stressi[:, 8]
+                von_mises[ielement0] = stressi[:, 9]
+        #elif etype in {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4'}:
+            #for result in results_cases:
+                #ielement0 = nelement0 + np.searchsorted(model_element_id, result.element)
+                #stressi = result.data[0, :, :]
+                #oxx[ielement0] = stressi[:, 0]
+        elif etype in {'CROD', 'CTUBE', 'CONROD'}:
+            for result in results_cases:
+                if result.is_complex:
+                    continue
+                #[axial, SMa, torsion, SMt]
+                ielement0 = nelement0 + np.searchsorted(model_element_id, result.element)
+                stressi = result.data[0, :, :]
+                oxx[ielement0] = stressi[:, 0]
+                txy[ielement0] = stressi[:, 2]
+
+        elif etype in {'CBAR'}:
+            for result in results_cases:
+                if result.is_complex:
+                    continue
+                # element does not has duplicate ids for A/B side
+                ielement0 = nelement0 + np.searchsorted(model_element_id, result.element)
+                # data is long
+                irange = np.arange(0, len(result.element), 2)
+
+                #type=RealBarStressArray nelements=1
+                #data: [1, ntotal, 15] where
+                # 15=[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+                #     s1b, s2b, s3b, s4b,        smaxb, sminb, MS_compression]
+                #data.shape = (3, 1, 15)
+                stressi = result.data[0, :, :]
+
+                #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+                # s1b, s2b, s3b, s4b,        smaxb, sminb, MS_compression]
+                #oxx[ielement] = stressi[:, 0]
+                #txy[ielement] = stressi[:, 2]
+
+                #stressi[ielement, 0], # SXC
+                #stressi[ielement, 1], # SXD
+                #stressi[ielement, 2], # SXE
+                #stressi[ielement, 3], # SXF
+                oxxi = stressi[irange, 4]
+                omaxi = np.column_stack([
+                    stressi[irange, 5],   # omax
+                    stressi[irange, 12],  # omax
+                ]).max(axis=1)
+                assert len(omaxi) == len(ielement0)
+                omini = np.column_stack([
+                    stressi[irange, 6],   # omin
+                    stressi[irange, 13],  # omin
+                ]).min(axis=1)
+                oxx[ielement0] = oxxi
+                omax[ielement0] = omaxi
+                omin[ielement0] = omini
+                del oxxi, omaxi, omini
+                x = 1
+        elif etype in {'CBEAM'}:
+            for result in results_cases:
+                if result.is_complex:
+                    continue
+                # element has duplicate ids for A/B side
+                ielement0 = nelement0 + np.searchsorted(model_element_id, result.element[::2])
+                irange = np.arange(0, len(result.element), 2)
+
+                #[sxc, sxd, sxe, sxf, smax, smin, MS_tension, MS_compression]
+                stressi = result.data[0, :, :]
+                #oxx[ielement] = stressi[:, 0]
+                #txy[ielement] = stressi[:, 2]
+
+                #stressi[ielement, 0], # SXC
+                #stressi[ielement, 1], # SXD
+                #stressi[ielement, 2], # SXE
+                #stressi[ielement, 3], # SXF
+                omaxi = np.column_stack([
+                    stressi[irange, 4],   # omax
+                    stressi[irange+1, 4], # omax
+                ]).max(axis=1)
+                assert len(omaxi) == len(ielement0)
+                omini = np.column_stack([
+                    stressi[irange, 5],   # omin
+                    stressi[irange+1, 5], # omin
+                ]).min(axis=1)
+                omax[ielement0] = omaxi
+                omin[ielement0] = omini
+                del omaxi, omini
+                x = 1
+        elif etype in {'CTRIA3', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CTRIA6', 'CQUAD8'}:
+            for result in results_cases:
+                if result.is_complex:
+                    continue
+
+                nnodei = result.nnodes
+                if result.data.shape[2] == 8:
+                    # RealPlateStressArray
+                    #[fiber_distance, oxx, oyy, txy, angle, omax, omin, max_shear]
+                    result_eids = result.element_node[::nnodei, 0]
+                    result_eids = result_eids[::2]
+                    upper = result.data[0, ::2, :]
+                    lower = result.data[0, 1::2, :]
+                    oxxi = np.column_stack([upper[:, 0], lower[:, 0]]).max(axis=1)
+                    oyyi = np.column_stack([upper[:, 1], lower[:, 1]]).max(axis=1)
+                    txyi = np.column_stack([upper[:, 2], lower[:, 2]]).max(axis=1)
+                elif result.data.shape[2] == 9:
+                    # RealComplatePlateStressArray
+                    #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
+                    continue
+                else:
+                    raise NotImplementedError(result)
+                ielement0 = nelement0 + np.searchsorted(model_element_id, result_eids)
+                oxx[ielement0] = oxxi
+                oxx[ielement0] = oyyi
+                oxx[ielement0] = txyi
+                del nnodei, oxxi, oyyi, txyi, upper, lower
+        else:
+            raise NotImplementedError(etype)
+        assert len(oxx) == nelements
         nelement0 += element.n
         x = 1
 

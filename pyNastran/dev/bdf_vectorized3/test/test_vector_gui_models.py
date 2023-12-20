@@ -310,7 +310,7 @@ class TestGuiModels(unittest.TestCase):
 
         # overflow
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
-        #run_nastran_gui(bdf_filename)
+        run_nastran_gui(bdf_filename)
 
         # EIGC parsing
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'

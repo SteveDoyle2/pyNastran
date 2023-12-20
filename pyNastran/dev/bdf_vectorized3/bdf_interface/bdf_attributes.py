@@ -1672,7 +1672,7 @@ class BDFAttributes:
             nelements += card.n
 
         #area = np.full(nelements, np.nan, dtype='float64')
-        element_ids = np.full(nelements, -1, dtype='int32')
+        element_ids = np.full(nelements, -1, dtype=self.idtype)
         taper_ratio = np.full(nelements, np.nan, dtype='float64')
         area_ratio = np.full(nelements, np.nan, dtype='float64')
         max_skew = np.full(nelements, np.nan, dtype='float64')
