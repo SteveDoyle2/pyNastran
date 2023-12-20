@@ -51,6 +51,9 @@ class LoadActions(BaseGui):
         if is_failed:
             return
 
+        if not hasattr(self, 'model_objs'):
+            self.model_objs = {}
+
         has_results = False
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
@@ -104,6 +107,7 @@ class LoadActions(BaseGui):
                     function_name2 = 'load_%s_geometry' % geometry_format2
                     load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
+                    self.model_objs[name] = cls
                 else:
                     #  nastran
                     assert 'nastran' in geometry_format2
@@ -293,6 +297,13 @@ class LoadActions(BaseGui):
                 return
                 #raise IOError(msg)
             self.gui.last_dir = os.path.split(out_filenamei)[0]
+
+            name = 'main'
+            if name in self.model_objs:
+                model = self.model_objs[name]
+                if fmt[0] == 'nastran3':
+                    fmti, geo1, geo2, res1, res2 = model.get_nastran3_wildcard_geometry_results_functions()
+                    load_function = res2
 
             try:
                 load_function(out_filenamei)

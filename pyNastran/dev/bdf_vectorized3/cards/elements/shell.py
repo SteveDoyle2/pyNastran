@@ -2228,6 +2228,13 @@ class CQUAD8(ShellElement):
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
 
+    def card_headers(self, size: int=8) -> list[str]:
+        theta_mcid = 'th_mcid' if size == 8 else 'theta_mcid'
+        headers = ['CQUAD8', 'eid', 'pid', 'node1', 'node2', 'node3', 'node4', 'node5', 'node6',
+                   'node7', 'node8', 'T1', 'T2', 'T3', 'T4', theta_mcid, 'zoffset',
+                   'tflag', ]
+        return headers
+
     @property
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(),
@@ -2244,32 +2251,36 @@ class CQUAD8(ShellElement):
         #)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
-        mcids = array_default_int(self.mcid, default=-1, size=size)
+        #mcids = array_default_int(self.mcid, default=-1, size=size)
+        tflags = array_default_int(self.tflag, default=0, size=size)
+        nodes_ = array_default_int(self.nodes, default=0, size=size).tolist()
         #no_zoffset = np.all(np.isnan(self.zoffset))
         #no_mcid = np.all(mcids == '')
         #CQUAD4    307517     105  247597  262585  262586  247591      -1     0.0
+        zoffsets = array_default_float(self.zoffset, default=0., size=size, is_double=False)
+        Ts = array_default_float(self.T, default=0., size=size, is_double=False)
         theta_mcids = combine_int_float_array(
             self.mcid, self.theta,
             int_default=-1, float_default=0.0,
             size=size)
         for eid, pid, nodes, theta_mcid, zoffset, tflag, T in zip_longest(
-            element_id, property_id, self.nodes, theta_mcids,
-            self.zoffset, self.tflag, self.T):
-            zoffset = '' if np.isnan(zoffset) else zoffset
+            element_id, property_id, nodes_, theta_mcids,
+            zoffsets, tflags, Ts):
+            #zoffset = '' if np.isnan(zoffset) else zoffset
             T1, T2, T3, T4 = T
             #if np.isnan(theta):
                 #theta_mcid = '%8s' % mcid
             #else:
                 #theta_mcid = print_field_8(theta)
 
-            zoffset = set_blank_if_default(zoffset, 0.0)
-            tflag = set_blank_if_default(tflag, 0)
-            T1 = set_blank_if_default(T1, 1.0)
-            T2 = set_blank_if_default(T2, 1.0)
-            T3 = set_blank_if_default(T3, 1.0)
-            T4 = set_blank_if_default(T4, 1.0)
-            nodes2 = [None if node == 0 else node for node in nodes]
-            list_fields = ['CQUAD8', eid, pid] + nodes2 + [
+            #zoffset = set_blank_if_default(zoffset, 0.0)
+            #tflag = set_blank_if_default(tflag, 0)
+            #T1 = set_blank_if_default(T1, 1.0)
+            #T2 = set_blank_if_default(T2, 1.0)
+            #T3 = set_blank_if_default(T3, 1.0)
+            #T4 = set_blank_if_default(T4, 1.0)
+            #nodes2 = [None if node == 0 else node for node in nodes]
+            list_fields = ['CQUAD8', eid, pid] + nodes + [
                 T1, T2, T3, T4, theta_mcid, zoffset, tflag]
             bdf_file.write(print_card(list_fields))
         return

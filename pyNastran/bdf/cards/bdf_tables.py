@@ -34,6 +34,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 
@@ -253,7 +254,7 @@ class TABLED1(Table):
         assert self.yaxis in ['LINEAR', 'LOG'], 'yaxis=%r' % (self.yaxis)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TABLED1 card from ``BDF.add_card(...)``
 
@@ -271,6 +272,27 @@ class TABLED1(Table):
         extrap = integer_or_blank(card, 4, 'yaxis', 0)
 
         x, y = read_table(card, table_id, 'TABLED1')
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a TABLED1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        extrap = integer_or_blank(card, 4, 'yaxis', 0)
+
+        x, y = read_table_lax(card, table_id, 'TABLED1')
         return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
@@ -397,7 +419,7 @@ class TABLED2(Table):
         self.y = np.asarray(y, dtype='float64')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TABLED2 card from ``BDF.add_card(...)``
 
@@ -413,6 +435,25 @@ class TABLED2(Table):
         x1 = double(card, 2, 'x1')
         extrap = integer_or_blank(card, 3, 'extrap', default=0)
         x, y = read_table(card, table_id, 'TABLED2')
+        return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a TABLED2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x1 = double(card, 2, 'x1')
+        extrap = integer_or_blank(card, 3, 'extrap', default=0)
+        x, y = read_table_lax(card, table_id, 'TABLED2')
         return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
@@ -545,6 +586,26 @@ class TABLED3(Table):
         x2 = double(card, 3, 'x2')
         extrap = integer_or_blank(card, 4, 'extrap', default=0)
         x, y = read_table(card, table_id, 'TABLED3')
+        return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLED3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x1 = double(card, 2, 'x1')
+        x2 = double(card, 3, 'x2')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
+        x, y = read_table_lax(card, table_id, 'TABLED3')
         return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
@@ -829,6 +890,24 @@ class TABDMP1(Table):
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABDMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        Type = string_or_blank(card, 2, 'Type', 'G')
+        x, y = read_table_lax(card, table_id, 'TABDMP1')
+        return TABDMP1(table_id, x, y, Type=Type, comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         table_id = data[0]
         unused_x1 = data[1]
@@ -920,6 +999,25 @@ class TABLEM1(Table):
         return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLEM1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        x, y = read_table_lax(card, table_id, 'TABLEM1')
+        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         table_id = data[0]
         xy = data[1:]
@@ -1005,6 +1103,28 @@ class TABLEM2(Table):
         x1 = double_or_blank(card, 2, 'x1', 0.0)
         extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
         x, y = read_table(card, table_id, 'TABLEM2')
+        return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLEM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        table_id = integer(card, 1, 'tid')
+
+        # defined in MSC as an integer and used as a float...int > 0
+        # defined in NX as a float; real
+        # no default given in either, but from context, let's assume 0.0
+        x1 = double_or_blank(card, 2, 'x1', 0.0)
+        extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
+        x, y = read_table_lax(card, table_id, 'TABLEM2')
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
@@ -1094,6 +1214,26 @@ class TABLEM3(Table):
         x2 = double(card, 3, 'x2')
         extrap = integer_or_blank(card, 4, 'extrap', default=0)
         x, y = read_table(card, table_id, 'TABLEM3')
+        return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLEM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x1 = double(card, 2, 'x1')
+        x2 = double(card, 3, 'x2')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
+        x, y = read_table_lax(card, table_id, 'TABLEM3')
         return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
@@ -1299,6 +1439,24 @@ class TABLES1(Table):
         return TABLES1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLES1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        Type = integer_or_blank(card, 2, 'Type', 1)
+        x, y = read_table_lax(card, table_id, 'TABLES1')
+        return TABLES1(table_id, x, y, Type=Type, comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         """
         Adds a TABLES1 card from the OP2
@@ -1379,6 +1537,23 @@ class TABLEST(Table):
         """
         table_id = integer(card, 1, 'tid')
         x, y = read_table(card, table_id, 'TABLEST')
+        return TABLEST(table_id, x, y, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLEST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x, y = read_table_lax(card, table_id, 'TABLEST')
         return TABLEST(table_id, x, y, comment=comment)
 
     @classmethod
@@ -1480,6 +1655,23 @@ class TABLEH1(Table):
         """
         table_id = integer(card, 1, 'tid')
         x, y = read_table(card, table_id, 'TABLEH1')
+        return TABLEH1(table_id, x, y, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABLEH1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x, y = read_table_lax(card, table_id, 'TABLEH1')
         return TABLEH1(table_id, x, y, comment=comment)
 
     @classmethod
@@ -1665,6 +1857,25 @@ class TABRND1(Table):
         return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a TABRND1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        x, y = read_table_lax(card, table_id, 'TABRND1')
+        return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         """
         Adds a TABRND1 card from the OP2
@@ -1796,7 +2007,7 @@ def _map_axis(axis):
         raise ValueError('axis=%r' % axis)
     return axis_type
 
-def read_table(card, table_id, table_type):
+def read_table(card, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2
@@ -1810,6 +2021,27 @@ def read_table(card, table_id, table_type):
             break
         xi = double_or_string(card, n, 'x' + str(i + 1))
         yi = double_or_string(card, n + 1, 'y' + str(i + 1))
+        if xi == 'SKIP' or yi == 'SKIP':
+            continue
+        xy.append([xi, yi])
+    string(card, nfields, 'ENDT')
+    x, y = make_xy(table_id, table_type, xy)
+    return x, y
+
+def read_table_lax(card, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
+    """common method for reading tables that handles SKIP"""
+    nfields = len(card) - 1
+    nterms = (nfields - 9) // 2
+    if nterms < 0:
+        raise SyntaxError('%r card is too short' % table_type)
+
+    xy = []
+    for i in range(nterms):
+        n = 9 + i * 2
+        if card.field(n) == 'ENDT' or card.field(n+1) == 'ENDT':
+            break
+        xi = force_double_or_string(card, n, 'x' + str(i + 1))
+        yi = force_double_or_string(card, n + 1, 'y' + str(i + 1))
         if xi == 'SKIP' or yi == 'SKIP':
             continue
         xy.append([xi, yi])

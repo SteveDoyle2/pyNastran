@@ -74,7 +74,7 @@ class Nastran3:
         )
         return data
 
-    def load_op2_results(self, op2_filename: str, plot: bool=True) -> None:
+    def load_op2_results(self, op2_filename: PathLike, plot: bool=True) -> None:
         """loads results from an op2 file"""
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2(debug=True, log=None, mode='msc')
@@ -94,7 +94,7 @@ class Nastran3:
     def _load_op2_results(self, model: OP2, plot: bool) -> None:
         """loads results from a filled OP2 object (for op2/h5)"""
         name = 'main'
-        gui = self.gui
+        gui: MainWindow = self.gui
         cases: Cases = gui.result_cases
         form: Form = gui.get_form()
         icase = len(cases)
@@ -102,7 +102,7 @@ class Nastran3:
             model,
             form, cases, icase,
             name, plot)
-        self.gui._finish_results_io2(name, form, cases)
+        gui._finish_results_io2(name, form, cases)
 
     def load_nastran3_geometry(self, bdf_filename: PathLike,
                                name: str='main', plot: bool=True):
@@ -110,10 +110,13 @@ class Nastran3:
         bdf_filename_lower = bdf_filename.lower()
         print(bdf_filename)
         if bdf_filename_lower.endswith('.op2'):
-            return self.load_op2_geometry(bdf_filename)
+            geo = self.load_op2_geometry(bdf_filename)
         elif bdf_filename_lower.endswith('.h5'):
-            return self.load_h5_geometry(bdf_filename)
-        return self.load_bdf_geometry(bdf_filename)
+            geo = self.load_h5_geometry(bdf_filename)
+        else:
+            geo = self.load_bdf_geometry(bdf_filename)
+        self.xyz_cid0
+        return geo
 
     def load_nastran3_results(self, results_filename: PathLike,
                               name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
@@ -152,6 +155,7 @@ class Nastran3:
 
         xyz_cid0 = self.xyz_cid0
         node_id = self.node_id
+        element_id = self.element_id
         mmax = xyz_cid0.max(axis=0)
         mmin = xyz_cid0.min(axis=0)
         dim_max = (mmax - mmin).max()
@@ -163,13 +167,17 @@ class Nastran3:
         #prop_res = GuiResult(subcase_id, header=result_name, title=result_name,
                              #location='centroid', scalar=property_id, mask_value=0)
 
+        #results = model.res
         name_results = [
             ('Displacement', model.displacements),
             ('Eigenvector', model.eigenvectors),
+            ('Temperature', model.temperatures),
+            ('Velocity', model.velocities),
+            ('Acceleration', model.accelerations),
         ]
 
         subcases = set([])
-        for (name, results) in name_results:
+        for (res_name, results) in name_results:
             for key, case in results.items():
                 subcases.add(key)
 
@@ -182,6 +190,30 @@ class Nastran3:
                               key, subcase, subcase_form,
                               cases, icase,
                               node_id, xyz_cid0, dim_max)
+            icase = _load_stress_strain(
+                self.element_cards,
+                model, name,
+                key, subcase, subcase_form,
+                cases, icase,
+                element_id, is_stress=True)
+            icase = _load_stress_strain(
+                self.element_cards,
+                model, name,
+                key, subcase, subcase_form,
+                cases, icase,
+                element_id, is_stress=False)
+
+            #('Geometry', None, geometry_form),
+
+            #e = ('Subcase 1', None,
+                 #[('Displacement', None, [('Static', 13, [])]),
+                  #[('Stress', None,
+                    #[('oxx', 14, []), ('oyy', 15, []), ('ozz', 16, []),
+                     #('txy', 17, []), ('txz', 18, []), ('tyz', 19, []),
+                     #('omax', 20, []), ('omin', 21, []), ('Von Mises', 22, [])]
+                    #)
+                   #]])
+
         return icase
 
     def load_h5_geometry(self, h5_filename: PathLike,
@@ -251,6 +283,8 @@ class Nastran3:
         gui._add_alt_actors(gui.alt_grids)
 
         element_id, property_id = self.load_elements(ugrid, model, node_id)
+        self.element_id = element_id
+
         #print(f'nelements = {len(element_id)}')
         form, cases, icase = self.save_results(model, node_id, element_id, property_id)
 
@@ -274,6 +308,9 @@ class Nastran3:
 
         # I think we specifically look up NodeID, ELementID,
         # but I think we want to look up by Index here
+        self.node_id = node_id
+        self.element_id = element_id
+
         gui.node_ids = node_id        # TODO: should this be node_id/index
         gui.element_ids = element_id  # TODO: should this be element_id/index
         gui.nnodes = len(node_id)
@@ -605,6 +642,7 @@ class Nastran3:
         This makes it easier to fill the geometry/results, but harder to lookup
         a specific element id.
         """
+        include_mass_in_geometry = self.include_mass_in_geometry
         log = model.log
         property_ids: list[np.ndarray] = []
         element_ids: list[np.ndarray] = []
@@ -640,6 +678,7 @@ class Nastran3:
         self.gui_elements = gui_elements
 
         element_cards = [card for card in model.element_cards if card.n]
+        self.element_cards = element_cards
         nelement0 = 0
         for element in element_cards:
             nelement = element.n
@@ -779,7 +818,7 @@ class Nastran3:
 
 
             elif etype in solid_elements:
-                #model.log.debug('  solid')
+                #log.debug('  solid')
                 cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                     element, grid_id, cell_offset0)
 
@@ -790,7 +829,7 @@ class Nastran3:
                 cell_offset_.append(cell_offseti)
                 del n_nodesi, cell_typei, cell_offseti
 
-            elif self.include_mass_in_geometry and etype == 'CONM2' and 0:
+            elif include_mass_in_geometry and etype == 'CONM2' and 0:
                 cell_type = cell_type_point
                 property_ids.append(np.full(nelement, -1))
 
@@ -824,7 +863,7 @@ class Nastran3:
                 cell_offset0 += nelement * (dnode + 1)
             else:
                 # more complicated element
-                model.log.warning(f'  dropping {element}')
+                log.warning(f'  dropping {element}')
                 continue
                 #raise NotImplementedError(element.type)
             self.card_index[etype] = (nelement0, nelement0 + nelement)
@@ -990,9 +1029,203 @@ def _set_quality(icase: int, cases: dict[int, Any],
     return mean_edge_length, icase, quality_form
 
 
+def _load_stress_strain(element_cards: list,
+                        model: OP2,
+                        name: str,
+                        key: tuple[int, int, int, int, int, str, str],
+                        subcase: Subcase,
+                        subcase_form: Form,
+                        cases: Cases, icase: int,
+                        all_element_ids: np.ndarray,
+                        is_stress: bool=True) -> int:
+    """
+    loads:
+    """
+    is_strain = not is_stress
+    # collect all the stresses
+    result_form = []
+    if is_stress:
+        stress_form = ('Stress', None, result_form)
+        name_results = {
+            # name, result_dicts
+            'CELAS1' : (model.celas1_stress, ),
+            'CELAS2' : (model.celas2_stress, ),
+            'CELAS3' : (model.celas3_stress, ),
+            'CELAS4' : (model.celas4_stress, ),
+
+            #('CDAMP1', model.cdamp1_stress),
+            #('CDAMP2', model.cdamp2_stress),
+            #('CDAMP3', model.cdamp3_stress),
+            #('CDAMP4', model.cdamp4_stress),
+
+            'CROD' : (model.crod_stress, ),
+            'CTUBE': (model.ctube_stress, ),
+            'CONROD': (model.conrod_stress, ),
+
+            'CBAR': (model.cbar_stress, ),
+            'CBEAM': (model.cbeam_stress, ),
+
+            'CTRIA3': (model.ctria3_stress, model.ctria3_composite_stress),
+            'CTRIA6': (model.ctria6_stress, model.ctria6_composite_stress),
+            'CTRIAR': (model.ctriar_stress, model.ctriar_composite_stress),
+
+            'CQUAD4': (model.cquad4_stress, model.cquad4_composite_stress),
+            'CQUAD8': (model.cquad8_stress, model.cquad8_composite_stress),
+            'CQUADR': (model.cquadr_stress, model.cquadr_composite_stress),
+
+            'CTETRA': (model.ctetra_stress, ),
+            'CPENTA': (model.cpenta_stress, ),
+            'CPYRAM': (model.cpyram_stress, ),
+            'CHEXA': (model.chexa_stress, ),
+
+            #('cplstn3', self.cplstn3_stress),
+            #('cplstn4', self.cplstn4_stress),
+            #('cplstn6', self.cplstn6_stress),
+            #('cplstn8', self.cplstn8_stress),
+            #('cplsts3', self.cplsts3_stress),
+            #('cplsts4', self.cplsts4_stress),
+            #('cplsts6', self.cplsts6_stress),
+            #('cplsts8', self.cplsts8_stress),
+        }
+    else:
+        stress_form = ('Strain', None, result_form)
+        name_results = {
+            # name, result_dicts
+            'CELAS1' : (model.celas1_strain, ),
+            'CELAS2' : (model.celas2_strain, ),
+            'CELAS3' : (model.celas3_strain, ),
+            'CELAS4' : (model.celas4_strain, ),
+
+            #('CDAMP1', model.cdamp1_strain),
+            #('CDAMP2', model.cdamp2_strain),
+            #('CDAMP3', model.cdamp3_strain),
+            #('CDAMP4', model.cdamp4_strain),
+
+            'CROD' : (model.crod_strain, ),
+            'CTUBE': (model.ctube_strain, ),
+            'CONROD': (model.conrod_strain, ),
+
+            'CBAR': (model.cbar_strain, ),
+            'CBEAM': (model.cbeam_strain, ),
+
+            'CTRIA3': (model.ctria3_strain, model.ctria3_composite_strain),
+            'CTRIA6': (model.ctria6_strain, model.ctria6_composite_strain),
+            'CTRIAR': (model.ctriar_strain, model.ctriar_composite_strain),
+
+            'CQUAD4': (model.cquad4_strain, model.cquad4_composite_strain),
+            'CQUAD8': (model.cquad8_strain, model.cquad8_composite_strain),
+            'CQUADR': (model.cquadr_strain, model.cquadr_composite_strain),
+
+            'CTETRA': (model.ctetra_strain, ),
+            'CPENTA': (model.cpenta_strain, ),
+            'CPYRAM': (model.cpyram_strain, ),
+            'CHEXA': (model.chexa_strain, ),
+
+            #('cplstn3', self.cplstn3_strain),
+            #('cplstn4', self.cplstn4_strain),
+            #('cplstn6', self.cplstn6_strain),
+            #('cplstn8', self.cplstn8_strain),
+            #('cplsts3', self.cplsts3_strain),
+            #('cplsts4', self.cplsts4_strain),
+            #('cplsts6', self.cplsts6_strain),
+            #('cplsts8', self.cplsts8_strain),
+        }
+
+    name_results_dict = {}
+    for name, results_dicts in name_results.items():
+        results_dicts2 = []
+        for result_dict in results_dicts:
+            if key in result_dict:
+                results_dicts2.append(result_dict[key])
+        if len(results_dicts2):
+            name_results_dict[name] = results_dicts2
+
+    assert np.array_equal(all_element_ids, np.unique(all_element_ids))
+    nelement0 = 0
+    nelements = len(all_element_ids)
+    oxx = np.full(nelements, np.nan, dtype='float64')
+    oyy = np.full(nelements, np.nan, dtype='float64')
+    ozz = np.full(nelements, np.nan, dtype='float64')
+    txy = np.full(nelements, np.nan, dtype='float64')
+    txz = np.full(nelements, np.nan, dtype='float64')
+    tyz = np.full(nelements, np.nan, dtype='float64')
+    omax = np.full(nelements, np.nan, dtype='float64')
+    omin = np.full(nelements, np.nan, dtype='float64')
+    von_mises = np.full(nelements, np.nan, dtype='float64')
+
+    is_von_mises = True
+    for element in element_cards:
+        etype = element.type
+        if etype in name_results_dict:
+            results_cases = name_results_dict[etype]
+            #print(element)
+            if etype in {'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'}:
+                #oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises
+                for result in results_cases:
+                    is_von_mises = result.is_von_mises
+                    #if isinstance(result, RealSolidStressArray):
+                    elements = result.element_cid[:, 0]
+                    ielement = np.searchsorted(all_element_ids, elements)
+                    stress = result.data[:, ielement*5, :]
+                    stressi = stress[0, :, :]
+                    oxx[ielement] = stressi[:, 0]
+                    oyy[ielement] = stressi[:, 1]
+                    ozz[ielement] = stressi[:, 2]
+                    txy[ielement] = stressi[:, 3]
+                    tyz[ielement] = stressi[:, 4]
+                    txz[ielement] = stressi[:, 5]
+                    omax[ielement] = stressi[:, 6]
+                    #omid[ielement] = stressi[:, 7]
+                    omin[ielement] = stressi[:, 8]
+                    von_mises[ielement] = stressi[:, 9]
+            else:
+                raise NotImplementedError(etype)
+        nelement0 += element.n
+        x = 1
+
+    vm_word = 'Von Mises' if is_von_mises else 'Max Shear'
+    subcase_id = 1
+
+    o = 'ϵ' if is_strain else 'σ'
+    t = 'ϵ' if is_strain else '𝜏'
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+'xx', oxx)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+'oyy', oyy)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+'zz', ozz)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        t+'xy', txy)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        t+'xz', txz)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        t+'yz', tyz)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+'max', omax)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+'min', omax)
+    icase = _add_finite_centroidal_gui_result(
+        icase, cases, result_form, subcase_id,
+        o+vm_word, von_mises)
+    #del name_results
+    if len(result_form):
+        formi = subcase_form
+        formi.append(stress_form)
+    return icase
+    #x = 1
+
 def _load_oug(model: OP2,
-              name: str, name_results,
-              key,
+              name: str,
+              name_results: list[tuple[str, Any]],
+              key: tuple[int, int, int, int, int, str, str],
               subcase: Subcase,
               subcase_form: Form,
               cases: Cases, icase: int,
@@ -1007,11 +1240,11 @@ def _load_oug(model: OP2,
      - temperature
 
     """
-    for (name, results) in name_results:
+    for (res_name, results) in name_results:
         if subcase not in results:
             continue
         res_form: Form = []
-        subcase_form.append((name, None, res_form))
+        subcase_form.append((res_name, None, res_form))
 
         case = results[subcase]
         scale_per_time, header_names = get_case_headers(case)

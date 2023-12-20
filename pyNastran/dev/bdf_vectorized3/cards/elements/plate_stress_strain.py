@@ -1368,11 +1368,12 @@ class CPLSTS6(PlateStrainElement):
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         tflags = array_default_int(self.tflag, size=size, default=0)
+        thicknesses = array_float_nan(self.thickness, size=size, is_double=False)
         for eid, pid, (n1, n2, n3, n4, n5, n6), theta, tflag, thickness in zip_longest(
-            element_id, property_id, nodes, self.theta, tflags, self.thickness):
+            element_id, property_id, nodes, self.theta, tflags, thicknesses):
             list_fields = ['CPLSTS6', eid, pid, n1, n2, n3, n4, n5, n6, '', '',
                            theta, tflag]
-            if not np.all(np.isnan(thickness)):
+            if not np.all(thickness == ''):
                 t1, t2, t3, t4, t5, t6 = thickness
                 list_fields.extend([t1, t2, t3, '', '', '', '', '', t4, t5, t6])
             bdf_file.write(print_card(list_fields))
@@ -1525,11 +1526,12 @@ class CPLSTS8(PlateStrainElement):
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         tflags = array_default_int(self.tflag, size=size, default=0)
+        thicknesses = array_float_nan(self.thickness, size=size)
         for eid, pid, (n1, n2, n3, n4, n5, n6, n7, n8), theta, tflag, thickness, in zip_longest(
-            element_id, property_id, nodes, self.theta, tflags, self.thickness):
+            element_id, property_id, nodes, self.theta, tflags, thicknesses):
             list_fields = ['CPLSTS8', eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
                            theta, tflag]
-            if not np.all(np.isnan(thickness)):
+            if not np.all(thickness == ''):
                 t1, t2, t3, t4, t5, t6, t7, t8 = thickness
                 list_fields.extend([t1, t2, t3, t4, '', '', '', '', t5, t6, t7, t8])
             bdf_file.write(print_card(list_fields))

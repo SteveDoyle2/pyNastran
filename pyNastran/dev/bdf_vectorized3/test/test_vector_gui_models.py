@@ -23,13 +23,26 @@ class NastranGUI(Nastran3, FakeGUIMethods):
         Nastran3.__init__(self, self)
         self.build_fmts(['nastran3'], stop_on_failure=True)
 
-def run_nastran_gui(filename: str, load_results: bool=True):
+def run_nastran_gui(filename: str,
+                    load_results: bool=True):
     assert os.path.exists(filename), filename
     filename = str(filename)
     test = NastranGUI()
     test.load_nastran3_geometry(filename)
     if filename.lower().endswith(('.op2', '.h5')) and load_results:
         test.load_nastran3_results(filename)
+    test.cycle_results()
+    test.on_rcycle_results()
+
+def run_nastran_gui_results(input_filename: str,
+                            output_filename: str):
+    assert os.path.exists(input_filename), input_filename
+    assert os.path.exists(output_filename), output_filename
+    input_filename = str(input_filename)
+    output_filename = str(output_filename)
+    test = NastranGUI()
+    test.load_nastran3_geometry(input_filename)
+    test.load_nastran3_results(output_filename)
     test.cycle_results()
     test.on_rcycle_results()
 
@@ -114,7 +127,9 @@ class TestGuiModels(unittest.TestCase):
         run_nastran_gui(bdf_filename)
     def test_solid_bending(self):
         bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
-        run_nastran_gui(bdf_filename)
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        #run_nastran_gui(bdf_filename)
+        run_nastran_gui_results(bdf_filename, op2_filename)
     def test_isat1(self):
         bdf_filename = MODEL_PATH / 'iSat' / 'ISat_Dploy_Sm.dat'
         run_nastran_gui(bdf_filename)
