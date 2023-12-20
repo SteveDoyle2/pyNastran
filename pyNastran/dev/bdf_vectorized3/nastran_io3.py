@@ -192,13 +192,13 @@ class Nastran3:
                               node_id, xyz_cid0, dim_max)
             icase = _load_stress_strain(
                 self.element_cards,
-                model, name,
+                self.model, model, name,
                 key, subcase, subcase_form,
                 cases, icase,
                 element_id, is_stress=True)
             icase = _load_stress_strain(
                 self.element_cards,
-                model, name,
+                self.model, model, name,
                 key, subcase, subcase_form,
                 cases, icase,
                 element_id, is_stress=False)
@@ -1030,7 +1030,8 @@ def _set_quality(icase: int, cases: dict[int, Any],
 
 
 def _load_stress_strain(element_cards: list,
-                        model: OP2,
+                        bdf_model: BDF,
+                        op2_model: OP2,
                         name: str,
                         key: tuple[int, int, int, int, int, str, str],
                         subcase: Subcase,
@@ -1041,7 +1042,7 @@ def _load_stress_strain(element_cards: list,
     """
     loads:
     """
-    if not hasattr(model, 'celas1'):
+    if not hasattr(bdf_model, 'celas1'):
         return icase
 
     is_strain = not is_stress
@@ -1051,35 +1052,35 @@ def _load_stress_strain(element_cards: list,
         stress_form = ('Stress', None, result_form)
         name_results = {
             # name, result_dicts
-            'CELAS1' : (model.celas1_stress, ),
-            'CELAS2' : (model.celas2_stress, ),
-            'CELAS3' : (model.celas3_stress, ),
-            'CELAS4' : (model.celas4_stress, ),
+            'CELAS1' : (op2_model.celas1_stress, ),
+            'CELAS2' : (op2_model.celas2_stress, ),
+            'CELAS3' : (op2_model.celas3_stress, ),
+            'CELAS4' : (op2_model.celas4_stress, ),
 
-            #('CDAMP1', model.cdamp1_stress),
-            #('CDAMP2', model.cdamp2_stress),
-            #('CDAMP3', model.cdamp3_stress),
-            #('CDAMP4', model.cdamp4_stress),
+            #('CDAMP1', op2_model.cdamp1_stress),
+            #('CDAMP2', op2_model.cdamp2_stress),
+            #('CDAMP3', op2_model.cdamp3_stress),
+            #('CDAMP4', op2_model.cdamp4_stress),
 
-            'CROD' : (model.crod_stress, ),
-            'CTUBE': (model.ctube_stress, ),
-            'CONROD': (model.conrod_stress, ),
+            'CROD' : (op2_model.crod_stress, ),
+            'CTUBE': (op2_model.ctube_stress, ),
+            'CONROD': (op2_model.conrod_stress, ),
 
-            'CBAR': (model.cbar_stress, ),
-            'CBEAM': (model.cbeam_stress, ),
+            'CBAR': (op2_model.cbar_stress, ),
+            'CBEAM': (op2_model.cbeam_stress, ),
 
-            'CTRIA3': (model.ctria3_stress, model.ctria3_composite_stress),
-            'CTRIA6': (model.ctria6_stress, model.ctria6_composite_stress),
-            'CTRIAR': (model.ctriar_stress, model.ctriar_composite_stress),
+            'CTRIA3': (op2_model.ctria3_stress, op2_model.ctria3_composite_stress),
+            'CTRIA6': (op2_model.ctria6_stress, op2_model.ctria6_composite_stress),
+            'CTRIAR': (op2_model.ctriar_stress, op2_model.ctriar_composite_stress),
 
-            'CQUAD4': (model.cquad4_stress, model.cquad4_composite_stress),
-            'CQUAD8': (model.cquad8_stress, model.cquad8_composite_stress),
-            'CQUADR': (model.cquadr_stress, model.cquadr_composite_stress),
+            'CQUAD4': (op2_model.cquad4_stress, op2_model.cquad4_composite_stress),
+            'CQUAD8': (op2_model.cquad8_stress, op2_model.cquad8_composite_stress),
+            'CQUADR': (op2_model.cquadr_stress, op2_model.cquadr_composite_stress),
 
-            'CTETRA': (model.ctetra_stress, ),
-            'CPENTA': (model.cpenta_stress, ),
-            'CPYRAM': (model.cpyram_stress, ),
-            'CHEXA': (model.chexa_stress, ),
+            'CTETRA': (op2_model.ctetra_stress, ),
+            'CPENTA': (op2_model.cpenta_stress, ),
+            'CPYRAM': (op2_model.cpyram_stress, ),
+            'CHEXA': (op2_model.chexa_stress, ),
 
             #('cplstn3', self.cplstn3_stress),
             #('cplstn4', self.cplstn4_stress),
@@ -1094,35 +1095,35 @@ def _load_stress_strain(element_cards: list,
         stress_form = ('Strain', None, result_form)
         name_results = {
             # name, result_dicts
-            'CELAS1' : (model.celas1_strain, ),
-            'CELAS2' : (model.celas2_strain, ),
-            'CELAS3' : (model.celas3_strain, ),
-            'CELAS4' : (model.celas4_strain, ),
+            'CELAS1' : (op2_model.celas1_strain, ),
+            'CELAS2' : (op2_model.celas2_strain, ),
+            'CELAS3' : (op2_model.celas3_strain, ),
+            'CELAS4' : (op2_model.celas4_strain, ),
 
-            #('CDAMP1', model.cdamp1_strain),
-            #('CDAMP2', model.cdamp2_strain),
-            #('CDAMP3', model.cdamp3_strain),
-            #('CDAMP4', model.cdamp4_strain),
+            #('CDAMP1', op2_model.cdamp1_strain),
+            #('CDAMP2', op2_model.cdamp2_strain),
+            #('CDAMP3', op2_model.cdamp3_strain),
+            #('CDAMP4', op2_model.cdamp4_strain),
 
-            'CROD' : (model.crod_strain, ),
-            'CTUBE': (model.ctube_strain, ),
-            'CONROD': (model.conrod_strain, ),
+            'CROD' : (op2_model.crod_strain, ),
+            'CTUBE': (op2_model.ctube_strain, ),
+            'CONROD': (op2_model.conrod_strain, ),
 
-            'CBAR': (model.cbar_strain, ),
-            'CBEAM': (model.cbeam_strain, ),
+            'CBAR': (op2_model.cbar_strain, ),
+            'CBEAM': (op2_model.cbeam_strain, ),
 
-            'CTRIA3': (model.ctria3_strain, model.ctria3_composite_strain),
-            'CTRIA6': (model.ctria6_strain, model.ctria6_composite_strain),
-            'CTRIAR': (model.ctriar_strain, model.ctriar_composite_strain),
+            'CTRIA3': (op2_model.ctria3_strain, op2_model.ctria3_composite_strain),
+            'CTRIA6': (op2_model.ctria6_strain, op2_model.ctria6_composite_strain),
+            'CTRIAR': (op2_model.ctriar_strain, op2_model.ctriar_composite_strain),
 
-            'CQUAD4': (model.cquad4_strain, model.cquad4_composite_strain),
-            'CQUAD8': (model.cquad8_strain, model.cquad8_composite_strain),
-            'CQUADR': (model.cquadr_strain, model.cquadr_composite_strain),
+            'CQUAD4': (op2_model.cquad4_strain, op2_model.cquad4_composite_strain),
+            'CQUAD8': (op2_model.cquad8_strain, op2_model.cquad8_composite_strain),
+            'CQUADR': (op2_model.cquadr_strain, op2_model.cquadr_composite_strain),
 
-            'CTETRA': (model.ctetra_strain, ),
-            'CPENTA': (model.cpenta_strain, ),
-            'CPYRAM': (model.cpyram_strain, ),
-            'CHEXA': (model.chexa_strain, ),
+            'CTETRA': (op2_model.ctetra_strain, ),
+            'CPENTA': (op2_model.cpenta_strain, ),
+            'CPYRAM': (op2_model.cpyram_strain, ),
+            'CHEXA': (op2_model.chexa_strain, ),
 
             #('cplstn3', self.cplstn3_strain),
             #('cplstn4', self.cplstn4_strain),
@@ -1158,35 +1159,35 @@ def _load_stress_strain(element_cards: list,
 
     is_von_mises = True
     model_etype_map = {
-        'CELAS1': model.celas1,
-        'CELAS2': model.celas2,
-        'CELAS3': model.celas3,
-        'CELAS4': model.celas4,
+        'CELAS1': bdf_model.celas1,
+        'CELAS2': bdf_model.celas2,
+        'CELAS3': bdf_model.celas3,
+        'CELAS4': bdf_model.celas4,
 
-        'CDAMP1': model.cdamp1,
-        'CDAMP2': model.cdamp2,
-        'CDAMP3': model.cdamp3,
-        'CDAMP4': model.cdamp4,
+        'CDAMP1': bdf_model.cdamp1,
+        'CDAMP2': bdf_model.cdamp2,
+        'CDAMP3': bdf_model.cdamp3,
+        'CDAMP4': bdf_model.cdamp4,
 
-        'CROD': model.crod,
-        'CTUBE': model.ctube,
-        'CONROD': model.conrod,
+        'CROD': bdf_model.crod,
+        'CTUBE': bdf_model.ctube,
+        'CONROD': bdf_model.conrod,
 
-        'CBAR': model.cbar,
-        'CBEAM': model.cbeam,
+        'CBAR': bdf_model.cbar,
+        'CBEAM': bdf_model.cbeam,
 
-        'CTETRA': model.ctetra,
-        'CPENTA': model.cpenta,
-        'CHEXA': model.chexa,
-        'CPYRAM': model.cpyram,
+        'CTETRA': bdf_model.ctetra,
+        'CPENTA': bdf_model.cpenta,
+        'CHEXA': bdf_model.chexa,
+        'CPYRAM': bdf_model.cpyram,
 
-        'CTRIA3': model.ctria3,
-        'CTRIA6': model.ctria6,
-        'CTRIAR': model.ctriar,
+        'CTRIA3': bdf_model.ctria3,
+        'CTRIA6': bdf_model.ctria6,
+        'CTRIAR': bdf_model.ctriar,
 
-        'CQUAD4': model.cquad4,
-        'CQUAD8': model.cquad8,
-        'CQUADR': model.cquadr,
+        'CQUAD4': bdf_model.cquad4,
+        'CQUAD8': bdf_model.cquad8,
+        'CQUADR': bdf_model.cquadr,
     }
     for element in element_cards:
         etype = element.type
@@ -1355,7 +1356,7 @@ def _load_stress_strain(element_cards: list,
         o+'xx', oxx)
     icase = _add_finite_centroidal_gui_result(
         icase, cases, result_form, subcase_id,
-        o+'oyy', oyy)
+        o+'yy', oyy)
     icase = _add_finite_centroidal_gui_result(
         icase, cases, result_form, subcase_id,
         o+'zz', ozz)
