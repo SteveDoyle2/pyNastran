@@ -40,6 +40,7 @@ class QHBDY(Load):
         'AREA6' : (4, 6), # 4-6
         'AREA8' : (5, 8), # 5-8
     }
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -177,6 +178,7 @@ class QHBDY(Load):
         load.area_factor = self.area_factor[i]
         load.grids = hslice_by_idim(i, self.inode, self.grids)
         load.ngrid = self.ngrid[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -226,6 +228,7 @@ class QBDY1(VectorizedBaseCard):
     Defines a uniform heat flux into CHBDYj elements.
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -307,6 +310,7 @@ class QBDY1(VectorizedBaseCard):
         load.qflux = self.qflux[i]
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         element_id = self.model.shell_element_ids
@@ -349,6 +353,7 @@ class QBDY2(VectorizedBaseCard):
     Defines a uniform heat flux load for a boundary surface.
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -430,6 +435,7 @@ class QBDY2(VectorizedBaseCard):
         load.element_id = self.element_id[i]
         load.qflux = hslice_by_idim(i, self.iflux, self.qflux)
         load.nflux = self.nflux[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         element_id = self.model.shell_element_ids
@@ -471,6 +477,7 @@ class QBDY3(Load):
     Defines a uniform heat flux load for a boundary surface.
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -577,6 +584,7 @@ class QBDY3(Load):
         load.control_node = self.control_node[i]
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -635,6 +643,7 @@ class QVOL(Load):
     +------+------+------+---------+------+------+------+------+------+
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -733,6 +742,7 @@ class QVOL(Load):
         load.control_node = self.control_node[i]
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -782,6 +792,7 @@ class QVOL(Load):
 
 
 class TEMPBC(VectorizedBaseCard):
+    _id_name = 'spc_id'
     def clear(self) -> None:
         self.n = 0
         self.spc_id = np.array([], dtype='int32')
@@ -857,6 +868,7 @@ class TEMPBC(VectorizedBaseCard):
         load.temperature = hslice_by_idim(i, self.inode, self.temperature)
         load.nodes = hslice_by_idim(i, self.inode, self.nodes)
         load.nnode = self.nnode[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -910,6 +922,7 @@ class RADM(VectorizedBaseCard):
     analysis
 
     """
+    _id_name = 'rad_mid'
     def clear(self) -> None:
         self.n = 0
         self.rad_mid = np.array([], dtype='int32')
@@ -971,6 +984,13 @@ class RADM(VectorizedBaseCard):
         self.nemissivity = nemissivity
         self.emissivity = emissivity
 
+    def __apply_slice__(self, load: QHBDY, i: np.ndarray) -> None:
+        load.rad_mid = self.rad_mid[i]
+        load.absorptivity = self.absorptivity[i]
+        load.emissivity = hslice_by_idim(i, self.iemissivity, self.emissivity)
+        load.nemissivity = self.nemissivity[i]
+        load.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
@@ -1003,6 +1023,7 @@ class RADBC(VectorizedBaseCard):
     conditions
 
     """
+    _id_name = 'node_id'
     def clear(self) -> None:
         self.n = 0
         self.node_id = np.array([], dtype='int32')
@@ -1081,6 +1102,7 @@ class RADBC(VectorizedBaseCard):
         load.control_node = self.control_node[i]
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
+        load.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

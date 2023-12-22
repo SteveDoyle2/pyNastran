@@ -9,6 +9,17 @@ from cpylog import SimpleLogger
 RUN_THRMAL = False
 
 class TestThermal(unittest.TestCase):
+    def test_radcav(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
+        radcav = model.radcav
+        card_fields = [
+            'radcav', '1', None, 'NO', None, '0', None, None, '17', '3', '6', '5', '6', '5',
+            '5', '6', '5', '6', '1', '6', '3', '1', '3', '3', '1', '1', '5', '3', '5', '1',
+            '6', '3', '6', '3', '5', '3', '6']
+        model.add_card(card_fields, 'RADCAV')
+        model.setup()
+
     def test_thermal_1(self):
         """tests various thermal cards"""
         log = SimpleLogger(level='warning')

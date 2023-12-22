@@ -565,6 +565,109 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
         save_load_deck(model)
 
+    def test_solids_cpentcz(self):
+        """tests a CPENTCZ"""
+        model = BDF(debug=False)
+        cpentcz = model.cpentcz
+        psolcz = model.psolcz
+        mcid = 42
+        thickness = 0.1
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model.add_grid(21, [0., 0., 0.])
+        model.add_grid(22, [1., 0., 0.])
+        model.add_grid(23, [1., 1., 0.])
+        model.add_grid(24, [0., 0., 2.])
+        model.add_grid(25, [1., 0., 2.])
+        model.add_grid(26, [1., 1., 2.])
+        psolcz.add(pid, mid, thickness, mcid=mcid)
+        model.add_cord2r(mcid, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        nids = [21, 22, 23, 24, 25, 26]
+        cpentcz.add(eid, pid, nids, comment='cpenta')
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = cpentcz.add(eid, pid, nids2, comment='cpenta15')
+        model.setup()
+        elem2 = model.Element(eid)[0]
+        elem2.write(size=8)
+        elem2.write(size=16)
+        elem2.write_16(is_double=False)
+        end_checks(model)
+        save_load_deck(model)
+
+    def test_solids_chexcz(self):
+        """tests a CHEXCZ, PSOLCZ"""
+        model = BDF(debug=False)
+        chexcz = model.chexcz
+        psolcz = model.psolcz
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+
+        model.add_grid(15, [0., 0., 2.])
+        model.add_grid(16, [1., 0., 2.])
+        model.add_grid(17, [1., 1., 2.])
+        model.add_grid(18, [0., 1., 2.])
+        psolcz.add(pid, mid, 0.1, mcid=0, comment='')
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        nids = [11, 12, 13, 14, 15, 16, 17, 18]
+        elem = chexcz.add(eid, pid, nids, comment='chexa')
+        model.setup(run_geom_check=False)
+        elem = model.Element(eid)[0]
+        elem.write(size=8)
+        #elem.write_card(size=16)
+        #elem.write_card_16(is_double=False)
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = chexcz.add(eid, pid, nids2, comment='chexa16')
+        model.setup(run_geom_check=False)
+        elem2 = model.Element(eid)[0]
+        elem2.write(size=8)
+        #elem2.write_card(size=16)
+        #elem2.write_card_16(is_double=False)
+
+        eid10 = 1
+        pid10 = 10
+        #mid10 = 10
+        #bulk = 1.
+        #c = 1.
+        #rho = None
+        #model.add_mat10(mid10, bulk, rho, c, ge=0.0, gamma=None,
+                        #table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
+                        #comment='')
+        thickness = 0.1
+        mcid = 42
+        model.psolcz.add(pid10, mid, thickness, mcid=mcid, comment='comment')
+        #model.add_plsolid(pid10, mid10, stress_strain='GRID', ge=0., comment='')
+        elem3 = chexcz.add(eid10, pid10, nids, comment='chexa')
+        model.setup()
+
+        chexcz.write(size=8)
+        chexcz.write(size=16)
+        chexcz.write_16(is_double=False)
+        massi = chexcz.mass()
+
+        end_checks(model)
+        elem = model.Element(eid)[0]
+        assert elem.mass() > 0, elem.mass()
+        save_load_deck(model, run_remove_unused=False)
+
     def test_solids_chexa(self):
         """tests a CHEXA8"""
         model = BDF(debug=False)
@@ -622,8 +725,6 @@ class TestSolids(unittest.TestCase):
         chexa.write(size=16)
         chexa.write_16(is_double=False)
         chexa.mass()
-
-
 
         end_checks(model)
         elem = model.Element(eid)[0]

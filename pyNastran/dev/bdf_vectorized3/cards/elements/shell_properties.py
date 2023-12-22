@@ -61,6 +61,8 @@ def shell_materials(model: BDF) -> list[Union[MAT1, MAT8]]:
 
 
 class PSHELL(Property):
+    _show_attributes = ['property_id', 'material_id', 't',
+                        'twelveIt3', 'tst', 'nsm', 'z']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -152,8 +154,9 @@ class PSHELL(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros((ncards, 4), dtype=idtype)
         t = np.zeros(ncards, dtype='float64')
         twelveIt3 = np.zeros(ncards, dtype='float64')
         tst = np.zeros(ncards, dtype='float64')
@@ -475,6 +478,8 @@ class PAABSF(Property):
     | PAABSF | PID | TZREID | TZIMID | S | A | B | K | RHOC |
     +--------+-----+--------+--------+---+---+---+---+------+
     """
+    _show_attributes = ['property_id', 'table_reactance_real', 'table_reactance_imag',
+                        's', 'a', 'b', 'k', 'rho_c']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -614,7 +619,7 @@ class PAABSF(Property):
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.table_reactance_real = self.table_reactance_real[i]
-        prop.table_reactance_imags = self.table_reactance_imags[i]
+        prop.table_reactance_imag = self.table_reactance_imag[i]
         prop.s = self.s[i]
         prop.a = self.a[i]
         prop.b = self.b[i]
@@ -915,6 +920,10 @@ class PCOMP(CompositeProperty):
     |       | 300705 |   .5   |  0.0+0  |  YES  |        |        |        |       |
     +-------+--------+--------+---------+-------+--------+--------+--------+-------+
     """
+    _skip_equality_check = True  # assume unequal
+    _show_attributes = [
+        'property_id', 'z0', 'nsm', 'failure_theory', 'tref',
+        'ge', 'lam', 'nlayer', 'material_id', 'thickness', 'sout', 'theta']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1567,6 +1576,13 @@ class PCOMP(CompositeProperty):
 
 
 class PCOMPG(CompositeProperty):
+    _skip_equality_check = True  # assume unequal
+    _show_attributes = [
+        'property_id', 'z0', 'nsm', 'failure_theory', 'tref',
+        'ge', 'lam', 'nlayer',
+        'global_ply_id', 'material_id', 'thickness', 'sout', 'theta',
+        'shear_bonding',
+    ]
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1584,7 +1600,7 @@ class PCOMPG(CompositeProperty):
         self.lam = np.array([], dtype='|U6')
 
         self.nlayer = np.array([], dtype='int32')
-        global_ply_id = np.array([], dtype='int32')
+        self.global_ply_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.thickness = np.array([], dtype='float64')
         self.sout = np.array([], dtype='|U4') # YES, NO, YESA

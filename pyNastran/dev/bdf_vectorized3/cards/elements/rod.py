@@ -424,6 +424,7 @@ class PROD(Property):
     | PROD |  1  |  2  | 2.0 | 3.0 | 0.5 | 1.0 |
     +------+-----+-----+-----+-----+-----+-----+
     """
+    _show_attributes = ['property_id', 'material_id', 'A', 'J', 'c', 'nsm']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.ndarray = np.array([], dtype='int32')
@@ -487,8 +488,9 @@ class PROD(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         A = np.zeros(ncards, dtype='float64')
         J = np.zeros(ncards, dtype='float64')
         c = np.zeros(ncards, dtype='float64')
@@ -503,6 +505,7 @@ class PROD(Property):
             c[icard] = ci
             nsm[icard] = nsmi
         self._save(property_id, material_id, A, J, c, nsm)
+        self.sort()
         self.cards = []
 
     def _save(self, property_id, material_id, A, J, c, nsm):
@@ -780,6 +783,7 @@ class PTUBE(Property):
     | PTUBE |  2   |  6  | 6.29 | 0.25 |      |     |
     +-------+------+-----+------+------+------+-----+
     """
+    _show_attributes = ['pid', 'mid', 'diameter', 't', 'nsm']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')

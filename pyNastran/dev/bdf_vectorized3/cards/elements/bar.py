@@ -807,6 +807,8 @@ class PBAR(Property):
         do a check for mid -> MAT1      for structural
         do a check for mid -> MAT4/MAT5 for thermal
     """
+    _show_attributes = ['property_id', 'material_id', 'A', 'J',
+                        'c', 'd', 'e', 'f', 'I', 'k', 'nsm']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1241,6 +1243,9 @@ class PBARL(Property):
         'L' : 4,
     }  # for GROUP="MSCBML0"
 
+    _skip_equality_check = True  # assume unequal
+    _show_attributes = ['property_id', 'material_id', 'ndim', 'Type',
+                        'group', 'nsm', 'dims']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1289,9 +1294,7 @@ class PBARL(Property):
             #raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
 
     def __apply_slice__(self, prop: PBARL, i: np.ndarray) -> None:  # ignore[override]
-        self.write()
         assert self.ndim.sum() == len(self.dims)
-        prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.Type = self.Type[i]
@@ -1302,9 +1305,9 @@ class PBARL(Property):
         prop.dims = hslice_by_idim(i, idim, self.dims)
 
         prop.ndim = self.ndim[i]
+        prop.n = len(i)
         assert isinstance(prop.ndim, np.ndarray), prop.ndim
         assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
-        self.write()
 
     def add(self, pid: int, mid: int, bar_type: str, dim: list[float],
             group: str='MSCBML0', nsm: float=0., comment: str='') -> int:
@@ -1435,7 +1438,6 @@ class PBARL(Property):
             dim = self.dims[idim0 : idim1].tolist()
             ndim = self.valid_types[beam_type]
             assert len(dim) == ndim, f'PBARL pid={pid:d} bar_type={beam_type} ndim={ndim:d} len(dims)={dim}'
-
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

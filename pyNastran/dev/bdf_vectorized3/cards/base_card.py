@@ -13,7 +13,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16,
 #from pyNastran.dev.bdf_vectorized3.cards.shell_elements import CQUAD4, CTRIA3, PSHELL, PCOMP, PCOMPG
 #from pyNastran.dev.bdf_vectorized3.cards.solid_elements import CTETRA, CHEXA, CPENTA, CPYRAM
 #from pyNastran.dev.bdf_vectorized3.cards.static_loads import PLOAD4, FORCE
-from pyNastran.utils import object_stats # object_attributes, object_methods,
+from pyNastran.utils import object_stats, object_attributes # , object_methods,
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -103,6 +103,7 @@ def searchsorted_filter(all_ids: np.ndarray,
 
 #DOUBLE_CARDS = {'GRID', 'DMIG', 'DMIK', 'DMIJ', 'DMIJI', 'DMIAX'}
 class VectorizedBaseCard:
+    _skip_equality_check = True
     def __init__(self, model: BDF):
         self.model = model
         self.cards: list[tuple] = []
@@ -309,7 +310,20 @@ class VectorizedBaseCard:
         assert self.n > 0, self
         self_ids = self._ids
         assert len(self_ids), self_ids
-        i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
+
+        # i needs to be a numpy array of integers (vs. a list of integers)
+        # in general, we'll use the dtype from:
+        #  - self.node_id
+        #  - self.element_id
+        # but some cards are special snowflakes and don't have ids
+        idtype = self_ids.dtype
+        if idtype.name not in {'int32', 'int64'}:
+            if self.type in {'AECOMP', 'AECOMPL', 'MONPNT1', 'MONPNT2', 'MONPNT3', 'USET'}:
+                idtype = self.model.idtype
+            else:  # pragma: no cover
+                raise RuntimeError(self.get_stats())
+        i = np.atleast_1d(np.asarray(i, dtype=idtype))
+
         assert len(i) > 0, i
         assert i.min() >= 0, i
         if sort_index:
@@ -325,6 +339,7 @@ class VectorizedBaseCard:
         cls = self.__class__
         card = cls(self.model)
         #card = CQUAD4(self.model)
+        assert self.n > 0, self
         self.__apply_slice__(card, i)
         assert card.n > 0, card
         return card
@@ -395,6 +410,14 @@ class VectorizedBaseCard:
         return ielem
 
     def sort(self) -> None:
+        """sorts the card by node_id"""
+        if hasattr(self, '_show_attributes'):
+            sort_duplicates(self)
+            self._is_sorted = True
+            #if self.type == 'PSHELL':
+                #assert len(self.property_id) == 1, self.property_id
+            return
+
         self_ids = self._ids
         uid = np.unique(self_ids)
         if np.array_equal(uid, self_ids):
@@ -474,9 +497,22 @@ class VectorizedBaseCard:
         if size == 8:
             self.write_file_8(bdf_file, write_card_header=write_card_header)
         else:
-            self.write_file_16(bdf_file, is_double=is_double, write_card_header=write_card_header)
+            self.write_file_16(bdf_file, is_double=is_double,
+                               write_card_header=write_card_header)
         return
 
+    def get_attributes(self, mode: str='public',
+                       keys_to_skip: Optional[list[str]]=None,
+                       filter_properties: bool=False) -> list[str]:
+        if hasattr(self, '_show_attributes'):
+            return self._show_attributes
+
+        keys_to_skip = keys_to_skip if keys_to_skip is not None else []
+        keys_to_skip.append('model')
+        #if hasattr(self, '_remove_attributes'):
+            #keys_to_skip += self._remove_attributes
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip,
+                                 filter_properties=filter_properties)
     def get_stats(self,
                   mode: str='public',
                   keys_to_skip: Optional[list[str]]=None,
@@ -719,3 +755,154 @@ def remove_unused_duplicate(card, used_ids: np.ndarray, ids: np.ndarray,
         card.clear()
         ncards_removed = 0
     return ncards_removed
+
+# -----------------------------------------------------------
+
+def is_equal_by_index(card: VectorizedBaseCard,
+                      inode1: np.ndarray,
+                      inode2: np.ndarray) -> bool:
+    if card._skip_equality_check:
+        return False
+    is_equal = True
+    for key in card._show_attributes:
+        values = getattr(card, key)
+        val1 = values[inode1]
+        val2 = values[inode2]
+        if not np.array_equal(val1, val2):
+            print(f'key={key!r} are not equal')
+            is_equal = False
+            break
+    return is_equal
+
+
+def compare_by_indexs(card: VectorizedBaseCard,
+                      iarg1: np.ndarray,
+                      iarg2: np.ndarray) -> tuple[str]:
+    attributes = card.get_attributes(mode='public', keys_to_skip=None,
+                                     filter_properties=False)
+    name = card.type.lower()
+    card1 = card.slice_card_by_index(iarg1)
+    card2 = card.slice_card_by_index(iarg2)
+    msg = ''
+    for value_name in attributes:
+        value1 = getattr(card1, value_name)
+        value2 = getattr(card2, value_name)
+        if value1.dtype.name in {'int32', 'int64', 'float32', 'float64'}:
+            dvalue = value1 - value2
+            if np.abs(dvalue).max() > 0:
+                msg += f'd{value_name}:\n{dvalue}\n'
+        else:
+            # strings
+            valuei = value1[0]
+            assert isinstance(valuei, str), valuei
+            is_diff = (value1 != value2)
+            if np.any(is_diff):
+                msg += (
+                    f'{value_name}:\n'
+                    f'  {value_name}1: {value1[is_diff]}\n'
+                    f'  {value_name}2: {value2[is_diff]}\n')
+
+    if msg:
+        msg = (f'arg1={iarg1}\n'
+               f'arg2={iarg2}\n'
+               f'{name}1:\n{card1.write()}'
+               f'{name}2:\n{card2.write()}') + msg
+    return msg
+    #dxyz = node1.xyz - node2.xyz
+    #dcp = node1.cp - node2.cp
+    #dcd = node1.cd - node2.cd
+    #if np.abs(dxyz).max() > 0.0:
+        #msg += f'dxyz:\n{dxyz}\n'
+    #if np.abs(dcp).max() > 0:
+        #msg += f'dcp={dcp}\n'
+    #if np.abs(dcd).max() > 0:
+        #msg += f'dcd={dcd}\n'
+    #raise RuntimeError(msg)
+
+
+def sort_duplicates(card: VectorizedBaseCard) -> None:
+    """
+    sort_duplicates is sort, but you can have duplicate values
+    the duplicate values will be removed only if the values are unique
+    (so all GRID NID=1 are identical).  Otherwise, there will be a crash
+    """
+    if not hasattr(card, '_id_name'):
+        raise NotImplementedError('_id_name is required for sort_duplicates')
+    if not hasattr(card, '_show_attributes'):
+        raise NotImplementedError('_show_attributes is required for sort_duplicates')
+    # get the sort index
+    #ids = self.node_id
+    ids = getattr(card, card._id_name)
+    iarg = np.argsort(ids)
+
+    # sort the sort index
+    uarg = np.unique(iarg)
+
+    ids_sorted = ids[iarg]
+    uids_sorted = np.unique(ids_sorted)
+
+    if not np.array_equal(uarg, iarg) or len(ids) != len(uids_sorted):
+        # we have duplicate/unsorted nodes
+        #
+        #print(iarg.tolist())
+        #print('->  ', ids_sorted.tolist())
+        #print('--> ', uids_sorted.tolist())
+        assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
+        #if len(iarg) == len(uarg):
+            ## if the lengths are the same, we can use dumb sorting
+
+            ## check on dumb sort; no missing entries and no duplicates
+            #assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
+
+        is_duplicate_ids = (len(ids_sorted) != len(uids_sorted))
+        if is_duplicate_ids:
+            # Now that we've sorted the ids, we'll take the delta id with the next id.
+            # We check the two neighoring values when there is a duplicate,
+            # so if they're they same in xyz, cp, cd, etc., the results are the same
+            # we don't need to check unique ids
+            dnode = ids_sorted[1:] - ids_sorted[:-1] # high - low
+            #dnode = np.diff(ids_sorted)
+            #inode = (dnode == 0)
+            inode1 = np.hstack([False, dnode == 0])
+            inode2 = np.hstack([dnode == 0, False])
+            #ids_unique1 = ids_sorted[inode1] # high node
+            #ids_unique2 = ids_sorted[inode2] # low  node
+
+            iarg1 = iarg[inode1]
+            iarg2 = iarg[inode2]
+            if not is_equal_by_index(card, iarg1, iarg2):
+                msg = compare_by_indexs(card, iarg1, iarg2)
+                if msg != '' or not card._skip_equality_check:
+                    raise RuntimeError(msg)
+
+            # now that we know all the nodes are unique
+            # (i.e., 2x node_id=1 is OK, but they have the same xyz),
+            # we can slice ids to get the unique ids. Then take
+            # the mapping (idx) and slice the data to make the nodes
+            # unique
+            uids_sorted, idx = np.unique(ids, return_index=True)
+            nunique_nodes = len(uids_sorted)
+            assert nunique_nodes == len(idx)
+
+            card.__apply_slice__(card, idx)
+
+            # check we found the unique ids
+            node_id = getattr(card, card._id_name)
+            assert np.array_equal(node_id, uids_sorted)
+            #assert np.array_equal(self.node_id, np.unique(self.node_id))
+        else:
+            # no duplicate nodes
+            #
+            # we should still sort using iargsort
+            card.__apply_slice__(card, iarg)
+
+    ids2 = getattr(card, card._id_name)
+    unid = np.unique(ids2)
+
+    if len(ids2) != len(unid):
+        # we need to filter nodes
+        msg = f'len(self.{ids2})={len(ids2)} != len(unid)={len(unid)}'
+        print(msg)
+
+    #self.remove_duplicates(inplace=False)
+    card._is_sorted = True

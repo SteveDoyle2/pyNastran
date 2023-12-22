@@ -384,6 +384,12 @@ class CMASS3(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
+    def __apply_slice__(self, elem: CMASS3, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.spoints = self.spoints[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
         used_dict['spoint_id'].append(self.spoints.ravel())
@@ -496,6 +502,12 @@ class CMASS4(Element):
         self._mass = mass
         self.spoints = spoints
         self.n = len(element_id)
+
+    def __apply_slice__(self, elem: CMASS4, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem._mass = self._mass[i]
+        elem.spoints = self.spoints[i, :]
+        elem.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spoint_id'].append(self.spoints.ravel())

@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TABLED1, TABLED2, TABLED3, TABLED4,
         TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABLES1, TABLEST, TABLEH1, TABLEHT,
+        TABDMP1, # TABRND1, TABRNDG
         #PACABS,
         DTABLE,
         )
@@ -274,6 +275,15 @@ class AddMethods():
             table, self.model.tables_m[key])
         #assert key > 0; yes you can have negative tables...
         self.model.tables_m[key] = table
+        self.model._type_to_id_map[table.type].append(key)
+
+    def _add_table_sdamping_object(self, table: TABDMP1) -> None:
+        """adds a TABDMP1 object"""
+        key = table.tid
+        assert key not in self.model.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
+            table, self.model.tables_sdamping[key])
+        #assert key > 0; yes you can have negative tables...
+        self.model.tables_sdamping[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
     #-----------------------------------------------------------

@@ -7,6 +7,7 @@ import numpy as np
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.elements.solid import volume4
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank,
     integer_string_or_blank, string_or_blank)
@@ -51,7 +52,7 @@ class SolidElement(Element):
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> None:
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         #nids2 = [0] * self.nodes.shape[1]
         nids2 = [0 if nid is None else nid
                  for nid in nids]
@@ -59,6 +60,7 @@ class SolidElement(Element):
         nids2.extend([0]*nnodes_to_extend)
         self.cards.append((eid, pid, nids2, comment))
         self.n += 1
+        return self.n - 1
 
     def volume(self) -> np.ndarray:
         raise RuntimeError(f'volume is not impemented for {self.type}')
@@ -69,10 +71,16 @@ class SolidElement(Element):
         allowed_properties = [model.psolid, model.plsolid, model.pcomps]
         return [prop for prop in allowed_properties if prop.n > 0]
 
+    def rho(self) -> np.ndarray:
+        rho = get_density_from_property(self.property_id, self.allowed_properties)
+        return rho
+
     def mass_breakdown(self) -> np.ndarray:
         """[rho, volume, mass]"""
         #material_id = get_material_from_property(self.property_id, self.allowed_properties)
-        rho = get_density_from_property(self.property_id, self.allowed_properties)
+        rho = self.rho()
+        if rho.max() == 0. and rho.min() == 0.:
+            return np.zeros((len(rho), 3), dtype=rho.dtype)
         volume = self.volume()
         mass = rho * volume
         breakdown = np.column_stack([rho, volume, mass])
@@ -80,14 +88,15 @@ class SolidElement(Element):
 
     def mass(self) -> np.ndarray:
         #material_id = get_material_from_property(self.property_id, self.allowed_properties)
-        rho = get_density_from_property(self.property_id, self.allowed_properties)
+        rho = self.rho()
         if rho.max() == 0. and rho.min() == 0.:
-            return np.zeros(len(rho), rho.dtype)
-        mass = rho * self.volume()
+            return np.zeros(len(rho), dtype=rho.dtype)
+        volume = self.volume()
+        mass = rho * volume
         return mass
 
     def mass_material_id(self) -> np.ndarray:
-        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBAR')
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, self.type)
         return material_id
 
     def geom_check(self, missing: dict[str, np.ndarray]):
@@ -337,7 +346,7 @@ CHEXA_FACE_MAPPER = {
     (3, 6) : np.array([2, 6, 7, 3]),
 }
 
-class CPENTA(SolidElement):
+class SolidPenta(SolidElement):
     r"""
     +--------+-----+-----+----+----+----+----+----+----+
     |    1   |  2  |  3  |  4 |  5 |  6 |  7 |  8 |  9 |
@@ -428,7 +437,7 @@ class CPENTA(SolidElement):
                 #msg1 = (
                     #f'{card_name:<8s}{eid:>8s}{pid:>8s}{nodes[0]:>8s}'
                     #f'{nodes[1]:>8s}{nodes[2]:>8s}{nodes[3]:>8s}{nodes[4]:>8s}{nodes[5]:>8s}\n')
-                msg2 = print_card(['CPENTA', eid, pid] + nodes.tolist())
+                msg2 = print_card([self.type, eid, pid] + nodes.tolist())
                 #assert msg1 == msg2
                 bdf_file.write(msg2)
             #else:
@@ -436,14 +445,14 @@ class CPENTA(SolidElement):
                     #msg1 = (
                         #f'{card_name:<8s}{eid:>16s}{pid:>16s}{nodes[0]:>16s}{nodes[1]:>16s}\n'
                         #f'{"*":<8s}{nodes[2]:>16s}{nodes[3]:>16s}{nodes[4]:>16s}{nodes[5]:>16s}\n')
-                    #msg2 = print_card(['CPENTA', eid, pid] + nodes.tolist())
+                    #msg2 = print_card([self.type, eid, pid] + nodes.tolist())
                     #assert msg1 == msg2
                     #lines.append(msg2)
         else:
             #midside_nodes_str = array_default_int(midside_nodes, default=0, size=size)
             nodes_str = array_default_int(self.nodes, default=0, size=size)
             for eid, pid, nodes in zip(element_ids, property_ids, nodes_str):
-                msg = print_card(['CPENTA', eid, pid] + nodes.tolist())
+                msg = print_card([self.type, eid, pid] + nodes.tolist())
                 bdf_file.write(msg)
         return
 
@@ -716,8 +725,43 @@ class SolidHex(SolidElement):
         out = chexa_quality(self)
         return out
 
+class CPENTCZ(SolidPenta):
+    """NX cohesive zone"""
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.psolcz]
+        return [prop for prop in allowed_properties if prop.n > 0]
 class CHEXCZ(SolidHex):
-    pass
+    """NX cohesive zone"""
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.psolcz]
+        return [prop for prop in allowed_properties if prop.n > 0]
+
+
+class CIFPENT(SolidPenta):
+    """MSC cohesive zone"""
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.pcohe]
+        return [prop for prop in allowed_properties if prop.n > 0]
+class CIFHEX(SolidHex):
+    """MSC cohesive zone"""
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.pcohe]
+        return [prop for prop in allowed_properties if prop.n > 0]
+
+class CPENTA(SolidPenta):
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.psolid, model.plsolid, model.pcomps, model.pcompls]
+        return [prop for prop in allowed_properties if prop.n > 0]
 class CHEXA(SolidHex):
     @property
     def allowed_properties(self) -> list[Any]:
@@ -738,7 +782,9 @@ class PSOLID(Property):
     | PSOLID |  2  | 100 |   6   | TWO |  GRID  | REDUCED |      |
     +--------+-----+-----+-------+-----+--------+---------+------+
     """
-    @Element.clear_check
+    _show_attributes = ['property_id', 'material_id', 'coord_id',
+                        'integ', 'stress', 'isop', 'fctn']
+    @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
@@ -769,7 +815,7 @@ class PSOLID(Property):
             integ: Optional[str|int]=None,
             stress: Optional[str]='',
             isop: Optional[str]='',
-            fctn: str='SMECH', comment='') -> None:
+            fctn: str='SMECH', comment='') -> int:
         if integ is None:
             integ = ''
         if stress is None:
@@ -778,6 +824,7 @@ class PSOLID(Property):
             isop = ''
         self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -936,6 +983,7 @@ class PLSOLID(Property):
     | PLSOLID |  20 |  21 |     |
     +---------+-----+-----+-----+
     """
+    _show_attributes = ['property_id', 'material_id', 'stress_strain']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -951,9 +999,10 @@ class PLSOLID(Property):
         prop.material_id = self.material_id[i]
         prop.stress_strain = self.stress_strain[i]
 
-    def add(self, pid, mid, stress_strain='GRID', ge=0., comment='') -> None:
+    def add(self, pid, mid, stress_strain='GRID', ge=0., comment='') -> int:
         self.cards.append((pid, mid, stress_strain, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -965,6 +1014,7 @@ class PLSOLID(Property):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1046,6 +1096,139 @@ class PLSOLID(Property):
         return rho
 
 
+class PSOLCZ(Property):
+    """
+    Defines the properties of cohesive elements
+    (CHEXCZ and CPENTCZ entries).
+
+    +---------+-----+-----+-------+-------+
+    |    1    |  2  |  3  |   4   |   4   |
+    +=========+=====+=====+=======+=======+
+    |  PSOLCZ | PID | MID | CORDM | THICK |
+    +---------+-----+-----+-------+-------+
+    |  PSOLCZ |  20 |  21 |   3   |  0.75 |
+    +---------+-----+-----+-------+-------+
+
+    NX 2019.2
+    """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.mcid = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        used_dict['coord_id'].append(self.mcid)
+
+    def __apply_slice__(self, prop: PSOLCZ, i: np.ndarray) -> None:  # ignore[override]
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+        prop.mcid = self.mcid[i]
+        prop.thickness = self.thickness[i]
+
+    def add(self, pid: int, mid: int, thickness: float,
+            mcid: int=0, comment: str='') -> int:
+        self.cards.append((pid, mid, mcid, thickness, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a PLSOLCZ card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        mcid = integer_or_blank(card, 3, 'mcid', default=0)
+        thickness = double(card, 4, 'thickness')
+        assert len(card) <= 5, f'len(PSOLCZ card) = {len(card):d}\ncard={card}'
+        self.cards.append((pid, mid, mcid, thickness, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
+        mcid = np.zeros(ncards, dtype=idtype)
+        thickness = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (pid, mid, mcidi, thicknessi, comment) = card
+            property_id[icard] = pid
+            material_id[icard] = mid
+            mcid[icard] = mcidi
+            thickness[icard] = thicknessi
+        self._save(property_id, material_id, mcid, thickness)
+        self.sort()
+        self.cards = []
+
+    def _save(self, property_id, material_id, mcid, thickness) -> None:
+        if len(self.property_id):
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            mcid = np.hstack([self.mcid, mcid])
+            thickness = np.hstack([self.thickness, thickness])
+        self.property_id = property_id
+        self.material_id = material_id
+        self.mcid = mcid
+        self.thickness = thickness
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
+                          msg=f'no solid materials for {self.type}')
+        mids.sort()
+        geom_check(self,
+                   missing,
+                   material_id=(mids, self.material_id))
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        for pid, mid, mcidi, thicknessi in zip(property_ids, material_ids, self.mcid, self.thickness):
+            fields = ['PSOLCZ', pid, mid, mcidi, thicknessi]
+            bdf_file.write(print_card(fields))
+        return
+
+    @property
+    def all_materials(self) -> list[Any]:
+        model = self.model
+        materials = [model.mat1, model.mat11, #model.matcz,
+                     ]
+        return materials
+
+    @property
+    def allowed_materials(self) -> list[Any]:
+        """TODO: what about SOL 200 or undefined case control decks?"""
+        #MAT1, MAT3, MAT4, MAT5, MAT9, MAT10,
+        #MAT10C, MATF10C, MAT11, or MATPOR
+        model = self.model
+        all_materials = self.all_materials
+        materials = [mat for mat in all_materials if mat.n > 0]
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={model.material_cards}'
+        return materials
+
+    def rho(self) -> np.ndarray:
+        rho = get_density_from_material(self.material_id, self.allowed_materials)
+        return rho
+
+
 class PCOMPS(Property):
     @Property.clear_check
     def clear(self) -> None:
@@ -1077,7 +1260,7 @@ class PCOMPS(Property):
             nb: Optional[float]=None,
             tref: float=0.0, ge: float=0.0,
             failure_theories=None, interlaminar_failure_theories=None,
-            souts=None, comment='') -> None:
+            souts=None, comment='') -> int:
         nb = nb if nb is not None else np.nan
         sb = sb if sb is not None else np.nan
 
@@ -1093,6 +1276,7 @@ class PCOMPS(Property):
                            global_ply_ids, mids, thicknesses, thetas,
                            failure_theories, interlaminar_failure_theories, souts))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1139,7 +1323,15 @@ class PCOMPS(Property):
             thetas.append(theta)
             failure_theories.append(ft)
             interlaminar_failure_theories.append(ift)
-            assert ft in {'', 'PFA', 'HOFF', 'HILL'}, f'PCOMPS pid={pid} failure_theory={ft!r}'
+
+            #'HILL'  Hill failure theory.
+            #'HOFF'  Hoffman failure theory.
+            #'TSAI'  Tsai-Wu failure theory.
+            #'STRN'  Maximum Strain failure theory.
+            #'STRS'  Maximum Stress failure theory.
+            #'TS'    Maximum Transverse Shear Stress failure theory.
+            #'PFA'   progressive ply failure. See Remark 6.
+            assert ft in {'', 'TSAI', 'HOFF', 'HILL', 'PFA', 'STRN', 'STRS', 'TS'}, f'PCOMPS pid={pid} failure_theory={ft!r}'
             assert ift in {'', 'SB', 'NB'}, f'PCOMPS pid={pid} interlaminar_failure_theory={ift!r}'
             souts.append(sout)
             iply += 1
@@ -1382,10 +1574,11 @@ class PCOMPLS(Property):
         comment : str; default=''
             a comment for the card
         """
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         pid = integer(card, 1, 'pid')
         direct = integer_or_blank(card, 2, 'direct', default=1)
         cordm = integer_or_blank(card, 3, 'cordm', default=0)
-        sb = double_or_blank(card, 4, 'sb')
+        sb = fdouble_or_blank(card, 4, 'sb')
         analysis = string_or_blank(card, 5, 'tref', default='ISH')
         nfields = len(card) - 1
         #nrows =
@@ -1398,7 +1591,7 @@ class PCOMPLS(Property):
         c8: list[str] = []
         c20: list[str] = []
         while ifield < nfields:
-            value = card[ifield]
+            value = card[ifield].upper()
             """
             | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
             |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
@@ -1455,7 +1648,7 @@ class PCOMPLS(Property):
             global_ply_id = integer(card, ifield, 'global_ply_id_%d' % iply)
             mid = integer(card, ifield + 1, 'mid_%d' % iply)
             t = double(card, ifield + 2, 'thickness_%d' % iply)
-            theta = double(card, ifield + 3, 'theta_%d' % iply)
+            theta = double_or_blank(card, ifield + 3, 'theta_%d' % iply, default=0.0)
             global_ply_ids.append(global_ply_id)
             mids.append(mid)
             thicknesses.append(t)
@@ -1657,11 +1850,16 @@ class PCOMPLS(Property):
         """TODO: what about SOL 200 or undefined case control decks?"""
         model = self.model
         #MAT1, MAT9, MATORT, MATHE, MATUSR or MATDIGI
-        #if model.is_thermal:
-            #all_materials = [model.mat4]
-        #else:
-        #all_materials = [model.mat1, model.mat10]
-        all_materials = [model.mat9, model.matort]
+        if model.is_thermal:
+            all_materials = [model.mat4, model.mat5]
+        else:
+            #all_materials = [model.mat1, model.mat10]
+
+            # The MIDi entry may point to MAT1, MAT9, MATORT, MATHE, MATUSR or MATDIGI
+            # entries. The following table shows associated nonlinear entries.
+            # The association is established through the material entries having
+            # the same values as the MID entry.
+            all_materials = [model.mat1, model.mat9, model.matort]
         materials = [mat for mat in all_materials if mat.n > 0]
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
         return materials

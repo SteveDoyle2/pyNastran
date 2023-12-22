@@ -215,7 +215,7 @@ def parse_executive_control_deck(
             sline = uline.strip().split()
             assert len(sline) == 2, sline
             app = sline[1]
-            assert app in {'HEAT', 'DISP', 'COUPLED', 'DISPLACEMENT'}, f'uline={uline!r}'
+            assert app in {'HEAT', 'DISP', 'COUPLED', 'DISPLACEMENT', 'DMAP'}, f'uline={uline!r}'
     return sol, method, sol_iline, app
 
 

@@ -102,7 +102,7 @@ class MATT1(Material):
         sc_table = np.zeros(ncards, dtype='int32')
         ss_table = np.zeros(ncards, dtype='int32')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, e_tablei, g_tablei, nu_tablei, rho_tablei, a_tablei,
              ge_tablei, st_tablei, sc_tablei, ss_tablei, comment) = card
             e_tablei = 0 if e_tablei is None else e_tablei
@@ -114,16 +114,16 @@ class MATT1(Material):
             st_tablei = 0 if st_tablei is None else st_tablei
             sc_tablei = 0 if sc_tablei is None else sc_tablei
             ss_tablei = 0 if ss_tablei is None else ss_tablei
-            material_id[i] = mid
-            e_table[i] = e_tablei
-            g_table[i] = g_tablei
-            nu_table[i] = nu_tablei
-            rho_table[i] = rho_tablei
-            alpha_table[i] = a_tablei
-            ge_table[i] = ge_tablei
-            st_table[i] = st_tablei
-            sc_table[i] = sc_tablei
-            ss_table[i] = ss_tablei
+            material_id[icard] = mid
+            e_table[icard] = e_tablei
+            g_table[icard] = g_tablei
+            nu_table[icard] = nu_tablei
+            rho_table[icard] = rho_tablei
+            alpha_table[icard] = a_tablei
+            ge_table[icard] = ge_tablei
+            st_table[icard] = st_tablei
+            sc_table[icard] = sc_tablei
+            ss_table[icard] = ss_tablei
         self._save(material_id, e_table, g_table, nu_table,
                    rho_table, alpha_table,
                    ge_table,
@@ -321,13 +321,18 @@ class MATS1(Material):
             a comment for the card
 
         """
+        map_type_dict = {
+            'NLELAS': 'NLELAST',
+        }
         mid = integer(card, 1, 'mid')
         tid = integer_or_blank(card, 2, 'tables1_id')
-        Type = string(card, 3, 'Type')
+        nonlinear_type = string(card, 3, 'Type')
 
-        if Type not in {'NLELAST', 'PLASTIC', 'PLSTRN'}:
-            raise ValueError('MATS1 Type must be [NLELAST, PLASTIC, PLSTRN]; Type=%r' % Type)
-        if Type == 'NLELAST':
+        nonlinear_type = map_type_dict.get(nonlinear_type, nonlinear_type)
+        if nonlinear_type not in {'NLELAST', 'PLASTIC', 'PLSTRN'}:
+            raise ValueError('MATS1 Type must be [NLELAST, PLASTIC, PLSTRN]; Type=%r' % nonlinear_type)
+
+        if nonlinear_type == 'NLELAST':
             # should we even read these?
             hardening_slope = None
             hr = None
@@ -354,7 +359,7 @@ class MATS1(Material):
         stress_strain_measure = string_or_blank(card, 10, 'stress/strain measure', default='')
         assert len(card) <= 9, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         #return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
-        self.cards.append((mid, tid, Type, hardening_slope, hr, yf,
+        self.cards.append((mid, tid, nonlinear_type, hardening_slope, hr, yf,
                            limit1, limit2, stress_strain_measure, comment))
         self.n += 1
         return self.n - 1
@@ -372,21 +377,21 @@ class MATS1(Material):
         limit2 = np.zeros(ncards, dtype='float64')
         stress_strain_measure = np.zeros(ncards, dtype='|U8')
 
-        for i, card in enumerate(self.cards):
-            (mid, tid, typei, hardening_slopei, hri, yfi,
+        for icard, card in enumerate(self.cards):
+            (mid, tid, nonlinear_typei, hardening_slopei, hri, yfi,
              limit1i, limit2i, stress_strain_measurei, comment) = card
             tid = 0 if tid is None else tid
             hri = 1 if hri is None else hri
             yfi = 1 if yfi is None else yfi
-            material_id[i] = mid
-            table_id[i] = tid
-            Type[i] = typei
-            hardening_slope[i] = hardening_slopei
-            hr[i] = hri
-            yf[i] = yfi
-            limit1[i] = limit1i
-            limit2[i] = limit2i
-            stress_strain_measure[i] = stress_strain_measurei
+            material_id[icard] = mid
+            table_id[icard] = tid
+            Type[icard] = nonlinear_typei
+            hardening_slope[icard] = hardening_slopei
+            hr[icard] = hri
+            yf[icard] = yfi
+            limit1[icard] = limit1i
+            limit2[icard] = limit2i
+            stress_strain_measure[icard] = stress_strain_measurei
         self._save(material_id, table_id, Type, hardening_slope, hr, yf,
                    limit1, limit2, stress_strain_measure)
         self.sort()
@@ -599,7 +604,7 @@ class MATT2(Material):
         sc_table = np.zeros(ncards, dtype=idtype)
         ss_table = np.zeros(ncards, dtype=idtype)
         ge_table = np.zeros(ncards, dtype=idtype)
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid,
              g11_tablei, g22_tablei, g33_tablei,
              g12_tablei, g13_tablei, g23_tablei,
@@ -626,24 +631,24 @@ class MATT2(Material):
             ss_tablei = 0 if ss_tablei is None else ss_tablei
 
             ge_tablei = 0 if ge_tablei is None else ge_tablei
-            material_id[i] = mid
-            g11_table[i] = g11_tablei
-            g22_table[i] = g12_tablei
-            g33_table[i] = g13_tablei
+            material_id[icard] = mid
+            g11_table[icard] = g11_tablei
+            g22_table[icard] = g12_tablei
+            g33_table[icard] = g13_tablei
 
-            g12_table[i] = g12_tablei
-            g13_table[i] = g13_tablei
-            g23_table[i] = g23_tablei
+            g12_table[icard] = g12_tablei
+            g13_table[icard] = g13_tablei
+            g23_table[icard] = g23_tablei
 
-            rho_table[i] = rho_tablei
-            a1_table[i] = a1_tablei
-            a2_table[i] = a2_tablei
-            a3_table[i] = a3_tablei
+            rho_table[icard] = rho_tablei
+            a1_table[icard] = a1_tablei
+            a2_table[icard] = a2_tablei
+            a3_table[icard] = a3_tablei
 
-            st_table[i] = st_tablei
-            sc_table[i] = sc_tablei
-            ss_table[i] = ss_tablei
-            ge_table[i] = ge_tablei
+            st_table[icard] = st_tablei
+            sc_table[icard] = sc_tablei
+            ss_table[icard] = ss_tablei
+            ge_table[icard] = ge_tablei
         self._save(material_id,
                    g11_table, g22_table, g33_table,
                    g12_table, g13_table, g23_table,
@@ -896,7 +901,7 @@ class MATT8(Material):
         s_table = np.zeros(ncards, dtype=idtype)
         ge_table = np.zeros(ncards, dtype=idtype)
         f12_table = np.zeros(ncards, dtype=idtype)
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, e1_tablei, e2_tablei, nu12_tablei, g12_tablei,
              g1z_tablei, g2z_tablei, rho_tablei,
              a1_tablei, a2_tablei, xt_tablei,
@@ -918,23 +923,23 @@ class MATT8(Material):
             s_tablei = 0 if s_tablei is None else s_tablei
             ge_tablei = 0 if ge_tablei is None else ge_tablei
             f12_tablei = 0 if f12_tablei is None else f12_tablei
-            material_id[i] = mid
-            e1_table[i] = e1_tablei
-            e2_table[i] = e2_tablei
-            nu12_table[i] = nu12_tablei
-            g12_table[i] = g12_tablei
-            g1z_table[i] = g1z_tablei
-            g2z_table[i] = g2z_tablei
-            rho_table[i] = rho_tablei
-            a1_table[i] = a1_tablei
-            a2_table[i] = a2_tablei
-            xt_table[i] = xt_tablei
-            xc_table[i] = yt_tablei
-            yt_table[i] = yt_tablei
-            yc_table[i] = yc_tablei
-            s_table[i] = s_tablei
-            ge_table[i] = ge_tablei
-            f12_table[i] = f12_tablei
+            material_id[icard] = mid
+            e1_table[icard] = e1_tablei
+            e2_table[icard] = e2_tablei
+            nu12_table[icard] = nu12_tablei
+            g12_table[icard] = g12_tablei
+            g1z_table[icard] = g1z_tablei
+            g2z_table[icard] = g2z_tablei
+            rho_table[icard] = rho_tablei
+            a1_table[icard] = a1_tablei
+            a2_table[icard] = a2_tablei
+            xt_table[icard] = xt_tablei
+            xc_table[icard] = yt_tablei
+            yt_table[icard] = yt_tablei
+            yc_table[icard] = yc_tablei
+            s_table[icard] = s_tablei
+            ge_table[icard] = ge_tablei
+            f12_table[icard] = f12_tablei
         self._save(material_id, e1_table, e2_table, nu12_table, g12_table,
                    g1z_table, g2z_table, rho_table,
                    a1_table, a2_table, xt_table,
@@ -1230,7 +1235,7 @@ class MATT9(Material):
         a5_table = np.zeros(ncards, dtype=idtype)
         a6_table = np.zeros(ncards, dtype=idtype)
         ge_table = np.zeros(ncards, dtype=idtype)
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid,
              g11_tablei, g12_tablei, g13_tablei, g14_tablei, g15_tablei, g16_tablei,
              g22_tablei, g23_tablei, g24_tablei, g25_tablei, g26_tablei,
@@ -1276,37 +1281,37 @@ class MATT9(Material):
             a6_tablei = 0 if a6_tablei is None else a6_tablei
 
             ge_tablei = 0 if ge_tablei is None else ge_tablei
-            material_id[i] = mid
+            material_id[icard] = mid
 
-            g11_table[i] = g11_tablei
-            g12_table[i] = g12_tablei
-            g13_table[i] = g13_tablei
-            g14_table[i] = g14_tablei
-            g15_table[i] = g15_tablei
-            g16_table[i] = g16_tablei
-            g22_table[i] = g22_tablei
-            g23_table[i] = g23_tablei
-            g24_table[i] = g24_tablei
-            g25_table[i] = g25_tablei
-            g26_table[i] = g26_tablei
-            g33_table[i] = g33_tablei
-            g34_table[i] = g34_tablei
-            g35_table[i] = g35_tablei
-            g36_table[i] = g36_tablei
-            g44_table[i] = g44_tablei
-            g45_table[i] = g45_tablei
-            g46_table[i] = g46_tablei
-            g55_table[i] = g55_tablei
-            g56_table[i] = g56_tablei
-            g66_table[i] = g66_tablei
-            rho_table[i] = rho_tablei
-            a1_table[i] = a1_tablei
-            a2_table[i] = a2_tablei
-            a3_table[i] = a3_tablei
-            a4_table[i] = a4_tablei
-            a5_table[i] = a5_tablei
-            a6_table[i] = a6_tablei
-            ge_table[i] = ge_tablei
+            g11_table[icard] = g11_tablei
+            g12_table[icard] = g12_tablei
+            g13_table[icard] = g13_tablei
+            g14_table[icard] = g14_tablei
+            g15_table[icard] = g15_tablei
+            g16_table[icard] = g16_tablei
+            g22_table[icard] = g22_tablei
+            g23_table[icard] = g23_tablei
+            g24_table[icard] = g24_tablei
+            g25_table[icard] = g25_tablei
+            g26_table[icard] = g26_tablei
+            g33_table[icard] = g33_tablei
+            g34_table[icard] = g34_tablei
+            g35_table[icard] = g35_tablei
+            g36_table[icard] = g36_tablei
+            g44_table[icard] = g44_tablei
+            g45_table[icard] = g45_tablei
+            g46_table[icard] = g46_tablei
+            g55_table[icard] = g55_tablei
+            g56_table[icard] = g56_tablei
+            g66_table[icard] = g66_tablei
+            rho_table[icard] = rho_tablei
+            a1_table[icard] = a1_tablei
+            a2_table[icard] = a2_tablei
+            a3_table[icard] = a3_tablei
+            a4_table[icard] = a4_tablei
+            a5_table[icard] = a5_tablei
+            a6_table[icard] = a6_tablei
+            ge_table[icard] = ge_tablei
         self._save(material_id,
                    g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                    g22_table, g23_table, g24_table, g25_table, g26_table,

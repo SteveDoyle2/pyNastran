@@ -933,6 +933,8 @@ class TestDynamic(unittest.TestCase):
             (13., 14., 15.),
         ]
         model.add_tf(tf_id, nid0, component, b0, b1, b2, nids, components, a)
+        model.add_tf(tf_id+1, nid0, component, b0, b1, b2, nids, components, a)
+        model.add_tf(tf_id+2, nid0, component, b0, b1, b2, nids, components, a)
         model.setup()
 
         tf.write(size=8)

@@ -136,6 +136,13 @@ class CONM1(Element):
         self._mass = mass
         self.n = len(element_id)
 
+    def __apply_slice__(self, elem: CONM1, i: np.ndarray):
+        elem.element_id = self.element_id[i]
+        elem.node_id = self.node_id[i]
+        elem.coord_id = self.coord_id[i]
+        elem._mass = self._mass[i]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
         used_dict['coord_id'].append(self.coord_id)

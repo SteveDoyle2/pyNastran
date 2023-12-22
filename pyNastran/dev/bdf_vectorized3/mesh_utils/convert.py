@@ -60,14 +60,14 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'rotational_stiffness_scale': rotational_stiffness_scale,
         'linear_damping_scale': linear_damping_scale,
         'rotational_damping_scale': rotational_damping_scale,
-
     }
     CARDS_TO_SKIP = {
         'SPOINT', 'EPOINT',
         # elements/properties
         'CTUBE', 'CROD',
         'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
-        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CHEXCZ', 'PSOLID', 'PLSOLID',
+        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'PSOLID', 'PLSOLID',
+        'CPENTCZ', 'CHEXCZ', 'CIFPENT', 'CIFHEX',
         # sets
         'SET1', 'ASET', 'BSET', 'CSET', 'OMIT', 'QSET', 'USET', 'SUPORT',
         'SEBSET', 'SECSET', 'SEQSET', 'RELEASE',
@@ -84,6 +84,9 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'BLSEG'
         # superelements
         'SESET',
+    }
+    NOT_IMPLEMENTED_CARDS = {
+        'BCBODY',
     }
     #HARD_CARDS = {
         #'PELAS',

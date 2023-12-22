@@ -56,7 +56,7 @@ class TestGuiModels(unittest.TestCase):
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         run_nastran_gui(h5_filename)
 
-    def _test_h5_transient_thermal(self):
+    def test_h5_transient_thermal(self):
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
         run_nastran_gui(h5_filename)
 

@@ -575,7 +575,7 @@ class CTRIA3(ShellElement):
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
-        mcid = np.full(ncards, -1, dtype='int32')
+        mcid = np.full(ncards, -1, dtype=idtype)
         theta = np.full(ncards, np.nan, dtype='float64')
         zoffset = np.full(ncards, np.nan, dtype='float64')
         T = np.zeros((ncards, 3), dtype='float64')
@@ -1142,7 +1142,7 @@ class CQUAD4(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        element_id =  np.zeros(ncards, dtype=idtype)
+        element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
@@ -1872,7 +1872,7 @@ class CTRIA6(ShellElement):
         self.n = nelements
 
     def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
-        assert element.type == 'CTRIA6'
+        #assert element.type == 'CTRIA6'
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -2586,9 +2586,10 @@ class CAABSF(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card

@@ -6,12 +6,13 @@ from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, blank,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank,
     fields)
-from pyNastran.bdf.cards.elements.bars import set_blank_if_default
+#from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
@@ -96,6 +97,8 @@ class CBUSH(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
@@ -114,8 +117,8 @@ class CBUSH(Element):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', default=0.0)
-            x3 = double_or_blank(card, 7, 'x3', default=0.0)
+            x2 = fdouble_or_blank(card, 6, 'x2', default=0.0)
+            x3 = fdouble_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
             if not isinstance(cid, integer_types):
                 assert max(x) != min(x), 'x=%s' % x
@@ -124,7 +127,7 @@ class CBUSH(Element):
             x = [None, None, None]
 
         #: Location of spring damper (0 <= s <= 1.0)
-        s = double_or_blank(card, 9, 's', default=0.5)
+        s = fdouble_or_blank(card, 9, 's', default=0.5)
 
         #: Coordinate system identification of spring-damper offset. See
         #: Remark 9. (Integer > -1; Default = -1, which means the offset
@@ -133,9 +136,9 @@ class CBUSH(Element):
 
         #: Components of spring-damper offset in the OCID coordinate system
         #: if OCID > 0.
-        si = [double_or_blank(card, 11, 's1'),
-              double_or_blank(card, 12, 's2'),
-              double_or_blank(card, 13, 's3'), ]
+        si = [fdouble_or_blank(card, 11, 's1'),
+              fdouble_or_blank(card, 12, 's2'),
+              fdouble_or_blank(card, 13, 's3'), ]
         assert len(card) <= 14, f'len(CBUSH card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], cid, g0, x, s, ocid, si, comment))
         self.n += 1
@@ -151,9 +154,9 @@ class CBUSH(Element):
         g0 = np.full(ncards, -1, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
-        coord_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype=idtype)
         s = np.zeros(ncards, dtype='float64')
-        ocid = np.zeros(ncards, dtype='int32')
+        ocid = np.zeros(ncards, dtype=idtype)
         ocid_offset = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
             (eid, pid, nodesi, cidi, g0i, xi, si, ocidi, ocid_offseti, comment) = card
@@ -378,7 +381,7 @@ class CBUSH(Element):
     def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                             np.ndarray, np.ndarray, np.ndarray]:
-        log = self.model.log
+        #log = self.model.log
         coords = self.model.coord
         #xyz1, xyz2 = self.get_xyz()
 
@@ -491,6 +494,9 @@ class PBUSH(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        model = self.model
+        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+
         k_fields = []
         b_fields = []
         ge_fields = []
@@ -533,10 +539,10 @@ class PBUSH(Property):
                 #: Remarks 2. and 3. (Real; Default = 0.0)
                 ge_fields = self._read_var(card, 'GEi', istart + 1, istart + 7)
             elif pname == 'RCV':
-                rcv_fields = self._read_rcv(card, istart)
+                rcv_fields = read_pbush_rcv(model, card, istart)
             elif pname == 'M':
                 # Lumped mass of the cbush; default=0.0
-                mass = double_or_blank(card, istart + 1, 'mass', default=0.)
+                mass = fdouble_or_blank(card, istart + 1, 'mass', default=0.)
             elif pname == 'T':
                 t_fields = self._read_var(card, 'Ti', istart + 1, istart + 4)
                 assert len(t_fields) == 3, t_fields
@@ -598,6 +604,18 @@ class PBUSH(Property):
         self.tref = tref
         self.coincident_length = coincident_length
 
+    def __apply_slice__(self, prop: PBUSH, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.k_fields = self.k_fields[i, :]
+        prop.b_fields = self.b_fields[i, :]
+        prop.ge_fields = self.ge_fields[i, :]
+        prop.rcv_fields = self.rcv_fields[i, :]
+        prop._mass = self._mass[i]
+        prop.alpha = self.alpha[i]
+        prop.tref = self.tref[i]
+        prop.coincident_length = self.coincident_length[i]
+        prop.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['pbusht_id'].append(self.property_id)
 
@@ -624,19 +642,6 @@ class PBUSH(Property):
     def _read_var(cls, card, var_prefix, istart, iend):
         ki = fields(double_or_blank, card, var_prefix, istart, iend)
         return ki
-
-    @classmethod
-    def _read_rcv(cls, card, istart):
-        """
-        Flag indicating that the next 1 to 4 fields are stress or strain
-        coefficients. (Character)
-        """
-        #self.rcv = string(card, istart, 'rcv')
-        sa = double_or_blank(card, istart + 1, 'sa', default=1.)
-        st = double_or_blank(card, istart + 2, 'st', default=1.)
-        ea = double_or_blank(card, istart + 3, 'ea', default=1.)
-        et = double_or_blank(card, istart + 4, 'et', default=1.)
-        return [sa, st, ea, et]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -719,6 +724,20 @@ class PBUSH(Property):
     def mass(self) -> np.ndarray:
         mass = self._mass
         return mass
+
+def read_pbush_rcv(model: BDF, card, istart: int) -> tuple[float, float, float, float]:
+    """
+    Flag indicating that the next 1 to 4 fields are stress or strain
+    coefficients. (Character)
+    """
+    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+
+    #self.rcv = string(card, istart, 'rcv')
+    sa = fdouble_or_blank(card, istart + 1, 'sa', default=1.)
+    st = fdouble_or_blank(card, istart + 2, 'st', default=1.)
+    ea = fdouble_or_blank(card, istart + 3, 'ea', default=1.)
+    et = fdouble_or_blank(card, istart + 4, 'et', default=1.)
+    return (sa, st, ea, et)
 
 
 class PBUSHT(Property):
@@ -951,6 +970,13 @@ class CBUSH1D(Element):
         self.nodes = nodes
         self.coord_id = coord_id
 
+    def __apply_slice__(self, elem: CBUSH1D, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.coord_id = self.coord_id[i]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
         coords = np.unique(self.coord_id)
@@ -1059,13 +1085,16 @@ class PBUSH1D(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        pid = integer(card, 1, 'pid')
-        k = double_or_blank(card, 2, 'k', default=0.0)
-        c = double_or_blank(card, 3, 'c', default=0.0)
-        m = double_or_blank(card, 4, 'm', default=0.0)
+        model = self.model
+        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
 
-        sa = double_or_blank(card, 6, 'sa', default=0.0)
-        se = double_or_blank(card, 7, 'se', default=0.0)
+        pid = integer(card, 1, 'pid')
+        k = fdouble_or_blank(card, 2, 'k', default=0.0)
+        c = fdouble_or_blank(card, 3, 'c', default=0.0)
+        m = fdouble_or_blank(card, 4, 'm', default=0.0)
+
+        sa = fdouble_or_blank(card, 6, 'sa', default=0.0)
+        se = fdouble_or_blank(card, 7, 'se', default=0.0)
 
         nfields = card.nfields
         optional_vars = {}
@@ -1073,19 +1102,19 @@ class PBUSH1D(Property):
         while istart < nfields:
             pname = string(card, istart, 'pname')
             if pname == 'SHOCKA':
-                istart, out = self._read_shock(card, istart)
+                istart, out = read_pbush1d_shock(model, card, istart)
                 optional_vars['SHOCKA'] = out
 
             elif pname == 'SPRING':
-                out = self._read_spring(card, istart)
+                out = read_pbush1d_spring(card, istart)
                 optional_vars['SPRING'] = out
 
             elif pname == 'DAMPER':
-                out = self._read_damper(card, istart)
+                out = read_pbush1d_damper(model, card, istart)
                 optional_vars['DAMPER'] = out
 
             elif pname == 'GENER':
-                out = self._read_gener(card, istart)
+                out = read_pbush1d_gener(card, istart)
                 optional_vars['GENER'] = out
             else:
                 break
@@ -1275,136 +1304,6 @@ class PBUSH1D(Property):
         prop.gener_equation = self.gener_equation[i, :]
         prop.n = len(i)
 
-    @staticmethod
-    def _read_spring(card, istart: int) -> tuple[str, int, int, int, int]:
-        """
-        F(u) = Ft(u)
-        """
-        spring_type = string_or_blank(card, istart + 1, 'springType', default='TABLE')
-        spring_idt = integer(card, istart + 2, 'springIDT')
-
-        if spring_type == 'TABLE':
-            spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
-            spring_idtdu = integer_or_blank(card, istart + 4, 'springIDTDU', default=0)
-            spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
-        elif spring_type == 'EQUAT':
-            spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
-            spring_idtdu = integer(card, istart + 4, 'springIDTDU')
-            spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
-        else:
-            msg = 'Invalid spring_type=%r on card\n%s' % (spring_type, card)
-            raise RuntimeError(msg)
-
-        return spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu
-
-    @staticmethod
-    def _read_damper(card: BDFCard, istart: int) -> tuple[str, int, int, int, int]:
-        """
-        F(v) = Ft(u)
-        """
-        damper_type = string_or_blank(card, istart + 1, 'damperType', default='TABLE')
-        damper_idt = integer(card, istart + 2, 'damperIDT')
-        if damper_type == 'TABLE':
-            damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
-            damper_idtdv = integer_or_blank(card, istart + 4, 'damperIDTDV', default=0)
-            damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
-        elif damper_type == 'EQUAT':
-            damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
-            damper_idtdv = integer(card, istart + 4, 'damperIDTDV')
-            damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
-        else:
-            msg = 'Invalid damper_type=%r on card\n%s' % (damper_type, card)
-            raise RuntimeError(msg)
-
-        return damper_type, damper_idt, damper_idc, damper_idtdv, damper_idcdv
-
-    @staticmethod
-    def _read_shock(card: BDFCard, istart: int) -> tuple[int,
-                                                         tuple[str, float, float, float, float]]:
-        """
-        F(u, v) = Cv * S(u) * sign(v) * |v|^ev
-        """
-        #CVT   Viscous damping coefficient CV for tension v > 0,
-        #      force per unit velocity. (Real).
-        #CVC   Viscous damping coefficient CV for compression v > 0, force
-        #      per unit velocity. (Real); default = CVT
-        #EXPVT Exponent of velocity EXPV for tension v > 0. (Real); default = 1.
-        #EXPVC Exponent of velocity EXPV for compression v < 0. (Real). EXPVT
-
-        # TYPE=TABLE
-        # IDTS   TABLEDi id for tension and compression. Defines the
-        #        scale factor S, versus displacement u.
-        #
-        # Type=EQUAT
-        # IDETS DEQATN id for tension. Defines the scale
-        #       factor S, versus displacement u, for tension u > 0.
-        # IDECS DEQATN id for compression. Defines the scale
-        #       factor S, versus displacement u, for compression u < 0; default = IDETS
-        # IDETSD DEQATN id for tension. Defines the
-        #        derivative of the scale factor S, with respect
-        shock_type = string_or_blank(card, istart + 1, 'shockType')
-        shock_cvt = double(card, istart + 2, 'shockCVT')
-        shock_cvc = double_or_blank(card, istart + 3, 'shockCVC', default=shock_cvt)
-        shock_exp_vt = double_or_blank(card, istart + 4, 'shockExpVT', default=1.0)
-        shock_exp_vc = double_or_blank(card, istart + 5,
-                                       'shockExpVC', default=shock_exp_vt)
-
-        if shock_type == 'TABLE':
-            #shock_idts = None
-            shock_idets = 0
-            shock_idecs = 0
-            shock_idetsd = 0
-            shock_idecsd = 0
-            shock_idts = integer(card, istart + 6, 'shockIDTS')
-            #shock_idets = blank(card, istart + 9, 'shockIDETS')
-            #shock_idecs = blank(card, istart + 10, 'shockIDECS')
-            #shock_idetsd = blank(card, istart + 11, 'shockIDETSD')
-            #shock_idecsd = blank(card, istart + 12, 'shockIDECSD')
-        elif shock_type == 'EQUAT':
-            shock_idts = blank(card, istart + 6, 'shockIDTS')
-            shock_idets = integer(card, istart + 9, 'shockIDETS')
-            shock_idecs = integer_or_blank(card, istart + 10,
-                                           'shockIDECS', default=shock_idets)
-            shock_idetsd = integer(card, istart + 11, 'shockIDETSD')
-            shock_idecsd = integer_or_blank(card, istart + 11,
-                                            'shockIDECSD', default=shock_idetsd)
-            #def DEquation(self):
-                #if isinstance(self.dequation, int):
-                    #return self.dequation
-                #return self.dequation.equation_id
-        else:
-            msg = 'Invalid shockType=%r on card\n%s' % (shock_type, card)
-            raise RuntimeError(msg)
-
-        out = (
-            shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
-            shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
-        )
-        istart += 8
-        return istart, out
-
-    @staticmethod
-    def _read_gener(card, istart: int) -> tuple[int,
-                                                tuple[int, int, int, int, int, int]]:
-        """
-        F(u, v) = Ft(u, v)
-        """
-        gener_idt = integer(card, istart + 2, 'generIDT')
-        gener_idc = integer_or_blank(card, istart + 3,
-                                     'generIDC', gener_idt)
-        gener_idtdu = integer(card, istart + 4, 'generIDTDU')
-        gener_idcdu = integer_or_blank(card, istart + 5,
-                                       'generIDCDU', gener_idtdu)
-        gener_idtdv = integer(card, istart + 6, 'generIDTDV')
-        gener_idcdv = integer_or_blank(card, istart + 7,
-                                       'generIDCDV', gener_idtdv)
-        out = (
-            gener_idt, gener_idc,
-            gener_idtdu, gener_idcdu,
-            gener_idtdv, gener_idcdv,
-        )
-        return out
-
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
         #nid = self.model.grid.node_id
@@ -1467,6 +1366,137 @@ class PBUSH1D(Property):
     def mass(self) -> np.ndarray:
         mass = self.mass
         return mass
+
+def read_pbush1d_spring(card: BDFCard, istart: int) -> tuple[str, int, int, int, int]:
+    """
+    F(u) = Ft(u)
+    """
+    spring_type = string_or_blank(card, istart + 1, 'springType', default='TABLE')
+    spring_idt = integer(card, istart + 2, 'springIDT')
+
+    if spring_type == 'TABLE':
+        spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
+        spring_idtdu = integer_or_blank(card, istart + 4, 'springIDTDU', default=0)
+        spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
+    elif spring_type == 'EQUAT':
+        spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
+        spring_idtdu = integer(card, istart + 4, 'springIDTDU')
+        spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
+    else:
+        msg = 'Invalid spring_type=%r on card\n%s' % (spring_type, card)
+        raise RuntimeError(msg)
+
+    return spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu
+
+def read_pbush1d_damper(model: BDF, card: BDFCard, istart: int) -> tuple[str, int, int, int, int]:
+    """
+    F(v) = Ft(u)
+    """
+    damper_type = string_or_blank(card, istart + 1, 'damperType', default='TABLE')
+    damper_idt = integer(card, istart + 2, 'damperIDT')
+    if damper_type == 'TABLE':
+        damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
+        damper_idtdv = integer_or_blank(card, istart + 4, 'damperIDTDV', default=0)
+        damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
+    elif damper_type == 'EQUAT':
+        damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
+        damper_idtdv = integer(card, istart + 4, 'damperIDTDV')
+        damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
+    else:
+        msg = 'Invalid damper_type=%r on card\n%s' % (damper_type, card)
+        raise RuntimeError(msg)
+
+    return damper_type, damper_idt, damper_idc, damper_idtdv, damper_idcdv
+
+
+def read_pbush1d_shock(model: BDF, card: BDFCard, istart: int) -> tuple[int,
+                                                     tuple[str, float, float, float, float]]:
+    """
+    F(u, v) = Cv * S(u) * sign(v) * |v|^ev
+    """
+    fdouble = force_double if model.is_lax_parser else double
+    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+
+    #CVT   Viscous damping coefficient CV for tension v > 0,
+    #      force per unit velocity. (Real).
+    #CVC   Viscous damping coefficient CV for compression v > 0, force
+    #      per unit velocity. (Real); default = CVT
+    #EXPVT Exponent of velocity EXPV for tension v > 0. (Real); default = 1.
+    #EXPVC Exponent of velocity EXPV for compression v < 0. (Real). EXPVT
+
+    # TYPE=TABLE
+    # IDTS   TABLEDi id for tension and compression. Defines the
+    #        scale factor S, versus displacement u.
+    #
+    # Type=EQUAT
+    # IDETS DEQATN id for tension. Defines the scale
+    #       factor S, versus displacement u, for tension u > 0.
+    # IDECS DEQATN id for compression. Defines the scale
+    #       factor S, versus displacement u, for compression u < 0; default = IDETS
+    # IDETSD DEQATN id for tension. Defines the
+    #        derivative of the scale factor S, with respect
+    shock_type = string_or_blank(card, istart + 1, 'shockType')
+    shock_cvt = fdouble(card, istart + 2, 'shockCVT')
+    shock_cvc = fdouble_or_blank(card, istart + 3, 'shockCVC', default=shock_cvt)
+    shock_exp_vt = fdouble_or_blank(card, istart + 4, 'shockExpVT', default=1.0)
+    shock_exp_vc = fdouble_or_blank(card, istart + 5,
+                                    'shockExpVC', default=shock_exp_vt)
+
+    if shock_type == 'TABLE':
+        #shock_idts = None
+        shock_idets = 0
+        shock_idecs = 0
+        shock_idetsd = 0
+        shock_idecsd = 0
+        shock_idts = integer(card, istart + 6, 'shockIDTS')
+        #shock_idets = blank(card, istart + 9, 'shockIDETS')
+        #shock_idecs = blank(card, istart + 10, 'shockIDECS')
+        #shock_idetsd = blank(card, istart + 11, 'shockIDETSD')
+        #shock_idecsd = blank(card, istart + 12, 'shockIDECSD')
+    elif shock_type == 'EQUAT':
+        shock_idts = blank(card, istart + 6, 'shockIDTS')
+        shock_idets = integer(card, istart + 9, 'shockIDETS')
+        shock_idecs = integer_or_blank(card, istart + 10,
+                                       'shockIDECS', default=shock_idets)
+        shock_idetsd = integer(card, istart + 11, 'shockIDETSD')
+        shock_idecsd = integer_or_blank(card, istart + 11,
+                                        'shockIDECSD', default=shock_idetsd)
+        #def DEquation(self):
+            #if isinstance(self.dequation, int):
+                #return self.dequation
+            #return self.dequation.equation_id
+    else:
+        msg = 'Invalid shockType=%r on card\n%s' % (shock_type, card)
+        raise RuntimeError(msg)
+
+    out = (
+        shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
+        shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
+    )
+    istart += 8
+    return istart, out
+
+def read_pbush1d_gener(card: BDFCard, istart: int) -> tuple[int,
+                                                            tuple[int, int, int, int, int, int]]:
+    """
+    F(u, v) = Ft(u, v)
+    """
+    gener_idt = integer(card, istart + 2, 'generIDT')
+    gener_idc = integer_or_blank(card, istart + 3,
+                                 'generIDC', gener_idt)
+    gener_idtdu = integer(card, istart + 4, 'generIDTDU')
+    gener_idcdu = integer_or_blank(card, istart + 5,
+                                   'generIDCDU', gener_idtdu)
+    gener_idtdv = integer(card, istart + 6, 'generIDTDV')
+    gener_idcdv = integer_or_blank(card, istart + 7,
+                                   'generIDCDV', gener_idtdv)
+    out = (
+        gener_idt, gener_idc,
+        gener_idtdu, gener_idcdu,
+        gener_idtdv, gener_idcdv,
+    )
+    return out
+
 
 CBUSH2D = CBUSH
 PBUSH2D = PBUSH

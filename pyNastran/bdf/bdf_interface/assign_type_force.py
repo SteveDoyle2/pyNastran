@@ -132,7 +132,8 @@ def force_integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[float]=None):
+def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                          default: Optional[float]=None):
     """see ``double_or_blank``"""
     svalue = card.field(ifield)
 
@@ -164,7 +165,7 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: O
                                   'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def force_double_or_string(card: BDFCard, ifield: int, fieldname: str, default: Optional[float]=None):
+def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
     """see ``double_or_string``"""
     svalue = card.field(ifield)
 
@@ -175,6 +176,7 @@ def force_double_or_string(card: BDFCard, ifield: int, fieldname: str, default: 
         warnings.warn('%s = %r (field #%s) on card must be a float or string (not an integer) -> %s.\n'
                       'card=%s' % (fieldname, svalue, ifield, card))
         return fvalue
+
     elif isinstance(svalue, str):
         if len(svalue) == 0:
             warnings.warn('%s = %r (field #%s) on card must be a float or string (not an blank) -> %s.\n'
@@ -209,9 +211,13 @@ def force_double_or_string(card: BDFCard, ifield: int, fieldname: str, default: 
                 #raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                                   #'card=%s' % (fieldname, svalue, ifield, dtype, card))
     else:
-        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
-                          'card=%s' % (fieldname, svalue, ifield, card))
-    return default
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a float or string (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    raise SyntaxError('%s = %r (field #%s) on card must be a float or string -> %s.\n'
+                      'card=%s' % (fieldname, svalue, ifield, dtype, card))
+    #return default
 
 def lax_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
                         default: Optional[float]=None,

@@ -466,6 +466,18 @@ class MONPNT3(VectorizedBaseCard):
         self.cd = cd
         self.xflag = xflag
 
+    def __apply_slice__(self, monitor: MONPNT3, i: np.ndarray) -> None:  # ignore[override]
+        monitor.name = self.name[i]
+        monitor.label = self.label[i]
+        monitor.axes = self.axes[i]
+        monitor.grid_set = self.grid_set[i]
+        monitor.elem_set = self.elem_set[i]
+        monitor.cp = self.cp[i]
+        monitor.xyz = self.xyz[i, :]
+        monitor.cd = self.cd[i]
+        monitor.xflag = self.xflag[i]
+        monitor.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['coord_id'].append(self.cp)
         used_dict['coord_id'].append(self.cd)

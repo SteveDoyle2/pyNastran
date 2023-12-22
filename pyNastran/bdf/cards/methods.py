@@ -793,6 +793,27 @@ class EIGR(Method):
             # AHOU = automatic selection of HOU or MHOU
             # AGIV = automatic selection of GIV or MGIV
             nd = integer_or_blank(card, 6, 'nd', default=0)
+        elif method == 'LAN':
+            #The LAN method is the most general-purpose method, and may be used on
+            #both small- and large-size problems. It takes advantage of sparsity of input
+            #matrices, leading to greater efficiency on large-size problems. Because Lanczos
+            #performance is tuned for medium to large problems, this has caused difficulties
+            #with very small problems. Thus, by default, on problems with fewer than 20
+            #degrees-of-freedom when the LAN method is selected, the method is switched to
+            #AHOU. The criteria for automatic switching is controlled by SYSTEM(359) on the
+            #NASTRAN entry.
+            #The NE, G, and C fields are ignored for the LAN method. The
+            #NORM field may be set to MASS (the default value) or NORM.
+            #
+            # The conventions used when both the Fi and ND fields are specified are
+            # described in Table 1 of the IGRL entry description.
+            #
+            # The EIGRL entry is an alternate method to select the
+            # LAN method. It has several other input options for special cases.
+            #
+            # When both and EIGRL and EIGR have the same SID and that SID is
+            # selected by a METHOD ommand the EIGRL entry takes precedence.
+            nd = integer_or_blank(card, 6, 'nd')
         else:
             nd = integer(card, 6, 'nd')
         crit = double_or_blank(card, 8, 'crit')

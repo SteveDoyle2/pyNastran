@@ -53,6 +53,11 @@ class PlotElement(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def __apply_slice__(self, elem: PlotElement, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.nodes.ravel())
 
@@ -124,6 +129,7 @@ class PLOTEL(PlotElement):
         else:
             assert len(card) <= 5, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         self.n += 1
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:

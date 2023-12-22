@@ -888,6 +888,12 @@ class PBEAM(Property):
     | M1(A) | M2(A) | M1(B) | M2(B) | N1(A)  | N2(A)  | N1(B) | N2(B) |
     +-------+-------+-------+-------+--------+--------+-------+-------+
     """
+    _show_attributes = [
+        'property_id', 'material_id', 'nstation',
+        's1', 's2', 'k1', 'k2', 'nsia', 'nsib', 'cwa', 'cwb',
+        'm1a', 'm2a', 'm1b', 'm2b', 'n1a', 'n2a', 'n1b', 'n2b',
+        'xxb', 'so', 'A', 'J', 'I1', 'I2', 'I12', 'nsm',
+    ]
     @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.array = np.array([], dtype='int32')
@@ -1863,6 +1869,11 @@ class PBEAML(Property):
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
+    _skip_equality_check = True  # assume unequal
+    _show_attributes = [
+        'property_id', 'material_id', 'Type', 'group',
+        '_nsm', 'dims', 'ndim', 'nstation',
+    ]
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -3918,7 +3929,7 @@ class PBEND(Property):
 
     def mass_per_length(self) -> np.ndarray:
         mpl = np.full(self.n, np.nan, dtype='float64')
-        raise NotImplementedError('PBEND')
+        #raise NotImplementedError('PBEND')
         return mpl
 
     @property

@@ -85,7 +85,6 @@ class WriteMesh(BDFAttributes):
             nodes_size=nodes_size, elements_size=elements_size,
             loads_size=loads_size, is_long_ids=is_long_ids)
 
-
         #if self.suport or self.suport1:
             #bdf_file.write('$CONSTRAINTS\n')
             #for suport in self.suport:
@@ -456,7 +455,12 @@ class Writer:
         model.chexa.write_file(bdf_file, size=size, is_double=is_double)
         model.cpyram.write_file(bdf_file, size=size, is_double=is_double)
 
+        # nx solid cohesive zone
+        model.cpentcz.write_file(bdf_file, size=size, is_double=is_double)
         model.chexcz.write_file(bdf_file, size=size, is_double=is_double)
+        # msc solid cohesive zone
+        model.cifpent.write_file(bdf_file, size=size, is_double=is_double)
+        model.cifhex.write_file(bdf_file, size=size, is_double=is_double)
 
         # acoustic shells
         model.caabsf.write_file(bdf_file, size=size, is_double=is_double)
@@ -631,6 +635,7 @@ class Writer:
         # solid
         model.psolid.write_file(bdf_file, size=size, is_double=is_double)
         model.plsolid.write_file(bdf_file, size=size, is_double=is_double)
+        model.psolcz.write_file(bdf_file, size=size, is_double=is_double)
         model.pcomps.write_file(bdf_file, size=size, is_double=is_double)
         model.pcompls.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -653,15 +658,16 @@ class Writer:
         is_thermal_materials = any([mat.n for mat in thermal_materials])
         if is_materials:
             bdf_file.write('$MATERIALS\n')
-            model.mat1.write_file(bdf_file, size=size, is_double=is_double)
+            model.mat1.write_file(bdf_file, size=size, is_double=is_double)  # isotropic
             model.mat2.write_file(bdf_file, size=size, is_double=is_double)
             model.mat3.write_file(bdf_file, size=size, is_double=is_double)
-            model.mat8.write_file(bdf_file, size=size, is_double=is_double)
+            model.mat8.write_file(bdf_file, size=size, is_double=is_double)  # orthotropic
             model.mat9.write_file(bdf_file, size=size, is_double=is_double)
             model.mat10.write_file(bdf_file, size=size, is_double=is_double)
             model.mat11.write_file(bdf_file, size=size, is_double=is_double)
             model.mat10c.write_file(bdf_file, size=size, is_double=is_double)
             model.matort.write_file(bdf_file, size=size, is_double=is_double)
+             #hyperelastic
             model.mathe.write_file(bdf_file, size=size, is_double=is_double)
             model.mathp.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -670,17 +676,21 @@ class Writer:
             model.mat4.write_file(bdf_file, size=size, is_double=is_double)
             model.mat5.write_file(bdf_file, size=size, is_double=is_double)
 
-            model.mats1.write_file(bdf_file, size=size, is_double=is_double)
+        model.mats1.write_file(bdf_file, size=size, is_double=is_double)
 
-            model.matt1.write_file(bdf_file, size=size, is_double=is_double)
-            model.matt8.write_file(bdf_file, size=size, is_double=is_double)
-            model.matt9.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt1.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt2.write_file(bdf_file, size=size, is_double=is_double)
+        #model.matt3.write_file(bdf_file, size=size, is_double=is_double)
+        #model.matt4.write_file(bdf_file, size=size, is_double=is_double)
+        #model.matt5.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt8.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt9.write_file(bdf_file, size=size, is_double=is_double)
 
         #is_big_materials = hasattr(model, 'big_materials') and model.big_materials
         is_materials_dict = len(model.nxstrats)
         #is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
                         #self.MATS3 or self.MATS8 or
-                        #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
+                        #self.MATT3 or self.MATT4 or self.MATT5 or
                         #self.nxstrats or is_big_materials)
 
         if is_materials_dict:
@@ -694,8 +704,6 @@ class Writer:
             #for (unused_mid, material) in sorted(self.MATS8.items()):
                 #bdf_file.write(material.write_card(size, is_double))
 
-            #for (unused_mid, material) in sorted(self.MATT2.items()):
-                #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT3.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT4.items()):
@@ -749,7 +757,7 @@ class Writer:
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         model = self.model
-        if model.tables or model.tables_d or model.tables_m: # or model.tables_sdamping:
+        if model.tables or model.tables_d or model.tables_m or model.tables_sdamping:
             bdf_file.write('$TABLES\n')
             for (unused_id, table) in sorted(model.tables.items()):
                 bdf_file.write(table.write_card(size, is_double))
@@ -757,8 +765,8 @@ class Writer:
                 bdf_file.write(table.write_card(size, is_double))
             for (unused_id, table) in sorted(model.tables_m.items()):
                 bdf_file.write(table.write_card(size, is_double))
-            #for (unused_id, table) in sorted(model.tables_sdamping.items()):
-                #bdf_file.write(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(model.tables_sdamping.items()):
+                bdf_file.write(table.write_card(size, is_double))
 
         #if model.random_tables:
             #bdf_file.write('$RANDOM TABLES\n')
@@ -784,10 +792,14 @@ class Writer:
             model.convm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
             model.pconvm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
+        model.radcav.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.tempbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+
+        model.view.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.view3d.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
     def _write_thermal_materials(self, bdf_file: TextIOLike,
                                  size: int=8, is_double: bool=False,
@@ -1070,6 +1082,7 @@ class Writer:
             model.bconp.write_file(bdf_file, size=size, is_double=is_double)
             model.blseg.write_file(bdf_file, size=size, is_double=is_double)
             model.bfric.write_file(bdf_file, size=size, is_double=is_double)
+            model.bcbody.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

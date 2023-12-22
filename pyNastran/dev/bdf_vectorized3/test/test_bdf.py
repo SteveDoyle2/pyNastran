@@ -627,7 +627,7 @@ def run_and_compare_fems(
         print("-" * 80)
     return (fem1, fem2, diff_cards)
 
-def check_setup_flag(model: BDFv):
+def check_setup_flag(model: BDFv) -> None:
     if not isinstance(model, BDFv):
         return
     card_types: dict[str, str] = {}
@@ -715,7 +715,7 @@ def _get_nominal_quantity(elements: list[Any],
 
 def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                        check_nodes: bool=True,
-                       compare_bar_vectors: bool=True):
+                       compare_bar_vectors: bool=True) -> None:
     if fem1_nominal is None:
         return
 
@@ -987,7 +987,7 @@ def compare_dict(nominal_elements: dict[int, Any],
                  vectorized_result: dict[int, float],
                  nominal_result: dict[int, float],
                  eid_name: str, result_name: str,
-                 rtol=1e-4, rtol_dict: Optional[dict[str, float]]=None):
+                 rtol: float=1e-4, rtol_dict: Optional[dict[str, float]]=None) -> None:
     """
     vectorized_result = eid_to_mass_vector
     nominal_result = eid_to_mass_nominal
@@ -1008,7 +1008,9 @@ def compare_dict(nominal_elements: dict[int, Any],
         rtol = rtol_dict.get(card_name, rtol_nominal)
         if not np.allclose(mass_vectorized, mass_nominal, rtol=rtol):
             #relative_error = (mass_vectorized - mass_nominal) / mass_nominal
-            msg = f'{eid_name}={eid:d} {result_name}_nominal={mass_nominal:g} {result_name}_vectorized={mass_vectorized:g}\n{elem}'
+            msg = (
+                f'{eid_name}={eid:d} {result_name}_nominal={mass_nominal:g} '
+                f'{result_name}_vectorized={mass_vectorized:g}\n{elem}')
             msg += _get_absolute_relative_difference(mass_nominal, mass_vectorized)
             raise RuntimeError(msg)
 
@@ -1363,13 +1365,13 @@ def _run_mass(model: BDFs, xref: bool, has_nodes: bool, is_nominal: bool):
             log.warning(f'mass = {mass:g}')
 
 
-def has_nodes(model: BDFs):
+def has_nodes(model: BDFs) -> bool:
     has_nodes = ('GRID' in model.card_count or
                  'SPOINT' in model.card_count or
                  'EPOINT' in model.card_count)
     return has_nodes
 
-def limit_mesh_optimization(model: BDFs):
+def limit_mesh_optimization(model: BDFs) -> None:
     is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
     mesh_opt_cards = [card_name for is_mesh_opti, card_name in zip(is_mesh_opt, MESH_OPT_CARDS)
                       if is_mesh_opti]
@@ -1377,7 +1379,7 @@ def limit_mesh_optimization(model: BDFs):
     if any(is_mesh_opt):
         raise MeshOptimizationError(f'model contains [{_cards}]; mesh optimization is not supported')
 
-def _fem_xref_methods_check(fem1: BDFv):
+def _fem_xref_methods_check(fem1: BDFv) -> None:
     """
     testing that these methods work with xref
     """
@@ -2223,9 +2225,9 @@ def _check_case_parameters(subcase: Subcase,
         #n (For SOLs 401 and 402) Sets the identification number of a TSTEP1 bulk entry.
         #n (For SOLs 601 and 701) Sets the identification number of a TSTEP bulk entry.
     else:
-        if any(subcase.has_parameter('TIME', 'TSTEP')):
-            tstep_id = _get_multi_parameter(subcase, ['TIME', 'TSTEP'])
-            if tstep_id not in fem.tsteps:
+        if any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
+            tstep_id = _get_multi_parameter(subcase, ['TIME', 'TSTEP', 'TSTEPNL'])
+            if tstep_id not in fem.tsteps and tstep_id not in fem.tstepnls:
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
     if 'TSTEPNL' in subcase:
@@ -2350,7 +2352,7 @@ def _check_case_parameters(subcase: Subcase,
         nsm_id = subcase.get_parameter('NSM')[0]
         fem.get_reduced_nsms(nsm_id, stop_on_failure=False)
 
-    if 'SDAMPING' in subcase and 0:
+    if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
         sdamp_sols = [110, 111, 112, 145, 146, 200]
         if not sdamping_id in fem.tables_sdamping and fem.sol in sdamp_sols:
@@ -2383,7 +2385,7 @@ def _check_case_parameters(subcase: Subcase,
             ic_val = subcase.get_parameter('IC')[0]
             if ic_val != 0:
                 log.debug(f'IC={ic_val}')
-                tic = fem.tics[ic_val]
+                tic = fem.tic.slice_card_by_id(ic_val)
                 # TIC - SOL 109, 129, 601, 701 (structural/physical)
                 #
                 # TEMP/TEMPD - SOL 159
@@ -2421,7 +2423,7 @@ def _check_case_parameters(subcase: Subcase,
         loads, scale_factors = fem.get_reduced_dloads(dload_id)
         #fem.log.info('scale_factors=%s loads=%s' % (scale_factors, loads))
 
-        if sol in [108, 111]:  # direct frequency, modal frequency
+        if sol in {108, 111}:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads, scale_factors):
                 freq_id = subcase.get_parameter('FREQ')[0]
                 freqs = fem.frequencies[freq_id]
@@ -2469,9 +2471,9 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
         suport_ids = [0, suport_id] if 0 in suporti else [suport_id]
         suport = suporti.slice_card_by_id(suport_ids)
 
-    if 'TRIM' in subcase and 0:
+    if 'TRIM' in subcase:
         trim_id = subcase.get_parameter('TRIM')[0]
-        if trim_id not in fem.trims:
+        if trim_id not in fem.trim:
             msg = (
                 f'SOL={sol}\n'
                 f'TRIM = {trim_id}\n'
@@ -2479,7 +2481,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
                 f'subcase:\n{subcase}')
             log_error(sol, [144, 200], msg, log)
         else:
-            trim = fem.trims[trim_id]
+            trim = fem.trim.slice_card_by_id(trim_id)
             try:
                 trim.verify_trim(
                     suport, fem.aestats, fem.aeparams,
@@ -2502,7 +2504,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
         assert 'TRIM' not in subcase, subcase
         #allowed_sols = [144, 200]
 
-    if 'FMETHOD' in subcase and 0:
+    if 'FMETHOD' in subcase:
         # FLUTTER
         fmethod_id = subcase.get_parameter('FMETHOD')[0]
         unused_fmethod = fem.flutter.slice_card_by_id(fmethod_id)

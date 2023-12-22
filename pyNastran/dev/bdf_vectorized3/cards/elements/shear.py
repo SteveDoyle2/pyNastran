@@ -99,6 +99,12 @@ class CSHEAR(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def __apply_slice__(self, elem: CSHEAR, i: np.ndarray):
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)
         used_dict['property_id'].append(self.property_id)
@@ -259,6 +265,15 @@ class PSHEAR(Property):
         self.nsm = nsm
         self.f1 = f1
         self.f2 = f2
+
+    def __apply_slice__(self, prop: PSHEAR, i: np.ndarray):
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+        prop.t = self.t[i]
+        prop.nsm = self.nsm[i]
+        prop.f1 = self.f1[i]
+        prop.f2 = self.f2[i]
+        prop.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

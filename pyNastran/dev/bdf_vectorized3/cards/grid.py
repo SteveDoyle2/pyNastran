@@ -1,7 +1,7 @@
 from __future__ import annotations
 from io import StringIO
 from itertools import zip_longest
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Callable, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8 # , print_float_8 # , print_field_8
@@ -18,7 +18,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank,
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check #get_print_card_8_16,
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, sort_duplicates #get_print_card_8_16,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, get_print_card_size, update_field_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
@@ -79,11 +79,11 @@ class XPOINT(VectorizedBaseCard):
             self.model.log.debug(f'parse {self.type}')
 
         ids = []
-        for i, (idsi, comment) in enumerate(self.cards):
+        for icard, (idsi, comment) in enumerate(self.cards):
             idsi2 = expand_thru(idsi)
             assert min(idsi2) > 0, idsi
             ids.extend(idsi2)
-            self.comment[i] = comment
+            self.comment[icard] = comment
 
         self.ids = np.array(ids, dtype=idtype)
         self._sort()
@@ -95,6 +95,10 @@ class XPOINT(VectorizedBaseCard):
         #nvalues = len(self.node_id)
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
+
+    def __apply_slice__(self, xpoint: XPOINT, i: np.ndarray) -> None:
+        xpoint.ids = self.ids[i]
+        xpoint.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         bad_ids = self.ids[self.ids <= 0]
@@ -220,7 +224,7 @@ class GRDSET(BaseCard):
         self.seid = seid
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRDSET card from ``BDF.add_card(...)``
 
@@ -272,6 +276,8 @@ class GRDSET(BaseCard):
 
 class GRID(VectorizedBaseCard):
     _id_name = 'node_id'
+    _show_attributes = ['node_id', 'xyz', 'cp', 'cd', 'ps', 'seid']
+    #_remove_attributes = ['_xyz_cid0']
     def __init__(self, model: BDF):
         super().__init__(model)
         self._is_sorted = False
@@ -403,14 +409,14 @@ class GRID(VectorizedBaseCard):
         seid = np.zeros(ncards, dtype=idtype)
 
         comment = {}
-        for i, card in enumerate(cards):
+        for icard, card in enumerate(cards):
             (nidi, xyzi, cpi, cdi, psi, seidi, commenti) = card
-            node_id[i] = nidi
-            cp[i] = cpi
-            cd[i] = cdi
-            xyz[i, :] = xyzi
-            ps[i] = psi
-            seid[i] = seidi
+            node_id[icard] = nidi
+            cp[icard] = cpi
+            cd[icard] = cdi
+            xyz[icard, :] = xyzi
+            ps[icard] = psi
+            seid[icard] = seidi
             if commenti:
                 #comment[i] = commenti
                 comment[nidi] = commenti
@@ -551,10 +557,9 @@ class GRID(VectorizedBaseCard):
         coord_basic = self.cp.max() == 0 and self.cp.min() == 0 and self.cd.max() == 0 and self.cd.min() == 0
         return coord_basic
 
+    @parse_node_check
     def write(self, size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> str:
-        if len(self.node_id) == 0:
-            return ''
         stringio = StringIO()
         self.write_file(stringio, size=size, is_double=is_double, write_card_header=write_card_header)
         msg = stringio.getvalue()
@@ -568,6 +573,7 @@ class GRID(VectorizedBaseCard):
             self.cd.max(), )
         return max_int
 
+    @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -640,24 +646,6 @@ class GRID(VectorizedBaseCard):
         return _write_grid_large(self, bdf_file, print_scientific_double,
                                  is_double=True, write_card_header=write_card_header)
 
-    def is_equal_by_index(self, inode1, inode2) -> bool:
-        is_equal = True
-        for key in ['node_id', 'cp', 'cd', 'ps', 'seid', 'xyz']:
-            values = getattr(self, key)
-            val1 = values[inode1]
-            val2 = values[inode2]
-            if not np.array_equal(val1, val2):
-                print(f'key={key!r} are not equal')
-                is_equal = False
-                break
-        return is_equal
-        #self.node_id = np.array([], dtype='int32')
-        #self.cp = np.array([], dtype='int32')
-        #self.cd = np.array([], dtype='int32')
-        #self.ps = np.array([], dtype='int32')
-        #self.seid = np.array([], dtype='int32')
-        #self.xyz = np.zeros((0, 3), dtype='float64')
-
     def sort2(self) -> None:  #  pragma: no cover
         r"""
         test_bdfv C:\MSC.Software\msc_nastran_docs_2020\tpl6\avl\ship_hull103.dat --skip_mass --skip_nominal
@@ -670,7 +658,6 @@ class GRID(VectorizedBaseCard):
         isort = np.argsort(ids)
         #iarg_array = np.arange(len(iarg), dtype='int32')
 
-        from collections import Counter
         counter_counts = np.array(list(Counter(ids).values()))
         idup = np.where(counter_counts > 1)[0]
 
@@ -691,102 +678,7 @@ class GRID(VectorizedBaseCard):
 
     def sort(self) -> None:
         """sorts the card by node_id"""
-        self.sort_duplicates()
-
-    def sort_duplicates(self) -> None:
-        """
-        sort_duplicates is sort, but you can have duplicate values
-        the duplicate values will be removed only if the values are unique
-        (so all GRID NID=1 are identical).  Otherwise, there will be a crash
-        """
-        if not hasattr(self, 'is_equal_by_index'):
-            raise NotImplementedError('is_equal_by_index is required for sort_duplicates')
-        # get the sort index
-        #ids = self.node_id
-        ids = getattr(self, self._id_name)
-        iarg = np.argsort(ids)
-
-        # sort the sort index
-        uarg = np.unique(iarg)
-
-        ids_sorted = ids[iarg]
-        uids_sorted = np.unique(ids_sorted)
-
-        if not np.array_equal(uarg, iarg):
-            # we have duplicate/unsorted nodes
-            #
-            #print(iarg.tolist())
-            #print('->  ', ids_sorted.tolist())
-            #print('--> ', uids_sorted.tolist())
-            assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
-            #if len(iarg) == len(uarg):
-                ## if the lengths are the same, we can use dumb sorting
-
-                ## check on dumb sort; no missing entries and no duplicates
-                #assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
-
-            is_duplicate_ids = (len(ids_sorted) != len(uids_sorted))
-            if is_duplicate_ids:
-                # Now that we've sorted the ids, we'll take the delta id with the next id.
-                # We check the two neighoring values when there is a duplicate,
-                # so if they're they same in xyz, cp, cd, etc., the results are the same
-                # we don't need to check unique ids
-                dnode = ids_sorted[1:] - ids_sorted[:-1] # high - low
-                #dnode = np.diff(ids_sorted)
-                #inode = (dnode == 0)
-                inode1 = np.hstack([False, dnode == 0])
-                inode2 = np.hstack([dnode == 0, False])
-                #ids_unique1 = ids_sorted[inode1] # high node
-                #ids_unique2 = ids_sorted[inode2] # low  node
-
-                iarg1 = iarg[inode1]
-                iarg2 = iarg[inode2]
-                if not self.is_equal_by_index(iarg1, iarg2):
-                    node1 = self.slice_card_by_index(iarg1)
-                    node2 = self.slice_card_by_index(iarg2)
-                    dxyz = node1.xyz - node2.xyz
-                    dcp = node1.cp - node2.cp
-                    dcd = node1.cd - node2.cd
-                    msg = (f'arg1={iarg1}\n'
-                           f'arg2={iarg2}\n'
-                           f'node1:\n{node1.write()}'
-                           f'node2:\n{node2.write()}')
-                    if np.abs(dxyz).max() > 0.0:
-                        msg += f'dxyz:\n{dxyz}\n'
-                    if np.abs(dcp).max() > 0:
-                        msg += f'dcp={dcp}\n'
-                    if np.abs(dcd).max() > 0:
-                        msg += f'dcd={dcd}\n'
-                    raise RuntimeError(msg)
-
-                # now that we know all the nodes are unique
-                # (i.e., 2x node_id=1 is OK, but they have the same xyz),
-                # we can slice ids to get the unique ids. Then take
-                # the mapping (idx) and slice the data to make the nodes
-                # unique
-                uids_sorted, idx = np.unique(ids, return_index=True)
-                nunique_nodes = len(uids_sorted)
-                assert nunique_nodes == len(idx)
-
-                self.__apply_slice__(self, idx)
-
-                # check we found the unique ids
-                node_id = getattr(self, self._id_name)
-                assert np.array_equal(node_id, uids_sorted)
-                #assert np.array_equal(self.node_id, np.unique(self.node_id))
-            else:
-                # no duplicate nodes
-                #
-                # we should still sort using iargsort
-                self.__apply_slice__(self, iarg)
-        unid = np.unique(self.node_id)
-
-        if len(self.node_id) != len(unid):
-            # we need to filter nodes
-            msg = f'len(self.node_id)={len(self.node_id)} != len(unid)={len(unid)}'
-            print(msg)
-
-        #self.remove_duplicates(inplace=False)
+        sort_duplicates(self)
         self._is_sorted = True
 
     #def get_global_position_by_node_id(self, nids: np.ndarray) -> np.ndarray:
@@ -815,7 +707,7 @@ class GRID(VectorizedBaseCard):
                 #assert np.array_equal(actual_nids, node_id)
         #return inid
 
-    def xyz_cid0(self):
+    def xyz_cid0(self) -> np.ndarray:
         """not validated"""
         if not self._is_sorted:
             self.sort()
@@ -897,7 +789,7 @@ class POINT(VectorizedBaseCard):
     +-------+-----+----+----+----+----+
 
     """
-    _id_name = 'node_id'
+    _id_name = 'point_id'
     def clear(self) -> None:
         self._is_sorted = False
         self.n = 0
@@ -905,7 +797,6 @@ class POINT(VectorizedBaseCard):
         self.cp = np.array([], dtype='int32')
         self.xyz = np.zeros((0, 3), dtype='float64')
         self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
-
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['point_id'].append(self.node_id)
@@ -926,9 +817,10 @@ class POINT(VectorizedBaseCard):
         self.xyz[is_rtp, 0] *= xyz_scale # rho
 
     def add(self, nid: int, xyz: np.ndarray,
-            cp: int=0, comment: str=''):
+            cp: int=0, comment: str='') -> int:
         self.cards.append((nid, xyz, cp, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -955,6 +847,7 @@ class POINT(VectorizedBaseCard):
         assert len(card) <= 9, f'len(POINT card) = {len(card):d}\ncard={card}'
         self.cards.append((nid, xyz, cp, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -967,12 +860,12 @@ class POINT(VectorizedBaseCard):
         xyz = np.zeros((ncards, 3), dtype='float64')
         _xyz_cid0 = np.full((ncards, 3), np.nan, dtype='float64')
         comment = self.comment
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (nid, xyzi, cpi, commenti) = card
-            point_id[i] = nid
-            cp[i] = cpi
-            xyz[i, :] = xyzi
-            comment[i] = commenti
+            point_id[icard] = nid
+            cp[icard] = cpi
+            xyz[icard, :] = xyzi
+            comment[icard] = commenti
 
         self._save(point_id, cp, xyz, _xyz_cid0, comment)
         self.sort()
@@ -982,7 +875,6 @@ class POINT(VectorizedBaseCard):
         self.cards = []
 
     def _save(self, point_id, cp, xyz, _xyz_cid0, comment):
-        print(cp)
         self.point_id = point_id
         self.cp = cp
         self.xyz = xyz
@@ -1002,9 +894,11 @@ class POINT(VectorizedBaseCard):
         return point
 
     def __apply_slice__(self, point: POINT, i: np.ndarray) -> None:
-        point.n = len(i)
         point.point_id = self.point_id[i]
+        point.cp = self.cp[i]
         point.xyz = self.xyz[i, :]
+        point._xyz_cid0 = self._xyz_cid0[i, :]
+        point.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         #nid = self.model.grid.node_id
@@ -1027,15 +921,15 @@ class POINT(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-    def sort(self) -> None:
-        i = np.argsort(self.point_id)
-        self.__apply_slice__(self, i)
+    #def sort(self) -> None:
+        #i = np.argsort(self.point_id)
+        #self.__apply_slice__(self, i)
 
-    def index(self, node_id: np.ndarray) -> np.ndarray:
-        assert len(self.node_id) > 0, self.node_id
-        node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
-        inid = np.searchsorted(self.node_id, node_id)
-        return inid
+    #def index(self, node_id: np.ndarray) -> np.ndarray:
+        #assert len(self.node_id) > 0, self.node_id
+        #node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
+        #inid = np.searchsorted(self.node_id, node_id)
+        #return inid
 
 
 def _write_grid_large(grid: GRID, bdf_file: TextIOLike,

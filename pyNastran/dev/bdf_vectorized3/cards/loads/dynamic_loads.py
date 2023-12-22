@@ -57,6 +57,7 @@ class DLOAD(VectorizedBaseCard):
     +------+-----+------+------+----+-----+----+----+----+
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -118,33 +119,48 @@ class DLOAD(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
-        nloads = len(self.cards)
-        if nloads == 0:
-            return
-        self.load_id = np.zeros(nloads, dtype='int32')
-        self.scale = np.zeros(nloads, dtype='float64')
-        self.nloads = np.zeros(nloads, dtype='int32')
+        ncards = len(self.cards)
+        load_id = np.zeros(ncards, dtype='int32')
+        scale = np.zeros(ncards, dtype='float64')
+        nloads = np.zeros(ncards, dtype='int32')
 
         all_load_ids = []
         all_scale_factors = []
-        assert nloads > 0, nloads
         for icard, card in enumerate(self.cards):
-            (sid, scale, scale_factors, load_ids, comment) = card
+            (sid, scalei, scale_factors, load_ids, comment) = card
             nloads_actual = len(scale_factors)
 
-            self.load_id[icard] = sid
-            self.scale[icard] = scale
-            self.nloads[icard] = nloads_actual
+            load_id[icard] = sid
+            scale[icard] = scalei
+            nloads[icard] = nloads_actual
             all_load_ids.extend(load_ids)
             all_scale_factors.extend(scale_factors)
-        self.load_ids = np.array(all_load_ids, dtype='int32')
-        self.scale_factors = np.array(all_scale_factors, dtype='float64')
+
+        load_ids = np.array(all_load_ids, dtype='int32')
+        scale_factors = np.array(all_scale_factors, dtype='float64')
+        self._save(load_id, scale, nloads, load_ids, scale_factors)
         self.model.log.debug('load_id=%s scale=%s nloads=%s all_load_ids=%s all_scale_factors=%s' % (
             self.load_id, self.scale, self.nloads, all_load_ids, all_scale_factors))
         self.cards = []
+
+    def _save(self, load_id, scale, nloads, load_ids, scale_factors):
+        assert len(self.load_id) == 0
+        self.load_id = load_id
+        self.scale = scale
+        self.nloads = nloads
+        self.load_ids = load_ids
+        self.scale_factors = scale_factors
+        self.n = len(load_id)
+
+    def __apply_slice__(self, dload: DLOAD, i: np.ndarray) -> None:
+        dload.load_id = self.load_id[i]
+        dload.scale = self.scale[i]
+        dload.nloads = self.nloads[i]
+        dload.load_ids = self.load_ids[i]
+        dload.scale_factors = self.scale_factors[i]
+        dload.n = len(i)
 
     @property
     def iload(self) -> np.ndarray:
@@ -267,6 +283,7 @@ class DAREA(VectorizedBaseCard):
     | DAREA |  3  | 6  | 2  | 8.2 | 15 | 1  | 10.1 |
     +-------+-----+----+----+-----+----+----+------+
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -419,6 +436,7 @@ class TLOAD1(VectorizedBaseCard):
     | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID |
     +--------+-----+----------+-------+------+-----+
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         #: Set identification number
@@ -684,6 +702,7 @@ class TLOAD2(VectorizedBaseCard):
     +--------+-----+----------+-------+------+-----+-----+--------+---------+
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -692,18 +711,6 @@ class TLOAD2(VectorizedBaseCard):
         #load = TLOAD2(self.model)
         #self.__apply_slice__(load, i)
         #return load
-
-    def __apply_slice__(self, load: TLOAD2, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.excite_id = self.excite_id[i]
-
-        load.delay_int = self.delay_int[i]
-        load.delay_float = self.delay_float[i]
-        load.load_type = self.load_type[i]
-        load.tabled_id = self.tabled_id[i]
-        load.us0 = self.us0[i]
-        load.vs0 = self.vs0[i]
 
     def add(self, sid: int, excite_id: int, delay: int=0,
             load_type: str='LOAD',
@@ -871,6 +878,22 @@ class TLOAD2(VectorizedBaseCard):
         self.us0 = us0
         self.vs0 = vs0
 
+    def __apply_slice__(self, load: TLOAD2, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.excite_id = self.excite_id[i]
+
+        load.T = self.T[i]
+        load.frequency = self.frequency[i]
+        load.delay_int = self.delay_int[i]
+        load.delay_float = self.delay_float[i]
+
+        load.phase = self.phase[i]
+        load.b = self.b[i]
+        load.c = self.c[i]
+        load.us0 = self.us0[i]
+        load.vs0 = self.vs0[i]
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         # TODO: self.excite_id
         delay = self.delay_int[self.delay_int > 0]
@@ -943,6 +966,7 @@ class RLOAD1(VectorizedBaseCard):
 
     NX allows DELAY and DPHASE to be floats
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -1184,6 +1208,7 @@ class RLOAD2(VectorizedBaseCard):
 
     NX allows DELAY and DPHASE to be floats
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -1194,8 +1219,8 @@ class RLOAD2(VectorizedBaseCard):
         #return load
 
     def __apply_slice__(self, load: RLOAD2, i: np.ndarray) -> None:
-        self.model.log.info(self.dphase_int)
-        self.model.log.info(i)
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
         assert len(i) > 0
         assert len(self.dphase_int) > 0
         load.n = len(i)
@@ -1496,6 +1521,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
     GRID       NID       X     Y     Z
     GRID       913      50.  0.19  -39.9
     """
+    _id_name = 'lseq_id'
     def clear(self) -> None:
         self.n = 0
         self.lseq_id = np.array([], dtype='int32')
@@ -1526,6 +1552,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
         assert len(card) <= 5, f'len(LSEQ card) = {len(card):d}\ncard={card}'
         self.cards.append((lseq_id, excite_id, load_id, temp_id, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1608,6 +1635,7 @@ class TIC(VectorizedBaseCard):
     entry may not be used for heat transfer analysis.
 
     """
+    _id_name = 'tic_id'
     def clear(self) -> None:
         self.n = 0
         self.tic_id = np.array([], dtype='int32')
@@ -1646,13 +1674,13 @@ class TIC(VectorizedBaseCard):
         u0 = np.zeros(ncards, dtype='float64')
         v0 = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (sid, nid, comp, u0i, v0i, comment) = card
-            tic_id[i] = sid
-            node_id[i] = nid
-            component[i] = comp
-            u0[i] = u0i
-            v0[i] = v0i
+            tic_id[icard] = sid
+            node_id[icard] = nid
+            component[icard] = comp
+            u0[icard] = u0i
+            v0[icard] = v0i
             #self.comment[i] = comment
         self._save(tic_id, node_id, component, u0, v0)
         #self.sort()
@@ -1729,7 +1757,7 @@ class TIC(VectorizedBaseCard):
 
     def __apply_slice__(self, tic: TIC, i: np.ndarray) -> None:
         tic.n = len(i)
-        tic._is_sorted = self._is_sorted
+        #tic._is_sorted = self._is_sorted
         tic.node_id = self.node_id[i]
         tic.tic_id = self.tic_id[i]
         tic.component = self.component[i]
@@ -1771,6 +1799,7 @@ class TF(VectorizedBaseCard):
     +----+-----+-----+------+------+------+--------+----+----+
 
     """
+    _id_name = 'tf_id'
     def clear(self) -> None:
         self.n = 0
         self.tf_id = np.array([], dtype='int32')
@@ -1912,10 +1941,12 @@ class TF(VectorizedBaseCard):
         tf.b = self.b[i, :]
         #asdf
         #tf.nnode = self.nnode[i]
+        #if self.nnode.max() > 0:
         inode = self.inode
-        tf.nodes = vslice_by_idim(i, inode, self.nodes)
-        tf.components = vslice_by_idim(i, inode, self.components)
+        tf.nodes = hslice_by_idim(i, inode, self.nodes)  # was vslice
+        tf.components = hslice_by_idim(i, inode, self.components)  # was vslice
         tf.a = vslice_by_idim(i, inode, self.a)
+        #tf.a = self.a[i, :]
         tf.nnode = self.nnode[i]
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
@@ -2013,6 +2044,7 @@ class DELAY(VectorizedBaseCard):
     #def __init__(self, model: BDF):
         #super().__init__(model)
         #self._is_sorted = False
+    _id_name = 'delay_id'
     def clear(self) -> None:
         self.n = 0
         self.delay_id = np.array([], dtype='int32')
@@ -2096,12 +2128,12 @@ class DELAY(VectorizedBaseCard):
         component = np.zeros(ncards, dtype='int32')
         delay = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (delay_idi, nodei, componenti, delayi, comment) = card
-            delay_id[i] = delay_idi
-            node_id[i] = nodei
-            component[i] = componenti
-            delay[i] = delayi
+            delay_id[icard] = delay_idi
+            node_id[icard] = nodei
+            component[icard] = componenti
+            delay[icard] = delayi
             #self.comment[i] = comment
         self._save(delay_id, node_id, component, delay)
         #self.sort()
@@ -2192,6 +2224,7 @@ class DPHASE(VectorizedBaseCard):
         #super().__init__(model)
         #self._is_sorted = False
 
+    _id_name = 'dphase_id'
     def clear(self) -> None:
         self.n = 0
         self.dphase_id = np.array([], dtype='int32')
@@ -2291,12 +2324,12 @@ class DPHASE(VectorizedBaseCard):
         component = np.zeros(ncards, dtype='int32')
         phase_lead = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (dphase_idi, nodei, componenti, phase_leadi, comment) = card
-            dphase_id[i] = dphase_idi
-            node_id[i] = nodei
-            component[i] = componenti
-            phase_lead[i] = phase_leadi
+            dphase_id[icard] = dphase_idi
+            node_id[icard] = nodei
+            component[icard] = componenti
+            phase_lead[icard] = phase_leadi
             #self.comment[i] = comment
         self._save(dphase_id, node_id, component, phase_lead)
         #self.sort()
@@ -2389,6 +2422,7 @@ class QVECT(VectorizedBaseCard):
     +-------+------+------+-------+-----+---------+---------+---------+---------+
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -2600,6 +2634,7 @@ class ACSRCE(VectorizedBaseCard):
       Source Strength = {A} * 1/(2πf)  * \sqrt( 8πC P(f) / ρ) ^ (ei(θ + 2πfτ))
 
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -2808,8 +2843,7 @@ class ACSRCE(VectorizedBaseCard):
         dphases = array_int_float(self.dphase_int, self.dphase_float, size=size, is_double=False)
         powers = array_int_float(self.power_int, self.power_float, size=size, is_double=False)
         bs = array_float(self.b, size=size, is_double=False)
-        rhos = array_float(self.rho, size=size, is_double=False)
-        for sid, excite_id, delay, dphase, power, b, rho in zip_longest(load_ids, excite_ids,
+        rhos = array_float(self.rho, size=size, is_double=False)        for sid, excite_id, delay, dphase, power, b, rho in zip_longest(load_ids, excite_ids,
                                                                         delays, dphases, powers,
                                                                         bs, rhos):
             list_fields = ['ACSRCE', sid, excite_id, delay, dphase,
@@ -2826,7 +2860,7 @@ class RANDPS(VectorizedBaseCard):
 
     .. math:: S_{jk}(F) = (X+iY)G(F)
     """
-
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')

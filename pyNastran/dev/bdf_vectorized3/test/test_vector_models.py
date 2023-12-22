@@ -290,7 +290,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
-    def _test_sol200_2(self):
+    def test_sol200_2(self):
         bdf_filename = MODEL_PATH / 'sol200' / 'model_200.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
@@ -298,15 +298,15 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'transfer_function' / 'actuator_tf_modeling.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-    def _test_aero_1(self):
+    def test_aero_1(self):
         bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        if IS_PYTABLES:
+        if IS_PYTABLES and 0:
             h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
             args = ['test_bdf', str(h5_filename), '--quiet']
             test_bdf(args, show_args=False)
-    def _test_aero_2(self):
+    def test_aero_2(self):
         bdf_filename = MODEL_PATH / 'aero' / 'bah_plane' / 'bah_plane.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
@@ -320,7 +320,7 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         test_bdf(args, show_args=False)
 
-    def _test_overflow(self):
+    def test_overflow(self):
         # overflow
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
         args = ['test_bdf', str(bdf_filename), '--skip_nominal']

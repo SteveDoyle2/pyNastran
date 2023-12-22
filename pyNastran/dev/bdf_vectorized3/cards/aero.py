@@ -3627,7 +3627,7 @@ class PAERO5(PAERO):
             property_id[icard] = pid
 
             #ndoci = len(docs)
-            caoci.append(caocii)
+            caoci.extend(caocii)
             ncaoci[icard] = len(caocii)
             #ndoc[icard] = ndoci
 
@@ -3659,6 +3659,10 @@ class PAERO5(PAERO):
         self.ltaus = ltaus
         self.n = len(property_id)
 
+    @property
+    def icaoci(self) -> np.ndarray:
+        return make_idim(self.n, self.ncaoci)
+
     def __apply_slice__(self, prop: PAERO5, i: np.ndarray) -> None:
         prop.n = len(i)
         prop.property_id = self.property_id[i]
@@ -3667,19 +3671,14 @@ class PAERO5(PAERO):
         #prop.gapocs = self.gapocs[i]
 
         icaoci = self.icaoci
-        prop.docs = hslice_by_idim(i, icaoci, self.docs)
-        prop.caocs = hslice_by_idim(i, icaoci, self.caocs)
-        prop.gapocs = hslice_by_idim(i, icaoci, self.gapocs)
-        prop.ndoc = self.ndoc[i]
+        prop.caocs = hslice_by_idim(i, icaoci, self.caoci)
+        prop.ncaoci = self.ncaoci[i]
 
-        prop.cla = self.cla[i]
-        prop.lcla = self.lcla[i]
-        prop.circ = self.circ[i]
-        prop.lcirc = self.lcirc[i]
+        prop.lalpha = self.lalpha[i]
+        prop.nalpha = self.nalpha[i]
 
-    @property
-    def icaoci(self) -> np.ndarray:
-        return make_idim(self.n, self.ncaoci)
+        prop.lxis = self.lxis[i]
+        prop.nxis = self.nxis[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
@@ -3712,7 +3711,7 @@ class PAERO5(PAERO):
         ntaus_ = array_str(self.ntaus, size=size)
         ltaus_ = array_str(self.ltaus, size=size)
 
-        for pid, nalpha, lalpha, nxis, lxis, ntau, ltau, (caoci0, caoci1) in zip(
+        for pid, nalpha, lalpha, nxis, lxis, ntau, ltau, (caoci0, caoci1) in zip_longest(
                 paero_ids, nalpha_, lalpha_,
                 nxis_, lxis_,
                 ntaus_, ltaus_, self.icaoci):
@@ -4072,7 +4071,9 @@ class AEFACT(VectorizedBaseCard):
           should they be normalized if they are not?
 
     """
+    _skip_equality_check = True  # assume unequal
     _id_name = 'aefact_id'
+    _show_attributes = ['aefact_id', 'nfractions', 'fractions']
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.aefact_id = np.array([], dtype='int32')
@@ -4139,6 +4140,7 @@ class AEFACT(VectorizedBaseCard):
             all_fractions.extend(fractions)
         fractions = np.array(all_fractions, dtype='float64')
         self._save(aefact_id, nfractions, fractions)
+        self.sort()
         self.cards = []
 
     def _save(self, aefact_id, nfractions, fractions) -> None:
@@ -4149,6 +4151,7 @@ class AEFACT(VectorizedBaseCard):
         self.aefact_id = aefact_id
         self.nfractions = nfractions
         self.fractions = fractions
+        self.n = len(aefact_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -4158,12 +4161,12 @@ class AEFACT(VectorizedBaseCard):
         return make_idim(self.n, self.nfractions)
 
     def __apply_slice__(self, prop: AEFACT, i: np.ndarray) -> None:
-        prop.n = len(i)
         prop.aefact_id = self.aefact_id[i]
 
         ifraction = self.ifraction
         prop.fractions = hslice_by_idim(i, ifraction, self.fractions)
         prop.nfractions = self.nfractions[i]
+        prop.n = len(i)
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4202,6 +4205,7 @@ class FLFACT(VectorizedBaseCard):
     +--------+-----+-------+------+-------+----+--------+
     """
     _id_name = 'flfact_id'
+    _skip_equality_check = True  # assume unequal
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.flfact_id = np.array([], dtype='int32')
@@ -5607,6 +5611,7 @@ class GUST(VectorizedBaseCard):
     | GUST | 133 |   61  | 1.0 | 0.  | 1.+4 |
     +------+-----+-------+-----+-----+------+
     """
+    _id_name = 'gust_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.gust_id = np.array([], dtype='int32')
@@ -5702,6 +5707,13 @@ class GUST(VectorizedBaseCard):
         self.x0 = x0
         self.V = V
 
+    def __apply_slice__(self, gust: GUST, i: np.ndarray) -> None:
+        gust.gust_id = self.gust_id[i]
+        gust.dload_id = self.dload_id[i]
+        gust.wg = self.wg[i]
+        gust.x0 = self.x0[i]
+        gust.n = len(i)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
                           #msg=f'no materials for {self.type}')
@@ -5730,6 +5742,7 @@ class GUST(VectorizedBaseCard):
         return
 
 
+FLUTTER_METHODS = {'K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS'}
 class FLUTTER(VectorizedBaseCard):
     """
     Defines data needed to perform flutter analysis.
@@ -5742,6 +5755,7 @@ class FLUTTER(VectorizedBaseCard):
     | FLUTTER | 19  |   K    | 119  | 219  | 319   |   S   |      5      | 1.-4 |
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     """
+    _id_name = 'flutter_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.flutter_id = np.array([], dtype='int32')
@@ -5757,7 +5771,7 @@ class FLUTTER(VectorizedBaseCard):
     #def __len__(self) -> int:
         #return len(self.name)
 
-    def add(self, sid: int, method: str,
+    def add(self, flutter_id: int, method: str,
             density: int, mach: int, reduced_freq_velocity: int,
             imethod: str='L',
             nvalue=None, omax=None,
@@ -5807,10 +5821,13 @@ class FLUTTER(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((sid, method,
+        #(flutter_idi, methodi,
+         #density_flfact_idi, mach_flfact_idi, rfreq_flfact_idi,
+         #nvaluei, omaxi, epsiloni, comment) = card
+        assert method in FLUTTER_METHODS, f'method={method} allowed={FLUTTER_METHODS}'
+        self.cards.append((flutter_id, method, imethod,
                            density, mach, reduced_freq_velocity,
-                           imethod, nvalue, omax,
-                           epsilon, comment))
+                           nvalue, omax, epsilon, comment))
         self.n += 1
         return self.n - 1
 
@@ -5844,16 +5861,16 @@ class FLUTTER(VectorizedBaseCard):
             nvalue = integer_or_blank(card, 7, 'nvalue')
         elif method == 'PK':
             nvalue = integer_or_blank(card, 7, 'nvalue')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('FLUTTER method=%r' % method)
 
-        assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
+        assert method in FLUTTER_METHODS, f'method={method} allowed={FLUTTER_METHODS}'
         epsilon = double_or_blank(card, 8, 'epsilon', default=1e-3)  # not defined in QRG
         assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         #return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        #imethod=imethod, nvalue=nvalue, omax=omax,
                        #epsilon=epsilon, comment=comment)
-        self.cards.append((flutter_id, method,
+        self.cards.append((flutter_id, method, imethod,
                            density_id, mach_id, reduced_freq_velocity_id,
                            nvalue, omax, epsilon, comment))
         self.n += 1
@@ -5873,7 +5890,7 @@ class FLUTTER(VectorizedBaseCard):
         epsilon = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (flutter_idi, methodi,
+            (flutter_idi, methodi, imethodi,
              density_flfact_idi, mach_flfact_idi, rfreq_flfact_idi,
              nvaluei, omaxi, epsiloni, comment) = card
             if nvaluei is None:
@@ -5882,37 +5899,53 @@ class FLUTTER(VectorizedBaseCard):
                 omaxi = 0
             flutter_id[icard] = flutter_idi
             method[icard] = methodi
+            imethod[icard] = imethodi
             density_flfact_id[icard] = density_flfact_idi
             mach_flfact_id[icard] = mach_flfact_idi
             rfreq_flfact_id[icard] = rfreq_flfact_idi
             nvalue[icard] = nvaluei
             omax[icard] = omaxi
             epsilon[icard] = epsiloni
-        self._save(flutter_id, method,
+        self._save(flutter_id, method, imethod,
                    density_flfact_id, mach_flfact_id, rfreq_flfact_id,
-                   imethod, nvalue, omax, epsilon)
-        #self.sort()
+                   nvalue, omax, epsilon)
+        self.sort()
         self.cards = []
 
-    def _save(self, flutter_id, method,
+    def _save(self, flutter_id, method, imethod,
               density_flfact_id, mach_flfact_id, rfreq_flfact_id,
-              imethod, nvalue, omax, epsilon):
+              nvalue, omax, epsilon):
         if len(self.flutter_id):
-            asdf
-            #gust_id = np.hstack([self.gust_id, gust_id])
-            #dload_id = np.hstack([self.dload_id, dload_id])
-            #wg = np.hstack([self.wg, wg])
-            #x0 = np.hstack([self.x0, x0])
-            #V = np.hstack([self.V, V])
+            flutter_id = np.hstack([self.flutter_id, flutter_id])
+            method = np.hstack([self.method, method])
+            imethod = np.hstack([self.imethod, imethod])
+            density_flfact_id = np.hstack([self.density_flfact_id, density_flfact_id])
+            mach_flfact_id = np.hstack([self.mach_flfact_id, mach_flfact_id])
+            rfreq_flfact_id = np.hstack([self.rfreq_flfact_id, rfreq_flfact_id])
+            nvalue = np.hstack([self.nvalue, nvalue])
+            omax = np.hstack([self.omax, omax])
+            epsilon = np.hstack([self.epsilon, epsilon])
         self.flutter_id = flutter_id
         self.method = method
+        self.imethod = imethod
         self.density_flfact_id = density_flfact_id
         self.mach_flfact_id = mach_flfact_id
         self.rfreq_flfact_id = rfreq_flfact_id
-        self.imethod = imethod
         self.nvalue = nvalue
         self.omax = omax
         self.epsilon = epsilon
+
+    def __apply_slice__(self, flutter: FLUTTER, i: np.ndarray) -> None:
+        flutter.flutter_id = self.flutter_id[i]
+        flutter.method = self.method[i]
+        flutter.density_flfact_id = self.density_flfact_id[i]
+        flutter.mach_flfact_id = self.mach_flfact_id[i]
+        flutter.rfreq_flfact_id = self.rfreq_flfact_id[i]
+        flutter.imethod = self.imethod[i]
+        flutter.nvalue = self.nvalue[i]
+        flutter.omax = self.omax[i]
+        flutter.epsilon = self.epsilon[i]
+        flutter.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -5983,6 +6016,7 @@ class AESTAT(VectorizedBaseCard):
     | AESTAT | 5001 | ANGLEA |
     +--------+------+--------+
     """
+    _id_name = 'aestat_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.aestat_id = np.array([], dtype='int32')
@@ -6048,6 +6082,11 @@ class AESTAT(VectorizedBaseCard):
             label = np.hstack([self.label, label])
         self.aestat_id = aestat_id
         self.label = label
+
+    def __apply_slice__(self, aestat: AESTAT, i: np.ndarray) -> None:
+        aestat.aestat_id = self.aestat_id[i]
+        aestat.label = self.label[i]
+        aestat.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -6762,7 +6801,7 @@ class CSSCHD(VectorizedBaseCard):
 
         #set1_ids = np.unique(set1_ids)
         geom_check(
-            missing,
+            self, missing,
             #coord=(model.coord.coord_id, ucoords),
             #aelist=(model.aelist.aelist_id, aelist_ids),
             #caero=(model.caero1.caero_id, caero_ids),
@@ -6983,7 +7022,7 @@ class TRIM(VectorizedBaseCard):
         load.trim_id = self.trim_id[i]
         load.mach = self.mach[i]
         load.q = self.q[i]
-        load.lmach = self.lmach[i]
+        load.aeqr = self.aeqr[i]
 
         ilabel = self.ilabel
         load.label = hslice_by_idim(i, ilabel, self.label)
@@ -7255,7 +7294,7 @@ class TRIM(VectorizedBaseCard):
 
         trim_ids = array_str(self.trim_id, size=size)
 
-        for trim_id, mach, q, aeqr, (ilabel0, ilabel1) in zip(
+        for trim_id, mach, q, aeqr, (ilabel0, ilabel1) in zip_longest(
                 trim_ids, self.mach, self.q, self.aeqr, self.ilabel):
 
             labels = self.label[ilabel0:ilabel1]

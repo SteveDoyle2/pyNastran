@@ -134,6 +134,7 @@ class SPC(VectorizedBaseCard):
         #inid1 = inid0 + nnodes
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -332,7 +333,7 @@ class SPC1(VectorizedBaseCard):
         ncards_removed = remove_unused_duplicate(self, spc_ids, self.spc_id, 'spc_id')
         return ncards_removed
 
-    def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> None:
+    def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> int:
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0
@@ -353,6 +354,7 @@ class SPC1(VectorizedBaseCard):
             nodes = [nodes]
         self.cards.append((spc_id, components, nodes, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         spc_id = integer(card, 1, 'conid')
@@ -365,6 +367,7 @@ class SPC1(VectorizedBaseCard):
         assert 'THRU' not in nodes, nodes
         self.cards.append((spc_id, components, nodes, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -541,6 +544,16 @@ class MPC(VectorizedBaseCard):
         self.node_id = node_id
         self.components = components
         self.coefficients = coefficients
+
+    def __apply_slice__(self, mpc: MPC, i: np.ndarray):
+        """this kind of doesn't make sense..."""
+        mpc.mpc_id = self.mpc_id[i]
+        impc = self.idim
+        mpc.node_id = hslice_by_idim(i, impc, self.node_id)
+        mpc.components = hslice_by_idim(i, impc, self.components)
+        mpc.coefficients = hslice_by_idim(i, impc, self.coefficients)
+        mpc.nnode = self.nnode[i]
+        mpc.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
@@ -842,6 +855,7 @@ class MPCADD(ADD):
 
 
 class CommonSet(VectorizedBaseCard):
+    _id_name = 'node_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.node_id = np.array([], dtype='int32')
@@ -949,7 +963,7 @@ class CommonSet(VectorizedBaseCard):
         node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti

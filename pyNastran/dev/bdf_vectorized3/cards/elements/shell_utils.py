@@ -394,7 +394,8 @@ def shell_thickness(model: BDF,
     if np.any(inan):
         msg = f'Thickness has nan\nt={thickness}'
         log.error(msg)
-        raise RuntimeError(msg)
+        if not model.allow_nan_thickness:
+            raise RuntimeError(msg)
     return thickness
 
 def shell_total_thickness(property_id: np.ndarray,

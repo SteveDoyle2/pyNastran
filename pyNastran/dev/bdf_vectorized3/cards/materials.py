@@ -38,6 +38,10 @@ class MAT1(Material):
     +------+-----+-----+-----+-------+-----+------+------+-----+
 
     """
+    _show_attributes = [
+        'material_id', 'E', 'G', 'nu', 'rho', 'alpha', 'tref',
+        'ge', 'St', 'Sc', 'Ss', 'mcsid',
+    ]
     @Material.clear_check
     def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
@@ -185,22 +189,22 @@ class MAT1(Material):
         Sc = np.zeros(ncards, dtype='float64')
         mcsid = np.zeros(ncards, dtype='int32')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, Ei, Gi, nui, rhoi, alphai, trefi, gei,
              Sti, Sci, Ssi,
              mcsidi, comment) = card
-            material_id[i] = mid
-            E[i] = Ei
-            G[i] = Gi
-            nu[i] = nui
-            rho[i] = rhoi
-            alpha[i] = alphai
-            tref[i] = trefi
-            ge[i] = gei
-            Ss[i] = Ssi
-            St[i] = Sti
-            Sc[i] = Sci
-            mcsid[i] = mcsidi
+            material_id[icard] = mid
+            E[icard] = Ei
+            G[icard] = Gi
+            nu[icard] = nui
+            rho[icard] = rhoi
+            alpha[icard] = alphai
+            tref[icard] = trefi
+            ge[icard] = gei
+            Ss[icard] = Ssi
+            St[icard] = Sti
+            Sc[icard] = Sci
+            mcsid[icard] = mcsidi
         self._save(material_id, E, G, nu, rho, alpha, tref, ge,
                    Ss, St, Sc, mcsid)
         self.sort()
@@ -446,27 +450,27 @@ class MAT2(Material):
         mcsid = np.zeros(ncards, dtype='int32')
         ge_matrix = np.full((ncards, 6), np.nan, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, G11i, G12i, G13i, G22i, G23i, G33i, rhoi,
              alphas, trefi, gei, Sti, Sci, Ssi, mcsidi, ge_matrixi, comment) = card
 
-            material_id[i] = mid
-            G11[i] = G11i
-            G12[i] = G12i
-            G13[i] = G13i
-            G22[i] = G22i
-            G23[i] = G23i
-            G33[i] = G33i
+            material_id[icard] = mid
+            G11[icard] = G11i
+            G12[icard] = G12i
+            G13[icard] = G13i
+            G22[icard] = G22i
+            G23[icard] = G23i
+            G33[icard] = G33i
 
-            rho[i] = rhoi
-            alpha[i] = alphas
-            tref[i] = trefi
-            ge[i] = gei
-            Ss[i] = Ssi
-            St[i] = Sti
-            Sc[i] = Sci
-            mcsid[i] = mcsidi
-            ge_matrix[i] = ge_matrixi
+            rho[icard] = rhoi
+            alpha[icard] = alphas
+            tref[icard] = trefi
+            ge[icard] = gei
+            Ss[icard] = Ssi
+            St[icard] = Sti
+            Sc[icard] = Sci
+            mcsid[icard] = mcsidi
+            ge_matrix[icard] = ge_matrixi
         self._save(material_id, G11, G12, G13, G22, G23, G33,
                    rho, alpha, tref, ge, Ss, St, Sc,
                    mcsid, ge_matrix)
@@ -748,25 +752,25 @@ class MAT3(Material):
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rhoi, gzxi,
              axi, athi, azi, trefi, gei, comment) = card
-            material_id[i] = mid
-            ex[i] = exi
-            eth[i] = ethi
-            ez[i] = ezi
-            nuxth[i] = nuxthi
-            nuthz[i] = nuthzi
-            nuzx[i] = nuzxi
-            gzx[i] = gzxi
+            material_id[icard] = mid
+            ex[icard] = exi
+            eth[icard] = ethi
+            ez[icard] = ezi
+            nuxth[icard] = nuxthi
+            nuthz[icard] = nuthzi
+            nuzx[icard] = nuzxi
+            gzx[icard] = gzxi
 
-            ax[i] = axi
-            ath[i] = athi
-            az[i] = azi
+            ax[icard] = axi
+            ath[icard] = athi
+            az[icard] = azi
 
-            rho[i] = rhoi
-            tref[i] = trefi
-            ge[i] = gei
+            rho[icard] = rhoi
+            tref[icard] = trefi
+            ge[icard] = gei
         self._save(material_id, ex, eth, ez,
                    nuxth, nuthz, nuzx, gzx,
                    ax, ath, az, rho, tref, ge)
@@ -919,20 +923,20 @@ class MAT4(Material):
         tdelta = np.zeros(ncards, dtype='float64')
         qlat = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, ki, cpi, rhoi, Hi, mui, hgeni, ref_enthalpyi,
              tchi, tdeltai, qlati, comment) = card
-            material_id[i] = mid
-            k[i] = ki
-            cp[i] = cpi
-            rho[i] = rhoi
-            H[i] = Hi
-            mu[i] = mui
-            hgen[i] = hgeni
-            ref_enthalpy[i] = ref_enthalpyi
-            tch[i] = tchi
-            tdelta[i] = tdeltai
-            qlat[i] = qlati
+            material_id[icard] = mid
+            k[icard] = ki
+            cp[icard] = cpi
+            rho[icard] = rhoi
+            H[icard] = Hi
+            mu[icard] = mui
+            hgen[icard] = hgeni
+            ref_enthalpy[icard] = ref_enthalpyi
+            tch[icard] = tchi
+            tdelta[icard] = tdeltai
+            qlat[icard] = qlati
         self._save(material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
                    tch, tdelta, qlat)
         self.sort()
@@ -1057,18 +1061,18 @@ class MAT5(Material):
         cp = np.zeros(ncards, dtype='float64')
         hgen = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, kxxi, kxyi, kxzi, kyyi, kyzi, kzzi, cpi, rhoi, hgeni, comment) = card
-            material_id[i] = mid
-            kxx[i] = kxxi
-            kxy[i] = kxyi
-            kxz[i] = kxzi
-            kyy[i] = kyyi
-            kyz[i] = kyzi
-            kzz[i] = kzzi
-            cp[i] = cpi
-            rho[i] = rhoi
-            hgen[i] = hgeni
+            material_id[icard] = mid
+            kxx[icard] = kxxi
+            kxy[icard] = kxyi
+            kxz[icard] = kxzi
+            kyy[icard] = kyyi
+            kyz[icard] = kyzi
+            kzz[icard] = kzzi
+            cp[icard] = cpi
+            rho[icard] = rhoi
+            hgen[icard] = hgeni
         self._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen)
         self.sort()
         self.cards = []
@@ -1412,6 +1416,12 @@ class MAT8(Material):
         if len(self.material_id) != 0:
             raise NotImplementedError()
         nmaterials = len(material_id)
+
+        if hf is None:
+            hf = np.full((nmaterials, 6), np.nan, dtype='float64')
+            ht = np.full((nmaterials, 9), np.nan, dtype='float64')
+            hfb = np.full((nmaterials, 9), np.nan, dtype='float64')
+
         self.material_id = material_id
         self.E11 = E11
         self.E22 = E22
@@ -1479,6 +1489,9 @@ class MAT8(Material):
         self.Yt *= stress_scale
         self.Yc *= stress_scale
         self.S *= stress_scale
+        #self.hf = hf
+        #self.ht = ht
+        #self.hfb = hfb
 
     @property
     def a1(self) -> np.ndarray:
@@ -2249,6 +2262,7 @@ class MAT11(Material):
         self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                            rho, a1, a2, a3, tref, ge, comment))
         self.n += 1
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -3066,7 +3080,7 @@ class MATHP(Material):
         tab4 = np.zeros(ncards, dtype='int32')
         tabd = np.zeros(ncards, dtype='int32')
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, a10i, a01i, d1i, rhoi, avi, trefi, gei, nai, ndi, a20i, a11i,
              a02i, d2i, a30i, a21i, a12i, a03i, d3i, a40i,
              a31i, a22i, a13i, a04i, d4i, a50i, a41i,
@@ -3078,43 +3092,43 @@ class MATHP(Material):
             tab4i = tab4i if tab4i is not None else 0
             tabdi = tabdi if tabdi is not None else 0
 
-            material_id[i] = mid
-            a10[i] = a10i
-            a01[i] = a01i
-            d1[i] = d1i
-            av[i] = avi
-            na[i] = nai
-            nd[i] = ndi
-            a20[i] = a20i
-            a11[i] = a11i
-            a02[i] = a02i
-            d2[i] = d2i
-            a30[i] = a30i
-            a21[i] = a21i
-            a12[i] = a12i
-            a03[i] = a03i
-            d3[i] = d3i
-            a40[i] = a40i
-            a31[i] = a31i
-            a22[i] = a22i
-            a13[i] = a13i
-            a04[i] = a04i
-            d4[i] = d4i
-            a50[i] = a50i
-            a41[i] = a41i
-            a32[i] = a32i
-            a23[i] = a23i
-            a14[i] = a14i
-            a05[i] = a05i
-            d5[i] = d5i
-            rho[i] = rhoi
-            tref[i] = trefi
-            ge[i] = gei
-            tab1[i] = tab1i
-            tab2[i] = tab2i
-            tab3[i] = tab3i
-            tab4[i] = tab4i
-            tabd[i] = tabdi
+            material_id[icard] = mid
+            a10[icard] = a10i
+            a01[icard] = a01i
+            d1[icard] = d1i
+            av[icard] = avi
+            na[icard] = nai
+            nd[icard] = ndi
+            a20[icard] = a20i
+            a11[icard] = a11i
+            a02[icard] = a02i
+            d2[icard] = d2i
+            a30[icard] = a30i
+            a21[icard] = a21i
+            a12[icard] = a12i
+            a03[icard] = a03i
+            d3[icard] = d3i
+            a40[icard] = a40i
+            a31[icard] = a31i
+            a22[icard] = a22i
+            a13[icard] = a13i
+            a04[icard] = a04i
+            d4[icard] = d4i
+            a50[icard] = a50i
+            a41[icard] = a41i
+            a32[icard] = a32i
+            a23[icard] = a23i
+            a14[icard] = a14i
+            a05[icard] = a05i
+            d5[icard] = d5i
+            rho[icard] = rhoi
+            tref[icard] = trefi
+            ge[icard] = gei
+            tab1[icard] = tab1i
+            tab2[icard] = tab2i
+            tab3[icard] = tab3i
+            tab4[icard] = tab4i
+            tabd[icard] = tabdi
         self._save(material_id, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
                    a02, d2, a30, a21, a12, a03, d3, a40,
                    a31, a22, a13, a04, d4, a50, a41,

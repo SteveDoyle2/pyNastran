@@ -7,6 +7,99 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 RUN_CONTACT = False
 
 class TestContact(unittest.TestCase):
+    def test_bcbody_01(self):
+        model = BDF(debug=False)
+        cgid = 2
+        nent = 3
+        card_lines = [
+            'BCBODY,1,2d,deform,0',
+            f'        '
+            f'RIGID   '
+            f'{cgid:8d}'
+            f'{nent:8d}'
+            ' rigid_body_name'
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_02(self):
+        model = BDF(debug=False)
+        card_lines = ['BCBODY, 111, , DEFORM, 102, 0, .04']
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_03(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'BCBODY, 112, , RIGID, , 0, .05',
+            ' , 0, 0.0, 0., 0., 0., 0., 0., -10.0',
+            ' ,NURBS2,901',
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_04(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'BCBODY   1       3D      DEFORM  6       0               -1',
+            '         ADVANCE         11011',
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_05(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'BCBODY   4       3D      RIGID           0               1       0',
+            '         0       0.      0.      0.      0.      0.     2.       0.',
+            '        RIGID   0       1       CONTACT_BOTTOM',
+            '         NURBS   -10     13      4       4       50      50      8',
+            '                -6.     -7.1    -5.5    -6.     -7.06955-5.5',
+            '                -5.99954-7.0391 -5.5    -5.99861-7.00867-5.5',
+            '                -5.94871-5.37038-5.5    -4.59318-4.07539-5.5',
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_06(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'BCBODY*                3              3D           RIGID               0',
+            '*                      0  0.00000000E+00               0               1',
+            '*                      0  0.00000000E+00  0.00000000E+00  0.00000000E+00',
+            '*         1.00000000E+00',
+            '*               RIGID                  1               1sphere',
+            '*',
+            '*               APPROV',
+            '*                         0.00000000E+00  0.00000000E+00 -1.00000000E-02',
+            '*                NURBS                -5               9               3',
+            '*                      3              24              48               0',
+            '*                         0.00000000E+00 -1.00000000E-02  1.20000000E-02',
+            '*         1.00000000E-02 -1.00000000E-02  1.20000000E-02',
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
+    def test_bcbody_07(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'BCBODY       101      3D   RIGID                               1      -1+',
+            '+                                                                       +',
+            '+           GROW                                       1       1        +',
+            '+          RIGID               1               RIGID_CYL                +',
+            '        NURBS         -7       2       4       2      50      50       6',
+            '                    -1.2     0.0   -0.92    -1.2   -1.84   -0.92',
+        ]
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
     def test_params(self):
         model = BDF(debug=False)
         key_values = {

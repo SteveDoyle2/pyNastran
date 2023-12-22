@@ -451,13 +451,13 @@ class VIEW3D(BaseCard):
 
         """
         icavity = integer(card, 1, 'icavity')
-        gitb = integer_or_blank(card, 2, 'gitb', 4)
-        gips = integer_or_blank(card, 3, 'gips', 4)
-        cier = integer_or_blank(card, 4, 'cier', 4)
-        error_tol = double_or_blank(card, 5, 'error_tol', 0.1)
-        zero_tol = double_or_blank(card, 6, 'zero_tol', 1e-10)
-        warp_tol = double_or_blank(card, 7, 'warp_tol', 0.01)
-        rad_check = integer_or_blank(card, 8, 'rad_check', 3)
+        gitb = integer_or_blank(card, 2, 'gitb', default=4)
+        gips = integer_or_blank(card, 3, 'gips', default=4)
+        cier = integer_or_blank(card, 4, 'cier', default=4)
+        error_tol = double_or_blank(card, 5, 'error_tol', default=0.1)
+        zero_tol = double_or_blank(card, 6, 'zero_tol', default=1e-10)
+        warp_tol = double_or_blank(card, 7, 'warp_tol', default=0.01)
+        rad_check = integer_or_blank(card, 8, 'rad_check', default=3)
         return VIEW3D(icavity, gitb=gitb, gips=gips, cier=cier,
                       error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
                       rad_check=rad_check, comment=comment)

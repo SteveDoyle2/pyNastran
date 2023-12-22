@@ -30,6 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class RigidElement(VectorizedBaseCard):
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.n = 0
         self.element_id = np.array([])
@@ -177,6 +178,15 @@ class RBAR(RigidElement):
         self.tref = tref
         self.n = len(element_id)
 
+    def __apply_slice__(self, element: RBAR, i: np.ndarray):
+        element.element_id = self.element_id[i]
+        element.nodes = self.nodes[i, :]
+        element.independent_dof = self.independent_dof[i]
+        element.dependent_dof = self.dependent_dof[i]
+        element.alpha = self.alpha[i]
+        element.tref = self.tref[i]
+        element.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.nodes)
 
@@ -300,13 +310,21 @@ class RROD(RigidElement):
         nelements = len(element_id)
         assert element_id.min() > 0, element_id
         assert nodes.min() > 0, nodes
-        self.nodes = nodes
-        self.element_id = element_id
-        self.dependent_dof = cm
         if alpha is None:
             alpha = np.zeros(nelements, dtype='float64')
+
+        self.element_id = element_id
+        self.nodes = nodes
+        self.dependent_dof = cm
         self.alpha = alpha
         self.n = nelements
+
+    def __apply_slice__(self, element: RROD, i: np.ndarray):
+        element.element_id = self.element_id[i]
+        element.nodes = self.nodes[i, :]
+        element.dependent_dof = self.dependent_dof[i]
+        element.alpha = self.alpha[i]
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.nodes)
@@ -426,13 +444,21 @@ class RBAR1(RigidElement):
         nelements = len(element_id)
         assert element_id.min() > 0, element_id
         assert nodes.min() > 0, nodes
-        self.nodes = nodes
-        self.element_id = element_id
-        self.dependent_dof = cb
         if alpha is None:
             alpha = np.zeros(nelements, dtype='float64')
+
+        self.element_id = element_id
+        self.nodes = nodes
+        self.dependent_dof = cb
         self.alpha = alpha
         self.n = nelements
+
+    def __apply_slice__(self, element: RBAR1, i: np.ndarray):
+        element.element_id = self.element_id[i]
+        element.nodes = self.nodes[i, :]
+        element.dependent_dof = self.dependent_dof[i]
+        element.alpha = self.alpha[i]
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.nodes)
@@ -614,6 +640,22 @@ class RBE1(RigidElement):
         self.tref = tref
         self.alpha = alpha
 
+    def __apply_slice__(self, element: RBAR, i: np.ndarray):
+        element.element_id = self.element_id[i]
+        idependent = self.idependent
+        element.dependent_node = hslice_by_idim(i, idependent, self.dependent_node)
+        element.dependent_dof = hslice_by_idim(i, idependent, self.dependent_dof)
+        element.ndependent = self.ndependent[i]
+
+        iindependent = self.iindependent
+        element.independent_node = hslice_by_idim(i, iindependent, self.independent_node)
+        element.independent_dof = hslice_by_idim(i, iindependent, self.independent_dof)
+        element.nindependent = self.nindependent[i]
+
+        element.tref = self.tref[i]
+        element.alpha = self.alpha[i]
+        element.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.dependent_node)
         used_dict['node_id'].append(self.independent_node)
@@ -718,6 +760,7 @@ class RBE2(RigidElement):
         element.tref = self.tref[i]
         element.dependent_nodes = hslice_by_idim(i, self.idim, self.dependent_nodes)
         element.nnode = self.nnode[i]
+        element.n = len(i)
 
     def add(self, eid: int,
             gn: int, # independent
@@ -1128,6 +1171,27 @@ class RBE3(RigidElement):
         self.ndependent = ndependent
         self.dependent_nodes = dependent_nodes
         self.dependent_dofs = dependent_dofs
+
+    def __apply_slice__(self, element: RBE3, i: np.ndarray):
+        element.element_id = self.element_id[i]
+        element.ref_grid = self.ref_grid[i]
+        element.elemeref_componentt_id = self.ref_component[i]
+        element.tref = self.tref[i]
+        element.alpha = self.alpha[i]
+
+        iweight = self.iweight
+        element.weight = hslice_by_idim(i, iweight, self.weight)
+        element.independent_dofs = hslice_by_idim(i, iweight, self.independent_dofs)
+        element.independent_nodes = hslice_by_idim(i, iweight, self.independent_nodes)
+        element.ngrid_per_weight = self.ngrid_per_weight[i]
+        element.nweight = self.nweight[i]
+
+        idependent = self.idependent
+        element.dependent_dofs = hslice_by_idim(i, idependent, self.dependent_dofs)
+        element.dependent_nodes = hslice_by_idim(i, idependent, self.dependent_nodes)
+
+        element.ndependent = self.ndependent[i]
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.dependent_nodes)

@@ -566,28 +566,30 @@ class MPT:
         n, ints, floats = get_ints_floats(data, n, nmaterials, 19, size=op2.size, endian=op2._endian)
         material_id = ints[:, 0]
         assert material_id.min() > 0
-        material.material_id = material_id
         #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
         # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-        material.E11 = floats[:, 1]
-        material.E22 = floats[:, 2]
-        material.nu12 = floats[:, 3]
-        material.G12 = floats[:, 4]
-        material.G13 = floats[:, 5]
-        material.G23 = floats[:, 6]
+        E11 = floats[:, 1]
+        E22 = floats[:, 2]
+        nu12 = floats[:, 3]
+        G12 = floats[:, 4]
+        G13 = floats[:, 5]
+        G23 = floats[:, 6]
 
-        material.rho = floats[:, 7]
-        material.alpha = floats[:, [8, 9]]
-        material.tref = floats[:, 10]
-        material.Xt = floats[:, 11]
-        material.Xc = floats[:, 12]
-        material.Yt = floats[:, 13]
-        material.Yc = floats[:, 14]
-        material.S = floats[:, 15]
-        material.ge = floats[:, 16]
-        material.f12 = floats[:, 17]
-        material.strn = floats[:, 18]
-        material.n = nmaterials
+        rho = floats[:, 7]
+        alpha = floats[:, [8, 9]]
+        tref = floats[:, 10]
+        Xt = floats[:, 11]
+        Xc = floats[:, 12]
+        Yt = floats[:, 13]
+        Yc = floats[:, 14]
+        S = floats[:, 15]
+        ge = floats[:, 16]
+        f12 = floats[:, 17]
+        strn = floats[:, 18]
+        #n = nmaterials
+        material._save(material_id, E11, E22, G12, G13, G23, nu12, rho, alpha, tref, ge,
+                       Xt, Xc, Yt, Yc, S, f12, strn,
+                       hf=None, ht=None, hfb=None)
 
         #i = np.where(material.material_id < MID_CAP)[0]
         #material.__apply_slice__(material, i)

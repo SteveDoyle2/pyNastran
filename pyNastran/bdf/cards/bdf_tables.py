@@ -37,6 +37,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 def make_xy(table_id, table_type, xy):
@@ -2007,7 +2008,7 @@ def _map_axis(axis):
         raise ValueError('axis=%r' % axis)
     return axis_type
 
-def read_table(card, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
+def read_table(card: BDFCard, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2
@@ -2028,7 +2029,8 @@ def read_table(card, table_id: int, table_type: str) -> tuple[np.ndarray, np.nda
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 
-def read_table_lax(card, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
+def read_table_lax(card: BDFCard, table_id: int,
+                   table_type: str) -> tuple[np.ndarray, np.ndarray]:
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2
@@ -2049,7 +2051,7 @@ def read_table_lax(card, table_id: int, table_type: str) -> tuple[np.ndarray, np
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 
-def read_table_float_int(card, table_id, table_type):
+def read_table_float_int(card: BDFCard, table_id: int, table_type: str):
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2

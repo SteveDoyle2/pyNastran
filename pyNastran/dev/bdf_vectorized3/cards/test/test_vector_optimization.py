@@ -167,18 +167,21 @@ class TestOpt(unittest.TestCase):
             assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
         save_load_deck(model)
 
-    def _test_ddval(self):
+    def test_ddval(self):
         """tests a DDVAL"""
         model = BDF(debug=False)
+        ddval = model.ddval
+
         oid = 10
         ddvals = [0.1, 0.2, 0.3, 0.5]
-        ddval = model.add_ddval(oid, ddvals, comment='ddval')
-        ddval.write_card(size=8)
-        ddval.write_card(size=16)
-        ddval.write_card(size=16, is_double=True)
-        ddval.raw_fields()
-        model.validate()
+        ddval_id = model.add_ddval(oid, ddvals, comment='ddval')
         model.setup()
+        ddval.write(size=8)
+        ddval.write(size=16)
+        ddval.write(size=16, is_double=True)
+        #ddval.raw_fields()
+        model.validate()
+        #model.setup()
         save_load_deck(model)
 
     def test_doptprm(self):
@@ -454,11 +457,9 @@ class TestOpt(unittest.TestCase):
                                      validate=True, comment='dvprel2')
         equation_id = 101
         eqs = ['fstress(x,y) = x * y + 10.']
-        RUN_DTABLE = True
-        if RUN_DTABLE:
-            model.add_deqatn(equation_id, eqs, comment='deqatn')
-            default_values = {'CAT': 42.0}
-            model.add_dtable(default_values, comment='dtable')
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
+        default_values = {'CAT': 42.0}
+        model.add_dtable(default_values, comment='dtable')
 
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
@@ -649,8 +650,6 @@ class TestOpt(unittest.TestCase):
 
     def test_dvmrel1(self):
         """tests a DVMREL1/DVMREL2"""
-        run_deqatn = False
-
         model = BDF(debug=False)
         model.add_desvar(11, 'X11', 1.0)
         oid = 10
@@ -699,11 +698,9 @@ class TestOpt(unittest.TestCase):
         c = 4000.
         mat10 = model.add_mat10(mid10, bulk, rho, c, ge=0.0, comment='mat10')
 
-        if run_deqatn:
-            equation_id = 42
-            eqs = ['fstress(x) = x + 10.']
-            model.add_deqatn(equation_id, eqs, comment='deqatn')
-
+        equation_id = 42
+        eqs = ['fstress(x) = x + 10.']
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
 
         #dvmrel1_1.raw_fields()
         model.dvmrel1.write(size=8)
@@ -742,10 +739,12 @@ class TestOpt(unittest.TestCase):
 
     def test_dvcrel1(self):
         """tests a DVCREL1, DVCREL2, DVGRID"""
-        run_deqatn = False
-        run_dvgrid = False
-
         model = BDF(debug=False)
+        dvgrid = model.dvgrid
+        dvcrel1 = model.dvcrel1
+        dvcrel2 = model.dvcrel2
+        #deqatn = model.dequations
+
         oid = 10
         conm2_eid = 100
         cp_min = 0.01
@@ -755,7 +754,6 @@ class TestOpt(unittest.TestCase):
         coeffs = 1.0
         dvcrel1_id = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
                                        cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
-        dvcrel1 = model.dvcrel1
         dvcrel1.element_type = np.array(['CONM2'])
         assert dvcrel1.element_type == dvcrel1.element_type
         #dvcrel1.pMax = p_max
@@ -801,22 +799,20 @@ class TestOpt(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
 
-        if run_deqatn:
-            eqs = ['fx2(x) = x + 10.']
-            deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
+        eqs = ['fx2(x) = x + 10.']
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
-        if run_dvgrid:
-            nid = 100
-            dvid = 10000
-            dxyz = [1., 2., 3.]
-            dvgrid1_id = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+        nid = 100
+        dvid = 10000
+        dxyz = [1., 2., 3.]
+        dvgrid1_id = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                      comment='dvgrid')
+
+        nid = 101
+        dvid = 10001
+        dxyz = np.array([1., 2., 3.])
+        unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                           comment='dvgrid')
-
-            nid = 101
-            dvid = 10001
-            dxyz = np.array([1., 2., 3.])
-            unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
-                                              comment='dvgrid')
 
         model.pop_parse_errors()
         model.setup(run_geom_check=True)
@@ -827,9 +823,8 @@ class TestOpt(unittest.TestCase):
         #dvcrel2.raw_fields()
         model.dvcrel2.write(size=16)
 
-        if run_dvgrid:
-            #dvgrid1.raw_fields()
-            dvgrid1.write(size=16)
+        #dvgrid1.raw_fields()
+        dvgrid.write(size=16)
 
         #dvcrel1.comment = ''
         #dvcrel2.comment = ''
@@ -838,7 +833,7 @@ class TestOpt(unittest.TestCase):
         dvcrel1_msg = model.dvcrel1.write(size=8)
         dvcrel2_msg = model.dvcrel2.write(size=8)
         desvar_msg = model.desvar.write(size=8)
-        dvgrid_msg = model.dvgrid.write(size=8)
+        dvgrid_msg = dvgrid.write(size=8)
 
         model.validate()
         model.setup()
@@ -851,10 +846,9 @@ class TestOpt(unittest.TestCase):
         model.dvcrel2.write(size=16)
         model.dvcrel2.write(size=8)
 
-        if run_dvgrid:
-            #dvgrid.raw_fields()
-            dvgrid.write(size=16)
-            dvgrid.write(size=8)
+        #dvgrid.raw_fields()
+        dvgrid.write(size=16)
+        dvgrid.write(size=8)
 
         #deqatn.write_card()
         mass = model.cbar.mass()
@@ -872,9 +866,9 @@ class TestOpt(unittest.TestCase):
 
         desvar_lines = desvar_msg.split('\n')
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
-        if run_dvgrid:
-            dvgrid_lines = dvgrid_msg.split('\n')
-            model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
+
+        dvgrid_lines = dvgrid_msg.split('\n')
+        model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
 
         #model2.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
                          #comment='conm2')

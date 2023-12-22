@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Union, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.utils.numpy_utils import integer_types # , cast_ints
+#from pyNastran.utils.numpy_utils import integer_types # , cast_ints
 from pyNastran.bdf.cards.expand_card import expand_thru_by
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class NSMi(VectorizedBaseCard):
@@ -311,10 +311,10 @@ class NSM1i(VectorizedBaseCard):
         self.n += 1
 
         #return cls(sid, nsm_type, pid_eid, value, comment=comment)
-        assert len(card) <= 9, f'len(NSM1 card) = {len(card):d}\ncard={card}'
+        assert len(card) >= 5, f'len(NSM1 card) = {len(card):d}\ncard={card}'
         return self.n - 1
 
-    def __apply_slice__(self, elem: NSMi, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: NSM1i, i: np.ndarray) -> None:
         elem.nsm_id = self.nsm_id[i]
         elem.nsm_type = self.nsm_type[i]
         elem.value = self.value[i]
@@ -434,7 +434,7 @@ class NSM1(NSM1i):
         print_card = get_print_card_8_16(size)
 
         nsm_str = array_str(self.nsm_id, size=size)
-        pid_eid_str = array_str(self.pid_eid, size=size)
+        #pid_eid_str = array_str(self.pid_eid, size=size)
         #insm = self.insm
         ielement = self.ielement
         for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
@@ -472,8 +472,14 @@ class NSM(NSMi):
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
-        for nsm_id, nsm_type, pid_eid, value in zip_longest(nsm_str, self.nsm_type, pid_eid_str, self.value):
-            list_fields = (['NSM', nsm_id, nsm_type, pid_eid, value])
+        values = array_float(self.value, size=size, is_double=False)
+        for nsm_id, nsm_type, (ivalue0, ivalue1) in zip_longest(nsm_str, self.nsm_type, self.ivalue):
+            pid_eid_value = alternate_values_in_list(
+                pid_eid_str[ivalue0:ivalue1],
+                values[ivalue0:ivalue1])
+            #pid_eid = pid_eid_str[ivalue0:ivalue1]
+            #value = self.value[ivalue0:ivalue1]
+            list_fields = ['NSM', nsm_id, nsm_type] + pid_eid_value
             bdf_file.write(print_card(list_fields))
         return
 
@@ -604,7 +610,7 @@ class NSMADD(ADD):
 
     def get_reduced_nsms(self,
                          #resolve_load_card: bool=False,
-                         stop_on_failure: bool=True) -> dict[int, SPCs]:
+                         stop_on_failure: bool=True) -> dict[int, NSMs]:
         """
         Parameters
         ----------

@@ -5,10 +5,12 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, # string,
     blank,
     integer_or_blank, double_or_blank, string_or_blank,
+    fields,
 )
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
@@ -90,7 +92,7 @@ class BDYOR(BaseCard):
         self.e123 = e123
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRDSET card from ``BDF.add_card(...)``
 
@@ -154,6 +156,7 @@ class CHBDYE(ThermalElement):
     +--------+-----+------+------+--------+--------+---------+---------+
 
     """
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.element_id = np.zeros((0, 2), dtype='int32')
         self.n = 0
@@ -214,6 +217,13 @@ class CHBDYE(ThermalElement):
         self.iview = iview
         self.rad_mid = rad_mid
         self.n = len(element_id)
+
+    def __apply_slice__(self, load: CHBDYE, i: np.ndarray) -> None:
+        load.element_id = self.element_id[i]
+        load.side = self.side[i]
+        load.iview = self.iview[i, :]
+        load.rad_mid = self.rad_mid[i, :]
+        load.n = len(i)
 
     @property
     def iview_front(self) -> np.ndarray:
@@ -287,11 +297,12 @@ class CONV(VectorizedBaseCard):
     through connection to a surface element (CHBDYi entry).
 
     """
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
@@ -311,39 +322,41 @@ class CONV(VectorizedBaseCard):
         assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pconid, film_node, cntrlnd, ta, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
 
         #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         #: (Integer > 0)
-        self.element_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype='int32')
 
         #: Convection property identification number of a PCONV entry
-        self.pconv_id = np.zeros(ncards, dtype='int32')
+        pconv_id = np.zeros(ncards, dtype='int32')
 
         #: Point for film convection fluid property temperature
-        self.film_node = np.zeros(ncards, dtype='int32')
+        film_node = np.zeros(ncards, dtype='int32')
 
         #: Control point for free convection boundary condition.
-        self.control_node = np.zeros(ncards, dtype='int32')
+        control_node = np.zeros(ncards, dtype='int32')
 
         #: Ambient points used for convection 0's are allowed for TA2 and
         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         #: Default for TA2 through TA8 is TA1.)
-        self.temp_ambient = np.zeros((ncards, 8), dtype='int32')
+        temp_ambient = np.zeros((ncards, 8), dtype='int32')
 
         #grids = []
         for icard, card in enumerate(self.cards):
-            (eid, pconid, film_node, cntrlnd, ta, comment) = card
-            self.element_id[icard] = eid
-            self.pconv_id[icard] = pconid
-            self.film_node[icard] = film_node
-            self.control_node[icard] = cntrlnd
-            self.temp_ambient[icard] = ta
+            (eid, pconid, film_nodei, cntrlnd, ta, comment) = card
+            element_id[icard] = eid
+            pconv_id[icard] = pconid
+            film_node[icard] = film_nodei
+            control_node[icard] = cntrlnd
+            temp_ambient[icard] = ta
+        self._save(element_id, pconv_id, film_node, control_node, temp_ambient)
+        self.sort()
+        self.cards = []
 
     def _save(self, element_id, pconv_id, film_node, control_node, temp_ambient):
         nelements = len(element_id)
@@ -357,6 +370,14 @@ class CONV(VectorizedBaseCard):
         self.control_node = control_node
         self.temp_ambient = temp_ambient
         self.n = nelements
+
+    def __apply_slice__(self, load: CONV, i: np.ndarray) -> None:
+        load.element_id = self.element_id[i]
+        load.pconv_id = self.pconv_id[i]
+        load.film_node = self.film_node[i]
+        load.control_node = self.control_node[i]
+        load.temp_ambient = self.temp_ambient[i]
+        load.n = len(i)
 
     @property
     def max_id(self) -> int:
@@ -401,11 +422,12 @@ class CHBDYG(ThermalElement):
     +--------+-----+----+------+--------+--------+---------+---------+-----+
 
     """
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         # no field 2
 
@@ -426,12 +448,11 @@ class CHBDYG(ThermalElement):
         self.cards.append((eid, surface_type, [iview_front, iview_back],
                            [rad_mid_front, rad_mid_back], nodes, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
 
         #: eid1: Surface element ID number for a side of an element. (0 < Integer < 100,000,000)
         #: eid2: A heat conduction element identification
@@ -485,14 +506,14 @@ class CHBDYG(ThermalElement):
         self.nnode = nnode
         self.grid = grid
 
-    def __apply_slice(self, load: CHBDYG, i: np.ndarray):
-        load.n = len(i)
+    def __apply_slice__(self, load: CHBDYG, i: np.ndarray) -> None:
         load.element_id = self.element_id[i]
         load.surface_type = self.surface_type[i]
         load.iview = self.iview[i, :]
         load.rad_mid = self.rad_mid[i, :]
         load.grid = hslice_by_idim(i, self.igrid, self.grid)
         load.nnode = self.nnode[i]
+        load.n = len(i)
 
     @property
     def igrid(self) -> np.ndarray:
@@ -573,11 +594,13 @@ class CHBDYP(ThermalElement):
     +--------+---------+---------+------+--------+--------+----+----+----+
 
     """
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=-1)
         surface_type = string_or_blank(card, 3, 'Type', default='')
@@ -597,20 +620,19 @@ class CHBDYP(ThermalElement):
         rad_mid_back = integer_or_blank(card, 10, 'rad_mid_back', default=0)
         gmid = integer_or_blank(card, 11, 'gmid', default=0)
         ce = integer_or_blank(card, 12, 'ce', default=-1)
-        e1 = double_or_blank(card, 13, 'e1', default=np.nan)
-        e2 = double_or_blank(card, 14, 'e2', default=np.nan)
-        e3 = double_or_blank(card, 15, 'e3', default=np.nan)
+        e1 = fdouble_or_blank(card, 13, 'e1', default=np.nan)
+        e2 = fdouble_or_blank(card, 14, 'e2', default=np.nan)
+        e3 = fdouble_or_blank(card, 15, 'e3', default=np.nan)
         assert len(card) <= 16, f'len(CHBDYP card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, surface_type, [g1, g2, gmid], g0,
                            [iview_front, iview_back], [rad_mid_front, rad_mid_back],
                            ce, [e1, e2, e3], comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
 
         #: Surface element ID
         element_id = np.zeros(ncards, dtype='int32')
@@ -678,6 +700,18 @@ class CHBDYP(ThermalElement):
         self.rad_mid = rad_mid
         self.ce = ce
         self.ce_orientation = ce_orientation
+
+    def __apply_slice__(self, load: CHBDYP, i: np.ndarray) -> None:
+        load.element_id = self.element_id[i]
+        load.property_id = self.property_id[i]
+        load.nodes = self.nodes[i, :]
+        load.g0 = self.g0[i]
+        load.surface_type = self.surface_type[i]
+        load.iview = self.iview[i, :]
+        load.rad_mid = self.rad_mid[i, :]
+        load.ce = self.ce[i]
+        load.ce_orientation = self.ce_orientation[i]
+        load.n = len(i)
 
     @property
     def iview_front(self) -> np.ndarray:
@@ -842,11 +876,12 @@ class PHBDY(VectorizedBaseCard):
     +-------+-----+------+-----+-----+
 
     """
+    _id_name = 'property_id'
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PHBDY card from ``BDF.add_card(...)``
 
@@ -858,19 +893,19 @@ class PHBDY(VectorizedBaseCard):
             a comment for the card
 
         """
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         pid = integer(card, 1, 'pid')
-        af = double_or_blank(card, 2, 'af', default=np.nan)
-        d1 = double_or_blank(card, 3, 'd1', default=np.nan)
-        d2 = double_or_blank(card, 4, 'd2', default=d1)
+        af = fdouble_or_blank(card, 2, 'af', default=np.nan)
+        d1 = fdouble_or_blank(card, 3, 'd1', default=np.nan)
+        d2 = fdouble_or_blank(card, 4, 'd2', default=d1)
         assert len(card) <= 5, f'len(PHBDY card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, af, d1, d2, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
 
         #: Property identification number. (Unique Integer among all PHBDY
         #: entries). (Integer > 0)
@@ -901,6 +936,12 @@ class PHBDY(VectorizedBaseCard):
         self.area_factor = area_factor
         self.diameter = diameter
         self.n = nproperties
+
+    def __apply_slice__(self, prop: PHBDY, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.area_factor = self.area_factor[i]
+        prop.diameter = self.diameter[i, :]
+        prop.n = len(i)
 
     @property
     def max_id(self) -> int:
@@ -1059,27 +1100,30 @@ class PCONV(VectorizedBaseCard):
     .. todo:: alternate format is not supported; NX not checked
 
     """
+    _id_name = 'pconv_id'
     def clear(self) -> None:
         self.pconv_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         pconid = integer(card, 1, 'pconid')
         mid = integer_or_blank(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
-        exponent_free_convection = double_or_blank(card, 4, 'expf', default=0.0)
+        exponent_free_convection = fdouble_or_blank(card, 4, 'expf', default=0.0)
         free_convection_type = integer_or_blank(card, 5, 'ftype', default=0)
         table_id = integer_or_blank(card, 6, 'tid', default=0)
-        chlen = double_or_blank(card, 9, 'chlen', default=np.nan)
+        chlen = fdouble_or_blank(card, 9, 'chlen', default=np.nan)
         gidin = integer_or_blank(card, 10, 'gidin', default=0)
         coord_e = integer_or_blank(card, 11, 'ce', default=0)
-        e1 = double_or_blank(card, 12, 'e1')
-        e2 = double_or_blank(card, 13, 'e2')
-        e3 = double_or_blank(card, 14, 'e3')
+        e1 = fdouble_or_blank(card, 12, 'e1')
+        e2 = fdouble_or_blank(card, 13, 'e2')
+        e3 = fdouble_or_blank(card, 14, 'e3')
         assert len(card) <= 15, f'len(PCONV card) = {len(card):d}\ncard={card}'
         self.cards.append((pconid, mid, form, exponent_free_convection, free_convection_type, table_id,
                            chlen, gidin, coord_e, [e1, e2, e3], comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1183,6 +1227,20 @@ class PCONV(VectorizedBaseCard):
         self.e = np.zeros((nproperties, 3), dtype='float64')
         self.n = nproperties
 
+    def __apply_slice__(self, prop: PCONV, i: np.ndarray) -> None:
+        prop.pconv_id = self.pconv_id[i]
+        prop.material_id = self.material_id[i]
+        prop.form = self.form[i]
+        prop.exponent_free_convection = self.exponent_free_convection[i]
+
+        prop.free_convection_type = self.free_convection_type[i]
+        prop.table_id = self.table_id[i]
+        prop.characteristic_length = self.characteristic_length[i]
+        prop.grid_inlet = self.grid_inlet[i]
+        prop.coord_e = self.coord_e[i]
+        prop.e = self.e[i]
+        prop.n = len(i)
+
     @property
     def max_id(self) -> int:
         return max(self.pconv_id.max(), self.material_id.max(), self.table_id.max(),
@@ -1254,11 +1312,12 @@ class CONVM(VectorizedBaseCard):
     +-------+-----+--------+-------+---------+-----+-----+------+
 
     """
+    _id_name = 'element_id'
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CONVM card from ``BDF.add_card(...)``
 
@@ -1270,16 +1329,18 @@ class CONVM(VectorizedBaseCard):
             a comment for the card
 
         """
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
         cntmdot = integer_or_blank(card, 4, 'cntmdot', default=0)
         ta1 = integer(card, 5, 'ta1')
         ta2 = integer_or_blank(card, 6, 'ta2', default=ta1)
-        mdot = double_or_blank(card, 7, 'mdot', default=1.0)
+        mdot = fdouble_or_blank(card, 7, 'mdot', default=1.0)
         assert len(card) <= 8, f'len(CONVM card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pconvm, film_node, cntmdot, [ta1, ta2], mdot, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1330,18 +1391,29 @@ class CONVM(VectorizedBaseCard):
             control_node_mdot[icard] = cntmdot
             mdot[icard] = mdoti
         self._save(element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot)
+        self.cards = []
 
     def _save(self, element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot):
+        if mdot is None:
+            mdot = np.ones(nelements, dtype='float64')
         nelements = len(element_id)
+        assert len(self.element_id) == 0
         self.element_id = element_id
         self.pconvm_id = pconvm_id
         self.film_node = film_node
         self.temp_ambient = temp_ambient
         self.control_node_mdot = control_node_mdot
-        if mdot is None:
-            mdot = np.ones(nelements, dtype='float64')
         self.mdot = mdot
         self.n = nelements
+
+    def __apply_slice__(self, elem: CONVM, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.pconvm_id = self.pconvm_id[i]
+        elem.film_node = self.film_node[i]
+        elem.temp_ambient = self.temp_ambient[i]
+        elem.control_node_mdot = self.control_node_mdot[i]
+        elem.mdot = self.mdot[i]
+        elem.n = len(i)
 
     @property
     def max_id(self) -> int:
@@ -1387,22 +1459,26 @@ class PCONVM(VectorizedBaseCard):
     +--------+--------+-----+------+------+-------+------+-------+-------+
 
     """
+    _id_name = 'pconvm_id'
     def clear(self) -> None:
         self.pconvm_id = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble = force_double if self.model.is_lax_parser else double
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
         flag = integer_or_blank(card, 4, 'flag', default=0)
-        coeff = double(card, 5, 'coef')
-        expr = double_or_blank(card, 6, 'expr', default=0.0)
-        exppi = double_or_blank(card, 7, 'exppi', default=0.0)
-        exppo = double_or_blank(card, 8, 'exppo', default=0.0)
+        coeff = fdouble(card, 5, 'coef')
+        expr = fdouble_or_blank(card, 6, 'expr', default=0.0)
+        exppi = fdouble_or_blank(card, 7, 'exppi', default=0.0)
+        exppo = fdouble_or_blank(card, 8, 'exppo', default=0.0)
         assert len(card) <= 9, f'len(PCONVM card) = {len(card):d}\ncard={card}'
         self.cards.append((pconid, mid, form, flag, coeff, expr, exppi, exppo, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1478,6 +1554,7 @@ class PCONVM(VectorizedBaseCard):
         prop.expr = self.expr[i]
         prop.exppi = self.exppi[i]
         prop.exppo = self.exppo[i]
+        prop.n = len(i)
 
     @property
     def max_id(self) -> int:
@@ -1509,3 +1586,416 @@ class PCONVM(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+
+class RADCAV(VectorizedBaseCard):
+    """
+    Identifies the characteristics of each radiant enclosure.
+
+    +--------+---------+--------+------+---------+--------+-------+------+--------+
+    |    1   |    2    |    3   |  4   |     5   |    6   |   7   |   8  |    9   |
+    +========+=========+========+========+=======+========+=======+======+========+
+    | RADCAV | ICAVITY | ELEAMB | SHADOW | SCALE | PRTPCH | NFECI | RMAX |        |
+    +--------+---------+--------+------+---------+--------+-------+------+--------+
+    |        |  SET11  |  SET12 |  SET21 | SET22 |  SET31 | SET32 | etc. |        |
+    +--------+---------+--------+------+---------+--------+-------+------+--------+
+    | RADCAV |    1    |    1   |        |       |        |       | .99  |        |
+    +--------+---------+--------+------+---------+--------+-------+------+--------+
+    |        |    3    |    5   |    4   |   5   |    7   |   5   |      |        |
+    +--------+---------+--------+------+---------+--------+-------+------+--------+
+
+    """
+    _id_name = 'icavity'
+    def clear(self) -> None:
+        self.icavity = np.array([], dtype='int32')
+        self.ele_ambient = np.array([], dtype='int32')
+        self.shadow = np.array([], dtype='|U8')
+        self.scale = np.array([], dtype='float64')
+
+        self.prtpch = np.array([], dtype='int32')
+        self.nefci = np.array([], dtype='|U8')
+        self.rmax = np.array([], dtype='float64')
+        self.ncomp = np.array([], dtype='int32')
+        self.nset = np.array([], dtype='int32')
+        self.sets = np.array([], dtype='int32')
+        self.n = 0
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a RADCAV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #fdouble = force_double if self.model.is_lax_parser else double
+        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        icavity = integer(card, 1, 'icavity')
+        ele_ambient = integer_or_blank(card, 2, 'ele_amb', default=0)  # default made up
+        shadow = string_or_blank(card, 3, 'shadow', default='YES')
+        scale = double_or_blank(card, 4, 'scale', default=0.0)
+        prtpch = integer_or_blank(card, 5, 'prtpch', default=0)    # default made up
+        nefci = string_or_blank(card, 6, 'nefci', default='')      # default made up
+        rmax = double_or_blank(card, 7, 'rmax', default=1.0)
+        ncomp = integer_or_blank(card, 8, 'ncomp', default=32)
+
+        sets = fields(integer, card, 'set', i=9, j=card.nfields)
+        if not self.model.allow_empty_sets:
+            assert len(sets) > 0, card
+        #return RADCAV(icavity, sets, ele_amb=ele_amb,
+                      #shadow=shadow, scale=scale, prtpch=prtpch,
+                      #nefci=nefci, rmax=rmax, ncomp=ncomp, comment=comment)
+        self.cards.append((icavity, sets, ele_ambient,
+                           shadow, scale, prtpch,
+                           nefci, rmax, ncomp, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        icavity = np.zeros(ncards, dtype='int32')
+        ele_ambient = np.zeros(ncards, dtype='int32')
+        shadow = np.zeros(ncards, dtype='|U8')
+        scale = np.zeros(ncards, dtype='float64')
+
+        prtpch = np.zeros(ncards, dtype='int32')
+        nefci = np.zeros(ncards, dtype='|U8')
+        rmax = np.zeros(ncards, dtype='float64')
+        ncomp = np.zeros(ncards, dtype='int32')
+        nset = np.zeros(ncards, dtype='int32')
+        all_sets_list = []
+
+        for icard, card in enumerate(self.cards):
+            (icavityi, setsi, ele_ambi,
+             shadowi, scalei, prtpchi,
+             nefcii, rmaxi, ncompi, comment) = card
+            icavity[icard] = icavityi
+            ele_ambient[icard] = ele_ambi
+            shadow[icard] = shadowi
+            scale[icard] = scalei
+            prtpch[icard] = prtpchi
+            nefci[icard] = nefcii
+            rmax[icard] = rmaxi
+            ncomp[icard] = ncompi
+            nset[icard] = len(setsi)
+            all_sets_list.extend(setsi)
+        all_sets = np.array(all_sets_list, dtype=idtype)
+        self._save(icavity, ele_ambient, shadow, scale, prtpch,
+                   nefci, rmax, ncomp, all_sets, nset)
+        self.cards = []
+
+    def _save(self, icavity, ele_ambient, shadow, scale, prtpch,
+              nefci, rmax, ncomp, sets, nset) -> int:
+        assert len(self.icavity) == 0
+        self.icavity = icavity
+        self.ele_ambient = ele_ambient
+        self.shadow = shadow
+        self.scale = scale
+        self.prtpch = prtpch
+        self.nefci = nefci
+        self.rmax = rmax
+        self.ncomp = ncomp
+        self.sets = sets
+        self.nset = nset
+        self.n = len(icavity)
+
+    def __apply_slice__(self, radcav: RADCAV, i: np.ndarray) -> None:
+        radcav.icavity = self.icavity[i]
+        radcav.ele_ambient = self.ele_ambient[i]
+        radcav.shadow = self.shadow[i]
+        radcav.scale = self.scale[i]
+        radcav.prtpch = self.prtpch[i]
+        radcav.nefci = self.nefci[i]
+        radcav.rmax = self.rmax[i]
+        radcav.ncomp = self.ncomp[i]
+
+        iset = self.iset
+        radcav.sets = hslice_by_idim(i, iset, self.sets)
+        radcav.nset = self.nset[i]
+        radcav.n = len(i)
+
+    @property
+    def iset(self) -> np.ndarray:
+        return make_idim(self.n, self.nset)
+
+    @property
+    def max_id(self) -> int:
+        set_max = 0 if len(self.sets) == 0 else self.sets.max()
+        return max(self.icavity.max(), set_max)
+
+    #@parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.icavity) == 0:
+            return ''
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        icavitys = array_str(self.icavity, size=size)
+        ele_ambients = array_str(self.ele_ambient, size=size)
+        shadows = array_str(self.shadow, size=size)
+        prtpchs = array_str(self.prtpch, size=size)
+        ncomps = array_str(self.ncomp, size=size)
+        for icavity, ele_ambient, shadow, scale, \
+            prtpch, nefci, rmax, ncomp, (iset0, iset1) in zip_longest(icavitys, ele_ambients,
+                                                                      shadows, self.scale,
+                                                                      prtpchs, self.nefci, self.rmax,
+                                                                      ncomps, self.iset):
+            sets = self.sets[iset0:iset1].tolist()
+            list_fields = ['RADCAV', icavity, ele_ambient, shadow, scale,
+                           prtpch, nefci, rmax, ncomp] + sets
+            bdf_file.write(print_card(list_fields))
+        return
+
+class VIEW(VectorizedBaseCard):
+    """
+    Defines radiation cavity and shadowing for radiation
+    view factor calculations.
+
+    +------+-------+---------+-------+----+----+--------+
+    |   1  |   2   |    3    |   4   | 5  |  6 |    7   |
+    +======+=======+=========+=======+====+====+========+
+    | VIEW | IVIEW | ICAVITY | SHADE | NB | NG | DISLIN |
+    +------+-------+---------+-------+----+----+--------+
+    | VIEW |   1   |    1    | BOTH  | 2  | 3  |  0.25  |
+    +------+-------+---------+-------+----+----+--------+
+
+    """
+    _id_name = 'icavity'
+    def clear(self) -> None:
+        self.iview = np.array([], dtype='int32')
+        self.icavity = np.array([], dtype='int32')
+        self.shade = np.array([], dtype='|U8')
+        self.nbeta = np.array([], dtype='int32')
+        self.ngamma = np.array([], dtype='int32')
+        self.dislin = np.array([], dtype='float64')
+        self.n = 0
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a VIEW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        iview = integer(card, 1, 'iview')
+        icavity = integer(card, 2, 'icavity')
+        shade = string_or_blank(card, 3, 'shade', default='BOTH')
+        nbeta = integer_or_blank(card, 4, 'nbeta', default=1)
+        ngamma = integer_or_blank(card, 5, 'ngamma', default=1)
+        dislin = double_or_blank(card, 6, 'dislin', default=0.0)
+        #return VIEW(iview, icavity, shade=shade, nbeta=nbeta, ngamma=ngamma,
+                    #dislin=dislin, comment=comment)
+
+        self.cards.append((iview, icavity, shade, nbeta, ngamma,
+                    dislin, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        iview = np.zeros(ncards, dtype='int32')
+        icavity = np.zeros(ncards, dtype='int32')
+        shade = np.zeros(ncards, dtype='|U8')
+        nbeta = np.zeros(ncards, dtype='int32')
+        ngamma = np.zeros(ncards, dtype='int32')
+        dislin = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (iviewi, icavityi, shadei, nbetai, ngammai, dislini, comment) = card
+            iview[icard] = iviewi
+            icavity[icard] = icavityi
+            shade[icard] = shadei
+            nbeta[icard] = nbetai
+            ngamma[icard] = ngammai
+            dislin[icard] = dislini
+        self._save(iview, icavity, shade, nbeta, ngamma, dislin)
+        self.cards = []
+
+    def _save(self, iview, icavity, shade, nbeta, ngamma, dislin) -> int:
+        assert len(self.icavity) == 0
+        self.iview = iview
+        self.icavity = icavity
+        self.shade = shade
+        self.nbeta = nbeta
+        self.ngamma = ngamma
+        self.dislin = dislin
+        self.n = len(iview)
+
+    def __apply_slice__(self, view: VIEW, i: np.ndarray) -> None:
+        view.iview = self.iview[i]
+        view.icavity = self.icavity[i]
+        view.shade = self.shade[i]
+        view.nbeta = self.nbeta[i]
+        view.ngamma = self.ngamma[i]
+        view.dislin = self.dislin[i]
+        view.n = len(i)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.iview.max(), self.icavity.max())
+
+    #@parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.icavity) == 0:
+            return ''
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        iviews = array_str(self.iview, size=size)
+        icavitys = array_str(self.icavity, size=size)
+        nbetas = array_str(self.nbeta, size=size)
+        ngammas = array_str(self.ngamma, size=size)
+        for iview, icavity, shade, nbeta, ngamma, dislin in zip_longest(
+            iviews, icavitys, self.shade, nbetas, ngammas, self.dislin):
+            list_fields = ['VIEW', iview, icavity, shade, nbeta, ngamma, dislin]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class VIEW3D(VectorizedBaseCard):
+    """
+    View Factor Definition - Gaussian Integration Method
+
+    Defines parameters to control and/or request the Gaussian Integration
+    method of view factor calculation for a specified cavity.
+
+    +--------+---------+------+------+------+------+--------+------+--------+
+    |    1   |    2    |   3  |  4   |   5  |   6  |    7   |   8  |    9   |
+    +========+=========+======+======+======+======+========+======+========+
+    | VIEW3D | ICAVITY | GITB | GIPS | CIER | ETOL |  ZTOL  | WTOL | RADCHK |
+    +--------+---------+------+------+------+------+--------+------+--------+
+    | VIEW3D |    1    |   2  |   2  |   4  |      | 1.0E-6 |      |        |
+    +--------+---------+------+------+------+------+--------+------+--------+
+
+    """
+    _id_name = 'icavity'
+    def clear(self) -> None:
+        self.icavity = np.array([], dtype='int32')
+        self.gitb = np.array([], dtype='int32')
+        self.gips = np.array([], dtype='int32')
+        self.cier = np.array([], dtype='int32')
+        self.error_tol = np.array([], dtype='float64')
+        self.warp_tol = np.array([], dtype='float64')
+        self.rad_check = np.array([], dtype='int32')
+        self.n = 0
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a VIEW3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        icavity = integer(card, 1, 'icavity')
+        gitb = integer_or_blank(card, 2, 'gitb', default=4)
+        gips = integer_or_blank(card, 3, 'gips', default=4)
+        cier = integer_or_blank(card, 4, 'cier', default=4)
+        error_tol = double_or_blank(card, 5, 'error_tol', default=0.1)
+        zero_tol = double_or_blank(card, 6, 'zero_tol', default=1e-10)
+        warp_tol = double_or_blank(card, 7, 'warp_tol', default=0.01)
+        rad_check = integer_or_blank(card, 8, 'rad_check', default=3)
+        #return VIEW3D(icavity, gitb=gitb, gips=gips, cier=cier,
+                      #error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
+                      #rad_check=rad_check, comment=comment)
+
+        self.cards.append((icavity, gitb, gips, cier,
+                           error_tol, zero_tol, warp_tol,
+                           rad_check, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        icavity = np.zeros(ncards, dtype='int32')
+        gitb = np.zeros(ncards, dtype='int32')
+        gips = np.zeros(ncards, dtype='int32')
+        cier = np.zeros(ncards, dtype='int32')
+        error_tol = np.zeros(ncards, dtype='float64')
+        zero_tol = np.zeros(ncards, dtype='float64')
+        warp_tol = np.zeros(ncards, dtype='float64')
+        rad_check = np.zeros(ncards, dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (icavityi, gitbi, gipsi, cieri,
+             error_toli, zero_toli, warp_toli, rad_checki, comment) = card
+            #iview[icard] = iviewi
+            icavity[icard] = icavityi
+            gitb[icard] = gitbi
+            gips[icard] = gipsi
+            cier[icard] = cieri
+            error_tol[icard] = error_toli
+            zero_tol[icard] = zero_toli
+            warp_tol[icard] = warp_toli
+            rad_check[icard] = rad_checki
+        self._save(icavity, gitb, gips, cier, error_tol, zero_tol, warp_tol, rad_check)
+        self.cards = []
+
+    def _save(self, icavity, gitb, gips, cier, error_tol, zero_tol, warp_tol, rad_check) -> int:
+        assert len(self.icavity) == 0
+        #self.iview = iview
+        self.icavity = icavity
+        self.gitb = gitb
+        self.gips = gips
+        self.cier = cier
+        self.error_tol = error_tol
+        self.zero_tol = zero_tol
+        self.warp_tol = warp_tol
+        self.rad_check = rad_check
+        self.n = len(icavity)
+
+    def __apply_slice__(self, view: VIEW, i: np.ndarray) -> None:
+        view.icavity = self.icavity[i]
+        view.gitb = self.gitb[i]
+        view.gips = self.gips[i]
+        view.cier = self.cier[i]
+        view.error_tol = self.error_tol[i]
+        view.zero_tol = self.zero_tol[i]
+        view.warp_tol = self.warp_tol[i]
+        view.rad_check = self.rad_check[i]
+        view.n = len(i)
+
+    @property
+    def max_id(self) -> int:
+        return self.icavity.max()
+
+    #@parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.icavity) == 0:
+            return ''
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        #iviews = array_str(self.iview, size=size)
+        icavitys = array_str(self.icavity, size=size)
+        gitbs = array_str(self.gitb, size=size)
+        gips = array_str(self.gips, size=size)
+        ciers = array_str(self.cier, size=size)
+        for icavity, gitb, gips, cier, error_tol, zero_tol, warp_tol, rad_check in zip_longest(
+            icavitys, gitbs, gips, ciers,
+            self.error_tol, self.zero_tol, self.warp_tol, self.rad_check):
+            list_fields = ['VIEW3D', icavity, gitb, gips, cier,
+                           error_tol, zero_tol, warp_tol, rad_check]
+            bdf_file.write(print_card(list_fields))
+        return

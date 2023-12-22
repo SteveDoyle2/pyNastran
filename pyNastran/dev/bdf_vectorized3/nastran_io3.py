@@ -282,8 +282,13 @@ class Nastran3:
         # add alternate actors
         gui._add_alt_actors(gui.alt_grids)
 
-        element_id, property_id = self.load_elements(ugrid, model, node_id)
+        element_id, property_id, element_cards, gui_elements, card_index = load_elements(
+            ugrid, model, node_id,
+            self.include_mass_in_geometry)
         self.element_id = element_id
+        self.element_cards = element_cards
+        self.gui_elements = gui_elements
+        self.card_index = card_index
 
         #print(f'nelements = {len(element_id)}')
         form, cases, icase = self.save_results(model, node_id, element_id, property_id)
@@ -361,8 +366,9 @@ class Nastran3:
                 element_id, nelements, self.gui_elements)
             self.mean_edge_length = mean_edge_length
 
-            icase = self.material_ids(model, icase, cases, geometry_form,
-                                      element_id, property_id)
+            icase = gui_material_ids(
+                model, icase, cases, geometry_form,
+                element_id, property_id, self.card_index)
 
         form = [
             ('Geometry', None, geometry_form),
@@ -371,228 +377,6 @@ class Nastran3:
             geometry_form.append(('Quality', None, quality_form))
 
         return form, cases, icase# , nids, eids, data_map_dict
-
-    def material_ids(self, model: BDF,
-                     icase: int,
-                     cases: Cases,
-                     form: Form,
-                     element_ids: np.ndarray,
-                     property_ids: np.ndarray) -> int:
-        cards = (
-            ('Rod', False, [model.conrod], []),
-            ('Rod', True, [model.crod], [model.prod]),
-            ('Rod', True, [model.cbar], model.bar_property_cards),
-            ('Rod', True, [model.cbeam], model.beam_property_cards),
-            ('Shell', True, model.shell_element_cards, model.shell_property_cards),
-            ('Solid', True, model.solid_element_cards, model.solid_property_cards),
-        )
-        #beams = [model.cbeam if model.cbeam.n > 0]
-        #solids = [card for card in model.solid_element_cards if card.n > 0]
-        #shells = [card for card in model.shell_element_cards if card.n > 0]
-        idtype = element_ids.dtype
-        fdtype = model.fdtype
-
-        materials_dict = {}
-        neid = len(element_ids)
-        for (base_flag, is_pid, element_cards, property_cards) in cards:
-            element_cards2 = [card for card in element_cards if card.n > 0]
-            property_cards2 = [card for card in property_cards if card.n > 0]
-
-            for card in element_cards2:
-                flag = base_flag
-                etype = card.type
-                if etype not in self.card_index:
-                    continue
-
-                i0, i1 = self.card_index[etype]
-                #eids = element_ids[i0:i1]
-                pids = property_ids[i0:i1]
-                if not is_pid:
-                    continue
-
-                if flag in materials_dict:
-                    material_dicti = materials_dict[flag]
-                else:
-                    if flag == 'Rod':
-                        material_id = np.full(neid, 0, dtype=idtype)
-                    elif flag == 'Shell':
-                        #material_id = np.array([], dtype=idtype)
-                        pass
-                        #pshell_material_id = np.full((neid, 4), 0, dtype=idtype)
-                        #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
-                    elif flag == 'Solid':
-                        material_id = np.full(neid, 0, dtype=idtype)
-                    else:
-                        raise RuntimeError(flag)
-
-                    if flag != 'Shell':
-                        material_dicti = {
-                            'mid': material_id,
-                        }
-                for card in property_cards2:
-                    card_pids = card.property_id
-                    index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
-                                          if pid in card_pids])
-                    if index_pid.shape[0] == 0:
-                        continue
-                    index = index_pid[:, 0]
-                    pidsi = index_pid[:, 1]
-                    cardi = card.slice_card_by_id(pidsi)
-                    ptype = card.type
-                    if flag in {'Rod'}:
-                        material_idi = cardi.material_id
-                        material_id[index] = material_idi
-                    elif flag == 'Solid' and ptype in {'PSOLID', 'PLSOLID'}:
-                        material_idi = cardi.material_id
-                        material_id[index] = material_idi
-
-                    elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
-                        upids = np.unique(cardi.property_id)
-                        ucard = card.slice_card_by_id(upids)
-                        #nlayer = ucard.nlayer.max()
-                        nlayer = card.nlayer.max()
-                        #print('nlayer =', nlayer)
-                        if ptype in {'PCOMP', 'PCOMPG'}:
-                            flag = 'Shell - Composite'
-                        elif ptype == 'PCOMPS':
-                            flag = 'Solid - Composite'
-                        else:
-                            raise RuntimeError(ptype)
-
-                        if flag in materials_dict:
-                            material_dicti = materials_dict[flag]
-                        else:
-                            # hack...
-                            material_id = np.full((neid, nlayer), -1, dtype=idtype)
-                            thickness = np.full((neid, nlayer), np.nan, dtype=fdtype)
-                            theta = np.full((neid, nlayer), np.nan, dtype=fdtype)
-                            material_dicti = {
-                                'mid': material_id,
-                                't': thickness,
-                                'theta': theta,
-                            }
-                        material_id = material_dicti['mid']
-                        thickness = material_dicti['t']
-                        theta = material_dicti['theta']
-
-                        # Presumably the unique number of layers is small, so we
-                        # iterate on that. We can then reshape the material_id once
-                        # we slice off the unwanted rows
-                        for ilayer in np.unique(ucard.nlayer):
-                            ipid = np.where(ilayer == cardi.nlayer)[0]
-                            ieid = index[ipid]
-                            npid = len(ipid)
-                            pids_layer = cardi.property_id[ipid]
-                            cardii = card.slice_card_by_id(pids_layer)
-                            material_id_rect = cardii.material_id.reshape(npid, ilayer)
-                            thickness_rect = cardii.thickness.reshape(npid, ilayer)
-                            theta_rect = cardii.theta.reshape(npid, ilayer)
-                            material_id[ieid, :ilayer] = material_id_rect
-                            thickness[ieid, :ilayer] = thickness_rect
-                            theta[ieid, :ilayer] = theta_rect
-                        del material_id, cardii, ieid, ipid, npid
-                        del material_id_rect, thickness_rect
-                    elif ptype == 'PSHELL':
-                        flag = 'Shell - PSHELL'
-                        if flag in materials_dict:
-                            material_dicti = materials_dict[flag]
-                        else:
-                            # hack...
-                            material_id = np.full((neid, 4), -1, dtype=idtype)
-                            thickness = np.full(neid, np.nan, dtype=fdtype)
-                            material_dicti = {
-                                'mid': material_id,
-                                't': thickness,
-                            }
-                        material_id = material_dicti['mid']
-                        thickness = material_dicti['t']
-                        material_idi = cardi.material_id
-                        material_id[index] = material_idi
-                        thickness[index] = cardi.total_thickness()
-                        del material_id, material_idi, thickness, index
-
-                    else:  # pragma: no cover
-                        raise RuntimeError(flag)
-                    materials_dict[flag] = material_dicti
-                    #if base_flag == 'Shell':
-                        #del material_id
-                del material_dicti
-                print(f'finished {etype} {flag}')
-
-        #materials_dict2 = {}
-        #for flag, material_dict in materials_dict.items():
-            #mid_col_max = material_id.max(axis=0)
-            #imat = (mid_col_max > 0)
-            #material_id2 = material_id[:, imat]
-            #materials_dict2[flag] = material_id2
-        #del materials_dict
-
-        subcase_id = 0
-        pshell_result_name_map = {
-            0: 'MID1 - Membrane',
-            1: 'MID2 - Bending',
-            2: 'MID3 - Shear',
-            3: 'MID4 - Membrane/Bending',
-        }
-
-        for flag, material_dicti in materials_dict.items():
-            material_id = material_dicti['mid']
-
-            if 'Shell' in flag:
-                mid_col_max = material_id.max(axis=0)
-                imat = (mid_col_max > 0)
-                #material_id2 = material_id[:, imat]
-                #materials_dict2[flag] = material_id2
-
-            #print(flag, material_id)
-            materials_form = []
-            if material_id.ndim == 1:
-                material_id = material_id.reshape((neid, 1))
-
-            nlayer = material_id.shape[1]
-            for ilayer in range(nlayer):
-                if flag in {'Rod', 'Solid'}:
-                    result_name = 'Material'
-                elif 'Composite' in flag:
-                    result_name = f'Material Layer {ilayer+1}'
-
-                elif 'PSHELL' in flag:
-                    if ilayer == 1:
-                        result_namei = 'Total Thickness'
-                        resulti = material_dicti['t']
-                        icase = _add_finite_centroidal_gui_result(
-                            icase, cases, materials_form, subcase_id,
-                            result_namei, resulti)
-
-                    result_name = pshell_result_name_map[ilayer]
-                else:  #  pragma: no cover
-                    raise RuntimeError(flag)
-
-                material_idi = material_id[:, ilayer]
-                material_idi[material_idi == 0] = -1
-                if material_idi.max() == -1:
-                    continue
-                icase = _add_integer_centroid_gui_result(
-                    icase, cases, materials_form, subcase_id,
-                    result_name, material_idi, mask_value=-1)
-
-            if 'Composite' in flag:
-                for ilayer in range(nlayer):
-                    result_namei = f'Thickness Layer {ilayer+1}'
-                    resulti = material_dicti['t'][:, ilayer]
-                    icase = _add_finite_centroidal_gui_result(
-                        icase, cases, materials_form, subcase_id,
-                        result_namei, resulti)
-                for ilayer in range(nlayer):
-                    result_namei = f'Theta {ilayer+1}'
-                    resulti = material_dicti['theta'][:, ilayer]
-                    icase = _add_finite_centroidal_gui_result(
-                        icase, cases, materials_form, subcase_id,
-                        result_namei, resulti)
-
-            if len(materials_form):
-                form.append((flag, None, materials_form))
-        return icase
 
     def _simple_gui(self, ugrid: vtkUnstructuredGrid) -> None:  # pragma: no cover
         from pyNastran.gui.vtk_rendering_core import (
@@ -631,265 +415,249 @@ class Nastran3:
         renderWindowInteractor.Start()
         #x = 1
 
-    def load_elements(self,
-                      ugrid: vtkUnstructuredGrid,
-                      model: BDF,
-                      grid_id: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Fills the vtkUnstructuredGrid.
 
-        Elements are added by the order in model.element_cards, not by element id.
-        This makes it easier to fill the geometry/results, but harder to lookup
-        a specific element id.
-        """
-        include_mass_in_geometry = self.include_mass_in_geometry
-        log = model.log
-        property_ids: list[np.ndarray] = []
-        element_ids: list[np.ndarray] = []
-        #nodes_ids: list[np.ndarray] = []
-        #nnodes: list[np.ndarray] = []
-        n_nodes_ = []
-        cell_type_ = []
-        cell_offset_ = []
+def load_elements(ugrid: vtkUnstructuredGrid,
+                  model: BDF,
+                  grid_id: np.ndarray,
+                  include_mass_in_geometry: bool,
+                  ) -> tuple[np.ndarray, np.ndarray,
+                             list[Any], set[str],
+                             dict[str, tuple[int, int]]]:
+    """
+    Fills the vtkUnstructuredGrid.
 
-        cell_type_point = 1  # vtk.vtkVertex().GetCellType()
-        cell_type_line = 3  # vtk.vtkLine().GetCellType()
-        cell_type_tri3 = 5
-        cell_type_tri6 = 22
-        cell_type_quad4 = 9
-        cell_type_quad8 = 23
+    Elements are added by the order in model.element_cards, not by element id.
+    This makes it easier to fill the geometry/results, but harder to lookup
+    a specific element id.
+    """
+    log = model.log
+    property_ids: list[np.ndarray] = []
+    element_ids: list[np.ndarray] = []
+    #nodes_ids: list[np.ndarray] = []
+    #nnodes: list[np.ndarray] = []
+    n_nodes_ = []
+    cell_type_ = []
+    cell_offset_ = []
 
-        cell_offset0 = 0
+    cell_type_point = 1  # vtk.vtkVertex().GetCellType()
+    cell_type_line = 3  # vtk.vtkLine().GetCellType()
+    cell_type_tri3 = 5
+    cell_type_tri6 = 22
+    cell_type_quad4 = 9
+    cell_type_quad8 = 23
 
-        # elements that don't use SPOINTs or
-        basic_elements = {
-            'CONROD', 'CTUBE', 'CROD',
-            'CBEAM', 'CBAR', 'CBUSH',
-            'CBAR', 'CBEAM', 'CSHEAR',
-            'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
-        }
-        midside_elements = {
-            'CTRIA6', 'CQUAD8', # 'CQUAD'
-            'CTRIAX6',
-        }
-        solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
+    cell_offset0 = 0
 
-        gui_elements = basic_elements | solid_elements | midside_elements
-        self.gui_elements = gui_elements
+    # elements that don't use SPOINTs or
+    basic_elements = {
+        'CONROD', 'CTUBE', 'CROD',
+        'CBEAM', 'CBAR', 'CBUSH',
+        'CBAR', 'CBEAM', 'CSHEAR',
+        'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
+    }
+    midside_elements = {
+        'CTRIA6', 'CQUAD8', # 'CQUAD'
+        'CTRIAX6',
+    }
+    solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
 
-        element_cards = [card for card in model.element_cards if card.n]
-        self.element_cards = element_cards
-        nelement0 = 0
-        for element in element_cards:
-            nelement = element.n
-            #print('element')
-            etype = element.type
-            #print('load', etype, nelement, element.element_id)
-            if etype in basic_elements:
-                #print('  basic')
-                # basic elements
-                # missing nodes are not allowed
-                if etype in {'CONROD'}:
-                    cell_type = cell_type_line
-                    property_id = np.full(nelement, -1)
-                elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH', 'CGAP'}:
-                    cell_type = cell_type_line
-                    property_id = element.property_id
-                elif etype in {'CTRIA3', 'CTRIAR'}:
-                    cell_type = cell_type_tri3
-                    property_id = element.property_id
-                elif etype in {'CQUAD4', 'CQUADR'}:
-                    cell_type = cell_type_quad4
-                    property_id = element.property_id
-                elif etype == 'CSHEAR':
-                    cell_type = cell_type_quad4
-                    property_id = element.property_id
-                else:  # pragma: no cover
-                    raise NotImplementedError(element)
+    gui_elements = basic_elements | solid_elements | midside_elements
 
-                element_id = element.element_id
-                assert len(element_id) == len(property_id), etype
-                nodesi = element.nodes
+    nelement0 = 0
+    card_index = {}
+    element_cards = [card for card in model.element_cards if card.n]
+    for element in element_cards:
+        nelement = element.n
+        #print('element')
+        etype = element.type
+        #print('load', etype, nelement, element.element_id)
+        if etype in basic_elements:
+            #print('  basic')
+            # basic elements
+            # missing nodes are not allowed
+            if etype in {'CONROD'}:
+                cell_type = cell_type_line
+                property_id = np.full(nelement, -1)
+            elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH', 'CGAP'}:
+                cell_type = cell_type_line
+                property_id = element.property_id
+            elif etype in {'CTRIA3', 'CTRIAR'}:
+                cell_type = cell_type_tri3
+                property_id = element.property_id
+            elif etype in {'CQUAD4', 'CQUADR'}:
+                cell_type = cell_type_quad4
+                property_id = element.property_id
+            elif etype == 'CSHEAR':
+                cell_type = cell_type_quad4
+                property_id = element.property_id
+            else:  # pragma: no cover
+                raise NotImplementedError(element)
 
-                if 0:  # pragma: no cover
-                    pids_to_filter = [2, 70, 71,
-                                      60, 61, # skin
-
-                                      # spar
-                                      4, 5, 6, 7, 8, 9,
-                                      10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-                                      20, 21, 22, 13, 24, 25, 26, 27, 28, 29,
-                                      30, 31, 32, 13, 34, 35, 36, 37, 38, 39,
-                                      #901,  # cb
-                                      222]  # ribs
-                    pids_to_filter = []
-                    i = filter_property_ids(etype, property_id, pids_to_filter, log)
-                    #nelement = len(i)
-                    element_id = element_id[i]
-                    nelement = len(element_id)
-                    property_id = property_id[i]
-                    nodesi = nodesi[i, :]
-
-                nodes_indexi = np.searchsorted(grid_id, nodesi[:, :])
-                dnode = nodesi.shape[1]
-                nnodesi = np.ones((nelement, 1), dtype='int64') * dnode
-                cell_typei = np.ones(nelement, dtype='int64') * cell_type
-
-                cell_offseti = _cell_offset(cell_offset0, nelement, dnode)
-
-                #nnodes
-                n_nodesi = np.hstack([nnodesi, nodes_indexi])
-                n_nodes_.append(n_nodesi.ravel())
-
-                cell_type_.append(cell_typei)
-                cell_offset_.append(cell_offseti)
-                element_ids.append(element_id)
-                property_ids.append(property_id)
-                #nnodes_nodes = [nnodes, node_id]
-                del cell_type
-                del cell_offseti, nnodesi, nodesi
-                cell_offset0 += nelement * (dnode + 1)
-            elif etype in midside_elements:
-                #print('  midside')
-                midside_nodes = element.midside_nodes
-                min_midside_nid = midside_nodes.min(axis=1)
-                assert len(min_midside_nid) == nelement
-
-                #print('min_midside_nid =', min_midside_nid)
-                is_partial = (min_midside_nid == 0)
-                is_full = ~is_partial
-
-                element_id = element.element_id
-                if etype == 'CTRIAX6':
-                    property_id = np.full(element_id.shape, 0, dtype='int32')
-                else:
-                    property_id = element.property_id
-                nfull = is_full.sum()
-                npartial = is_partial.sum()
-
-                if nfull and npartial:
-                    log.warning(f'{etype} nelement={nelement} downcasting midside elements to first order')
-
-                log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
-                if nfull:
-                    if etype == 'CTRIA6':
-                        cell_type = cell_type_tri6
-                        nodes = element.nodes
-                    elif etype == 'CTRIAX6':
-                        cell_type = cell_type_tri6
-                        nodes = element.nodes[:, [0, 2, 4, 1, 3, 5]]
-                    elif etype == 'CQUAD8':
-                        cell_type = cell_type_quad8
-                        nodes = element.nodes
-                    else:  # pragma: no cover
-                        raise NotImplementedError(f'full {etype}')
-                    cell_offset0 = _save_element(
-                        is_full, grid_id, cell_type, cell_offset0,
-                        element_id, property_id, nodes,
-                        element_ids,
-                        property_ids,
-                        n_nodes_,
-                        cell_type_,
-                        cell_offset_)
-
-                if npartial:
-                    if etype == 'CTRIA6':
-                        cell_type = cell_type_tri3
-                        nodes = element.nodes[:, :3]
-                    elif etype == 'CTRIAX6':
-                        cell_type = cell_type_tri3
-                        nodes = element.nodes[:, [0, 2, 4]]
-                    elif etype == 'CQUAD8':
-                        cell_type = cell_type_quad8
-                        nodes = element.nodes[:, :4]
-                    else:  # pragma: no cover
-                        raise NotImplementedError(f'full {etype}')
-                    is_full = np.arange(element.n, dtype='int32')
-                    cell_offset0 = _save_element(
-                        is_full, grid_id, cell_type, cell_offset0,
-                        element_id, property_id, nodes,
-                        element_ids,
-                        property_ids,
-                        n_nodes_,
-                        cell_type_,
-                        cell_offset_)
-                    continue
-                nodesi = element.base_nodes
-
-
-            elif etype in solid_elements:
-                #log.debug('  solid')
-                cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
-                    element, grid_id, cell_offset0)
-
-                n_nodes_.append(n_nodesi.ravel())
-                element_ids.append(element.element_id)
-                property_ids.append(element.property_id)
-                cell_type_.append(cell_typei)
-                cell_offset_.append(cell_offseti)
-                del n_nodesi, cell_typei, cell_offseti
-
-            elif include_mass_in_geometry and etype == 'CONM2' and 0:
-                cell_type = cell_type_point
-                property_ids.append(np.full(nelement, -1))
-
-                nodesi = element.node_id.reshape(nelement, 1)
-                nodes_indexi = np.searchsorted(grid_id, nodesi)
-                dnode = 1
-                nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
-                cell_typei = np.ones(nelement, dtype='int32') * cell_type
-
-                # (nnodes+1) = 4+1 = 5
-                # [0, 5, 10, 15, 20, ... (nelements-1)*5]
-                #
-                # for 2 CQUAD4s elements (4 nodes; 5 columns including the node count of 4)
-                # [0, 5]
-                # should be length nelement
-                cell_offseti = cell_offset0 + np.arange(0, nelement * (dnode + 1), dnode + 1)
-                assert len(cell_offseti) == nelement
-
-                #nnodes
-                #print('nnodesi =', nnodesi)
-                #print('nodes_indexi =', nodes_indexi)
-                n_nodesi = np.hstack([nnodesi, nodes_indexi])
-                n_nodes_.append(n_nodesi.ravel())
-
-                cell_type_.append(cell_typei)
-                cell_offset_.append(cell_offseti)
-                element_ids.append(element.element_id)
-                #nnodes_nodes = [nnodes, node_id]
-                del cell_type
-                del cell_offseti, nnodesi, nodesi
-                cell_offset0 += nelement * (dnode + 1)
-            else:
-                # more complicated element
-                log.warning(f'  dropping {element}')
-                continue
-                #raise NotImplementedError(element.type)
-            self.card_index[etype] = (nelement0, nelement0 + nelement)
-            nelement0 += nelement
-            del nelement # , dnode
+            element_id = element.element_id
+            assert len(element_id) == len(property_id), etype
+            nodesi = element.nodes
 
             if 0:  # pragma: no cover
-                #  testing to make sure things work...useful when they don't :/
-                # [number of nodes, nodes]
-                n_nodes = np.hstack(n_nodes_)
-                element_id = np.hstack(element_ids)
-                property_id = np.hstack(property_ids)
-                cell_type = np.hstack(cell_type_)  # 10, 12
-                cell_offset = np.hstack(cell_offset_) # 0, 5
-                #property_id = np.hstack(property_ids)
+                pids_to_filter = [2, 70, 71,
+                                  60, 61, # skin
 
-                assert len(element_id) == len(property_id)
-                assert len(element_id) == len(cell_type)
-                assert len(element_id) == len(cell_offset)
-        # [number of nodes, nodes]
-        assert len(element_ids) == len(property_ids)
+                                  # spar
+                                  4, 5, 6, 7, 8, 9,
+                                  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                  20, 21, 22, 13, 24, 25, 26, 27, 28, 29,
+                                  30, 31, 32, 13, 34, 35, 36, 37, 38, 39,
+                                  #901,  # cb
+                                  222]  # ribs
+                pids_to_filter = []
+                i = filter_property_ids(etype, property_id, pids_to_filter, log)
+                #nelement = len(i)
+                element_id = element_id[i]
+                nelement = len(element_id)
+                property_id = property_id[i]
+                nodesi = nodesi[i, :]
 
-        if len(element_ids) == 0:
-            element_id = np.array([], dtype='int32')
-            property_id = np.array([], dtype='int32')
+            nodes_indexi = np.searchsorted(grid_id, nodesi[:, :])
+            dnode = nodesi.shape[1]
+            nnodesi = np.ones((nelement, 1), dtype='int64') * dnode
+            cell_typei = np.ones(nelement, dtype='int64') * cell_type
+
+            cell_offseti = _cell_offset(cell_offset0, nelement, dnode)
+
+            #nnodes
+            n_nodesi = np.hstack([nnodesi, nodes_indexi])
+            n_nodes_.append(n_nodesi.ravel())
+
+            cell_type_.append(cell_typei)
+            cell_offset_.append(cell_offseti)
+            element_ids.append(element_id)
+            property_ids.append(property_id)
+            #nnodes_nodes = [nnodes, node_id]
+            del cell_type
+            del cell_offseti, nnodesi, nodesi
+            cell_offset0 += nelement * (dnode + 1)
+        elif etype in midside_elements:
+            #print('  midside')
+            midside_nodes = element.midside_nodes
+            min_midside_nid = midside_nodes.min(axis=1)
+            assert len(min_midside_nid) == nelement
+
+            #print('min_midside_nid =', min_midside_nid)
+            is_partial = (min_midside_nid == 0)
+            is_full = ~is_partial
+
+            element_id = element.element_id
+            if etype == 'CTRIAX6':
+                property_id = np.full(element_id.shape, 0, dtype='int32')
+            else:
+                property_id = element.property_id
+            nfull = is_full.sum()
+            npartial = is_partial.sum()
+
+            if nfull and npartial:
+                log.warning(f'{etype} nelement={nelement} downcasting midside elements to first order')
+
+            log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
+            if nfull:
+                if etype == 'CTRIA6':
+                    cell_type = cell_type_tri6
+                    nodes = element.nodes
+                elif etype == 'CTRIAX6':
+                    cell_type = cell_type_tri6
+                    nodes = element.nodes[:, [0, 2, 4, 1, 3, 5]]
+                elif etype == 'CQUAD8':
+                    cell_type = cell_type_quad8
+                    nodes = element.nodes
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'full {etype}')
+                cell_offset0 = _save_element(
+                    is_full, grid_id, cell_type, cell_offset0,
+                    element_id, property_id, nodes,
+                    element_ids,
+                    property_ids,
+                    n_nodes_,
+                    cell_type_,
+                    cell_offset_)
+
+            if npartial:
+                if etype == 'CTRIA6':
+                    cell_type = cell_type_tri3
+                    nodes = element.nodes[:, :3]
+                elif etype == 'CTRIAX6':
+                    cell_type = cell_type_tri3
+                    nodes = element.nodes[:, [0, 2, 4]]
+                elif etype == 'CQUAD8':
+                    cell_type = cell_type_quad8
+                    nodes = element.nodes[:, :4]
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'full {etype}')
+                is_full = np.arange(element.n, dtype='int32')
+                cell_offset0 = _save_element(
+                    is_full, grid_id, cell_type, cell_offset0,
+                    element_id, property_id, nodes,
+                    element_ids,
+                    property_ids,
+                    n_nodes_,
+                    cell_type_,
+                    cell_offset_)
+                continue
+            nodesi = element.base_nodes
+
+        elif etype in solid_elements:
+            #log.debug('  solid')
+            cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
+                element, grid_id, cell_offset0)
+
+            n_nodes_.append(n_nodesi.ravel())
+            element_ids.append(element.element_id)
+            property_ids.append(element.property_id)
+            cell_type_.append(cell_typei)
+            cell_offset_.append(cell_offseti)
+            del n_nodesi, cell_typei, cell_offseti
+
+        elif include_mass_in_geometry and etype == 'CONM2' and 0:
+            cell_type = cell_type_point
+            property_ids.append(np.full(nelement, -1))
+
+            nodesi = element.node_id.reshape(nelement, 1)
+            nodes_indexi = np.searchsorted(grid_id, nodesi)
+            dnode = 1
+            nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
+            cell_typei = np.ones(nelement, dtype='int32') * cell_type
+
+            # (nnodes+1) = 4+1 = 5
+            # [0, 5, 10, 15, 20, ... (nelements-1)*5]
+            #
+            # for 2 CQUAD4s elements (4 nodes; 5 columns including the node count of 4)
+            # [0, 5]
+            # should be length nelement
+            cell_offseti = cell_offset0 + np.arange(0, nelement * (dnode + 1), dnode + 1)
+            assert len(cell_offseti) == nelement
+
+            #nnodes
+            #print('nnodesi =', nnodesi)
+            #print('nodes_indexi =', nodes_indexi)
+            n_nodesi = np.hstack([nnodesi, nodes_indexi])
+            n_nodes_.append(n_nodesi.ravel())
+
+            cell_type_.append(cell_typei)
+            cell_offset_.append(cell_offseti)
+            element_ids.append(element.element_id)
+            #nnodes_nodes = [nnodes, node_id]
+            del cell_type
+            del cell_offseti, nnodesi, nodesi
+            cell_offset0 += nelement * (dnode + 1)
         else:
+            # more complicated element
+            log.warning(f'  dropping {element}')
+            continue
+            #raise NotImplementedError(element.type)
+        card_index[etype] = (nelement0, nelement0 + nelement)
+        nelement0 += nelement
+        del nelement # , dnode
+
+        if 0:  # pragma: no cover
+            #  testing to make sure things work...useful when they don't :/
+            # [number of nodes, nodes]
             n_nodes = np.hstack(n_nodes_)
             element_id = np.hstack(element_ids)
             property_id = np.hstack(property_ids)
@@ -900,14 +668,30 @@ class Nastran3:
             assert len(element_id) == len(property_id)
             assert len(element_id) == len(cell_type)
             assert len(element_id) == len(cell_offset)
+    # [number of nodes, nodes]
+    assert len(element_ids) == len(property_ids)
 
-            nelement_total = len(element_id)
-            #nelement_total = 5 # len(element_id)
-            build_vtk_geometry(
-                nelement_total, ugrid,
-                n_nodes, cell_type, cell_offset)
-        self.gui_elements = gui_elements
-        return element_id, property_id
+    if len(element_ids) == 0:
+        element_id = np.array([], dtype='int32')
+        property_id = np.array([], dtype='int32')
+    else:
+        n_nodes = np.hstack(n_nodes_)
+        element_id = np.hstack(element_ids)
+        property_id = np.hstack(property_ids)
+        cell_type = np.hstack(cell_type_)  # 10, 12
+        cell_offset = np.hstack(cell_offset_) # 0, 5
+        #property_id = np.hstack(property_ids)
+
+        assert len(element_id) == len(property_id)
+        assert len(element_id) == len(cell_type)
+        assert len(element_id) == len(cell_offset)
+
+        nelement_total = len(element_id)
+        #nelement_total = 5 # len(element_id)
+        build_vtk_geometry(
+            nelement_total, ugrid,
+            n_nodes, cell_type, cell_offset)
+    return element_id, property_id, element_cards, gui_elements, card_index
 
 def _save_element(i: np.ndarray, grid_id: np.ndarray, cell_type: int, cell_offset0: int,
                   element_id,
@@ -952,6 +736,229 @@ def _cell_offset(cell_offset0: int, nelement: int, dnode: int) -> np.ndarray:
     cell_offseti = cell_offset0 + np.arange(0, nelement*(dnode +1), dnode + 1)
     assert len(cell_offseti) == nelement
     return cell_offseti
+
+def gui_material_ids(model: BDF,
+                     icase: int,
+                     cases: Cases,
+                     form: Form,
+                     element_ids: np.ndarray,
+                     property_ids: np.ndarray,
+                     card_index: dict[str, tuple[int, int]]) -> int:
+    cards = (
+        ('Rod', False, [model.conrod], []),
+        ('Rod', True, [model.crod], [model.prod]),
+        ('Rod', True, [model.cbar], model.bar_property_cards),
+        ('Rod', True, [model.cbeam], model.beam_property_cards),
+        ('Shell', True, model.shell_element_cards, model.shell_property_cards),
+        ('Solid', True, model.solid_element_cards, model.solid_property_cards),
+    )
+    #beams = [model.cbeam if model.cbeam.n > 0]
+    #solids = [card for card in model.solid_element_cards if card.n > 0]
+    #shells = [card for card in model.shell_element_cards if card.n > 0]
+    idtype = element_ids.dtype
+    fdtype = model.fdtype
+
+    materials_dict = {}
+    neid = len(element_ids)
+    for (base_flag, is_pid, element_cards, property_cards) in cards:
+        element_cards2 = [card for card in element_cards if card.n > 0]
+        property_cards2 = [card for card in property_cards if card.n > 0]
+
+        for card in element_cards2:
+            flag = base_flag
+            etype = card.type
+            if etype not in card_index:
+                continue
+
+            i0, i1 = card_index[etype]
+            #eids = element_ids[i0:i1]
+            pids = property_ids[i0:i1]
+            if not is_pid:
+                continue
+
+            if flag in materials_dict:
+                material_dicti = materials_dict[flag]
+            else:
+                if flag == 'Rod':
+                    material_id = np.full(neid, 0, dtype=idtype)
+                elif flag == 'Shell':
+                    #material_id = np.array([], dtype=idtype)
+                    pass
+                    #pshell_material_id = np.full((neid, 4), 0, dtype=idtype)
+                    #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
+                elif flag == 'Solid':
+                    material_id = np.full(neid, 0, dtype=idtype)
+                else:
+                    raise RuntimeError(flag)
+
+                if flag != 'Shell':
+                    material_dicti = {
+                        'mid': material_id,
+                    }
+            for card in property_cards2:
+                card_pids = card.property_id
+                index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
+                                      if pid in card_pids])
+                if index_pid.shape[0] == 0:
+                    continue
+                index = index_pid[:, 0]
+                pidsi = index_pid[:, 1]
+                cardi = card.slice_card_by_id(pidsi)
+                ptype = card.type
+                if flag in {'Rod'}:
+                    material_idi = cardi.material_id
+                    material_id[index] = material_idi
+                elif flag == 'Solid' and ptype in {'PSOLID', 'PLSOLID'}:
+                    material_idi = cardi.material_id
+                    material_id[index] = material_idi
+
+                elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
+                    upids = np.unique(cardi.property_id)
+                    ucard = card.slice_card_by_id(upids)
+                    #nlayer = ucard.nlayer.max()
+                    nlayer = card.nlayer.max()
+                    #print('nlayer =', nlayer)
+                    if ptype in {'PCOMP', 'PCOMPG'}:
+                        flag = 'Shell - Composite'
+                    elif ptype == 'PCOMPS':
+                        flag = 'Solid - Composite'
+                    else:
+                        raise RuntimeError(ptype)
+
+                    if flag in materials_dict:
+                        material_dicti = materials_dict[flag]
+                    else:
+                        # hack...
+                        material_id = np.full((neid, nlayer), -1, dtype=idtype)
+                        thickness = np.full((neid, nlayer), np.nan, dtype=fdtype)
+                        theta = np.full((neid, nlayer), np.nan, dtype=fdtype)
+                        material_dicti = {
+                            'mid': material_id,
+                            't': thickness,
+                            'theta': theta,
+                        }
+                    material_id = material_dicti['mid']
+                    thickness = material_dicti['t']
+                    theta = material_dicti['theta']
+
+                    # Presumably the unique number of layers is small, so we
+                    # iterate on that. We can then reshape the material_id once
+                    # we slice off the unwanted rows
+                    for ilayer in np.unique(ucard.nlayer):
+                        ipid = np.where(ilayer == cardi.nlayer)[0]
+                        ieid = index[ipid]
+                        npid = len(ipid)
+                        pids_layer = cardi.property_id[ipid]
+                        cardii = card.slice_card_by_id(pids_layer)
+                        material_id_rect = cardii.material_id.reshape(npid, ilayer)
+                        thickness_rect = cardii.thickness.reshape(npid, ilayer)
+                        theta_rect = cardii.theta.reshape(npid, ilayer)
+                        material_id[ieid, :ilayer] = material_id_rect
+                        thickness[ieid, :ilayer] = thickness_rect
+                        theta[ieid, :ilayer] = theta_rect
+                    del material_id, cardii, ieid, ipid, npid
+                    del material_id_rect, thickness_rect
+                elif ptype == 'PSHELL':
+                    flag = 'Shell - PSHELL'
+                    if flag in materials_dict:
+                        material_dicti = materials_dict[flag]
+                    else:
+                        # hack...
+                        material_id = np.full((neid, 4), -1, dtype=idtype)
+                        thickness = np.full(neid, np.nan, dtype=fdtype)
+                        material_dicti = {
+                            'mid': material_id,
+                            't': thickness,
+                        }
+                    material_id = material_dicti['mid']
+                    thickness = material_dicti['t']
+                    material_idi = cardi.material_id
+                    material_id[index] = material_idi
+                    thickness[index] = cardi.total_thickness()
+                    del material_id, material_idi, thickness, index
+
+                else:  # pragma: no cover
+                    raise RuntimeError(flag)
+                materials_dict[flag] = material_dicti
+                #if base_flag == 'Shell':
+                    #del material_id
+            del material_dicti
+            print(f'finished {etype} {flag}')
+
+    #materials_dict2 = {}
+    #for flag, material_dict in materials_dict.items():
+        #mid_col_max = material_id.max(axis=0)
+        #imat = (mid_col_max > 0)
+        #material_id2 = material_id[:, imat]
+        #materials_dict2[flag] = material_id2
+    #del materials_dict
+
+    subcase_id = 0
+    pshell_result_name_map = {
+        0: 'MID1 - Membrane',
+        1: 'MID2 - Bending',
+        2: 'MID3 - Shear',
+        3: 'MID4 - Membrane/Bending',
+    }
+
+    for flag, material_dicti in materials_dict.items():
+        material_id = material_dicti['mid']
+
+        if 'Shell' in flag:
+            mid_col_max = material_id.max(axis=0)
+            imat = (mid_col_max > 0)
+            #material_id2 = material_id[:, imat]
+            #materials_dict2[flag] = material_id2
+
+        #print(flag, material_id)
+        materials_form = []
+        if material_id.ndim == 1:
+            material_id = material_id.reshape((neid, 1))
+
+        nlayer = material_id.shape[1]
+        for ilayer in range(nlayer):
+            if flag in {'Rod', 'Solid'}:
+                result_name = 'Material'
+            elif 'Composite' in flag:
+                result_name = f'Material Layer {ilayer+1}'
+
+            elif 'PSHELL' in flag:
+                if ilayer == 1:
+                    result_namei = 'Total Thickness'
+                    resulti = material_dicti['t']
+                    icase = _add_finite_centroidal_gui_result(
+                        icase, cases, materials_form, subcase_id,
+                        result_namei, resulti)
+
+                result_name = pshell_result_name_map[ilayer]
+            else:  #  pragma: no cover
+                raise RuntimeError(flag)
+
+            material_idi = material_id[:, ilayer]
+            material_idi[material_idi == 0] = -1
+            if material_idi.max() == -1:
+                continue
+            icase = _add_integer_centroid_gui_result(
+                icase, cases, materials_form, subcase_id,
+                result_name, material_idi, mask_value=-1)
+
+        if 'Composite' in flag:
+            for ilayer in range(nlayer):
+                result_namei = f'Thickness Layer {ilayer+1}'
+                resulti = material_dicti['t'][:, ilayer]
+                icase = _add_finite_centroidal_gui_result(
+                    icase, cases, materials_form, subcase_id,
+                    result_namei, resulti)
+            for ilayer in range(nlayer):
+                result_namei = f'Theta {ilayer+1}'
+                resulti = material_dicti['theta'][:, ilayer]
+                icase = _add_finite_centroidal_gui_result(
+                    icase, cases, materials_form, subcase_id,
+                    result_namei, resulti)
+
+        if len(materials_form):
+            form.append((flag, None, materials_form))
+    return icase
 
 def _mean_min_edge_length(min_edge_length: np.ndarray) -> float:
     """

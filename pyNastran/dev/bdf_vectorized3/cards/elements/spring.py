@@ -67,7 +67,7 @@ class CELAS1(Element):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
-        nids = [integer(card, 3, 'g1'),
+        nids = [integer_or_blank(card, 3, 'g1', default=0),
                 integer_or_blank(card, 5, 'g2', default=0)]
 
         #: component number
@@ -376,6 +376,12 @@ class CELAS3(Element):
         self.spoints = spoints
         self.n = nelements
 
+    def __apply_slice__(self, elem: CELAS3, i: np.ndarray) -> None:  # ignore[override]
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.spoints = self.spoints[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         spoints = self.spoints.ravel()
         spoints = spoints[spoints > 0]
@@ -484,6 +490,12 @@ class CELAS4(Element):
         self.spoints = spoints
         self.k = k
         self.n = nelements
+
+    def __apply_slice__(self, elem: CELAS4, i: np.ndarray) -> None:  # ignore[override]
+        elem.element_id = self.element_id[i]
+        elem.spoints = self.spoints[i, :]
+        elem.k = self.k[i]
+        elem.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         spoints = self.spoints.ravel()
@@ -714,6 +726,14 @@ class PELAST(Property):
         self.table_k = table_k
         self.table_ge = table_ge
         self.table_k_nonlinear = table_k_nonlinear
+
+    def __apply_slice__(self, prop: PELAST, i: np.ndarray) -> None:  # ignore[override]
+        prop.property_id = self.property_id[i]
+        prop.table_k = self.table_k[i]
+        prop.table_ge = self.table_ge[i]
+        prop.table_k_nonlinear = self.table_k_nonlinear[i]
+        prop.n = len(i)
+
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass

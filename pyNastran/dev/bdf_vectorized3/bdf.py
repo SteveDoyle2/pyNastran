@@ -107,7 +107,7 @@ from pyNastran.bdf.cards.dynamic import (
                               #CREEP, EQUIV)
 from pyNastran.bdf.cards.materials import NXSTRAT
 #from .cards.material_deps import (
-    #MATT2, MATT3, MATT4, MATT5, MATT9, MATS1)
+    #MATT3, MATT4, MATT5, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from .cards.grid import GRDSET
@@ -136,21 +136,21 @@ from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPR
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 #from .bdf.cards.elements.thermal import BDYOR
 #from .cards.thermal.loads import (TEMPB3, TEMPRB)
-from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
-    CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-    PHBDY, CONV, CONVM, # TEMPBC,
-)
+#from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
+    #CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+    #PHBDY, CONV, CONVM, # TEMPBC,
+#)
 #from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-    TABLES1, # TABDMP1,
+    TABLES1, TABDMP1,
     TABLEST, TABLEH1, # TABLEHT,
-    #TABRND1, TABRNDG,
+    TABRND1, # TABRNDG,
     DTABLE,
 )
 from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCPARA, BCTPARA, BLSEG, BCTPARM, BCBODY)
+    BCRPARA, BCPARA, BCTPARA, BCTPARM) # BLSEG, BCBODY
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
@@ -467,6 +467,7 @@ OBJ_CARDS = {
     'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5',
     'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
     'TABLES1', 'TABLEST', 'TABLEH1', 'TABLEHT',
+    'TABDMP1',
     'DTABLE',
 }
 
@@ -616,7 +617,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # solids
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            'CHEXCZ',
+            'CPENTCZ', 'CHEXCZ',
 
             # acoustic
             #'CHACAB',
@@ -648,7 +649,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'PSHELL', 'PCOMP', 'PCOMPG',
             'PSHEAR', 'PSHLN1', 'PSHLN2',
-            'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
+            'PSOLID', 'PLSOLID', 'PSOLCZ',
+            'PVISC', # 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
 
             ## pdampt
@@ -756,9 +758,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CHBDYE', 'CHBDYG', 'CHBDYP', 'BDYOR',
             'PCONV', 'PCONVM', 'PHBDY',
             'RADBC', 'CONV',
-            'RADM', # 'VIEW', 'VIEW3D',  # TODO: not validated
+            'RADM', 'VIEW', 'VIEW3D',  # TODO: not validated
 
-            #'RADCAV', ## radcavs
+            'RADCAV', ## radcavs
 
             # ---- dynamic cards ---- #
             'DAREA',  ## darea
@@ -863,7 +865,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TABLES1',
 
             ## modal damping table - tables_sdamping
-            #'TABDMP1',
+            'TABDMP1',
 
             ## random_tables
             # PSD=func(freq); used by RANDPS card
@@ -886,7 +888,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MODTRAK',
 
             #: contact
-            #'BCBODY',  ## bcbody
+            'BCBODY',  ## bcbody
             #'BCPARA',  ## bcpara
 
             # nx-contact
@@ -2043,7 +2045,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         card_name = card_name.upper()
         self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'GMSURF', 'OUTPUT', 'ADAPT',
-                         'MONDSP1']:
+                         'MONDSP1', 'BCBODY']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -2084,6 +2086,18 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 #raise CardParseSyntaxError(card)
                 msg = _format_comment(comment) + str(card)
                 raise UnsupportedCard(msg)
+        class RuntimeCrash:
+            """class for crashing on specific cards"""
+            def __init__(self) -> None:
+                """dummy init"""
+                pass
+            @classmethod
+            def add_card(cls, card, comment=''):
+                """the method that forces the crash"""
+                #raise CardParseSyntaxError(card)
+                msg = _format_comment(comment) + str(card)
+                raise RuntimeError(msg)
+                #raise UnsupportedCard(msg)
 
         #class CrashIgnore:
             #"""class for crashing on specific cards"""
@@ -2123,12 +2137,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nx contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             'BCTPARM' : (BCTPARM, add_methods._add_bctparm_object),
-            #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
             # nx bolts
-            'BOLT' : (Crash, None),
-            'BOLTFOR' : (Crash, None),
-            'BOLTLD' : (Crash, None),
+            'BOLT' : (RuntimeCrash, None),
+            'BOLTFOR' : (RuntimeCrash, None),
+            'BOLTLD' : (RuntimeCrash, None),
 
             #'CBEAR', 'PBEAR', 'ROTORB',
             #'CBEAR' : (Crash, None),
@@ -2145,7 +2158,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PSEAM' : (Crash, None),
 
             #'DVSHAP' : (Crash, None),
-            #'BNDGRID' : (Crash, None),
+            'BNDGRID' : (RuntimeCrash, None),
 
             #'CYSYM' : (Crash, None),
             #'TEMPP1' : (Crash, None),
@@ -2163,7 +2176,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nodes
             #'RINGAX' : (RINGAX, add_methods._add_ringax_object),
             #'POINTAX' : (POINTAX, add_methods._add_ringax_object),
-            #'POINT' : (POINT, add_methods._add_point_object),
             #'SEQGP' : (SEQGP, add_methods._add_seqgp_object),
             #'GRIDB' : (GRIDB, add_methods._add_gridb_object),
 
@@ -2242,12 +2254,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DOPTPRM' : (DOPTPRM, add_methods._add_doptprm_object),
             #'TOPVAR' : (TOPVAR, add_methods._add_topvar_object),
 
-            #'PCONV' : (PCONV, add_methods._add_convection_property_object),
-            #'PCONVM' : (PCONVM, add_methods._add_convection_property_object),
-
-            #'VIEW' : (VIEW, add_methods._add_view_object),
-            #'VIEW3D' : (VIEW3D, add_methods._add_view3d_object),
-
             # SOL 144
             'AEROS' : (AEROS, add_methods._add_aeros_object),
             'DIVERG' : (DIVERG, add_methods._add_diverg_object),
@@ -2288,7 +2294,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TABLEM4' : (TABLEM4, add_methods._add_tablem_object),
 
             # other tables
-            #'TABDMP1' : (TABDMP1, add_methods._add_table_sdamping_object),
+            'TABDMP1' : (TABDMP1, add_methods._add_table_sdamping_object),
             #'TABRND1' : (TABRND1, add_methods._add_random_table_object),
             #'TABRNDG' : (TABRNDG, add_methods._add_random_table_object),
 
@@ -2299,13 +2305,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
 
             # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BOUTPUT': (Crash, None),
-            #'BOLT': (Crash, None),
-            #'BOLTFOR': (Crash, None),
-            'BOLTFRC': (Crash, None),
-            'MBOLTUS': (Crash, None)
+            'BOUTPUT': (RuntimeCrash, None),
+            'BOLT': (Crash, None),
+            'BOLTFOR': (Crash, None),
+            'BOLTFRC': (RuntimeCrash, None),
+            'MBOLTUS': (RuntimeCrash, None),
 
-            #'RADCAV' : (RADCAV, add_methods._add_radcav_object), #
             #'RADLST' : (RADLST, add_methods._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMTX' : (RADMTX, add_methods._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT' : (Crash, None),
@@ -2331,12 +2336,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
             'EPOINT': partial(self._prepare_card, self.epoint),
+
+            # supports 2 cards in 1
             'CORD1R': self._prepare_cord1r,
             'CORD1C': self._prepare_cord1c,
             'CORD1S': self._prepare_cord1s,
-            'CORD2R': self._prepare_cord2r,
-            'CORD2C': self._prepare_cord2c,
-            'CORD2S': self._prepare_cord2s,
+            'CORD2R': partial(self._prepare_card_by_method, self.coord.add_cord2r_bdf),
+            'CORD2C': partial(self._prepare_card_by_method, self.coord.add_cord2c_bdf),
+            'CORD2S': partial(self._prepare_card_by_method, self.coord.add_cord2s_bdf),
 
             'MODTRAK' : partial(self._prepare_card, self.modtrak),
 
@@ -2482,11 +2489,19 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CPENTA' : partial(self._prepare_card, self.cpenta),
             'CHEXA' : partial(self._prepare_card, self.chexa),
             'CPYRAM' : partial(self._prepare_card, self.cpyram),
-            'CHEXCZ' : partial(self._prepare_card, self.chexcz),
             'PSOLID': partial(self._prepare_card, self.psolid),
             'PLSOLID': partial(self._prepare_card, self.plsolid),
+            'PSOLCZ': partial(self._prepare_card, self.psolcz),
             'PCOMPS': partial(self._prepare_card, self.pcomps),
             'PCOMPLS': partial(self._prepare_card, self.pcompls),
+
+            # cohesive zone solids
+            #nx
+            'CPENTCZ' : partial(self._prepare_card, self.cpentcz),
+            'CHEXCZ' : partial(self._prepare_card, self.chexcz),
+            # msc
+            'CIFPENT' : partial(self._prepare_card, self.cifpent),
+            'CIFHEX' : partial(self._prepare_card, self.cifhex),
 
             # acoustic shells?
             'CAABSF': partial(self._prepare_card, self.caabsf),
@@ -2509,6 +2524,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PCONV': partial(self._prepare_card, self.pconv),
             'CONVM': partial(self._prepare_card, self.convm),
             'PCONVM': partial(self._prepare_card, self.pconvm),
+
+            # radiation
+            'RADCAV': partial(self._prepare_card, self.radcav),
+            'VIEW' : partial(self._prepare_card, self.view),
+            'VIEW3D' : partial(self._prepare_card, self.view3d),
+
 
             # static loads
             'LOAD' : partial(self._prepare_card, self.load),
@@ -2590,10 +2611,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MATS8' : partial(self._prepare_card, self.mats8),
 
             'MATT1' : partial(self._prepare_card, self.matt1),
-            #'MATT2' : (MATT2, add_methods._add_material_dependence_object),
-            #'MATT3' : (MATT3, add_methods._add_material_dependence_object),
-            #'MATT4' : (MATT4, add_methods._add_material_dependence_object),
-            #'MATT5' : (MATT5, add_methods._add_material_dependence_object),
+            'MATT2' : partial(self._prepare_card, self.matt2),
+            #'MATT3' : partial(self._prepare_card, self.matt3),
+            #'MATT4' : partial(self._prepare_card, self.matt4),
+            #'MATT5' : partial(self._prepare_card, self.matt5),
             'MATT8' : partial(self._prepare_card, self.matt8),
             'MATT9' : partial(self._prepare_card, self.matt9),
 
@@ -2633,6 +2654,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
             'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),
             'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card),
+            'BCBODY' : partial(self._prepare_card, self.bcbody),
 
             # nx glue contact
             'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),
@@ -2770,8 +2792,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DEQATN' : self._prepare_dequatn,
 
             #'TEMPAX' : self._prepare_tempax,
-            #'CONVM' : self._prepare_convm,
-            #'CONV' : self._prepare_conv,
             # GRDSET-will be last card to update from _card_parser_prepare
             'GRDSET' : self._prepare_grdset,
             'BAROR' : self._prepare_baror,
@@ -2859,27 +2879,21 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             out = self.coord.add_cord1s_bdf(card_obj, icard=1, comment=comment)
         return out
 
-    def _prepare_cord2r(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
-        """adds a CORD2R"""
-        out = self.coord.add_cord2r_bdf(card_obj, comment=comment)
-        return out
-    def _prepare_cord2c(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
-        """adds a CORD2C"""
-        out = self.coord.add_cord2c_bdf(card_obj, comment=comment)
-        return out
-    def _prepare_cord2s(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
-        """adds a CORD2S"""
-        out = self.coord.add_cord2s_bdf(card_obj, comment=comment)
-        return out
-
     def _prepare_card(self, cls, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
-        """adds a CBAR"""
+        """adds a card and  calls the add_card method"""
         i = cls.add_card(card_obj, comment=comment)
+        if cls.type == 'PDAMP':
+            assert isinstance(i, list), (i, cls)
+        else:
+            assert isinstance(i, int), (i, cls)
         return i
 
-    def _prepare_card_by_method(self, func: Callable, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
-        """adds a CBAR"""
+    def _prepare_card_by_method(self, func: Callable,
+                                unused_card: list[str],
+                                card_obj: BDFCard, comment='') -> None:
+        """adds a card, but doesn't call the add_card method"""
         i = func(card_obj, comment=comment)
+        assert isinstance(i, int), (i, cls)
         return i
 
     def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:

@@ -1034,12 +1034,11 @@ class GEOM2:
                                           size=op2.size, endian=op2._endian)
         element = op2.cbeam
         element_id = ints[:, 0]
-        element.element_id = element_id
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
 
-        element.sa = ints[:, 4]
-        element.sb = ints[:, 5]
+        sa = ints[:, 4]
+        sb = ints[:, 5]
 
         fes = ints[:, 9]
         fs = fes & 3
@@ -1050,11 +1049,12 @@ class GEOM2:
 
         g0 = np.full(nelements, -1, dtype='int32')
         x = np.full((nelements, 3), np.nan, dtype='float64')
-        element.pa = np.zeros(nelements, dtype='int32')
-        element.pb = np.zeros(nelements, dtype='int32')
-        element.wa = np.zeros((nelements, 3), dtype='float64')
-        element.wb = np.zeros((nelements, 3), dtype='float64')
+        pa = np.zeros(nelements, dtype='int32')
+        pb = np.zeros(nelements, dtype='int32')
+        wa = np.zeros((nelements, 3), dtype='float64')
+        wb = np.zeros((nelements, 3), dtype='float64')
 
+        bit = np.zeros(nelements, dtype='int32')
         offt = np.full(nelements, '', dtype='|U8')
         for i, eid, fei in zip(count(), element_id, fes):
             try:
@@ -1064,36 +1064,32 @@ class GEOM2:
                 raise
             offt[i] = offti
 
-        element.offt = offt
-        #cbeam.pa = np.zeros(nelements, dtype='int32')
         if i0.sum():
             x[i0, :] = floats[i0, :][6, 7, 8]
-            element.pa[i0] = ints[i0, 10]
-            element.pb[i0] = ints[i0, 11]
-            #element.wa[i0, :] = floats[i0, [12, 13, 14]]
-            #element.wb[i0, :] = floats[i0, [15, 16, 17]]
+            pa[i0] = ints[i0, 10]
+            pb[i0] = ints[i0, 11]
+            #wa[i0, :] = floats[i0, [12, 13, 14]]
+            #wb[i0, :] = floats[i0, [15, 16, 17]]
         if i1.sum():
             x[i1, :] = floats[i1, :][:, [6, 7, 8]]
-            element.pa[i1] = ints[i1, 10]
-            element.pb[i1] = ints[i1, 11]
-            #element.wa[i1, :] = floats[i1, [12, 13, 14]]
-            #element.wb[i1, :] = floats[i1, [15, 16, 17]]
+            pa[i1] = ints[i1, 10]
+            pb[i1] = ints[i1, 11]
+            #wa[i1, :] = floats[i1, [12, 13, 14]]
+            #wb[i1, :] = floats[i1, [15, 16, 17]]
 
         if i2.sum():
             g0[i2] = ints[i2, 6]
             #element.x[i2, :] = floats[i2, [6, 7, 8]]
-            element.pa[i2] = ints[i2, 10]
-            element.pb[i2] = ints[i2, 11]
-            #element.wa[i2, :] = floats[i2, [12, 13, 14]]
-            #element.wb[i2, :] = floats[i2, [15, 16, 17]]
+            pa[i2] = ints[i2, 10]
+            pb[i2] = ints[i2, 11]
+            #wa[i2, :] = floats[i2, [12, 13, 14]]
+            #wb[i2, :] = floats[i2, [15, 16, 17]]
         #else:
             #(eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
              #pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-        element.wa = floats[:, [12, 13, 14]]
-        element.wb = floats[:, [15, 16, 17]]
-        element.x = x
-        element.g0 = g0
-        element.n = nelements
+        wa = floats[:, [12, 13, 14]]
+        wb = floats[:, [15, 16, 17]]
+        element._save(element_id, property_id, nodes, offt, bit, g0, x, pa, pb, wa, wb, sa, sb)
         element.write()
 
         #struct_i = op2.struct_i if self.size == 4 else self.struct_q

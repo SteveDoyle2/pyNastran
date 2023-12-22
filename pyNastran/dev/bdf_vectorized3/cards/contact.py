@@ -11,14 +11,18 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thr
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim)
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double,
+    integer, double, string, blank,
     integer_or_blank, double_or_blank, string_or_blank,
+    integer_double_or_blank, integer_string_or_blank,
+    string_choice_or_blank,
     #components_or_blank, parse_components,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import lax_double_or_blank
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.cards.contact import _get_bcbody_section_values
+
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     remove_unused_primary, remove_unused_duplicate)
 from .constraints import ADD
@@ -30,13 +34,14 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class ElementPropertyNodeSet(VectorizedBaseCard):
+    _id_name = 'sid'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.sid = np.array([], dtype='int32')
@@ -196,13 +201,16 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
                         list_fields.extend(['']*(8-nleftover))
                     for double in doubles:
                         list_fields += double + [''] * 5
-                #print(print_card(list_fields))
-                bdf_file.write(print_card(list_fields))
-            else:
+                #print(print_card(list_fields).rstrip())
+            elif len(doubles):
                 assert len(singles) == 0, singles
-                for double in doubles:
-                    list_fields = [self.type, sid] + double
-                    bdf_file.write(print_card(list_fields))
+                list_fields = [self.type, sid] + doubles[0] + ['', '', '', '']
+                for double in doubles[1:]:
+                    list_fields.extend(double + ['', '', '', '', ''])
+                #print(print_card(list_fields).rstrip())
+            else:  # pragma: no cover
+                raise RuntimeError((singles, doubles))
+            bdf_file.write(print_card(list_fields))
         return
 
     #def index(self, node_id: np.ndarray, safe: bool=False) -> np.ndarray:
@@ -279,6 +287,7 @@ class BSURF(ElementSet):
                    element_id=(eid, self.element_id),)
 
 class BSURFS(ElementSet):
+    #_id_name = 'bsurf_id'
     def geom_check(self, missing: dict[str, np.ndarray]):
         eid = self.model.solid_element_ids
         geom_check(self,
@@ -354,6 +363,7 @@ class BGSET(VectorizedBaseCard):
     |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
     +-------+------+------+------+---------+----+------+------+----+
     """
+    _id_name = 'glue_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         #self.sid = np.array([], dtype='int32')
@@ -500,7 +510,6 @@ class BGSET(VectorizedBaseCard):
 
     def __apply_slice__(self, bgset: BGSET, i: np.ndarray) -> None:
         self._slice_comment(bgset, i)
-        bgset.n = len(i)
 
         isource = self.isource
         bgset.glue_id = self.glue_id[i]
@@ -509,6 +518,7 @@ class BGSET(VectorizedBaseCard):
         bgset.target_ids = hslice_by_idim(i, isource, self.target_ids)
         bgset.search_distance = hslice_by_idim(i, isource, self.search_distance)
         bgset.extension = hslice_by_idim(i, isource, self.extension)
+        bgset.n = len(i)
 
     @property
     def isource(self) -> np.ndarray:
@@ -554,6 +564,7 @@ class BCTSET(VectorizedBaseCard):
     |        |  etc. |      |       |       |       |       |       |
     +--------+-------+------+-------+-------+-------+-------+-------+
     """
+    _id_name = 'contact_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         #self.sid = np.array([], dtype='int32')
@@ -737,7 +748,6 @@ class BCTSET(VectorizedBaseCard):
 
     def __apply_slice__(self, bctset: BCTSET, i: np.ndarray) -> None:
         self._slice_comment(bctset, i)
-        bctset.n = len(i)
 
         isource = self.isource
         bctset.contact_id = self.contact_id[i]
@@ -748,6 +758,7 @@ class BCTSET(VectorizedBaseCard):
         bctset.min_search_distances = hslice_by_idim(i, isource, self.min_search_distances)
         bctset.max_search_distances = hslice_by_idim(i, isource, self.max_search_distances)
         bctset.frictions = hslice_by_idim(i, isource, self.frictions)
+        bctset.n = len(i)
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         contact_id = used_dict['contact_id']
@@ -1040,8 +1051,6 @@ class BCONP(VectorizedBaseCard):
 
     def __apply_slice__(self, bconp: BCONP, i: np.ndarray) -> None:
         #self._slice_comment(bconp, i)
-        bconp.n = len(i)
-
         bconp.contact_id = self.contact_id[i]
         bconp.slave_id = self.slave_id[i]
         bconp.master_id = self.master_id[i]
@@ -1049,6 +1058,7 @@ class BCONP(VectorizedBaseCard):
         bconp.friction_id = self.friction_id[i]
         bconp.ptype = self.ptype[i]
         bconp.coord_id = self.coord_id[i]
+        bconp.n = len(i)
 
     @property
     def max_id(self) -> int:
@@ -1178,10 +1188,10 @@ class BFRIC(VectorizedBaseCard):
 
     def __apply_slice__(self, bfric: BFRIC, i: np.ndarray) -> None:
         #self._slice_comment(bfric, i)
-        bfric.n = len(i)
         bfric.friction_id = self.friction_id[i]
         bfric.fstiff = self.fstiff[i]
         bfric.mu1 = self.mu1[i]
+        bfric.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -1373,12 +1383,12 @@ class BCRPARA(VectorizedBaseCard):
 
     def __apply_slice__(self, bcrpara: BCRPARA, i: np.ndarray) -> None:
         #self._slice_comment(bcrpara, i)
-        bcrpara.n = len(i)
         bcrpara.contact_region_id = self.contact_region_id[i]
         bcrpara.surf = self.surf[i]
         bcrpara.offset = self.offset[i]
         bcrpara.surface_type = self.surface_type[i]
         bcrpara.grid_point = self.grid_point[i]
+        bcrpara.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.grid_point)
@@ -1621,4 +1631,708 @@ class BEDGE(VectorizedBaseCard):
             for eid, (nid1, nid2) in zip(element_id, nodes):
                 list_fields.extend([eid, nid1, nid2, None])
             bdf_file.write(print_card(list_fields))
+        return
+
+
+def bcbody_lines_to_card_rigid(lines: list[str]) -> tuple[BDFCard, BDFCard]:
+    card_fields = []
+    rigid_fields = []
+    is_active_rigid = False
+    for iline, line in enumerate(lines):
+        #print(f'iline={iline} line={line!r}')
+        nfields_expected = 9 if iline == 0 else 8
+        line = line.expandtabs()
+
+        #print(line)
+        if '*' in line:
+            # large field
+            fields = _split_large_fields(line, iline)
+
+            if fields[0].strip().upper().startswith('RIGID'):
+                assert is_active_rigid is False, is_active_rigid
+                assert is_active_rigid is not None, is_active_rigid
+                rigid_fields.extend(fields)
+                is_active_rigid = True
+            elif is_active_rigid:
+                assert is_active_rigid is not None, is_active_rigid
+                rigid_fields.extend(fields)
+                is_active_rigid = None
+            else:
+                card_fields.extend(fields)
+            continue
+        else:
+            # small field
+            if ',' in line:
+                fields = line.split(',')[:9]
+                if iline > 0:
+                    fields = fields[1:]
+                    if fields[0].upper() == 'RIGID':
+                        rigid_fields = fields
+                        is_active_rigid = None
+
+                if len(fields) < nfields_expected:
+                    nmissing = nfields_expected - len(fields)
+                    fields.extend([''] * nmissing)
+            else:
+                if line[1:].strip().upper().startswith('RIGID'):
+                    assert is_active_rigid is False, is_active_rigid
+                    rigid_fields = _split_small_rigid_fields(line)
+                    is_active_rigid = None
+                    continue
+                fields = _split_small_fields(line, iline)
+        #print(f'iline={iline} fields={fields}; n={len(fields)}')
+        assert len(fields) == nfields_expected, (fields, len(fields))
+        card_fields.extend(fields)
+
+    rigid_card = []
+    if rigid_fields:
+        rigid_fields2 = [
+            '', rigid_fields[0], rigid_fields[1], rigid_fields[2],
+            rigid_fields[3] + rigid_fields[4] + rigid_fields[5],
+        ]
+        rigid_card = BDFCard(rigid_fields2, has_none=False)
+
+    card = BDFCard(card_fields, has_none=False)
+    return card, rigid_card
+
+def _split_large_fields(line: str, iline: int) -> list[str]:
+    assert ',' not in line, line
+    if iline == 0:
+        fields = [
+            line[0:8],
+            line[8:24], line[24:40], line[40:56], line[56:72],
+        ]
+    else:
+        fields = [
+            line[8:24], line[24:40], line[40:56], line[56:72],
+        ]
+    return fields
+
+def _split_small_fields(line: str, iline: int) -> list[str]:
+    assert ',' not in line, line
+    if iline == 0:
+        fields = [
+            line[0:8],
+            line[8:16], line[16:24], line[24:32], line[32:40], line[40:48],
+            line[48:56], line[56:64], line[64:72],
+        ]
+    else:
+        fields = [
+            line[8:16], line[16:24], line[24:32], line[32:40], line[40:48],
+            line[48:56], line[56:64], line[64:72],
+        ]
+    return fields
+
+def _split_small_rigid_fields(line: str) -> list[str]:
+    if ',' in line:
+        raise NotImplementedError(line)
+    else:
+        rigid_fields = [
+            #line[0:8],
+            line[8:16], line[16:24], line[24:32],
+            line[32:40], line[40:48], line[48:56],
+            #line[32:56],
+        ]
+    return rigid_fields
+
+
+class BCBODY(VectorizedBaseCard):
+    """
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |    1   |    2    |    3   |   4    |    5     |     6   |    7    |    8    |    9    |
+    +========+=========+========+========+==========+=========+=========+=========+=========+
+    | BCBODY | BID     | DIM    | BEHAV  |   BSID   |   ISTYP | FRIC    |  IDSPL  | CONTROL |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | NLOAD   | ANGVEL | DCOS1  |   DCOS2  |   DCOS3 | VELRB1  |  VELRB2 | VELRB3  |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | ADVANCE | SANGLE | COPTB  |   USER   |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | CTYPE   | ISMALL | ITYPE  |   IAUG   |  PENALT | AUGDIST |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | RIGID   | CGID   | NENT   | --- Rigid Body Name ---      |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | APPROV  | A      |  N1    | N2       |    N3   |    V1   |    V2   |    V3   |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | RTEMP   | G(temp)|  Tempr | T(Tempr) |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | SINK    | G(sink)|  Tsink | T(Tsink) |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | GROW    | GF1    |  GF2   |   GF3    | TAB-GF1 | TAB-GF2 | TAB-GF3 |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | HEAT    | CFILM  |  TSINK |   CHEAT  | TBODY   | HCV     | HNC     |  ITYPE  |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | BNC     | EMISS  |  HBL   |          |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    """
+    _id_name = 'bcbody_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.bcbody_id = np.array([], dtype='int32')
+
+    #def add(self, bcbody: int,
+            #eids: list[int],
+            #grids: list[tuple[int, int]],
+            #comment: str='') -> int:
+        #"""Creates a BEDGE card"""
+        #self.cards.append((bedge_id, eids, grids, comment))
+        #self.n += 1
+        #return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, lines: list[str], comment: str='') -> int:
+        """
+        Adds a BCBODY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        BID : int (4,1)
+           Contact body identification number referenced by
+           BCTABLE, BCHANGE, or BCMOVE. (Integer > 0; Required)
+        DIM : str; default='3D'
+           Dimension of body.
+           DIM=2D planar body in x-y plane of the basic coordinate system,
+                  composed of 2D elements or curves.
+           DIM=3D any 3D body composed of rigid surfaces, shell elements or solid
+                  elements.
+        BEHAV (4,8)
+           Behavior of curve or surface (Character; Default = DEFORM) DEFORM body is
+           deformable, RIGID body is rigid, SYMM body is a symmetry body, ACOUS
+           indicates an acoustic body, WORK indicates body is a workpiece, HEAT indicates
+           body is a heat-rigid body. See Remark 3. for Rigid Bodies..
+        BSID : int
+            Identification number of a BSURF, BCBOX, BCPROP or BCMATL entry if
+            BEHAV=DEFORM. (Integer > 0)
+        ISTYP : int (4,3)
+           Check of contact conditions. (Integer > 0; Default = 0)
+        ISTYP : int
+           is not supported in segment-to-segment contact.
+           For a deformable body:
+           =0 symmetric penetration, double sided contact.
+           =1 unsymmetric penetration, single sided contact. (Integer > 0)
+           =2 double-sided contact with automatic optimization of contact constraint
+              equations (this option is known as “optimized contact”).
+              Notes: single-sided contact (ISTYP=1) with the contact bodies arranged properly
+              using the contact table frequently runs much faster than ISTYP=2.
+              For a rigid body:
+           =0 no symmetry condition on rigid body.
+           =1 rigid body is a symmetry plane.
+        FRIC : int/float (6,7)
+            Friction coefficient. (Real > 0 or integer; Default = 0)
+            If the value is an integer it represents the ID of a TABL3Di.
+        IDSPL : int (4,5)
+            Set IDSPL=1 to activate the SPLINE (analytical contact) option for a deformable
+            body and for a rigid contact surface. Set it to zero or leave blank to not have
+            analytical contact. (Integer; Default = 0)
+        NLOAD : int or None
+            Enter a positive number if "load controlled" and rotations are allowed (Integer). The
+            positive number is the grid number where the moments or rotations are applied. The
+            rotations are specified using SPCD at grid ID NLOAD and can be specified using dof's
+            1-3 (for rotation about x, y, z respectively), or by dof's 4-6 (for rotation about x, y, z
+            respectively).
+            Note: This rotation takes the position of the grid point defined in CGID field as the
+            center of rotation.
+        ANGVEL : int/float; default=0.0
+            Angular velocity or angular position about local axis through center of rotation. If the
+            value is an integer it represents the ID of a TABLED1, TABLED2 or TABL3D, i.e., a
+            time-dependent or multi-dimensional table; however, no log scales, only linear scales.
+            (Real or Integer; Default = 0.0)
+        DCOSi : int/float; default=0.0
+            Components of direction cosine of local axis if ANGVEL is nonzero. If the value is an
+            integer, it represents the ID of a TABLED1, TABLED2 or TABL3D, i.e., a time-dependent
+            or multi-dimensional table; however, no log scales, only linear scales. (Real
+            or Integer; Default=0.0) In 2D contact only DCOS3 is used and the Default is 1.0.
+        VELRBi : int/float; default=0.0
+            Translation velocity or final position (depending on the value of CONTROL) of rigid
+            body at the grid point defined in CGID filed. For velocity control only, if the value is
+            an integer, it represents the ID of TABLED1, TABLED2 or TABL3D, i.e., a time-dependent
+            or multi-dimensional table; however, no log scales, only linear scales. Only
+            VELRB1 and VELRB2 are used in 2D contact. (Real or Integer; Default = 0.0)
+
+        """
+        card, rigid_card = bcbody_lines_to_card_rigid(lines)
+
+        contact_id = integer(card, 1, 'contact_id')
+        field2 = card.field(2).strip()
+        if field2 in {'2', '3'}:
+            dim = field2 + 'D'
+        else:
+            dim = string_choice_or_blank(card, 2, 'dim',
+                                         ('2D', '3D'),
+                                         default='3D')
+
+        behav = string_choice_or_blank(card, 3, 'behav',
+                                       ('RIGID', 'DEFORM', 'SYMM', 'ACOUS', 'WORK', 'HEAT'),
+                                       default='DEFORM')
+        if behav == 'DEFORM':
+            bsid = integer(card, 4, 'bsid')
+        else:
+            bsid = integer_double_or_blank(card, 4, 'bsid', default=0)
+
+        istype = integer_or_blank(card, 5, 'istype', default=0)
+        fric = integer_double_or_blank(card, 6, 'fric', default=0)
+        idispl = integer_or_blank(card, 7, 'idispl', default=0)
+        control = integer_or_blank(card, 8, 'control', default=0)
+
+        # NLOAD   | ANGVEL | DCOS1  | DCOS2|  DCOS3 | VELRB1  | VELRB2 | VELRB3
+        word_nload = integer_string_or_blank(card, 9, 'nload (int) / word (str)', default=None)
+        i = 9
+        if word_nload is None or isinstance(word_nload, int):
+            nload = integer_or_blank(card, 9, 'nload', default=0) # made up
+            ang_vel = double_or_blank(card, 10, 'ang_vel', default=0.0)
+            dcos = [
+                integer_double_or_blank(card, 11, 'dcos1', default=0.0),
+                integer_double_or_blank(card, 12, 'dcos2', default=0.0),
+                integer_double_or_blank(card, 13, 'dcos3', default=0.0),
+            ]
+            vel_rb = [
+                integer_double_or_blank(card, 14, 'vel_rb1', default=0.0),
+                integer_double_or_blank(card, 15, 'vel_rb2', default=0.0),
+                integer_double_or_blank(card, 16, 'vel_rb3', default=0.0),
+            ]
+            i += 8
+        else:
+            nload = 0
+            ang_vel = 0.0
+            dcos = [0., 0., 0.]
+            vel_rb = [0., 0., 0.]
+
+        # advance
+        sangle = 60.
+        coptb = 0
+        user = 0
+        min_node = 0
+
+        old_word = None
+        while i < len(card):
+            word = string_or_blank(card, i, 'word (str)', default=None)
+            if word is None:
+                raise RuntimeError(f'should be broken by {old_word}')
+
+            #print('*', word)
+            if word == 'ADVANCE':
+                # TODO: USER is NX and MIN_NODE is MSC???
+                #
+                # | ADVANCE | SANGLE | COPTB | USER | MIDNO |
+                sangle = double_or_blank(card, i+1, 'sangle', default=60.)
+                coptb = integer_or_blank(card, i+2, 'coptb', default=0)
+                user = integer_or_blank(card, i+3, 'user', default=0)
+                min_node = integer_or_blank(card, i+4, 'min_node', default=0)
+                # 'ADVANCE'
+                #     The entries for this continuation line are for advanced options starting with
+                #     MD Nastran R2.
+                # SANGLE
+                #     Threshold for automatic discontinuity detection in degrees. (Real; Default = 60.0)
+                #     Used for SPLINE option in SOL 400 only. SANGLE is not used when IDSPL ≥ 0.
+                # COPTB
+                #     Flag to indicate how body surfaces may contact. See Remark 9. on the BCTABLE entry.
+                #     (Integer; Default = 0)
+                # MIDNOD
+                #     Mid-side node projection flag. (Integer > 0; Default = 0)
+                #     When MIDNOD > 0 and IDSPL 0, the mid-side grid of quadratic elements are
+                #     projected onto the selected spline surfaces. This operation is performed before the
+                #     contact process starts and it may change the location of grids in contact bodies. It may
+                #     operate in combination with the initial stress-free contact.
+                i += 8
+            elif word == 'HEAT':
+                # “HEAT”
+                #    The entries of this continuation line(s) are for contact in heat transfer in a pure thermal
+                #    analysis or in a coupled thermal/structural analysis. In a pure structural analysis they are
+                #    ignored.
+                # CFILM (9,1)/(10,1)
+                #     Heat transfer coefficient (film) to environment. (Real or Integer, Default = 0.0) If Real,
+                #     the value entered is the film coefficient. If Integer, the value entered is the ID of a
+                #     TABLEM1 or TABLEM2 entry specifying the heat transfer coefficient vs temperature
+                #     or a TABL3D entry specifying the film coefficient vs temperature and possibly other
+                #     variables.
+                # TSINK (9,2)/(10,2)
+                #     Environment sink temperature. (Real or Integer, Default = 0.0). If Real, the value
+                #     entered is the sink temperature. If Integer, the value entered is the ID of a TABLED1
+                #     or TABLED2 entry specifying temperature vs time or a TABL3D entry specifying the
+                #     sink temperature vs time and possibly other variables. When entered as a negative
+                #     integer its absolute value is a scalar point identification number. If a scalar point is
+                #     specified on this entry it need not be defined on an SPOINT entry.
+                # CHEAT (9,3)/(10,3)
+                #     Contact heat transfer coefficient. (Real or Integer; Default = 0.0). If Real, the value
+                #     entered is the contact heat transfer coefficient. If Integer, the value entered is the ID of
+                #     a TABLEM1 or TABLEM2 entry specifying the contact heat transfer coefficient vs
+                #     temperature or a TABL3D entry specifying the contact heat transfer coefficient vs
+                #     temperature and possibly other variables.
+                # TBODY (9,4)/(10,4)
+                #     Body temperature. (Real or Integer; Default = 0.0). If Real, the value entered is the body
+                #     temperature. If Integer, the value entered is the ID of a TABLED1 or TABLED2 entry
+                #     specifying the body temperature vs time or a TABL3D entry specifying the body
+                #     temperature vs time and possibly other variables. When entered as a negative integer its
+                #     absolute value is a scalar point identification number. If a scalar point is specified on
+                #     this entry it need not be defined on an SPOINT entry.
+                # HCV (9,5)/(10,5)
+                #     Convection coefficient for near field behavior (Real or Integer; Default = 0.0). If Real
+                #     the value entered is the near field convection coefficient. If Integer, the value entered is
+                #     the ID of a TABLEM1 or TABLEM2 entry specifying the near field convection
+                #     coefficient vs temperature or a TABL3D entry specifying the
+                # HEAT CFILM TSINK CHEAT TBODY HCV HNC  ITYPE
+                #      BNC   EMISS HBL   HNL   BNL HNLE BNLE
+                #      HNCE  BNCE  CMB   CMS
+                cfilm = integer_double_or_blank(card, i+1, 'cfilm', default=0.0)
+                tsink = integer_double_or_blank(card, i+2, 'tsink', default=0.0)
+                cheat = integer_double_or_blank(card, i+3, 'cheat', default=0.0)
+                tbody = integer_double_or_blank(card, i+4, 'tbody', default=0.0)
+                hcv = integer_double_or_blank(card, i+5, 'hcv', default=0.0)
+                hnc = integer_double_or_blank(card, i+6, 'hnc', default=0.0)
+
+                # no default...but this fails otherwise...
+                #C:\MSC.Software\msc_nastran_runs\cpl_002_m1.dat
+                itype = integer_or_blank(card, i+7, 'itype', default=0)
+                i += 8
+
+                bnc = double_or_blank(card, i+1, 'bnc', default=1.)
+                emiss = double_or_blank(card, i+2, 'emiss', default=0.)
+                hbl = double_or_blank(card, i+3, 'hbl', default=0.)
+                hnl = integer_double_or_blank(card, i+4, 'hnl', default=0.)
+                bnl = integer_double_or_blank(card, i+5, 'bnl', default=1.)
+                hnle = integer_double_or_blank(card, i+6, 'hnle', default=0.)
+                bnle = integer_double_or_blank(card, i+7, 'bnle', default=1.)
+                i += 8
+
+                hnce = integer_double_or_blank(card, i+1, 'hnce', default=0.)
+                bnce = integer_double_or_blank(card, i+2, 'bnce', default=1.)
+                cmb = double_or_blank(card, i+3, 'cmb', default=0.)
+                cms = double_or_blank(card, i+4, 'cms', default=0.)
+                i += 8
+            elif word == 'GROW':
+                #'GROW' GF1 GF2 GF3 TAB-GF1 TAB-GF2 TAB-GF3
+                gf1 = double_or_blank(card, i+1, 'GF1', default=1.0)
+                gf2 = double_or_blank(card, i+2, 'GF2', default=1.0)
+                gf3 = double_or_blank(card, i+3, 'GF3', default=1.0)
+                tab_gf1 = integer_or_blank(card, i+4, 'tab_GF1', default=0)
+                tab_gf2 = integer_or_blank(card, i+5, 'tab_GF2', default=0)
+                tab_gf3 = integer_or_blank(card, i+6, 'tab_GF3', default=0)
+                #blank = blank(card, i+7, 'GROW blank')
+                #print('grow values =', [gf1, gf2, gf3, tab_gf1, tab_gf2, tab_gf3])
+                i += 8
+                #GF1 GF2 GF3 TAB-GF1 TAB-GF2 TAB-GF3
+            elif word == 'NURBS':
+                i, values = _get_bcbody_section_values(card, i, word)
+                #print('end of NURBS -> ', valuei)
+            elif word in ('NURBS2', 'NURBS2D'):
+                i, values = _get_bcbody_section_values(card, i, word)
+                #print('end of NURBS -> ', valuei)
+            elif word == 'PATCH3D':
+                #'PATCH3D' NPATCH
+                #          IDP G1 G2 G3 G4
+                #          IDP G1 G2 G3 G4
+                i, values = _get_bcbody_section_values(card, i, word)
+            #elif word == 'RIGID':
+                #i += 8
+            elif word == 'BEZIER':
+                i, values = _get_bcbody_section_values(card, i, word)
+                #print(word, values)
+            elif word == 'APPROV':
+                i, values = _get_bcbody_section_values(card, i, word)
+            else:  # pragma: no cover
+                raise NotImplementedError(word)
+            old_word = word
+
+        if len(rigid_card):
+            #CGID
+            #(5,i) i=1,2,3
+            #Grid point identification number defining the initial position of the reference point of
+            #the rigid body or the point where a concentrated force or moment is applied
+            #
+            #NENT Number of geometric entities to describe this rigid surface. A rigid surface can be
+            #described by multiple sets of patches, nurbs, etc. For example, if it takes 3 sets of
+            #PATCH3D entries to describe a rigid surface, then set NENT=3.
+            # (Integer > 0; Default=1)
+
+            #word = string(rigid_card, 1, 'RIGID')
+            cgid = integer_or_blank(rigid_card, 2, 'cgid', default=-1)  #  TODO: made up default
+            nent = integer_or_blank(rigid_card, 3, 'nent', default=1)
+            rigid_body_name = string(rigid_card, 4, 'rigid_body_name')
+            #CGID NENT --- Rigid Body Name ---
+        else:
+            cgid = -1
+            nent = 1
+            rigid_body_name = ''
+        #return BCBODY(contact_id, bsid,
+                      #dim=dim, behav=behav, istype=istype,
+                      #fric=fric, idispl=idispl,
+                      #comment=comment)
+        self.cards.append((contact_id, dim, behav, bsid, istype,
+                           fric, idispl, control,
+                           ('NLOAD', nload, dcos, ang_vel, vel_rb),
+                           ('ADVANCE', sangle, coptb, user, min_node),
+                           ('RIGID', cgid, nent, rigid_body_name),
+                           comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
+        bcbody_id = np.zeros(ncards, dtype='int32')
+        bsid = np.zeros(ncards, dtype='int32')
+        dim = np.zeros(ncards, dtype='|U8')
+        behavior = np.zeros(ncards, dtype='|U8')
+        fric_int = np.zeros(ncards, dtype='float64')
+        fric_float = np.zeros(ncards, dtype='float64')
+        istype = np.zeros(ncards, dtype='int32')
+        idispl = np.zeros(ncards, dtype='int32')
+        control = np.zeros(ncards, dtype='int32')
+
+        # line2
+        nload = np.zeros(ncards, dtype='int32')
+        ang_vel = np.zeros(ncards, dtype='float64')
+        dcos = np.zeros((ncards, 3), dtype='float64')
+        vel_rb = np.zeros((ncards, 3), dtype='float64')
+
+        # ADVANCE
+        sangle = np.zeros(ncards, dtype='float64')
+        coptb = np.zeros(ncards, dtype='int32')
+        user = np.zeros(ncards, dtype='int32')
+        min_node = np.zeros(ncards, dtype='int32')
+
+        # RIGID
+        cgid = np.zeros(ncards, dtype='int32')
+        nent = np.zeros(ncards, dtype='int32')
+        rigid_body_name = np.zeros(ncards, dtype='|U24')
+
+        #comment = {}
+        #element_list = []
+        #nodes_list = []
+        for icard, card in enumerate(self.cards):
+            (bcbody_idi,
+             dimi, behavi, bsidi, istypei,
+             frici, idispli, controli,
+             nloadi, advancei, rigidi,
+             commenti) = card
+            assert isinstance(bsidi, int), bsidi
+            bcbody_id[icard] = bcbody_idi
+            bsid[icard] = bsidi
+            dim[icard] = dimi
+            behavior[icard] = behavi
+            if isinstance(frici, float):
+                fric_int[icard] = frici
+            else:
+                fric_float[icard] = frici
+            istype[icard] = istypei
+            idispl[icard] = idispli
+            control[icard] = controli
+
+            # nload
+            (wprdo, nloadi, dcosi, ang_veli, vel_rbi) = nloadi
+            nload[icard] = nloadi
+            ang_vel[icard] = ang_veli
+            dcos[icard, :] = dcosi
+            vel_rb[icard, :] = vel_rbi
+
+            # advance
+            #('ADVANCE', sangle, coptb, user, min_node),
+            (wordi, sanglei, coptbi, useri, min_nodei) = advancei
+            sangle[icard] = sanglei
+            coptb[icard] = coptbi
+            user[icard] = useri
+            min_node[icard] = min_nodei
+
+            # rigid
+            (wordi, cgidi, nenti, rigid_body_namei) = rigidi
+            assert len(rigid_body_namei) < 24, rigid_body_namei
+            cgid[icard] = cgidi
+            nent[icard] = nenti
+            rigid_body_name[icard] = rigid_body_namei
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        self._save(bcbody_id, dim, behavior, bsid, fric_int, fric_float, istype, idispl, control,
+                   nload, ang_vel, dcos, vel_rb,
+                   #advance
+                   sangle, coptb, user, min_node,
+                   #rigid
+                   cgid, nent, rigid_body_name)
+        self.sort()
+        self.cards = []
+
+    def _save(self, bcbody_id, dim, behavior, bsid, fric_int, fric_float, istype, idispl, control,
+              nload, ang_vel, dcos, vel_rb,
+              #advance
+              sangle, coptb, user, min_node,
+              #rigid
+              cgid, nent, rigid_body_name) -> None:
+        ncards_existing = len(self.bcbody_id)
+        if ncards_existing != 0:
+            bcbody_id = np.hstack([self.bcbody_id, bcbody_id])
+            #nelement = np.hstack([self.nelement, nelement])
+            #element_id = np.hstack([self.element_id, element_id])
+            #nodes = np.hstack([self.nodes, nodes])
+            asdf
+        #if comment:
+            #self.comment.update(comment)
+        self.bcbody_id = bcbody_id
+        self.dim = dim
+        self.behavior = behavior
+        self.bsid = bsid
+        self.fric_int = fric_int
+        self.fric_float = fric_float
+        self.istype = istype
+        self.idispl = idispl
+        self.control = control
+
+        self.nload = nload
+        self.ang_vel = ang_vel
+        self.dcos = dcos
+        self.vel_rb = vel_rb
+
+        # advance
+        self.sangle = sangle
+        self.coptb = coptb
+        self.user = user
+        self.min_node = min_node
+
+        # rigid
+        self.cgid = cgid
+        self.nent = nent
+        self.rigid_body_name = rigid_body_name
+        self.n = len(self.bcbody_id)
+
+    def __apply_slice__(self, bcbody: BCBODY, i: np.ndarray) -> None:
+        #self._slice_comment(bedge, i)
+        bcbody.bcbody_id = self.bcbody_id[i]
+        bcbody.dim = self.dim[i]
+        bcbody.behavior = self.behavior[i]
+        bcbody.bsid = self.bsid[i]
+        bcbody.fric_int = self.fric_int[i]
+        bcbody.fric_float = self.fric_float[i]
+        bcbody.istype = self.istype[i]
+        bcbody.idispl = self.idispl[i]
+        bcbody.control = self.control[i]
+
+        bcbody.nload = self.nload[i]
+        bcbody.ang_vel = self.ang_vel[i]
+        bcbody.dcos = self.dcos[i, :]
+        bcbody.vel_rb = self.vel_rb[i, :]
+
+        # advance
+        bcbody.sangle = self.sangle[i]
+        bcbody.coptb = self.coptb[i]
+        bcbody.user = self.user[i]
+        bcbody.min_node = self.min_node[i]
+
+        # rigid
+        bcbody.cgid = self.cgid[i]
+        bcbody.nent = self.nent[i]
+        bcbody.rigid_body_name = self.rigid_body_name[i]
+        bcbody.n = len(i)
+
+    #def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['element_id'].append(self.element_id)
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    #def convert(self, **kwargs) -> None:
+        #pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        """
+        Defines a region of element edges for:
+         - glue (BGSET entry)
+         - contact (BCTSET entry)
+         - fluid pressure load (PLOADFP entry)
+         - wetted edges for a Co-simulation (CSMSET entry)
+        """
+        nids = self.model.grid.node_id
+        #unids = np.unique(self.nodes.ravel())
+        #geom_check(self,
+                   #missing,
+                   #node=(nids, unids))
+
+    #@property
+    #def ielement(self) -> np.ndarray:
+        #return make_idim(self.n, self.nelement)
+
+    @property
+    def max_id(self) -> int:
+        return self.bcbody_id.max()
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        print_card, size = get_print_card_size(size, self.max_id)
+        bcbody_ids = array_str(self.bcbody_id, size=size).tolist()
+
+        istypes = array_default_int(self.istype, default=0)
+        frics = array_default_float(self.fric_float, default=0.0)
+        idispls = array_default_int(self.idispl, default=0)
+        controls = array_default_int(self.control, default=0)
+
+        nloads = array_str(self.nload, size=size).tolist()
+        ang_vels = array_default_float(self.ang_vel, default=0., size=size, is_double=False)
+        dcoss = array_default_float(self.dcos, default=0., size=size, is_double=False).tolist()
+        vel_rbs = array_default_float(self.vel_rb, default=0., size=size, is_double=False).tolist()
+        is_nloads = ~(
+            (self.nload == 0) & (self.ang_vel == 0.0) &
+            (self.dcos[:, 0]   == 0.0) & (self.dcos[:, 1]   == 0.0) & (self.dcos[:, 2]   == 0.0) &
+            (self.vel_rb[:, 0] == 0.0) & (self.vel_rb[:, 1] == 0.0) & (self.vel_rb[:, 2] == 0.0)
+        )
+        # ADVANCE
+        is_advances = ~((self.sangle == 60.0) & (self.coptb == 0) & (self.user == 0) & (self.min_node == 0))
+        sangles = array_default_float(self.sangle, default=60.0, size=size, is_double=False)
+        coptbs = array_default_int(self.coptb, default=0)
+        users = array_default_int(self.user, default=0)
+        min_nodes = array_default_int(self.min_node, default=0)
+
+        # RIGID
+        cgids = array_default_int(self.min_node, default=-1)
+
+        for bcbody_id, dim, behav, bsid, istype, fric, idispl, control, \
+            is_nload, nload, ang_vel, dcos, vel_rb, \
+            is_advance, sangle, coptb, user, min_node, \
+            cgid, nent, rigid_body_name in zip(
+            bcbody_ids, self.dim, self.behavior, self.bsid, istypes, frics, idispls, controls,
+            is_nloads, nloads, ang_vels, dcoss, vel_rbs,
+            # advance
+            is_advances, sangles, coptbs, users, min_nodes,
+            # rigid
+            cgids, self.nent, self.rigid_body_name):
+            if is_nload:
+                list_fields = [
+                    'BCBODY', bcbody_id, dim, behav, bsid, istype, fric, idispl, control,
+                    nload, ang_vel] + dcos + vel_rb
+            else:
+                list_fields = [
+                    'BCBODY', bcbody_id, dim, behav, bsid, istype, fric, idispl, control]
+            if is_advance:
+                list_fields += ['ADVANCE', sangle, coptb, user, min_node, '', '']
+
+            msgi = ''
+            if rigid_body_name:
+                msgi = f'        {"RIGID":<8s}{cgid:>8s}{nent:>8d}{rigid_body_name:>24s}\n'
+                #list_fields += ['RIGID', cgid, nent, rigid_body_name]
+
+            #list_fields = ['BEDGE', bedge_id]
+            #element_id = element_id_[ieid0:ieid1]
+            #nodes = nodes_[ieid0:ieid1, :].tolist()
+            #for eid, (nid1, nid2) in zip(element_id, nodes):
+                #list_fields.extend([eid, nid1, nid2, None])
+            bdf_file.write(print_card(list_fields) + msgi)
         return

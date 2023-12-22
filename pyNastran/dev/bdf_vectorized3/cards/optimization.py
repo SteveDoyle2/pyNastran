@@ -145,6 +145,14 @@ class MODTRAK(VectorizedBaseCard):
         self.high_range = high_range
         self.mt_filter = mt_filter
 
+    def __apply_slice__(self, modtrak: MODTRAK, i: np.ndarray) -> None:
+        """why would you call this one?"""
+        modtrak.modtrak_id = self.modtrak_id[i]
+        modtrak.low_range = self.low_range[i]
+        modtrak.high_range = self.high_range[i]
+        modtrak.mt_filter = self.mt_filter[i]
+        modtrak.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
@@ -314,6 +322,16 @@ class DESVAR(VectorizedBaseCard):
         self.delx = delx
         self.ddval = ddval
 
+    def __apply_slice__(self, desvar: DESVAR, i: np.ndarray) -> None:
+        desvar.desvar_id = self.desvar_id[i]
+        desvar.label = self.label[i]
+        desvar.xinit = self.xinit[i]
+        desvar.xlb = self.xlb[i]
+        desvar.xub = self.xub[i]
+        desvar.delx = self.delx[i]
+        desvar.ddval = self.ddval[i]
+        desvar.n = len(i)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -394,39 +412,22 @@ class DDVAL(VectorizedBaseCard):
         self.nddval = np.array([], dtype='int32')
         self.value = np.array([], dtype='float64')
 
-    def add(self, desvar_id: int, label: str, xinit: float,
-            xlb: float=-1e20, xub: float=1e20,
-            delx=None, ddval: Optional[int]=None,
+    def add(self, ddval_id: int, values: list[float],
             comment: str='') -> int:
         """
-        Creates a DESVAR card
+        Creates a DDVAL card
 
         Parameters
         ----------
-        desvar_id : int
+        ddval_id : int
             design variable id
-        label : str
-            name of the design variable
-        xinit : float
-            the starting point value for the variable
-        xlb : float; default=-1.e20
-            the lower bound
-        xub : float; default=1.e20
-            the lower bound
-        delx : float; default=1.e20
-            fractional change allowed for design variables during
-            approximate optimization
-            NX  if blank : take from DOPTPRM; otherwise 1.0
-            MSC if blank : take from DOPTPRM; otherwise 0.5
-        ddval : int; default=None
-            int : DDVAL id
-                  allows you to set discrete values
-            None : continuous
+        values : list[float]
+            explicit values
         comment : str; default=''
             a comment for the card
 
         """
-        self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
+        self.cards.append((ddval_id, values, comment))
         self.n += 1
         return self.n - 1
 
@@ -488,6 +489,13 @@ class DDVAL(VectorizedBaseCard):
         self.ddval_id = ddval_id
         self.nddval = nddval
         self.value = value
+        self.n = len(ddval_id)
+
+    def __apply_slice__(self, ddval: DDVAL, i: np.ndarray):
+        ddval.ddval_id = self.ddval_id[i]
+        ddval.value = hslice_by_idim(i, self.iddval, self.value)
+        ddval.nddval = self.nddval[i]
+        ddval.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -662,6 +670,17 @@ class DLINK(VectorizedBaseCard):
         self.independent_desvars = independent_desvars
         self.coefficients = coefficients
 
+    def __apply_slice__(self, dlink: DLINK, i: np.ndarray) -> None:
+        dlink.dlink_id = self.dlink_id[i]
+        dlink.dependent_desvar = self.dependent_desvar[i]
+        dlink.c0 = self.c0[i]
+        dlink.cmult = self.cmult[i]
+
+        dlink.independent_desvars = hslice_by_idim(i, self.idesvar, self.independent_desvars)
+        dlink.coefficients = hslice_by_idim(i, self.idesvar, self.coefficients)
+        dlink.nindependent_desvars = self.nindependent_desvars[i]
+        dlink.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['desvar_id'].append(self.dependent_desvar)
         used_dict['desvar_id'].append(self.independent_desvars)
@@ -793,6 +812,14 @@ class DVGRID(VectorizedBaseCard):
         self.coord_id = coord_id
         self.coefficient = coefficient
         self.dxyz = dxyz
+
+    def __apply_slice__(self, dvgrid: DVGRID, i: np.ndarray) -> None:
+        dvgrid.desvar_id = self.desvar_id[i]
+        dvgrid.node_id = self.node_id[i]
+        dvgrid.coord_id = self.coord_id[i]
+        dvgrid.coefficient = self.coefficient[i]
+        dvgrid.dxyz = self.dxyz[i, :]
+        dvgrid.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
@@ -1067,17 +1094,20 @@ class DRESP1(VectorizedBaseCard):
                     assert response_typei not in FLOAT_RESPONSE_TYPES, response_typei
                     atti_ints.extend(attii)
                     atti_type[icard] = 'i'
-                elif isinstance(attii[0], str):
-                    assert response_typei in {'VOLUME'}, response_typei
-                    atti_strs.extend(attii)
-                    atti_type[icard] = 's'
+                    atti_floats.extend([np.nan]*len(attii))
+                #elif isinstance(attii[0], str):
+                    #assert response_typei in {'VOLUME'}, response_typei
+                    #atti_strs.extend(attii)
+                    #atti_type[icard] = 's'
+                    #atti_floats.extend([np.nan]*len(attii))
                 else:
                     assert isinstance(attii[0], float), attii
                     assert response_typei in FLOAT_RESPONSE_TYPES, response_typei
                     atti_floats.extend(attii)
                     atti_type[icard] = 'f'
+                    atti_ints.extend([0]*len(attii))
             else:
-                print(card)
+                #print(card)
                 x = 1
             iatti[icard, :] = [atti0, atti1]  # TODO: change this to natti
             atti1 = atti0
@@ -1100,7 +1130,7 @@ class DRESP1(VectorizedBaseCard):
         self._save(dresp_id, label, response_type, property_type, region,
                    atta_type, atta_float, atta_int, atta_str,
                    attb_type, attb_float, attb_int, attb_str,
-                   atti_type, atti_float, atti_int,
+                   atti_type, atti_float, atti_int, # atti_str,
                    iatti, )
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
@@ -1117,10 +1147,8 @@ class DRESP1(VectorizedBaseCard):
             assdf
 
         self.dresp_id = dresp_id
-
         self.label = label
         self.response_type = response_type
-
         self.property_type = property_type
         self.region = region
 
@@ -1138,6 +1166,30 @@ class DRESP1(VectorizedBaseCard):
         self.atti_type = atti_type
         self.atti_float = atti_float
         self.atti_int = atti_int
+        self.n = len(dresp_id)
+
+    def __apply_slice__(self, dresp: DRESP1, i: np.ndarray) -> None:
+        dresp.dresp_id = self.dresp_id[i]
+        dresp.response_type = self.response_type[i]
+        dresp.property_type = self.property_type[i]
+        dresp.region = self.region[i]
+
+        dresp.atta_type = self.atta_type[i]
+        dresp.atta_int = self.atta_int[i]
+        dresp.atta_float = self.atta_float[i]
+        dresp.atta_str = self.atta_str[i]
+
+        dresp.attb_type = self.attb_type[i]
+        dresp.attb_int = self.attb_int[i]
+        dresp.attb_float = self.attb_float[i]
+        dresp.attb_str = self.attb_str[i]
+
+        iatti = self.iatti
+        dresp.atti_type = self.atti_type[i]
+        dresp.atti_float = hslice_by_idim(i, iatti, self.atti_float)
+        dresp.atti_int = hslice_by_idim(i, self.iatti, self.atti_int)
+        #dresp.atti_str = hslice_by_idim(i, self.iatti, self.atti_str)
+        dresp.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         skip_response_types = {
@@ -1559,6 +1611,25 @@ class DRESP2(VectorizedBaseCard):
         self.nparam_values = nparam_values
         self.param_values = param_values
 
+    def __apply_slice__(self, dresp: DRESP2, i: np.ndarray) -> None:
+        dresp.dresp_id = self.dresp_id[i]
+        dresp.label = self.label[i]
+        dresp.dequation_id = self.dequation_id[i]
+        dresp.dequation_str = self.dequation_str[i]
+        dresp.region = self.region[i]
+
+        dresp.method = self.method[i]
+        dresp.c1 = self.c1[i]
+        dresp.c2 = self.c2[i]
+        dresp.c3 = self.c3[i]
+
+        iparam = self.iparam
+        dresp.param_type = hslice_by_idim(i, iparam, self.param_type)
+
+        iparam_value = self.iparam_value
+        dresp.param_values = hslice_by_idim(i, iparam_value, self.param_values)
+        dresp.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         iparam_value = 0
 
@@ -1576,9 +1647,9 @@ class DRESP2(VectorizedBaseCard):
             param_types = self.param_type[iparam0:iparam1]
             nparam_values = self.nparam_values[iparam0:iparam1]
 
-            deqatn = deqatn_str if deqatn_id == -1 else deqatn_id
-            list_fields = ['DRESP2', dresp_id, label, deqatn,
-                           region, method,]
+            #deqatn = deqatn_str if deqatn_id == -1 else deqatn_id
+            #list_fields = ['DRESP2', dresp_id, label, deqatn,
+                           #region, method,]
 
             for param_type, nvalues in zip(param_types, nparam_values):
                 values_list2 = self.param_values[iparam_value:iparam_value + nvalues]
@@ -1624,6 +1695,9 @@ class DRESP2(VectorizedBaseCard):
     @property
     def iparam(self) -> np.ndarray:
         return make_idim(self.n, self.nparams)
+    @property
+    def iparam_value(self) -> np.ndarray:
+        return make_idim(len(self.nparam_values), self.nparam_values)
 
     #def iparam_value(self, iparam: int) -> np.ndarray:
         #return make_idim(self.n, self.nparam_values[iparam])
@@ -1784,6 +1858,15 @@ class DCONSTR(VectorizedBaseCard):
         self.lower_allowable = lower_allowable
         self.upper_table = upper_table
         self.upper_allowable = upper_allowable
+
+    def __apply_slice__(self, constraint: DCONSTR, i: np.ndarray) -> None:
+        constraint.dconstr_id = self.dconstr_id[i]
+        constraint.dresp_id = self.dresp_id[i]
+        constraint.lower_table = self.lower_table[i]
+        constraint.lower_allowable = self.lower_allowable[i]
+        constraint.upper_table = self.upper_table[i]
+        constraint.upper_allowable = self.upper_allowable[i]
+        constraint.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['tabled_id'].append(self.lower_table)
@@ -2007,6 +2090,7 @@ class DVPREL1(VectorizedBaseCard):
             dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
             property_id = np.hstack([self.property_id, property_id])
             property_type = np.hstack([self.property_type, property_type])
+            property_name = np.hstack([self.property_name, property_name])
             field_num = np.hstack([self.field_num, field_num])
             p_min = np.hstack([self.p_min, p_min])
             p_max = np.hstack([self.p_max, p_max])
@@ -2318,6 +2402,25 @@ class DVPREL2(VectorizedBaseCard):
         self.desvar_ids = desvar_ids
         self.labels = labels
 
+    def __apply_slice__(self, opt: DVPREL2, i: np.ndarray) -> None:
+        opt.dvprel_id = self.dvprel_id[i]
+        opt.property_id = self.property_id[i]
+        opt.property_type = self.property_type[i]
+        opt.property_name = self.property_name[i]
+        opt.field_num = self.field_num[i]
+        opt.p_min = self.p_min[i]
+        opt.p_max = self.p_max[i]
+        opt.deqatn_id = self.deqatn_id[i]
+
+        #opt.c0 = self.c0[i]
+        idesvar = self.idesvar
+        ilabel = self.ilabel
+        opt.desvar_ids = hslice_by_idim(i, idesvar, self.desvar_ids)
+        opt.labels = hslice_by_idim(i, ilabel, self.labels)
+        opt.ndesvar = self.ndesvar[i]
+        opt.ndtable = self.ndtable[i]
+        opt.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
 
@@ -2559,6 +2662,20 @@ class DVMREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def __apply_slice__(self, opt: DVMREL1, i: np.ndarray) -> None:
+        opt.dvmrel_id = self.dvmrel_id[i]
+        opt.material_id = self.material_id[i]
+        opt.material_name = self.material_name[i]
+        opt.mp_min = self.mp_min[i]
+        opt.mp_max = self.mp_max[i]
+        opt.c0 = self.c0[i]
+
+        idesvar = self.idesvar
+        opt.desvar_id = hslice_by_idim(i, idesvar, self.desvar_id)
+        opt.coefficients = hslice_by_idim(i, idesvar, self.coefficients)
+        opt.ndesvar = self.ndesvar[i]
+        opt.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
 
@@ -2578,7 +2695,7 @@ class DVMREL1(VectorizedBaseCard):
             )
 
     @property
-    def idim(self) -> np.ndarray:
+    def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -2597,12 +2714,12 @@ class DVMREL1(VectorizedBaseCard):
         c0s = array_default_float(self.c0, default=0., size=size)
 
         for dvmrel_id, mid, mat_type, mp_name, \
-            mp_min, mp_max, c0, idim in zip_longest(dvmrel_ids, material_ids, self.material_type,
-                                                    self.material_name,
-                                                    mp_maxs, mp_mins, c0s, self.idim):
-            idim0, idim1 = idim
-            desvars = desvar_ids[idim0:idim1]
-            coeffs = self.coefficients[idim0:idim1]
+            mp_min, mp_max, c0, idesvar in zip_longest(dvmrel_ids, material_ids, self.material_type,
+                                                       self.material_name,
+                                                       mp_maxs, mp_mins, c0s, self.idesvar):
+            idesvar0, idesvar1 = idesvar
+            desvars = desvar_ids[idesvar0:idesvar1]
+            coeffs = self.coefficients[idesvar0:idesvar1]
             #p_max = set_blank_if_default(p_max, 1e20)
             #c0 = set_blank_if_default(c0, 0.)
             list_fields = ['DVMREL1', dvmrel_id, mat_type, mid,
@@ -2646,7 +2763,7 @@ class DVMREL2(VectorizedBaseCard):
         self.deqatn_id = np.array([], dtype='float64')
 
         self.ndesvar = np.array([], dtype='int32')
-        self.desvar_id = np.array([], dtype='int32')
+        self.desvar_ids = np.array([], dtype='int32')
         self.coefficients = np.array([], dtype='float64')
 
     def add(self, dvmrel_id: int, mat_type: str, mid: int, mp_name: str,
@@ -2817,14 +2934,14 @@ class DVMREL2(VectorizedBaseCard):
             nlabel[icard] = len(labelsi)
             all_desvars.extend(desvar_idsi)
             all_labels.extend(labelsi)
-        desvar_id = np.array(all_desvars, dtype='int32')
+        desvar_ids = np.array(all_desvars, dtype='int32')
         labels = np.array(all_labels, dtype='|U8')
         self._save(dvmrel_id, material_id, material_type, material_name,
-                   mp_min, mp_max, deqatn_id, ndesvar, desvar_id, nlabel, labels)
+                   mp_min, mp_max, deqatn_id, ndesvar, desvar_ids, nlabel, labels)
         self.cards = []
 
     def _save(self, dvmrel_id, material_id, material_type, material_name,
-              mp_min, mp_max, deqatn_id, ndesvar, desvar_id, nlabel, labels):
+              mp_min, mp_max, deqatn_id, ndesvar, desvar_ids, nlabel, labels):
         if len(self.dvmrel_id) != 0:
             assdf
         self.dvmrel_id = dvmrel_id
@@ -2835,9 +2952,27 @@ class DVMREL2(VectorizedBaseCard):
         self.mp_max = mp_max
         self.deqatn_id = deqatn_id
         self.ndesvar = ndesvar
-        self.desvar_id = desvar_id
+        self.desvar_ids = desvar_ids
         self.nlabel = nlabel
         self.labels = labels
+
+    def __apply_slice__(self, opt: DVMREL2, i: np.ndarray) -> None:
+        opt.dvmrel_id = self.dvmrel_id[i]
+        opt.material_id = self.material_id[i]
+        opt.material_type = self.material_type[i]
+        opt.material_name = self.material_name[i]
+        opt.mp_min = self.mp_min[i]
+        opt.mp_max = self.mp_max[i]
+        opt.deqatn_id = self.deqatn_id[i]
+
+        #opt.c0 = self.c0[i]
+        idesvar = self.idesvar
+        ilabel = self.ilabel
+        opt.desvar_ids = hslice_by_idim(i, idesvar, self.desvar_ids)
+        opt.labels = hslice_by_idim(i, ilabel, self.labels)
+        opt.ndesvar = self.ndesvar[i]
+        opt.nlabel = self.nlabel[i]
+        opt.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
@@ -2873,7 +3008,7 @@ class DVMREL2(VectorizedBaseCard):
         print_card = get_print_card_8_16(size)
         dvmrel_ids = array_str(self.dvmrel_id, size=size)
         material_ids = array_str(self.material_id, size=size)
-        desvar_ids = array_str(self.desvar_id, size=size)
+        desvar_ids = array_str(self.desvar_ids, size=size)
         deqatn_ids = array_str(self.deqatn_id, size=size)
 
         mp_mins = array_float(self.mp_min, size=size)
@@ -3078,6 +3213,21 @@ class DVCREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def __apply_slice__(self, opt: DVCREL1, i: np.ndarray) -> None:
+        opt.dvcrel_id = self.dvcrel_id[i]
+        opt.element_id = self.element_id[i]
+        opt.element_type = self.element_type[i]
+        opt.cp_name = self.cp_name[i]
+        opt.cp_min = self.cp_min[i]
+        opt.cp_max = self.cp_max[i]
+        opt.c0 = self.c0[i]
+
+        idesvar = self.idesvar
+        opt.desvar_id = hslice_by_idim(i, idesvar, self.desvar_id)
+        opt.coefficients = hslice_by_idim(i, idesvar, self.coefficients)
+        opt.ndesvar = self.ndesvar[i]
+        opt.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)
 
@@ -3102,7 +3252,7 @@ class DVCREL1(VectorizedBaseCard):
             )
 
     @property
-    def idim(self) -> np.ndarray:
+    def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -3121,12 +3271,12 @@ class DVCREL1(VectorizedBaseCard):
 
         #coeffs = array_float(self.cp_min, size=size)
         for dvcrel_id, eid, element_type, cp_name, \
-            cp_min, cp_max, c0, idim in zip_longest(dvcrel_ids, element_ids, self.element_type,
+            cp_min, cp_max, c0, idesvar in zip_longest(dvcrel_ids, element_ids, self.element_type,
                                                     self.cp_name,
-                                                    cp_maxs, cp_mins, c0s, self.idim):
-            idim0, idim1 = idim
-            desvars = desvar_ids[idim0:idim1]
-            coeffs = self.coefficients[idim0:idim1]
+                                                    cp_maxs, cp_mins, c0s, self.idesvar):
+            idesvar0, idesvar1 = idesvar
+            desvars = desvar_ids[idesvar0:idesvar1]
+            coeffs = self.coefficients[idesvar0:idesvar1]
             #p_max = set_blank_if_default(p_max, 1e20)
             #c0 = set_blank_if_default(c0, 0.)
             list_fields = ['DVCREL1', dvcrel_id, element_type, eid,
@@ -3352,9 +3502,26 @@ class DVCREL2(VectorizedBaseCard):
         self.cp_max = cp_max
         self.deqatn_id = deqatn_id
         self.ndesvar = ndesvar
-        self.desvar_id = desvar_id
+        self.desvar_ids = desvar_id
         self.nlabel = nlabel
         self.labels = labels
+
+    def __apply_slice__(self, opt: DVCREL2, i: np.ndarray) -> None:
+        opt.dvcrel_id = self.dvcrel_id[i]
+        opt.element_id = self.element_id[i]
+        opt.element_type = self.element_type[i]
+        opt.cp_name = self.cp_name[i]
+        opt.cp_min = self.cp_min[i]
+        opt.cp_max = self.cp_max[i]
+        opt.deqatn_id = self.deqatn_id[i]
+        #opt.c0 = self.c0[i]
+        idesvar = self.idesvar
+        ilabel = self.ilabel
+        opt.desvar_ids = hslice_by_idim(i, idesvar, self.desvar_ids)
+        opt.labels = hslice_by_idim(i, ilabel, self.labels)
+        opt.ndesvar = self.ndesvar[i]
+        opt.nlabel = self.nlabel[i]
+        opt.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
@@ -3481,27 +3648,37 @@ class DSCREEN(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        #dscreen_id = np.zeros(ncards, dtype='int32')
+        dscreen_id = np.zeros(ncards, dtype='int32')
         #: user-defined name for printing purposes
         response_type = np.zeros(ncards, dtype='|U8')
         trs = np.zeros(ncards, dtype='float64')
         nstr = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
             response_typei, trsi, nstri, comment = card
+            dscreen_id[icard] = icard
             response_type[icard] = response_typei
             trs[icard] = trsi
             nstr[icard] = nstri
 
-        self._save(response_type, trs, nstr)
+        self._save(dscreen_id, response_type, trs, nstr)
         self.cards = []
 
-    def _save(self, response_type, trs, nstr):
-        if len(self.response_type) != 0:
+    def _save(self, dscreen_id, response_type, trs, nstr):
+        if len(self.dscreen_id) != 0:
             asdf
-        #self.desvar_id = desvar_id
+        self.dscreen_id = dscreen_id
         self.response_type = response_type
         self.trs = trs
         self.nstr = nstr
+        self.n = len(response_type)
+
+    def __apply_slice__(self, dscreen: DSCREEN, i: np.ndarray) -> None:
+        """why would you call this one?"""
+        dscreen.dscreen_id = self.dscreen_id[i]
+        dscreen.response_type = self.response_type[i]
+        dscreen.trs = self.trs[i]
+        dscreen.nstr = self.nstr[i]
+        dscreen.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass

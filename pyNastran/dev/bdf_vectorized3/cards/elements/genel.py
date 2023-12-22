@@ -141,12 +141,13 @@ class GENEL(Element):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str=''):
+            comment: str='') -> int:
         self.cards.append(((eid, pid, nids,
                             theta_mcid, zoffset,
                             tflag, T1, T2, T3,
                             comment)))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment=''):
         eid = integer(card, 1, 'eid')
@@ -199,8 +200,8 @@ class GENEL(Element):
 
         if nz:
             assert len(k) == 0, k
-            iz = card_fields.index('Z')
-            assert card_fields[iz] == 'Z', card_fields
+            iz = ucard_fields.index('Z')
+            assert card_fields[iz].upper() == 'Z', card_fields
             _z_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, iz+1)
             for i, _z in enumerate(_z_fields):
                 zi = double(card, i + iz+1, 'Z_%d' % (i + 1))
@@ -225,6 +226,7 @@ class GENEL(Element):
         #return GENEL(eid, ul, ud, k, z, s, comment=comment)
         self.cards.append((eid, ul, ud, k, z, s, comment))
         self.n += 1
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:

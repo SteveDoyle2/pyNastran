@@ -48,14 +48,18 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CHEXA, CPENTA, CPYRAM,
-    PSOLID, PLSOLID, PCOMPS, PCOMPLS,
-    CHEXCZ,
+    PSOLID, PLSOLID, PSOLCZ, PCOMPS, PCOMPLS,
+    CPENTCZ, CHEXCZ,  # nx cohesive zone
+    CIFPENT, CIFHEX,  # msc cohesive zone
     #CHACAB, CHACBR,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
-from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
+from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
+    CHBDYE, CHBDYP, CHBDYG,
+    CONV, PCONV, CONVM, PCONVM, PHBDY,
+    RADCAV, VIEW, VIEW3D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
@@ -97,7 +101,9 @@ from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
     BGSET, BCTSET, BGADD, BCTADD,
-    BCONP, BFRIC, BLSEG, BCRPARA, BEDGE)
+    BCONP, BFRIC, BLSEG, BCRPARA, BEDGE,
+    BCBODY,
+)
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
@@ -148,6 +154,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TABLED1, TABLED2, TABLED3, TABLED4, # TABLED5,
         TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABLES1, TABLEST, TABLEH1, TABLEHT,
+        TABDMP1, # TABRND1, TABRNDG
     )
 
 class BDFAttributes:
@@ -159,9 +166,21 @@ class BDFAttributes:
         # just push it to the xlb/xub
         self.apply_clip_to_desvar_range = True
 
-        # run the area, length, volume, mass, inertia, and quality methods
-        self.run_testing_checks = False
+        # applies to RADCAV
+        # TODO: applies to SPCADD, MPCADD, LOAD, ...
+        self.allow_empty_sets = True
 
+        self.allow_nan_length = True
+        self.allow_nan_area = True
+        self.allow_nan_volume = True
+        self.allow_nan_mass = True
+        self.allow_nan_density = True
+        self.allow_nan_thickness = True
+
+        # run the area, length, volume, mass, inertia, and quality methods
+        # may be removed at some point
+        self.run_testing_checks = False
+        # ---------------------------------------------------------------------
         self.fdtype = 'float64'
         self.idtype = 'int32'
         self.punch = None
@@ -233,6 +252,7 @@ class BDFAttributes:
         self.blseg = BLSEG(self)
         self.bcrpara = BCRPARA(self)
         self.bedge = BEDGE(self)
+        self.bcbody = BCBODY(self)
         self.bctpara = {}
         self.bctparm = {}
 
@@ -419,7 +439,16 @@ class BDFAttributes:
         self.pcompls = PCOMPLS(self)
         #self.solid_properties = []
 
-        self.chexcz = CHEXCZ(self)   # cohesive zone
+        # cohesive zone
+        # nx
+        self.cpentcz = CPENTCZ(self)
+        self.chexcz = CHEXCZ(self)
+        self.psolcz = PSOLCZ(self)
+        # msc
+        self.cifpent = CIFPENT(self)
+        self.cifhex = CIFHEX(self)
+        #self.pchoe = PCOHE(self)
+
 
         # mass
         self.pmass = PMASS(self)
@@ -453,6 +482,10 @@ class BDFAttributes:
         self.pconv = PCONV(self)
         self.convm = CONVM(self)
         self.pconvm = PCONVM(self)
+
+        self.radcav = RADCAV(self)
+        self.view = VIEW(self)
+        self.view3d = VIEW3D(self)
 
         # loads
         self.load = LOAD(self)
@@ -618,6 +651,7 @@ class BDFAttributes:
         self.tables:   dict[int, Union[TABLES1, TABLEST, TABLEH1, TABLEHT]] = {}
         self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
         self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
+        self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # matrices
         #: direct matrix input - DMIG
@@ -708,7 +742,8 @@ class BDFAttributes:
     def solid_element_cards(self) -> list[Any]:
         elements = [
             self.ctetra, self.cpenta, self.chexa, self.cpyram,
-            self.chexcz,
+            self.cpentcz, self.chexcz,  # nx cohesive zone
+            self.cifpent, self.cifhex,  # msc cohesive zone
         ]
         return elements
 
@@ -780,7 +815,8 @@ class BDFAttributes:
     @property
     def solid_property_cards(self) -> list[Any]:
         properties = [
-            self.psolid, self.plsolid, self.pcomps, self.pcompls,
+            self.psolid, self.plsolid, self.psolcz,
+            self.pcomps, self.pcompls,
         ]
         return properties
 
@@ -935,7 +971,8 @@ class BDFAttributes:
             self.conv, self.pconv,
             self.convm, self.pconvm,
             self.tempbc,
-            self.radbc, self.radm, self.radset,
+            self.radbc, self.radm, self.radset, self.radcav,
+            self.view, self.view3d,
         ]
         return boundary_conditions
 
@@ -1029,14 +1066,15 @@ class BDFAttributes:
         return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops,
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
-                self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge]
+                self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge,
+                self.bcbody, ]
     @property
     def _cards_not_setup(self) -> list[Any]:
         cards = [
             # optimization
             self.dequations, self.dtable, self.doptprm,
             # tables,
-            self.tables, self.tables_d, self.tables_m,
+            self.tables, self.tables_d, self.tables_m, self.tables_sdamping,
             # modes
             self.methods, self.cMethods,
             # nonlinear
@@ -1381,6 +1419,8 @@ class BDFAttributes:
             'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
         }
 
+        #element_cards = [card for card in self.element_cards
+                         #if card.n > 0 and card.type not in NO_MASS]
         for card in self.elements:
             if card.n == 0 or (card_type := card.type) in NO_MASS:
                 continue
@@ -1419,15 +1459,16 @@ class BDFAttributes:
         element_ids_all = []
         masses = []
         #mass = 0.
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_MASS:
-                continue
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_MASS]
+        for card in element_cards:
             element_ids_all.append(card.element_id)
             massi = card.mass()
             massi_sum = massi.sum()
             if np.isnan(massi_sum):
                 log.error(f'{card.type} has nan mass; mass={massi}')
-                raise RuntimeError(f'{card.type} has nan mass; mass={massi}')
+                if card.type != 'CBEND' and not self.allow_nan_mass:
+                    raise RuntimeError(f'{card.type} has nan mass; mass={massi}')
             #log.debug(f'{card.type}; mass={massi_sum}')
             masses.append(massi)
 
@@ -1464,9 +1505,9 @@ class BDFAttributes:
         inertias = []
         total_mass = 0.
         mass_cg = np.zeros(3, dtype='float64')
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_MASS:
-                continue
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_MASS]
+        for card in element_cards:
             card.center_of_mass()
             #if card.type == 'CONM2':
                 #continue
@@ -1539,10 +1580,9 @@ class BDFAttributes:
         mass_cg = np.zeros(3, dtype='float64')
         masses = []
         centroids = []
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_MASS:
-                continue
-
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_MASS]
+        for card in element_cards:
             element_ids_all.append(card.element_id)
             massi = card.mass()
             masses.append(massi)
@@ -1600,39 +1640,42 @@ class BDFAttributes:
         assert len(self.grid), 'No grids'
         NAN_LENGTHS = {'CBUSH', 'CBUSH1D'}
         length = 0.
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_LENGTH:
-                continue
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_LENGTH]
+        for card in element_cards:
             lengthi = card.length()
             if card.type not in NAN_LENGTHS and np.any(np.isnan(lengthi)):
                 self.log.error(f'{card.type} has nan length; length={lengthi}')
-                raise RuntimeError(f'{card.type} has nan length; length={lengthi}')
+                if card.type != 'CBEND' and not self.allow_nan_length:
+                    raise RuntimeError(f'{card.type} has nan length; length={lengthi}')
             length += lengthi.sum()
         return length
 
     def area(self) -> float:
         assert len(self.grid), 'No grids'
         area = 0.
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_AREA:
-                continue
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_AREA]
+        for card in element_cards:
             areai = card.area()
             if np.any(np.isnan(areai)):
                 self.log.error(f'{card.type} has nan area; area={areai}')
-                raise RuntimeError(f'{card.type} has nan area; area={areai}')
+                if not self.allow_nan_area:
+                    raise RuntimeError(f'{card.type} has nan area; area={areai}')
             area += areai.sum()
         return area
 
     def volume(self) -> float:
         assert len(self.grid), 'No grids'
         volume = 0.
-        for card in self.element_cards:
-            if card.n == 0 or card.type in NO_VOLUME:
-                continue
+        element_cards = [card for card in self.element_cards
+                         if card.n > 0 and card.type not in NO_VOLUME]
+        for card in element_cards:
             volumei = card.volume()
             if np.any(np.isnan(volumei)):
                 self.log.error(f'{card.type} has nan volume; volume={volumei}')
-                raise RuntimeError(f'{card.type} has nan volume; volume={volumei}')
+                if card.type != 'CBEND' and not self.allow_nan_volume:
+                    raise RuntimeError(f'{card.type} has nan volume; volume={volumei}')
             volume += volumei.sum()
         return volume
 
@@ -1646,6 +1689,7 @@ class BDFAttributes:
         ----------
         cards_to_read : set[str]
             cards that won't be included in element_ids
+
         """
         #assert len(self.grid), 'No grids'
         # list of elements that have no quality results
@@ -1868,16 +1912,16 @@ def _get_duplicate_cards(properties: list[Any],
     #print('count_inverse_where =', count_inverse_where)
     #print('count_where =', count_where)
 
-    if 0:
-        # old method with a memory issue
-        count = np.bincount(property_ids)
-        count_where = np.where(count > 1)[0]
-        count2 = count[count_where]
+    #if 0:
+        ## old method with a memory issue
+        #count = np.bincount(property_ids)
+        #count_where = np.where(count > 1)[0]
+        #count2 = count[count_where]
 
-        print('*count', count)
-        print('*count_where', count_where)
-        print('*count2', count2)
-        aaa
+        #print('*count', count)
+        #print('*count_where', count_where)
+        #print('*count2', count2)
+        #aaa
 
     #print(len(properties))
     #print('--------------------------')

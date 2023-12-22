@@ -1,3 +1,8 @@
+"""
+References:
+https://www.oasys-software.com/help/gsa/9.0/GSA_Theory.pdf
+https://download.strusoft.com/FEM-Design/inst110x/theory.pdf
+"""
 import os
 import copy
 from datetime import date

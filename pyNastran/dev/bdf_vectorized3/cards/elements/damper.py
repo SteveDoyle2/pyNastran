@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, get_print_card_8_16,
+    Element, Property,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size,
@@ -25,7 +25,7 @@ from .bar import get_bar_vector, safe_normalize, line_length
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
@@ -70,7 +70,7 @@ class CDAMP1(Element):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
-        nids = [integer(card, 3, 'g1'),
+        nids = [integer_or_blank(card, 3, 'g1', default=0),
                 integer_or_blank(card, 5, 'g2', default=0)]
 
         #: component number
@@ -107,6 +107,13 @@ class CDAMP1(Element):
         self.components = components
         self.n = nelements
 
+    def __apply_slice__(self, elem: CDAMP1, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.components = self.components[i]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()
         nodes = nodes[nodes > 0]
@@ -122,12 +129,16 @@ class CDAMP1(Element):
                    missing,
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -254,6 +265,13 @@ class CDAMP2(Element):
         self.b = b
         self.n = nelements
 
+    def __apply_slice__(self, elem: CDAMP2, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.components = self.components[i]
+        elem.b = self.b[i]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.nodes.ravel())
 
@@ -262,12 +280,15 @@ class CDAMP2(Element):
         geom_check(self,
                    missing,
                    node=(nid, self.nodes))
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         bs = array_float(self.b, size=size, is_double=False)
@@ -350,6 +371,12 @@ class CDAMP3(Element):
         self.property_id = property_id
         self.spoints = spoints
         self.n = nelements
+
+    def __apply_slice__(self, elem: CDAMP3, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.spoints = self.spoints[i, :]
+        elem.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -461,6 +488,12 @@ class CDAMP4(Element):
         self.spoints = spoints
         self.n = nelements
 
+    def __apply_slice__(self, elem: CDAMP4, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.b = self.b[i]
+        elem.spoints = self.spoints[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spoint_id'].append(self.spoints.ravel())
 
@@ -470,11 +503,15 @@ class CDAMP4(Element):
                    missing,
                    spoint=(spoint, self.spoints))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.spoints.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         bs = array_float(self.b, size=size, is_double=False)
@@ -525,8 +562,8 @@ class CDAMP5(Element):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        nids = [integer_or_blank(card, 3, 'n1', 0),
-                integer_or_blank(card, 4, 'n2', 0)]
+        nids = [integer_or_blank(card, 3, 'n1', default=0),
+                integer_or_blank(card, 4, 'n2', default=0)]
         assert len(card) <= 5, f'len(CDAMP5 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
@@ -556,11 +593,22 @@ class CDAMP5(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def __apply_slice__(self, elem: CDAMP4, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -656,6 +704,11 @@ class PDAMP(Property):
         self.b = b
         self.n = nproperties
 
+    def __apply_slice__(self, prop: PDAMP, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.b = self.b[i]
+        prop.n = len(i)
+
     def validate(self) -> None:
         return
 
@@ -668,11 +721,15 @@ class PDAMP(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         for pid, b in zip(property_id, self.b):
@@ -769,11 +826,15 @@ class PDAMP5(Property):
                    node=(nid, self.nodes),
                    property_id=(mids, self.material_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)
@@ -835,14 +896,23 @@ class PDAMPT(Property):
         self.property_id = property_id
         self.table_b = table_b
 
+    def __apply_slice__(self, prop: PDAMPT, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.table_b = self.table_b[i]
+        prop.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['tabled_id'].append(self.table_b)
+
+    @property
+    def max_id(self):
+        return max(self.property_id.max(), self.table_b.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         table_bs = array_default_int(self.table_b, default=0, size=size)
@@ -920,6 +990,12 @@ class CVISC(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def __apply_slice__(self, elem: CVISC, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()
         nodes = nodes[nodes > 0]
@@ -936,11 +1012,16 @@ class CVISC(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1051,17 +1132,26 @@ class PVISC(Property):
         self.ce = ce
         self.n = len(property_id)
 
+    def __apply_slice__(self, prop: PVISC, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.cr = self.cr[i]
+        prop.ce = self.ce[i]
+        prop.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
+    @property
+    def max_id(self):
+        return self.property_id.max()
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         ces = array_float(self.ce, size=size, is_double=is_double)
@@ -1499,6 +1589,20 @@ class PGAP(Property):
         self.mar = mar
         self.trmin = trmin
 
+    def __apply_slice__(self, prop: PGAP, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.u0 = self.u0[i]
+        prop.f0 = self.f0[i]
+        prop.ka = self.ka[i]
+        prop.kb = self.kb[i]
+        prop.kt = self.kt[i]
+        prop.mu1 = self.mu1[i]
+        prop.mu2 = self.mu2[i]
+        prop.tmax = self.tmax[i]
+        prop.mar = self.mar[i]
+        prop.trmin = self.trmin[i]
+        prop.n = len(i)
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
@@ -1545,11 +1649,15 @@ class PGAP(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
         u0s = array_default_float(self.u0, default=0.0, size=size, is_double=is_double)

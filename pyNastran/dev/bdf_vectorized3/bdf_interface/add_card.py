@@ -3224,11 +3224,11 @@ class AddAero(BDFAttributes):
             a comment for the card
 
         """
-        flutter = FLUTTER(sid, method, density, mach, reduced_freq_velocity,
-                          imethod=imethod, nvalue=nvalue,
-                          omax=omax, epsilon=epsilon,
-                          comment=comment, validate=validate)
-        self._add_methods._add_flutter_object(flutter)
+        flutter = self.flutter.add(
+            sid, method, density, mach, reduced_freq_velocity,
+            imethod=imethod, nvalue=nvalue,
+            omax=omax, epsilon=epsilon,
+            comment=comment, validate=validate)
         return flutter
 
     def add_flfact(self, sid: int, factors: list[float], comment: str='') -> int:
@@ -3548,7 +3548,6 @@ class AddAero(BDFAttributes):
         assert isinstance(perq, str), perq
         fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
-
 
 
 class AddOptimization(BDFAttributes):
@@ -4026,9 +4025,9 @@ class AddOptimization(BDFAttributes):
         dvgrid = self.dvgrid.add(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
         return dvgrid
 
-    def add_ddval(self, oid: int, ddvals: list[int], comment: str='') -> int:
+    def add_ddval(self, ddval_id: int, ddvals: list[int], comment: str='') -> int:
         """Creates a DDVAL card"""
-        ddval = self.ddval.add(oid, ddvals, comment=comment)
+        ddval = self.ddval.add(ddval_id, ddvals, comment=comment)
         return ddval
 
     def add_dlink(self, oid: int, dependent_desvar: int,
@@ -5308,6 +5307,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                     log.error(str(error))
                     log.error(class_name)
                     raise
+                ncard = len(card)
+                icard = np.arange(ncard)
+                card.slice_card_by_index(icard)
 
     def setup(self, run_geom_check: bool=True) -> None:
         self.parse_cards()

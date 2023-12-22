@@ -17,7 +17,8 @@ def get_density_from_property(property_id: np.ndarray,
         rho[i_lookup] = rhoi[i_all]
     return rho
 
-def get_density_from_material(material_id: np.ndarray, allowed_materials: list[Any],
+def get_density_from_material(material_id: np.ndarray,
+                              allowed_materials: list[Any],
                               debug: bool=False) -> np.ndarray:
     assert len(allowed_materials) > 0, allowed_materials
     nmaterials = len(material_id)

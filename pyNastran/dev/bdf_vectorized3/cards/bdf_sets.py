@@ -150,7 +150,7 @@ class ABCOQSET(VectorizedBaseCard):
         node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
@@ -404,14 +404,14 @@ class SuperBCQSET(VectorizedBaseCard):
         node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (seidi, nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
-            seid[i] = seidi
+            seid[icard] = seidi
             nnodei = len(nidi)
             assert nnodei > 0, (seidi, nidi, componenti)
-            nnode[i] = nnodei
+            nnode[icard] = nnodei
             node_id_list.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
@@ -650,14 +650,14 @@ class RELEASE(VectorizedBaseCard):
         node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (seidi, nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
-            seid[i] = seidi
+            seid[icard] = seidi
             nnodei = len(nidi)
             assert nnodei > 0, (seidi, nidi, componenti)
-            nnode[i] = nnodei
+            nnode[icard] = nnodei
             node_id_list.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
@@ -919,7 +919,7 @@ class SUPORT(VectorizedBaseCard):
         node_id = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(cards):
+        for icard, card in enumerate(cards):
             (suport_idi, nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
@@ -1237,7 +1237,7 @@ class USET(VectorizedBaseCard):
         node_id = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(cards):
+        for icard, card in enumerate(cards):
             (namei, nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
