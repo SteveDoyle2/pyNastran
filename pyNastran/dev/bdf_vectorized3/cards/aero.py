@@ -7140,6 +7140,7 @@ class TRIM(VectorizedBaseCard):
         nsuport_dofs = 0
         nsuport1_dofs = 0
         suport_dofs = set()
+        suport1_dofs = set()
 
         #for (inode0, inode1) in suport.inode:
             #nodes = suport.node[inode0:inode1]

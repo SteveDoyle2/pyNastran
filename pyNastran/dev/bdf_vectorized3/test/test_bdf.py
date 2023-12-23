@@ -2483,9 +2483,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
         else:
             trim = fem.trim.slice_card_by_id(trim_id)
             try:
-                trim.verify_trim(
-                    suport, fem.aestats, fem.aeparams,
-                    fem.aelinks, fem.aesurf, xref=True)
+                trim.verify_trim(suport_id)
             except RuntimeError:
                 if stop_on_failure or ierror == nerrors:
                     raise
