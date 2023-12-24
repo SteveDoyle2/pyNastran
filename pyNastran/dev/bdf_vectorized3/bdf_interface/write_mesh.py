@@ -856,7 +856,7 @@ class Writer:
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the static aero cards"""
         model = self.model
-        if model.aeros or len(model.trim) or model.divergs or len(model.csschd):
+        if model.aeros or len(model.trim) or len(model.diverg) or len(model.csschd):
             bdf_file.write('$STATIC AERO\n')
             model.trim.write_file(bdf_file, size=size, is_double=is_double)
             #model.trim2.write_file(bdf_file, size=size, is_double=is_double)
@@ -866,8 +866,6 @@ class Writer:
             # static aero
             if model.aeros:
                 bdf_file.write(model.aeros.write_card(size, is_double))
-            for (unused_id, diverg) in sorted(model.divergs.items()):
-                bdf_file.write(diverg.write_card(size, is_double))
 
     def _write_flutter(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
@@ -900,7 +898,7 @@ class Writer:
         model.aecompl.write_file(bdf_file, size=size, is_double=is_double)  # helper for AECOMPL
         model.aelist.write_file(bdf_file, size=size, is_double=is_double)  # aero boxes for AESURF
         model.flfact.write_file(bdf_file, size=size, is_double=is_double)  # Mach, vel, rho for FLUTTER
-        #bdf_file.write(model.aefact.write(size=size))  #
+        model.aefact.write_file(bdf_file, size=size, is_double=is_double)
 
         if (write_aero_in_flutter and model.aero) or len(model.flutter) or model.mkaeros:
             bdf_file.write('$FLUTTER\n')
@@ -932,6 +930,7 @@ class Writer:
         #if self.load_combinations or self.loads or self.cyjoin:
         if any(load.n for load in model.load_cards):
             bdf_file.write('$LOADS\n')
+            model.cload.write_file(bdf_file, size=size, is_double=is_double)
             model.load.write_file(bdf_file, size=size, is_double=is_double)
             model.grav.write_file(bdf_file, size=size, is_double=is_double)
             model.accel.write_file(bdf_file, size=size, is_double=is_double)

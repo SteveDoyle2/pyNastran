@@ -2240,7 +2240,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'SESUP' : (SESUP, add_methods._add_sesuport_object), # pseudo-constraint
 
-            'CLOAD' : (RuntimeCrash, None),
             #'CLOAD' : (CLOAD, add_methods._add_load_combination_object),
             #'LOADCYN' : (LOADCYN, add_methods._add_load_object),
             #'LOADCYH' : (LOADCYH, add_methods._add_load_object),
@@ -2531,6 +2530,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'VIEW' : partial(self._prepare_card, self.view),
             'VIEW3D' : partial(self._prepare_card, self.view3d),
 
+            # cyclic loads
+            'CLOAD' : partial(self._prepare_card, self.cload),
 
             # static loads
             'LOAD' : partial(self._prepare_card, self.load),

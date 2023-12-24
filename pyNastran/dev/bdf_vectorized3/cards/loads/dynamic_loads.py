@@ -35,6 +35,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float,
     get_print_card_size)
+from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LoadCombination
 #from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 #from .static_loads import get_loads_by_load_id, get_reduced_loads
 
@@ -44,20 +45,19 @@ if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
-class DLOAD(VectorizedBaseCard):
+class DLOAD(LoadCombination):
     """
-    +------+-----+------+------+----+-----+----+----+----+
-    |   1  |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
-    +======+=====+======+======+====+=====+====+====+====+
-    | LOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
-    +------+-----+------+------+----+-----+----+----+----+
-    |      | S4  |  L4  | etc. |    |     |    |    |    |
-    +------+-----+------+------+----+-----+----+----+----+
-    | LOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
-    +------+-----+------+------+----+-----+----+----+----+
+    +-------+-----+------+------+----+-----+----+----+----+
+    |   1   |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +=======+=====+======+======+====+=====+====+====+====+
+    | DLOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +-------+-----+------+------+----+-----+----+----+----+
+    |       | S4  |  L4  | etc. |    |     |    |    |    |
+    +-------+-----+------+------+----+-----+----+----+----+
+    | DLOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +-------+-----+------+------+----+-----+----+----+----+
 
     """
-    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -86,85 +86,8 @@ class DLOAD(VectorizedBaseCard):
             a comment for the card
 
         """
-        if isinstance(scale_factors, float) and isinstance(load_ids, int):
-            scale_factors = [scale_factors]
-            load_ids = [load_ids]
-        elif isinstance(scale_factors, float):
-            scale_factors = [scale_factors] * len(load_ids)
-        else:
-            load_ids = [load_ids] * len(scale_factors)
-
-            scale_factors
-        self.cards.append((sid, scale, scale_factors, load_ids, comment))
-        self.n += 1
-        return self.n - 1
-
-    def add_card(self, card: BDFCard, comment: str='') -> None:
-        sid = integer(card, 1, 'sid')
-        scale = double(card, 2, 'scale')
-
-        scale_factors = []
-        load_ids = []
-
-        # alternating of scale factor & load set ID
-        nload_fields = len(card) - 3
-        assert nload_fields % 2 == 0, 'card=%s' % card
-        for iload in range(nload_fields // 2):
-            n = 2 * iload + 3
-            scale_factors.append(double(card, n, 'scale_factor'))
-            load_ids.append(integer(card, n + 1, 'load_id'))
-
-        assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
-        self.cards.append((sid, scale, scale_factors, load_ids, comment))
-        self.n += 1
-        return self.n - 1
-
-    @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self) -> None:
-        ncards = len(self.cards)
-        load_id = np.zeros(ncards, dtype='int32')
-        scale = np.zeros(ncards, dtype='float64')
-        nloads = np.zeros(ncards, dtype='int32')
-
-        all_load_ids = []
-        all_scale_factors = []
-        for icard, card in enumerate(self.cards):
-            (sid, scalei, scale_factors, load_ids, comment) = card
-            nloads_actual = len(scale_factors)
-
-            load_id[icard] = sid
-            scale[icard] = scalei
-            nloads[icard] = nloads_actual
-            all_load_ids.extend(load_ids)
-            all_scale_factors.extend(scale_factors)
-
-        load_ids = np.array(all_load_ids, dtype='int32')
-        scale_factors = np.array(all_scale_factors, dtype='float64')
-        self._save(load_id, scale, nloads, load_ids, scale_factors)
-        self.model.log.debug('load_id=%s scale=%s nloads=%s all_load_ids=%s all_scale_factors=%s' % (
-            self.load_id, self.scale, self.nloads, all_load_ids, all_scale_factors))
-        self.cards = []
-
-    def _save(self, load_id, scale, nloads, load_ids, scale_factors):
-        assert len(self.load_id) == 0
-        self.load_id = load_id
-        self.scale = scale
-        self.nloads = nloads
-        self.load_ids = load_ids
-        self.scale_factors = scale_factors
-        self.n = len(load_id)
-
-    def __apply_slice__(self, dload: DLOAD, i: np.ndarray) -> None:
-        dload.load_id = self.load_id[i]
-        dload.scale = self.scale[i]
-        dload.nloads = self.nloads[i]
-        dload.load_ids = self.load_ids[i]
-        dload.scale_factors = self.scale_factors[i]
-        dload.n = len(i)
-
-    @property
-    def iload(self) -> np.ndarray:
-        return make_idim(self.n, self.nloads)
+        return super().add(
+            sid, scale, scale_factors, load_ids, comment=comment)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['load_id'].append(self.load_ids)
@@ -174,34 +97,6 @@ class DLOAD(VectorizedBaseCard):
         ncards_removed = remove_unused_primary(
             self, load_id, self.load_id, 'load_id')
         return ncards_removed
-
-    @property
-    def max_id(self) -> int:
-        return max(self.load_id.max(), self.load_ids.max())
-
-    @parse_load_check
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card, size = get_print_card_size(size, self.max_id)
-
-        for sid, scale, iloadi in zip(self.load_id, self.scale, self.iload):
-            iload0, iload1 = iloadi
-            list_fields = ['DLOAD', sid, scale]
-            scale_factors = self.scale_factors[iload0:iload1]
-            load_ids = self.load_ids[iload0:iload1]
-            for (scale_factor, load_id) in zip_longest(scale_factors, load_ids):
-                list_fields += [scale_factor, load_id]
-            #if len(load_ids) != len(scale_factors):
-                #msg = 'nload_ids=%s nscale_factors=%s and arent the same\n' % (
-                    #len(load_ids), len(scale_factors))
-                #msg = 'load_ids=%s\n' % (load_ids)
-                #msg += 'scale_factors=%s\n' % (scale_factors)
-                #msg += print_card_8(list_fields)
-                #msg += str(self.get_stats())
-                #raise IndexError(msg)
-            bdf_file.write(print_card(list_fields))
-        return
 
     def get_loads_by_load_id(self) -> dict[int, Loads]:
         model = self.model

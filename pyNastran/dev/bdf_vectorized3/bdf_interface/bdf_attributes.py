@@ -64,6 +64,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
+    CLOAD,
     LOAD, SLOAD,
     FORCE, FORCE1, FORCE2,
     MOMENT, MOMENT1, MOMENT2,
@@ -495,6 +496,9 @@ class BDFAttributes:
         self.view = VIEW(self)
         self.view3d = VIEW3D(self)
 
+        # cyclic loads
+        self.cload = CLOAD(self)
+
         # loads
         self.load = LOAD(self)
         self.sload = SLOAD(self)
@@ -656,7 +660,6 @@ class BDFAttributes:
 
         # static aero
         self.aeros = None
-        self.divergs = {}
 
         #  flutter
         self.aero = None
@@ -928,7 +931,7 @@ class BDFAttributes:
     @property
     def load_cards(self) -> list[Any]:
         loads = [
-            self.load, self.lseq,
+            self.load, self.lseq, self.cload,
 
             #self.dtemp, # has nodes
             self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3,
@@ -1107,7 +1110,7 @@ class BDFAttributes:
             # nonlinear transient
             self.tstepnls, self.nlpcis, self.nxstrats,
             # aero
-            self.aeros, self.divergs, # trim
+            self.aeros,  # trim
             self.aero, self.mkaeros, # flutter
         ]
         return cards

@@ -6093,7 +6093,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.load.add(sid, scale, scale_factors, load_ids, comment=comment)
         return load
 
-    def add_cload(self, sid, scale, scale_factors, load_ids, comment: str='') -> CLOAD:
+    def add_cload(self, sid: int, scale: float,
+                  scale_factors: list[float], load_ids: list[int],
+                  comment: str='') -> int:
         """
         Creates a CLOAD card
 
@@ -6111,8 +6113,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = CLOAD(sid, scale, scale_factors, load_ids, comment=comment)
-        self._add_methods._add_load_combination_object(load)
+        load = self.cload.add(sid, scale, scale_factors, load_ids, comment=comment)
         return load
 
     def add_lseq(self, sid: int, excite_id: int,
@@ -6297,9 +6298,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.tload2.add(sid, excite_id, delay=delay, load_type=load_type, T1=T1, T2=T2,
-                               frequency=frequency, phase=phase, c=c, b=b,
-                               us0=us0, vs0=vs0, comment=comment)
+        load = self.tload2.add(
+            sid, excite_id, delay=delay, load_type=load_type, T1=T1, T2=T2,
+            frequency=frequency, phase=phase, c=c, b=b,
+            us0=us0, vs0=vs0, comment=comment)
         return load
 
     def add_rload1(self, sid: int, excite_id: int,
@@ -6343,8 +6345,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.rload1.add(sid, excite_id, delay=delay, dphase=dphase, tc=tc, td=td,
-                               load_type=load_type, comment=comment)
+        load = self.rload1.add(
+            sid, excite_id, delay=delay, dphase=dphase, tc=tc, td=td,
+            load_type=load_type, comment=comment)
         return load
 
     def add_rload2(self, sid: int, excite_id: int,
@@ -6388,8 +6391,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.rload2.add(sid, excite_id, delay=delay, dphase=dphase, tb=tb, tphi=tphi,
-                               load_type=load_type, comment=comment)
+        load = self.rload2.add(
+            sid, excite_id, delay=delay, dphase=dphase, tb=tb, tphi=tphi,
+            load_type=load_type, comment=comment)
         return load
 
     def add_rforce(self, sid: int, nid: int, scale: float, r123: list[float],
@@ -6437,8 +6441,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.rforce1.add(sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
-                                main_bulk=main_bulk, method=method, comment=comment)
+        load = self.rforce1.add(
+            sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
+            main_bulk=main_bulk, method=method, comment=comment)
         return load
 
     def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment: str='') -> int:
@@ -6729,7 +6734,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.accel.add(sid, N, direction, locs, vals, cid=cid, comment=comment)
+        load = self.accel.add(sid, N, direction, locs, vals, cid=cid,
+                              comment=comment)
         return load
 
     def add_accel1(self, sid: int, scale: float,
@@ -6837,7 +6843,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         Distributed Load : x1 != x2
 
         """
-        load = self.pload1.add(sid, eid, load_type, scale, x1, p1, x2=x2, p2=p2, comment=comment)
+        load = self.pload1.add(sid, eid, load_type, scale, x1, p1, x2=x2, p2=p2,
+                               comment=comment)
         return load
 
     def add_pload2(self, sid: int, pressure: float, eids: list[int],
@@ -6936,7 +6943,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.ploadx1.add(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
+        load = self.ploadx1.add(sid, eid, pa, nids, pb=pb, theta=theta,
+                                comment=comment)
         return load
 
     def add_spc(self, conid :int, nodes: list[int], components: list[str],
@@ -8045,10 +8053,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         dphase = self.dphase.add(dphase_id, node, component, phase_lead, comment=comment)
         return dphase
 
-    def add_rotorg(self, sid, nids, comment: str='') -> ROTORG:
+    def add_rotorg(self, sid, nids, comment: str='') -> int:
         """Creates a ROTORG card"""
-        rotor = ROTORG(sid, nids, comment=comment)
-        self._add_methods._add_rotor_object(rotor)
+        rotor = self.rotorg,add(sid, nids, comment=comment)
         return rotor
 
     def add_rotord(self, sid, rstart, rstep, numstep,
@@ -8369,8 +8376,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_acmodl_object(acmodl)
         return acmodl
 
-    def add_chacab(self, eid, pid, nodes, comment: str='') -> CHACAB:
-        chacab = CHACAB(eid, pid, nodes, comment=comment)
+    def add_chacab(self, eid, pid, nodes, comment: str='') -> int:
+        chacab = self.chacab.add(eid, pid, nodes, comment=comment)
         return chacab
 
     def add_caabsf(self, eid: int, pid: int, nodes: list[int],
@@ -8378,8 +8385,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         caabsf = self.caabsf.add(eid, pid, nodes, comment=comment)
         return caabsf
 
-    def add_chacbr(self, eid, pid, nodes, comment: str='') -> CHACBR:
-        chacbr = CHACBR(eid, pid, nodes, comment=comment)
+    def add_chacbr(self, eid, pid, nodes, comment: str='') -> int:
+        chacbr = self.chacbr.add(eid, pid, nodes, comment=comment)
         return chacbr
 
     def add_paabsf(self, pid: int,
@@ -8447,4 +8454,3 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                         comment=comment)
         self._add_methods._add_acoustic_property_object(pacabs)
         return pacabs
-

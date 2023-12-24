@@ -1552,19 +1552,21 @@ class ACCEL1(Load):
         return
 
 
-class LOAD(Load):
+class LoadCombination(Load):
     """
-    +------+-----+------+------+----+-----+----+----+----+
-    |   1  |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
-    +======+=====+======+======+====+=====+====+====+====+
-    | LOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
-    +------+-----+------+------+----+-----+----+----+----+
-    |      | S4  |  L4  | etc. |    |     |    |    |    |
-    +------+-----+------+------+----+-----+----+----+----+
-    | LOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
-    +------+-----+------+------+----+-----+----+----+----+
+    +------+-----+-------+------+----+-----+----+----+----+
+    |   1  |  2  |   3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +======+=====+=======+======+====+=====+====+====+====+
+    | LOAD | SID | SCALE |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +------+-----+-------+------+----+-----+----+----+----+
+    |      | S4  |   L4  | etc. |    |     |    |    |    |
+    +------+-----+-------+------+----+-----+----+----+----+
+    | LOAD | 101 | -0.5  | 1.0  | 3  | 6.2 | 4  |    |    |
+    +------+-----+-------+------+----+-----+----+----+----+
 
+    Used for LOAD, CLOAD, DLOAD
     """
+    _id_name = 'load_id'
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -1575,6 +1577,34 @@ class LOAD(Load):
     def add(self, sid: int, scale: float,
             scale_factors: list[float],
             load_ids: list[int], comment: str='') -> int:
+        """
+        Creates a LOAD/CLOAD/DLOAD card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number
+        scale : float
+            Global scale factor
+        Si : list[float]
+            scale factors
+        load_ids : list[int]
+            Load set identification numbers to combine
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if isinstance(scale_factors, (tuple, list, np.ndarray)) and isinstance(load_ids, (tuple, list, np.ndarray)):
+            assert len(scale_factors) == len(load_ids)
+        elif isinstance(scale_factors, float) and isinstance(load_ids, int):
+            scale_factors = [scale_factors]
+            load_ids = [load_ids]
+        elif isinstance(scale_factors, float):
+            scale_factors = [scale_factors] * len(load_ids)
+        else:
+            load_ids = [load_ids] * len(scale_factors)
+            scale_factors
+
         assert len(scale_factors) == len(load_ids), f'sid={sid:d} scale_factors={scale_factors} load_ids={load_ids}'
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
@@ -1602,6 +1632,7 @@ class LOAD(Load):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        #idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
         scale = np.zeros(ncards, dtype='float64')
         nloads = np.zeros(ncards, dtype='int32')
@@ -1610,13 +1641,13 @@ class LOAD(Load):
         all_scale_factors = []
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, scalei, scale_factors, load_ids, comment) = card
+            (sid, scalei, scale_factors, load_idsi, comment) = card
             nloads_actual = len(scale_factors)
 
             load_id[icard] = sid
             scale[icard] = scalei
             nloads[icard] = nloads_actual
-            all_load_ids.extend(load_ids)
+            all_load_ids.extend(load_idsi)
             all_scale_factors.extend(scale_factors)
         load_ids = np.array(all_load_ids, dtype='int32')
         scale_factors = np.array(all_scale_factors, dtype='float64')
@@ -1636,7 +1667,8 @@ class LOAD(Load):
         self.load_ids = load_ids
         self.scale_factors = scale_factors
 
-    def __apply_slice__(self, load: LOAD, i: np.ndarray) -> None:  # ignore[override]
+    def __apply_slice__(self, load: LoadCombination,
+                        i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.scale = self.scale[i]
@@ -1669,10 +1701,11 @@ class LOAD(Load):
                    write_card_header: bool=False) -> None:
         #get_reduced_loads(self, filter_zero_scale_factors=False)
         print_card, size = get_print_card_size(size, self.max_id)
-
+        load_id_ = array_str(self.load_id, size=size)
+        load_ids_ = array_str(self.load_ids, size=size).tolist()
         for sid, scale, iload in zip(self.load_id, self.scale, self.iload):
             iload0, iload1 = iload
-            list_fields = ['LOAD', sid, scale]
+            list_fields = [self.type, sid, scale]
             scale_factors = self.scale_factors[iload0:iload1]
             load_ids = self.load_ids[iload0:iload1]
             for (scale_factor, load_id) in zip(scale_factors, load_ids):
@@ -1691,6 +1724,34 @@ class LOAD(Load):
         return
 
 
+class CLOAD(LoadCombination):
+    """
+    +-------+-----+------+------+----+-----+----+----+----+
+    |   1   |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +=======+=====+======+======+====+=====+====+====+====+
+    | CLOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +-------+-----+------+------+----+-----+----+----+----+
+    |       | S4  |  L4  | etc. |    |     |    |    |    |
+    +-------+-----+------+------+----+-----+----+----+----+
+    | CLOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +-------+-----+------+------+----+-----+----+----+----+
+
+    """
+    pass
+
+class LOAD(LoadCombination):
+    """
+    +------+-----+------+------+----+-----+----+----+----+
+    |   1  |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +======+=====+======+======+====+=====+====+====+====+
+    | LOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +------+-----+------+------+----+-----+----+----+----+
+    |      | S4  |  L4  | etc. |    |     |    |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+    | LOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+
+    """
     #def get_loads_by_load_id(self) -> dict[int, Loads]:
         #return get_loads_by_load_id(self)
 
