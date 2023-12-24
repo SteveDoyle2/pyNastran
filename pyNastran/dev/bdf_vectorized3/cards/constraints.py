@@ -629,6 +629,7 @@ class ADD(VectorizedBaseCard):
     @property
     def max_id(self):
         return max(self.sid.max(), self.sids.max())
+
     @property
     def is_small_field(self) -> bool:
         return self.max_id < 99_999_999
@@ -927,7 +928,7 @@ class CommonSet(VectorizedBaseCard):
 
     def add_set1_card(self, card: BDFCard, comment: str='') -> int:
         """
-        Adds a SPCOFF1/BNDFIX1/BNDFREE1 card from ``BDF.add_card(...)``
+        Adds a SPCOFF1/BNDFIX1/BNDFREE1/BNDGRID card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1036,7 +1037,6 @@ class CommonSet(VectorizedBaseCard):
         spcoff.node_id = self.node_id[i]
         spcoff.component = self.component[i]
 
-
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
@@ -1085,6 +1085,13 @@ class BNDFIX(CommonSet):
     pass
 class BNDFREE(CommonSet):
     pass
+class BNDGRID(CommonSet):
+    pass
+    #def add_card(self, card: BDFCard, comment: str=''):
+        #thru = card.field(3).strip()
+        #if thru == 'THRU':
+            #self.add_set_card(card, comment='')
+
 
 SPCs = Union[SPC, SPC1]
 

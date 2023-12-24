@@ -2465,6 +2465,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
     log = fem.log
 
     suport = None # fem.suport.slice_card_by_index([])
+    suport_id = 0
     if 'SUPORT1' in subcase:
         suport_id = subcase.get_parameter('SUPORT1')[0]
         suporti = fem.suport

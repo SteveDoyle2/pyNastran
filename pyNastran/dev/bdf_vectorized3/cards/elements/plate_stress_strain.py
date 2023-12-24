@@ -127,6 +127,10 @@ class PlateStressElement(Element):
             raise RuntimeError(msg)
         return volume
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
 
 class CPLSTS3(PlateStressElement):
     """
@@ -560,6 +564,11 @@ class PPLANE(Property):
         self.write_file(bdf_file, size=16, is_double=is_double,
                         write_card_header=write_card_header)
 
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -717,6 +726,10 @@ class PlateStrainElement(Element):
             self.model.log.error(msg)
             raise RuntimeError(msg)
         return volume
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
 
 class CPLSTN3(PlateStrainElement):

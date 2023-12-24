@@ -104,12 +104,15 @@ class XPOINT(VectorizedBaseCard):
         bad_ids = self.ids[self.ids <= 0]
         assert self.ids.min() > 0, bad_ids
 
+    @property
+    def max_id(self) -> int:
+        return self.ids.max()
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.ids.max()
         assert self.ids.min() > 0, self.ids[self.ids <= 0]
-        print_card = get_print_card(size, max_int)
+        print_card = get_print_card(size, self.max_id)
 
         #node_id = array_str(self.node_id, size=8)
         lists_fields = compress_xpoints(self.type, self.ids)
@@ -907,11 +910,14 @@ class POINT(VectorizedBaseCard):
                    missing,
                    property_id=(cids, self.cp))
 
+    @property
+    def max_id(self) -> int:
+        return self.point_id.max()
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.point_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card = get_print_card(size, self.max_id)
 
         point_ids = array_str(self.point_id, size=size)
         cps = array_default_int(self.cp, default=0, size=size)

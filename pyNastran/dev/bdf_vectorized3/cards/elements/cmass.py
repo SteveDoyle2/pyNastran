@@ -118,6 +118,10 @@ class CMASS1(Element):
         elem.components = self.components[i, :]
         elem.n = len(i)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -283,6 +287,10 @@ class CMASS2(Element):
         elem.components = self.components[i, :]
         elem.n = len(i)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -403,6 +411,10 @@ class CMASS3(Element):
     def centroid(self) -> np.ndarray:
         return self.center_of_mass()
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.spoints.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -521,6 +533,10 @@ class CMASS4(Element):
     def centroid(self) -> np.ndarray:
         return self.center_of_mass()
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.spoints.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -609,6 +625,10 @@ class PMASS(Property):
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
+
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

@@ -1752,6 +1752,241 @@ class RADCAV(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+
+class RADLST(VectorizedBaseCard):
+    """
+    Identifies the characteristics of each radiant enclosure.
+
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    |    1   |    2    |    3   |  4   |   5   |    6   |   7   |   8  |    9   |
+    +========+=========+========+======+=======+========+=======+======+========+
+    | RADLST | ICAVITY | MTXTYP | EID1 |  EID2 |  EID3  |  EID4 | EID5 |  EID6  |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    |        |   EID7  |  etc.  |      |       |        |       |      |        |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    | RADLST |    3    |    5   |  4   |   5   |    7   |   5   |      |        |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+
+    """
+    _id_name = 'icavity'
+    def clear(self) -> None:
+        self.icavity = np.array([], dtype='int32')
+        self.ele_ambient = np.array([], dtype='int32')
+        self.shadow = np.array([], dtype='|U8')
+        self.scale = np.array([], dtype='float64')
+
+        self.prtpch = np.array([], dtype='int32')
+        self.nefci = np.array([], dtype='|U8')
+        self.rmax = np.array([], dtype='float64')
+        self.ncomp = np.array([], dtype='int32')
+        self.nset = np.array([], dtype='int32')
+        self.sets = np.array([], dtype='int32')
+        self.n = 0
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a RADLST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #fdouble = force_double if self.model.is_lax_parser else double
+        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        icavity = integer(card, 1, 'icavity')
+        matrix_type = integer_or_blank(card, 2, 'matrix_type', default=1)
+
+        eids = fields(integer, card, 'eid', i=3, j=card.nfields)
+
+        if not self.model.allow_empty_sets:
+            assert len(eids) > 0, card
+        self.cards.append((icavity, matrix_type, eids, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        icavity = np.zeros(ncards, dtype='int32')
+        nelement = np.zeros(ncards, dtype='int32')
+
+        matrix_type = np.zeros(ncards, dtype='int32')
+        all_eids_list = []
+
+        for icard, card in enumerate(self.cards):
+            (icavityi, matrix_typei, eids, comment) = card
+            icavity[icard] = icavityi
+            matrix_type[icard] = matrix_typei
+            nelement[icard] = len(eids)
+            all_eids_list.extend(eids)
+        element_ids = np.array(all_eids_list, dtype=idtype)
+        self._save(icavity, matrix_type, element_ids, nelement)
+        self.cards = []
+
+    def _save(self, icavity, matrix_type, element_ids, nelement) -> int:
+        assert len(self.icavity) == 0
+        self.icavity = icavity
+        self.matrix_type = matrix_type
+        self.element_ids = element_ids
+        self.nelement = nelement
+        self.n = len(icavity)
+
+    def __apply_slice__(self, radlist: RADLST, i: np.ndarray) -> None:
+        radlist.icavity = self.icavity[i]
+        radlist.matrix_type = self.matrix_type[i]
+        ielement = self.ielement
+        radlist.element_ids = hslice_by_idim(i, ielement, self.element_ids)
+        radlist.nelement = self.nelement[i]
+        radlist.n = len(i)
+
+    @property
+    def ielement(self) -> np.ndarray:
+        return make_idim(self.n, self.nelement)
+
+    @property
+    def max_id(self) -> int:
+        eid_max = 0 if len(self.element_ids) == 0 else self.element_ids.max()
+        return max(self.icavity.max(), eid_max)
+
+    #@parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.icavity) == 0:
+            return ''
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        icavitys = array_str(self.icavity, size=size)
+        matrix_types = array_default_int(self.ele_ambient, default=1, size=size)
+        element_ids = array_str(self.element_ids, size=size).tolist()
+        for icavity, matrix_type, (ielement0, ielement1) in zip_longest(icavitys, matrix_types,
+                                                                        self.ielement):
+            eids = element_ids[ielement0:ielement1]
+            list_fields = ['RADLST', icavity, matrix_type] + eids
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class RADMTX(VectorizedBaseCard):
+    """
+    Provides the Fji=Aj*fji exchange factors for all the faces of a
+    radiation enclosure specified in the corresponding RADLST entry.
+
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    |    1   |    2    |    3   |   4    |    5   |    6   |    7   |    8   |    9   |
+    +========+=========+========+========+========+========+========+========+========+
+    | RADMTX | ICAVITY | INDEX  |  Fi,j  | Fi+1,j | Fi+2,j | Fi+3,j | Fi+4,j | Fi+5,j |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    |        | Fi+6,j  |  etc.  |        |        |        |        |        |        |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    | RADMTX |    2    |    1   |  0.0   |  0.1   |   0.2  |   0.2  |   0.3  |   0.2  |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+
+    """
+    _id_name = 'icavity'
+    def clear(self) -> None:
+        self.icavity = np.array([], dtype='int32')
+        self.ele_ambient = np.array([], dtype='int32')
+        self.shadow = np.array([], dtype='|U8')
+        self.scale = np.array([], dtype='float64')
+
+        self.prtpch = np.array([], dtype='int32')
+        self.nefci = np.array([], dtype='|U8')
+        self.rmax = np.array([], dtype='float64')
+        self.ncomp = np.array([], dtype='int32')
+        self.nset = np.array([], dtype='int32')
+        self.sets = np.array([], dtype='int32')
+        self.n = 0
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a RADMTX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        icavity = integer(card, 1, 'icavity')
+        index = integer(card, 2, 'index')
+        exchange_factors = fields(double, card, 'eid', i=3, j=card.nfields)
+        if not self.model.allow_empty_sets:
+            assert len(exchange_factors) > 0, card
+        #return RADMTX(icavity, index, exchange_factors, comment=comment)
+        self.cards.append((icavity, index, exchange_factors, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        #idtype = self.model.idtype
+        icavity = np.zeros(ncards, dtype='int32')
+        nexchange_factors = np.zeros(ncards, dtype='int32')
+        index = np.zeros(ncards, dtype='int32')
+
+        exchange_factors_list = []
+        for icard, card in enumerate(self.cards):
+            (icavityi, indexi, exchange_factorsi, comment) = card
+            icavity[icard] = icavityi
+            index[icard] = indexi
+            nexchange_factors[icard] = len(exchange_factors_list)
+            exchange_factors_list.extend(exchange_factorsi)
+        exchange_factors = np.array(exchange_factors_list, dtype='float64')
+        self._save(icavity, index, exchange_factors, nexchange_factors)
+        self.cards = []
+
+    def _save(self, icavity, index, exchange_factors, nexchange_factors) -> int:
+        assert len(self.icavity) == 0
+        self.icavity = icavity
+        self.index = index
+        self.exchange_factors = exchange_factors
+        self.nexchange_factors = nexchange_factors
+        self.n = len(icavity)
+
+    def __apply_slice__(self, radmtx: RADLST, i: np.ndarray) -> None:
+        radmtx.icavity = self.icavity[i]
+        radmtx.index = self.index[i]
+        iexchange_factor = self.iexchange_factor
+        radmtx.exchange_factors = hslice_by_idim(i, iexchange_factor, self.exchange_factors)
+        radmtx.nexchange_factors = self.nexchange_factors[i]
+        radmtx.n = len(i)
+
+    @property
+    def iexchange_factor(self) -> np.ndarray:
+        return make_idim(self.n, self.nexchange_factors)
+
+    @property
+    def max_id(self) -> int:
+        #eid_max = 0 if len(self.element_ids) == 0 else self.element_ids.max()
+        return self.icavity.max()
+
+    #@parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.icavity) == 0:
+            return ''
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        icavitys = array_str(self.icavity, size=size)
+        indexs = array_str(self.index, size=size)
+        exchange_factors = array_float(self.exchange_factors, size=size, is_double=False).tolist()
+        for icavity, index, (iex0, iex1) in zip_longest(icavitys, indexs, self.iexchange_factor):
+            exchange_factorsi = exchange_factors[iex0:iex1]
+            list_fields = ['RADMTX', icavity, index] + exchange_factorsi
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class VIEW(VectorizedBaseCard):
     """
     Defines radiation cavity and shadowing for radiation

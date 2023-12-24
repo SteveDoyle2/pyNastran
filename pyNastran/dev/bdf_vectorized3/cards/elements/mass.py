@@ -186,6 +186,11 @@ class CONM1(Element):
         assert center_of_mass.shape == (self.n, 3), center_of_mass.shape
         return center_of_mass
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.node_id.max(),
+                   self.coord_id.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -367,6 +372,11 @@ class CONM2(Element):
         self.xyz_offset *= xyz_scale
         self._mass *= mass_scale
         self.inertia *= mass_inertia_scale
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.node_id.max(),
+                   self.coord_id.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

@@ -212,56 +212,56 @@ class TestMaterials(unittest.TestCase):
         """tests MAT3"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        matt3 = model.matt3
+        mat3 = model.mat3
         mid = 10
         ex = 3.0e7
         eth = 6.0e7
         ez = 6e4
         nuxth = nuthz = nuzx = 0.3
         mat3_id = model.add_mat3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0,
-                              gzx=None, ax=0.,
-                              ath=0., az=0.,
-                              tref=0., ge=0.,
-                              comment='mat3')
+                                 gzx=None, ax=0.,
+                                 ath=0., az=0.,
+                                 tref=0., ge=0.,
+                                 comment='mat3')
         mat3 = model.mat3
         mat3.write(size=16, is_double=False)
         mat3.rho
         #mat3.raw_fields()
         mat3.validate()
 
-        RUN_MATTX = False
-        if RUN_MATTX:
-            matt3_id = model.add_matt3(
-                mid, ex_table=1, eth_table=2, ez_table=3,
-                nuth_table=4, nuxz_table=1, rho_table=1,
-                gzx_table=1, ax_table=1, ath_table=1,
-                az_table=1, ge_table=1, comment='matt3')
-            matt3.validate()
-            matt3.write()
+        matt3_id = model.add_matt3(
+            mid, ex_table=1, eth_table=2, ez_table=3,
+            nuth_table=4, nuxz_table=1, rho_table=1,
+            gzx_table=1, ax_table=1, ath_table=1,
+            az_table=1, ge_table=1, comment='matt3')
+        #matt3.validate()
+        matt3.write()
 
-            x = np.linspace(1., 10.)
-            y = np.sin(x) + 5.
-            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-            tablem1.write()
+        x = np.linspace(1., 10.)
+        y = np.sin(x) + 5.
+        tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
+        tablem1.write_card()
 
-            x1 = 1.0
-            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-            tablem2.write()
+        x1 = 1.0
+        tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
+        tablem2.write_card()
 
-            x2 = 2.0
-            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-            tablem3.write()
+        x2 = 2.0
+        tablem3 = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+        tablem3.write_card()
 
-            #x1 = 1.0
-            #x2 = 2.0
-            x3 = 3.0
-            x4 = 4.0
-            a = [5.0]
-            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-            tablem4.write()
+        #x1 = 1.0
+        #x2 = 2.0
+        x3 = 3.0
+        x4 = 4.0
+        a = [5.0]
+        tablem4 = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+        tablem4.write_card()
 
         model.validate()
         model.pop_parse_errors()
-        model.cross_reference()
+        #model.cross_reference()
         #matt3.write(size=16, is_double=False)
 
         save_load_deck(model)
@@ -270,6 +270,7 @@ class TestMaterials(unittest.TestCase):
         """tests MAT4, MATT4"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        matt4 = model.matt4
         mid = 10
         k = 1000.
         mat4_id = model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None,
@@ -285,38 +286,35 @@ class TestMaterials(unittest.TestCase):
         h_table = 3
         mu_table = 4
         hgen_table = 3
-        RUN_MATTX = False
-        if RUN_MATTX:
-            matt4_id = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
-                                       hgen_table, comment='matt4')
-            matt4.validate()
-            matt4.write()
+        matt4_id = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
+                                   hgen_table, comment='matt4')
+        #matt4.validate()
+        matt4.write()
 
-            x = np.linspace(1., 10.)
-            y = np.sin(x) + 5.
-            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-            tablem1.write()
+        x = np.linspace(1., 10.)
+        y = np.sin(x) + 5.
+        tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
+        tablem1.write_card()
 
-            x1 = 1.0
-            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-            tablem2.write()
+        x1 = 1.0
+        tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
+        tablem2.write_card()
 
-            x2 = 2.0
-            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-            tablem3.write()
+        x2 = 2.0
+        tablem3 = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+        tablem3.write_card()
 
-            #x1 = 1.0
-            #x2 = 2.0
-            x3 = 3.0
-            x4 = 4.0
-            a = [5.0]
-            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-            tablem4.write()
+        #x1 = 1.0
+        #x2 = 2.0
+        x3 = 3.0
+        x4 = 4.0
+        a = [5.0]
+        tablem4 = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+        tablem4.write_card()
 
         model.validate()
         model.cross_reference()
-        if RUN_MATTX:
-            matt4.write(size=16, is_double=False)
+        matt4.write(size=16, is_double=False)
 
         save_load_deck(model)
 
@@ -327,6 +325,9 @@ class TestMaterials(unittest.TestCase):
         #+             .1
         log = get_logger(level='warning')
         model = BDF(log=log)
+        matt5 = model.matt5
+        mat5 = model.mat5
+
         mid = 10
         mat5_id = model.add_mat5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0.,
                                  kzz=0., cp=0.,
@@ -350,39 +351,36 @@ class TestMaterials(unittest.TestCase):
         kzz_table = 4
         cp_table = 4
         hgen_table = 4
-        RUN_MATTX = False
-        if RUN_MATTX:
-            matt5_id = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
-                                       kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
-                                       comment='matt5')
-            matt5.validate()
-            matt5.write()
+        matt5_id = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
+                                   kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
+                                   comment='matt5')
+        #matt5.validate()
+        matt5.write()
 
-            x = np.linspace(1., 10.)
-            y = np.sin(x) + 5.
-            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-            tablem1.write()
+        x = np.linspace(1., 10.)
+        y = np.sin(x) + 5.
+        tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
+        tablem1.write_card()
 
-            x1 = 1.0
-            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-            tablem2.write()
+        x1 = 1.0
+        tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
+        tablem2.write_card()
 
-            x2 = 2.0
-            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-            tablem3.write()
+        x2 = 2.0
+        tablem3 = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+        tablem3.write_card()
 
-            #x1 = 1.0
-            #x2 = 2.0
-            x3 = 3.0
-            x4 = 4.0
-            a = [5.0]
-            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-            tablem4.write()
+        #x1 = 1.0
+        #x2 = 2.0
+        x3 = 3.0
+        x4 = 4.0
+        a = [5.0]
+        tablem4 = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+        tablem4.write_card()
 
         model.validate()
         model.cross_reference()
-        if RUN_MATTX:
-            matt5.write(size=16, is_double=False)
+        matt5.write(size=16, is_double=False)
 
         save_load_deck(model)
 

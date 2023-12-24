@@ -628,6 +628,10 @@ class PELAS(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -740,6 +744,11 @@ class PELAST(Property):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.table_k.max(),
+                   self.table_ge.max(), self.table_k_nonlinear.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

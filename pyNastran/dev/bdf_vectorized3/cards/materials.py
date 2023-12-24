@@ -1351,7 +1351,8 @@ class MAT8(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        material_id = np.zeros(ncards, dtype=idtype)
 
         E11 = np.zeros(ncards, dtype='float64')
         E22 = np.zeros(ncards, dtype='float64')
@@ -1402,7 +1403,7 @@ class MAT8(Material):
             if hti is not None:
                 ht[icard, :] = hti
             if hfbi is not None:
-                hfbi[icard, :] = hfbi
+                hfb[icard, :] = hfbi
 
         self._save(material_id, E11, E22, G12, G13, G23, nu12,
                    rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn,

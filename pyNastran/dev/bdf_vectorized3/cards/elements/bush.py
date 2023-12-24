@@ -267,6 +267,11 @@ class CBUSH(Element):
     def si(self, ocid_offset: np.ndarray) -> None:
         self.ocid_offset = ocid_offset
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max(),
+                   self.g0.max(), self.coord_id.max(), self.ocid.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -868,6 +873,12 @@ class PBUSHT(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(),
+                   self.k_tables.max(), self.b_tables.max(),
+                   self.ge_tables.max(), self.kn_tables.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -995,6 +1006,11 @@ class CBUSH1D(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id),
                    coord=(cids, coord_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max(),
+                   self.coord_id.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -1318,6 +1334,14 @@ class PBUSH1D(Property):
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(),
+                   self.spring_table.max(), self.spring_equation.max(),
+                   self.damper_table.max(), self.damper_equation.max(),
+                   self.shock_table.max(), self.shock_equation.max(),)
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

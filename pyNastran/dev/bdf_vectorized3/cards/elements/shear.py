@@ -120,6 +120,11 @@ class CSHEAR(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

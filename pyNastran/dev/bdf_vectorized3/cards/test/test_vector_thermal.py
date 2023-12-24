@@ -20,6 +20,14 @@ class TestThermal(unittest.TestCase):
         model.add_card(card_fields, 'RADCAV')
         model.setup()
 
+    def test_radlst(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
+        radcav = model.radcav
+        card_fields = ['radlst', '10', '1', '10', '20']
+        model.add_card(card_fields, 'RADLST')
+        model.setup()
+
     def test_thermal_1(self):
         """tests various thermal cards"""
         log = SimpleLogger(level='warning')

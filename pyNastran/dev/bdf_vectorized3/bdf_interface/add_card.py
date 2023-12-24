@@ -4491,26 +4491,29 @@ class AddMaterial(BDFAttributes):
                              comment=comment)
         return mat
 
-    def add_matt3(self, mid, ex_table=None, eth_table=None, ez_table=None,
-                  nuth_table=None, nuxz_table=None, rho_table=None,
-                  gzx_table=None, ax_table=None, ath_table=None, az_table=None,
-                  ge_table=None, comment: str='') -> int:
+    def add_matt3(self, mid: int,
+                  ex_table: int=0, eth_table: int=0, ez_table: int=0,
+                  nuth_table: int=0, nuxz_table: int=0, rho_table: int=0,
+                  gzx_table: int=0,
+                  ax_table: int=0, ath_table: int=0, az_table: int=0,
+                  ge_table: int=0, comment: str='') -> int:
         """Creates a MATT3 card"""
         mat = self.matt3.add(mid, ex_table, eth_table, ez_table,
                              nuth_table, nuxz_table, rho_table, gzx_table,
                              ax_table, ath_table, az_table, ge_table, comment=comment)
         return mat
 
-    def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
-                  mu_table=None, hgen_table=None, comment: str='') -> int:
+    def add_matt4(self, mid: int,
+                  k_table: int=0, cp_table: int=0, h_table: int=0,
+                  mu_table: int=0, hgen_table: int=0, comment: str='') -> int:
         """Creates a MATT4 card"""
         mat = self.matt4.add(mid, k_table, cp_table, h_table, mu_table, hgen_table,
                              comment=comment)
         return mat
 
-    def add_matt5(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
-                  kyy_table=None, kyz_table=None, kzz_table=None, cp_table=None,
-                  hgen_table=None, comment: str='') -> int:
+    def add_matt5(self, mid, kxx_table: int=0, kxy_table: int=0, kxz_table: int=0,
+                  kyy_table: int=0, kyz_table: int=0, kzz_table: int=0,
+                  cp_table: int=0, hgen_table: int=0, comment: str='') -> int:
         """Creates a MATT5 card"""
         mat = self.matt5.add(
             mid, kxx_table, kxy_table, kxz_table, kyy_table,

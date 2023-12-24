@@ -5,7 +5,8 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.base_card import expand_thru, _format_comment
+from pyNastran.bdf.cards.base_card import (
+    read_ids_thru, expand_thru, _format_comment)
 from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, parse_components,
@@ -122,13 +123,7 @@ class ABCOQSET(VectorizedBaseCard):
         component = int(components_str)
 
         nfields = len(card)
-        ids = []
-        i = 1
-        for ifield in range(2, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
-                i += 1
-                ids.append(idi)
+        ids = read_ids_thru(card, ifield0=2, base_str='node_id%d')
         ids = expand_thru(ids, set_fields=True, sort_fields=True)
         components = [component] * len(ids)
         #return cls(ids, components, comment=comment)
@@ -376,14 +371,7 @@ class SuperBCQSET(VectorizedBaseCard):
         components_str = fcomponents_or_blank(card, 2, 'components', default='0')
         component = int(components_str)
 
-        nfields = len(card)
-        ids = []
-        i = 1
-        for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%d' % i)
-            if idi:
-                i += 1
-                ids.append(idi)
+        ids = read_ids_thru(card, ifield0=3, base_str='node_id%d')
         ids = expand_thru(ids)
         components = [component] * len(ids)
         #return cls(seid, ids, components, comment=comment)
@@ -578,6 +566,20 @@ class SEQSET(SuperBCQSET):
 
 
 class RELEASE(VectorizedBaseCard):
+    """
+    Superelement Boundary Grid Point Release
+
+    Defines degrees-of-freedom for superelement exterior grid points
+    that are not connected to the superelement.
+
+    +---------+-----+-----+------+------+-----+-----+-----+-----+
+    |    1    |  2  |  3  |   4  |  5   |  6  |  7  |  8  |  9  |
+    +=========+=====+=====+======+======+=====+=====+=====+=====+
+    | RELEASE |  C  | ID1 |  ID2 | ID3  | ID4 | ID5 | ID6 | ID7 |
+    +---------+-----+-----+------+------+-----+-----+-----+-----+
+    | RELEASE | ID8 | ID9 |      |      |     |     |     |     |
+    +---------+-----+-----+------+------+-----+-----+-----+-----+
+    """
     _id_name = 'seid'
 
     @VectorizedBaseCard.clear_check
@@ -622,14 +624,7 @@ class RELEASE(VectorizedBaseCard):
         components_str = fcomponents_or_blank(card, 2, 'components', default='0')
         component = int(components_str)
 
-        nfields = len(card)
-        ids = []
-        i = 1
-        for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%d' % i)
-            if idi:
-                i += 1
-                ids.append(idi)
+        ids = read_ids_thru(card, ifield0=3, base_str='node_id%d')
         ids = expand_thru(ids)
         components = [component] * len(ids)
         #return cls(seid, ids, components, comment=comment)
@@ -1195,14 +1190,7 @@ class USET(VectorizedBaseCard):
         name = string(card, 1, 'name')
         component = fcomponents_or_blank(card, 2, 'components', default='0')
 
-        i = 1
-        nfields = len(card)
-        nodes = []
-        for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
-                i += 1
-                nodes.append(idi)
+        nodes = read_ids_thru(card, ifield0=3, base_str='node_id%d')
         #return USET1(name, nodes, components, comment=comment)
 
         nodes = expand_thru(nodes, set_fields=True, sort_fields=True)
@@ -1795,8 +1783,7 @@ class SET3(VectorizedBaseCard):
         """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
-        ids = fields(integer_string_or_blank, card, 'ID', i=3, j=len(card))
-        ids = [idi for idi in ids if idi is not None]
+        ids = read_ids_thru(card, ifield0=3, base_str='ID%d')
         #return SET3(sid, desc, ids, comment=comment)
         self.cards.append((sid, desc, ids, comment))
         self.n += 1

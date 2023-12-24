@@ -1275,7 +1275,7 @@ class MATT4(MaterialDependenceThermal):
         self.hgen_table_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MATT4 card from ``BDF.add_card(...)``
 

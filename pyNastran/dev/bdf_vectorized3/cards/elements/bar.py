@@ -1103,6 +1103,10 @@ class PBAR(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1454,6 +1458,10 @@ class PBARL(Property):
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1836,6 +1844,10 @@ class CBARAO(Element):
     def istation(self) -> np.ndarray:
         istation = make_idim(self.n, self.nstation)
         return istation
+
+    @property
+    def max_id(self) -> int:
+        return self.element_id.max()
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

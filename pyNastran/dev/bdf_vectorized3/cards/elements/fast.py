@@ -171,6 +171,11 @@ class CFAST(Element):
         self.fastener_xyz = np.zeros((nelement, 3), dtype='float64')
         self.n = nelement
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.fastener_node.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -356,6 +361,10 @@ class PFAST(Property):
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['coord_id'].append(self.coord_id)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.coord_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

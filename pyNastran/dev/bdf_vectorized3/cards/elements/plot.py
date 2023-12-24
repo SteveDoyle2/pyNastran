@@ -67,6 +67,10 @@ class PlotElement(Element):
                    missing,
                    node=(nid, self.nodes))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

@@ -33,7 +33,7 @@ from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 class DCONADD(ADD):
@@ -164,6 +164,10 @@ class MODTRAK(VectorizedBaseCard):
         #desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
         #idesvar = np.searchsorted(self.desvar_id, desvar_id)
         #return idesvar
+
+    @property
+    def max_id(self) -> int:
+        return max(self.modtrak_id.max(), self.low_range.max(), self.high_range.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -349,6 +353,10 @@ class DESVAR(VectorizedBaseCard):
         idesvar = np.searchsorted(self.desvar_id, desvar_id)
         return idesvar
 
+    @property
+    def max_id(self) -> int:
+        return self.desvar_id.max()
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -432,9 +440,6 @@ class DDVAL(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble = force_double if self.model.is_lax_parser else double
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-
         """
         Adds a DDVAL card from ``BDF.add_card(...)``
 
@@ -446,6 +451,8 @@ class DDVAL(VectorizedBaseCard):
             a comment for the card
 
         """
+        #fdouble = force_double if self.model.is_lax_parser else double
+        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         oid = integer(card, 1, 'oid')
         n = 1
         ddvals = []
@@ -517,6 +524,10 @@ class DDVAL(VectorizedBaseCard):
     @property
     def iddval(self) -> np.ndarray:
         return make_idim(self.n, self.nddval)
+
+    @property
+    def max_id(self) -> int:
+        return self.ddval_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -689,6 +700,11 @@ class DLINK(VectorizedBaseCard):
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.nindependent_desvars)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dlink_id.max(), self.dependent_desvar.max(),
+                   self.independent_desvars.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -847,6 +863,11 @@ class DVGRID(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),
                    coord=(cid, self.coord_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.desvar_id.max(), self.node_id.max(),
+                   self.coord_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -1259,6 +1280,11 @@ class DRESP1(VectorizedBaseCard):
                     nid2 = nid_old_to_new.get(nid1, nid1)
                     nodes[i] = nid2
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dresp_id.max(), self.atta_int.max(),
+                   self.attb_int.max(), self.atti_int.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1571,9 +1597,9 @@ class DRESP2(VectorizedBaseCard):
             c2[icard] = c2i
             c3[icard] = c3i
 
-        param_type = np.array(param_type_list)
-        nparam_values = np.array(nparam_values_list)
-        param_values = np.array(param_values_list)
+        param_type = np.array(param_type_list, dtype='|U8')
+        nparam_values = np.array(nparam_values_list, dtype='int32')
+        param_values = np.array(param_values_list)  # TODO: support DTABLE
 
         ##xinit = np.clip(xinit, xlb, xub)
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
@@ -1701,6 +1727,11 @@ class DRESP2(VectorizedBaseCard):
 
     #def iparam_value(self, iparam: int) -> np.ndarray:
         #return make_idim(self.n, self.nparam_values[iparam])
+
+    @property
+    def max_id(self) -> int:
+        # TODO: support self.param_values which can be DTABLE
+        return max(self.dresp_id.max(), self.dequation_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -1872,6 +1903,11 @@ class DCONSTR(VectorizedBaseCard):
         used_dict['tabled_id'].append(self.lower_table)
         used_dict['tabled_id'].append(self.upper_table)
         used_dict['dresp_id'].append(self.dresp_id)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.dconstr_id.max(), self.dresp_id.max(),
+                   self.lower_table.max(), self.upper_table.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -2155,6 +2191,11 @@ class DVPREL1(VectorizedBaseCard):
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dvprel_id.max(), self.property_id.max(),
+                   self.desvar_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2215,6 +2256,9 @@ class DVPREL2(VectorizedBaseCard):
         self.p_min = np.array([], dtype='float64')
         self.p_max = np.array([], dtype='float64')
 
+        self.ndesvar = np.array([], dtype='int32')
+        self.desvar_ids = np.array([], dtype='int32')
+        self.labels = np.array([], dtype='|U8')
 
     def add(self, dvprel_id: int, prop_type: str, pid: int,
             pname_fid: Union[int, str], deqation: int,
@@ -2446,6 +2490,11 @@ class DVPREL2(VectorizedBaseCard):
     @property
     def ilabel(self) -> np.ndarray:
         return make_idim(self.n, self.ndtable)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.dvprel_id.max(), self.property_id.max(),
+                   self.desvar_ids.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -2697,6 +2746,11 @@ class DVMREL1(VectorizedBaseCard):
     @property
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.dvmrel_id.max(), self.material_id.max(),
+                   self.desvar_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -2999,6 +3053,11 @@ class DVMREL2(VectorizedBaseCard):
     def ilabel(self) -> np.ndarray:
         return make_idim(self.n, self.nlabel)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dvmrel_id.max(), self.material_id.max(),
+                   self.desvar_ids.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3255,6 +3314,11 @@ class DVCREL1(VectorizedBaseCard):
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dvcrel_id.max(), self.element_id.max(),
+                   self.desvar_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3320,7 +3384,7 @@ class DVCREL2(VectorizedBaseCard):
         self.deqatn_id = np.array([], dtype='float64')
 
         self.ndesvar = np.array([], dtype='int32')
-        self.desvar_id = np.array([], dtype='int32')
+        self.desvar_ids = np.array([], dtype='int32')
         self.labels = np.array([], dtype='|U8')
 
     def add(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
@@ -3545,6 +3609,11 @@ class DVCREL2(VectorizedBaseCard):
     def ilabel(self) -> np.ndarray:
         return make_idim(self.n, self.nlabel)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.dvcrel_id.max(), self.element_id.max(),
+                   self.desvar_ids.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3554,7 +3623,7 @@ class DVCREL2(VectorizedBaseCard):
         print_card = get_print_card_8_16(size)
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
-        desvar_ids = array_str(self.desvar_id, size=size)
+        desvar_ids = array_str(self.desvar_ids, size=size)
 
         cp_mins = array_float(self.cp_min, size=size)
         cp_maxs = array_default_float(self.cp_max, default=1e20, size=size)
@@ -3691,6 +3760,10 @@ class DSCREEN(VectorizedBaseCard):
         #desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
         #idesvar = np.searchsorted(self.desvar_id, desvar_id)
         #return idesvar
+
+    @property
+    def max_id(self) -> int:
+        return 1
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

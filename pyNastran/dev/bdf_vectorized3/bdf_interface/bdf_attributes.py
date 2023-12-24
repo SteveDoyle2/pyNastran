@@ -51,7 +51,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     PSOLID, PLSOLID, PSOLCZ, PCOMPS, PCOMPLS,
     CPENTCZ, CHEXCZ,  # nx cohesive zone
     CIFPENT, CIFHEX,  # msc cohesive zone
-    #CHACAB, CHACBR,
+    CHACAB, CHACBR,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
@@ -59,7 +59,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, 
 from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
     CHBDYE, CHBDYP, CHBDYG,
     CONV, PCONV, CONVM, PCONVM, PHBDY,
-    RADCAV, VIEW, VIEW3D)
+    RADCAV, RADLST, RADMTX,
+    VIEW, VIEW3D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
@@ -96,20 +97,24 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     MATS1, # MATS3,
     #MATS8, # MSC
-    MATT1, MATT2, MATT8, MATT9)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
 
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
     BGSET, BCTSET, BGADD, BCTADD,
     BCONP, BFRIC, BLSEG, BCRPARA, BEDGE,
-    BCBODY,
+    BCBODY, BCBODY1,
 )
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
+from pyNastran.dev.bdf_vectorized3.cards.rotor import (
+    ROTORG
+)
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
     SPCOFF,  # SPCOFF1,
     BNDFIX,  # BNDFIX1,
     BNDFREE, # BNDFREE1
+    BNDGRID,
     MPC, MPCADD)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBAR, RBAR1,
@@ -124,7 +129,7 @@ from pyNastran.dev.bdf_vectorized3.cards.aero import (
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, FLUTTER,
     AEPARM, AELINK, AESTAT,
-    GUST, AESURF, AESURFS, CSSCHD, TRIM)
+    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
@@ -253,6 +258,7 @@ class BDFAttributes:
         self.bcrpara = BCRPARA(self)
         self.bedge = BEDGE(self)
         self.bcbody = BCBODY(self)
+        self.bcbody1 = BCBODY1(self)
         self.bctpara = {}
         self.bctparm = {}
 
@@ -474,8 +480,8 @@ class BDFAttributes:
         self.chbdyg = CHBDYG(self)
         self.phbdy = PHBDY(self)
 
-        #self.chacab = CHACAB(self)
-        #self.chacbr = CHACBR(self)
+        self.chacab = CHACAB(self)
+        self.chacbr = CHACBR(self)
 
         # thermal boundary conditions
         self.conv = CONV(self)
@@ -484,6 +490,8 @@ class BDFAttributes:
         self.pconvm = PCONVM(self)
 
         self.radcav = RADCAV(self)
+        self.radlst = RADLST(self)
+        #self.radmtx = RADMTX(self)
         self.view = VIEW(self)
         self.view3d = VIEW3D(self)
 
@@ -566,6 +574,9 @@ class BDFAttributes:
         #self.mats8 = MATS8(self)
         self.matt1 = MATT1(self)
         self.matt2 = MATT2(self)
+        self.matt3 = MATT3(self)
+        self.matt4 = MATT4(self)
+        self.matt5 = MATT5(self)
         self.matt8 = MATT8(self)
         self.matt9 = MATT9(self)
 
@@ -574,6 +585,10 @@ class BDFAttributes:
         self.spcoff = SPCOFF(self)  # SPCOFF1
         self.bndfix = BNDFIX(self)  # BNDFIX1
         self.bndfree = BNDFREE(self)  # BNDFREE1
+        self.bndgrid = BNDGRID(self)
+
+        self.rotorg = ROTORG(self)
+
         self.spcadd = SPCADD(self)
         self.mpc = MPC(self)
         self.mpcadd = MPCADD(self)
@@ -635,6 +650,7 @@ class BDFAttributes:
         self.aesurf = AESURF(self)
         self.aesurfs = AESURFS(self)
         self.csschd = CSSCHD(self)
+        self.diverg = DIVERG(self)
         self.trim = TRIM(self)
         #self.trim2 = TRIM(self)
 
@@ -756,7 +772,7 @@ class BDFAttributes:
             #self.ctrax3, self.ctrax6,
         ]
         acoustic_element_cards = [
-            #self.chacab, self.chacbr,
+            self.chacab, self.chacbr,
         ]
         elements = self.spring_element_cards + self.damper_element_cards + [
             self.cvisc, self.cgap,
@@ -890,6 +906,7 @@ class BDFAttributes:
             self.dvcrel1, self.dvcrel2,
             self.dscreen,
             self.modtrak,
+            self.bndgrid,
         ]
         return optimization
 
@@ -926,6 +943,9 @@ class BDFAttributes:
             self.darea,
             self.tload1, self.tload2, # self.tload3,
             self.rload1, self.rload2, # self.rloadex
+
+            # rotors
+            self.rotorg,
 
             # random loads
             self.randps, self.acsrce,
@@ -971,7 +991,7 @@ class BDFAttributes:
             self.conv, self.pconv,
             self.convm, self.pconvm,
             self.tempbc,
-            self.radbc, self.radm, self.radset, self.radcav,
+            self.radbc, self.radm, self.radset, self.radcav, self.radlst, # self.radmtx,
             self.view, self.view3d,
         ]
         return boundary_conditions
@@ -1021,7 +1041,8 @@ class BDFAttributes:
     @property
     def aero_loads(self) -> list[Any]:
         loads = [
-            self.gust, self.csschd, self.trim, # self.trim2, # self.diverg,
+            self.gust, self.csschd, self.trim, # self.trim2,
+            self.diverg,
         ]
         return loads
 
@@ -1067,7 +1088,7 @@ class BDFAttributes:
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
                 self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge,
-                self.bcbody, ]
+                self.bcbody, self.bcbody1]
     @property
     def _cards_not_setup(self) -> list[Any]:
         cards = [

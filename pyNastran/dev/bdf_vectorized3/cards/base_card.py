@@ -324,8 +324,8 @@ class VectorizedBaseCard:
                 raise RuntimeError(self.get_stats())
         i = np.atleast_1d(np.asarray(i, dtype=idtype))
 
-        assert len(i) > 0, i
-        assert i.min() >= 0, i
+        assert len(i) > 0, (i, self.type)
+        assert i.min() >= 0, (i, self.type)
         if sort_index:
             i.sort()
             imax = i[-1]
@@ -341,6 +341,7 @@ class VectorizedBaseCard:
         #card = CQUAD4(self.model)
         assert self.n > 0, self
         self.__apply_slice__(card, i)
+        card.max_id
         assert card.n > 0, card
         return card
 

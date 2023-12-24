@@ -17,6 +17,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.bdf_interface.assign_type import integer_string_or_blank
 from pyNastran.bdf.field_writer import print_card, print_card_8, print_card_16, print_card_double
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.utils import deprecated
@@ -693,3 +694,21 @@ def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> tuple[str, 
     if num not in ['A', 'B']:
         num = int(num)
     return word, num
+
+def read_ids_thru(card: BDFCard, ifield0: int,
+                  base_str: str='ID%d') -> list[int]:
+    """
+    Helper for loading:
+
+    ['ROTORG', rotor_id, id1, id2, id3, ...]
+    ['ROTORG', rotor_id, 1, THRU, 10]
+    """
+    nfields = len(card)
+    ids = []
+    i = 1
+    for ifield in range(ifield0, nfields):
+        idi = integer_string_or_blank(card, ifield, base_str % i)
+        if idi:
+            i += 1
+            ids.append(idi)
+    return ids

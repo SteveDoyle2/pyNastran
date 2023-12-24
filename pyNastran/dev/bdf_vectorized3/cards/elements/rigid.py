@@ -197,6 +197,10 @@ class RBAR(RigidElement):
             nid2 = nid_old_to_new.get(nid1, nid1)
             nodes[i] = nid2
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -336,6 +340,10 @@ class RROD(RigidElement):
             nid2 = nid_old_to_new.get(nid1, nid1)
             nodes[i] = nid2
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -469,6 +477,10 @@ class RBAR1(RigidElement):
         for i, nid1 in enumerate(nodes):
             nid2 = nid_old_to_new.get(nid1, nid1)
             nodes[i] = nid2
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -865,6 +877,11 @@ class RBE2(RigidElement):
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.nnode)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.independent_node.max(),
+                   self.dependent_nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1214,13 +1231,14 @@ class RBE3(RigidElement):
 
     @property
     def is_small_field(self):
+        return self.max_id < 99_999_999
+
+    @property
+    def max_id(self) -> int:
         max_dependent_node = 0
         if self.ndependent.max() > 0:
             max_dependent_node = self.dependent_nodes.max()
-
-        return max(self.element_id.max(),
-                   self.independent_nodes.max(),
-                   max_dependent_node) < 99_999_999
+        return max(self.element_id.max(), self.independent_nodes.max(), max_dependent_node)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

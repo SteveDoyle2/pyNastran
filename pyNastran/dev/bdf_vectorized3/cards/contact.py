@@ -1857,7 +1857,7 @@ class BCBODY(VectorizedBaseCard):
         card, rigid_card = bcbody_lines_to_card_rigid(lines)
 
         contact_id = integer(card, 1, 'contact_id')
-        field2 = card.field(2).strip()
+        field2 = card.field(2)  # string/None
         if field2 in {'2', '3'}:
             dim = field2 + 'D'
         else:
@@ -2336,3 +2336,5 @@ class BCBODY(VectorizedBaseCard):
                 #list_fields.extend([eid, nid1, nid2, None])
             bdf_file.write(print_card(list_fields) + msgi)
         return
+
+BCBODY1 = BSURF

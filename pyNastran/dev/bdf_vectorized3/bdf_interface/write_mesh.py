@@ -467,8 +467,8 @@ class Writer:
         model.paabsf.write_file(bdf_file, size=size, is_double=is_double)
 
         # acoustic solids
-        #bdf_file.write(model.chacab.write(size=size))
-        #bdf_file.write(model.chacbr.write(size=size))
+        model.chacab.write_file(bdf_file, size=size, is_double=is_double)
+        model.chacbr.write_file(bdf_file, size=size, is_double=is_double)
 
         # other
         model.genel.write_file(bdf_file, size=size, is_double=is_double)
@@ -680,9 +680,9 @@ class Writer:
 
         model.matt1.write_file(bdf_file, size=size, is_double=is_double)
         model.matt2.write_file(bdf_file, size=size, is_double=is_double)
-        #model.matt3.write_file(bdf_file, size=size, is_double=is_double)
-        #model.matt4.write_file(bdf_file, size=size, is_double=is_double)
-        #model.matt5.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt3.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt4.write_file(bdf_file, size=size, is_double=is_double)
+        model.matt5.write_file(bdf_file, size=size, is_double=is_double)
         model.matt8.write_file(bdf_file, size=size, is_double=is_double)
         model.matt9.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -793,9 +793,12 @@ class Writer:
             model.pconvm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         model.radcav.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.radlst.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        #model.radmtx.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radm.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.radset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+
         model.tempbc.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         model.view.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
@@ -858,6 +861,7 @@ class Writer:
             model.trim.write_file(bdf_file, size=size, is_double=is_double)
             #model.trim2.write_file(bdf_file, size=size, is_double=is_double)
             model.csschd.write_file(bdf_file, size=size, is_double=is_double)
+            model.diverg.write_file(bdf_file, size=size, is_double=is_double)
 
             # static aero
             if model.aeros:
@@ -1051,13 +1055,12 @@ class Writer:
         model = self.model
         is_contacta = max([card.n for card in model.contact_cards])
         is_contactb = model.bctparm or model.bctpara
-        # or self.bcbodys or self.bcparas
+        # or self.bcparas
         if is_contacta or is_contactb:
             bdf_file.write('$CONTACT\n')
             # msc contact
-            #model.bcbody.write_file(bdf_file, size=size, is_double=is_double)
-            #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
-                #bdf_file.write(bcbody.write_card(size, is_double))
+            model.bcbody.write_file(bdf_file, size=size, is_double=is_double)
+            model.bcbody1.write_file(bdf_file, size=size, is_double=is_double)
 
             model.bcrpara.write_file(bdf_file, size=size, is_double=is_double)
             for (unused_id, bctparam) in sorted(model.bctparm.items()):
@@ -1082,7 +1085,6 @@ class Writer:
             model.bconp.write_file(bdf_file, size=size, is_double=is_double)
             model.blseg.write_file(bdf_file, size=size, is_double=is_double)
             model.bfric.write_file(bdf_file, size=size, is_double=is_double)
-            model.bcbody.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,
@@ -1129,6 +1131,10 @@ class Writer:
             #for (unused_id, rotor) in sorted(model.rotors.items()):
                 #bdf_file.write(rotor.write_card(size, is_double))
 
+        #model.rotord.write_file(bdf_file, size=size, is_double=is_double)
+        #model.rotor.write_file(bdf_file, size=size, is_double=is_double)
+        model.rotorg.write_file(bdf_file, size=size, is_double=is_double)
+
     def _write_dmigs(self, bdf_file: TextIOLike,
                      size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -1169,6 +1175,8 @@ class Writer:
         model.dresp1.write_file(bdf_file, size=size, is_double=is_double)
         model.dresp2.write_file(bdf_file, size=size, is_double=is_double)  # poorly supported
         #model.dresp3.write_file(bdf_file, size=size, is_double=is_double)
+
+        model.bndgrid.write_file(bdf_file, size=size, is_double=is_double)
 
         for deqatn_id, deqatn in model.dequations.items():
             bdf_file.write(deqatn.write_card(size=size, is_double=is_double))

@@ -5,10 +5,8 @@ import unittest
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard
-#from pyNastran.dev.bdf_vectorized3.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import make_dvprel_optimization
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
-#mass_properties
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 

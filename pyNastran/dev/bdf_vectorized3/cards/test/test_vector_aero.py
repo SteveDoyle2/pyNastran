@@ -2770,19 +2770,20 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(ValueError):
             mkaeroc.write_card()
 
-    def _test_diverg(self):
+    def test_diverg(self):
         """checks the DIVERG card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        diverg = model.diverg
 
         sid = 100
         nroots = 21
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        diverg = DIVERG(sid, nroots, machs, comment='divergence')
+        diverg_id = model.add_diverg(sid, nroots, machs, comment='divergence')
         diverg.validate()
-        diverg.write_card()
+        diverg.write()
 
-        diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
+        #diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
         model.validate()
         save_load_deck(model)
         #diverg.validate()

@@ -256,6 +256,10 @@ class PSHELL(Property):
                    missing,
                    material_id=(mids, material_ids))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1373,6 +1377,10 @@ class PCOMP(CompositeProperty):
     def sb(self, sb):
         self.shear_bonding = sb
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1818,6 +1826,11 @@ class PCOMPG(CompositeProperty):
         self.tref *= temperature_scale
         self.nsm *= nsm_per_area_scale
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.global_ply_id.max(),
+                   self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1996,6 +2009,10 @@ class PLPLANE(Property):
 #                      is_double=False, write_card_header: bool=False) -> None:
 #        self.write_file(bdf_file, size=16, is_double=is_double,
 #                        write_card_header=write_card_header)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max(), self.coord_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2329,6 +2346,10 @@ class PSHLN1(Property):
         prop.integration = self.integration[i, :]
         prop.integration_h = self.integration_h[i, :]
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -2661,6 +2682,10 @@ class PSHLN2(Property):
         prop.integration = self.integration[i, :]
         prop.beh_h = self.beh_h[i, :]
         prop.integration_h = self.integration_h[i, :]
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

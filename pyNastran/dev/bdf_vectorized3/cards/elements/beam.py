@@ -326,6 +326,11 @@ class CBEAM(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.g0.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1638,9 +1643,13 @@ class PBEAM(Property):
 
     @property
     def is_small_field(self) -> bool:
+        return self.max_id < 99_999_999
+
+    @property
+    def max_id(self) -> int:
         return max(self.property_id.max(),
                    self.material_id.max(),
-                   self.s1.max(), self.s2.max()) < 99_999_999
+                   self.s1.max(), self.s2.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2193,6 +2202,10 @@ class PBEAML(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -2257,7 +2270,7 @@ class PBEAML(Property):
             #nsm = self.nsm[istation0:istation1]
             #so = self.so[istation0:istation1]
             dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
-            dims_str = str(dims).replace('\n', '')
+            #dims_str = str(dims).replace('\n', '')
             #self.model.log.info(f'pid={pid} beam_type={beam_type!r} dims={dims_str} idim0={idim0} idim1={idim1}')
 
             #prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
@@ -2616,6 +2629,10 @@ class PBCOMP(Property):
         idim = make_idim(self.n, self.nstation)
         return idim
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max(), )
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -2958,6 +2975,11 @@ class CBEND(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.g0.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -3093,7 +3115,8 @@ class CBEND(Element):
             #cbends = self.slice_card_by_index(i).write()
             #raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
         if igeom_flag4.sum():
-            i = np.where(igeom_flag3)[0]
+            i = np.where(igeom_flag4)[0]
+            assert len(i), i
             cbends = self.slice_card_by_index(i).write()
             raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
 
@@ -3934,8 +3957,12 @@ class PBEND(Property):
 
     @property
     def is_small_field(self) -> bool:
+        return self.max_id < 99_999_999
+
+    @property
+    def max_id(self) -> int:
         return max(self.property_id.max(),
-                   self.material_id.max(), ) < 99_999_999
+                   self.material_id.max(), )
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

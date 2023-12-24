@@ -142,6 +142,11 @@ class SolidElement(Element):
         self.sort()
         self.cards = []
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max())
+
     #def write_8(self) -> str:
         #return self.write(size=8, is_double=False)
 
@@ -930,15 +935,15 @@ class PSOLID(Property):
                    coord=(cid, ucoord_id),
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max(), self.coord_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(
-            self.property_id.max(),
-            self.material_id.max(),
-            self.coord_id.max())
-        print_card = get_print_card(size, max_int)
+        print_card = get_print_card(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)
@@ -1048,6 +1053,10 @@ class PLSOLID(Property):
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1192,6 +1201,10 @@ class PSOLCZ(Property):
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max(), self.mcid.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1468,6 +1481,11 @@ class PCOMPS(Property):
     @property
     def ilayer(self) -> np.ndarray:
         return make_idim(self.n, self.nlayer)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.coord_id.max(),
+                   self.global_ply_id.max(), self.material_id.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1806,6 +1824,11 @@ class PCOMPLS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.coord_id.max(),
+                   self.global_ply_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1871,6 +1894,7 @@ class PCOMPLS(Property):
 
 class CHACBR(SolidElement):
     def clear(self):
+        self.n = 0
         self.nodes = np.zeros((0, 20), dtype='int32')
         self.nnode_base = 8
         self.nnode = 20
@@ -1927,6 +1951,10 @@ class CHACBR(SolidElement):
             return midside_nodes
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1987,6 +2015,7 @@ class CHACBR(SolidElement):
 
 class CHACAB(SolidElement):
     def clear(self):
+        self.n = 0
         self.nodes = np.zeros((0, 20), dtype='int32')
         self.nnode_base = 8
         self.nnode = 20
@@ -2043,6 +2072,10 @@ class CHACAB(SolidElement):
             return midside_nodes
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

@@ -2947,6 +2947,7 @@ class RANDPS(VectorizedBaseCard):
 
     def __apply_slice__(self, load: RANDPS, i: np.ndarray) -> None:
         load.n = len(i)
+        load.load_id = self.load_id[i]
         load.subcase_excite_load = self.subcase_excite_load[i]
         load.subcase_applied_load = self.subcase_applied_load[i]
         load.xy = self.xy[i, :]

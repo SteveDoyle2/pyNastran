@@ -74,6 +74,7 @@ class TestBeams(unittest.TestCase):
             #"""
         ]
         self._compare(fields, lines_expected)
+
     def _compare(self, fields, lines_expected):
         msg = print_card_8(fields).rstrip()
         lines_actual = msg.rstrip().split('\n')

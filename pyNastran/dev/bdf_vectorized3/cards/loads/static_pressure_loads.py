@@ -150,6 +150,10 @@ class PLOAD(Load):
                    missing,
                    node=(nid, node_id),)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -341,6 +345,10 @@ class PLOAD1(Load):
         is_dist = ~is_fixed
         self.pressure[is_fixed] *= force_scale
         self.pressure[is_dist] *= pressure_scale
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_id.max())
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
@@ -741,6 +749,10 @@ class PLOAD2(Load):
     @property
     def is_small_field(self):
         return max(self.load_id.max(), self.element_ids.max()) < 99_999_999
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_ids.max())
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,

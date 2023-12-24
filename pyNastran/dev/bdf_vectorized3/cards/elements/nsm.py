@@ -200,6 +200,10 @@ class NSMi(VectorizedBaseCard):
     def ivalue(self) -> np.ndarray:
         return make_idim(self.n, self.nvalue)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.nsm_id.max(), self.pid_eid.max())
+
     #def geom_check(self, missing: dict[str, np.ndarray]):
         #nid = self.model.grid.node_id
         #cid = self.model.coord.coord_id
@@ -397,6 +401,10 @@ class NSM1i(VectorizedBaseCard):
         self.pid_eid = pid_eid
         self.npid_eid = npid_eid
         self.value = value
+
+    @property
+    def max_id(self) -> int:
+        return max(self.nsm_id.max(), self.pid_eid.max())
 
     #def geom_check(self, missing: dict[str, np.ndarray]):
         #nid = self.model.grid.node_id

@@ -32,7 +32,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float, array_default_str,
-    array_float_nan)
+    array_float_nan, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.femutils.utils import hstack_lists
 
@@ -221,6 +221,10 @@ class AECOMP(VectorizedBaseCard):
             caero=(all_caero_ids, caero_ids),
         )
 
+    @property
+    def max_id(self) -> int:
+        return self.lists.max()
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -326,6 +330,10 @@ class AECOMPL(VectorizedBaseCard):
             #missing,
             ##aecomp=(model.aecomp.aelist_id, aelist_ids),
         #)
+
+    @property
+    def max_id(self) -> int:
+        return 1
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -890,11 +898,16 @@ class CAERO1(VectorizedBaseCard):
             ipoint += len(pointsi)
         return points, elements
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
+                   self.lchord.max(), self.lspan.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1248,6 +1261,11 @@ class CAERO2(VectorizedBaseCard):
             assert xyz is not None, str(self)
         return xyz, elems
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
+                   self.lsb.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -1587,6 +1605,11 @@ class CAERO3(VectorizedBaseCard):
             elements.append(elementsi + ipoint)
             ipoint += len(pointsi)
         return points, elements
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
+                   self.list_c1.max(), self.list_c2.max(), self.list_w.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -2008,6 +2031,11 @@ class CAERO4(VectorizedBaseCard):
             ipoint += len(pointsi)
         return points, elements
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
+                   self.lspan.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -2308,6 +2336,11 @@ class CAERO5(VectorizedBaseCard):
             elements.append(elementsi + ipoint)
             ipoint += len(pointsi)
         return points, elements
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
+                   self.lspan.max())
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -2892,6 +2925,11 @@ class PAERO1(PAERO):
     def icaero_body_id(self) -> np.ndarray:
         return make_idim(self.n, self.ncaero_body_id)
 
+    @property
+    def max_id(self) -> int:
+        caero_body_id_max = 0 if len(self.caero_body_id) == 0 else self.caero_body_id.max()
+        return max(self.property_id.max(), caero_body_id_max)
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -3120,6 +3158,10 @@ class PAERO2(PAERO):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             #caero=(model.caero1.element_id, ucaero_ids),
         #)
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.lrsb.max(),
+                   self.lrib.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -3298,6 +3340,10 @@ class PAERO3(PAERO):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             #caero=(model.caero1.element_id, ucaero_ids),
         #)
+
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -3512,6 +3558,10 @@ class PAERO4(PAERO):
             #caero=(model.caero1.element_id, ucaero_ids),
         #)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.lcla.max(), self.lcirc.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -3680,6 +3730,9 @@ class PAERO5(PAERO):
         prop.lxis = self.lxis[i]
         prop.nxis = self.nxis[i]
 
+        prop.ltaus = self.ltaus[i]
+        prop.ntaus = self.ntaus[i]
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -3695,6 +3748,11 @@ class PAERO5(PAERO):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             #caero=(model.caero1.element_id, ucaero_ids),
         #)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.lalpha.max(),
+                   self.lxis.max(), self.ltaus.max())
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -3857,6 +3915,10 @@ class AELIST(VectorizedBaseCard):
     @property
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelements)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.aelist_id.max(), self.elements.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4033,6 +4095,10 @@ class AELINK(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
+    @property
+    def max_id(self) -> int:
+        return self.aelink_id.max()
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -4167,6 +4233,10 @@ class AEFACT(VectorizedBaseCard):
         prop.fractions = hslice_by_idim(i, ifraction, self.fractions)
         prop.nfractions = self.nfractions[i]
         prop.n = len(i)
+
+    @property
+    def max_id(self) -> int:
+        return self.aefact_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4328,6 +4398,10 @@ class FLFACT(VectorizedBaseCard):
     @property
     def ifactor(self) -> np.ndarray:
         return make_idim(self.n, self.nfactors)
+
+    @property
+    def max_id(self) -> int:
+        return self.flfact_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4509,6 +4583,7 @@ class SPLINE1(VectorizedBaseCard):
         elem.spline_id = self.spline_id[i]
         elem.caero_id = self.caero_id[i]
         elem.box_id = self.box_id[i, :]
+        elem.set_id = self.set_id[i]
         elem.dz = self.dz[i]
         elem.method = self.method[i]
         elem.usage = self.usage[i]
@@ -4531,6 +4606,11 @@ class SPLINE1(VectorizedBaseCard):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             caero=(model.caero1.element_id, ucaero_ids),
         )
+
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
+                   self.box_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -4812,6 +4892,11 @@ class SPLINE2(VectorizedBaseCard):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             caero=(all_caero_ids, ucaero_ids),
         )
+
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
+                   self.box_id.max(), self.coord_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -5148,6 +5233,14 @@ class SPLINE3(VectorizedBaseCard):
         inode = make_idim(self.n, self.nnode)
         return inode
 
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.box_id.max())
+
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.box_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -5338,6 +5431,7 @@ class SPLINE4(VectorizedBaseCard):
         elem.spline_id = self.spline_id[i]
         elem.caero_id = self.caero_id[i]
         elem.aelist_id = self.aelist_id[i]
+        elem.set_id = self.set_id[i]
         elem.dz = self.dz[i]
         elem.method = self.method[i]
         elem.usage = self.usage[i]
@@ -5362,6 +5456,11 @@ class SPLINE4(VectorizedBaseCard):
             #aelist=(model.aelist.aelist_id, aelist_ids),
             caero=(model.caero1.element_id, ucaero_ids),
         )
+
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
+                   self.aelist_id.max())
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -5567,6 +5666,11 @@ class SPLINE5(VectorizedBaseCard):
             caero=(model.caero1.element_id, ucaero_ids),
         )
 
+    @property
+    def max_id(self) -> int:
+        return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
+                   self.coord_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -5727,6 +5831,10 @@ class GUST(VectorizedBaseCard):
                    #coord=(coords, ucoords),
                    #aecomp=(all_aecomp_names, aecomp_names))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.gust_id.max(), self.dload_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -5762,7 +5870,7 @@ class FLUTTER(VectorizedBaseCard):
         self.method = np.array([], dtype='|U8')
         self.density_flfact_id = np.array([], dtype='int32')
         self.mach_flfact_id = np.array([], dtype='int32')
-        self.rfreq_flfact_id = np.array([], dtype='int32')
+        self.rfreq_velocity_flfact_id = np.array([], dtype='int32')
         self.imethod = np.array([], dtype='|U8')
         self.nvalue = np.array([], dtype='int32')
         self.omax = np.array([], dtype='float64')
@@ -5883,7 +5991,7 @@ class FLUTTER(VectorizedBaseCard):
         method = np.zeros(ncards, dtype='|U8')
         density_flfact_id = np.zeros(ncards, dtype='int32')
         mach_flfact_id = np.zeros(ncards, dtype='int32')
-        rfreq_flfact_id = np.zeros(ncards, dtype='int32')
+        rfreq_velocity_flfact_id = np.zeros(ncards, dtype='int32')
         imethod = np.zeros(ncards, dtype='|U8')
         nvalue = np.zeros(ncards, dtype='int32')
         omax = np.zeros(ncards, dtype='float64')
@@ -5891,7 +5999,7 @@ class FLUTTER(VectorizedBaseCard):
 
         for icard, card in enumerate(self.cards):
             (flutter_idi, methodi, imethodi,
-             density_flfact_idi, mach_flfact_idi, rfreq_flfact_idi,
+             density_flfact_idi, mach_flfact_idi, rfreq_velocity_flfact_idi,
              nvaluei, omaxi, epsiloni, comment) = card
             if nvaluei is None:
                 nvaluei = 0
@@ -5902,18 +6010,18 @@ class FLUTTER(VectorizedBaseCard):
             imethod[icard] = imethodi
             density_flfact_id[icard] = density_flfact_idi
             mach_flfact_id[icard] = mach_flfact_idi
-            rfreq_flfact_id[icard] = rfreq_flfact_idi
+            rfreq_velocity_flfact_id[icard] = rfreq_velocity_flfact_idi
             nvalue[icard] = nvaluei
             omax[icard] = omaxi
             epsilon[icard] = epsiloni
         self._save(flutter_id, method, imethod,
-                   density_flfact_id, mach_flfact_id, rfreq_flfact_id,
+                   density_flfact_id, mach_flfact_id, rfreq_velocity_flfact_id,
                    nvalue, omax, epsilon)
         self.sort()
         self.cards = []
 
     def _save(self, flutter_id, method, imethod,
-              density_flfact_id, mach_flfact_id, rfreq_flfact_id,
+              density_flfact_id, mach_flfact_id, rfreq_velocity_flfact_id,
               nvalue, omax, epsilon):
         if len(self.flutter_id):
             flutter_id = np.hstack([self.flutter_id, flutter_id])
@@ -5921,7 +6029,7 @@ class FLUTTER(VectorizedBaseCard):
             imethod = np.hstack([self.imethod, imethod])
             density_flfact_id = np.hstack([self.density_flfact_id, density_flfact_id])
             mach_flfact_id = np.hstack([self.mach_flfact_id, mach_flfact_id])
-            rfreq_flfact_id = np.hstack([self.rfreq_flfact_id, rfreq_flfact_id])
+            rfreq_velocity_flfact_id = np.hstack([self.rfreq_velocity_flfact_id, rfreq_velocity_flfact_id])
             nvalue = np.hstack([self.nvalue, nvalue])
             omax = np.hstack([self.omax, omax])
             epsilon = np.hstack([self.epsilon, epsilon])
@@ -5930,7 +6038,7 @@ class FLUTTER(VectorizedBaseCard):
         self.imethod = imethod
         self.density_flfact_id = density_flfact_id
         self.mach_flfact_id = mach_flfact_id
-        self.rfreq_flfact_id = rfreq_flfact_id
+        self.rfreq_velocity_flfact_id = rfreq_velocity_flfact_id
         self.nvalue = nvalue
         self.omax = omax
         self.epsilon = epsilon
@@ -5940,7 +6048,7 @@ class FLUTTER(VectorizedBaseCard):
         flutter.method = self.method[i]
         flutter.density_flfact_id = self.density_flfact_id[i]
         flutter.mach_flfact_id = self.mach_flfact_id[i]
-        flutter.rfreq_flfact_id = self.rfreq_flfact_id[i]
+        flutter.rfreq_velocity_flfact_id = self.rfreq_velocity_flfact_id[i]
         flutter.imethod = self.imethod[i]
         flutter.nvalue = self.nvalue[i]
         flutter.omax = self.omax[i]
@@ -5970,6 +6078,11 @@ class FLUTTER(VectorizedBaseCard):
         # PK, PKNL
         return self.imethod, self.nvalue
 
+    @property
+    def max_id(self) -> int:
+        return max(self.flutter_id.max(), self.density_flfact_id.max(),
+                   self.mach_flfact_id.max(), self.rfreq_velocity_flfact_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -5980,7 +6093,7 @@ class FLUTTER(VectorizedBaseCard):
         flutter_ids = array_str(self.flutter_id, size=size)
         densities = array_str(self.density_flfact_id, size=size)
         machs = array_str(self.mach_flfact_id, size=size)
-        rfreqs = array_str(self.rfreq_flfact_id, size=size)
+        rfreqs = array_str(self.rfreq_velocity_flfact_id, size=size)
         epsilons = array_default_float(self.epsilon, default=1e-3, size=size, is_double=False)
         imethods = array_default_str(self.imethod, default='L', size=size)
 
@@ -6090,6 +6203,10 @@ class AESTAT(VectorizedBaseCard):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
+
+    @property
+    def max_id(self) -> int:
+        return self.aestat_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -6213,6 +6330,10 @@ class AEPARM(VectorizedBaseCard):
                    #missing,
                    #coord=(coords, ucoords),
                    #aecomp=(all_aecomp_names, aecomp_names))
+
+    @property
+    def max_id(self) -> int:
+        return self.aeparm_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -6456,6 +6577,11 @@ class AESURF(VectorizedBaseCard):
             #caero=(model.caero1.caero_id, caero_ids),
         )
 
+    @property
+    def max_id(self) -> int:
+        return max(self.aesurf_id.max(), self.coord_id.max(),
+                   self.aelist_id.max(), self.tqllim.max(), self.tqulim.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -6635,6 +6761,10 @@ class AESURFS(VectorizedBaseCard):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return max(self.aesurfs_id.max(), self.list1_id.max(), self.list2_id.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -6807,6 +6937,11 @@ class CSSCHD(VectorizedBaseCard):
             #caero=(model.caero1.caero_id, caero_ids),
         )
 
+    @property
+    def max_id(self) -> int:
+        return max(self.csschd_id.max(), self.aesurf_id.max(),
+                   self.lalpha.max(), self.lmach.max(), self.lschd.max())
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -6826,6 +6961,172 @@ class CSSCHD(VectorizedBaseCard):
             list_fields = ['CSSCHD', csschd_id, aesurf_id, lalpha, lmach, lschd]
             bdf_file.write(print_card(list_fields))
         return
+
+
+class DIVERG(VectorizedBaseCard):
+    """
+    +--------+-----+--------+----+----+----+----+----+----+
+    |   1    |  2  |   3    | 4  | 5  | 6  | 7  | 8  | 9  |
+    +========+=====+========+====+====+====+====+====+====+
+    | DIVERG | SID | NROOT  | M1 | M2 | M3 | M4 | M5 | M6 |
+    +--------+-----+--------+----+----+----+----+----+----+
+    |        |  M7 |  etc.  |    |    |    |    |    |    |
+    +--------+-----+--------+----+----+----+----+----+----+
+
+    Attributes
+    ----------
+    sid : int
+        The name.
+    nroots : int
+        the number of roots
+    machs : list[float, ..., float]
+        list of Mach numbers
+
+    """
+    _id_name = 'diverg_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.diverg_id = np.array([], dtype='int32')
+        #self.aesurf_id = np.array([], dtype='int32')
+        #self.lalpha = np.array([], dtype='int32')
+        #self.lmach = np.array([], dtype='int32')
+        #self.lschd = np.array([], dtype='int32')
+
+    def add(self, diverg_id: int, nroots: int,
+            machs: list[float], comment: str='') -> int:
+        """
+        Creates an DIVERG card, which is used in divergence
+        analysis (SOL 144).
+
+        Parameters
+        ----------
+        diverg_id : int
+            The name
+        nroots : int
+            the number of roots
+        machs : list[float, ..., float]
+            list of Mach numbers
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #assert lalpha is None or isinstance(lalpha, integer_types), lalpha
+        #assert lmach is None or isinstance(lmach, integer_types), lmach
+        #assert lschd is None or isinstance(lschd, integer_types), lschd
+        card = (diverg_id, nroots, machs, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DIVERG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        nroots = integer(card, 2, 'nroot')
+        j = 1
+        machs = []
+        for i in range(3, len(card)):
+            mach = double(card, i, 'Mach_%i' % j)
+            machs.append(mach)
+            j += 1
+        assert len(machs) > 0, card
+        #return DIVERG(sid, nroots, machs, comment=comment)
+        self.cards.append((sid, nroots, machs, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        diverg_id = np.zeros(ncards, dtype='int32')
+        nroots = np.zeros(ncards, dtype='int32')
+        nmach = np.zeros(ncards, dtype='int32')
+
+        machs_list = []
+        for icard, card in enumerate(self.cards):
+            (sid, nrootsi, machsi, comment) = card
+            diverg_id[icard] = sid
+            nroots[icard] = nrootsi
+            nmach[icard] = len(machsi)
+            machs_list.extend(machsi)
+        machs = np.array(machs_list, dtype='float64')
+        self._save(diverg_id, nroots, machs, nmach)
+        self.sort()
+        self.cards = []
+
+    def _save(self, diverg_id, nroots, machs, nmach):
+        assert len(self.diverg_id) == 0, self.diverg_id
+        self.diverg_id = diverg_id
+        self.nroots = nroots
+        self.machs = machs
+        self.nmach = nmach
+        self.n = len(diverg_id)
+
+    #def sort(self) -> None:
+        #ueid = np.unique(self.csschd_id)
+        #if np.array_equal(ueid, self.csschd_id):
+            #return
+        #i = np.argsort(self.csschd_id)
+        #self.__apply_slice__(self, i)
+
+    def __apply_slice__(self, load: DIVERG, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.diverg_id = self.diverg_id[i]
+        load.nroots = self.nroots[i]
+        imach = self.imach
+        load.machs = hslice_by_idim(i, imach, self.machs)
+        load.nmach = self.nmach[i]
+
+    @property
+    def imach(self) -> np.ndarray:
+        return make_idim(self.n, self.nmach)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
+                          #msg=f'no materials for {self.type}')
+        #mids.sort()
+        #coords = self.model.coord.coord_id
+        #uaesurf = np.unique(self.aesurf_id)
+
+        #set1_ids = np.unique(set1_ids)
+        geom_check(
+            self, missing,
+            #coord=(model.coord.coord_id, ucoords),
+            #aelist=(model.aelist.aelist_id, aelist_ids),
+            #caero=(model.caero1.caero_id, caero_ids),
+        )
+
+    @property
+    def max_id(self) -> int:
+        return self.diverg_id.max()
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.diverg_id) == 0:
+            return ''
+        print_card = get_print_card_8_16(size)
+
+        diverg_ids = array_str(self.diverg_id, size=size)
+        nroots = array_str(self.nroots, size=size)
+        machs = array_float(self.machs, size=size, is_double=False).tolist()
+
+        for diverg_id, nroot, (imach0, imach1) in zip(diverg_ids, nroots, self.imach):
+            mach = machs[imach0:imach1]
+            list_fields = ['DIVERG', diverg_id, nroot] + mach
+            bdf_file.write(print_card(list_fields))
+        return
+
 
 class TRIM(VectorizedBaseCard):
     """
@@ -7285,6 +7586,10 @@ class TRIM(VectorizedBaseCard):
             )
             msg += str(self)
             raise RuntimeError(msg)
+
+    @property
+    def max_id(self) -> int:
+        return self.trim_id.max()
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

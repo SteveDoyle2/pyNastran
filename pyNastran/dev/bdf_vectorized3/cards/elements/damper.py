@@ -392,6 +392,10 @@ class CDAMP3(Element):
                    spoint=(spoint, self.spoints),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.spoints.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
