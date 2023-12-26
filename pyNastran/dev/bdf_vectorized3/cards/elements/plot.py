@@ -75,7 +75,8 @@ class PlotElement(Element):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         element_id = array_str(self.element_id, size=size)
         nodes = array_str(self.nodes, size=size).tolist()

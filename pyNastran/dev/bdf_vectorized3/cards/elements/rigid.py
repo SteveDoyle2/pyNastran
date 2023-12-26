@@ -205,7 +205,8 @@ class RBAR(RigidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
@@ -348,7 +349,8 @@ class RROD(RigidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
@@ -486,7 +488,8 @@ class RBAR1(RigidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
@@ -886,7 +889,8 @@ class RBE2(RigidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         eid_str = array_default_int(self.element_id, default=0, size=size)
         ind_node_str = array_default_int(self.independent_node, default=0, size=size)
@@ -1230,10 +1234,6 @@ class RBE3(RigidElement):
         return make_idim(self.n, self.ndependent)
 
     @property
-    def is_small_field(self):
-        return self.max_id < 99_999_999
-
-    @property
     def max_id(self) -> int:
         max_dependent_node = 0
         if self.ndependent.max() > 0:
@@ -1244,11 +1244,7 @@ class RBE3(RigidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        #print_card = get_print_card_8_16(size)
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         eid_str = array_default_int(self.element_id, default=0, size=size)
         #ind_node_str = array_default_int(self.independent_node, default=0, size=size)

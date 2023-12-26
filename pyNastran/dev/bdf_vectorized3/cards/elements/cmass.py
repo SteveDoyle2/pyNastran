@@ -126,7 +126,7 @@ class CMASS1(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -295,7 +295,7 @@ class CMASS2(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
@@ -541,7 +541,7 @@ class CMASS4(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
@@ -634,7 +634,7 @@ class PMASS(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         for pid, mass in zip(property_id, self._mass):

@@ -195,7 +195,7 @@ class CONM1(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
         node_ids = array_str(self.node_id, size=size)
@@ -382,7 +382,7 @@ class CONM2(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         is_xyz = self.xyz_offset.max() != 0. or self.xyz_offset.min() != 0.
         is_inertia = self.inertia.max() != 0. or self.inertia.min() != 0.

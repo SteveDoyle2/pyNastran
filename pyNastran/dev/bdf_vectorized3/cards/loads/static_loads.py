@@ -2658,7 +2658,8 @@ class RFORCE(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-        #print_card = get_print_card_8_16(size)
+        #print_card, size = get_print_card_size(size, self.max_id)
+
         #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)
@@ -2927,7 +2928,8 @@ class RFORCE1(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-        #print_card = get_print_card_8_16(size)
+        #print_card, size = get_print_card_size(size, self.max_id)
+
 
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)

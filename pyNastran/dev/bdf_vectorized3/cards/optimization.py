@@ -27,7 +27,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     #hslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_float, array_default_int, array_default_float, array_default_str)
+    array_str, array_float, array_default_int, array_default_float, array_default_str, array_float_nan)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 
@@ -67,10 +67,7 @@ class DCONADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.dconadd_id) == 0:
             return
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()
         dconadd_ids = array_str(self.dconadd_id, size=size)
@@ -174,7 +171,7 @@ class MODTRAK(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.modtrak_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         modtrak_ids = array_str(self.modtrak_id, size=size)
         low_ranges = array_str(self.low_range, size=size)
@@ -362,7 +359,7 @@ class DESVAR(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.desvar_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         is_delx = not np.all(np.isnan(self.delx))
         is_ddval = not np.all(np.isnan(self.ddval))
@@ -534,7 +531,7 @@ class DDVAL(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.ddval_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         ddval_ids = array_str(self.ddval_id, size=size)
         values = array_float(self.value, size=size, is_double=is_double).tolist()
@@ -711,7 +708,7 @@ class DLINK(VectorizedBaseCard):
         if len(self.dlink_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dlink_ids = array_str(self.dlink_id, size=size)
         dependent_desvar = array_str(self.dependent_desvar, size=size)
         c0s = array_default_float(self.c0, default=0.0, size=size, is_double=False)
@@ -875,7 +872,8 @@ class DVGRID(VectorizedBaseCard):
         if len(self.desvar_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         desvar_ids = array_str(self.desvar_id, size=size)
         node_ids = array_str(self.node_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -1282,8 +1280,9 @@ class DRESP1(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
+        atti_max = 0 if len(self.atti_int) == 0 else self.atti_int.max()
         return max(self.dresp_id.max(), self.atta_int.max(),
-                   self.attb_int.max(), self.atti_int.max())
+                   self.attb_int.max(), atti_max)
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -1291,37 +1290,30 @@ class DRESP1(VectorizedBaseCard):
         if len(self.dresp_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        dresp_ids = array_str(self.dresp_id, size=size)
+        print_card, size = get_print_card_size(size, self.max_id)
         regions = array_default_int(self.region, default=-1, size=size)
-        atta_ints = array_str(self.atta_int, size=size)
-        attb_ints = array_str(self.attb_int, size=size)
+
+        iint = (self.atta_type == 'i')
+        ifloat = (self.atta_type == 'f')
+        attas = self.atta_str.copy()
+        attas[iint] = array_str(self.atta_int[iint], size=size)
+        attas[ifloat] = array_float_nan(self.atta_float[ifloat], size=size, is_double=is_double)
+
+        iint = (self.attb_type == 'i')
+        ifloat = (self.attb_type == 'f')
+        attbs = self.attb_str.copy()
+        attbs[iint] = array_str(self.attb_int[iint], size=size)
+        attbs[ifloat] = array_float_nan(self.attb_float[ifloat], size=size, is_double=is_double)
+
         atti_ints = array_str(self.atti_int, size=size)
-        atta_floats = array_float(self.atta_float, size=size, is_double=is_double)
-        attb_floats = array_float(self.attb_float, size=size, is_double=is_double)
-        atti_floats = array_float(self.atti_float, size=size, is_double=is_double)
+        atti_floats = array_float_nan(self.atti_float, size=size, is_double=is_double)
 
         for dresp_id, label, response_type, property_type, region, \
-            atta_type, atta_int, atta_float, atta_str, \
-            attb_type, attb_int, attb_float, attb_str, \
-            atti_type, iatti in zip_longest(
-                self.dresp_id, self.label, self.response_type, self.property_type, regions,
-                self.atta_type, atta_ints, atta_floats, self.atta_str,
-                self.attb_type, attb_ints, attb_floats, self.attb_str,
-                self.atti_type, self.iatti):
+            atta, attb, atti_type, iatti in zip_longest(
+                dresp_ids, self.label, self.response_type, self.property_type, regions,
+                attas, attbs, self.atti_type, self.iatti):
             iatti0, iatti1 = iatti
-            if atta_type == 'i':
-                atta = atta_int
-            elif atta_type == 'f':
-                atta = atta_float
-            else:
-                atta = atta_str
-
-            if attb_type == 'i':
-                attb = attb_int
-            elif attb_type == 'f':
-                attb = attb_float
-            else:
-                attb = attb_str
 
             if atti_type == 'i':
                 atti_list = atti_ints[iatti0:iatti1].tolist()
@@ -1739,7 +1731,7 @@ class DRESP2(VectorizedBaseCard):
         if len(self.dresp_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         iparam_value = 0
 
         dresp_ids = array_str(self.dresp_id, size=size)
@@ -1915,7 +1907,7 @@ class DCONSTR(VectorizedBaseCard):
         if len(self.dresp_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dconstr_ids = array_str(self.dconstr_id, size=size)
         dresp_ids = array_str(self.dresp_id, size=size)
         for dconstr_id, dresp_id, lower_allowable, lower_table, upper_allowable, upper_table, \
@@ -2202,7 +2194,8 @@ class DVPREL1(VectorizedBaseCard):
         if len(self.dvprel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         dvprel_ids = array_str(self.dvprel_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
@@ -2502,7 +2495,7 @@ class DVPREL2(VectorizedBaseCard):
         if len(self.dvprel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dvprel_ids = array_str(self.dvprel_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         desvar_ids = array_str(self.desvar_ids, size=size)
@@ -2758,7 +2751,7 @@ class DVMREL1(VectorizedBaseCard):
         if len(self.dvmrel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dvmrel_ids = array_str(self.dvmrel_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
@@ -3064,7 +3057,7 @@ class DVMREL2(VectorizedBaseCard):
         if len(self.dvmrel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dvmrel_ids = array_str(self.dvmrel_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         desvar_ids = array_str(self.desvar_ids, size=size)
@@ -3325,7 +3318,7 @@ class DVCREL1(VectorizedBaseCard):
         if len(self.dvcrel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
@@ -3620,7 +3613,7 @@ class DVCREL2(VectorizedBaseCard):
         if len(self.dvcrel_id) == 0:
             return
 
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_ids, size=size)
@@ -3770,7 +3763,8 @@ class DSCREEN(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.response_type) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         trss = array_float(self.trs, size=size, is_double=is_double)
         nstrs = array_str(self.nstr, size=size)

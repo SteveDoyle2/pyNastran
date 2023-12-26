@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from pyNastran.bdf.cards.deqatn import lines_to_eqs, write_deqatn, _setup_deqatn
 from pyNastran.bdf.cards.base_card import BaseCard
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 

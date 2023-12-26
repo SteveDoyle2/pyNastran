@@ -56,6 +56,7 @@ from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
+from .cards.elements.thermal import BDYOR
 
 #from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D
 #from pyNastran.bdf.cards.properties.properties import PRAC2D, PRAC3D
@@ -113,7 +114,7 @@ from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import MONDSP1
-from pyNastran.bdf.cards.aero.static_loads import AEROS, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import AEROS
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
     #TOPVAR,
@@ -623,7 +624,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CHACAB',
             'CAABSF', 'CHACBR',
             #'PACABS',
-            'PAABSF', #'PACBAR', 'ACMODL',
+            'PAABSF', 'PACBAR', # 'ACMODL',
 
             # crack
             #'CRAC2D', 'CRAC3D',
@@ -921,7 +922,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PANEL', 'SWLDPRM',
             #'CWELD', 'PWELD',
             #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM',
-            'DVSHAP', 'BNDGRID',
+            #'DVSHAP',
+            'BNDGRID',
             #'CYSYM', 'CYJOIN',
             # 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
 
@@ -2158,7 +2160,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CSEAM' : (Crash, None),
             #'PSEAM' : (Crash, None),
 
-            'DVSHAP' : (RuntimeCrash, None),
+            #'DVSHAP' : (RuntimeCrash, None),
 
             #'CYSYM' : (Crash, None),
             #'TEMPP1' : (Crash, None),
@@ -2502,14 +2504,17 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CIFPENT' : partial(self._prepare_card, self.cifpent),
             'CIFHEX' : partial(self._prepare_card, self.cifhex),
 
-            # acoustic shells?
+            # acoustic absorber element; shells?
             'CAABSF': partial(self._prepare_card, self.caabsf),
             'PAABSF': partial(self._prepare_card, self.paabsf),
 
+            # acoustic absorber element
             'CHACAB' : partial(self._prepare_card, self.chacab),
+            #'PACABS': (PACABS, add_methods._add_acoustic_property_object),  # goes with CHACAB
+
+            # acoustic barrier element
             'CHACBR' : partial(self._prepare_card, self.chacbr),
-            #'PACABS': (PACABS, add_methods._add_acoustic_property_object),
-            #'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
+            'PACBAR' : partial(self._prepare_card, self.pacbar),  # goes with CHACBR
 
             # thermal elements
             'CHBDYE': partial(self._prepare_card, self.chbdye),
@@ -2897,7 +2902,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
     def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a GRDSET"""
         assert self.grdset is None, self.grdset
-        self.grdset = GRDSET.add_card(card_obj, comment=comment)
+        grdset = GRDSET.add_card(card_obj, comment=comment)
+        self.grdset = grdset
         return self.grdset
     def _prepare_baror(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a BAROR"""

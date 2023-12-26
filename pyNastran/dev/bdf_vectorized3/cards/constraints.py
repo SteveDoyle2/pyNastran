@@ -630,10 +630,6 @@ class ADD(VectorizedBaseCard):
     def max_id(self):
         return max(self.sid.max(), self.sids.max())
 
-    @property
-    def is_small_field(self) -> bool:
-        return self.max_id < 99_999_999
-
     def add(self, sid: int, sets, comment: str='') -> int:
         """Creates an MPCADD card"""
         if isinstance(sets, integer_types):
@@ -835,10 +831,8 @@ class MPCADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.mpc_id) == 0:
             return
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
+
         #self.get_reduced_spcs()
         mpc_ids = array_str(self.mpc_ids, size=size)
         for mpc_id, idim in zip(self.mpc_id, self.idim):

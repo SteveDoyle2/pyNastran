@@ -1111,7 +1111,7 @@ class PBAR(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1164,7 +1164,11 @@ class PBAR(Property):
 
     @property
     def all_materials(self) -> list[Any]:
-        return [self.model.mat1]
+        if self.model.is_thermal:
+            materials = [self.model.mat4, self.model.mat5]
+        else:
+            materials = [self.model.mat1]
+        return materials
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -1467,7 +1471,7 @@ class PBARL(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         assert isinstance(self.ndim, np.ndarray), self.ndim
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1853,7 +1857,8 @@ class CBARAO(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         element_ids = array_str(self.element_id, size=size)
 

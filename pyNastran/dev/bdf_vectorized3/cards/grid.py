@@ -268,6 +268,11 @@ class GRDSET(BaseCard):
         assert isinstance(self.ps, integer_types), 'ps=%r' % self.ps
         assert isinstance(self.seid, integer_types), 'seid=%r' % self.seid
 
+    def raw_fields(self) -> list[Any]:
+        list_fields = ['GRDSET', None, self.cp, None, None, None,
+                       self.cd, self.ps, self.seid]
+        return list_fields
+
     def write(self, size: int=8):
         cp = set_blank_if_default(self.cp, 0)
         cd = set_blank_if_default(self.cd, 0)

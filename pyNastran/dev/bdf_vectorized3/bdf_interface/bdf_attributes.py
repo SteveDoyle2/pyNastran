@@ -51,7 +51,9 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     PSOLID, PLSOLID, PSOLCZ, PCOMPS, PCOMPLS,
     CPENTCZ, CHEXCZ,  # nx cohesive zone
     CIFPENT, CIFHEX,  # msc cohesive zone
-    CHACAB, CHACBR,
+)
+from pyNastran.dev.bdf_vectorized3.cards.elements.acoustic import (
+    CHACAB, CHACBR, PACBAR,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
@@ -431,10 +433,6 @@ class BDFAttributes:
         self.ctrax3 = CTRAX3(self)
         self.ctrax6 = CTRAX6(self)
 
-        # acoustic shells?
-        self.caabsf = CAABSF(self)
-        self.paabsf = PAABSF(self)
-
         # solid elements
         self.ctetra = CTETRA(self)
         self.chexa = CHEXA(self)
@@ -456,6 +454,19 @@ class BDFAttributes:
         self.cifhex = CIFHEX(self)
         #self.pchoe = PCOHE(self)
 
+        # ----------------------------------------------------------------------
+        # acoustic shells?
+        self.caabsf = CAABSF(self)
+        self.paabsf = PAABSF(self)
+
+        # acoustic absorber element - solid
+        self.chacab = CHACAB(self)
+        #self.pacabs = PACABS(self)
+
+        # acoustic barrier element - solid
+        self.chacbr = CHACBR(self)
+        self.pacbar = PACBAR(self)
+        # ----------------------------------------------------------------------
 
         # mass
         self.pmass = PMASS(self)
@@ -481,9 +492,6 @@ class BDFAttributes:
         self.chbdyg = CHBDYG(self)
         self.phbdy = PHBDY(self)
 
-        self.chacab = CHACAB(self)
-        self.chacbr = CHACBR(self)
-
         # thermal boundary conditions
         self.conv = CONV(self)
         self.pconv = PCONV(self)
@@ -492,7 +500,7 @@ class BDFAttributes:
 
         self.radcav = RADCAV(self)
         self.radlst = RADLST(self)
-        #self.radmtx = RADMTX(self)
+        #self.radmtx = RADMTX(self)  #radiation matrix
         self.view = VIEW(self)
         self.view3d = VIEW3D(self)
 
@@ -649,7 +657,6 @@ class BDFAttributes:
         # ---------------------------------------------------
         ## unoptimized
         # aero model
-        #self.aefacts = {}
 
         self.aesurf = AESURF(self)
         self.aesurfs = AESURFS(self)
@@ -683,9 +690,6 @@ class BDFAttributes:
         self.dti: dict[str, DMI] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
         # ----------------------------------------
-        #self.suport1 = {}
-        #self.suport = []
-        #self.suport = SUPORT(self)
 
         self.system_command_lines: list[str] = []
         self.executive_control_lines: list[str] = []
@@ -775,7 +779,9 @@ class BDFAttributes:
             #self.ctrax3, self.ctrax6,
         ]
         acoustic_element_cards = [
-            self.chacab, self.chacbr,
+            self.chacab, # absorber solid
+            self.chacbr, # barrier solid
+            self.caabsf, # absorber shell
         ]
         elements = self.spring_element_cards + self.damper_element_cards + [
             self.cvisc, self.cgap,
@@ -786,7 +792,6 @@ class BDFAttributes:
             self.cbeam,
             self.cbend,
             self.cshear,
-            self.caabsf, # acoustic shells
             self.genel,
         ] + self.shell_element_cards + self.solid_element_cards + \
         axisymmetric_element_cards + [

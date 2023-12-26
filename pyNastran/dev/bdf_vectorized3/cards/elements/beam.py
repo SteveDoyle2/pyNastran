@@ -335,7 +335,7 @@ class CBEAM(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -1580,7 +1580,11 @@ class PBEAM(Property):
 
     @property
     def all_materials(self) -> list[MAT1]:
-        return [self.model.mat1]
+        if self.model.is_thermal:
+            materials = [self.model.mat4, self.model.mat5]
+        else:
+            materials = [self.model.mat1]
+        return materials
 
     @property
     def allowed_materials(self) -> list[MAT1]:
@@ -1642,10 +1646,6 @@ class PBEAM(Property):
         return rho_area, nsm_per_length
 
     @property
-    def is_small_field(self) -> bool:
-        return self.max_id < 99_999_999
-
-    @property
     def max_id(self) -> int:
         return max(self.property_id.max(),
                    self.material_id.max(),
@@ -1655,11 +1655,7 @@ class PBEAM(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for pid, mid, (istation0, istation1), nstation, \
             s1, s2, k1, k2, \
@@ -2210,7 +2206,7 @@ class PBEAML(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         assert len(self.property_id) == len(self.material_id)
         assert len(self.property_id) == len(self.ndim)
@@ -2637,7 +2633,7 @@ class PBCOMP(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -2984,7 +2980,7 @@ class CBEND(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -3956,10 +3952,6 @@ class PBEND(Property):
         return mpl
 
     @property
-    def is_small_field(self) -> bool:
-        return self.max_id < 99_999_999
-
-    @property
     def max_id(self) -> int:
         return max(self.property_id.max(),
                    self.material_id.max(), )
@@ -3968,11 +3960,7 @@ class PBEND(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         ps = array_default_float(self.p, default=0., size=size, is_double=False)
         rbs = array_default_float(self.rb, default=0., size=size, is_double=False)

@@ -439,7 +439,7 @@ class NSM1(NSM1i):
                    write_card_headers: bool=False) -> None:
         if len(self.nsm_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
         #pid_eid_str = array_str(self.pid_eid, size=size)
@@ -458,7 +458,7 @@ class NSML1(NSM1i):
                    write_card_headers: bool=False) -> None:
         if len(self.nsm_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
         #pid_eid_str = array_str(self.pid_eid, size=size)
@@ -476,7 +476,7 @@ class NSM(NSMi):
                    write_card_headers: bool=False) -> None:
         if len(self.nsm_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
@@ -497,7 +497,7 @@ class NSML(NSMi):
                    write_card_headers: bool=False) -> None:
         if len(self.nsm_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
@@ -558,7 +558,7 @@ class NSMADD(ADD):
                    write_card_headers: bool=False) -> None:
         if len(self.nsm_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         nsm_id = array_str(self.nsm_id, size=size)
         nsm_ids = array_str(self.nsm_ids, size=size)
         for nsm_id, idim in zip(nsm_id, self.idim):

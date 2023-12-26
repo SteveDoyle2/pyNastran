@@ -100,6 +100,21 @@ class TestContact(unittest.TestCase):
         model.setup()
         model.bcbody.write()
 
+    def test_bcbody_08(self):
+        model = BDF(debug=False)
+        card_lines = [
+            'bcbody,3,3d,rigid, ,1,0.02',
+            ' ,0, 0.0,0.0,0.0,0.0,0.0,0.0,21',
+            ' ,approv, 0.0,0.0,0.0,0.0,0.0,0.0,0.21',
+            ',heat,0.0,0.0,0.0,10.0,0.0,0.0,1',
+            ',,0.0,0.0,0.0,',
+            ',rigid,10000,1,',
+            ',patch3d,1,',
+            ',,1,20,17,14,11']
+        model.add_card(card_lines, 'BCBODY')
+        model.setup()
+        model.bcbody.write()
+
     def test_params(self):
         model = BDF(debug=False)
         key_values = {

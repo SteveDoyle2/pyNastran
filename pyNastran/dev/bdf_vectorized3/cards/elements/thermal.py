@@ -21,9 +21,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     make_idim, hslice_by_idim, )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float,
-    get_print_card_size)
+    array_float, get_print_card_size)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -160,6 +160,38 @@ class CHBDYE(ThermalElement):
     def clear(self) -> None:
         self.element_id = np.zeros((0, 2), dtype='int32')
         self.n = 0
+
+    def add(self, eid: int, eid2: int, side: int,
+            iview_front: int=0, iview_back: int=0,
+            rad_mid_front: int=0, rad_mid_back: int=0,
+            comment: str='') -> int:
+        """
+        Creates a CHBDYE card
+
+        Parameters
+        ----------
+        eid : int
+            surface element ID number for a side of an element
+        eid2: int
+            a heat conduction element identification
+        side: int
+            a consistent element side identification number (1-6)
+        iview_front: int; default=0
+            a VIEW entry identification number for the front face
+        iview_back: int; default=0
+            a VIEW entry identification number for the back face
+        rad_mid_front: int; default=0
+            RADM identification number for front face of surface element
+        rad_mid_back: int; default=0
+            RADM identification number for back face of surface element
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, eid2, side, iview_front, iview_back,
+                           rad_mid_front, rad_mid_back, comment))
+        self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -302,6 +334,35 @@ class CONV(VectorizedBaseCard):
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, eid: int, pconid: int,
+            ta: list[int], film_node: int=0, cntrlnd: int=0,
+            comment: str='') -> int:
+        """
+        Creates a CONV card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pconid : int
+            Convection property ID
+        mid : int
+            Material ID
+        ta : list[int]
+            Ambient points used for convection 0's are allowed for TA2
+            and higher
+        film_node : int; default=0
+            Point for film convection fluid property temperature
+        cntrlnd : int; default=0
+            Control point for free convection boundary condition
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pconid, film_node, cntrlnd, ta, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
@@ -426,6 +487,16 @@ class CHBDYG(ThermalElement):
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
+
+    def add(self, eid: int, surface_type: str, nodes: list[int],
+            iview_front: int=0, iview_back: int=0,
+            rad_mid_front: int=0, rad_mid_back: int=0,
+            comment: str='') -> int:
+        """Creates a CHBDYG card"""
+        self.cards.append((eid, surface_type, [iview_front, iview_back],
+                           [rad_mid_front, rad_mid_back], nodes, comment))
+        self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -599,6 +670,60 @@ class CHBDYP(ThermalElement):
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, eid: int, pid: int, surface_type: str,
+            g1: int, g2: int,
+            g0: int=0, gmid: int=0,
+            ce: int=0,
+            iview_front: int=0, iview_back: int=0,
+            rad_mid_front: int=0, rad_mid_back: int=0,
+            e1=None, e2=None, e3=None,
+            comment: str='') -> int:
+        """
+        Creates a CHBDYP card
+
+        Parameters
+        ----------
+        eid : int
+            Surface element ID
+        pid : int
+            PHBDY property entry identification numbers. (Integer > 0)
+        surface_type : str
+            Surface type
+            Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
+        iview_front : int; default=0
+            A VIEW entry identification number for the front face.
+        iview_back : int; default=0
+            A VIEW entry identification number for the back face.
+        g1 / g2 : int
+            Grid point identification numbers of grids bounding the surface
+        g0 : int; default=0
+            Orientation grid point
+        rad_mid_front : int
+            RADM identification number for front face of surface element
+        rad_mid_back : int
+            RADM identification number for back face of surface element.
+        gmid : int
+            Grid point identification number of a midside node if it is used
+            with the line type surface element.
+        ce : int; default=0
+            Coordinate system for defining orientation vector
+        e1 / e2 / e3 : float; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        g2 = 0 if g2 is None else g2
+        gmid = 0 if gmid is None else gmid
+        self.cards.append((eid, pid, surface_type,
+                           [g1, g2, gmid], g0,
+                           [iview_front, iview_back],
+                           [rad_mid_front, rad_mid_back],
+                           ce, [e1, e2, e3], comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         eid = integer(card, 1, 'eid')
@@ -609,11 +734,11 @@ class CHBDYP(ThermalElement):
         iview_back = integer_or_blank(card, 5, 'iview_back', default=0)
         g1 = integer(card, 6, 'g1')
 
-        if surface_type != 'POINT':
-            g2 = integer(card, 7, 'g2')
-        else:
+        if surface_type == 'POINT':
             g2 = blank(card, 7, 'g2')
             g2 = 0
+        else:
+            g2 = integer(card, 7, 'g2')
 
         g0 = integer_or_blank(card, 8, 'g0', default=0)
         rad_mid_front = integer_or_blank(card, 9, 'rad_mid_front', default=0)
@@ -624,8 +749,10 @@ class CHBDYP(ThermalElement):
         e2 = fdouble_or_blank(card, 14, 'e2', default=np.nan)
         e3 = fdouble_or_blank(card, 15, 'e3', default=np.nan)
         assert len(card) <= 16, f'len(CHBDYP card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, surface_type, [g1, g2, gmid], g0,
-                           [iview_front, iview_back], [rad_mid_front, rad_mid_back],
+        self.cards.append((eid, pid, surface_type,
+                           [g1, g2, gmid], g0,
+                           [iview_front, iview_back],
+                           [rad_mid_front, rad_mid_back],
                            ce, [e1, e2, e3], comment))
         self.n += 1
         return self.n - 1
@@ -677,6 +804,8 @@ class CHBDYP(ThermalElement):
             property_id[icard] = pid
 
             nodes[icard, :] = nodesi
+            if nodesi[1] == 0:
+                assert surface_typei == 'POINT', f'eid={eid} surface_type={surface_typei!r} has g2=0'
             g0[icard] = g0i
             surface_type[icard] = surface_typei
             iview[icard] = iviewi
@@ -881,6 +1010,34 @@ class PHBDY(VectorizedBaseCard):
         self.property_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, pid: int,
+            area_factor: float=None,
+            d1=None, d2=None,
+            comment: str='') -> int:
+        """
+        Creates a PHBDY card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id
+        area_factor : int
+            Area factor of the surface used only for CHBDYP element
+            Must be {POINT, LINE, TUBE, ELCYL}
+            TUBE : constant thickness of hollow tube
+        d1, d2 : float; default=None
+            Diameters associated with the surface
+            Used with CHBDYP [ELCYL, TUBE, FTUBE] surface elements
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, area_factor, d1, d2, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PHBDY card from ``BDF.add_card(...)``
@@ -925,6 +1082,7 @@ class PHBDY(VectorizedBaseCard):
             (pid, af, d1, d2, comment) = card
             property_id[icard] = pid
             area_factor[icard] = af
+            d2 = d1 if d2 is None else d2
             diameter[icard, :] = [d1, d2]
         self._save(property_id, area_factor, diameter)
         self.cards = []
@@ -1105,9 +1263,60 @@ class PCONV(VectorizedBaseCard):
         self.pconv_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, pconv_id: int, mid: int=None,
+            form: int=0, exponent_free_convection=0.0,
+            free_convection_type: int=0,
+            table_id: int=0,
+            chlen: float=None, gidin: int=None, ce: int=0,
+            e1: float=None, e2: float=None, e3: float=None,
+            comment: str='') -> int:
+        """
+        Creates a PCONV card
+
+        Parameters
+        ----------
+        pconv_id : int
+            Convection property ID
+        mid : int; default=None
+            Material ID
+        form : int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        expf : float; default=0.0
+            Free convection exponent as implemented within the context
+            of the particular form that is chosen
+        ftype : int; default=0
+            Formula type for various configurations of free convection
+        tid : int; default=None
+            Identification number of a TABLEHT entry that specifies the
+            two variable tabular function of the free convection heat
+            transfer coefficient
+        chlen : float; default=None
+            Characteristic length
+        gidin : int; default=None
+            Grid ID of the referenced inlet point
+        ce : int; default=0
+            Coordinate system for defining orientation vector.
+        e1 / e2 / e3 : list[float]; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mid = 0 if mid is None else mid
+        table_id = 0 if table_id is None else table_id
+        gidin = 0 if gidin is None else gidin
+        coord_e = ce
+        self.cards.append((pconv_id, mid, form, exponent_free_convection,
+                           free_convection_type, table_id,
+                           chlen, gidin, coord_e, [e1, e2, e3], comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-        pconid = integer(card, 1, 'pconid')
+        pconv_id = integer(card, 1, 'pconv_id')
         mid = integer_or_blank(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
         exponent_free_convection = fdouble_or_blank(card, 4, 'expf', default=0.0)
@@ -1116,11 +1325,12 @@ class PCONV(VectorizedBaseCard):
         chlen = fdouble_or_blank(card, 9, 'chlen', default=np.nan)
         gidin = integer_or_blank(card, 10, 'gidin', default=0)
         coord_e = integer_or_blank(card, 11, 'ce', default=0)
-        e1 = fdouble_or_blank(card, 12, 'e1')
-        e2 = fdouble_or_blank(card, 13, 'e2')
-        e3 = fdouble_or_blank(card, 14, 'e3')
+        e1 = fdouble_or_blank(card, 12, 'e1', default=np.nan)
+        e2 = fdouble_or_blank(card, 13, 'e2', default=np.nan)
+        e3 = fdouble_or_blank(card, 14, 'e3', default=np.nan)
         assert len(card) <= 15, f'len(PCONV card) = {len(card):d}\ncard={card}'
-        self.cards.append((pconid, mid, form, exponent_free_convection, free_convection_type, table_id,
+        self.cards.append((pconv_id, mid, form, exponent_free_convection,
+                           free_convection_type, table_id,
                            chlen, gidin, coord_e, [e1, e2, e3], comment))
         self.n += 1
         return self.n - 1
@@ -1317,6 +1527,43 @@ class CONVM(VectorizedBaseCard):
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, eid: int, pconvm_id: int, ta1: int,
+            film_node: int=0, cntmdot: int=0,
+            ta2: int=0, mdot: float=1.0,
+            comment: str='') -> int:
+        """
+        Creates a CONVM card
+
+        Parameters
+        ----------
+        eid : int
+            element id (CHBDYP)
+        pconvm_id : int
+            property ID (PCONVM)
+        mid : int
+            Material ID
+        ta1 : int
+            ambient point for convection
+        ta2 : int; default=None
+            None : ta1
+            ambient point for convection
+        film_node : int; default=0
+        cntmdot : int; default=0
+            control point used for controlling mass flow
+            0/blank is only allowed when mdot > 0
+        mdot : float; default=1.0
+            a multiplier for the mass flow rate in case there is no
+            point associated with the CNTRLND field
+            required if cntmdot = 0
+        comment : str; default=''
+            a comment for the card
+
+        """
+        ta2 = 0 if ta2 is None else ta2
+        self.cards.append((eid, pconvm_id, film_node, cntmdot, [ta1, ta2], mdot, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CONVM card from ``BDF.add_card(...)``
@@ -1427,14 +1674,14 @@ class CONVM(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
-        #pconv_ids = array_str(self.pconv_id, size=size)
+        pconvm_ids = array_str(self.pconvm_id, size=size)
         film_nodes = array_default_int(self.film_node, default=0, size=size)
         control_node_mdots = array_default_int(self.control_node_mdot, default=0, size=size)
         temp_ambients = array_default_int(self.temp_ambient, default=0, size=size)
         #self.temp_ambient[icard] = ta
         for eid, pconvm_id, film_node, control_node_mdot, \
-            (ta1, ta2), mdot in zip(element_ids, self.pconvm_id,
-                             film_nodes, control_node_mdots, temp_ambients, self.mdot):
+            (ta1, ta2), mdot in zip(element_ids, pconvm_ids, film_nodes,
+                                    control_node_mdots, temp_ambients, self.mdot):
             #assert pconvm_id > 0, pconvm_id
 
             ta2 = set_blank_if_default(ta2, ta1)
@@ -1464,10 +1711,47 @@ class PCONVM(VectorizedBaseCard):
         self.pconvm_id = np.array([], dtype='int32')
         self.n = 0
 
+    def add(self, pconvm_id: int, mid: int, coeff: float,
+            form: int=0, flag: int=0,
+            expr: float=0.0,
+            exppi: float=0.0, exppo: float=0.0,
+            comment: str='') -> int:
+        """
+        Creates a PCONVM card
+
+        Parameters
+        ----------
+        pconvm_id : int
+            Convection property ID
+        mid: int
+            Material ID
+        coeff: float
+            Constant coefficient used for forced convection
+        form: int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        flag: int; default=0
+            Flag for mass flow convection
+        expr: float; default=0.0
+            Reynolds number convection exponent
+        exppi: float; default=0.0
+            Prandtl number convection exponent for heat transfer into
+            the working fluid
+        exppo: float; default=0.0
+            Prandtl number convection exponent for heat transfer out of
+            the working fluid
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pconvm_id, mid, form, flag, coeff, expr, exppi, exppo, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         fdouble = force_double if self.model.is_lax_parser else double
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-        pconid = integer(card, 1, 'pconid')
+        pconvm_id = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
         flag = integer_or_blank(card, 4, 'flag', default=0)
@@ -1476,7 +1760,7 @@ class PCONVM(VectorizedBaseCard):
         exppi = fdouble_or_blank(card, 7, 'exppi', default=0.0)
         exppo = fdouble_or_blank(card, 8, 'exppo', default=0.0)
         assert len(card) <= 9, f'len(PCONVM card) = {len(card):d}\ncard={card}'
-        self.cards.append((pconid, mid, form, flag, coeff, expr, exppi, exppo, comment))
+        self.cards.append((pconvm_id, mid, form, flag, coeff, expr, exppi, exppo, comment))
         self.n += 1
         return self.n - 1
 
@@ -1572,14 +1856,16 @@ class PCONVM(VectorizedBaseCard):
         material_ids = array_str(self.material_id, size=size)
         forms = array_default_int(self.form, default=0, size=size)
         flags = array_default_int(self.flag, default=0, size=size)
+
+        coefficients = array_float(self.coefficient, size=size, is_double=False)
+        exprs = array_default_float(self.expr, default=0.0, size=size, is_double=False)
+        exppis = array_default_float(self.exppi, default=0.0, size=size, is_double=False)
+        exppos = array_default_float(self.exppo, default=0.0, size=size, is_double=False)
         #form = set_blank_if_default(self.form, 0)
         #flag = set_blank_if_default(self.flag, 0)
-        #expr = set_blank_if_default(self.expr, 0.0)
-        #exppi = set_blank_if_default(self.exppi, 0.0)
-        #exppo = set_blank_if_default(self.exppo, 0.0)
         for pconvm_id, mid, form, flag, \
             coeff, expr, exppi, exppo in zip_longest(pconvm_ids, material_ids, forms, flags,
-                                                     self.coefficient, self.expr, self.exppi, self.exppo):
+                                                     coefficients, exprs, exppis, exppos):
             assert pconvm_id != '0', pconvm_id
             list_fields = ['PCONVM', pconvm_id, mid, form, flag,
                            coeff, expr, exppi, exppo]
@@ -2011,6 +2297,14 @@ class VIEW(VectorizedBaseCard):
         self.dislin = np.array([], dtype='float64')
         self.n = 0
 
+    def add(self, iview: int, icavity: int, shade: str='BOTH',
+                 nbeta: int=1, ngamma: int=1, dislin: float=0.0, comment: str='') -> int:
+        """Creates a VIEW card"""
+        self.cards.append((iview, icavity, shade, nbeta, ngamma,
+                           dislin, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a VIEW card from ``BDF.add_card(...)``
@@ -2033,7 +2327,7 @@ class VIEW(VectorizedBaseCard):
                     #dislin=dislin, comment=comment)
 
         self.cards.append((iview, icavity, shade, nbeta, ngamma,
-                    dislin, comment))
+                           dislin, comment))
         self.n += 1
         return self.n - 1
 

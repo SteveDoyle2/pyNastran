@@ -180,7 +180,7 @@ class CFAST(Element):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -370,7 +370,7 @@ class PFAST(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for pid, diameter, (kt1, kt2, kt3), (kr1, kr2, kr3), mcid, mflag, mass, ge in zip_longest(
                 self.property_id, self.diameter, self.kt, self.kr,

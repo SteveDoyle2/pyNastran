@@ -68,7 +68,8 @@ class BaseCard:
 
     @abstractmethod
     def raw_fields(self):  # pragma: no cover
-        return []
+        raise RuntimeError()
+        #return []
 
     @abstractclassmethod
     def add_card(self, card, comment=''):  # pragma: no cover

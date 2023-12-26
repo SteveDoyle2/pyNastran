@@ -996,7 +996,8 @@ class CTRIAR(ShellElement):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         assert self.nodes.shape[1] == 3, self.nodes.shape
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -1899,7 +1900,8 @@ class CTRIA6(ShellElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         #remove_tflag = (
             #np.all(self.tflag == 0) and
             #np.all(np.isnan(self.T))

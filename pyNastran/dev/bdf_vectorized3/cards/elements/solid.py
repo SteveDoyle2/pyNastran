@@ -1062,7 +1062,8 @@ class PLSOLID(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1210,7 +1211,8 @@ class PSOLCZ(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1491,7 +1493,8 @@ class PCOMPS(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         for pid, cordm, psdir, sb, nb, tref, ge, ilayer in zip(self.property_id, self.coord_id,
                                                                self.psdir, self.sb, self.nb, self.tref, self.ge, self.ilayer):
@@ -1833,7 +1836,8 @@ class PCOMPLS(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1891,245 +1895,3 @@ class PCOMPLS(Property):
         print(self.material_id, self.model.matort.rho)
         rho = get_density_from_material(self.material_id, self.allowed_materials, debug=True)
         return rho
-
-class CHACBR(SolidElement):
-    def clear(self):
-        self.n = 0
-        self.nodes = np.zeros((0, 20), dtype='int32')
-        self.nnode_base = 8
-        self.nnode = 20
-
-    def add_card(self, card: BDFCard, comment: str='') -> int:
-        eid = integer(card, 1, 'eid')
-        pid = integer(card, 2, 'pid')
-        nids = [
-            integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
-            integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
-            integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
-            integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
-            integer_or_blank(card, 11, 'nid9', default=0),
-            integer_or_blank(card, 12, 'nid10', default=0),
-            integer_or_blank(card, 13, 'nid11', default=0),
-            integer_or_blank(card, 14, 'nid12', default=0),
-            0, # integer_or_blank(card, 15, 'nid13', default=0),
-            0, # integer_or_blank(card, 16, 'nid14', default=0),
-            0, # integer_or_blank(card, 17, 'nid15', default=0),
-            0, # integer_or_blank(card, 18, 'nid16', default=0),
-            integer_or_blank(card, 19, 'nid17', default=0),
-            integer_or_blank(card, 20, 'nid18', default=0),
-            integer_or_blank(card, 21, 'nid19', default=0),
-            integer_or_blank(card, 22, 'nid20', default=0),
-        ]
-        assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
-        self.n += 1
-        return self.n - 1
-
-    @Element.parse_cards_check
-    def parse_cards(self) -> None:
-        ncards = len(self.cards)
-        idtype = self.model.idtype
-        element_id = np.zeros(ncards, dtype=idtype)
-        property_id = np.zeros(ncards, dtype=idtype)
-        nodes = np.zeros((ncards, 20), dtype=idtype)
-        for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
-            element_id[icard] = eid
-            property_id[icard] = pid
-            nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
-
-    @property
-    def base_nodes(self) -> np.ndarray:
-        base_nodes = self.nodes[:, :8]
-        return base_nodes
-
-    @property
-    def midside_nodes(self) -> np.ndarray:
-        midside_nodes = self.nodes[:, 8:]
-        if midside_nodes.shape[1] == 0:
-            return midside_nodes
-        assert midside_nodes.shape[1] == 12, midside_nodes.shape
-        return midside_nodes
-
-    @property
-    def max_id(self) -> int:
-        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
-
-    @parse_element_check
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
-
-        base_nodes = self.base_nodes
-        midside_nodes = self.midside_nodes
-        assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
-
-        if midside_nodes.shape[1] == 0:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
-                msg = print_card(['CHACBR', eid, pid] + nodes.tolist())
-                bdf_file.write(msg)
-        else:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
-                msg = print_card(['CHACBR', eid, pid] + nodes.tolist())
-        return
-
-    def centroid(self) -> np.ndarray:
-        centroid = chexa_centroid(self)
-        return centroid
-
-    def center_of_mass(self) -> np.ndarray:
-        return self.centroid()
-
-    def volume(self) -> np.ndarray:
-        xyz = self.model.grid.xyz_cid0()
-        nid = self.model.grid.node_id
-        nodes = self.base_nodes
-
-        inode = np.searchsorted(nid, nodes)
-        n1 = xyz[inode[:, 0], :]
-        n2 = xyz[inode[:, 1], :]
-        n3 = xyz[inode[:, 2], :]
-        n4 = xyz[inode[:, 3], :]
-        n5 = xyz[inode[:, 4], :]
-        n6 = xyz[inode[:, 5], :]
-        n7 = xyz[inode[:, 6], :]
-        n8 = xyz[inode[:, 7], :]
-        volume = volume_chexa(n1, n2, n3, n4, n5, n6, n7, n8)
-        return volume
-
-    def mass(self) -> np.ndarray:
-        #material_id = get_material_from_property(self.property_id, self.allowed_properties)
-        #rho = get_density_from_property(self.property_id, self.allowed_properties)
-        #if rho.max() == 0. and rho.min() == 0.:
-        #return np.zeros(len(rho), rho.dtype)
-        #mass = rho * self.volume()
-        mass = np.zeros(len(self.element_id), dtype='float64')
-        return mass
-
-    def quality(self):
-        out = chexa_quality(self)
-        return out
-
-
-class CHACAB(SolidElement):
-    def clear(self):
-        self.n = 0
-        self.nodes = np.zeros((0, 20), dtype='int32')
-        self.nnode_base = 8
-        self.nnode = 20
-
-    def add_card(self, card: BDFCard, comment: str='') -> int:
-        eid = integer(card, 1, 'eid')
-        pid = integer(card, 2, 'pid')
-        nids = [
-            integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
-            integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
-            integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
-            integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
-            integer_or_blank(card, 11, 'nid9', default=0),
-            integer_or_blank(card, 12, 'nid10', default=0),
-            integer_or_blank(card, 13, 'nid11', default=0),
-            integer_or_blank(card, 14, 'nid12', default=0),
-            0, # integer_or_blank(card, 15, 'nid13', default=0),
-            0, # integer_or_blank(card, 16, 'nid14', default=0),
-            0, # integer_or_blank(card, 17, 'nid15', default=0),
-            0, # integer_or_blank(card, 18, 'nid16', default=0),
-            integer_or_blank(card, 19, 'nid17', default=0),
-            integer_or_blank(card, 20, 'nid18', default=0),
-            integer_or_blank(card, 21, 'nid19', default=0),
-            integer_or_blank(card, 22, 'nid20', default=0),
-        ]
-        assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
-        self.n += 1
-        return self.n - 1
-
-    @Element.parse_cards_check
-    def parse_cards(self) -> None:
-        ncards = len(self.cards)
-        idtype = self.model.idtype
-        element_id = np.zeros(ncards, dtype=idtype)
-        property_id = np.zeros(ncards, dtype=idtype)
-        nodes = np.zeros((ncards, 20), dtype=idtype)
-        for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
-            element_id[icard] = eid
-            property_id[icard] = pid
-            nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
-
-    @property
-    def base_nodes(self) -> np.ndarray:
-        base_nodes = self.nodes[:, :8]
-        return base_nodes
-
-    @property
-    def midside_nodes(self) -> np.ndarray:
-        midside_nodes = self.nodes[:, 8:]
-        if midside_nodes.shape[1] == 0:
-            return midside_nodes
-        assert midside_nodes.shape[1] == 12, midside_nodes.shape
-        return midside_nodes
-
-    @property
-    def max_id(self) -> int:
-        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
-
-    @parse_element_check
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
-
-        base_nodes = self.base_nodes
-        midside_nodes = self.midside_nodes
-        assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
-
-        if midside_nodes.shape[1] == 0:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
-                msg = print_card(['CHACAB', eid, pid] + nodes.tolist())
-                bdf_file.write(msg)
-        else:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
-                msg = print_card(['CHACAB', eid, pid] + nodes.tolist())
-                bdf_file.write(msg)
-        return
-
-    def centroid(self) -> np.ndarray:
-        centroid = chexa_centroid(self)
-        return centroid
-
-    def center_of_mass(self) -> np.ndarray:
-        return self.centroid()
-
-    def volume(self) -> np.ndarray:
-        xyz = self.model.grid.xyz_cid0()
-        nid = self.model.grid.node_id
-        nodes = self.base_nodes
-
-        inode = np.searchsorted(nid, nodes)
-        n1 = xyz[inode[:, 0], :]
-        n2 = xyz[inode[:, 1], :]
-        n3 = xyz[inode[:, 2], :]
-        n4 = xyz[inode[:, 3], :]
-        n5 = xyz[inode[:, 4], :]
-        n6 = xyz[inode[:, 5], :]
-        n7 = xyz[inode[:, 6], :]
-        n8 = xyz[inode[:, 7], :]
-        volume = volume_chexa(n1, n2, n3, n4, n5, n6, n7, n8)
-        return volume
-
-    def mass(self) -> np.ndarray:
-        #material_id = get_material_from_property(self.property_id, self.allowed_properties)
-        #rho = get_density_from_property(self.property_id, self.allowed_properties)
-        #if rho.max() == 0. and rho.min() == 0.:
-        #return np.zeros(len(rho), rho.dtype)
-        #mass = rho * self.volume()
-        mass = np.zeros(len(self.element_id), dtype='float64')
-        return mass
-
-    def quality(self):
-        out = chexa_quality(self)
-        return out

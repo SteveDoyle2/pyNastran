@@ -30,7 +30,7 @@ from .shell import (
     _check_shell_mass,
     NUMPY_INTS, NUMPY_FLOATS)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike

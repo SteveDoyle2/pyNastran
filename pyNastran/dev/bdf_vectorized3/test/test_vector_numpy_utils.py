@@ -3,8 +3,27 @@ import numpy as np
 from functools import partial
 from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter, searchsorted_filter_
 from pyNastran.dev.bdf_vectorized3.bdf_interface.fast_float_print import print_float_8, compare
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_float, array_default_float, array_default_float_nan)
 
 class TestNumpyExtensions(unittest.TestCase):
+    def test_array_default_float_nan(self):
+        myarray = np.array([1., 2., 3., np.nan])
+        out = array_default_float_nan(myarray, default=0., size=8, is_double=False)
+        assert np.array_equal(out, ['      1.', '      2.', '      3.', ''])
+
+        with self.assertRaises(RuntimeError):
+            out = array_float(myarray, size=8, is_double=False)
+
+        with self.assertRaises(RuntimeError):
+            out = array_default_float(myarray, size=8, is_double=False)
+
+        myarray2 = np.array([1., 2., 3.])
+        out2 = array_float(myarray2, size=8, is_double=False)
+        assert np.array_equal(out2, ['      1.', '      2.', '      3.'])
+        out2 = array_default_float(myarray2, size=8, is_double=False)
+        assert np.array_equal(out2, ['      1.', '      2.', '      3.'])
+
     def test_print_float_8(self):
         compare_print_float_8 = partial(compare, stop_on_error=True)
 

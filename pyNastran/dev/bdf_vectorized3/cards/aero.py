@@ -37,7 +37,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.femutils.utils import hstack_lists
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -230,7 +230,7 @@ class AECOMP(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.name) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         lists_ = array_str(self.lists, size=size).tolist()
 
@@ -340,7 +340,7 @@ class AECOMPL(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.name) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         labels_ = array_str(self.labels, size=size).tolist()
         for name, (ilabel0, ilabel1) in zip(self.name, self.ilabel):
@@ -1270,7 +1270,7 @@ class CAERO2(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1615,7 +1615,7 @@ class CAERO3(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -2040,7 +2040,7 @@ class CAERO4(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -2346,7 +2346,7 @@ class CAERO5(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -2749,7 +2749,7 @@ class CAERO7(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         cp_ = array_default_int(self.cp, default=0, size=size)
@@ -2934,7 +2934,7 @@ class PAERO1(PAERO):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         paero_ids = array_str(self.property_id, size=size)
         caero_body_ids = array_str(self.caero_body_id, size=size)
@@ -3167,7 +3167,7 @@ class PAERO2(PAERO):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         paero_ids = array_str(self.property_id, size=size)
         lrsbs = array_str(self.lrsb, size=size)
@@ -3349,7 +3349,7 @@ class PAERO3(PAERO):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         paero_ids = array_str(self.property_id, size=size)
         nboxes = array_str(self.nbox, size=size)
@@ -3566,7 +3566,7 @@ class PAERO4(PAERO):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         paero_ids = array_str(self.property_id, size=size)
         cla_ = array_str(self.cla, size=size)
@@ -3758,7 +3758,7 @@ class PAERO5(PAERO):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         paero_ids = array_str(self.property_id, size=size)
         lalpha_ = array_str(self.lalpha, size=size)
@@ -3925,7 +3925,7 @@ class AELIST(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aelist_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         elements_ = array_str(self.elements, size=size).tolist()
         for sid, (ielement0, ielement1) in zip(self.aelist_id, self.ielement):
@@ -4104,7 +4104,7 @@ class AELINK(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aelink_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         aelink_ids = array_str(self.aelink_id, size=size)
         for aelink_id, label, (icoeff0, icoeff1) in zip(aelink_ids, self.label, self.icoeff):
@@ -4243,7 +4243,7 @@ class AEFACT(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aefact_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, (ifraction0, ifraction1) in zip(self.aefact_id, self.ifraction):
             factors = self.fractions[ifraction0:ifraction1].tolist()
@@ -4408,7 +4408,7 @@ class FLFACT(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.flfact_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, (ifactor0, ifactor1) in zip(self.flfact_id, self.ifactor):
             factors = self.factors[ifactor0:ifactor1].tolist()
@@ -4617,7 +4617,7 @@ class SPLINE1(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spline_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
@@ -4903,7 +4903,7 @@ class SPLINE2(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spline_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
@@ -5246,7 +5246,7 @@ class SPLINE3(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spline_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
@@ -5467,7 +5467,7 @@ class SPLINE4(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spline_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
@@ -5676,7 +5676,7 @@ class SPLINE5(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spline_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         spline_ids = array_str(self.spline_id, size=size)
         caero_ids = array_str(self.caero_id, size=size)
@@ -5840,7 +5840,7 @@ class GUST(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.gust_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         gust_ids = array_str(self.gust_id, size=size)
         dload_ids = array_str(self.dload_id, size=size)
@@ -6088,7 +6088,7 @@ class FLUTTER(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.flutter_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         flutter_ids = array_str(self.flutter_id, size=size)
         densities = array_str(self.density_flfact_id, size=size)
@@ -6213,7 +6213,7 @@ class AESTAT(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aestat_id) == 0:
             return ''
-        #print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         aestat_ids = array_str(self.aestat_id, size=size)
         for aestat_id, label in zip(aestat_ids, self.label):
@@ -6340,7 +6340,7 @@ class AEPARM(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aeparm_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         aeparm_ids = array_str(self.aeparm_id, size=size)
         for aeparm_id, label, units in zip(aeparm_ids, self.label, self.units):
@@ -6587,7 +6587,7 @@ class AESURF(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aesurf_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         aesurf_id_ = array_str(self.aesurf_id, size=size)
         cid1_ = array_str(self.coord_id[:, 0], size=size)
@@ -6770,7 +6770,7 @@ class AESURFS(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.aesurfs_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         aesurfs_id_ = array_str(self.aesurfs_id, size=size)
 
@@ -6947,7 +6947,7 @@ class CSSCHD(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.csschd_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         csschd_id_ = array_str(self.csschd_id, size=size)
         aesurf_id_ = array_str(self.aesurf_id, size=size)
@@ -7115,7 +7115,7 @@ class DIVERG(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.diverg_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         diverg_ids = array_str(self.diverg_id, size=size)
         nroots = array_str(self.nroots, size=size)
@@ -7596,7 +7596,7 @@ class TRIM(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.trim_id) == 0:
             return ''
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         trim_ids = array_str(self.trim_id, size=size)
 

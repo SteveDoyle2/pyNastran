@@ -67,6 +67,9 @@ def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.nd
 def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
+    if np.any(np.isnan(ndarray)):
+        raise RuntimeError('nans found')
+
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -119,6 +122,9 @@ def array_default_float(ndarray: np.ndarray, default: float=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
+    if np.any(np.isnan(ndarray)):
+        raise RuntimeError('nans found')
+
     idefault = (ndarray == default)
     ivalue = ~idefault
     if size == 8:

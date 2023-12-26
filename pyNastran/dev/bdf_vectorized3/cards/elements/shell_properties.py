@@ -1385,7 +1385,8 @@ class PCOMP(CompositeProperty):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         assert self.failure_theory.dtype.name == 'str256', self.failure_theory.dtype.name
         for pid, nsm, shear_bonding, failure_theory, ge, tref, lam, z0, \
             nlayer, ilayer in zip_longest(self.property_id, self.nsm, self.shear_bonding,
@@ -1835,7 +1836,8 @@ class PCOMPG(CompositeProperty):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         property_id = array_str(self.property_id, size=size)
 
         nsms = array_default_float(self.nsm, default=0., size=size, is_double=False)
@@ -2018,7 +2020,8 @@ class PLPLANE(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         pids = array_str(self.property_id, size=size)
         mids = array_str(self.material_id, size=size)
         cids = array_str(self.coord_id, size=size)

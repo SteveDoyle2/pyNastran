@@ -837,10 +837,7 @@ class BGADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.bgadd_id) == 0:
             return
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()
         bgadd_ids = array_str(self.bgadd_id, size=size)
@@ -896,10 +893,7 @@ class BCTADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.bctadd_id) == 0:
             return
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()
         bctadd_ids = array_str(self.bctadd_id, size=size)
@@ -1645,6 +1639,7 @@ def bcbody_lines_to_card_rigid(lines: list[str]) -> tuple[BDFCard, BDFCard]:
 
         #print(line)
         if '*' in line:
+            #print(f'large {line!r}')
             # large field
             fields = _split_large_fields(line, iline)
 
@@ -1663,17 +1658,26 @@ def bcbody_lines_to_card_rigid(lines: list[str]) -> tuple[BDFCard, BDFCard]:
         else:
             # small field
             if ',' in line:
+                #print(f'comma {line!r}')
                 fields = line.split(',')[:9]
                 if iline > 0:
                     fields = fields[1:]
+
+                    if len(fields) < nfields_expected:
+                        nmissing = nfields_expected - len(fields)
+                        fields.extend([''] * nmissing)
+
+                    #print(f'  sline={fields}')
                     if fields[0].upper() == 'RIGID':
                         rigid_fields = fields
                         is_active_rigid = None
+                    continue
 
                 if len(fields) < nfields_expected:
                     nmissing = nfields_expected - len(fields)
                     fields.extend([''] * nmissing)
             else:
+                #print(f'small {line!r}')
                 if line[1:].strip().upper().startswith('RIGID'):
                     assert is_active_rigid is False, is_active_rigid
                     rigid_fields = _split_small_rigid_fields(line)
@@ -2048,10 +2052,11 @@ class BCBODY(VectorizedBaseCard):
             #PATCH3D entries to describe a rigid surface, then set NENT=3.
             # (Integer > 0; Default=1)
 
-            #word = string(rigid_card, 1, 'RIGID')
+            word = string(rigid_card, 1, 'RIGID')
+            assert word == 'RIGID', word
             cgid = integer_or_blank(rigid_card, 2, 'cgid', default=-1)  #  TODO: made up default
             nent = integer_or_blank(rigid_card, 3, 'nent', default=1)
-            rigid_body_name = string(rigid_card, 4, 'rigid_body_name')
+            rigid_body_name = string_or_blank(rigid_card, 4, 'rigid_body_name', default='dummy_name')
             #CGID NENT --- Rigid Body Name ---
         else:
             cgid = -1

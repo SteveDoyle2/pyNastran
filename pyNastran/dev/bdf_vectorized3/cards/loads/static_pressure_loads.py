@@ -158,7 +158,8 @@ class PLOAD(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        #print_card = get_print_card_8_16(size)
+        #print_card, size = get_print_card_size(size, self.max_id)
+
 
         load_ids = array_default_int(self.load_id, size=size)
         node_ids = array_default_int(self.node_id, default=0, size=size)
@@ -354,7 +355,8 @@ class PLOAD1(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> str:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
+
         load_ids = array_str(self.load_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         xs = array_float(self.x, size=size, is_double=is_double)
@@ -747,10 +749,6 @@ class PLOAD2(Load):
                    element_id=(eids, self.element_ids))
 
     @property
-    def is_small_field(self):
-        return max(self.load_id.max(), self.element_ids.max()) < 99_999_999
-
-    @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.element_ids.max())
 
@@ -758,11 +756,7 @@ class PLOAD2(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        #print_card = get_print_card_8_16(size)
-        if size == 8 and self.is_small_field:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for load_id, pressure, idim in zip(self.load_id, self.pressure, self.idim):
             idim0, idim1 = idim

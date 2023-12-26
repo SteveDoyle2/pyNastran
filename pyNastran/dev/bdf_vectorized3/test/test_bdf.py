@@ -97,7 +97,8 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_equivalence: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
-                      pickle_obj: bool=True, quiet: bool=False) -> list[str]:
+                      pickle_obj: bool=True,
+                      quiet: bool=False) -> list[str]:
     """
     Runs multiple BDFs
 
@@ -297,7 +298,7 @@ def run_bdf(folder: str, bdf_filename: str,
             version: Optional[str]=None,
             validate_case_control: bool=True,
             stop_on_failure: bool=True,
-            log=None, name: str=''):
+            log: Optional[SimpleLogger]=None, name: str=''):
     """
     Runs a single BDF
 
@@ -1502,7 +1503,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
              run_geom_check: bool=True,
              encoding: Optional[str]=None, debug: bool=False, quiet: bool=False,
              stop_on_failure: bool=True, validate_case_control: bool=True,
-             ierror: int=0, nerrors: int=100, log=None) -> BDFs:
+             ierror: int=0, nerrors: int=100, log: Optional[SimpleLogger]=None) -> BDFs:
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -1609,7 +1610,8 @@ def _assert_has_spc(subcase, fem: BDFv) -> bool:
 
 def _validate_case_control(fem: BDFs, p0: Any, sol_base: int,
                            subcase_keys: list[int],
-                           subcases: Any, unused_sol_200_map: Any,
+                           subcases: dict[int, Subcase],
+                           unused_sol_200_map: Any,
                            stop_on_failure: bool=True,
                            ierror: int=0, nerrors: int=100) -> int:
     if len(subcase_keys) > 1:
@@ -1673,8 +1675,8 @@ def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     ierror += 1
     return ierror
 
-def check_for_optional_param(keys: list[str], subcase: Any,
-                             msg: str, error: Any, log: Any,
+def check_for_optional_param(keys: list[str], subcase: Subcase,
+                             msg: str, error: Any, log: SimpleLogger,
                              ierror: int, nerrors: int) -> int:
     """one or more must be True"""
     if not any(subcase.has_parameter(*keys)):
@@ -1689,7 +1691,7 @@ def check_sol(sol: int,
               subcase: Subcase,
               allowed_sols: list[int],
               case_control_key: str,
-              log: Any, ierror: int, nerrors: int,
+              log: SimpleLogger, ierror: int, nerrors: int,
               require_sol: bool=True) -> int:
     """Checks that the solution is valid"""
     if allowed_sols is not None:
@@ -1904,7 +1906,7 @@ def check_case(sol: int,
     assert isinstance(ierror, int)
     return ierror
 
-def _check_static_aero_case(fem: BDFv, log: Any, sol: int,
+def _check_static_aero_case(fem: BDFv, log: SimpleLogger, sol: int,
                             subcase: Subcase,
                             ierror: int, nerrors: int) -> int:
     """checks that TRIM/DIVERG is valid"""
@@ -2018,7 +2020,7 @@ def _check_case_sol_200(sol: int,
                         fem2: BDFs,
                         p0: Any,
                         isubcase: int, subcases: int,
-                        log: Any):
+                        log: SimpleLogger):
     """
     helper method for ``check_case``
 
@@ -2354,7 +2356,7 @@ def _check_case_parameters(subcase: Subcase,
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
-        sdamp_sols = [110, 111, 112, 145, 146, 200]
+        sdamp_sols = {110, 111, 112, 145, 146, 200}
         if not sdamping_id in fem.tables_sdamping and fem.sol in sdamp_sols:
             msg = 'SDAMPING = %s; not in TABDMP1, but must since its SOL %i\n' % (
                 sdamping_id, fem.sol)
@@ -2386,6 +2388,7 @@ def _check_case_parameters(subcase: Subcase,
             if ic_val != 0:
                 log.debug(f'IC={ic_val}')
                 tic = fem.tic.slice_card_by_id(ic_val)
+                del tic
                 # TIC - SOL 109, 129, 601, 701 (structural/physical)
                 #
                 # TEMP/TEMPD - SOL 159
@@ -2402,7 +2405,7 @@ def _check_case_parameters(subcase: Subcase,
                 # the ID of a static analysis subcase (SOL 109 and 112). For
                 # the TZERO option, n is not used by the software, although a
                 # dummy value must be defined. (Integer>0)
-                if sol in [109, 129, 601, 701]:
+                if sol in {109, 129, 601, 701}:
                     raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
                 elif sol == 159:
                     fem.Load(ic_val)
@@ -2464,13 +2467,14 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
     """helper method for ``_check_case_parameters``"""
     log = fem.log
 
-    suport = None # fem.suport.slice_card_by_index([])
+    #suport = None # fem.suport.slice_card_by_index([])
     suport_id = 0
     if 'SUPORT1' in subcase:
         suport_id = subcase.get_parameter('SUPORT1')[0]
         suporti = fem.suport
         suport_ids = [0, suport_id] if 0 in suporti else [suport_id]
         suport = suporti.slice_card_by_id(suport_ids)
+        del suport
 
     if 'TRIM' in subcase:
         trim_id = subcase.get_parameter('TRIM')[0]
@@ -2497,9 +2501,9 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
             assert 'DIVERG' not in subcase, subcase
             #allowed_sols = [144, 200]
 
-    if 'DIVERG' in subcase and 0:
+    if 'DIVERG' in subcase:
         value = subcase.get_parameter('DIVERG')[0]
-        assert value in fem.divergs, 'value=%s\n divergs=%s\n subcase:\n%s' % (value, str(fem.divergs), str(subcase))
+        assert value in fem.diverg, 'value=%s\n divergs=\n%s\n subcase:\n%s' % (value, str(fem.diverg.write()), str(subcase))
         assert 'TRIM' not in subcase, subcase
         #allowed_sols = [144, 200]
 
@@ -2516,7 +2520,7 @@ def test_get_cards_by_card_types(model: BDFs) -> None:
     # setup to remove hackish cards
     card_types = list(model.card_count.keys())
     removed_cards = []
-    for card_type in ['ENDDATA', 'INCLUDE', 'JUNK']:
+    for card_type in {'ENDDATA', 'INCLUDE', 'JUNK'}:
         if card_type in model.card_count:
             removed_cards.append(card_type)
     for removed_card in removed_cards:

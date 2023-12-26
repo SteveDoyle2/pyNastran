@@ -172,14 +172,6 @@ class AddMethods():
         #self.model._type_to_id_map[aeros.type].append(key)
 
     # SOL 144 - static aero
-    def _add_diverg_object(self, diverg: DIVERG, allow_overwrites: bool=False) -> None:
-        """adds an DIVERG object"""
-        key = diverg.sid
-        if not allow_overwrites:
-            assert key not in self.model.divergs, 'DIVERG=%s  old=\n%snew=\n%s' % (key, self.model.divergs[key], diverg)
-        assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
-        self.model.divergs[key] = diverg
-        self.model._type_to_id_map[diverg.type].append(key)
 
     # SOL 145 - flutter
     def _add_mkaero_object(self, mkaero: Union[MKAERO1, MKAERO2]) -> None:

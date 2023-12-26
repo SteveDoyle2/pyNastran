@@ -639,6 +639,8 @@ class Writer:
         model.pcomps.write_file(bdf_file, size=size, is_double=is_double)
         model.pcompls.write_file(bdf_file, size=size, is_double=is_double)
 
+        # acoustic
+        model.pacbar.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_materials(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                          is_long_ids: Optional[bool]=None) -> None:

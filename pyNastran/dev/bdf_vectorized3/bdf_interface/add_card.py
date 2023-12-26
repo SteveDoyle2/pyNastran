@@ -18,6 +18,7 @@ from pyNastran.bdf.cards.dynamic import (
     FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, ROTORG, ROTORD)
 from pyNastran.bdf.cards.optimization import DOPTPRM
+from pyNastran.bdf.cards.bdf_tables import TABLEH1, TABLEHT
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -4955,9 +4956,10 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return load
 
-    def add_chbdyg(self, eid, surface_type, nodes,
-                   iview_front=0, iview_back=0,
-                   rad_mid_front=0, rad_mid_back=0, comment: str='') -> int:
+    def add_chbdyg(self, eid: int, surface_type: str, nodes: list[int],
+            iview_front: int=0, iview_back: int=0,
+            rad_mid_front: int=0, rad_mid_back: int=0,
+            comment: str='') -> int:
         """Creates a CHBDYG card"""
         elem = self.chbdyg.add(
             eid, surface_type, nodes,
@@ -4966,10 +4968,12 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return elem
 
-    def add_chbdyp(self, eid, pid, surface_type, g1, g2,
-                   g0=0, gmid=None, ce=0,
-                   iview_front=0, iview_back=0,
-                   rad_mid_front=0, rad_mid_back=0,
+    def add_chbdyp(self, eid: int, pid: int, surface_type: str,
+                   g1: int, g2: int,
+                   g0: int=0, gmid: int=0,
+                   ce: int=0,
+                   iview_front: int=0, iview_back: int=0,
+                   rad_mid_front: int=0, rad_mid_back: int=0,
                    e1=None, e2=None, e3=None,
                    comment: str='') -> int:
         """
@@ -5017,9 +5021,9 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return elem
 
-    def add_chbdye(self, eid, eid2, side,
-                   iview_front=0, iview_back=0,
-                   rad_mid_front=0, rad_mid_back=0,
+    def add_chbdye(self, eid: int, eid2: int, side: int,
+                   iview_front: int=0, iview_back: int=0,
+                   rad_mid_front: int=0, rad_mid_back: int=0,
                    comment: str='') -> int:
         """
         Creates a CHBDYE card
@@ -5051,7 +5055,10 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return elem
 
-    def add_phbdy(self, pid, af=None, d1=None, d2=None, comment: str='') -> int:
+    def add_phbdy(self, pid: int,
+                  area_factor: float=None,
+                  d1=None, d2=None,
+                  comment: str='') -> int:
         """
         Creates a PHBDY card
 
@@ -5061,7 +5068,7 @@ class AddThermal(BDFAttributes):
             element id
         pid : int
             property id
-        af : int
+        area_factor: float
             Area factor of the surface used only for CHBDYP element
             Must be {POINT, LINE, TUBE, ELCYL}
             TUBE : constant thickness of hollow tube
@@ -5072,10 +5079,13 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        prop = self.phbdy.add(pid, af=af, d1=d1, d2=d2, comment=comment)
+        prop = self.phbdy.add(pid, area_factor=area_factor,
+                              d1=d1, d2=d2, comment=comment)
         return prop
 
-    def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment: str='') -> int:
+    def add_conv(self, eid: int, pconid: int,
+                 ta: list[int], film_node: int=0, cntrlnd: int=0,
+                 comment: str='') -> int:
         """
         Creates a CONV card
 
@@ -5104,8 +5114,9 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return boundary_condition
 
-    def add_convm(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
-                  ta2=None, mdot=1.0,
+    def add_convm(self, eid: int, pconvm: int, ta1: int,
+                  film_node: int=0, cntmdot: int=0,
+                  ta2: int=0, mdot: float=1.0,
                   comment: str='') -> int:
         """
         Creates a CONVM card
@@ -5156,24 +5167,30 @@ class AddThermal(BDFAttributes):
         boundary_condition = self.radbc.add(nodamb, famb, cntrlnd, eids, comment=comment)
         return boundary_condition
 
-    def add_view(self, iview, icavity, shade='BOTH', nbeta=1, ngamma=1,
-                 dislin=0.0, comment: str='') -> int:
+    def add_view(self, iview: int, icavity: int, shade: str='BOTH',
+                 nbeta: int=1, ngamma: int=1, dislin: float=0.0, comment: str='') -> int:
         """Creates a VIEW card"""
         view = self.view.add(iview, icavity, shade=shade, nbeta=nbeta, ngamma=ngamma,
                              dislin=dislin, comment=comment)
         return view
 
-    def add_view3d(self, icavity, gitb=4, gips=4, cier=4, error_tol=0.1,
-                        zero_tol=1e-10, warp_tol=0.01, rad_check=3, comment: str='') -> int:
+    def add_view3d(self, icavity: int,
+                   gitb: int=4, gips: int=4, cier: int=4,
+                   error_tol: float=0.1, zero_tol: float=1e-10, warp_tol: float=0.01,
+                   rad_check: int=3, comment: str='') -> int:
         """Creates a VIEW3D card"""
         view3d = self.view3d.add(icavity, gitb=gitb, gips=gips, cier=cier,
                                  error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
                                  rad_check=rad_check, comment=comment)
         return view3d
 
-    def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
-                  chlen=None, gidin=None, ce=0,
-                  e1=None, e2=None, e3=None,
+    def add_pconv(self, pconid: int, mid: int=None,
+                  form: int=0,
+                  exponent_free_convection=0.0,
+                  free_convection_type: int=0,
+                  table_id: int=0,
+                  chlen: float=None, gidin: int=None, ce: int=0,
+                  e1: float=None, e2: float=None, e3: float=None,
                   comment: str='') -> int:
         """
         Creates a PCONV card
@@ -5211,13 +5228,17 @@ class AddThermal(BDFAttributes):
         """
         prop = self.pconv.add(
             pconid, mid=mid,
-            form=form, expf=expf, ftype=ftype,
-            tid=tid, chlen=chlen, gidin=gidin,
+            form=form, exponent_free_convection=exponent_free_convection,
+            free_convection_type=free_convection_type,
+            table_id=table_id, chlen=chlen, gidin=gidin,
             ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
         return prop
 
-    def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
-                   expr=0.0, exppi=0.0, exppo=0.0, comment: str='') -> int:
+    def add_pconvm(self, pconid: int, mid: int, coeff: float,
+                   form: int=0, flag: int=0,
+                   expr: float=0.0,
+                   exppi: float=0.0, exppo: float=0.0,
+                   comment: str='') -> int:
         """
         Creates a PCONVM card
 
@@ -5227,7 +5248,7 @@ class AddThermal(BDFAttributes):
             Convection property ID
         mid: int
             Material ID
-        coef: float
+        coeff: float
             Constant coefficient used for forced convection
         form: int; default=0
             Type of formula used for free convection
@@ -5247,7 +5268,7 @@ class AddThermal(BDFAttributes):
 
         """
         prop = self.pconvm.add(
-            pconid, mid, coef, form=form, flag=flag,
+            pconid, mid, coeff, form=form, flag=flag,
             expr=expr, exppi=exppi, exppo=exppo, comment=comment)
         return prop
 
