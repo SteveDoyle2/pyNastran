@@ -16,13 +16,14 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, get_print_card_8_16,
+    Element,
     parse_element_check,
     #hslice_by_idim, make_idim,
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int,
     array_default_float, array_float_nan,
+    array_default_float_nan,
     print_card_8_comment, print_card_16_comment,
     get_print_card_size,
 )
@@ -717,7 +718,7 @@ class CTRIA3(ShellElement):
         nodes_ = array_str(self.nodes, size=size)
         tflags = array_default_int(self.tflag, default=0, size=size)
         zoffsets = array_default_float(self.zoffset, default=0.0, size=size, is_double=False)
-        Ts = array_default_float(self.T, default=1.0, size=size, is_double=False)
+        Ts = array_default_float_nan(self.T, default=1.0, size=size, is_double=False)
         theta_mcids = combine_int_float_array(
             self.mcid, self.theta,
             int_default=-1, float_default=0.0, size=size, is_double=False)
@@ -2260,7 +2261,7 @@ class CQUAD8(ShellElement):
         #no_mcid = np.all(mcids == '')
         #CQUAD4    307517     105  247597  262585  262586  247591      -1     0.0
         zoffsets = array_default_float(self.zoffset, default=0., size=size, is_double=False)
-        Ts = array_default_float(self.T, default=0., size=size, is_double=False)
+        Ts = array_default_float_nan(self.T, default=0., size=size, is_double=False)
         theta_mcids = combine_int_float_array(
             self.mcid, self.theta,
             int_default=-1, float_default=0.0,
@@ -2727,7 +2728,7 @@ def combine_int_float_array(int_array,
                             float_default: float,
                             size: int=8, is_double: bool=False) -> np.ndarray:
     mcids = array_default_int(int_array, default=-1, size=size)
-    thetas = array_default_float(float_array, default=0.0, size=size)
+    thetas = array_default_float_nan(float_array, default=0.0, size=size)
     itheta = (mcids == '')
     mcids[itheta] = thetas[itheta]
     theta_mcids = mcids

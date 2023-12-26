@@ -25,9 +25,7 @@ from pyNastran.bdf.cards.aero.utils import (
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim, hslice_by_idim,
-    get_print_card_8_16,
-    parse_element_check,
-    parse_property_check,
+    parse_element_check, parse_property_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,

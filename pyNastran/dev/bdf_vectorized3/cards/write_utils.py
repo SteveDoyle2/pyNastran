@@ -22,12 +22,12 @@ def print_card_16_comment(fields: list[str]) -> str:
             msg += '\n$       '
     return msg.rstrip('$ \n') + '\n'
 
-def get_print_card(size: int, max_int: int) -> Callable:
-    if size == 16 or max_int > MAX_8_CHAR_INT:
-        print_card = print_card_16
-    else:
-        print_card = print_card_8
-    return print_card
+#def get_print_card(size: int, max_int: int) -> Callable:
+    #if size == 16 or max_int > MAX_8_CHAR_INT:
+        #print_card = print_card_16
+    #else:
+        #print_card = print_card_8
+    #return print_card
 
 def update_field_size(max_int: int, size: int) -> int:
     if max_int > MAX_8_CHAR_INT:
@@ -64,10 +64,11 @@ def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.nd
     str_array[idefault] = ''
     return str_array
 
-def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
+def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False,
+                nan_check: bool=True) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
-    if np.any(np.isnan(ndarray)):
+    if nan_check and np.any(np.isnan(ndarray)):
         raise RuntimeError('nans found')
 
     if size == 8:
@@ -180,10 +181,11 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
     return str_array
 
 def array_default_floats(ndarray: np.ndarray, defaults: np.ndarray,
-                         size: int=8, is_double: float=False) -> np.ndarray:
+                         size: int=8, is_double: float=False,
+                         nan_check: bool=True) -> np.ndarray:
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
-    values_str = array_float(ndarray, size=size, is_double=is_double)
-    defaults_str = array_float(defaults, size=size, is_double=is_double)
+    values_str = array_float(ndarray, size=size, is_double=is_double, nan_check=nan_check)
+    defaults_str = array_float(defaults, size=size, is_double=is_double, nan_check=True)
     idefault = (values_str == defaults_str)
     values_str[idefault] = ''
     return values_str

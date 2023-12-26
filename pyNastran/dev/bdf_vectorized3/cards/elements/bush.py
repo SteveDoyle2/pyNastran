@@ -15,8 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, get_print_card_8_16,
-    parse_element_check, parse_property_check)
+    Element, Property, parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str,
     array_default_int, array_default_float, array_float_nan)

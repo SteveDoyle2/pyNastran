@@ -14,8 +14,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     interpret_value)
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default # , print_card_8
+#from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
@@ -23,11 +23,13 @@ from pyNastran.bdf.cards.optimization import build_table_lines, parse_table_fiel
 from pyNastran.bdf.cards.base_card import expand_thru_by
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, make_idim, get_print_card_8_16,
+    VectorizedBaseCard, make_idim,
     #hslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_float, array_default_int, array_default_float, array_default_str, array_float_nan)
+    array_str, array_float, array_default_int,
+    array_default_float, array_default_str, array_float_nan,
+    get_print_card_size,)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 
@@ -1741,7 +1743,7 @@ class DRESP2(VectorizedBaseCard):
 
         c1s = array_float(self.c1, size=size, is_double=False)
         c2s = array_float(self.c2, size=size, is_double=False)
-        c3s = array_float(self.c3, size=size, is_double=False)
+        c3s = array_float_nan(self.c3, size=size, is_double=False)
         for (dresp_id, label, deqatn_id, deqatn_str,
              region, method, c1, c2, c3, iparam) in zip_longest(
             dresp_ids, self.label,
@@ -2756,7 +2758,7 @@ class DVMREL1(VectorizedBaseCard):
         material_ids = array_str(self.material_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
 
-        mp_mins = array_float(self.mp_min, size=size)
+        mp_mins = array_float_nan(self.mp_min, size=size)
         mp_maxs = array_default_float(self.mp_max, default=1e20, size=size)
         c0s = array_default_float(self.c0, default=0., size=size)
 
@@ -3063,7 +3065,7 @@ class DVMREL2(VectorizedBaseCard):
         desvar_ids = array_str(self.desvar_ids, size=size)
         deqatn_ids = array_str(self.deqatn_id, size=size)
 
-        mp_mins = array_float(self.mp_min, size=size)
+        mp_mins = array_float_nan(self.mp_min, size=size)
         mp_maxs = array_default_float(self.mp_max, default=1e20, size=size)
 
         for dvmrel_id, mid, mat_type, mp_name, \
@@ -3322,7 +3324,7 @@ class DVCREL1(VectorizedBaseCard):
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
-        cp_mins = array_float(self.cp_min, size=size)
+        cp_mins = array_float_nan(self.cp_min, size=size)
         cp_maxs = array_default_float(self.cp_max, default=1e20, size=size)
         c0s = array_default_float(self.c0, default=0., size=size)
 

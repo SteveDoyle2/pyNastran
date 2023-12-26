@@ -2912,7 +2912,8 @@ def array_int_float(delay_int: np.ndarray,
                     delay_float: np.ndarray,
                     size: int=8, is_double: bool=False) -> np.ndarray:
     delay_ids = array_str(delay_int, size=size)
-    delay_floats = array_float(delay_float, size=size, is_double=is_double)
+    delay_floats = array_float(delay_float, size=size, is_double=is_double,
+                               nan_check=False)
     idelay_int = (delay_int > 0)
     delay_floats[idelay_int] = delay_ids[idelay_int]
     return delay_floats

@@ -7,8 +7,7 @@ from pyNastran.utils.numpy_utils import cast_ints # integer_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
-    parse_element_check, get_print_card_8_16,
-    remove_unused_primary)
+    parse_element_check, remove_unused_primary)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, blank,
     integer_or_blank, double_or_blank,

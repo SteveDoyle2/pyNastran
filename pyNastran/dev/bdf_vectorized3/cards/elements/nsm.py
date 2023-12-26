@@ -14,8 +14,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_string,
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16, hslice_by_idim, make_idim, VectorizedBaseCard
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float # , array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim, VectorizedBaseCard
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, get_print_card_size)  # , array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -469,6 +470,7 @@ class NSML1(NSM1i):
             list_fields = ['NSML1', nsm_id, nsm_type, value, ] + ids
             bdf_file.write(print_card(list_fields))
         return
+
 
 class NSM(NSMi):
     def write_file(self, bdf_file: TextIOLike,

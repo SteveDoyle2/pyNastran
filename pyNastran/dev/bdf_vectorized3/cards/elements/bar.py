@@ -23,8 +23,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim,
-    searchsorted_filter, get_print_card_8_16,
-    parse_element_check, parse_property_check)
+    searchsorted_filter, parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
     line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
     e_g_nu_from_property_id,

@@ -12,8 +12,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, parse_element_check, get_print_card_8_16)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
+    Element, parse_element_check)
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, array_default_int,
+    get_print_card_size)
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 #from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 if TYPE_CHECKING:  # pragma: no cover

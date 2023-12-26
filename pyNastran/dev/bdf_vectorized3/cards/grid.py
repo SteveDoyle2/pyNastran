@@ -18,8 +18,8 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank,
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, sort_duplicates #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, get_print_card_size, update_field_size
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, sort_duplicates
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card_size, update_field_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 from pyNastran.femutils.coord_transforms import (
@@ -112,7 +112,7 @@ class XPOINT(VectorizedBaseCard):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         assert self.ids.min() > 0, self.ids[self.ids <= 0]
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #node_id = array_str(self.node_id, size=8)
         lists_fields = compress_xpoints(self.type, self.ids)
@@ -922,7 +922,7 @@ class POINT(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         point_ids = array_str(self.point_id, size=size)
         cps = array_default_int(self.cp, default=0, size=size)

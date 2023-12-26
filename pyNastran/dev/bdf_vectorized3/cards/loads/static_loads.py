@@ -27,11 +27,10 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
     parse_load_check, remove_unused_duplicate,
     remove_unused_primary,
-    #get_print_card_8_16,
     ) # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int,
-    get_print_card_size)
+    array_float_nan, get_print_card_size)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -2936,7 +2935,7 @@ class RFORCE1(Load):
         cids = array_default_int(self.coord_id, default=0, size=size)
         methods = array_default_int(self.method, default=1, size=size)
         mbs = array_default_int(self.main_bulk, default=0, size=size)
-        r123s = array_float(self.r, size=size, is_double=is_double).tolist()
+        r123s = array_float_nan(self.r, size=size, is_double=is_double).tolist()
         group_ids = array_default_int(self.group_id, default=0, size=size)
         for sid, nid, cid, scale, r123, method, racc, mb, group_id in zip_longest(
             load_ids, nids, cids, self.scale, r123s, methods, self.racc, mbs, group_ids):

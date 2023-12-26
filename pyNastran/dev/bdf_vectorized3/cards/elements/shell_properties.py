@@ -19,15 +19,15 @@ from pyNastran.bdf.cards.properties.shell import map_failure_theory_int
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Property, get_print_card_8_16,
+    Property,
     hslice_by_idim, make_idim, searchsorted_filter,
     parse_property_check,
-    vslice_by_idim,
+    #vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str,
     array_default_int, array_default_float,
-    get_print_card,
+    get_print_card_size,
     #print_card_8_comment, print_card_16_comment,
 )
 from .utils import get_density_from_material # , expanded_mass_material_id
@@ -264,8 +264,7 @@ class PSHELL(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.property_id.max(), self.material_id.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for pid, mids, t, twelveIt3, tst, nsm, z in zip_longest(self.property_id, self.material_id, self.t,
                                                                 self.twelveIt3, self.tst, self.nsm, self.z):
@@ -651,7 +650,7 @@ class PAABSF(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for pid, table_real, table_imag, s, a, b, k, rhoc in zip_longest(self.property_id,
                                                                          self.table_reactance_real, self.table_reactance_real,
@@ -2357,8 +2356,7 @@ class PSHLN1(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.property_id.max(), self.material_id.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -2694,8 +2692,7 @@ class PSHLN2(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.property_id.max(), self.material_id.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         directs = array_default_int(self.direct, default=1, size=size)

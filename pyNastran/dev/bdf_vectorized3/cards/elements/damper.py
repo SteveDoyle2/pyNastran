@@ -1673,10 +1673,10 @@ class PGAP(Property):
 
         kas = array_default_float(self.ka, default=1e8, size=size, is_double=is_double)
         kb_default = 1e-14 * self.ka
-        kbs = array_default_floats(self.kb, kb_default, size=size, is_double=is_double)
+        kbs = array_default_floats(self.kb, kb_default, size=size, is_double=is_double, nan_check=False)
 
         kt_default = self.mu1 * self.ka
-        kts = array_default_floats(self.kt, kt_default, size=size, is_double=is_double)
+        kts = array_default_floats(self.kt, kt_default, size=size, is_double=is_double, nan_check=False)
 
         for pid, u0, f0, ka, kb, kt, mu1, mu2, \
             tmax, mar, trmin in zip_longest(property_ids, u0s, f0s, kas, kbs, kts,

@@ -18,12 +18,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, get_print_card_8_16,
+    Element, Property,
     #hslice_by_idim, make_idim, searchsorted_filter,
     parse_element_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
-    array_default_int, array_default_float, array_float_nan)
+    array_default_int, array_default_float, array_float_nan,
+    get_print_card_size)
 from .utils import get_density_from_material
 from .shell import (
     tri_centroid, tri_area, # tri_area_centroid_normal, tri_quality_xyz, tri_quality_nodes,
@@ -574,7 +575,6 @@ class PPLANE(Property):
                    write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
             return
-
         print_card, size = get_print_card_size(size, self.max_id)
 
         pids = array_str(self.property_id, size=size)

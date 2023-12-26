@@ -1086,6 +1086,7 @@ class Writer:
             model.bconp.write_file(bdf_file, size=size, is_double=is_double)
             model.blseg.write_file(bdf_file, size=size, is_double=is_double)
             model.bfric.write_file(bdf_file, size=size, is_double=is_double)
+            model.boutput.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

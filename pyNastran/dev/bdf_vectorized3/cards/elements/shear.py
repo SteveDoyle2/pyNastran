@@ -4,8 +4,8 @@ from itertools import zip_longest
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
+#from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, searchsorted_filter,
     parse_element_check, parse_property_check,
@@ -14,11 +14,11 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
     integer_or_blank, double_or_blank)
-from pyNastran.bdf.cards.elements.bars import set_blank_if_default
+#from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_float,
-    get_print_card
-)
+    array_str, # array_default_int,
+    array_default_float,
+    get_print_card_size)
 from .utils import get_density_from_material
 from .shell import quad_area, quad_centroid
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -27,7 +27,7 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class CSHEAR(Element):
@@ -299,7 +299,7 @@ class PSHEAR(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)

@@ -12,9 +12,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, get_print_card_8_16,
+    Element, Property,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .utils import get_mass_from_property
@@ -158,7 +159,6 @@ class CMASS1(Element):
                    missing,
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
-        s = 1
 
     def centroid(self) -> np.ndarray:
         #ispoint = np.where(self.components.ravel() == 0)[0]

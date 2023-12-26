@@ -898,6 +898,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BGADD',  ## bgadds
             'BGSET',  ## bgset  - glue set (points to BSURF/BSURFS/BCPROP/BCPROPS)
             'BEDGE',
+            'BOUTPUT', # Output for Slideline Contact
 
             # not glue...
             'BCRPARA',  ## bcrpara
@@ -2306,8 +2307,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGC' : (EIGC, add_methods._add_cmethod_object),
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
 
-            # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BOUTPUT': (RuntimeCrash, None),
+            # 'BOLT', 'BOLTFOR', 'BOLTFRC',
             'BOLT': (Crash, None),
             'BOLTFOR': (Crash, None),
             'BOLTFRC': (RuntimeCrash, None),
@@ -2666,6 +2666,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
             'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),
             'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card),
+            'BOUTPUT': partial(self._prepare_card_by_method, self.boutput.add_card),  # output for sideline contact
 
             # nx glue contact
             'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),

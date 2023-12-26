@@ -107,6 +107,7 @@ from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BGSET, BCTSET, BGADD, BCTADD,
     BCONP, BFRIC, BLSEG, BCRPARA, BEDGE,
     BCBODY, BCBODY1,
+    BOUTPUT,
 )
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.rotor import (
@@ -257,6 +258,7 @@ class BDFAttributes:
         self.bsurfs = BSURFS(self)    # source/target_id to solid eid
         self.bcprop = BCPROP(self)    # source/target_id to shell pid
         self.bcprops = BCPROPS(self)  # source/target_id to solid pid
+        self.boutput = BOUTPUT(self)   # output for sideline contact
         self.blseg = BLSEG(self)
         self.bcrpara = BCRPARA(self)
         self.bedge = BEDGE(self)
@@ -1092,7 +1094,7 @@ class BDFAttributes:
 
     @property
     def contact_cards(self) -> list[Any]:
-        return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops,
+        return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops, self.boutput,
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
                 self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge,

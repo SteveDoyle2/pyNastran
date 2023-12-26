@@ -15,10 +15,11 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, make_idim, hslice_by_idim, get_print_card_8_16,
+    Element, Property, make_idim, hslice_by_idim,
     parse_element_check, parse_property_check, ) # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    get_print_card, array_str, array_default_str, array_default_int, array_float_nan)
+    array_str, array_default_str, array_default_int, array_float_nan,
+    get_print_card_size, )
 from .utils import get_density_from_material, get_density_from_property, basic_mass_material_id
 
 from .solid_quality import chexa_quality, tetra_quality, penta_quality, pyram_quality, Quality
@@ -210,10 +211,7 @@ class CTETRA(SolidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.element_id.max(),
-                      self.property_id.max(),
-                      self.nodes.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
@@ -423,10 +421,7 @@ class SolidPenta(SolidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.element_id.max(),
-                      self.property_id.max(),
-                      self.nodes.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
@@ -561,10 +556,7 @@ class CPYRAM(SolidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.element_id.max(),
-                      self.property_id.max(),
-                      self.nodes.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
@@ -686,7 +678,7 @@ class SolidHex(SolidElement):
         max_int = max(self.element_id.max(),
                       self.property_id.max(),
                       self.nodes.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
@@ -943,7 +935,7 @@ class PSOLID(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)

@@ -31,8 +31,8 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
     array_str, array_float,
     array_default_int, array_default_float,
-    get_print_card_size)
-from pyNastran.dev.bdf_vectorized3.utils import print_card_8
+    array_float_nan, get_print_card_size)
+#from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
@@ -310,6 +310,12 @@ class BCPROPS(PropertySet):
                    missing,
                    property_id=(pid, self.property_id),)
 
+class BOUTPUT(ElementPropertyNodeSet):
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   property_id=(nid, self.node_id),)
 
 class NodeSet(ElementPropertyNodeSet):
     @property
@@ -1204,7 +1210,7 @@ class BFRIC(VectorizedBaseCard):
             return
         print_card, size = get_print_card_size(size, self.max_id)
         friction_ids = array_str(self.friction_id, size=size)
-        fstiffs = array_float(self.fstiff, size=size, is_double=False)
+        fstiffs = array_float_nan(self.fstiff, size=size, is_double=False)
         mu1s = array_float(self.mu1, size=size, is_double=False)
 
         for friction_id, fstiff, mu1 in zip(friction_ids, fstiffs, mu1s):

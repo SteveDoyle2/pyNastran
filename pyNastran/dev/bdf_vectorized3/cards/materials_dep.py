@@ -12,8 +12,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int, array_float, array_float_nan
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    get_print_card_size, array_str, array_default_int, array_float_nan)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -221,7 +222,7 @@ class MATT1(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         e_table = array_default_int(self.e_table, default=0, size=size)
@@ -469,14 +470,14 @@ class MATS1(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         table_id = array_str(self.table_id, size=size)
-        hardening_slope = array_float(self.hardening_slope, size=size)
+        hardening_slope = array_float_nan(self.hardening_slope, size=size)
         yf = array_str(self.yf, size=size)
         hr = array_str(self.hr, size=size)
-        limit1 = array_float(self.limit1, size=size)
+        limit1 = array_float_nan(self.limit1, size=size)
         limit2 = array_float_nan(self.limit2, size=size)
 
         #tables = np.column_stack([self.e_table, self.g_table, self.nu_table, self.rho_table])
@@ -759,7 +760,7 @@ class MATT2(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         g11_table = array_default_int(self.g11_table, default=0, size=size)
@@ -1014,7 +1015,7 @@ class MATT3(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         ex_table = array_default_int(self.ex_table, default=0, size=size)
@@ -1203,7 +1204,7 @@ class MATT4(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         k_table = array_default_int(self.k_table, default=0, size=size)
@@ -1423,7 +1424,7 @@ class MATT5(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         kxx_table = array_default_int(self.kxx_table, default=0, size=size)
@@ -1699,7 +1700,7 @@ class MATT8(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         e1_table = array_default_int(self.e1_table, default=0, size=size)
@@ -2107,7 +2108,7 @@ class MATT9(Material):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
 

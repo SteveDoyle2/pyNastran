@@ -20,7 +20,6 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim, searchsorted_filter, # vslice_by_idim,
     parse_element_check, parse_property_check,
-    get_print_card_8_16
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid, e_g_nu_from_property_id
 from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector,
@@ -28,7 +27,8 @@ from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vecto
                   e_g_nu_from_isotropic_material)
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_float, array_default_str)
+    array_str, array_default_int, array_default_float, array_default_str,
+    array_default_float_nan, get_print_card_size,)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
@@ -3962,8 +3962,8 @@ class PBEND(Property):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-        ps = array_default_float(self.p, default=0., size=size, is_double=False)
-        rbs = array_default_float(self.rb, default=0., size=size, is_double=False)
+        ps = array_default_float_nan(self.p, default=0., size=size, is_double=False)
+        rbs = array_default_float_nan(self.rb, default=0., size=size, is_double=False)
         for (pid, mid, beam_type, nsm, rc, zc,
              # beam_type=1
              area, j, i1, i2, rb, theta_b,
