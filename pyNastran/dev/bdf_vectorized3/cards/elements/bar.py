@@ -32,8 +32,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.utils import (
     get_density_from_material, basic_mass_material_id)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_str, array_default_float,
-    get_print_card_size,
-)
+    array_default_float_nan, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
@@ -1122,7 +1121,7 @@ class PBAR(Property):
         ds = array_default_float(self.d, default=0.0, size=size)
         es = array_default_float(self.e, default=0.0, size=size)
         fs = array_default_float(self.f, default=0.0, size=size)
-        ks = array_default_float(self.k, default=1e8, size=size)
+        ks = array_default_float_nan(self.k, default=1e8, size=size)
         for pid, mid, A, I, j, nsm, c, d, e, f, k in zip(property_ids, material_ids,
                                                          areas, iis, js,
                                                          nsms,

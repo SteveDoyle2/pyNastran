@@ -408,10 +408,11 @@ def _load_h5_pbush1d(prop: PBUSH1D,
     id_tcu = data['IDTCU']
     id_tsud = data['IDTSUD']
     id_csud = data['IDCSUD']
-    shock_table = [shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
-                   id_tsu, id_tcu,
-                   id_ecs, id_tsud, id_csud,
-    ]
+    shock_table = np.column_stack([
+        shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
+        id_tsu, id_tcu,
+        id_ecs, id_tsud, id_csud,
+    ])
 
     # spring group
     #'TYPES', 'IDTS', 'IDCS', 'IDTDU1', 'IDCDU1',

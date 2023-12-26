@@ -60,7 +60,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CM
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
     CHBDYE, CHBDYP, CHBDYG,
-    CONV, PCONV, CONVM, PCONVM, PHBDY,
+    CONV, PCONV, CONVM, PCONVM, PHBDY)
+from pyNastran.dev.bdf_vectorized3.cards.elements.radiation import (
     RADCAV, RADLST, RADMTX,
     VIEW, VIEW3D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8

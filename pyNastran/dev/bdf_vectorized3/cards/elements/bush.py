@@ -1294,6 +1294,7 @@ class PBUSH1D(Property):
         #self.gener_idcdu = gener_idcdu
         #self.gener_idtdv = gener_idtdv
         #self.gener_idcdv = gener_idcdv
+        #assert isinstance(self.shock_table, np.ndarray), type(self.shock_table)
         self.n = len(property_id)
 
     def __apply_slice__(self, prop: PBUSH1D, i: np.ndarray) -> None:
