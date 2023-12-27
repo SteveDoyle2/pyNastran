@@ -664,16 +664,6 @@ class Material(VectorizedBaseCard):
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
 
-def parse_node_check(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if len(self.node_id) == 0:
-            if self.n == 0:
-                return
-            self.parse_cards()
-        return func(self, *args, **kwargs)
-    return wrapper
-
 def parse_check(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):

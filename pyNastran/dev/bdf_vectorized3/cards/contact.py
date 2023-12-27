@@ -9,7 +9,7 @@ import numpy as np
 from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thru,
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim)
+    VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim, parse_check)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, blank,
     integer_or_blank, double_or_blank, string_or_blank,
@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import lax_double_or_blank
 #from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
+#from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.contact import _get_bcbody_section_values
 
@@ -173,11 +173,10 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
             self, contact_id, self.sid, 'contact_id')
         return ncards_removed
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         set_to_ids = defaultdict(list)
@@ -534,11 +533,10 @@ class BGSET(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.glue_id.max(), self.source_ids.max(), self.target_ids.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         for glue_id, (isource0, isource1) in zip(self.glue_id, self.isource):
@@ -780,11 +778,10 @@ class BCTSET(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.contact_id.max(), self.source_ids.max(), self.target_ids.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         contact_ids = array_str(self.contact_id, size=size)
@@ -1065,11 +1062,10 @@ class BCONP(VectorizedBaseCard):
         return max(self.contact_id.max(), self.slave_id.max(),
                    self.master_id.max(), self.coord_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
         contact_ids = array_str(self.contact_id, size=size)
         slave_ids = array_str(self.slave_id, size=size)
@@ -1203,11 +1199,10 @@ class BFRIC(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.friction_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
         friction_ids = array_str(self.friction_id, size=size)
         fstiffs = array_float_nan(self.fstiff, size=size, is_double=False)
@@ -1416,11 +1411,10 @@ class BCRPARA(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.contact_region_id.max(), self.grid_point.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
         contact_ids = array_str(self.contact_region_id, size=size)
         offsets = array_float(self.offset, size=size, is_double=False)
@@ -1614,11 +1608,10 @@ class BEDGE(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.bedge_id.max(), self.element_id.max(), self.nodes.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
         bedge_ids = array_str(self.bedge_id, size=size).tolist()
         element_id_ = array_str(self.element_id, size=size).tolist()
@@ -2283,11 +2276,10 @@ class BCBODY(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.bcbody_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
         bcbody_ids = array_str(self.bcbody_id, size=size).tolist()
 

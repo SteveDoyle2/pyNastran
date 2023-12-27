@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, parse_node_check,
+    VectorizedBaseCard, parse_check,
     hslice_by_idim, make_idim, remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int)
@@ -242,7 +242,7 @@ class ABCOQSET(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -502,7 +502,7 @@ class SuperBCQSET(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -751,7 +751,7 @@ class RELEASE(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1063,7 +1063,7 @@ class SUPORT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1374,7 +1374,7 @@ class USET(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1490,12 +1490,10 @@ class RADSET(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.cavity_id.max()
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.cavity_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         ids = array_str(self.cavity_id, size=size).tolist()
@@ -1673,12 +1671,10 @@ class SET1(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.set_id.max()
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.set_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         set_ids = array_str(self.set_id, size=size)
@@ -1825,12 +1821,10 @@ class SET2(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.set_id.max()
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.set_id) == 0:
-            return
         asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
@@ -1995,12 +1989,10 @@ class SET3(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.set_id.max()
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.set_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         set_id = array_str(self.set_id, size=size).tolist()
@@ -2129,12 +2121,10 @@ class SET4(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.set_id.max(), self.property_ids.max())
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.set_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         set_id = array_str(self.set_id, size=size).tolist()
@@ -2269,12 +2259,10 @@ class SESET(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.seid.max(), self.node_id.max())
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.seid) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         seids = array_str(self.seid, size=size)

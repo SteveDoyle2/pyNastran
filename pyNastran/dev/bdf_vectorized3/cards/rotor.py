@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, parse_node_check,
+    VectorizedBaseCard, parse_check,
     hslice_by_idim, make_idim, remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int)
@@ -159,7 +159,7 @@ class ROTORG(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.rotor_id.max(), self.node_id.max())
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

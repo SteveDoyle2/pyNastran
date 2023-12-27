@@ -14,11 +14,14 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, _format_comment
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, components_or_blank,
     integer_or_string, blank)
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank, lax_double_or_blank
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_blank, lax_double_or_blank)
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, sort_duplicates
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, array_default_int)
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, parse_check, sort_duplicates)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card_size, update_field_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
@@ -565,7 +568,7 @@ class GRID(VectorizedBaseCard):
         coord_basic = self.cp.max() == 0 and self.cp.min() == 0 and self.cd.max() == 0 and self.cd.min() == 0
         return coord_basic
 
-    @parse_node_check
+    @parse_check
     def write(self, size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> str:
         stringio = StringIO()
@@ -581,7 +584,7 @@ class GRID(VectorizedBaseCard):
             self.cd.max(), )
         return max_int
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -594,7 +597,7 @@ class GRID(VectorizedBaseCard):
             self.write_file_16(bdf_file, write_card_header=write_card_header)
         return
 
-    @parse_node_check
+    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         coord_basic, extra_basic, is_basic = self._write_flags()
@@ -642,13 +645,13 @@ class GRID(VectorizedBaseCard):
         is_basic = coord_basic and extra_basic
         return coord_basic, extra_basic, is_basic
 
-    @parse_node_check
+    @parse_check
     def write_file_16(self, bdf_file: TextIOLike,
                       write_card_header: bool=False) -> None:
         return _write_grid_large(self, bdf_file, print_scientific_16,
                                  is_double=False, write_card_header=write_card_header)
 
-    @parse_node_check
+    @parse_check
     def write_file_double(self, bdf_file: TextIOLike,
                           write_card_header: bool=False) -> None:
         return _write_grid_large(self, bdf_file, print_scientific_double,

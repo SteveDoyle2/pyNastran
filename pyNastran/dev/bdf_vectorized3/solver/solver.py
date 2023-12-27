@@ -195,7 +195,7 @@ class Solver:
 
         log = model.log
         mpc_id, unused_options = subcase['MPC']
-w
+
         #print('mpc_id =', mpc_id)
 
         ieq = 0

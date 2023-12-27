@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, # parse_check,
+    VectorizedBaseCard, parse_check,
     make_idim, hslice_by_idim, )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, # array_default_float,
@@ -170,12 +170,10 @@ class RADCAV(VectorizedBaseCard):
         set_max = 0 if len(self.sets) == 0 else self.sets.max()
         return max(self.icavity.max(), set_max)
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.icavity) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         icavitys = array_str(self.icavity, size=size)
@@ -295,12 +293,10 @@ class RADLST(VectorizedBaseCard):
         eid_max = 0 if len(self.element_ids) == 0 else self.element_ids.max()
         return max(self.icavity.max(), eid_max)
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.icavity) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         icavitys = array_str(self.icavity, size=size)
@@ -411,12 +407,10 @@ class RADMTX(VectorizedBaseCard):
         #eid_max = 0 if len(self.element_ids) == 0 else self.element_ids.max()
         return self.icavity.max()
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.icavity) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         icavitys = array_str(self.icavity, size=size)
@@ -532,12 +526,10 @@ class VIEW(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.iview.max(), self.icavity.max())
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.icavity) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         iviews = array_str(self.iview, size=size)
@@ -664,12 +656,10 @@ class VIEW3D(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.icavity.max()
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.icavity) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         #iviews = array_str(self.iview, size=size)

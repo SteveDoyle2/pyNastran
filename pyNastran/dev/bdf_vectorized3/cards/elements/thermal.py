@@ -1112,12 +1112,10 @@ class PHBDY(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         property_ids = array_str(self.property_id, size=size)
@@ -1463,12 +1461,10 @@ class PCONV(VectorizedBaseCard):
         return max(self.pconv_id.max(), self.material_id.max(), self.table_id.max(),
                    self.grid_inlet.max())
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.pconv_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         #self.pconv_id[icard] = pconid
@@ -1851,12 +1847,10 @@ class PCONVM(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.pconvm_id.max(), self.material_id.max())
 
-    #@parse_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.pconvm_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         pconvm_ids = array_str(self.pconvm_id, size=size)

@@ -15,14 +15,14 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.dev.bdf_vectorized3.cards.base_card import remove_unused_primary, remove_unused_duplicate
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    remove_unused_primary, remove_unused_duplicate, parse_check)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
     array_str, array_default_int,
     get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
-from .grid import parse_node_check
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -1041,7 +1041,7 @@ class CommonSet(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.node_id.max()
 
-    @parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

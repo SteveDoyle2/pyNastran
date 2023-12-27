@@ -273,12 +273,10 @@ class BOLT(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.bolt_id.max(), self.element_ids.max())
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.bolt_id) == 0:
-            return
         asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
@@ -378,12 +376,10 @@ class BOLTFOR(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.bolt_id.max(), self.element_ids.max())
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.bolt_id) == 0:
-            return
         asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
@@ -514,12 +510,10 @@ class BOLTFRC(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.bolt_id.max(), self.bolt_ids.max())
 
-    #@parse_node_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.bolt_id) == 0:
-            return
         asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
