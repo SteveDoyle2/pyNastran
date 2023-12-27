@@ -128,11 +128,17 @@ def _load_h5_ptube(prop: PTUBE, property_id, data, domain_id) -> None:
     # dtype([('PID', '<i8'), ('MID', '<i8'), ('OD', '<f8'), ('T', '<f8'),
     #       ('NSM', '<f8'), ('DOMAIN_ID', '<i8')])
     #prop = model.ptube
+    nproperties = len(property_id)
     nsm = data['NSM']
     material_id = data['MID']
     t = data['T']
     diameter = data['OD']
-    prop._save(property_id, material_id, diameter, t, nsm)
+    assert diameter.ndim == 1, diameter.shape
+    diameter2 = np.column_stack([
+        diameter,
+        np.full(nproperties, np.nan, dtype=diameter.dtype)
+    ])
+    prop._save(property_id, material_id, diameter2, t, nsm)
     prop.domain_id = domain_id
 
 def _load_h5_pshear(prop: PSHEAR, property_id, data, domain_id) -> None:

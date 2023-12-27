@@ -830,14 +830,6 @@ class PTUBE(Property):
         self.n += 1
         return self.n - 1
 
-    def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
-        prop.property_id = self.property_id[i]
-        prop.diameter = self.diameter[i, :]
-        prop.t = self.t[i]
-        prop.nsm = self.nsm[i]
-        prop.material_id = self.material_id[i]
-        prop.n = len(i)
-
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
@@ -866,6 +858,17 @@ class PTUBE(Property):
         self.diameter = diameter
         self.t = t
         self.nsm = nsm
+        assert self.diameter.ndim == 2, self.diameter.shape
+
+    def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
+        assert self.diameter.ndim == 2, self.diameter.shape
+        prop.property_id = self.property_id[i]
+        prop.diameter = self.diameter[i, :]
+        prop.t = self.t[i]
+        prop.nsm = self.nsm[i]
+        prop.material_id = self.material_id[i]
+        prop.n = len(i)
+        assert prop.diameter.ndim == 2, prop.diameter.shape
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
@@ -904,33 +907,24 @@ class PTUBE(Property):
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)
 
-        if self.diameter.ndim == 1:
-            for pid, mid, OD1, t, nsm in zip_longest(property_id, material_id,
-                                                     self.diameter, self.t, self.nsm):
-                ts = set_blank_if_default(t, OD1 / 2.)
-                nsm = set_blank_if_default(nsm, 0.0)
-                list_fields = ['PTUBE', pid, mid, OD1, ts, nsm]
+        assert self.diameter.ndim == 2, self.diameter.shape
+        for pid, mid, diameter, t, nsm in zip_longest(property_id, material_id,
+                                                      self.diameter, self.t, self.nsm):
+            OD1, OD2 = diameter
+            ts = set_blank_if_default(t, OD1 / 2.)
+            nsm = set_blank_if_default(nsm, 0.0)
+            OD2s = set_blank_if_default(OD2, OD1)
+            list_fields = ['PTUBE', pid, mid, OD1, ts, nsm, OD2s]
 
-                bdf_file.write(print_card(list_fields))
-        else:
-            assert self.diameter.ndim == 2, self.diameter.shape
-            for pid, mid, diameter, t, nsm in zip_longest(property_id, material_id,
-                                                          self.diameter, self.t, self.nsm):
-                OD1, OD2 = diameter
-                ts = set_blank_if_default(t, OD1 / 2.)
-                nsm = set_blank_if_default(nsm, 0.0)
-                OD2s = set_blank_if_default(OD2, OD1)
-                list_fields = ['PTUBE', pid, mid, OD1, ts, nsm, OD2s]
-
-                bdf_file.write(print_card(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
     def area(self) -> np.ndarray:
         t1 = self.t.copy()
         inan_t1 = np.isnan(t1)
-        if self.diameter.ndim == 1:
-            t1[inan_t1] = self.diameter[inan_t1]
-            return _tube_area(t1, self.diameter[inan_t1])
+        #if self.diameter.ndim == 1:
+            #t1[inan_t1] = self.diameter[inan_t1]
+            #return _tube_area(t1, self.diameter[inan_t1])
 
         diameter = self.diameter.copy()
         Dout1 = diameter[:, 0]
@@ -993,8 +987,9 @@ class PTUBE(Property):
         return line_mid_mass_per_length(self.material_id, self.nsm, self.area(),
                                         self.allowed_materials)
 
-def _tube_area(t, Dout: np.ndarray) -> np.ndarray:
+def _tube_area(t: np.ndarray, Dout: np.ndarray) -> np.ndarray:
     """Gets the Area of Section 1/2 of the CTUBE."""
+    assert len(Dout) == len(t)
     A = np.zeros(len(t), dtype='float64')
     #Dout = self.diameter[:, 0]
     izero = np.where(t == 0.)[0]
