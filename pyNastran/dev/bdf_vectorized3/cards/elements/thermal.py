@@ -124,10 +124,18 @@ class BDYOR(BaseCard):
                      ce, e123, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['BDYOR', self.surface_type, self.iview_front, self.iview_back,
-                       self.rad_mid_front, self.rad_mid_back,
-                       self.pid, self.g0,
-                       self.ce] + self.e123
+        g0 = '' if self.g0 == -1 else self.g0
+        iview_front = '' if self.iview_front == 0 else self.iview_front
+        iview_back = '' if self.iview_back == 0 else self.iview_back
+        rad_mid_front = '' if self.rad_mid_front == 0 else self.rad_mid_front
+        rad_mid_back = '' if self.rad_mid_back == 0 else self.rad_mid_back
+        ce = '' if self.ce == 0 else self.ce
+
+        list_fields = ['BDYOR', self.surface_type,
+                       iview_front, iview_back,
+                       rad_mid_front, rad_mid_back, None,
+                       self.pid, g0,
+                       ce] + self.e123
         return list_fields
 
     def write(self, size: int=8):

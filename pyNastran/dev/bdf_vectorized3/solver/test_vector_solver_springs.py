@@ -103,6 +103,11 @@ class TestSolverSpring(unittest.TestCase):
         nid = 2
         mass = 1.
         model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
+        setup_modes_case_control(model)
+        sid = 103
+        nmodes = 2
+        model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
+                        maxset=None, shfscl=None, norm=None, options=None, values=None, comment='')
         model.sol = 103
         solver.run()
 
@@ -863,6 +868,30 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
         lines += extra_case_lines
     cc = CaseControlDeck(lines, log=model.log)
     model.sol = 101
+    model.case_control_deck = cc
+
+
+def setup_modes_case_control(model: BDF, extra_case_lines=None):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        #'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        #'OLOAD(PLOT,PRINT) = ALL',
+        #'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+        '  METHOD = 103',
+        #'  FREQUENCY = 100',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 103
     model.case_control_deck = cc
 
 

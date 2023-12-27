@@ -731,8 +731,9 @@ class Writer:
         model.uset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         model.set1.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        #bdf_file.write(model.set2.write(size=size))  #  faked
+        model.set2.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.set3.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.set4.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         model.seset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.sebset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)

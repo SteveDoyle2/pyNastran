@@ -1708,6 +1708,144 @@ class SET1(VectorizedBaseCard):
         return
 
 
+class SET2(VectorizedBaseCard):
+    _id_name = 'set_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.set_id = np.array([], dtype='int32')
+        self.desc = np.array([], dtype='|U5')  #  POINT
+        self.ids = np.array([], dtype='int32')
+        self.num_ids = np.array([], dtype='int32')
+
+    #def slice_card_by_set_id(self, ids: np.ndarray) -> SET1:
+        #assert self.n > 0, self.n
+        #assert len(self.set_id) > 0, self.set_id
+        #i = self.index(ids)
+        #cls_obj = self.slice_card_by_index(i)
+        #assert cls_obj.n > 0, cls_obj
+        #return cls_obj
+
+    #def index(self, set_id: np.ndarray) -> np.ndarray:
+        #assert len(self.set_id) > 0, self.set_id
+        #set_id = np.atleast_1d(np.asarray(set_id, dtype=self.set_id.dtype))
+        #i = np.searchsorted(self.set_id, set_id)
+        #return i
+
+    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> SET3:
+        #self.cards.append((sid, desc, ids, comment))
+        #self.n += 1
+        #return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        Adds a SET2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        set2_add
+        sid = integer(card, 1, 'sid')
+        desc = string(card, 2, 'desc')
+        ids = read_ids_thru(card, ifield0=3, base_str='ID%d')
+        #return SET3(sid, desc, ids, comment=comment)
+        self.cards.append((sid, desc, ids, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+
+        set_id = np.zeros(ncards, dtype='int32')
+        desc = np.zeros(ncards, dtype='|U5')  #  POINT
+        num_ids = np.zeros(ncards, dtype='int32')
+
+        all_ids = []
+        for icard, card in enumerate(self.cards):
+            sid, desci, idsi, comment = card
+            if desci == 'ELEM':
+                desci = 'ELEMENT'
+            elif desci == 'RBEIN':
+                desci = 'RBEin'
+            elif desci == 'RBEEX':
+                desci = 'RBEex'
+
+            set_id[icard] = sid
+            desc[icard] = desci
+            ids2 = split_set3_ids(idsi)
+            num_ids[icard] = len(ids2)
+            all_ids.extend(ids2)
+        ids = np.array(all_ids, dtype=idtype)
+        self._save(set_id, desc, num_ids, ids)
+        self.sort()
+        self.cards = []
+
+    def _save(self, set_id, desc, num_ids, ids):
+        if len(self.set_id) != 0:
+            set_id = np.hstack([self.set_id, set_id])
+            desc = np.hstack([self.desc, desc])
+            num_ids = np.hstack([self.num_ids, num_ids])
+            ids = np.hstack([self.ids, ids])
+        self.set_id = set_id
+        self.desc = desc
+        self.num_ids = num_ids
+        self.ids = ids
+        self.n = len(set_id)
+
+    def __apply_slice__(self, set_card: SET3, i: np.ndarray) -> None:
+        assert self.num_ids.sum() == len(self.ids)
+        set_card.n = len(i)
+        set_card.set_id = self.set_id[i]
+        set_card.desc = self.desc[i]
+
+        inid = self.inid # [i, :]
+        set_card.ids = hslice_by_idim(i, inid, self.ids)
+
+        set_card.num_ids = self.num_ids[i]
+        #assert isinstance(prop.ndim, np.ndarray), prop.ndim
+        #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def inid(self) -> np.ndarray:
+        return make_idim(self.n, self.num_ids)
+
+    @property
+    def max_id(self) -> int:
+        return self.set_id.max()
+
+    #@parse_node_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.set_id) == 0:
+            return
+        asdf
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        set_id = array_str(self.set_id, size=size).tolist()
+        ids_ = array_str(self.ids, size=size).tolist()
+
+        for sid, desc, inid in zip(set_id, self.desc, self.inid):
+            inid0, inid1 = inid
+            ids = ids_[inid0:inid1]
+
+            list_fields = ['SET3', sid, desc] + ids
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class SET3(VectorizedBaseCard):
     """
     Defines a list of grids, elements or points.
@@ -1883,6 +2021,146 @@ def split_set3_ids(idsi: list[int, str]) -> list[int]:
     else:
         ids2 = idsi
     return ids2
+
+
+class SET4(VectorizedBaseCard):
+    _id_name = 'set_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.set_id = np.array([], dtype='int32')
+        self.desc = np.array([], dtype='|U5')  #  POINT
+        self.ids = np.array([], dtype='int32')
+        self.num_ids = np.array([], dtype='int32')
+
+    #def slice_card_by_set_id(self, ids: np.ndarray) -> SET1:
+        #assert self.n > 0, self.n
+        #assert len(self.set_id) > 0, self.set_id
+        #i = self.index(ids)
+        #cls_obj = self.slice_card_by_index(i)
+        #assert cls_obj.n > 0, cls_obj
+        #return cls_obj
+
+    #def index(self, set_id: np.ndarray) -> np.ndarray:
+        #assert len(self.set_id) > 0, self.set_id
+        #set_id = np.atleast_1d(np.asarray(set_id, dtype=self.set_id.dtype))
+        #i = np.searchsorted(self.set_id, set_id)
+        #return i
+
+    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> SET3:
+        #self.cards.append((sid, desc, ids, comment))
+        #self.n += 1
+        #return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        Adds a SET4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        set4_add
+        sid = integer(card, 1, 'sid')
+        desc = string(card, 2, 'desc')
+        ids = read_ids_thru(card, ifield0=3, base_str='ID%d')
+        #return SET3(sid, desc, ids, comment=comment)
+        self.cards.append((sid, desc, ids, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+
+        set_id = np.zeros(ncards, dtype='int32')
+        desc = np.zeros(ncards, dtype='|U5')  #  POINT
+        num_ids = np.zeros(ncards, dtype='int32')
+
+        all_ids = []
+        for icard, card in enumerate(self.cards):
+            sid, desci, idsi, comment = card
+            if desci == 'ELEM':
+                desci = 'ELEMENT'
+            elif desci == 'RBEIN':
+                desci = 'RBEin'
+            elif desci == 'RBEEX':
+                desci = 'RBEex'
+
+            set_id[icard] = sid
+            desc[icard] = desci
+            ids2 = split_set3_ids(idsi)
+            num_ids[icard] = len(ids2)
+            all_ids.extend(ids2)
+        ids = np.array(all_ids, dtype=idtype)
+        self._save(set_id, desc, num_ids, ids)
+        self.sort()
+        self.cards = []
+
+    def _save(self, set_id, desc, num_ids, ids):
+        if len(self.set_id) != 0:
+            set_id = np.hstack([self.set_id, set_id])
+            desc = np.hstack([self.desc, desc])
+            num_ids = np.hstack([self.num_ids, num_ids])
+            ids = np.hstack([self.ids, ids])
+        self.set_id = set_id
+        self.desc = desc
+        self.num_ids = num_ids
+        self.ids = ids
+        self.n = len(set_id)
+
+    def __apply_slice__(self, set_card: SET3, i: np.ndarray) -> None:
+        assert self.num_ids.sum() == len(self.ids)
+        set_card.n = len(i)
+        set_card.set_id = self.set_id[i]
+        set_card.desc = self.desc[i]
+
+        inid = self.inid # [i, :]
+        set_card.ids = hslice_by_idim(i, inid, self.ids)
+
+        set_card.num_ids = self.num_ids[i]
+        #assert isinstance(prop.ndim, np.ndarray), prop.ndim
+        #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def inid(self) -> np.ndarray:
+        return make_idim(self.n, self.num_ids)
+
+    @property
+    def max_id(self) -> int:
+        return self.set_id.max()
+
+    #@parse_node_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.set_id) == 0:
+            return
+        asdf
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        set_id = array_str(self.set_id, size=size).tolist()
+        ids_ = array_str(self.ids, size=size).tolist()
+
+        for sid, desc, inid in zip(set_id, self.desc, self.inid):
+            inid0, inid1 = inid
+            ids = ids_[inid0:inid1]
+
+            list_fields = ['SET3', sid, desc] + ids
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 
 class SESET(VectorizedBaseCard):
     _id_name = 'seid'

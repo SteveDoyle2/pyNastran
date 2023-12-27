@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI,
 from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, OMIT, USET, SUPORT,
     SEBSET, SECSET, SEQSET, SESET, RELEASE,
-    SET1, SET3, RADSET) # , SET2
+    SET1, SET2, SET3, SET4, RADSET)
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -255,14 +255,14 @@ class BDFAttributes:
         self.pdampt = PDAMPT(self)
 
         # contact
-        self.bsurf = BSURF(self)      # source/target_id to shell eid
-        self.bsurfs = BSURFS(self)    # source/target_id to solid eid
-        self.bcprop = BCPROP(self)    # source/target_id to shell pid
-        self.bcprops = BCPROPS(self)  # source/target_id to solid pid
+        self.bsurf = BSURF(self)      # source/target_id to shell element ids
+        self.bsurfs = BSURFS(self)    # source/target_id to solid element ids
+        self.bcprop = BCPROP(self)    # source/target_id to shell property ids
+        self.bcprops = BCPROPS(self)  # source/target_id to solid property ids
         self.boutput = BOUTPUT(self)   # output for sideline contact
-        self.blseg = BLSEG(self)
+        self.blseg = BLSEG(self)       # glue/contact region by node ids
         self.bcrpara = BCRPARA(self)
-        self.bedge = BEDGE(self)
+        self.bedge = BEDGE(self)       #  contact region defined by edges
         self.bcbody = BCBODY(self)
         self.bcbody1 = BCBODY1(self)
         self.bctpara = {}
@@ -292,8 +292,9 @@ class BDFAttributes:
         self.release = RELEASE(self)
 
         self.set1 = SET1(self)
-        #self.set2 = SET2(self)
+        self.set2 = SET2(self)
         self.set3 = SET3(self)
+        self.set4 = SET4(self)
 
         self.nxstrats: dict[int, NXSTRAT] = {}
 
@@ -1011,8 +1012,8 @@ class BDFAttributes:
     def set_cards(self) -> list[Any]:
         """handles ASET/ASET1, ..."""
         sets = [
-            self.set1, # self.set2,
-            self.set3,
+            self.set1, self.set3,
+            self.set2, self.set4,
             self.aset, self.bset, self.cset, self.qset,
             self.omit, self.uset,
         ]

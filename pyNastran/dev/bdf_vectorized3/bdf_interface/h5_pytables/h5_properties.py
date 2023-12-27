@@ -82,7 +82,10 @@ def load_h5_property(model: BDF, input_group: Group):
         elif name == 'PCONV':
             prop = model.pconv
             _load_h5_pconv(prop, property_id, data, domain_id)
-        elif name in {'PAERO1', 'PBEND'}:
+        elif name in 'PAERO1':
+            prop = model.paero1
+            _load_h5_paero1(prop, property_id, data, domain_id)
+        elif name in {'PBEND'}:
             #print(f'skipping {name}')
             model.log.warning(f'skipping {name}')
             continue

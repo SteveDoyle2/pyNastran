@@ -30,7 +30,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 #from pyNastran.bdf.mesh_utils.loads import get_ndof
 
-#from .recover.static_force import recover_force_101
+from pyNastran.dev.bdf_vectorized3.solver.recover.static_force import recover_force_101
 #from .recover.static_stress import recover_stress_101
 #from .recover.static_strain import recover_strain_101
 #from .recover.strain_energy import recover_strain_energy_101
@@ -797,12 +797,13 @@ class Solver:
         λ^2 = [M]^-1[K]
         [A][X] = [X]λ^2
         """
-        self.log.debug(f'run_sol_101')
+        self.log.debug(f'run_sol_103 (modes)')
+        model = self.model
+        assert len(model.methods), 'SOL 103 (modes) requires a METHOD and a EIGR/EIGRL card'
         end_options = [
             'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
             'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
         ]
-        model = self.model
         op2 = self.op2
         #log = model.log
         #write_f06 = True

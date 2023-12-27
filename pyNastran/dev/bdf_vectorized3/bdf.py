@@ -53,6 +53,7 @@ from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 
 #-------------------------------
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
@@ -129,7 +130,6 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
     #CSUPER, CSUPEXT,
 #)
 #from .cards.bdf_sets import (
-    #SET2,
     #SEUSET, SEUSET1
     #SEQSEP
 #)
@@ -797,7 +797,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # sets
             'SET1', 'SET3',  ## sets
-            'SET2',
+            'SET2', 'SET4',  # TODO: buggy
 
             'ASET', 'ASET1',  ## aset
             'OMIT', 'OMIT1',  ## omit
@@ -2350,8 +2350,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # sets
             'SET1': partial(self._prepare_card, self.set1),
-            #'SET2': partial(self._prepare_card, self.set2),
+            'SET2': partial(self._prepare_card, self.set2),
             'SET3': partial(self._prepare_card, self.set3),
+            'SET4': partial(self._prepare_card, self.set4),
 
             # spring
             'CELAS1' : partial(self._prepare_card, self.celas1),
@@ -2662,15 +2663,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'ROTORG' : partial(self._prepare_card_by_method, self.rotorg.add_card),
 
             # nx-contact
-            'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),
-            'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
-            'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),
-            'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card),
+            'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),     # shell contact by element id
+            'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),   # solid contact by element id
+            'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),   # shell contact by property id
+            'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card), # solid contact by property id
             'BOUTPUT': partial(self._prepare_card_by_method, self.boutput.add_card),  # output for sideline contact
 
             # nx glue contact
-            'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),
-            'BGADD' : partial(self._prepare_card_by_method, self.bgadd.add_card),
+            'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),     # glue set
+            'BGADD' : partial(self._prepare_card_by_method, self.bgadd.add_card),     # glue add set
             'BEDGE' : partial(self._prepare_card, self.bedge),
 
             # nx general contact
@@ -4661,7 +4662,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             elif isinstance(card, dict):
                 card_counti = defaultdict(int)
                 for cardi in card.values():
-                    card_counti[cardi.type] += 1
+                    #if isinstance(cardi, VectorizedBaseCard):
+                        #card_counti[cardi.type] += 1
+                    if isinstance(cardi, list):
+                        for cardii in cardi:
+                            card_counti[cardii.type] += 1
+                    else:
+                        card_counti[cardi.type] += 1
                 card_counti = dict(card_counti)
                 for name, counti in sorted(card_count.items()):
                     card_count[name] = counti
@@ -4782,12 +4789,8 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
-            #'add_AELIST', 'add_AEPARM',
-            #'add_DIVERG',
-            #'add_FLFACT', ,
-            #'add_GUST', 'add_NLPARM', 'add_NLPCI',
-            #'add_PARAM', 'add_PHBDY',
-            #'add_SET', 'add_SEUSET',
+            #'add_NLPARM', 'add_NLPCI',
+            #'add_PARAM',',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
             #'add_convection_property', 'add_creep_material',

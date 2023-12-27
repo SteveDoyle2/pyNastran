@@ -12,7 +12,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR
     from pyNastran.dev.bdf_vectorized3.cards.elements.bar import CBAR
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM
-    from pyNastran.dev.bdf_vectorized3.cards.elements.shell import CQUAD4
+    from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
+        CQUAD4, CQUAD8, CQUADR, CQUAD,
+        CTRIA3, CTRIA6, CTRIAR)
     from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from tables import Group
@@ -85,31 +87,31 @@ def load_h5_element(model: BDF, input_group: Group):
             #elem.write()
         elif element_name in 'CELAS1':
             elem = model.celas1
-            read_celas1_cdamp1(name, data, elem)
+            _read_celas1_cdamp1(name, data, elem)
         elif element_name == 'CELAS2':
             elem = model.celas2
-            read_celas2(name, data, elem)
+            _read_celas2(name, data, elem)
         elif element_name == 'CELAS3':
             elem = model.celas3
-            read_celas3_cdamp3(name, data, elem)
+            _read_celas3_cdamp3(name, data, elem)
         elif element_name == 'CELAS4':
             elem = model.celas4
-            read_celas4(name, data, elem)
+            _read_celas4(name, data, elem)
         elif element_name == 'CDAMP1':
             elem = model.cdamp1
-            read_celas1_cdamp1(name, data, elem)
+            _read_celas1_cdamp1(name, data, elem)
         elif element_name == 'CDAMP2':
             elem = model.cdamp2
-            read_cdamp2(name, data, elem)
+            _read_cdamp2(name, data, elem)
         elif element_name == 'CDAMP3':
             elem = model.cdamp3
-            read_celas3_cdamp3(name, data, elem)
+            _read_celas3_cdamp3(name, data, elem)
         elif element_name == 'CDAMP4':
             elem = model.cdamp4
-            read_cdamp4(name, data, elem)
+            _read_cdamp4(name, data, elem)
         elif element_name == 'CDAMP4':
             elem = model.cvisc
-            read_cvisc(name, data, elem)
+            _read_cvisc(name, data, elem)
         else:
             model.log.warning(f'skipping {element_name} in _load_h5_element')
             #print(f'skipping {element_name} in _load_h5_element')
@@ -306,7 +308,8 @@ def _load_h5_shell(elem: CQUAD4, element_id, data):
                zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
 
-def read_celas1_cdamp1(name: str, group: h5py._hl.dataset.Dataset, elem: Union[CELAS1, CDAMP1]) -> None:
+def _read_celas1_cdamp1(name: str, group: h5py._hl.dataset.Dataset,
+                        elem: Union[CELAS1, CDAMP1]) -> None:
     """
     ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
     """
@@ -320,13 +323,14 @@ def read_celas1_cdamp1(name: str, group: h5py._hl.dataset.Dataset, elem: Union[C
     nodes = np.column_stack([G1, G2])
     components = np.column_stack([C1, C2])
     #assert NIDS.shape[1] == 2, NIDS.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, pid, nids, c1, c2 in zip(EID, PID, NIDS, C1, C2):
         #obj = geom_model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
         #obj.validate()
     elem._save(element_id, property_id, nodes, components)
 
-def read_celas2(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS2) -> None:
+def _read_celas2(name: str, group: h5py._hl.dataset.Dataset,
+                 elem: CELAS2) -> None:
     """
     ('EID', 'K', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
     dtype=[('EID', '<i8'), ('K', '<f8'), ('G1', '<i8'), ('G2', '<i8'), ('C1', '<i8'), ('C2', '<i8'),
@@ -344,13 +348,14 @@ def read_celas2(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS2) -> Non
     nodes = np.column_stack([G1, G2])
     components = np.column_stack([C1, C2])
     #assert NIDS.shape[1] == 2, NIDS.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, k, nids, c1, c2 in zip(EID, K, NIDS, C1, C2):
         #obj = geom_model.add_celas2(eid, k, nids, c1=c1, c2=c2, comment='')
         #obj.validate()
     elem._save(element_id, nodes, components, k, ge, s)
 
-def read_celas3_cdamp3(name: str, group: h5py._hl.dataset.Dataset, elem: Union[CELAS3, CDAMP3]) -> None:
+def _read_celas3_cdamp3(name: str, group: h5py._hl.dataset.Dataset,
+                        elem: Union[CELAS3, CDAMP3]) -> None:
     assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     property_id = group['PID']
@@ -358,13 +363,14 @@ def read_celas3_cdamp3(name: str, group: h5py._hl.dataset.Dataset, elem: Union[C
     G2 = group['S2']
     spoints = np.stack([G1, G2], axis=1)
     #assert NIDS.shape[1] == 2, NIDS.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, pid, nids in zip(EID, PID, NIDS):
         #obj = geom_model.add_celas3(eid, pid, nids, comment='')
         #obj.validate()
     elem._save(element_id, property_id, spoints)
 
-def read_celas4(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS4) -> None:
+def _read_celas4(name: str, group: h5py._hl.dataset.Dataset,
+                 elem: CELAS4) -> None:
     assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     k = group['K']
@@ -372,7 +378,7 @@ def read_celas4(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS4) -> Non
     G2 = group['S2']
     spoints = np.stack([G1, G2], axis=1)
     #assert spoints.shape[1] == 2, spoints.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, k, nids in zip(EID, K, NIDS):
         #obj = geom_model.add_celas4(eid, k, nids)
         #obj.validate()
@@ -395,7 +401,8 @@ def read_celas4(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS4) -> Non
         #obj.validate()
     #elem._save(element_id, property_id, nodes, components)
 
-def read_cdamp2(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP2) -> None:
+def _read_cdamp2(name: str, group: h5py._hl.dataset.Dataset,
+                 elem: CDAMP2) -> None:
     """
     ('EID', 'B', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
     """
@@ -409,7 +416,7 @@ def read_cdamp2(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP2) -> Non
     nodes = np.column_stack([G1, G2])
     components = np.column_stack([C1, C2])
     assert nodes.shape[1] == 2, nodes.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, b, nids, c1, c2 in zip(EID, B, NIDS, C1, C2):
         #obj = geom_model.add_cdamp2(eid, b, nids, c1=c1, c2=c2, comment='')
         #obj.validate()
@@ -429,7 +436,8 @@ def read_cdamp2(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP2) -> Non
         #obj = geom_model.add_cdamp3(eid, pid, nids, comment='')
         #obj.validate()
 
-def read_cdamp4(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP4) -> None:
+def _read_cdamp4(name: str, group: h5py._hl.dataset.Dataset,
+                 elem: CDAMP4) -> None:
     assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     b = group['B']
@@ -437,13 +445,13 @@ def read_cdamp4(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP4) -> Non
     G2 = group['S2']
     spoints = np.column_stack([G1, G2])
     assert spoints.shape[1] == 2, spoints.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, b, nids in zip(EID, B, NIDS):
         #obj = geom_model.add_cdamp4(eid, b, nids)
         #obj.validate()
     elem._save(element_id, b, spoints)
 
-def read_cvisc(name: str, group: h5py._hl.dataset.Dataset, elem: CVISC) -> None:
+def _read_cvisc(name: str, group: h5py._hl.dataset.Dataset, elem: CVISC) -> None:
     """
     ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
     """

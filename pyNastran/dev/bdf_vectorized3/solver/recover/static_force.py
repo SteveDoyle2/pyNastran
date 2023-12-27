@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
@@ -14,11 +14,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Subcase, CBAR, PBAR, PBARL
 
 
-def recover_force_101(f06_file, op2,
+def recover_force_101(f06_file: TextIO, op2,
                       model: BDF, dof_map,
-                      subcase: Subcase,
-                      xb,
-                      fdtype: str='float32',
+                      subcase: Subcase, xb, fdtype: str='float32',
                       title: str='', subtitle: str='', label: str='',
                       page_num: int=1, page_stamp: str='PAGE %s'):
     """
@@ -78,9 +76,10 @@ def recover_force_101(f06_file, op2,
     if nelements == 0:
         model.log.warning(f'no force output...{model.card_count}; {model.bdf_filename}')
 
-def _recover_force_rod(f06_file, op2,
-                       model: BDF, dof_map, isubcase, xb, eids_str,
-                       element_name, fdtype='float32',
+def _recover_force_rod(f06_file: TextIO, op2,
+                       model: BDF, dof_map, isubcase: int,
+                       xb: np.ndarray, eids_str,
+                       element_name: str, fdtype='float32',
                        title: str='', subtitle: str='', label: str='',
                        page_num: int=1, page_stamp='PAGE %s') -> None:
     """recovers static rod force"""
@@ -168,7 +167,7 @@ def _recover_forcei_rod(xb, dof_map, elem, prop):
 
     return axial_force, torsional_moment
 
-def _recover_force_cbar(f06_file, op2,
+def _recover_force_cbar(f06_file: TextIO, op2,
                         model: BDF, dof_map, isubcase, xb, eids_str,
                         element_name, fdtype='float32',
                         title: str='', subtitle: str='', label: str='',
@@ -202,8 +201,10 @@ def _recover_force_cbar(f06_file, op2,
     return neids
 
 def _recover_forcei_cbar(model: BDF,
-                         xb, dof_map, elem: CBAR,
-                         prop: Union[PBAR, PBARL], fdtype: str='float64'):
+                         xb, dof_map,
+                         elem: CBAR,
+                         prop: Union[PBAR, PBARL],
+                         fdtype: str='float64'):
     """get the static CBAR force"""
     #words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
              #'0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

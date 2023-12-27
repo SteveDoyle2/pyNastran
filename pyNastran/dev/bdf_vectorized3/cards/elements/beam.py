@@ -847,7 +847,9 @@ class CBEAM(Element):
             msg += f'pid={self.property_id[inan]}\n'
             msg += f'all_properties={self.all_properties}'
             #msg += f'As={self.nodes[inan]}\n'
-            raise RuntimeError(msg)
+            self.model.log.error(msg)
+            if not self.model.allow_nan_area:
+                raise RuntimeError(msg)
         return area
 
     def volume(self) -> np.ndarray:

@@ -1610,8 +1610,9 @@ class LoadCombination(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble = force_double if self.model.is_lax_parser else double
         sid = integer(card, 1, 'sid')
-        scale = double(card, 2, 'scale')
+        scale = fdouble(card, 2, 'scale')
         scale_factors = []
         load_ids = []
 
@@ -1620,7 +1621,7 @@ class LoadCombination(Load):
         assert nload_fields % 2 == 0, 'card=%s' % card
         for iload in range(nload_fields // 2):
             n = 2 * iload + 3
-            scale_factors.append(double(card, n, 'scale_factor'))
+            scale_factors.append(fdouble(card, n, 'scale_factor'))
             load_ids.append(integer(card, n + 1, 'load_id'))
 
         assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)

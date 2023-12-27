@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
     blank)
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank, lax_double_or_blank
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank # , lax_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
 from pyNastran.bdf.cards.properties.bars import (
     _bar_areaL, to_fields, get_beam_sections, parse_pbrsect_options)
@@ -22,7 +22,7 @@ from pyNastran.bdf.cards.properties.bars import (
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, make_idim, hslice_by_idim,
+    Element, Property, Material, make_idim, hslice_by_idim,
     searchsorted_filter, parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
     line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
@@ -226,11 +226,12 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 class CBAR(Element):
     @Element.clear_check
     def clear(self) -> None:
-        self.element_id = np.array([], dtype='int32')
-        self.property_id = np.array([], dtype='int32')
-        self.nodes = np.zeros((0, 2), dtype='int32')
+        idtype = self.model.idtype
+        self.element_id = np.array([], dtype=idtype)
+        self.property_id = np.array([], dtype=idtype)
+        self.nodes = np.zeros((0, 2), dtype=idtype)
         self.offt = np.array([], dtype='|U3')
-        self.g0 = np.array([], dtype='int32')
+        self.g0 = np.array([], dtype=idtype)
         self.x = np.full((0, 3), np.nan, dtype='float64')
 
         self.pa = np.array([], dtype='int32')
@@ -838,25 +839,27 @@ class PBAR(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        #fdouble = force_double if self.model.is_lax_parser else double
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        A = double_or_blank(card, 3, 'A', default=0.0)
-        i1 = double_or_blank(card, 4, 'I1', default=0.0)
-        i2 = double_or_blank(card, 5, 'I2', default=0.0)
+        A = fdouble_or_blank(card, 3, 'A', default=0.0)
+        i1 = fdouble_or_blank(card, 4, 'I1', default=0.0)
+        i2 = fdouble_or_blank(card, 5, 'I2', default=0.0)
 
-        j = double_or_blank(card, 6, 'J', default=0.0)
-        nsm = double_or_blank(card, 7, 'nsm', default=0.0)
+        j = fdouble_or_blank(card, 6, 'J', default=0.0)
+        nsm = fdouble_or_blank(card, 7, 'nsm', default=0.0)
 
-        c1 = double_or_blank(card, 9, 'C1', default=0.0)
-        c2 = double_or_blank(card, 10, 'C2', default=0.0)
-        d1 = double_or_blank(card, 11, 'D1', default=0.0)
-        d2 = double_or_blank(card, 12, 'D2', default=0.0)
-        e1 = double_or_blank(card, 13, 'E1', default=0.0)
-        e2 = double_or_blank(card, 14, 'E2', default=0.0)
-        f1 = double_or_blank(card, 15, 'F1', default=0.0)
-        f2 = double_or_blank(card, 16, 'F2', default=0.0)
+        c1 = fdouble_or_blank(card, 9, 'C1', default=0.0)
+        c2 = fdouble_or_blank(card, 10, 'C2', default=0.0)
+        d1 = fdouble_or_blank(card, 11, 'D1', default=0.0)
+        d2 = fdouble_or_blank(card, 12, 'D2', default=0.0)
+        e1 = fdouble_or_blank(card, 13, 'E1', default=0.0)
+        e2 = fdouble_or_blank(card, 14, 'E2', default=0.0)
+        f1 = fdouble_or_blank(card, 15, 'F1', default=0.0)
+        f2 = fdouble_or_blank(card, 16, 'F2', default=0.0)
 
-        i12 = double_or_blank(card, 19, 'I12', default=0.0)
+        i12 = fdouble_or_blank(card, 19, 'I12', default=0.0)
 
         if A == 0.0:
             blank(card, 17, 'K1')
@@ -869,9 +872,9 @@ class PBAR(Property):
             k2 = np.nan
         else:
             #: default=infinite; assume 1e8
-            k1 = double_or_blank(card, 17, 'K1', 1e8)
+            k1 = fdouble_or_blank(card, 17, 'K1', default=1e8)
             #: default=infinite; assume 1e8
-            k2 = double_or_blank(card, 18, 'K2', 1e8)
+            k2 = fdouble_or_blank(card, 18, 'K2', default=1e8)
 
         assert len(card) <= 20, f'len(PBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
@@ -882,8 +885,9 @@ class PBAR(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         #Type = np.full(ncards, '', dtype='|U8')
         #group = np.full(ncards, '', dtype='|U8')
 
@@ -1195,13 +1199,12 @@ class PBAR(Property):
 def e_g_nu_from_isotropic_material(material_id: np.ndarray,
                                    allowed_materials: list[Material]) -> np.ndarray:
     """calculates E, G, nu"""
-
     assert len(allowed_materials) > 0, allowed_materials
     nmaterials = len(material_id)
     if nmaterials == 0:
         raise RuntimeError(f'material_id={material_id}')
 
-    material_id_check = np.zeros(nmaterials, dtype='int32')
+    material_id_check = np.zeros(nmaterials, dtype=material_id.dtype)
     e_g_nu = np.full((nmaterials, 3), np.nan, dtype='float64')
     for mat in allowed_materials:
         mat_material_ids = mat.material_id
@@ -1392,8 +1395,9 @@ class PBARL(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         ndim = np.zeros(ncards, dtype='int32')
         Type = np.full(ncards, '', dtype='|U8')
         group = np.full(ncards, '', dtype='|U8')

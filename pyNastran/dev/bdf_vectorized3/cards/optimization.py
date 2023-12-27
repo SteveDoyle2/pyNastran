@@ -373,21 +373,22 @@ class DESVAR(VectorizedBaseCard):
         xlbs = array_float(self.xlb, size=size, is_double=is_double)
         xubs = array_float(self.xub, size=size, is_double=is_double)
 
+        xinits = array_float(self.xinit, size=size, is_double=is_double)
         if is_delx and is_ddval:
-            delxs = array_float(self.delx, size=size, is_double=is_double)
-            for desvar_id, label, xinit, xlb, xub, delx, ddval in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs,
+            delxs = array_float_nan(self.delx, size=size, is_double=is_double)
+            for desvar_id, label, xinit, xlb, xub, delx, ddval in zip_longest(desvar_id, labels, xinits, xlbs, xubs,
                                                                               delxs, self.ddval):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                delx, ddval]
                 bdf_file.write(print_card(list_fields))
         elif is_delx:
-            for desvar_id, label, xinit, xlb, xub, delx in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs, delxs):
+            for desvar_id, label, xinit, xlb, xub, delx in zip_longest(desvar_id, labels, xinits, xlbs, xubs, delxs):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                delx]
                 bdf_file.write(print_card(list_fields))
         else:
             # is_ddval
-            for desvar_id, label, xinit, xlb, xub, ddval in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs, self.ddval):
+            for desvar_id, label, xinit, xlb, xub, ddval in zip_longest(desvar_id, labels, xinits, xlbs, xubs, self.ddval):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                None, ddval]
                 bdf_file.write(print_card(list_fields))
@@ -1244,11 +1245,10 @@ class DRESP1(VectorizedBaseCard):
             if atti_type == 'i':
                 atti = self.atti_int[iatti0:iatti1]
             elif atti_type == 'f':
-                atti = atti_float
-                atti = atti_float
+                atti = atti_float[iatti0:iatti1]
             else:
                 asdf
-                atti = atti_str
+                atti = atti_str[iatti0:iatti1]
 
             if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
                 atti_list = ['ALL']
@@ -3620,7 +3620,7 @@ class DVCREL2(VectorizedBaseCard):
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_ids, size=size)
 
-        cp_mins = array_float(self.cp_min, size=size)
+        cp_mins = array_float_nan(self.cp_min, size=size)
         cp_maxs = array_default_float(self.cp_max, default=1e20, size=size)
 
         for dvcrel_id, eid, element_type, cp_name, \
