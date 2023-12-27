@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, parse_element_check, # searchsorted_filter,
+    Element, parse_check, # searchsorted_filter,
     )
 from .rod import line_length, line_centroid
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -72,7 +72,7 @@ class PlotElement(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:

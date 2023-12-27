@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int, array_float_nan)
 
@@ -218,7 +218,7 @@ class MATT1(Material):
                             self.ge_table, ])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -466,7 +466,7 @@ class MATS1(Material):
     def max_id(self):
         return max(self.material_id.max(), self.table_id.max())
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -756,7 +756,7 @@ class MATT2(Material):
                             self.ge_table, ])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1011,7 +1011,7 @@ class MATT3(Material):
                             self.ge_table,])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1200,7 +1200,7 @@ class MATT4(Material):
                             self.mu_table, self.hgen_table, ])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1420,7 +1420,7 @@ class MATT5(Material):
                             self.kyz_table, self.kzz_table, self.cp_table, self.hgen_table, ])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1696,7 +1696,7 @@ class MATT8(Material):
         )
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2104,7 +2104,7 @@ class MATT9(Material):
             self.a4_table, self.a5_table, self.a6_table, self.ge_table])
         return tables.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

@@ -13,8 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property,
-    parse_element_check, parse_property_check)
+    Element, Property, parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size,
     array_str, array_float, array_float_nan,
@@ -134,7 +133,7 @@ class CDAMP1(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -284,7 +283,7 @@ class CDAMP2(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -396,7 +395,7 @@ class CDAMP3(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.spoints.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -511,7 +510,7 @@ class CDAMP4(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.spoints.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -608,7 +607,7 @@ class CDAMP5(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -729,7 +728,7 @@ class PDAMP(Property):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -834,7 +833,7 @@ class PDAMP5(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -912,7 +911,7 @@ class PDAMPT(Property):
     def max_id(self):
         return max(self.property_id.max(), self.table_b.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1021,7 +1020,7 @@ class CVISC(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1151,7 +1150,7 @@ class PVISC(Property):
     def max_id(self):
         return self.property_id.max()
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1430,7 +1429,7 @@ class CGAP(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max(), self.coord_id.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1657,7 +1656,7 @@ class PGAP(Property):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:

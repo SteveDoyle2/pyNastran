@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, Material, make_idim, hslice_by_idim,
-    searchsorted_filter, parse_element_check, parse_property_check)
+    searchsorted_filter, parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
     line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
     e_g_nu_from_property_id,
@@ -400,7 +400,7 @@ class CBAR(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1109,7 +1109,7 @@ class PBAR(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1469,7 +1469,7 @@ class PBARL(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1677,7 +1677,7 @@ class PBRSECT(Property):
         self.sort()
         self.cards = []
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1855,7 +1855,7 @@ class CBARAO(Element):
     def max_id(self) -> int:
         return self.element_id.max()
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

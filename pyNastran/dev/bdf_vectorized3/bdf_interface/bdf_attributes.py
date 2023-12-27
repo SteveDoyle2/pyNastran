@@ -64,6 +64,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.radiation import (
     RADCAV, RADLST, RADMTX,
     VIEW, VIEW3D)
+from pyNastran.dev.bdf_vectorized3.cards.elements.bolt import BOLT, BOLTLD, BOLTFOR, BOLTFRC
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
@@ -228,6 +229,12 @@ class BDFAttributes:
         self.epoint = EPOINT(self)
         self.point = POINT(self)
         self.coord = COORD(self)
+
+        # bolts
+        self.boltld = BOLTLD(self)
+        self.bolt = BOLT(self)
+        self.boltfor = BOLTFOR(self)
+        self.boltfrc = BOLTFRC(self)
 
         # plot
         self.plotel = PLOTEL(self)
@@ -807,6 +814,13 @@ class BDFAttributes:
         return elements
 
     @property
+    def bolt_cards(self) -> list[Any]:
+        cards = [
+            self.bolt, self.boltld, self.boltfor, self.boltfrc,
+        ]
+        return cards
+
+    @property
     def bar_property_cards(self) -> list[Any]:
         properties = [
             self.pbar, self.pbarl, self.pbrsect,
@@ -1135,7 +1149,7 @@ class BDFAttributes:
         ] + self.spc_cards + self.mpc_cards + self.element_cards + self.rigid_element_cards + \
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \
-        self.plot_element_cards + self.thermal_element_cards + \
+        self.plot_element_cards + self.thermal_element_cards + self.bolt_cards + \
         self.thermal_boundary_condition_cards + self.set_cards + self.seset_cards + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):

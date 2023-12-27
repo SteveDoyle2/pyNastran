@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
     #hslice_by_idim, make_idim, searchsorted_filter,
-    parse_element_check)
+    parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float, array_float_nan,
@@ -263,7 +263,7 @@ class CPLSTS3(PlateStressElement):
     def quality(self):
         return tri_quality_nodes(self.model.grid, self.nodes)
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -409,7 +409,7 @@ class CPLSTS4(PlateStressElement):
     def quality(self):
         return quad_quality_nodes(self.model.grid, self.nodes)
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -849,7 +849,7 @@ class CPLSTN3(PlateStrainElement):
         #self.nodes[i, :] = self.nodes[i, [0, 2, 1]] # fast flip
         self.nodes[i, :] = self.nodes[i, [1, 0, 2]]  # preserve material orientation
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -971,7 +971,7 @@ class CPLSTN4(PlateStrainElement):
             i = slice(len(self.element_id))
         self.nodes[i, :] = self.nodes[i, [1, 0, 3, 2]]
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1098,7 +1098,7 @@ class CPLSTN6(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 3:]
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1225,7 +1225,7 @@ class CPLSTN8(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 4:]
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1377,7 +1377,7 @@ class CPLSTS6(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 3:]
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1536,7 +1536,7 @@ class CPLSTS8(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 4:]
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:

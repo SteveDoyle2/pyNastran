@@ -29,7 +29,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim,
     hslice_by_idim, vslice_by_idim,
     remove_unused_primary, remove_unused_duplicate,
-    parse_load_check,
+    parse_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
@@ -58,12 +58,12 @@ class DLOAD(LoadCombination):
     +-------+-----+------+------+----+-----+----+----+----+
 
     """
-    def clear(self) -> None:
-        self.n = 0
-        self.load_id = np.array([], dtype='int32')
-        self.nloads = np.array([], dtype='int32')
-        self.load_ids = np.array([], dtype='int32')
-        self.scale_factors = np.array([], dtype='float64')
+    #def clear(self) -> None:
+        #self.n = 0
+        #self.load_id = np.array([], dtype='int32')
+        #self.nloads = np.array([], dtype='int32')
+        #self.load_ids = np.array([], dtype='int32')
+        #self.scale_factors = np.array([], dtype='float64')
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float], load_ids: list[int],
@@ -290,7 +290,7 @@ class DAREA(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -528,12 +528,10 @@ class TLOAD1(VectorizedBaseCard):
                    self.delay_int.max(),
                    self.tabled_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if self.n == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         #array_str, array_default_int
@@ -800,7 +798,7 @@ class TLOAD2(VectorizedBaseCard):
                    self.excite_id.max(),
                    self.delay_int.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1042,7 +1040,7 @@ class RLOAD1(VectorizedBaseCard):
                    self.delay_int.max(), self.dphase_int.max(),
                    self.tabled_c_int.max(), self.tabled_d_int.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1312,7 +1310,7 @@ class RLOAD2(VectorizedBaseCard):
                    self.delay_int.max(), self.dphase_int.max(),
                    self.tabled_b_int.max(), self.tabled_phi_int.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1487,7 +1485,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
                    self.load_id.max(), self.excite_id.max(),
                    self.temp_id.max(), )
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2481,7 +2479,7 @@ class QVECT(VectorizedBaseCard):
                    self.control_id.max(),
                    self.element.max(),)
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2725,7 +2723,7 @@ class ACSRCE(VectorizedBaseCard):
                    self.delay_int.max(), self.dphase_int.max(),
                    self.power_int.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2869,7 +2867,7 @@ class RANDPS(VectorizedBaseCard):
                    self.subcase_applied_load.max(),
                    self.tabrnd1_id.max(),)
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

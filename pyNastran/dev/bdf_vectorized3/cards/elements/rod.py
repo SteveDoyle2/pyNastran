@@ -12,8 +12,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
-    parse_element_check, parse_property_check,
-    searchsorted_filter, )
+    parse_check, searchsorted_filter, )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -175,7 +174,7 @@ class CONROD(Element):
     def max_id(self):
         return max(self.element_id.max(), self.material_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -329,7 +328,7 @@ class CROD(Element):
     def max_id(self):
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -540,7 +539,7 @@ class PROD(Property):
     def max_id(self):
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -661,7 +660,7 @@ class CTUBE(Element):
     def max_id(self):
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -896,7 +895,7 @@ class PTUBE(Property):
     def max_id(self):
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

@@ -25,7 +25,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     hslice_by_idim, make_idim, searchsorted_filter,
-    parse_load_check, remove_unused_duplicate,)
+    parse_check, remove_unused_duplicate,)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_float, array_str, array_default_int, array_default_float,
     get_print_card_size)
@@ -154,7 +154,7 @@ class PLOAD(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -351,7 +351,7 @@ class PLOAD1(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.element_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> str:
@@ -752,7 +752,7 @@ class PLOAD2(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.element_ids.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1082,7 +1082,7 @@ class PLOAD4(Load):
                    self.coord_id.max(),
                    self.nodes_g1_g34.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

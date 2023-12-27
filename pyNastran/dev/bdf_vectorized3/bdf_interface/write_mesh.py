@@ -473,6 +473,11 @@ class Writer:
         # other
         model.genel.write_file(bdf_file, size=size, is_double=is_double)
 
+        model.bolt.write_file(bdf_file, size=size, is_double=is_double)
+        model.boltld.write_file(bdf_file, size=size, is_double=is_double)
+        model.boltfor.write_file(bdf_file, size=size, is_double=is_double)
+        model.boltfrc.write_file(bdf_file, size=size, is_double=is_double)
+
     def _write_rejects(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:

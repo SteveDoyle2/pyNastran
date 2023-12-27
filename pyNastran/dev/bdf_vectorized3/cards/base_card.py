@@ -674,40 +674,11 @@ def parse_node_check(func):
         return func(self, *args, **kwargs)
     return wrapper
 
-def parse_element_check(func):
+def parse_check(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        if len(self.element_id) == 0:
-            if self.n == 0:
-                return
-            self.parse_cards()
-        return func(self, *args, **kwargs)
-    return wrapper
-
-def parse_property_check(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if len(self.property_id) == 0:
-            if self.n == 0:
-                return
-            self.parse_cards()
-        return func(self, *args, **kwargs)
-    return wrapper
-
-def parse_material_check(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if len(self.material_id) == 0:
-            if self.n == 0:
-                return
-            self.parse_cards()
-        return func(self, *args, **kwargs)
-    return wrapper
-
-def parse_load_check(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if len(self.load_id) == 0:
+        ids = getattr(self, self._id_name)
+        if len(ids) == 0:
             if self.n == 0:
                 return
             self.parse_cards()

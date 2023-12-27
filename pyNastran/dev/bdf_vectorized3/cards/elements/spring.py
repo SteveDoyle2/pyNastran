@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_element_check, parse_property_check)
+    Element, Property, parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float,
@@ -132,7 +132,7 @@ class CELAS1(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -284,7 +284,7 @@ class CELAS2(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -402,7 +402,7 @@ class CELAS3(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.spoints.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -513,7 +513,7 @@ class CELAS4(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.spoints.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -633,7 +633,7 @@ class PELAS(Property):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -752,7 +752,7 @@ class PELAST(Property):
         return max(self.property_id.max(), self.table_k.max(),
                    self.table_ge.max(), self.table_k_nonlinear.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

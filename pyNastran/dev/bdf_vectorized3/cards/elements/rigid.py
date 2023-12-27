@@ -7,7 +7,7 @@ from pyNastran.utils.numpy_utils import cast_ints # integer_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
-    parse_element_check, remove_unused_primary)
+    parse_check, remove_unused_primary)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, blank,
     integer_or_blank, double_or_blank,
@@ -200,7 +200,7 @@ class RBAR(RigidElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -344,7 +344,7 @@ class RROD(RigidElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -483,7 +483,7 @@ class RBAR1(RigidElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -695,7 +695,7 @@ class RBE1(RigidElement):
                    self.independent_node.max(),
                    self.dependent_node.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -884,7 +884,7 @@ class RBE2(RigidElement):
         return max(self.element_id.max(), self.independent_node.max(),
                    self.dependent_nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1239,7 +1239,7 @@ class RBE3(RigidElement):
             max_dependent_node = self.dependent_nodes.max()
         return max(self.element_id.max(), self.independent_nodes.max(), max_dependent_node)
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

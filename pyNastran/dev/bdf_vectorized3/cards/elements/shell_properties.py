@@ -21,7 +21,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Property,
     hslice_by_idim, make_idim, searchsorted_filter,
-    parse_property_check,
+    parse_check,
     #vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -260,7 +260,7 @@ class PSHELL(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -646,7 +646,7 @@ class PAABSF(Property):
                    self.table_reactance_real.max(),
                    self.table_reactance_imag.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1380,7 +1380,7 @@ class PCOMP(CompositeProperty):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1831,7 +1831,7 @@ class PCOMPG(CompositeProperty):
         return max(self.property_id.max(), self.global_ply_id.max(),
                    self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2015,7 +2015,7 @@ class PLPLANE(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max(), self.coord_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2352,7 +2352,7 @@ class PSHLN1(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2688,7 +2688,7 @@ class PSHLN2(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

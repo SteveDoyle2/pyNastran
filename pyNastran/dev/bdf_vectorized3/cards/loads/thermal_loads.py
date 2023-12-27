@@ -19,7 +19,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
-    parse_load_check)
+    parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, get_print_card_size
 from .static_loads import Load
 
@@ -206,7 +206,7 @@ class QHBDY(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.grids.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -331,7 +331,7 @@ class QBDY1(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.elements.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -455,7 +455,7 @@ class QBDY2(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.element_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -612,7 +612,7 @@ class QBDY3(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.control_node.max(), self.elements.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -772,7 +772,7 @@ class QVOL(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.control_node.max(), self.elements.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

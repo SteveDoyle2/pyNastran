@@ -633,6 +633,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RBAR', 'RBAR1',
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
+            ## bolts
+            'MBOLT', 'MBOLTUS', 'BOLT', 'BOLTFRC', 'BOLTFOR',
+
             ## plotels
             'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
 
@@ -2143,8 +2146,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCTPARM' : (BCTPARM, add_methods._add_bctparm_object),
 
             # nx bolts
-            'BOLT' : (RuntimeCrash, None),
-            'BOLTFOR' : (RuntimeCrash, None),
             'BOLTLD' : (RuntimeCrash, None),
 
             #'CBEAR', 'PBEAR', 'ROTORB',
@@ -2307,10 +2308,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGC' : (EIGC, add_methods._add_cmethod_object),
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
 
-            # 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BOLT': (Crash, None),
-            'BOLTFOR': (Crash, None),
-            'BOLTFRC': (RuntimeCrash, None),
+            # 'BOLTFRC',
             'MBOLTUS': (RuntimeCrash, None),
 
             'RADMT': (RuntimeCrash, None),
@@ -2328,6 +2326,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
+            # bolts
+            'BOLTLD': partial(self._prepare_card, self.boltld),
+            'BOLT' : partial(self._prepare_card, self.bolt),
+            'BOLTFOR' : partial(self._prepare_card, self.boltfor),
+            'BOLTFRC' : partial(self._prepare_card, self.boltfrc),
+
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'PLOTEL3': partial(self._prepare_card, self.plotel3),
             'PLOTEL4': partial(self._prepare_card, self.plotel4),

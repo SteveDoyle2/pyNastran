@@ -19,7 +19,7 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim, searchsorted_filter, # vslice_by_idim,
-    parse_element_check, parse_property_check,
+    parse_check,
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid, e_g_nu_from_property_id
 from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector,
@@ -331,7 +331,7 @@ class CBEAM(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1653,7 +1653,7 @@ class PBEAM(Property):
                    self.material_id.max(),
                    self.s1.max(), self.s2.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2204,7 +2204,7 @@ class PBEAML(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2631,7 +2631,7 @@ class PBCOMP(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max(), )
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2978,7 +2978,7 @@ class CBEND(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3958,7 +3958,7 @@ class PBEND(Property):
         return max(self.property_id.max(),
                    self.material_id.max(), )
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

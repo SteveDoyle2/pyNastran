@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, parse_element_check,
+    VectorizedBaseCard, parse_check,
     make_idim, hslice_by_idim, )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float,
@@ -295,7 +295,7 @@ class CHBDYE(ThermalElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.iview.max(), self.rad_mid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -451,7 +451,7 @@ class CONV(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.pconv_id.max(), self.control_node.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -629,7 +629,7 @@ class CHBDYG(ThermalElement):
         return max(self.element_id.max(), self.igrid.max(),
                    self.iview.max(), self.rad_mid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -881,7 +881,7 @@ class CHBDYP(ThermalElement):
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max(),
                    self.iview.max(), self.rad_mid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1112,7 +1112,7 @@ class PHBDY(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    #@parse_element_check
+    #@parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1463,7 +1463,7 @@ class PCONV(VectorizedBaseCard):
         return max(self.pconv_id.max(), self.material_id.max(), self.table_id.max(),
                    self.grid_inlet.max())
 
-    #@parse_element_check
+    #@parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1674,7 +1674,7 @@ class CONVM(VectorizedBaseCard):
         return max(self.element_id.max(), self.pconvm_id.max(),
                    self.film_node.max(), self.control_node_mdot.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1851,7 +1851,7 @@ class PCONVM(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.pconvm_id.max(), self.material_id.max())
 
-    #@parse_element_check
+    #@parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

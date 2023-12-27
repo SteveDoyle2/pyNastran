@@ -1061,7 +1061,7 @@ def _lines_to_decks_main(lines: list[str],
     #---------------------------------------------
     current_lines = executive_control_lines
 
-    if nastran_format in ['msc', 'nx', 'nasa95', 'mystran', 'zona']:
+    if nastran_format in {'msc', 'nx', 'nasa95', 'mystran', 'zona'}:
         flag_word = 'executive'
         flag = 1  # start from executive control deck
     elif nastran_format == 'optistruct':
@@ -1070,7 +1070,7 @@ def _lines_to_decks_main(lines: list[str],
     else:  # pragma: no cover
         raise RuntimeError(nastran_format)
     #flag = 1
-    old_flags = []
+    old_flags: list[int] = []
     bulk_data_ilines = []
     if ilines is None:
         ilines = count()
@@ -1200,6 +1200,12 @@ def _lines_to_decks_main(lines: list[str],
                     flag_word = 'SUPER=%s' % super_id
                     current_lines = superelement_lines[super_id]
                     current_ilines = superelement_ilines[super_id]
+                #elif 'SUPER' in line_upper:
+                    #super_id = -1
+                    #flag = -1
+                    #flag_word = 'SUPER'
+                    #current_lines = superelement_lines[super_id]
+                    #current_ilines = superelement_ilines[super_id]
 
                 elif ('AUXMODEL' in line_upper or 'AFPM' in line_upper) and '=' in line_upper:
                     out = _read_bulk_for_model(
@@ -1218,7 +1224,7 @@ def _lines_to_decks_main(lines: list[str],
                      flag, current_lines) = out
                     if is_broken:
                         break
-                else:
+                else:  # pragma: no cover
                     msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
@@ -1296,12 +1302,12 @@ def _lines_to_decks_main(lines: list[str],
             if is_broken:
                 #print('breaking...')
                 break
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(line)
 
     _check_valid_deck(flag, old_flags, nastran_format)
 
-    if len(bulk_data_lines) == 0:
+    if len(bulk_data_lines) == 0:  # and flag != -1:
         raise RuntimeError('no bulk data lines were found')
     #print('nbulk=%s nilines=%s' % (len(bulk_data_lines),
                                    #len(bulk_data_ilines)), bulk_data_ilines.shape)
@@ -1367,11 +1373,11 @@ def _is_begin_bulk(line_upper: str) -> bool:
     return is_begin_bulk
 
 def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: list[str],
-                         current_lines, current_ilines,
-                         old_flags,
-                         unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
-                         unused_is_afpm, afpm_lines, afpm_to_find, afpm_found,
-                         superelement_lines, superelement_ilines,
+                         current_lines: list[str], current_ilines,
+                         old_flags: list[int],
+                         unused_is_auxmodel: bool, auxmodel_lines: list[str], auxmodels_to_find, auxmodels_found,
+                         unused_is_afpm: bool, afpm_lines: list[str], afpm_to_find, afpm_found,
+                         superelement_lines: list[str], superelement_ilines,
                          is_auxmodel_active: bool, auxmodel_id: int,
                          is_afpm_active: bool, afpm_id: int,
                          bulk_data_ilines):
@@ -1393,8 +1399,8 @@ def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: lis
         #return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
 
     is_module_active = False
-    module_lines = {}
-    modules_found = set()
+    module_lines: dict[int, int] = {}
+    modules_found: set[int] = set()
 
     line_upper = line.upper().strip()
     if line_upper.startswith('BEGIN'):
@@ -1467,7 +1473,8 @@ def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: lis
         flag, current_lines)
     return out
 
-def _break_system_lines(executive_control_lines: list[str]) -> tuple[list[str], list[str]]:
+def _break_system_lines(executive_control_lines: list[str]) -> tuple[list[str],
+                                                                     list[str]]:
     """
     Extracts the Nastran system lines.
     System lines may be interspersed with executive lines.

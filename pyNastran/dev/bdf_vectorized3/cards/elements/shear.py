@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, searchsorted_filter,
-    parse_element_check, parse_property_check,
+    parse_check,
 )
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -125,7 +125,7 @@ class CSHEAR(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -295,7 +295,7 @@ class PSHEAR(Property):
     def max_id(self):
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

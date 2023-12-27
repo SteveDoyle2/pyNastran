@@ -16,7 +16,7 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim,
-    parse_element_check, parse_property_check, ) # searchsorted_filter,
+    parse_check) # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_str, array_default_int, array_float_nan,
     get_print_card_size, )
@@ -207,7 +207,7 @@ class CTETRA(SolidElement):
         assert midside_nodes.shape[1] == 6, midside_nodes.shape
         return midside_nodes
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -417,7 +417,7 @@ class SolidPenta(SolidElement):
         assert midside_nodes.shape[1] == 9, midside_nodes.shape
         return midside_nodes
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -552,7 +552,7 @@ class CPYRAM(SolidElement):
         assert midside_nodes.shape[1] == 8, midside_nodes.shape
         return midside_nodes
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -671,7 +671,7 @@ class SolidHex(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -931,7 +931,7 @@ class PSOLID(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max(), self.coord_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1050,7 +1050,7 @@ class PLSOLID(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1199,7 +1199,7 @@ class PSOLCZ(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max(), self.mcid.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1481,7 +1481,7 @@ class PCOMPS(Property):
         return max(self.property_id.max(), self.coord_id.max(),
                    self.global_ply_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1824,7 +1824,7 @@ class PCOMPLS(Property):
         return max(self.property_id.max(), self.coord_id.max(),
                    self.global_ply_id.max(), self.material_id.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

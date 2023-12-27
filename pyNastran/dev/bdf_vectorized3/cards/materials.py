@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str,
     array_default_int, array_default_float)
@@ -278,7 +278,7 @@ class MAT1(Material):
     def max_id(self):
         return max(self.material_id.max(), self.mcsid.max())
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -613,7 +613,7 @@ class MAT2(Material):
     def max_id(self):
         return max(self.material_id.max(), self.mcsid.max())
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -824,7 +824,7 @@ class MAT3(Material):
     def max_id(self):
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -979,7 +979,7 @@ class MAT4(Material):
     def max_id(self):
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1123,7 +1123,7 @@ class MAT5(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1541,7 +1541,7 @@ class MAT8(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -1890,7 +1890,7 @@ class MAT9(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -2164,7 +2164,7 @@ class MAT10(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -2408,7 +2408,7 @@ class MAT11(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -2531,7 +2531,7 @@ class MAT10C(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -2840,7 +2840,7 @@ class MATORT(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -3237,7 +3237,7 @@ class MATHP(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
@@ -3518,7 +3518,7 @@ class MATHE(Material):
     def max_id(self) -> int:
         return self.material_id.max()
 
-    @parse_material_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:

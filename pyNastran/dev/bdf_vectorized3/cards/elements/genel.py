@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     fields)
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, parse_element_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, parse_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim # , VectorizedBaseCard, searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
 
@@ -408,7 +408,7 @@ class GENEL(Element):
         ud_max = 0 if len(self.ul) == 0 else self.ul.max()
         return max(self.element_id.max(), ul_max, ud_max)
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

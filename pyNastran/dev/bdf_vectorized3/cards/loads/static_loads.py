@@ -25,7 +25,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rectangular
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
-    parse_load_check, remove_unused_duplicate,
+    parse_check, remove_unused_duplicate,
     remove_unused_primary,
     ) # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -37,6 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from .dynamic_loads import LOADSET
+    from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 
 class Load(VectorizedBaseCard):
@@ -196,7 +197,7 @@ class DEFORM(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.elements.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -349,7 +350,7 @@ class SPCD(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.nodes.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -480,7 +481,7 @@ class Load0(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -599,7 +600,7 @@ class Load1(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -723,7 +724,7 @@ class Load2(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -765,9 +766,9 @@ class FORCE(Load0):
         return self.mag * self.xyz
 
     def sum_forces_moments(self) -> np.ndarray:
-        grid = self.model.grid
+        #grid = self.model.grid
         #xyz_cid0 = grid.xyz_cid0()
-        nid = grid.node_id
+        #nid = grid.node_id
 
         nloads = len(self.load_id)
         force_moment = np.zeros((nloads, 6), dtype='float64')
@@ -789,7 +790,7 @@ class FORCE(Load0):
             else:
                 #print('else...')
                 coord = self.model.coord
-                coord_card = coord.slice_card_by_coord_id(cid)
+                coord_card = coord.slice_card_by_id(cid)
                 beta = coord_card.xyz_to_global_transform[cid]
 
                 coord_type = coord_card.coord_type
@@ -830,7 +831,7 @@ class MOMENT(Load0):
         return self.mag * self.xyz
 
     def sum_forces_moments(self):
-        grid = self.model.grid
+        #grid = self.model.grid
         #xyz_cid0 = grid.xyz_cid0()
         #nid = grid.node_id
 
@@ -934,12 +935,12 @@ class MOMENT1(Load1):
         xyz_cid0 = grid.xyz_cid0()
 
         nloads = len(self.load_id)
-        iapplied_nid = np.searchsorted(grid.node_id, self.node_id)
+        #iapplied_nid = np.searchsorted(grid.node_id, self.node_id)
         inid = np.searchsorted(grid.node_id, self.nodes)
         in1 = inid[:, 0]
         in2 = inid[:, 1]
 
-        xyz = xyz_cid0[iapplied_nid, :]
+        #xyz = xyz_cid0[iapplied_nid, :]
         xyz1 = xyz_cid0[in1, :]
         xyz2 = xyz_cid0[in2, :]
         nxyz = xyz2 - xyz1
@@ -1028,7 +1029,7 @@ class MOMENT2(Load2):
         xyz_cid0 = grid.xyz_cid0()
 
         nloads = len(self.load_id)
-        iapplied_nid = np.searchsorted(grid.node_id, self.node_id)
+        #iapplied_nid = np.searchsorted(grid.node_id, self.node_id)
         inid = np.searchsorted(grid.node_id, self.nodes)
         in1 = inid[:, 0]
         in2 = inid[:, 1]
@@ -1036,7 +1037,7 @@ class MOMENT2(Load2):
         in4 = inid[:, 3]
         assert in4.min() > 0, in4
 
-        xyz = xyz_cid0[iapplied_nid, :]
+        #xyz = xyz_cid0[iapplied_nid, :]
         xyz1 = xyz_cid0[in1, :]
         xyz2 = xyz_cid0[in2, :]
         xyz3 = xyz_cid0[in3, :]
@@ -1190,7 +1191,7 @@ class GRAV(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.coord_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1373,7 +1374,7 @@ class ACCEL(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.coord_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1532,7 +1533,7 @@ class ACCEL1(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.nodes.max(), self.coord_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1551,33 +1552,20 @@ class ACCEL1(Load):
         return
 
 
-class LoadCombination(Load):
-    """
-    +------+-----+-------+------+----+-----+----+----+----+
-    |   1  |  2  |   3   |  4   | 5  |  6  | 7  | 8  | 9  |
-    +======+=====+=======+======+====+=====+====+====+====+
-    | LOAD | SID | SCALE |  S1  | L1 | S2  | L2 | S3 | L3 |
-    +------+-----+-------+------+----+-----+----+----+----+
-    |      | S4  |   L4  | etc. |    |     |    |    |    |
-    +------+-----+-------+------+----+-----+----+----+----+
-    | LOAD | 101 | -0.5  | 1.0  | 3  | 6.2 | 4  |    |    |
-    +------+-----+-------+------+----+-----+----+----+----+
-
-    Used for LOAD, CLOAD, DLOAD
-    """
-    _id_name = 'load_id'
+class Combination(VectorizedBaseCard):
+    _id_name = '__id'
     def clear(self) -> None:
         self.n = 0
-        self.load_id = np.array([], dtype='int32')
-        self.nloads = np.array([], dtype='int32')
-        self.load_ids = np.array([], dtype='int32')
+        self._idi = np.array([], dtype='int32')
+        self._n_ids = np.array([], dtype='int32')
+        self._ids_data = np.array([], dtype='int32')
         self.scale_factors = np.array([], dtype='float64')
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float],
             load_ids: list[int], comment: str='') -> int:
         """
-        Creates a LOAD/CLOAD/DLOAD card
+        Creates a LOAD/CLOAD/DLOAD/BOLTLD card
 
         Parameters
         ----------
@@ -1632,8 +1620,8 @@ class LoadCombination(Load):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        #idtype = self.model.idtype
-        load_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        load_id = np.zeros(ncards, dtype=idtype)
         scale = np.zeros(ncards, dtype='float64')
         nloads = np.zeros(ncards, dtype='int32')
 
@@ -1649,65 +1637,59 @@ class LoadCombination(Load):
             nloads[icard] = nloads_actual
             all_load_ids.extend(load_idsi)
             all_scale_factors.extend(scale_factors)
-        load_ids = np.array(all_load_ids, dtype='int32')
+
+        load_ids = np.array(all_load_ids, dtype=idtype)
         scale_factors = np.array(all_scale_factors, dtype='float64')
         self._save(load_id, scale, nloads, load_ids, scale_factors)
         self.cards = []
 
-    def _save(self, load_id, scale, nloads, load_ids, scale_factors):
-        if len(self.load_id) != 0:
-            load_id = np.hstack([self.load_id, load_id])
+    def _save(self, _idi, scale, _n_ids, _ids_data, scale_factors):
+        if len(self._idi) != 0:
+            _idi = np.hstack([self._idi, _idi])
             scale = np.hstack([self.scale, scale])
-            nloads = np.hstack([self.nloads, nloads])
-            load_ids = np.hstack([self.load_ids, load_ids])
+            _n_ids = np.hstack([self._n_ids, _n_ids])
+            _ids_data = np.hstack([self._ids_data, _ids_data])
             scale_factors = np.hstack([self.scale_factors, scale_factors])
-        self.load_id = load_id
+        self._idi = _idi
         self.scale = scale
-        self.nloads = nloads
-        self.load_ids = load_ids
+        self._n_ids = _n_ids
+        self._ids_data = _ids_data
         self.scale_factors = scale_factors
 
-    def __apply_slice__(self, load: LoadCombination,
+    def __apply_slice__(self, load: Combination,
                         i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
-        load.load_id = self.load_id[i]
+        load._idi = self._idi[i]
         load.scale = self.scale[i]
 
-        iload = self.iload
-        load.load_ids = hslice_by_idim(i, iload, self.load_ids)
-        load.scale_factors = hslice_by_idim(i, iload, self.scale_factors)
-        load.nloads = self.nloads[i]
-
-    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
-        used_dict['load_id'].append(self.load_ids)
-
-    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
-        load_id = used_dict['load_id']
-        ncards_removed = remove_unused_primary(
-            self, load_id, self.load_id, 'load_id')
-        return ncards_removed
+        iids = self._iids
+        load._ids_data = hslice_by_idim(i, iids, self._ids_data)
+        load.scale_factors = hslice_by_idim(i, iids, self.scale_factors)
+        load._n_ids = self._n_ids[i]
 
     @property
-    def iload(self) -> np.ndarray:
-        return make_idim(self.n, self.nloads)
+    def _iids(self) -> np.ndarray:
+        return make_idim(self.n, self._n_ids)
 
     @property
     def max_id(self) -> int:
-        return max(self.load_id.max(), self.load_ids.max())
+        return max(self._idi.max(), self._ids_data.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
+        #if len(self._idi) == 0:
+            #return
         #get_reduced_loads(self, filter_zero_scale_factors=False)
         print_card, size = get_print_card_size(size, self.max_id)
-        load_id_ = array_str(self.load_id, size=size)
-        load_ids_ = array_str(self.load_ids, size=size).tolist()
-        for sid, scale, iload in zip(self.load_id, self.scale, self.iload):
+        load_id_ = array_str(self._idi, size=size)
+        #load_ids_ = array_str(self._ids_data, size=size).tolist()
+        for sid, scale, iload in zip(load_id_, self.scale, self._iids):
             iload0, iload1 = iload
             list_fields = [self.type, sid, scale]
             scale_factors = self.scale_factors[iload0:iload1]
-            load_ids = self.load_ids[iload0:iload1]
+            load_ids = self._ids_data[iload0:iload1]
             for (scale_factor, load_id) in zip(scale_factors, load_ids):
                 list_fields += [scale_factor, load_id]
             #if len(load_ids) != len(scale_factors):
@@ -1722,6 +1704,53 @@ class LoadCombination(Load):
         #else:
             #raise RuntimeError(size)
         return
+
+class LoadCombination(Combination): # todo used to be load
+    """
+    +------+-----+-------+------+----+-----+----+----+----+
+    |   1  |  2  |   3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +======+=====+=======+======+====+=====+====+====+====+
+    | LOAD | SID | SCALE |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +------+-----+-------+------+----+-----+----+----+----+
+    |      | S4  |   L4  | etc. |    |     |    |    |    |
+    +------+-----+-------+------+----+-----+----+----+----+
+    | LOAD | 101 | -0.5  | 1.0  | 3  | 6.2 | 4  |    |    |
+    +------+-----+-------+------+----+-----+----+----+----+
+
+    Used for LOAD, CLOAD, DLOAD
+    """
+    _id_name = 'load_id'
+    @property
+    def load_id(self) -> np.ndarray:
+        return self._idi
+    @property
+    def nloads(self) -> np.ndarray:
+        return self._n_ids
+    @property
+    def load_ids(self) -> np.ndarray:
+        return self._ids_data
+
+    @load_id.setter
+    def load_id(self, load_id: np.ndarray) -> None:
+        self._idi = load_id
+    @nloads.setter
+    def nloads(self, nloads: np.ndarray) -> None:
+        self._n_ids = nloads
+    @load_ids.setter
+    def load_ids(self, load_ids: np.ndarray) -> None:
+        self._ids_data = load_ids
+    @property
+    def iload(self) -> np.ndarray:
+        return self._iids
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['load_id'].append(self.load_ids)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        load_id = used_dict['load_id']
+        ncards_removed = remove_unused_primary(
+            self, load_id, self.load_id, 'load_id')
+        return ncards_removed
 
 
 class CLOAD(LoadCombination):
@@ -1817,7 +1846,7 @@ class LOAD(LoadCombination):
     def get_reduced_loads(self,
                           remove_missing_loads: bool=False,
                           filter_zero_scale_factors: bool=False,
-                          stop_on_failure: bool=True) -> dict[int, tuple[float, Loads]]:
+                          stop_on_failure: bool=True) -> dict[int, tuple[float, StaticLoad]]:
         """
         Takes a LOAD / LSEQ card and gets each referenced load.
         Does NOT do summations.
@@ -1852,7 +1881,7 @@ class LOAD(LoadCombination):
                                     load_id: int,
                                     remove_missing_loads: bool=False,
                                     filter_zero_scale_factors: bool=False,
-                                    stop_on_failure: bool=True) -> dict[int, tuple[float, Loads]]:
+                                    stop_on_failure: bool=True) -> dict[int, tuple[float, StaticLoad]]:
         """
         Takes a load_id and gets each referenced load.
         Does NOT do summations.
@@ -1878,7 +1907,7 @@ class LOAD(LoadCombination):
                 FORCE, PLOAD4, etc.
 
         """
-        load = self.slice_card_by_load_id(load_id)
+        load = self.slice_card_by_id(load_id)
         reduced_loads = get_reduced_loads(load)
         return reduced_loads
 
@@ -1923,7 +1952,7 @@ def get_reduced_static_load_from_load_id(model: BDF,
 def get_reduced_loads(load: Union[LOAD, LSEQ],
                       remove_missing_loads: bool=False,
                       filter_zero_scale_factors: bool=False,
-                      stop_on_failure: bool=True) -> dict[int, Loads]:
+                      stop_on_failure: bool=True) -> dict[int, StaticLoad]:
     """
     Takes a LOAD / LSEQ card and gets each referenced load.
     Does NOT do summations.
@@ -2138,7 +2167,7 @@ class TEMP(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2253,7 +2282,7 @@ class TEMPD(Load):
     def max_id(self) -> int:
         return self.load_id.max()
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2408,7 +2437,7 @@ class SLOAD(Load):
         return max(self.load_id.max(),
                    self.nodes.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2653,7 +2682,7 @@ class RFORCE(Load):
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2923,7 +2952,7 @@ class RFORCE1(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
-    @parse_load_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

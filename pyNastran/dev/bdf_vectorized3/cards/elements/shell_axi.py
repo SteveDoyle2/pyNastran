@@ -16,7 +16,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, searchsorted_filter, parse_element_check # Property, hslice_by_idim, make_idim
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, searchsorted_filter, parse_check) # Property, hslice_by_idim, make_idim
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, # array_default_float,
@@ -514,7 +515,7 @@ class CTRIAX(AxisymmetricShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max(), self.mcid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -682,7 +683,7 @@ class CTRIAX6(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max(), self.material_id.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -859,7 +860,7 @@ class CQUADX(AxiShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max(), self.mcid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -980,7 +981,7 @@ class CQUADX4(AxisymmetricShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1128,7 +1129,7 @@ class CQUADX8(AxisymmetricShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1239,7 +1240,7 @@ class CTRAX3(AxisymmetricShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1362,7 +1363,7 @@ class CTRAX6(AxisymmetricShellElement):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

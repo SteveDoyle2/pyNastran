@@ -2024,29 +2024,22 @@ def split_set3_ids(idsi: list[int, str]) -> list[int]:
 
 
 class SET4(VectorizedBaseCard):
+    """
+    | SET4 |  ID | CLASS |  TYPE  | ID1  | ID2  | ID3 | ID4 | ID5 |
+    |      | ID6 |  ID7  |  ID8   | etc. |      |     |     |     |
+    | SET4 | 22  |  PROP | PSOLID |   1  | THRU |  20 |     |     |
+
+    TYPE may be {PSOLID, PSHELL, PSHEAR, PBAR, PBEAM, PWELD}
+    """
     _id_name = 'set_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.set_id = np.array([], dtype='int32')
-        self.desc = np.array([], dtype='|U5')  #  POINT
-        self.ids = np.array([], dtype='int32')
+        self.property_type = np.array([], dtype='|U8')
+        self.property_ids = np.array([], dtype='int32')
         self.num_ids = np.array([], dtype='int32')
 
-    #def slice_card_by_set_id(self, ids: np.ndarray) -> SET1:
-        #assert self.n > 0, self.n
-        #assert len(self.set_id) > 0, self.set_id
-        #i = self.index(ids)
-        #cls_obj = self.slice_card_by_index(i)
-        #assert cls_obj.n > 0, cls_obj
-        #return cls_obj
-
-    #def index(self, set_id: np.ndarray) -> np.ndarray:
-        #assert len(self.set_id) > 0, self.set_id
-        #set_id = np.atleast_1d(np.asarray(set_id, dtype=self.set_id.dtype))
-        #i = np.searchsorted(self.set_id, set_id)
-        #return i
-
-    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> SET3:
+    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> int:
         #self.cards.append((sid, desc, ids, comment))
         #self.n += 1
         #return self.n - 1
@@ -2063,12 +2056,13 @@ class SET4(VectorizedBaseCard):
             a comment for the card
 
         """
-        set4_add
         sid = integer(card, 1, 'sid')
-        desc = string(card, 2, 'desc')
-        ids = read_ids_thru(card, ifield0=3, base_str='ID%d')
+        prop = string(card, 2, 'PROP')
+        property_type = string(card, 3, 'property_type')
+        assert prop == 'PROP', (sid, prop, property_type)
+        ids = read_ids_thru(card, ifield0=4, base_str='ID%d')
         #return SET3(sid, desc, ids, comment=comment)
-        self.cards.append((sid, desc, ids, comment))
+        self.cards.append((sid, property_type, ids, comment))
         self.n += 1
         return self.n - 1
 
@@ -2078,49 +2072,44 @@ class SET4(VectorizedBaseCard):
         idtype = self.model.idtype
 
         set_id = np.zeros(ncards, dtype='int32')
-        desc = np.zeros(ncards, dtype='|U5')  #  POINT
+        property_type = np.zeros(ncards, dtype='|U8')  #  POINT
         num_ids = np.zeros(ncards, dtype='int32')
 
         all_ids = []
         for icard, card in enumerate(self.cards):
-            sid, desci, idsi, comment = card
-            if desci == 'ELEM':
-                desci = 'ELEMENT'
-            elif desci == 'RBEIN':
-                desci = 'RBEin'
-            elif desci == 'RBEEX':
-                desci = 'RBEex'
+            sid, property_typei, idsi, comment = card
+            assert property_typei in {'PSOLID', 'PSHELL', 'PSHEAR', 'PBAR', 'PBEAM', 'PWELD'}, property_typei
 
             set_id[icard] = sid
-            desc[icard] = desci
+            property_type[icard] = property_typei
             ids2 = split_set3_ids(idsi)
             num_ids[icard] = len(ids2)
             all_ids.extend(ids2)
         ids = np.array(all_ids, dtype=idtype)
-        self._save(set_id, desc, num_ids, ids)
+        self._save(set_id, property_type, num_ids, ids)
         self.sort()
         self.cards = []
 
-    def _save(self, set_id, desc, num_ids, ids):
+    def _save(self, set_id, property_type, num_ids, property_ids):
         if len(self.set_id) != 0:
             set_id = np.hstack([self.set_id, set_id])
-            desc = np.hstack([self.desc, desc])
+            property_type = np.hstack([self.property_type, property_type])
             num_ids = np.hstack([self.num_ids, num_ids])
-            ids = np.hstack([self.ids, ids])
+            property_ids = np.hstack([self.property_ids, property_ids])
         self.set_id = set_id
-        self.desc = desc
+        self.property_type = property_type
         self.num_ids = num_ids
-        self.ids = ids
+        self.property_ids = property_ids
         self.n = len(set_id)
 
-    def __apply_slice__(self, set_card: SET3, i: np.ndarray) -> None:
-        assert self.num_ids.sum() == len(self.ids)
+    def __apply_slice__(self, set_card: SET4, i: np.ndarray) -> None:
+        assert self.num_ids.sum() == len(self.property_ids)
         set_card.n = len(i)
         set_card.set_id = self.set_id[i]
-        set_card.desc = self.desc[i]
+        set_card.property_type = self.property_type[i]
 
-        inid = self.inid # [i, :]
-        set_card.ids = hslice_by_idim(i, inid, self.ids)
+        inid = self.iprop # [i, :]
+        set_card.property_ids = hslice_by_idim(i, inid, self.property_ids)
 
         set_card.num_ids = self.num_ids[i]
         #assert isinstance(prop.ndim, np.ndarray), prop.ndim
@@ -2133,12 +2122,12 @@ class SET4(VectorizedBaseCard):
         pass
 
     @property
-    def inid(self) -> np.ndarray:
+    def iprop(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
 
     @property
     def max_id(self) -> int:
-        return self.set_id.max()
+        return max(self.set_id.max(), self.property_ids.max())
 
     #@parse_node_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2146,17 +2135,15 @@ class SET4(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.set_id) == 0:
             return
-        asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
         set_id = array_str(self.set_id, size=size).tolist()
-        ids_ = array_str(self.ids, size=size).tolist()
+        ids_ = array_str(self.property_ids, size=size).tolist()
+        for sid, property_type, iprop in zip(set_id, self.property_type, self.iprop):
+            iprop0, iprop1 = iprop
+            ids = ids_[iprop0:iprop1]
 
-        for sid, desc, inid in zip(set_id, self.desc, self.inid):
-            inid0, inid1 = inid
-            ids = ids_[inid0:inid1]
-
-            list_fields = ['SET3', sid, desc] + ids
+            list_fields = ['SET4', sid, 'PROP', property_type] + ids
             bdf_file.write(print_card(list_fields))
         return
 

@@ -25,8 +25,7 @@ from pyNastran.bdf.cards.aero.utils import (
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim, hslice_by_idim,
-    parse_element_check, parse_property_check,
-)
+    parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float, array_default_str,
@@ -901,7 +900,7 @@ class CAERO1(VectorizedBaseCard):
         return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
                    self.lchord.max(), self.lspan.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1264,7 +1263,7 @@ class CAERO2(VectorizedBaseCard):
         return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
                    self.lsb.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1609,7 +1608,7 @@ class CAERO3(VectorizedBaseCard):
         return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
                    self.list_c1.max(), self.list_c2.max(), self.list_w.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2034,7 +2033,7 @@ class CAERO4(VectorizedBaseCard):
         return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
                    self.lspan.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2340,7 +2339,7 @@ class CAERO5(VectorizedBaseCard):
         return max(self.element_id.max(), self.property_id.max(), self.cp.max(),
                    self.lspan.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2743,7 +2742,7 @@ class CAERO7(VectorizedBaseCard):
             y.append(yi)
         return x, y
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2928,7 +2927,7 @@ class PAERO1(PAERO):
         caero_body_id_max = 0 if len(self.caero_body_id) == 0 else self.caero_body_id.max()
         return max(self.property_id.max(), caero_body_id_max)
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3161,7 +3160,7 @@ class PAERO2(PAERO):
         return max(self.property_id.max(), self.lrsb.max(),
                    self.lrib.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3343,7 +3342,7 @@ class PAERO3(PAERO):
     def max_id(self) -> int:
         return self.property_id.max()
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3560,7 +3559,7 @@ class PAERO4(PAERO):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.lcla.max(), self.lcirc.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -3752,7 +3751,7 @@ class PAERO5(PAERO):
         return max(self.property_id.max(), self.lalpha.max(),
                    self.lxis.max(), self.ltaus.max())
 
-    @parse_property_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:

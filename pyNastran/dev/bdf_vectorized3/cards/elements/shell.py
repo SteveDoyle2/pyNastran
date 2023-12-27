@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element,
-    parse_element_check,
+    parse_check,
     #hslice_by_idim, make_idim,
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -465,7 +465,7 @@ class ShellElement(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.mcid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, file_obj: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -659,7 +659,7 @@ class CTRIA3(ShellElement):
         ]
         return headers
 
-    @parse_element_check
+    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         size = 8
@@ -706,7 +706,7 @@ class CTRIA3(ShellElement):
             bdf_file.write(msg)
         return
 
-    @parse_element_check
+    @parse_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double: bool=False,
                       write_card_header: bool=False) -> None:
@@ -980,19 +980,19 @@ class CTRIAR(ShellElement):
         self.T[itflag] *= xyz_scale
 
 
-    @parse_element_check
+    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                    write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=8, is_double=False,
                         write_card_header=write_card_header)
 
-    @parse_element_check
+    @parse_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double=False, write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=16, is_double=is_double,
                         write_card_header=write_card_header)
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1239,7 +1239,7 @@ class CQUAD4(ShellElement):
                    theta_mcid, 'zoffset', 'blank', 'tflag', 'T1', 'T2', 'T3', 'T4']
         return headers
 
-    @parse_element_check
+    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         assert self.max_id < 100_000_000, self.max_id
@@ -1303,7 +1303,7 @@ class CQUAD4(ShellElement):
                 bdf_file.write(msg)
         return
 
-    @parse_element_check
+    @parse_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double: bool=False,
                       write_card_header: bool=False) -> None:
@@ -1605,7 +1605,7 @@ class CQUADR(ShellElement):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.mcid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1897,7 +1897,7 @@ class CTRIA6(ShellElement):
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2243,7 +2243,7 @@ class CQUAD8(ShellElement):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.mcid.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2465,7 +2465,7 @@ class CQUAD(ShellElement):
         used_dict['node_id'].append(self.nodes.ravel())
         used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -2676,7 +2676,7 @@ class CAABSF(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
-    @parse_element_check
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
