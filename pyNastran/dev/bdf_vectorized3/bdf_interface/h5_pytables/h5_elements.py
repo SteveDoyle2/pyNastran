@@ -6,10 +6,14 @@ from .utils import get_group_name, get_attributes
 if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import CAERO1
     from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM2
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CONROD
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.bar import CBAR
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM
+    from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CONROD, CROD, CTUBE
+    from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4
+    from pyNastran.dev.bdf_vectorized3.cards.elements.damper import CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CGAP, CVISC
+    from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR
+    from pyNastran.dev.bdf_vectorized3.cards.elements.bar import CBAR
+    from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM
     from pyNastran.dev.bdf_vectorized3.cards.elements.shell import CQUAD4
+    from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from tables import Group
 
@@ -51,15 +55,27 @@ def load_h5_element(model: BDF, input_group: Group):
         elif element_name == 'CONM2':
             elem = _load_h5_conm2(model, data, element_id)
             #elem._save()
+        elif element_name == 'CONROD':
+            elem = model.conrod
+            _load_h5_conrod(elem, data, element_id)
         elif element_name == 'CROD':
             elem = model.crod
-            _load_h5_crod(elem, data, element_id)
+            _load_h5_crod_ctube_cshear(elem, data, element_id)
+        elif element_name == 'CTUBE':
+            elem = model.ctube
+            _load_h5_crod_ctube_cshear(elem, data, element_id)
+        elif element_name == 'CSHEAR':
+            elem = model.cshear
+            _load_h5_crod_ctube_cshear(elem, data, element_id)
         elif element_name == 'CBAR':
             elem = model.cbar
             _load_h5_cbar(elem, data, element_id)
         elif element_name == 'CBEAM':
             elem = model.cbeam
             _load_h5_cbeam(elem, data, element_id)
+        elif element_name == 'PLOTEL':
+            elem = model.plotel
+            _load_h5_plotel(elem, data, element_id)
 
         elif element_name in {'CHEXA', 'CPENTA', 'CTETRA'}:
             elem = getattr(model, element_name.lower())
@@ -67,30 +83,33 @@ def load_h5_element(model: BDF, input_group: Group):
             nodes = data['G']
             elem._save(element_id, property_id, nodes)
             #elem.write()
-        elif element_name == 'CELAS1':
+        elif element_name in 'CELAS1':
             elem = model.celas1
-            read_celas1(name, data, elem)
+            read_celas1_cdamp1(name, data, elem)
         elif element_name == 'CELAS2':
             elem = model.celas2
             read_celas2(name, data, elem)
         elif element_name == 'CELAS3':
             elem = model.celas3
-            read_celas3(name, data, elem)
+            read_celas3_cdamp3(name, data, elem)
         elif element_name == 'CELAS4':
             elem = model.celas4
             read_celas4(name, data, elem)
         elif element_name == 'CDAMP1':
             elem = model.cdamp1
-            read_cdamp1(name, data, elem)
+            read_celas1_cdamp1(name, data, elem)
         elif element_name == 'CDAMP2':
             elem = model.cdamp2
             read_cdamp2(name, data, elem)
         elif element_name == 'CDAMP3':
             elem = model.cdamp3
-            read_cdamp3(name, data, elem)
+            read_celas3_cdamp3(name, data, elem)
         elif element_name == 'CDAMP4':
             elem = model.cdamp4
             read_cdamp4(name, data, elem)
+        elif element_name == 'CDAMP4':
+            elem = model.cvisc
+            read_cvisc(name, data, elem)
         else:
             model.log.warning(f'skipping {element_name} in _load_h5_element')
             #print(f'skipping {element_name} in _load_h5_element')
@@ -112,6 +131,7 @@ def load_h5_element(model: BDF, input_group: Group):
     #y = 1
 
 def _load_h5_conm2(model: BDF, data, element_id) -> CONM2:
+    assert len(data.dtype) == 11, (data.dtype, len(data.dtype))
     elem = model.conm2
     # dtype([('EID', '<i8'), ('G', '<i8'), ('CID', '<i8'), ('M', '<f8'),
     #        ('X1', '<f8'), ('X2', '<f8'), ('X3', '<f8'), ('I1', '<f8'), ('I2', '<f8', (2,)),
@@ -129,16 +149,50 @@ def _load_h5_conm2(model: BDF, data, element_id) -> CONM2:
     ])
     return elem
 
-def _load_h5_crod(elem: CROD, data, element_id):
+def _load_h5_crod_ctube_cshear(elem: Union[CROD, CTUBE, CSHEAR], data, element_id):
     """
     array([(14, 3, [20, 24], 1), (15, 3, [21, 25], 1)],
       dtype=[('EID', '<i8'), ('PID', '<i8'), ('G', '<i8', (2,)), ('DOMAIN_ID', '<i8')])
+
+    array([(22, 8, [19, 20, 24, 23], 1)],
+      dtype=[('EID', '<i8'), ('PID', '<i8'), ('G', '<i8', (4,)), ('DOMAIN_ID', '<i8')])
     """
-    nelements = len(element_id)
+    assert len(data.dtype) == 4, (data.dtype, len(data.dtype))
+    #nelements = len(element_id)
     element_id = element_id
     property_id = data['PID']
     node_id = data['G']
     elem._save(element_id, property_id, node_id)
+    return elem
+
+def _load_h5_plotel(elem: PLOTEL, data, element_id):
+    """
+    array([(22, [19, 20, 24, 23], 1)],
+      dtype=[('EID', '<i8'), ('G', '<i8', (4,)), ('DOMAIN_ID', '<i8')])
+    """
+    assert len(data.dtype) == 3, (data.dtype, len(data.dtype))
+    #nelements = len(element_id)
+    element_id = element_id
+    node_id = data['G']
+    elem._save(element_id, node_id)
+    return elem
+
+def _load_h5_conrod(elem: CONROD, data, element_id):
+    """
+    array([(26, 22, 30, 1, 1., 2., 0., 0., 1)],
+      dtype=[('EID', '<i8'), ('G1', '<i8'), ('G2', '<i8'), ('MID', '<i8'),
+      ('A', '<f8'), ('J', '<f8'), ('C', '<f8'), ('NSM', '<f8'), ('DOMAIN_ID', '<i8')])
+    """
+    assert len(data.dtype) == 9, (data.dtype, len(data.dtype))
+    #nelements = len(element_id)
+    element_id = element_id
+    material_id = data['MID']
+    A = data['A']
+    J = data['J']
+    c = data['C']
+    nsm = data['NSM']
+    node_id = np.column_stack([data['G1'], data['G2']])
+    elem._save(element_id, material_id, node_id, A, J, c, nsm)
     return elem
 
 def _load_h5_cbar(elem: CBAR, data, element_id):
@@ -151,7 +205,8 @@ def _load_h5_cbar(elem: CBAR, data, element_id):
       ('W1B', '<f8'), ('W2B', '<f8'), ('W3B', '<f8'),
       ('DOMAIN_ID', '<i8')])
     """
-    nelements = len(element_id)
+    assert len(data.dtype) == 18, (data.dtype, len(data.dtype))
+    #nelements = len(element_id)
     element_id = element_id
     property_id = data['PID']
     nodes = np.column_stack([data['GA'], data['GB'], ])
@@ -193,7 +248,8 @@ def _load_h5_cbeam(elem: CBEAM, data, element_id):
     ('F', '<i8'), ('PA', '<i8'), ('PB', '<i8'),
     ('WA', '<f8', (3,)), ('WB', '<f8', (3,)), ('DOMAIN_ID', '<i8')])
     """
-    nelements = len(element_id)
+    assert len(data.dtype) == 14, (data.dtype, len(data.dtype))
+    #nelements = len(element_id)
     element_id = element_id
     property_id = data['PID']
     #node_id = data['G']
@@ -234,6 +290,7 @@ def _load_h5_cbeam(elem: CBEAM, data, element_id):
     return elem
 
 def _load_h5_shell(elem: CQUAD4, element_id, data):
+    assert len(data.dtype) == 9, (data.dtype, len(data.dtype))
     # dtype([('EID', '<i8'), ('PID', '<i8'), ('G', '<i8', (4,)), ('THETA', '<f8'),
     #        ('ZOFFS', '<f8'), ('TFLAG', '<i8'), ('T', '<f8', (4,)),
     #        ('MCID', '<i8'), ('DOMAIN_ID', '<i8')])
@@ -249,8 +306,11 @@ def _load_h5_shell(elem: CQUAD4, element_id, data):
                zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
 
-def read_celas1(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS1) -> None:
-    #('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+def read_celas1_cdamp1(name: str, group: h5py._hl.dataset.Dataset, elem: Union[CELAS1, CDAMP1]) -> None:
+    """
+    ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    """
+    assert len(group.dtype) == 7, (group.dtype, len(group.dtype))
     element_id = group['EID']
     property_id = group['PID']
     G1 = group['G1']
@@ -267,9 +327,12 @@ def read_celas1(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS1) -> Non
     elem._save(element_id, property_id, nodes, components)
 
 def read_celas2(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS2) -> None:
-    #('EID', 'K', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
-    #dtype=[('EID', '<i8'), ('K', '<f8'), ('G1', '<i8'), ('G2', '<i8'), ('C1', '<i8'), ('C2', '<i8'),
-           #('GE', '<f8'), ('S', '<f8'), ('DOMAIN_ID', '<i8')])
+    """
+    ('EID', 'K', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    dtype=[('EID', '<i8'), ('K', '<f8'), ('G1', '<i8'), ('G2', '<i8'), ('C1', '<i8'), ('C2', '<i8'),
+           ('GE', '<f8'), ('S', '<f8'), ('DOMAIN_ID', '<i8')])
+    """
+    assert len(group.dtype) == 9, (group.dtype, len(group.dtype))
     element_id = group['EID']
     k = group['K']
     G1 = group['G1']
@@ -287,7 +350,8 @@ def read_celas2(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS2) -> Non
         #obj.validate()
     elem._save(element_id, nodes, components, k, ge, s)
 
-def read_celas3(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS3) -> None:
+def read_celas3_cdamp3(name: str, group: h5py._hl.dataset.Dataset, elem: Union[CELAS3, CDAMP3]) -> None:
+    assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     property_id = group['PID']
     G1 = group['S1']
@@ -301,6 +365,7 @@ def read_celas3(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS3) -> Non
     elem._save(element_id, property_id, spoints)
 
 def read_celas4(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS4) -> None:
+    assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     k = group['K']
     G1 = group['S1']
@@ -313,25 +378,28 @@ def read_celas4(name: str, group: h5py._hl.dataset.Dataset, elem: CELAS4) -> Non
         #obj.validate()
     elem._save(element_id, k, spoints)
 
-def read_cdamp1(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP1) -> None:
+#def read_cdamp1(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP1) -> None:
     #('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
-    element_id = group['EID']
-    property_id = group['PID']
-    G1 = group['G1']
-    G2 = group['G2']
-    C1 = group['C1']
-    C2 = group['C2']
-    nodes = np.column_stack([G1, G2])
-    components = np.column_stack([C1, C2])
+    #element_id = group['EID']
+    #property_id = group['PID']
+    #G1 = group['G1']
+    #G2 = group['G2']
+    #C1 = group['C1']
+    #C2 = group['C2']
+    #nodes = np.column_stack([G1, G2])
+    #components = np.column_stack([C1, C2])
     #assert NIDS.shape[1] == 2, NIDS.shape
-    DOMAIN_ID = group['DOMAIN_ID']
+    #DOMAIN_ID = group['DOMAIN_ID']
     #for eid, pid, nids, c1, c2 in zip(EID, PID, NIDS, C1, C2):
         #obj = geom_model.add_cdamp1(eid, pid, nids, c1=c1, c2=c2, comment='')
         #obj.validate()
-    elem._save(element_id, property_id, nodes, components)
+    #elem._save(element_id, property_id, nodes, components)
 
 def read_cdamp2(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP2) -> None:
-    #('EID', 'B', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    """
+    ('EID', 'B', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    """
+    assert len(group.dtype) == 7, (group.dtype, len(group.dtype))
     element_id = group['EID']
     b = group['B']
     G1 = group['G1']
@@ -347,20 +415,22 @@ def read_cdamp2(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP2) -> Non
         #obj.validate()
     elem._save(element_id, nodes, components, b)
 
-def read_cdamp3(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP3) -> None:
-    element_id = group['EID']
-    property_id = group['PID']
-    G1 = group['S1']
-    G2 = group['S2']
-    spoints = np.stack([G1, G2], axis=1)
-    assert spoints.shape[1] == 2, spoints.shape
-    DOMAIN_ID = group['DOMAIN_ID']
-    elem._save(element_id, property_id, spoints)
+#def read_cdamp3(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP3) -> None:
+    #assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
+    #element_id = group['EID']
+    #property_id = group['PID']
+    #G1 = group['S1']
+    #G2 = group['S2']
+    #spoints = np.stack([G1, G2], axis=1)
+    #assert spoints.shape[1] == 2, spoints.shape
+    #DOMAIN_ID = group['DOMAIN_ID']
+    #elem._save(element_id, property_id, spoints)
     #for eid, pid, nids in zip(EID, PID, NIDS):
         #obj = geom_model.add_cdamp3(eid, pid, nids, comment='')
         #obj.validate()
 
 def read_cdamp4(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP4) -> None:
+    assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     b = group['B']
     G1 = group['S1']
@@ -372,3 +442,23 @@ def read_cdamp4(name: str, group: h5py._hl.dataset.Dataset, elem: CDAMP4) -> Non
         #obj = geom_model.add_cdamp4(eid, b, nids)
         #obj.validate()
     elem._save(element_id, b, spoints)
+
+def read_cvisc(name: str, group: h5py._hl.dataset.Dataset, elem: CVISC) -> None:
+    """
+    ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    """
+    assert len(group.dtype) == 7, (group.dtype, len(group.dtype))
+    element_id = group['EID']
+    property_id = group['PID']
+    G1 = group['G1']
+    G2 = group['G2']
+    C1 = group['C1']
+    C2 = group['C2']
+    nodes = np.column_stack([G1, G2])
+    components = np.column_stack([C1, C2])
+    #assert NIDS.shape[1] == 2, NIDS.shape
+    DOMAIN_ID = group['DOMAIN_ID']
+    #for eid, pid, nids, c1, c2 in zip(EID, PID, NIDS, C1, C2):
+        #obj = geom_model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
+        #obj.validate()
+    elem._save(element_id, property_id, nodes, components)

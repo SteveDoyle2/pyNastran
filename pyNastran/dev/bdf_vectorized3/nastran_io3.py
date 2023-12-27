@@ -462,6 +462,10 @@ def load_elements(ugrid: vtkUnstructuredGrid,
     solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
 
     gui_elements = basic_elements | solid_elements | midside_elements
+    cards_to_drop_silenced = {
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC',
+    }
 
     nelement0 = 0
     card_index = {}
@@ -647,6 +651,8 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             del cell_offseti, nnodesi, nodesi
             cell_offset0 += nelement * (dnode + 1)
         else:
+            if element.type in cards_to_drop_silenced:
+                continue
             # more complicated element
             log.warning(f'  dropping {element}')
             continue

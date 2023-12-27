@@ -79,7 +79,10 @@ def load_h5_property(model: BDF, input_group: Group):
             table_ge = data['TGEID']
             table_k_nonlinear = data['TKNID']
             prop._save(property_id, table_k, table_ge, table_k_nonlinear)
-        elif name in {'PAERO1', 'PBEND', 'PCONV'}:
+        elif name == 'PCONV':
+            prop = model.pconv
+            _load_h5_pconv(prop, property_id, data, domain_id)
+        elif name in {'PAERO1', 'PBEND'}:
             #print(f'skipping {name}')
             model.log.warning(f'skipping {name}')
             continue
@@ -643,4 +646,37 @@ def _load_h5_pcomp(model: BDF, group: Group):
     prop.domain_id = domain_id
     prop.write()
     x = 1
+
+def _load_h5_pconv(prop: PCONV, property_id, data, domain_id):
+    """
+    array([(35, 15, 0, 0., 0, 0., 0., 0., 0., 0., 0., 0., 0., 0, 0., 0, 0, [1., 0., 0.], 1)],
+      dtype=[('PID', '<i8'), ('MID', '<i8'), ('FORM', '<i8'), ('EXPF', '<f8'),
+             ('FTYPE', '<i8'),
+             ('HCF1', '<f8'), ('HCF2', '<f8'), ('HCF3', '<f8'), ('HCF4', '<f8'),
+             ('HCF5', '<f8'), ('HCF6', '<f8'), ('HCF7', '<f8'), ('HCF8', '<f8'),
+             ('TID', '<i8'), ('CHLEN', '<f8'), ('GIDIN', '<i8'), ('CE', '<i8'),
+             ('E', '<f8', (3,)), ('DOMAIN_ID', '<i8')])
+    """
+    assert len(data.dtype) == 19, (data.dtype, len(data.dtype))
+    pconv_id = data['PID']
+    material_id = data['MID']
+    form = data['FORM']
+    exponent_free_convection = data['EXPF']
+    free_convection_type = data['FTYPE']
+    hcf = np.column_stack([
+        data['HCF1'], data['HCF2'], data['HCF3'], data['HCF4'],
+        data['HCF5'], data['HCF6'], data['HCF7'], data['HCF8'],
+    ])
+    table_id = data['TID']
+    characteristic_length = data['CHLEN']
+    grid_inlet = data['GIDIN']
+    coord_e = data['CE']
+    e = data['E']
+    prop._save(pconv_id, material_id, form,
+              exponent_free_convection,
+              free_convection_type,
+              table_id, characteristic_length,
+              grid_inlet, coord_e, e)
+    prop.domain_id = domain_id
+
 
