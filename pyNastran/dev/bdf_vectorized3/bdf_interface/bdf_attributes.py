@@ -64,8 +64,10 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.radiation import (
     RADCAV, RADLST, RADMTX,
     VIEW, VIEW3D)
-from pyNastran.dev.bdf_vectorized3.cards.elements.bolt import BOLT, BOLTLD, BOLTFOR, BOLTFRC
-from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
+from pyNastran.dev.bdf_vectorized3.cards.elements.bolt import (
+    BOLT, BOLTLD, BOLTFOR, BOLTFRC, BOLTSEQ)
+from pyNastran.dev.bdf_vectorized3.cards.elements.plot import (
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8)
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     CLOAD,
@@ -128,7 +130,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBE1, RBE2, RBE3,
     #RSSCON,
 )
-from pyNastran.dev.bdf_vectorized3.cards.monitor import MONPNT1, MONPNT2, MONPNT3
+from pyNastran.dev.bdf_vectorized3.cards.monitor import (
+    MONPNT1, MONPNT2, MONPNT3, MONDSP1)
 from pyNastran.dev.bdf_vectorized3.cards.aero import (
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
@@ -235,6 +238,7 @@ class BDFAttributes:
         self.bolt = BOLT(self)
         self.boltfor = BOLTFOR(self)
         self.boltfrc = BOLTFRC(self)
+        self.boltseq = BOLTSEQ(self)
 
         # plot
         self.plotel = PLOTEL(self)
@@ -309,6 +313,7 @@ class BDFAttributes:
         self.monpnt1 = MONPNT1(self)
         self.monpnt2 = MONPNT2(self)
         self.monpnt3 = MONPNT3(self)
+        self.mondsp1 = MONDSP1(self)
 
         # aero geometry
         self.caero1 = CAERO1(self)
@@ -816,7 +821,7 @@ class BDFAttributes:
     @property
     def bolt_cards(self) -> list[Any]:
         cards = [
-            self.bolt, self.boltld, self.boltfor, self.boltfrc,
+            self.bolt, self.boltld, self.boltfor, self.boltfrc, self.boltseq,
         ]
         return cards
 
@@ -1086,7 +1091,7 @@ class BDFAttributes:
     @property
     def monitor_point_cards(self) -> list[Any]:
         monitor_points = [
-            self.monpnt1, self.monpnt2, self.monpnt3,
+            self.monpnt1, self.monpnt2, self.monpnt3, self.mondsp1,
         ]
         return monitor_points
 

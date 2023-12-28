@@ -2693,6 +2693,7 @@ class PSHLN2(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         directs = array_default_int(self.direct, default=1, size=size)

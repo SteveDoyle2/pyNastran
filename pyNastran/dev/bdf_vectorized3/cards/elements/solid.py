@@ -675,9 +675,6 @@ class SolidHex(SolidElement):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.element_id.max(),
-                      self.property_id.max(),
-                      self.nodes.max())
         print_card, size = get_print_card_size(size, self.max_id)
 
         base_nodes = self.base_nodes
@@ -1056,7 +1053,6 @@ class PLSOLID(Property):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         stress_strains = array_default_str(self.stress_strain, default='GRID', size=size)
@@ -1204,7 +1200,6 @@ class PSOLCZ(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1830,7 +1825,6 @@ class PCOMPLS(Property):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -1885,5 +1879,6 @@ class PCOMPLS(Property):
 
     def rho(self) -> np.ndarray:
         print(self.material_id, self.model.matort.rho)
-        rho = get_density_from_material(self.material_id, self.allowed_materials, debug=True)
+        rho = get_density_from_material(
+            self.material_id, self.allowed_materials, debug=False)
         return rho

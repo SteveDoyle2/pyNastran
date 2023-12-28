@@ -316,9 +316,12 @@ class VectorizedBaseCard:
         #  - self.node_id
         #  - self.element_id
         # but some cards are special snowflakes and don't have ids
+        non_integer_based_ids = {
+            'AECOMP', 'AECOMPL', 'MONPNT1', 'MONPNT2', 'MONPNT3',
+            'MONDSP1', 'USET'}
         idtype = self_ids.dtype
         if idtype.name not in {'int32', 'int64'}:
-            if self.type in {'AECOMP', 'AECOMPL', 'MONPNT1', 'MONPNT2', 'MONPNT3', 'USET'}:
+            if self.type in non_integer_based_ids:
                 idtype = self.model.idtype
             else:  # pragma: no cover
                 raise RuntimeError(self.get_stats())

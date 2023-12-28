@@ -895,11 +895,10 @@ class TEMPBC(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.spc_id.max(), self.nodes.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spc_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         spc_ids = array_str(self.spc_id, size=size)
@@ -1002,12 +1001,12 @@ class RADM(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.rad_mid.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.rad_mid) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
+
         rad_mids = array_str(self.rad_mid, size=size)
         for rad_mid, absorb, (iemissivity0, iemissivity1) in zip(
             rad_mids, self.absorptivity, self.iemissivity):

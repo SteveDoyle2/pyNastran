@@ -4125,15 +4125,15 @@ class MONDSP1(BaseCard):
         # assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        comp = string(card, 10, 'comp')
-        cp = integer_or_blank(card, 11, 'cp', 0)
+        comp = str(integer(card, 10, 'comp'))
+        cp = integer_or_blank(card, 11, 'cp', default=0)
         xyz = [
             double_or_blank(card, 12, 'x', default=0.0),
             double_or_blank(card, 13, 'y', default=0.0),
             double_or_blank(card, 14, 'z', default=0.0),
         ]
-        cd = integer_or_blank(card, 15, 'cd', cp)
-        ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
+        cd = integer_or_blank(card, 15, 'cd', default=cp)
+        ind_dof = components_or_blank(card, 16, 'ind_dof', default='123')
         return MONDSP1(name, label, axes, comp, xyz, cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

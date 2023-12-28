@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    hslice_by_idim, remove_unused_primary) #, BaseCard, _node_ids, expand_thru
+    hslice_by_idim, remove_unused_primary, parse_check) #, BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
@@ -168,11 +168,10 @@ class MODTRAK(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.modtrak_id.max(), self.low_range.max(), self.high_range.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.modtrak_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         modtrak_ids = array_str(self.modtrak_id, size=size)
@@ -356,11 +355,10 @@ class DESVAR(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.desvar_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.desvar_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         is_delx = not np.all(np.isnan(self.delx))
@@ -529,11 +527,10 @@ class DDVAL(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.ddval_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.ddval_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         ddval_ids = array_str(self.ddval_id, size=size)
@@ -869,12 +866,10 @@ class DVGRID(VectorizedBaseCard):
         return max(self.desvar_id.max(), self.node_id.max(),
                    self.coord_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.desvar_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
 
         desvar_ids = array_str(self.desvar_id, size=size)
@@ -1727,12 +1722,10 @@ class DRESP2(VectorizedBaseCard):
         # TODO: support self.param_values which can be DTABLE
         return max(self.dresp_id.max(), self.dequation_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.dresp_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
         iparam_value = 0
 
@@ -2491,12 +2484,10 @@ class DVPREL2(VectorizedBaseCard):
         return max(self.dvprel_id.max(), self.property_id.max(),
                    self.desvar_ids.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.dvprel_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
         dvprel_ids = array_str(self.dvprel_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -2747,12 +2738,10 @@ class DVMREL1(VectorizedBaseCard):
         return max(self.dvmrel_id.max(), self.material_id.max(),
                    self.desvar_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.dvmrel_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
         dvmrel_ids = array_str(self.dvmrel_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -3314,12 +3303,10 @@ class DVCREL1(VectorizedBaseCard):
         return max(self.dvcrel_id.max(), self.element_id.max(),
                    self.desvar_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.dvcrel_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
@@ -3760,13 +3747,11 @@ class DSCREEN(VectorizedBaseCard):
     def max_id(self) -> int:
         return 1
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.response_type) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         trss = array_float(self.trs, size=size, is_double=is_double)
         nstrs = array_str(self.nstr, size=size)

@@ -1661,13 +1661,12 @@ class TIC(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.tic_id.max(), self.node_id.max(),)
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.tic_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
+
         tic_ids = array_str(self.tic_id, size=size)
         node_id = array_str(self.node_id, size=size)
         components = array_default_int(self.component, size=size, default=0)
@@ -1883,13 +1882,12 @@ class TF(VectorizedBaseCard):
             nodes = self.nodes.max()
         return max(tf_id, node_id, nodes)
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.tf_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
+
         tf_ids = array_str(self.tf_id, size=size)
         node_id = array_str(self.node_id, size=size)
         #component = array_default_int(self.component, size=size, default=0)
@@ -2282,13 +2280,12 @@ class DPHASE(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.dphase_id.max(), self.node_id.max(),)
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.dphase_id) == 0:
-            return
-
         print_card, size = get_print_card_size(size, self.max_id)
+
         dphase_ids = array_str(self.dphase_id, size=size)
         node_id = array_str(self.node_id, size=size)
         components = array_default_int(self.component, size=size, default=0)

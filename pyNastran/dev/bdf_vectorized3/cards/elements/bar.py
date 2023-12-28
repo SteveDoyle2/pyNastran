@@ -1682,7 +1682,6 @@ class PBRSECT(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         #raise RuntimeError('PBRSECT')
-        #return ''
         return
 
 

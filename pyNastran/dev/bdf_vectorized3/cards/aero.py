@@ -222,11 +222,10 @@ class AECOMP(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.lists.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.name) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         lists_ = array_str(self.lists, size=size).tolist()
@@ -332,11 +331,10 @@ class AECOMPL(VectorizedBaseCard):
     def max_id(self) -> int:
         return 1
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.name) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         labels_ = array_str(self.labels, size=size).tolist()
@@ -3917,11 +3915,10 @@ class AELIST(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.aelist_id.max(), self.elements.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aelist_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         elements_ = array_str(self.elements, size=size).tolist()
@@ -4096,11 +4093,10 @@ class AELINK(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.aelink_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aelink_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         aelink_ids = array_str(self.aelink_id, size=size)
@@ -4235,11 +4231,10 @@ class AEFACT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.aefact_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aefact_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, (ifraction0, ifraction1) in zip(self.aefact_id, self.ifraction):
@@ -4400,11 +4395,10 @@ class FLFACT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.flfact_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.flfact_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, (ifactor0, ifactor1) in zip(self.flfact_id, self.ifactor):
@@ -4609,11 +4603,10 @@ class SPLINE1(VectorizedBaseCard):
         return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
                    self.box_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spline_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
@@ -4895,11 +4888,10 @@ class SPLINE2(VectorizedBaseCard):
         return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
                    self.box_id.max(), self.coord_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spline_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
@@ -5238,11 +5230,10 @@ class SPLINE3(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.spline_id.max(), self.caero_id.max(), self.box_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spline_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
@@ -5459,11 +5450,10 @@ class SPLINE4(VectorizedBaseCard):
         return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
                    self.aelist_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spline_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         caero_ids = array_str(self.caero_id, size=size)
@@ -5668,11 +5658,10 @@ class SPLINE5(VectorizedBaseCard):
         return max(self.spline_id.max(), self.caero_id.max(), self.set_id.max(),
                    self.coord_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spline_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         spline_ids = array_str(self.spline_id, size=size)
@@ -5832,11 +5821,10 @@ class GUST(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.gust_id.max(), self.dload_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.gust_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         gust_ids = array_str(self.gust_id, size=size)
@@ -6080,11 +6068,10 @@ class FLUTTER(VectorizedBaseCard):
         return max(self.flutter_id.max(), self.density_flfact_id.max(),
                    self.mach_flfact_id.max(), self.rfreq_velocity_flfact_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.flutter_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         flutter_ids = array_str(self.flutter_id, size=size)
@@ -6205,11 +6192,10 @@ class AESTAT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.aestat_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aestat_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         aestat_ids = array_str(self.aestat_id, size=size)
@@ -6332,11 +6318,10 @@ class AEPARM(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.aeparm_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aeparm_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         aeparm_ids = array_str(self.aeparm_id, size=size)
@@ -6351,6 +6336,22 @@ class AESURF(VectorizedBaseCard):
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.aesurf_id = np.array([], dtype='int32')
+
+        self.label = np.array([], dtype='|U8')
+        self.coord_id = np.zeros((0, 2), dtype='int32')
+        self.aelist_id = np.zeros((0, 2), dtype='int32')
+        self.eff = np.array([], dtype='float64')
+        self.ldw = np.array([], dtype='|U3')
+        self.refc = np.array([], dtype='float64')
+        self.refs = np.array([], dtype='float64')
+
+        self.pllim = np.array([], dtype='float64')
+        self.pulim = np.array([], dtype='float64')
+        self.hmllim = np.array([], dtype='float64')
+
+        self.hmulim = np.array([], dtype='float64')
+        self.tqllim = np.array([], dtype='int32')
+        self.tqulim = np.array([], dtype='int32')
 
     def add(self, aesurf_id: int, label: str,
             cid1: int, aelist_id1: int,
@@ -6529,15 +6530,6 @@ class AESURF(VectorizedBaseCard):
 
     def __apply_slice__(self, elem: AESURF, i: np.ndarray) -> None:
         elem.n = len(i)
-        #self.aesurf_id = self.aesurf_id[i]
-        #self.label = self.label[i]
-        #self.coord_id = self.coord_id[i]
-        #self.aelist_id = self.aelist_id[i]
-        #self.eff = self.eff[i]
-        #self.ldw = self.ldw[i]
-        #self.refc = self.refc[i]
-        #self.refs = self.refs[i]
-
         elem.aesurf_id = self.aesurf_id[i]
         elem.label = self.label[i]
         elem.coord_id = self.coord_id[i, :]
@@ -6579,11 +6571,10 @@ class AESURF(VectorizedBaseCard):
         return max(self.aesurf_id.max(), self.coord_id.max(),
                    self.aelist_id.max(), self.tqllim.max(), self.tqulim.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aesurf_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         aesurf_id_ = array_str(self.aesurf_id, size=size)
@@ -6762,11 +6753,10 @@ class AESURFS(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.aesurfs_id.max(), self.list1_id.max(), self.list2_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.aesurfs_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         aesurfs_id_ = array_str(self.aesurfs_id, size=size)
@@ -6880,7 +6870,13 @@ class CSSCHD(VectorizedBaseCard):
         self.cards = []
 
     def _save(self, csschd_id, aesurf_id, lalpha, lmach, lschd):
-        assert len(self.csschd_id) == 0, self.csschd_id
+        if len(self.csschd_id) > 0:
+            csschd_id = np.hstack([self.csschd_id, csschd_id])
+            aesurf_id = np.hstack([self.aesurf_id, aesurf_id])
+            lalpha = np.hstack([self.lalpha, lalpha])
+            lmach = np.hstack([self.lmach, lmach])
+            lschd = np.hstack([self.lschd, lschd])
+
         self.csschd_id = csschd_id
         self.aesurf_id = aesurf_id
         self.lalpha = lalpha
@@ -6939,11 +6935,10 @@ class CSSCHD(VectorizedBaseCard):
         return max(self.csschd_id.max(), self.aesurf_id.max(),
                    self.lalpha.max(), self.lmach.max(), self.lschd.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.csschd_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         csschd_id_ = array_str(self.csschd_id, size=size)
@@ -7107,11 +7102,10 @@ class DIVERG(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.diverg_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.diverg_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         diverg_ids = array_str(self.diverg_id, size=size)
@@ -7588,11 +7582,10 @@ class TRIM(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.trim_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.trim_id) == 0:
-            return ''
         print_card, size = get_print_card_size(size, self.max_id)
 
         trim_ids = array_str(self.trim_id, size=size)

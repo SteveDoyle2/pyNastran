@@ -1467,16 +1467,6 @@ class PCONV(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-        #self.pconv_id[icard] = pconid
-        #self.material_id[icard] = mid
-        #self.form[icard] = form
-        #self.exponent_free_convection[icard] = exponent_free_convection
-        #self.free_convection_type[icard] = free_convection_type
-        #self.table_id[icard] = table_id
-        #self.characteristic_length[icard] = chlen
-        #self.grid_inlet[icard] = gidin
-        #self.coord_e[icard] = coord_e
-        #self.e[icard, :] = [e1, e2, e3]
         pconv_ids = array_str(self.pconv_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         forms = array_default_int(self.form, default=0.0, size=size)

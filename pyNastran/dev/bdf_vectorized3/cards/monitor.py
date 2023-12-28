@@ -12,11 +12,14 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, # integer_or_string,
     double_or_blank,
     string, string_or_blank, parse_components,
+    components_or_blank,
 )
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.base_card import expand_thru
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard # , make_idim, hslice_by_idim
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, parse_check) # , make_idim, hslice_by_idim
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_float, get_print_card_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 #from pyNastran.femutils.utils import hstack_lists
@@ -198,11 +201,10 @@ class MONPNT1(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.cp.max(), self.cd.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
-        if len(self.name) == 0:
-            return None
         size = 8
         print_card, size = get_print_card_size(size, self.max_id)
         assert size == 8, size
@@ -345,11 +347,10 @@ class MONPNT2(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.element_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
-        if len(self.name) == 0:
-            return None
         size = 8
         print_card, size = get_print_card_size(size, self.max_id)
         assert size == 8, size
@@ -500,12 +501,10 @@ class MONPNT3(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.grid_set.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
-        if len(self.name) == 0:
-            return None
-
         size = 8
         print_card, size = get_print_card_size(size, self.max_id)
         assert size == 8, size
@@ -547,5 +546,176 @@ class MONPNT3(VectorizedBaseCard):
                         #print_float_8(x), print_float_8(y), print_float_8(z),
                         #xflag, cd
                     #))
+            bdf_file.write(msg.rstrip('\n ') + '\n')
+        return
+
+
+class MONDSP1(VectorizedBaseCard):
+    _id_name = 'name'
+
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.name = np.array([], dtype='|U8')
+        self.label = np.array([], dtype='|U72')
+        self.axes = np.array([], dtype='int32')
+        self.component = np.array([], dtype='int32')
+        self.ind_dof = np.array([], dtype='int32')
+        self.cp = np.array([], dtype='int32')
+        self.xyz = np.zeros((0, 3), dtype='float64')
+        self.cd = np.array([], dtype='int32')
+
+    #def __len__(self) -> int:
+        #return len(self.name)
+
+    def add(self, name: str, label: str, axes: str,
+            component: int, xyz: list[float],
+            cp: int=0, cd: Optional[int]=None,
+            ind_dof: str='123', comment: str='') -> int:
+        """Creates a MONDSP1 card"""
+        cd = cp if cd is None else cd
+        self.cards.append((name, label, axes, component, xyz, cp,
+                           cd, ind_dof, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        row0 = card[0]
+        row1 = card[1]
+        assert len(card) == 2, card
+        assert len(row0) > 8, row0
+        assert ',' not in row1, row1
+        if '\t' in row1:
+            card_fields = row1.split('\t')
+            row1 = row1.expandtabs(tabsize=8)
+
+        name = row0[8:16]
+        label = row0[16:72]
+        card_fields = [
+            'MONDSP1', name,
+            label[:8], label[8:16], label[16:24], label[24:32], label[32:40], label[40:48], label[48:56],
+            row1[8:16], row1[16:24], row1[24:32], row1[32:40], row1[40:48], row1[48:56], row1[56:64], row1[64:72]]
+
+        card = BDFCard(card_fields, has_none=True)
+
+        name = string(card, 1, 'name')
+        #label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        #label = ''.join(label_fields).strip()
+        # assert len(label) <= 56, label
+
+        axes = parse_components(card, 9, 'axes')
+        comp = str(integer(card, 10, 'comp'))
+        cp = integer_or_blank(card, 11, 'cp', default=0)
+        xyz = [
+            double_or_blank(card, 12, 'x', default=0.0),
+            double_or_blank(card, 13, 'y', default=0.0),
+            double_or_blank(card, 14, 'z', default=0.0),
+        ]
+        cd = integer_or_blank(card, 15, 'cd', default=cp)
+        ind_dof = components_or_blank(card, 16, 'ind_dof', default='123')
+        #return MONDSP1(name, label, axes, comp, xyz, cp=cp,
+                       #cd=cd, ind_dof=ind_dof, comment=comment)
+        self.cards.append((name, label, axes, comp, xyz, cp,
+                           cd, ind_dof, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        name = np.zeros(ncards, dtype='|U8')
+        label = np.zeros(ncards, dtype='|U72')
+        axes = np.zeros(ncards, dtype='int32')
+        component = np.zeros(ncards, dtype='|U6')
+        ind_dof = np.zeros(ncards, dtype='int32')
+        cp = np.zeros(ncards, dtype='int32')
+        xyz = np.zeros((ncards, 3), dtype='float64')
+        cd = np.zeros(ncards, dtype='int32')
+        for icard, card in enumerate(self.cards):
+            (namei, labeli, axesi, compi, xyzi, cpi,
+             cdi, ind_dofi, comment) = card
+            name[icard] = namei
+            label[icard] = labeli
+            axes[icard] = axesi
+            component[icard] = compi
+            ind_dof[icard] = ind_dofi
+            cp[icard] = cpi
+            xyz[icard, :] = xyzi
+            cd[icard] = cdi
+        self._save(name, label, axes, component, ind_dof, cp, xyz, cd)
+        #self.sort()
+        self.cards = []
+
+    def _save(self, name, label, axes, component, ind_dof, cp, xyz, cd):
+        assert len(self.name) == 0, self.name
+        self.name = name
+        self.label = label
+        self.axes = axes
+        self.component = component
+        self.ind_dof = ind_dof
+        self.cp = cp
+        self.xyz = xyz
+        self.cd = cd
+
+    def __apply_slice__(self, monitor: MONDSP1, i: np.ndarray) -> None:  # ignore[override]
+        monitor.name = self.name[i]
+        monitor.label = self.label[i]
+        monitor.axes = self.axes[i]
+        monitor.component = self.component[i]
+        monitor.ind_dof = self.ind_dof[i]
+        monitor.cp = self.cp[i]
+        monitor.xyz = self.xyz[i, :]
+        monitor.cd = self.cd[i]
+        monitor.n = len(i)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['coord_id'].append(self.cp)
+        used_dict['coord_id'].append(self.cd)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
+                          #msg=f'no materials for {self.type}')
+        #mids.sort()
+        coords = self.model.coord.coord_id
+        #all_aecomp_names = self.model.aecomp.name
+        #aecomp_names = np.unique(self.comp)
+        ucoords = np.unique(np.hstack([self.cp, self.cd]))
+        geom_check(self,
+                   missing,
+                   coord=(coords, ucoords),
+                   #aecomp=(all_aecomp_names, aecomp_names),
+                   )
+
+    @property
+    def max_id(self) -> int:
+        return max(self.cp.max(), self.cd.max())
+
+    def write_file(self, bdf_file: TextIOLike,
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        if len(self.name) == 0:
+            return None
+
+        size = 8
+        print_card, size = get_print_card_size(size, self.max_id)
+        assert size == 8, size
+
+
+        cps = array_default_int(self.cp, size=size)
+        cds = array_str(self.cd, size=size)
+        components = array_str(self.component, size=size)
+        ind_dofs = array_str(self.ind_dof, size=size)
+        is_default_cd = (self.cp == self.cd)
+        cds[is_default_cd] = ''
+        #cds = array_default_int(self.cd, default=0, size=size)
+        xyzs = array_float(self.xyz, size=size, is_double=False).tolist()
+        for name, label, axes, comp, ind_dof, \
+            cp, xyz, cd in zip(self.name, self.label, self.axes,
+                               components, ind_dofs,
+                               cps, xyzs, cds):
+            x, y, z = xyz
+
+            msg = 'MONDSP1 %-8s%s\n' % (name, label)
+            msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
+                axes, comp, cp, x, y, z, cd, ind_dof)
             bdf_file.write(msg.rstrip('\n ') + '\n')
         return

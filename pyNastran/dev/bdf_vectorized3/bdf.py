@@ -2331,6 +2331,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BOLT' : partial(self._prepare_card, self.bolt),
             'BOLTFOR' : partial(self._prepare_card, self.boltfor),
             'BOLTFRC' : partial(self._prepare_card, self.boltfrc),
+            'BOLTSEQ' : partial(self._prepare_card, self.boltseq),
 
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'PLOTEL3': partial(self._prepare_card, self.plotel3),
@@ -2777,8 +2778,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MONPNT1' : partial(self._prepare_card, self.monpnt1),
             'MONPNT2' : partial(self._prepare_card, self.monpnt2),
             'MONPNT3' : partial(self._prepare_card, self.monpnt3),
-            'MONDSP1' : (RuntimeCrash, None),
-            #'MONDSP1' : (MONDSP1, add_methods._add_monpnt_object),
+            'MONDSP1' : partial(self._prepare_card, self.mondsp1),
 
             # optimization
             'DESVAR': partial(self._prepare_card, self.desvar),

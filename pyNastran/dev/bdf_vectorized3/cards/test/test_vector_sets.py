@@ -15,6 +15,21 @@ from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 
 class TestSets(unittest.TestCase):
 
+    def test_mondsp1(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        mondsp1 = model.mondsp1
+        name = 'test'
+        label = 'test2'
+        axes = '123'
+        component = '123'
+        xyz = [0., 0., 0.]
+        mondsp1.add(name, label, axes, component, xyz,
+                    cp=0, cd=None, ind_dof='123',
+                    comment='mondsp1')
+        model.setup()
+        save_load_deck(model)
+
     def test_monpnt(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)

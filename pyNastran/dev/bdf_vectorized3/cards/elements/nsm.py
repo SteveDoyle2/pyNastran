@@ -14,7 +14,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_string,
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim, VectorizedBaseCard
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    hslice_by_idim, make_idim, VectorizedBaseCard, parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, get_print_card_size)  # , array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
@@ -435,11 +436,10 @@ class NSM1i(VectorizedBaseCard):
         #return centroid
 
 class NSM1(NSM1i):
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_headers: bool=False) -> None:
-        if len(self.nsm_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
@@ -454,11 +454,10 @@ class NSM1(NSM1i):
         return
 
 class NSML1(NSM1i):
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_headers: bool=False) -> None:
-        if len(self.nsm_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)
@@ -494,11 +493,10 @@ class NSM(NSMi):
         return
 
 class NSML(NSMi):
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_headers: bool=False) -> None:
-        if len(self.nsm_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         nsm_str = array_str(self.nsm_id, size=size)

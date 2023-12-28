@@ -565,16 +565,14 @@ class PPLANE(Property):
         self.write_file(bdf_file, size=16, is_double=is_double,
                         write_card_header=write_card_header)
 
-
     @property
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         pids = array_str(self.property_id, size=size)
@@ -976,7 +974,6 @@ class CPLSTN4(PlateStrainElement):
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)

@@ -111,6 +111,7 @@ class XPOINT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.ids.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -922,6 +923,7 @@ class POINT(VectorizedBaseCard):
     def max_id(self) -> int:
         return self.point_id.max()
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

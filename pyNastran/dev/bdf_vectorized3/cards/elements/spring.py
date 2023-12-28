@@ -519,7 +519,6 @@ class CELAS4(Element):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         element_id = array_str(self.element_id, size=size)
         ks = array_float(self.k, size=size, is_double=False)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
@@ -638,7 +637,6 @@ class PELAS(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         property_id = array_str(self.property_id, size=size)
         ks = array_float(self.k, size=size, is_double=False)

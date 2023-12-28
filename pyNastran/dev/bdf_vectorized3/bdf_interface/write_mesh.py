@@ -477,6 +477,7 @@ class Writer:
         model.boltld.write_file(bdf_file, size=size, is_double=is_double)
         model.boltfor.write_file(bdf_file, size=size, is_double=is_double)
         model.boltfrc.write_file(bdf_file, size=size, is_double=is_double)
+        model.boltseq.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_rejects(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
@@ -831,6 +832,7 @@ class Writer:
             model.monpnt1.write_file(bdf_file, size=size)
             model.monpnt2.write_file(bdf_file, size=size)
             model.monpnt3.write_file(bdf_file, size=size)
+            model.mondsp1.write_file(bdf_file, size=size)
 
         #if model.paeros: # or model.caeros or model.splines:
             #for (unused_id, caero) in sorted(model.caeros.items()):

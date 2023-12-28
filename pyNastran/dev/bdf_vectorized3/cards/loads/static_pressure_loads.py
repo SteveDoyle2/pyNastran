@@ -160,7 +160,6 @@ class PLOAD(Load):
                    write_card_header: bool=False) -> None:
         #print_card, size = get_print_card_size(size, self.max_id)
 
-
         load_ids = array_default_int(self.load_id, size=size)
         node_ids = array_default_int(self.node_id, default=0, size=size)
         pressures = array_float(self.pressure, size=8, is_double=False)

@@ -835,11 +835,10 @@ class BGADD(ADD):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['glue_id'].append(self.glue_ids)
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.bgadd_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()
@@ -891,11 +890,10 @@ class BCTADD(ADD):
             self, contact_id, self.bctadd_id, 'contact_id')
         return ncards_removed
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.bctadd_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()

@@ -246,7 +246,6 @@ class ABCOQSET(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.node_id.max()
         print_card, size = get_print_card_size(size, self.max_id)
 
         comp_to_nids = defaultdict(list)

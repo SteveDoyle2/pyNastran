@@ -78,7 +78,6 @@ class PlotElement(Element):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         element_id = array_str(self.element_id, size=size)
         nodes = array_str(self.nodes, size=size).tolist()
 

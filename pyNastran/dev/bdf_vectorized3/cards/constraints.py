@@ -242,11 +242,10 @@ class SPC(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.spc_id.max(), self.node_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spc_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         spc_str = array_str(self.spc_id, size=size)
@@ -411,11 +410,10 @@ class SPC1(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.spc_id.max(), self.node_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spc_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         spc_str = array_str(self.spc_id, size=size)
@@ -566,11 +564,10 @@ class MPC(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.mpc_id.max(), self.node_id.max())
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.mpc_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         mpc_str = array_str(self.mpc_id, size=size)
@@ -826,11 +823,10 @@ class MPCADD(ADD):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['mpc_id'].append(self.mpc_id)
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.mpc_id) == 0:
-            return
         print_card, size = get_print_card_size(size, self.max_id)
 
         #self.get_reduced_spcs()

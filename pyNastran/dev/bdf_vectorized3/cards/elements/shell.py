@@ -980,13 +980,11 @@ class CTRIAR(ShellElement):
         self.T[itflag] *= xyz_scale
 
 
-    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                    write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=8, is_double=False,
                         write_card_header=write_card_header)
 
-    @parse_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double=False, write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=16, is_double=is_double,

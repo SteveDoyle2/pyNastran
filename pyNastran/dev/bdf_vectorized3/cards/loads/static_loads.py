@@ -355,6 +355,7 @@ class SPCD(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+
         load_ids = array_str(self.load_id, size=size)
         node_ids = array_str(self.nodes, size=size)
         components = array_default_int(self.components, default=0, size=size)
@@ -1196,7 +1197,7 @@ class GRAV(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-        #array_str, array_default_int
+
         load_ids = array_default_int(self.load_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
         main_bulks = array_default_int(self.main_bulk, default=0, size=size)
@@ -1679,8 +1680,6 @@ class Combination(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        #if len(self._idi) == 0:
-            #return
         #get_reduced_loads(self, filter_zero_scale_factors=False)
         print_card, size = get_print_card_size(size, self.max_id)
         load_id_ = array_str(self._idi, size=size)
@@ -2172,6 +2171,7 @@ class TEMP(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+
         load_ids = array_str(self.load_id, size=size)
         node_ids = array_str(self.node_id, size=size)
 
@@ -2287,6 +2287,7 @@ class TEMPD(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+
         load_ids = array_str(self.load_id, size=size)
         temperatures = array_float(self.temperature, size=size, is_double=False)
         for sid, temperature in zip(load_ids, temperatures):
@@ -2442,6 +2443,7 @@ class SLOAD(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+
         load_ids = array_str(self.load_id, size=size)
         for sid, node, mag in zip(load_ids, self.nodes, self.mags):
             list_fields = ['SLOAD', sid, node, mag]
@@ -2687,9 +2689,7 @@ class RFORCE(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-        #print_card, size = get_print_card_size(size, self.max_id)
 
-        #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)
         cids = array_default_int(self.coord_id, default=0, size=size)
@@ -2957,8 +2957,6 @@ class RFORCE1(Load):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-        #print_card, size = get_print_card_size(size, self.max_id)
-
 
         load_ids = array_str(self.load_id, size=size)
         nids = array_default_int(self.node_id, default=0, size=size)

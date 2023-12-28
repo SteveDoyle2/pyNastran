@@ -206,7 +206,6 @@ class RBAR(RigidElement):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
         ind_nodes = array_default_int(self.independent_dof, default=-1, size=size)
@@ -349,7 +348,6 @@ class RROD(RigidElement):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
