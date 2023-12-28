@@ -634,7 +634,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## bolts
-            'MBOLT', 'MBOLTUS', 'BOLT', 'BOLTFRC', 'BOLTFOR',
+            'MBOLT', 'MBOLTUS',
+            'BOLT', 'BOLTFRC', 'BOLTFOR', 'BOLTSEQ', 'BOLTLD',
 
             ## plotels
             'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',

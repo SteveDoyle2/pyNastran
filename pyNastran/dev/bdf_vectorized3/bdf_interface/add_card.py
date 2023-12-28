@@ -245,6 +245,33 @@ class AddCoords(BDFAttributes):
         #return coord
 
 
+class AddBolts(BDFAttributes):
+    def add_bolt_nx(self, bolt_id: int,
+                    element_type: int,
+                    eids: Optional[list]=None,  # element_type=1
+                    nids: Optional[list]=None,  # element_type=2
+                    csid=None,  # element_type=2
+                    idir=None,  # element_type=2
+                    comment: str='') -> int:
+        bolt = self.bolt.add_nx(bolt_id, element_type,
+                                eids=eids, nids=nids,
+                                csid=csid, idir=idir, comment=comment)
+        return bolt
+
+    def add_boltseq_nx(self, sid: int,
+                       s_nos: list[int],
+                       b_ids: list[int],
+                       n_incs: Optional[list[int]]=None,
+                       comment: str='') -> int:
+        bolt = self.boltseq.add(sid, s_nos, b_ids, n_incs=n_incs, comment=comment)
+        return bolt
+
+    def add_boltfor_nx(self, sid: int, load_value: float, bolt_ids: list[int],
+                       comment: str='') -> int:
+        boltfor = self.boltfor.add_nx(sid, load_value, bolt_ids, comment=comment)
+        return boltfor
+
+
 class Add0dElements(BDFAttributes):
     def add_pelas(self, pid: int, k: float, ge: float=0., s: float=0.,
                   comment: str='') -> int:
@@ -5280,7 +5307,7 @@ class AddThermal(BDFAttributes):
 
 class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElements,
                AddRigidElements, AddAero, AddOptimization, AddMaterial, AddContact,
-               AddSuperelements, AddThermal):
+               AddSuperelements, AddThermal, AddBolts):
     def __init__(self):
         #BDFAttributes.__init__(self)
         super().__init__()

@@ -228,6 +228,41 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
         #return inid
 
 
+
+
+class NodeSet(ElementPropertyNodeSet):
+    @property
+    def nnode(self) -> np.ndarray:
+        return self.n_ids
+
+    @nnode.setter
+    def nnode(self, nnode: np.ndarray) -> None:
+        self.n_ids = nnode
+
+    @property
+    def node_id(self) -> np.ndarray:
+        return self.ids
+
+    @node_id.setter
+    def node_id(self, node_id: np.ndarray) -> None:
+        self.ids = node_id
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    @property
+    def inode(self) -> np.ndarray:
+        return self.i_id
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
+
+
 class PropertySet(ElementPropertyNodeSet):
     @property
     def nproperty(self) -> np.ndarray:
@@ -309,43 +344,13 @@ class BCPROPS(PropertySet):
                    missing,
                    property_id=(pid, self.property_id),)
 
-class BOUTPUT(ElementPropertyNodeSet):
+class BOUTPUT(NodeSet):
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
                    missing,
-                   property_id=(nid, self.node_id),)
+                   node=(nid, self.node_id),)
 
-class NodeSet(ElementPropertyNodeSet):
-    @property
-    def nnode(self) -> np.ndarray:
-        return self.n_ids
-
-    @nnode.setter
-    def nnode(self, nnode: np.ndarray) -> None:
-        self.n_ids = nnode
-
-    @property
-    def node_id(self) -> np.ndarray:
-        return self.ids
-
-    @node_id.setter
-    def node_id(self, node_id: np.ndarray) -> None:
-        self.ids = node_id
-
-    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
-        used_dict['node_id'].append(self.node_id)
-
-    @property
-    def inode(self) -> np.ndarray:
-        return self.i_id
-
-    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
-        """helper for bdf_equivalence_nodes"""
-        nodes = self.node_id
-        for i, nid1 in enumerate(nodes):
-            nid2 = nid_old_to_new.get(nid1, nid1)
-            nodes[i] = nid2
 
 class BLSEG(NodeSet):
     """Defines a glue or contact edge region or a curve for slideline contact via grid numbers."""

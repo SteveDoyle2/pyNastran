@@ -2482,7 +2482,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
             msg = (
                 f'SOL={sol}\n'
                 f'TRIM = {trim_id}\n'
-                f'trims={fem.trims}\n'
+                f'trims:\n{fem.trim.write()}\n'
                 f'subcase:\n{subcase}')
             log_error(sol, [144, 200], msg, log)
         else:

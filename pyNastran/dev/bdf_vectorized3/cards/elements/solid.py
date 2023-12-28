@@ -864,8 +864,12 @@ class PSOLID(Property):
 
             if isopi == 0:
                 isopi = '0'
-            if isopi == 1:
+            elif isopi == 1:
                 isopi = 'FULL'
+            elif isopi == 2:
+                isopi = 'TWO'
+            elif isopi == 3:
+                isopi = 'THREE'
 
             property_id[icard] = pid
             material_id[icard] = mid

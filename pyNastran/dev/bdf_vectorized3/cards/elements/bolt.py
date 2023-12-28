@@ -186,6 +186,19 @@ class BOLT(VectorizedBaseCard):
         #self.n += 1
         #return self.n - 1
 
+    def add_nx(self, bolt_id: int,
+               element_type: int,
+               eids: Optional[list]=None,  # element_type=1
+               nids: Optional[list]=None,  # element_type=2
+               csid=None,  # element_type=2
+               idir=None,  # element_type=2
+               comment: str='') -> int:
+        assert element_type == 1, element_type
+        card = ('nx', bolt_id, element_type, eids, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> None:
         """
         Adds a BOLT card from ``BDF.add_card(...)``
@@ -235,7 +248,8 @@ class BOLT(VectorizedBaseCard):
                 csid = integer_or_blank(card, 3, 'csid', default=0)
                 idir = integer_or_blank(card, 4, 'idir', default=0)
                 assert idir in {0, 1, 2, 3}, idir
-                assert len(card) <= 5, card
+                eids = read_ids_thru(card, ifield0=5, base_str='EID%d')
+                assert len(card) >= 5, card
             elif element_type == 3:
                 csid = integer_or_blank(card, 3, 'csid', default=0)
                 idir = integer_or_blank(card, 4, 'idir', default=0)
@@ -248,7 +262,7 @@ class BOLT(VectorizedBaseCard):
                 assert len(card) <= 15, card
             else:
                 raise RuntimeError(etype)
-            card = (bolt_id, etype, eids, comment)
+            card = ('nx', bolt_id, etype, eids, comment)
 
         self.cards.append(card)
         self.n += 1
@@ -275,7 +289,7 @@ class BOLT(VectorizedBaseCard):
                 asdf
             else:
                 assert card[0] == 'nx', card
-                bolt_idi, eidsi, comment = card
+                method, bolt_idi, etypei, eidsi, comment = card
 
             bolt_id[icard] = bolt_idi
             ids2 = split_set3_ids(eidsi)
@@ -301,8 +315,8 @@ class BOLT(VectorizedBaseCard):
         bolt.n = len(i)
         bolt.bolt_id = self.bolt_id[i]
 
-        inid = self.iprop # [i, :]
-        bolt.element_ids = hslice_by_idim(i, inid, self.element_ids)
+        ibolt = self.ibolt # [i, :]
+        bolt.element_ids = hslice_by_idim(i, ibolt, self.element_ids)
 
         bolt.num_ids = self.num_ids[i]
         #assert isinstance(prop.ndim, np.ndarray), prop.ndim
@@ -315,7 +329,7 @@ class BOLT(VectorizedBaseCard):
         pass
 
     @property
-    def iprop(self) -> np.ndarray:
+    def ibolt(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
 
     @property
@@ -326,36 +340,39 @@ class BOLT(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
-        set_id = array_str(self.set_id, size=size).tolist()
-        ids_ = array_str(self.property_ids, size=size).tolist()
-        for sid, property_type, iprop in zip(set_id, self.property_type, self.iprop):
-            iprop0, iprop1 = iprop
-            ids = ids_[iprop0:iprop1]
+        bolt_id = array_str(self.bolt_id, size=size).tolist()
+        ids_ = array_str(self.element_ids, size=size).tolist()
+        etype = 1
+        for sid, (ibolt0, ibolt1) in zip(bolt_id, self.ibolt):
+            ids = ids_[ibolt0:ibolt1]
 
-            list_fields = ['SET4', sid, 'PROP', property_type] + ids
+            list_fields = ['BOLT', sid, etype] + ids
             bdf_file.write(print_card(list_fields))
         return
 
 
-
-
 class BOLTFOR(VectorizedBaseCard):
+    """
+    BOLTFOR SID LOAD B1 B2 B3 B4 B5 B6
+            B7  THRU B8
+            ...
+    """
     _id_name = 'bolt_id'
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.bolt_id = np.array([], dtype='int32')
 
-    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> int:
-        #self.cards.append((sid, desc, ids, comment))
-        #self.n += 1
-        #return self.n - 1
+    def add_nx(self, bolt_id: int, load_value: float, bolt_ids: list[int],
+               comment: str='') -> int:
+        self.cards.append((bolt_id, load_value, bolt_ids, comment))
+        self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> None:
         """
-        Adds a BOLT card from ``BDF.add_card(...)``
+        Adds a BOLTFOR card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -365,7 +382,12 @@ class BOLTFOR(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((bolt_id, eids, comment))
+        #['BOLTFOR', '100', '2.0E8', '1']
+        bolt_id = integer(card, 1, 'bolt_id')
+        preload_force = double(card, 2, 'preload_force')
+        bolt_ids = read_ids_thru(card, ifield0=3, base_str='bolt%d')
+        assert len(bolt_ids) > 0, card
+        self.cards.append((bolt_id, preload_force, bolt_ids, comment))
         self.n += 1
         return self.n - 1
 
@@ -375,37 +397,42 @@ class BOLTFOR(VectorizedBaseCard):
         idtype = self.model.idtype
 
         bolt_id = np.zeros(ncards, dtype='int32')
+        preload_force = np.zeros(ncards, dtype='float64')
         num_ids = np.zeros(ncards, dtype='int32')
         all_ids = []
         for icard, card in enumerate(self.cards):
-            sid, bolt_idi, eidsi, comment = card
+            bolt_idi, preload_forcei, bolt_idsi, comment = card
 
             bolt_id[icard] = bolt_idi
-            ids2 = split_set3_ids(eidsi)
+            ids2 = split_set3_ids(bolt_idsi)
             num_ids[icard] = len(ids2)
             all_ids.extend(ids2)
-        ids = np.array(all_ids, dtype=idtype)
-        self._save(bolt_id, num_ids, ids)
+        bolt_ids = np.array(all_ids, dtype=idtype)
+        self._save(bolt_id, preload_force, num_ids, bolt_ids)
         self.sort()
         self.cards = []
 
-    def _save(self, bolt_id, num_ids, element_ids):
-        if len(self.set_id) != 0:
+    def _save(self, bolt_id, preload_force, num_ids, bolt_ids):
+        if len(self.bolt_id) != 0:
             bolt_id = np.hstack([self.bolt_id, bolt_id])
+            preload_force = np.hstack([self.preload_force, preload_force])
             num_ids = np.hstack([self.num_ids, num_ids])
-            element_ids = np.hstack([self.element_ids, element_ids])
+            bolt_ids = np.hstack([self.bolt_ids, bolt_ids])
         self.bolt_id = bolt_id
+        self.preload_force = preload_force
         self.num_ids = num_ids
-        self.element_ids = element_ids
+        self.bolt_ids = bolt_ids
+        assert len(bolt_ids) > 0, bolt_ids
         self.n = len(bolt_id)
 
-    def __apply_slice__(self, bolt: BOLT, i: np.ndarray) -> None:
-        assert self.num_ids.sum() == len(self.element_ids)
+    def __apply_slice__(self, bolt: BOLTFOR, i: np.ndarray) -> None:
+        assert self.num_ids.sum() == len(self.bolt_ids)
         bolt.n = len(i)
         bolt.bolt_id = self.bolt_id[i]
+        bolt.preload_force = self.preload_force[i]
 
-        inid = self.iprop # [i, :]
-        bolt.element_ids = hslice_by_idim(i, inid, self.element_ids)
+        ibolt = self.ibolt # [i, :]
+        bolt.bolt_ids = hslice_by_idim(i, ibolt, self.bolt_ids)
 
         bolt.num_ids = self.num_ids[i]
         #assert isinstance(prop.ndim, np.ndarray), prop.ndim
@@ -418,27 +445,26 @@ class BOLTFOR(VectorizedBaseCard):
         pass
 
     @property
-    def iprop(self) -> np.ndarray:
+    def ibolt(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
 
     @property
     def max_id(self) -> int:
-        return max(self.bolt_id.max(), self.element_ids.max())
+        return max(self.bolt_id.max(), self.bolt_ids.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        asdf
         print_card, size = get_print_card_size(size, self.max_id)
 
-        set_id = array_str(self.set_id, size=size).tolist()
-        ids_ = array_str(self.property_ids, size=size).tolist()
-        for sid, property_type, iprop in zip(set_id, self.property_type, self.iprop):
-            iprop0, iprop1 = iprop
-            ids = ids_[iprop0:iprop1]
+        preload_forces = array_float(self.preload_force, size=size, is_double=False, nan_check=True)
+        bolt_id = array_str(self.bolt_id, size=size).tolist()
+        ids_ = array_str(self.bolt_ids, size=size).tolist()
+        for sid, preload_force, (ibolt0, ibolt1) in zip(bolt_id, preload_forces, self.ibolt):
+            bolt_idsi = ids_[ibolt0:ibolt1]
 
-            list_fields = ['SET4', sid, 'PROP', property_type] + ids
+            list_fields = ['BOLTFOR', sid, preload_force] + bolt_idsi
             bdf_file.write(print_card(list_fields))
         return
 
@@ -480,7 +506,7 @@ class BOLTFRC(VectorizedBaseCard):
         bolt_type = string(card, 2, 'bolt_type') #  DISP, STRAIN, or LOAD
         preload = double(card, 3, 'D/preload') # preload dispacement/load/strain
         length = double_or_blank(card, 4, 'bolt_id', default=np.nan)
-        bolt_ids = eids = read_ids_thru(card, ifield0=9, base_str='bolt%d')
+        bolt_ids = read_ids_thru(card, ifield0=9, base_str='bolt%d')
         self.cards.append((bolt_id, bolt_type, preload, length, bolt_ids, comment))
         self.n += 1
         return self.n - 1
@@ -738,7 +764,7 @@ class BOLTSEQ(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
-        return max(self.bolt_id.max(), self.bolt_ids.max())
+        return max(self.bolt_id.max(), self.b_ids.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -747,8 +773,7 @@ class BOLTSEQ(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         bolt_ids = array_str(self.bolt_id, size=size).tolist()
-        for bolt_id, ibolt in zip(bolt_ids, elf.ibolt):
-            ibolt0, ibolt1 = ibolt
+        for bolt_id, (ibolt0, ibolt1) in zip(bolt_ids, self.ibolt):
             s_nos = self.s_nos[ibolt0:ibolt1]
             b_ids = self.b_ids[ibolt0:ibolt1]
             n_incs = self.n_incs[ibolt0:ibolt1]

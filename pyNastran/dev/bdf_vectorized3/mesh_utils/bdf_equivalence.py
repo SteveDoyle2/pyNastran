@@ -388,6 +388,7 @@ def update_cards(model: BDF,
         'DLOAD', 'LSEQ',
         # not supported
         'SEBSET', 'SECSET', 'SEQSET',
+        'BOLT', 'BOLTFOR', 'BOLTSEQ',
     } | no_equiv_cards
     grid = model.grid
     ids = np.unique(grid.node_id)

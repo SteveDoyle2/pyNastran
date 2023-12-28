@@ -381,7 +381,6 @@ class TestSolverRod(unittest.TestCase):
         assert np.allclose(solver.Fg[6], F), solver.xa_
         #assert np.allclose(solver.Fa_[0], 0.), solver.Fa_
 
-
     def test_crod(self):
         """Tests a CROD/PROD"""
         log = SimpleLogger(level='warning', encoding='utf-8')

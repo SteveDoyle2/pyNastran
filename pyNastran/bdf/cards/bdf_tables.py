@@ -433,7 +433,7 @@ class TABLED2(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        x1 = double(card, 2, 'x1')
+        x1 = double_or_blank(card, 2, 'x1', default=0.0)
         extrap = integer_or_blank(card, 3, 'extrap', default=0)
         x, y = read_table(card, table_id, 'TABLED2')
         return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
@@ -452,7 +452,7 @@ class TABLED2(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        x1 = double(card, 2, 'x1')
+        x1 = double_or_blank(card, 2, 'x1', default=0.0)
         extrap = integer_or_blank(card, 3, 'extrap', default=0)
         x, y = read_table_lax(card, table_id, 'TABLED2')
         return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
@@ -1101,7 +1101,7 @@ class TABLEM2(Table):
         # defined in MSC as an integer and used as a float...int > 0
         # defined in NX as a float; real
         # no default given in either, but from context, let's assume 0.0
-        x1 = double_or_blank(card, 2, 'x1', 0.0)
+        x1 = double_or_blank(card, 2, 'x1', default=0.0)
         extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
         x, y = read_table(card, table_id, 'TABLEM2')
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
@@ -1123,7 +1123,7 @@ class TABLEM2(Table):
         # defined in MSC as an integer and used as a float...int > 0
         # defined in NX as a float; real
         # no default given in either, but from context, let's assume 0.0
-        x1 = double_or_blank(card, 2, 'x1', 0.0)
+        x1 = double_or_blank(card, 2, 'x1', default=0.0)
         extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
         x, y = read_table_lax(card, table_id, 'TABLEM2')
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
@@ -2051,7 +2051,8 @@ def read_table_lax(card: BDFCard, table_id: int,
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 
-def read_table_float_int(card: BDFCard, table_id: int, table_type: str):
+def read_table_float_int(card: BDFCard, table_id: int,
+                         table_type: str) -> tuple[np.ndarray, np.ndarray]:
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2
