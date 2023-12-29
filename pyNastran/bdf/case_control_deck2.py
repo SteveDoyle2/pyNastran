@@ -30,6 +30,7 @@ from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.case_control_deck import (_clean_lines, split_equal_space,
                                              integer, decode_lines)
 from .bdf_interface.case_control_cards import CLASS_MAP
+from .case_control_deck import parse_entry
 from pyNastran.bdf.bdf_interface.subcase.cards import (
     #SURFACE, VOLUME, CSCALE,
     #EXTSEOUT,
@@ -499,7 +500,8 @@ class CaseControlDeck:
             raise SyntaxError(msg)
         #self.read([param])
         lines = _clean_lines([param])
-        (j, key, value, options, param_type) = self._parse_entry(lines)
+        (j, fail_flag, key, value, options, param_type) = parse_entry(
+            lines, self.log, debug=self.debug)
         return (j, key, value, options, param_type)
 
     def _read(self, lines: list[str]) -> None:
@@ -528,8 +530,13 @@ class CaseControlDeck:
                 i += 1
                 lines2.append(lines[i])
                 #comment = lines[i][72:]
-            (unused_j, key, value, options, param_type) = self._parse_entry(lines2)
+            (unused_j, fail_flag, key, value, options, param_type) = _parse_entry(
+                lines2, self.log, debug=self.debug)
             i += 1
+
+            if fail_flag:
+                self.log.warning(f'skipping Case Control line {i}: {line!r}')
+                continue
 
             line_upper = line.upper()
             if key == 'BEGIN':
@@ -565,416 +572,6 @@ class CaseControlDeck:
 
         #print(str(self))
         self.finish_subcases()
-
-    def _parse_entry(self, lines):
-        r"""
-        Internal method for parsing a card of the case control deck
-
-        Parses a single case control deck card into 4 sections
-
-        1.  param_name - obvious
-        2.  Value      - still kind of obvious
-        3.  options    - rarely used data
-        4.  param_type - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
-
-        It's easier with examples:
-
-        param_type = SUBCASE-type
-          SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
-        param_type = STRESS-type
-          STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
-          STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
-          TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
-        param_type = SET-type
-          SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
-        param_type = BEGIN_BULK-type
-          BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
-        param_type = CSV-type
-          PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
-
-        The param_type is the "macro" form of the data (similar to integer, float, string).
-        The value is generally whats on the RHS of the equals sign (assuming it's there).
-        Options are modifiers on the data.  Form things like the PARAM card or the SET card
-        they arent as clear, but the param_type lets the program know how to format it
-        when writing it out.
-
-        Parameters
-        ----------
-        lines : list[str, str, ...]
-            list of lines
-
-        Returns
-        -------
-        i : int
-            ???
-        paramName : str
-            see brief
-        value : list[...]
-            see brief
-        options : list[str/int/float]
-            see brief
-        param_type : str/int/float/list
-            see brief
-
-        """
-        i = 0
-        options = []
-        value = None
-        key = None
-        param_type = None
-
-        line = lines[i]
-        #print(line)
-        #print("*****lines = ", lines)
-
-        equals_count = 0
-        for letter in line:
-            if letter == '=':
-                equals_count += 1
-        line_upper = line.upper().expandtabs().strip()
-
-        #print("line_upper = %r" % line)
-        #print(STR_CARD_NAMES, line_upper.startswith(STR_CARD_NAMES))
-        #print('  equals_count = %s' % equals_count)
-        if line_upper.startswith('SUBCASE'):
-            param_type = split_equal_space(line_upper, 'SUBCASE', 'SUBCASE = 5')
-            key = 'SUBCASE'
-
-            #print("key=%r isubcase=%r" % (key, isubcase))
-            value = integer(param_type, line_upper)
-            #self.isubcase = int(isubcase)
-            param_type = 'SUBCASE-type'
-            assert key.upper() == key, key
-
-        elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
-            try:
-                eindex = line.index('=')
-            except ValueError:
-                msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
-                msg += "line = %r" % line_upper.strip()
-                raise RuntimeError(msg)
-
-            key = line_upper[0:eindex].strip()
-            value = line[eindex + 1:].strip()
-            options = []
-            param_type = 'STRING-type'
-        elif line_upper.startswith('SET ') and equals_count == 1:
-            obj = SET.add_from_case_control(line_upper, lines, i)
-            #if 0:
-                #key = obj.key
-                #options = None
-                #value = obj
-                #param_type = 'OBJ-type'
-            #else:
-            key = obj.key
-            options = obj.set_id
-            value = obj.value
-            param_type = 'SET-type'
-        elif line_upper.startswith('SETMC ') and equals_count == 1:
-            obj = SETMC.add_from_case_control(line_upper, lines, i)
-            #if 0:
-                #key = obj.key
-                #options = None
-                #value = obj
-                #param_type = 'OBJ-type'
-            #else:
-            key = value.key  # type: str
-            options = obj.set_id  # type: list[int]
-            value = obj.value  # type: int
-            param_type = 'SET-type'
-
-        elif line_upper.startswith('SETS DEFINITION'):
-            # just OUTPUT(PLOT)
-            obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, 'OUTPUT(PLOT)', lines, i)
-            value = obj.value
-            options = obj.options
-            param_type = 'STRESS-type'
-            key = obj.type
-        elif line_upper.startswith('OUTPUT'):
-            obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, line_upper, lines, i)
-            value = obj.value
-            options = obj.options
-            param_type = 'STRESS-type'
-            key = obj.type
-
-        elif line_upper.startswith(CHECK_CARD_NAMES) and self.use_card_dict:
-            if '(' in line:
-                key = line_upper.strip().split('(', 1)[0].strip()
-            elif '=' in line:
-                key = line_upper.strip().split('=', 1)[0].strip()
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-
-            key = update_param_name(key)
-            obj = CHECK_CARD_DICT[key].add_from_case_control(line, line_upper, lines, i)
-            value = obj.value
-            options = obj.options
-            param_type = 'STRESS-type'
-            key = obj.type
-
-        elif line_upper.startswith(INT_CARD_NAMES) and self.use_card_dict:
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = update_param_name(name)
-            obj = INT_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
-            key = obj.type
-            #if 0:
-                #value = obj.value
-                #options = []
-                #param_type = 'STRESS-type'
-            #else:
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
-
-        elif line_upper.startswith(INTSTR_CARD_NAMES) and self.use_card_dict:
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            obj = INTSTR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
-            key = obj.type
-            #if 0:
-                #value = obj.value
-                #options = []
-                #param_type = 'STRESS-type'
-            #else:
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
-
-        elif line_upper.startswith(STR_CARD_NAMES):
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            try:
-                cls = STR_CARD_DICT[name[:4]]
-            except KeyError:
-                cls = STR_CARD_DICT[name]
-            obj = cls.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
-
-        elif line_upper.startswith(('CSCALE', 'SURFACE', 'VOLUME', 'EXTSEOUT')):
-            keyi = line_upper.split(' ')[0]
-            options = None
-            param_type = 'OBJ-type'
-            clsi = CLASS_MAP[keyi]
-            obj = clsi.add_from_case_control(line_upper.strip())
-            value = obj
-            key = obj.type
-        elif line_upper.startswith('WEIGHTCHECK'):
-            options = None
-            param_type = 'OBJ-type'
-            obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            key = obj.type
-        elif line_upper.startswith('DSAPRT'):
-            options = None
-            param_type = 'OBJ-type'
-            obj = DSAPRT.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            key = obj.type
-        elif line_upper.startswith('GROUNDCHECK'):
-            options = None
-            param_type = 'OBJ-type'
-            obj = GROUNDCHECK.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            key = obj.type
-        elif line_upper.startswith('MODCON'):
-            options = None
-            param_type = 'OBJ-type'
-            obj = MODCON.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            key = obj.type
-        #elif line_upper.startswith('AUXMODEL'):
-            #options = None
-            #param_type = 'OBJ-type'
-            #value = AUXMODEL.add_from_case_control(line, line_upper, lines, i)
-            #key = value.type
-
-        elif line_upper.startswith('BEGIN'):  # begin bulk
-            try:
-                (key, value) = line_upper.split(' ')
-            except ValueError:
-                msg = 'excepted "BEGIN BULK" found=%r' % line
-                raise RuntimeError(msg)
-            key = key.upper()
-            param_type = 'BEGIN_BULK-type'
-            assert key.upper() == key, key
-
-        elif line_upper.startswith('PARAM'):
-            #line2 = line_upper.replace('\t', ' ').replace(',' , ' ')
-            key, value, options, param_type = _split_param(line, line_upper)
-
-        elif self.use_card_dict:
-            raise RuntimeError(f'case control work...\n{line_upper}')
-
-        #========================================================================================
-        elif line_upper.startswith('TEMP'):
-            if '=' in line:
-                (key, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            assert equals_count == 1, line_upper
-            if '(' in line_upper:
-                options = None
-                param_type = 'STRESS-type'
-                key = key.strip().upper()
-                value = value.strip()
-                if self.debug:
-                    self.log.debug("key=%r value=%r" % (key, value))
-                param_type = 'STRESS-type'
-                assert key.upper() == key, key
-
-                #param_type = 'STRESS-type'
-                sline = key.strip(')').split('(')
-                key = sline[0]
-                options = sline[1].split(',')
-
-                assert len(options) == 1, line_upper
-                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-                key = 'TEMPERATURE(%s)' % options[0]
-                value = value.strip()
-                options = []
-            else:
-                key = 'TEMPERATURE(BOTH)'
-                options = []
-                param_type = 'STRESS-type'
-            value = int(value)
-
-        elif line_upper.startswith('RIGID'):
-            if '=' in line:
-                (key, value) = line_upper.strip().split('=')
-                key = key.strip()
-                value = value.strip()
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            #print('line_upper=%r' % line_upper)
-            assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
-            param_type = 'STRESS-type'
-            options = []
-            #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
-            if value in ['LAGR', 'LAGRAN']:
-                value = 'LAGRANGE'
-            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR', 'AUTO']:
-                pass
-            else:
-                raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
-
-        elif equals_count == 1:  # STRESS
-            if '=' in line:
-                (key, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-
-            key = key.strip().upper()
-            value = value.strip()
-            if self.debug:
-                self.log.debug("key=%r value=%r" % (key, value))
-            param_type = 'STRESS-type'
-            assert key.upper() == key, key
-
-            if '(' in key:  # comma may be in line - STRESS-type
-                #param_type = 'STRESS-type'
-                sline = key.strip(')').split('(')
-                key = sline[0]
-                options = sline[1].split(',')
-
-            elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
-                #print('A ??? line = ',line)
-                #raise RuntimeError(line)
-                pass
-            else:  # STRESS-type; TITLE = stuff
-                #print('B ??? line = ',line)
-                pass
-
-            key = update_param_name(key)
-            verify_card(key, value, options, line)
-            assert key.upper() == key, key
-        elif equals_count > 2 and '(' in line and 'FLSPOUT' not in line:
-            #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
-            #print('****', lines)
-            assert len(lines) == 1, lines
-            line = lines[0]
-            try:
-                key, value_options = line.split('(', 1)
-            except ValueError:
-                msg = 'Expected a "(", but did not find one.\n'
-                msg += 'Looking for something of the form:\n'
-                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
-                msg += '%r' % line
-                raise ValueError(msg)
-
-            try:
-                options_paren, value = value_options.rsplit('=', 1)
-            except ValueError:
-                msg = 'Expected a "=", but did not find one.\n'
-                msg += 'Looking for something of the form:\n'
-                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
-                msg += 'value_options=%r\n' % value_options
-                msg += '%r' % line
-                raise ValueError(msg)
-            options_paren = options_paren.strip()
-
-            value = value.strip()
-            if value.isdigit():
-                value = int(value)
-            if not options_paren.endswith(')'):
-                raise RuntimeError(line)
-            str_options = options_paren[:-1]
-
-            if '(' in str_options:
-                options = split_by_mixed_commas_parentheses(str_options)
-            else:
-                options = str_options.split(',')
-            param_type = 'STRESS-type'
-            key = key.upper()
-
-        elif line_upper.startswith('BEGIN'):  # begin bulk
-            try:
-                (key, value) = line_upper.split(' ')
-            except ValueError:
-                msg = 'excepted "BEGIN BULK" found=%r' % line
-                raise RuntimeError(msg)
-            key = key.upper()
-            param_type = 'BEGIN_BULK-type'
-            assert key.upper() == key, key
-        elif 'PARAM' in line_upper:  # param
-            key, value, options, param_type = _split_param(line, line_upper)
-        elif ' ' not in line:
-            key = line.strip().upper()
-            value = line.strip()
-            options = None
-            param_type = 'KEY-type'
-            assert key.upper() == key, key
-        else:
-            msg = 'generic catch all...line=%r' % line
-            key = ''
-            value = line
-            options = None
-            param_type = 'KEY-type'
-            assert key.upper() == key, key
-        i += 1
-        assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
-
-        return (i, key, value, options, param_type)
 
     def finish_subcases(self):
         """
@@ -1228,3 +825,416 @@ def verify_card2(key, value, options, line):
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
         raise NotImplementedError('key=%r line=%r' % (key, line))
+
+
+def _parse_entry(self, lines: list[str],
+                 log: SimpleLogger,
+                 debug: bool=False):
+    r"""
+    Internal method for parsing a card of the case control deck
+
+    Parses a single case control deck card into 4 sections
+
+    1.  param_name - obvious
+    2.  Value      - still kind of obvious
+    3.  options    - rarely used data
+    4.  param_type - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
+
+    It's easier with examples:
+
+    param_type = SUBCASE-type
+      SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
+    param_type = STRESS-type
+      STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
+      STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
+      TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
+    param_type = SET-type
+      SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
+    param_type = BEGIN_BULK-type
+      BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
+    param_type = CSV-type
+      PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
+
+    The param_type is the "macro" form of the data (similar to integer, float, string).
+    The value is generally whats on the RHS of the equals sign (assuming it's there).
+    Options are modifiers on the data.  Form things like the PARAM card or the SET card
+    they arent as clear, but the param_type lets the program know how to format it
+    when writing it out.
+
+    Parameters
+    ----------
+    lines : list[str, str, ...]
+        list of lines
+
+    Returns
+    -------
+    i : int
+        ???
+    paramName : str
+        see brief
+    value : list[...]
+        see brief
+    options : list[str/int/float]
+        see brief
+    param_type : str/int/float/list
+        see brief
+
+    """
+    i = 0
+    options = []
+    value = None
+    key = None
+    param_type = None
+
+    line = lines[i]
+    #print(line)
+    #print("*****lines = ", lines)
+
+    equals_count = 0
+    for letter in line:
+        if letter == '=':
+            equals_count += 1
+    line_upper = line.upper().expandtabs().strip()
+
+    #print("line_upper = %r" % line)
+    #print(STR_CARD_NAMES, line_upper.startswith(STR_CARD_NAMES))
+    #print('  equals_count = %s' % equals_count)
+    if line_upper.startswith('SUBCASE'):
+        param_type = split_equal_space(line_upper, 'SUBCASE', 'SUBCASE = 5')
+        key = 'SUBCASE'
+
+        #print("key=%r isubcase=%r" % (key, isubcase))
+        value = integer(param_type, line_upper)
+        #self.isubcase = int(isubcase)
+        param_type = 'SUBCASE-type'
+        assert key.upper() == key, key
+
+    elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
+        try:
+            eindex = line.index('=')
+        except ValueError:
+            msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
+            msg += "line = %r" % line_upper.strip()
+            raise RuntimeError(msg)
+
+        key = line_upper[0:eindex].strip()
+        value = line[eindex + 1:].strip()
+        options = []
+        param_type = 'STRING-type'
+    elif line_upper.startswith('SET ') and equals_count == 1:
+        obj = SET.add_from_case_control(line_upper, lines, i)
+        #if 0:
+            #key = obj.key
+            #options = None
+            #value = obj
+            #param_type = 'OBJ-type'
+        #else:
+        key = obj.key
+        options = obj.set_id
+        value = obj.value
+        param_type = 'SET-type'
+    elif line_upper.startswith('SETMC ') and equals_count == 1:
+        obj = SETMC.add_from_case_control(line_upper, lines, i)
+        #if 0:
+            #key = obj.key
+            #options = None
+            #value = obj
+            #param_type = 'OBJ-type'
+        #else:
+        key = value.key  # type: str
+        options = obj.set_id  # type: list[int]
+        value = obj.value  # type: int
+        param_type = 'SET-type'
+
+    elif line_upper.startswith('SETS DEFINITION'):
+        # just OUTPUT(PLOT)
+        obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, 'OUTPUT(PLOT)', lines, i)
+        value = obj.value
+        options = obj.options
+        param_type = 'STRESS-type'
+        key = obj.type
+    elif line_upper.startswith('OUTPUT'):
+        obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, line_upper, lines, i)
+        value = obj.value
+        options = obj.options
+        param_type = 'STRESS-type'
+        key = obj.type
+
+    elif line_upper.startswith(CHECK_CARD_NAMES) and self.use_card_dict:
+        if '(' in line:
+            key = line_upper.strip().split('(', 1)[0].strip()
+        elif '=' in line:
+            key = line_upper.strip().split('=', 1)[0].strip()
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+
+        key = update_param_name(key)
+        obj = CHECK_CARD_DICT[key].add_from_case_control(line, line_upper, lines, i)
+        value = obj.value
+        options = obj.options
+        param_type = 'STRESS-type'
+        key = obj.type
+
+    elif line_upper.startswith(INT_CARD_NAMES) and self.use_card_dict:
+        if '=' in line:
+            (name, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+        name = update_param_name(name)
+        obj = INT_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+        key = obj.type
+        #if 0:
+            #value = obj.value
+            #options = []
+            #param_type = 'STRESS-type'
+        #else:
+        value = obj
+        options = None
+        param_type = 'OBJ-type'
+        key = obj.type
+
+    elif line_upper.startswith(INTSTR_CARD_NAMES) and self.use_card_dict:
+        if '=' in line:
+            (name, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+        name = name.strip()
+        obj = INTSTR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+        key = obj.type
+        #if 0:
+            #value = obj.value
+            #options = []
+            #param_type = 'STRESS-type'
+        #else:
+        value = obj
+        options = None
+        param_type = 'OBJ-type'
+        key = obj.type
+
+    elif line_upper.startswith(STR_CARD_NAMES):
+        if '=' in line:
+            (name, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+        name = name.strip()
+        try:
+            cls = STR_CARD_DICT[name[:4]]
+        except KeyError:
+            cls = STR_CARD_DICT[name]
+        obj = cls.add_from_case_control(line, line_upper, lines, i)
+        value = obj
+        options = None
+        param_type = 'OBJ-type'
+        key = obj.type
+
+    elif line_upper.startswith(('CSCALE', 'SURFACE', 'VOLUME', 'EXTSEOUT')):
+        keyi = line_upper.split(' ')[0]
+        options = None
+        param_type = 'OBJ-type'
+        clsi = CLASS_MAP[keyi]
+        obj = clsi.add_from_case_control(line_upper.strip())
+        value = obj
+        key = obj.type
+    elif line_upper.startswith('WEIGHTCHECK'):
+        options = None
+        param_type = 'OBJ-type'
+        obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
+        value = obj
+        key = obj.type
+    elif line_upper.startswith('DSAPRT'):
+        options = None
+        param_type = 'OBJ-type'
+        obj = DSAPRT.add_from_case_control(line, line_upper, lines, i)
+        value = obj
+        key = obj.type
+    elif line_upper.startswith('GROUNDCHECK'):
+        options = None
+        param_type = 'OBJ-type'
+        obj = GROUNDCHECK.add_from_case_control(line, line_upper, lines, i)
+        value = obj
+        key = obj.type
+    elif line_upper.startswith('MODCON'):
+        options = None
+        param_type = 'OBJ-type'
+        obj = MODCON.add_from_case_control(line, line_upper, lines, i)
+        value = obj
+        key = obj.type
+    #elif line_upper.startswith('AUXMODEL'):
+        #options = None
+        #param_type = 'OBJ-type'
+        #value = AUXMODEL.add_from_case_control(line, line_upper, lines, i)
+        #key = value.type
+
+    elif line_upper.startswith('BEGIN'):  # begin bulk
+        try:
+            (key, value) = line_upper.split(' ')
+        except ValueError:
+            msg = 'excepted "BEGIN BULK" found=%r' % line
+            raise RuntimeError(msg)
+        key = key.upper()
+        param_type = 'BEGIN_BULK-type'
+        assert key.upper() == key, key
+
+    elif line_upper.startswith('PARAM'):
+        #line2 = line_upper.replace('\t', ' ').replace(',' , ' ')
+        key, value, options, param_type = _split_param(line, line_upper)
+
+    elif self.use_card_dict:
+        raise RuntimeError(f'case control work...\n{line_upper}')
+
+    #========================================================================================
+    elif line_upper.startswith('TEMP'):
+        if '=' in line:
+            (key, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+        assert equals_count == 1, line_upper
+        if '(' in line_upper:
+            options = None
+            param_type = 'STRESS-type'
+            key = key.strip().upper()
+            value = value.strip()
+            if self.debug:
+                self.log.debug("key=%r value=%r" % (key, value))
+            param_type = 'STRESS-type'
+            assert key.upper() == key, key
+
+            #param_type = 'STRESS-type'
+            sline = key.strip(')').split('(')
+            key = sline[0]
+            options = sline[1].split(',')
+
+            assert len(options) == 1, line_upper
+            # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
+            key = 'TEMPERATURE(%s)' % options[0]
+            value = value.strip()
+            options = []
+        else:
+            key = 'TEMPERATURE(BOTH)'
+            options = []
+            param_type = 'STRESS-type'
+        value = int(value)
+
+    elif line_upper.startswith('RIGID'):
+        if '=' in line:
+            (key, value) = line_upper.strip().split('=')
+            key = key.strip()
+            value = value.strip()
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+        #print('line_upper=%r' % line_upper)
+        assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
+        param_type = 'STRESS-type'
+        options = []
+        #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
+        if value in ['LAGR', 'LAGRAN']:
+            value = 'LAGRANGE'
+        elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR', 'AUTO']:
+            pass
+        else:
+            raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
+
+    elif equals_count == 1:  # STRESS
+        if '=' in line:
+            (key, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+
+        key = key.strip().upper()
+        value = value.strip()
+        if self.debug:
+            self.log.debug("key=%r value=%r" % (key, value))
+        param_type = 'STRESS-type'
+        assert key.upper() == key, key
+
+        if '(' in key:  # comma may be in line - STRESS-type
+            #param_type = 'STRESS-type'
+            sline = key.strip(')').split('(')
+            key = sline[0]
+            options = sline[1].split(',')
+
+        elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
+            #print('A ??? line = ',line)
+            #raise RuntimeError(line)
+            pass
+        else:  # STRESS-type; TITLE = stuff
+            #print('B ??? line = ',line)
+            pass
+
+        key = update_param_name(key)
+        verify_card(key, value, options, line)
+        assert key.upper() == key, key
+    elif equals_count > 2 and '(' in line and 'FLSPOUT' not in line:
+        #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+        #print('****', lines)
+        assert len(lines) == 1, lines
+        line = lines[0]
+        try:
+            key, value_options = line.split('(', 1)
+        except ValueError:
+            msg = 'Expected a "(", but did not find one.\n'
+            msg += 'Looking for something of the form:\n'
+            msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+            msg += '%r' % line
+            raise ValueError(msg)
+
+        try:
+            options_paren, value = value_options.rsplit('=', 1)
+        except ValueError:
+            msg = 'Expected a "=", but did not find one.\n'
+            msg += 'Looking for something of the form:\n'
+            msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+            msg += 'value_options=%r\n' % value_options
+            msg += '%r' % line
+            raise ValueError(msg)
+        options_paren = options_paren.strip()
+
+        value = value.strip()
+        if value.isdigit():
+            value = int(value)
+        if not options_paren.endswith(')'):
+            raise RuntimeError(line)
+        str_options = options_paren[:-1]
+
+        if '(' in str_options:
+            options = split_by_mixed_commas_parentheses(str_options)
+        else:
+            options = str_options.split(',')
+        param_type = 'STRESS-type'
+        key = key.upper()
+
+    elif line_upper.startswith('BEGIN'):  # begin bulk
+        try:
+            (key, value) = line_upper.split(' ')
+        except ValueError:
+            msg = 'excepted "BEGIN BULK" found=%r' % line
+            raise RuntimeError(msg)
+        key = key.upper()
+        param_type = 'BEGIN_BULK-type'
+        assert key.upper() == key, key
+    elif 'PARAM' in line_upper:  # param
+        key, value, options, param_type = _split_param(line, line_upper)
+    elif ' ' not in line:
+        key = line.strip().upper()
+        value = line.strip()
+        options = None
+        param_type = 'KEY-type'
+        assert key.upper() == key, key
+    else:
+        msg = 'generic catch all...line=%r' % line
+        key = ''
+        value = line
+        options = None
+        param_type = 'KEY-type'
+        assert key.upper() == key, key
+    i += 1
+    assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
+
+    return (i, key, value, options, param_type)

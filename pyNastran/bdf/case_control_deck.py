@@ -24,7 +24,7 @@ import sys
 import copy
 from typing import Any, Optional, TYPE_CHECKING
 
-from cpylog import get_logger
+from cpylog import get_logger, SimpleLogger
 
 #from pyNastran.bdf import subcase
 from pyNastran.utils import object_attributes, object_methods, object_stats
@@ -530,7 +530,8 @@ class CaseControlDeck:
             raise SyntaxError(msg)
         #self.read([param])
         lines = _clean_lines([param])
-        (j, key, value, options, param_type) = self._parse_entry(lines)
+        (j, fail_flag, key, value, options, param_type) = parse_entry(
+            lines, self.log, debug=self.debug)
         return (j, key, value, options, param_type)
 
     def _read(self, lines: list[str]) -> None:
@@ -559,7 +560,7 @@ class CaseControlDeck:
                 i += 1
                 lines2.append(lines[i])
                 #comment = lines[i][72:]
-            (j, fail_flag, key, value, options, param_type) = _parse_entry(
+            (j, fail_flag, key, value, options, param_type) = parse_entry(
                 lines2, self.log, debug=self.debug)
             i += 1
 
@@ -928,9 +929,9 @@ def integer(str_value: str, line: str) -> int:
     return value
 
 
-def _parse_entry(lines: list[str],
-                 log: SimpleLogger,
-                 debug: bool=False) -> tuple[int, bool, str, Any, list[str], str]:
+def parse_entry(lines: list[str],
+                log: SimpleLogger,
+                debug: bool=False) -> tuple[int, bool, str, Any, list[str], str]:
     #return (i, fail_flag, key, value, options, param_type)
     r"""
     Internal method for parsing a card of the case control deck
@@ -970,7 +971,7 @@ def _parse_entry(lines: list[str],
 
     Returns
     -------
-    paramName : str
+    param_name : str
         see brief
     value : list[...]
         see brief
