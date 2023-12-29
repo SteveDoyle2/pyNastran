@@ -104,6 +104,7 @@ class CMASS1(Element):
         self.property_id = property_id
         self.nodes = nodes
         self.components = components
+        self.n = len(element_id)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()
@@ -273,6 +274,7 @@ class CMASS2(Element):
         self._mass = mass
         self.nodes = nodes
         self.components = components
+        self.n = len(element_id)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()

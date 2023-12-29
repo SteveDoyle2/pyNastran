@@ -886,12 +886,15 @@ class POINT(VectorizedBaseCard):
         assert self.xyz.shape == self._xyz_cid0.shape
         self.cards = []
 
-    def _save(self, point_id, cp, xyz, _xyz_cid0, comment):
+    def _save(self, point_id, cp, xyz, _xyz_cid0, comment=None):
+        if len(self.point_id) > 0:
+            asdf
         self.point_id = point_id
         self.cp = cp
         self.xyz = xyz
         self._xyz_cid0 = _xyz_cid0
-        self.comment = comment
+        if comment:
+            self.comment = comment
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)

@@ -948,18 +948,19 @@ class GEOM1:
         POINT(6001,60,377)
         """
         op2 = self.op2
-        s = Struct(op2._endian + b'2i3f')
+        #s = Struct(op2._endian + b'2i3f')
         ntotal = 20 * op2.factor
         nentries = (len(data) - n) // ntotal
-        for unused_i in range(nentries):
-            edata = data[n:n + ntotal]  # 5*4
-            out = s.unpack(edata)
-            # (nid, cid, x1, x2, x3) = out
-            if op2.is_debug_file:
-                op2.binary_debug.write('  POINT=%s\n' % str(out))
-            point = POINT.add_op2_data(out)
-            op2._add_methods._add_point_object(point)
-            n += ntotal
+
+        n, ints, floats = get_ints_floats(data, n, nentries, 5,
+                                          size=op2.size, endian=op2._endian)
+        point_id = ints[:, 0]
+        cid = ints[:, 1]
+        xyz = floats[:, [2, 3, 4]]
+        xyz_cid0 = np.full(xyz.size, dtype=xyz.dtype)
+        icp0 = (cid == 0)
+        xyz_cid0[icp0, :] = xyz[icp0, :]
+        op2.point._save(point_id, cp, xyz, xyz_cid0, comment=None)
         op2.increase_card_count('POINT', nentries)
         return n
 
@@ -985,21 +986,18 @@ class GEOM1:
     def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
         op2 = self.op2
-        struct_4i = Struct(op2._endian + b'4i')
-        ntotal = 16 * op2.factor  # 4*4
+        #struct_4i = Struct(op2._endian + b'4i')
+        #ntotal = 16 * op2.factor  # 4*4
         nentries = (len(data) - n) // ntotal
-        for unused_i in range(nentries):
-            edata = data[n:n + ntotal]
-            out = struct_4i.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('  CVISC=%s\n' % str(out))
-            # (eid, pid, n1, n2) = out
-            element = CVISC.add_op2_data(out)
-            op2.add_op2_element(element)
-            n += ntotal
+
+        n, ints = get_ints(data, n, nentries, 11,
+                           size=op2.size, endian=op2._endian)
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        op2.cvisc._save(element_id, property_id, nodes)
         op2.increase_card_count('CVISC', nentries)
         return n
-
 
     def _read_extrn(self, data: bytes, n: int) -> int:
         """

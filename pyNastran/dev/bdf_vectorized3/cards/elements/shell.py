@@ -954,6 +954,7 @@ class CTRIAR(ShellElement):
         self.theta = theta
         self.zoffset = zoffset
         self.T = T
+        self.n = len(element_id)
 
     def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]

@@ -583,6 +583,7 @@ class CHBDYG(ThermalElement):
         self.rad_mid = rad_mid
         self.nnode = nnode
         self.grid = grid
+        self.n = len(element_id)
 
     def __apply_slice__(self, load: CHBDYG, i: np.ndarray) -> None:
         load.element_id = self.element_id[i]
@@ -836,6 +837,7 @@ class CHBDYP(ThermalElement):
         self.rad_mid = rad_mid
         self.ce = ce
         self.ce_orientation = ce_orientation
+        self.n = len(element_id)
 
     def __apply_slice__(self, load: CHBDYP, i: np.ndarray) -> None:
         load.element_id = self.element_id[i]

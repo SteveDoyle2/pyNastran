@@ -1326,11 +1326,11 @@ class GEOM2:
 
         element = op2.cdamp1
         n, ints = get_ints(data, n, nelements, 6, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        element._save(element_id, property_id, nodes, components)
         element.write()
 
         #struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -1356,11 +1356,11 @@ class GEOM2:
 
         element = op2.cdamp2
         n, ints, floats = get_ints_floats(data, n, nelements, 6, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.b = floats[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        b = floats[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        element._save(element_id, nodes, components, b)
         element.write()
         #s = Struct(mapfmt(op2._endian + b'if4i', self.size))
         #for unused_i in range(nelements):
@@ -1384,22 +1384,11 @@ class GEOM2:
         nelements = (len(data) - n) // 16
         element = op2.cdamp3
         n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.spoints = ints[:, [2, 3]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        spoints = ints[:, [2, 3]]
+        element._save(element_id, property_id, spoints)
         element.write()
-
-        #struct_4i = Struct(op2._endian + b'4i')
-        #for unused_i in range(nelements):
-            #edata = data[n:n + 16]  # 4*4
-            #out = struct_4i.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CDAMP3=%s\n' % str(out))
-            ##(eid, pid, s1, s2) = out
-            #elem = CDAMP3.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += 16
         op2.card_count['CDAMP3'] = nelements
         return n
 
@@ -1447,17 +1436,6 @@ class GEOM2:
         element = op2.cdamp5
         element._save(element_id, property_id, nodes)
         element.write()
-
-        #s = Struct(op2._endian + b'4i')
-        #for unused_i in range(nelements):
-            #edata = data[n:n + 16]  # 4*4
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CDAMP5=%s\n' % str(out))
-            ##(eid, pid, s1, s2) = out
-            #elem = CDAMP5.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += 16
         op2.card_count['CDAMP5'] = nelements
         return n
 
@@ -1489,24 +1467,14 @@ class GEOM2:
         nelements = (len(data) - n) // ntotal
 
         element = op2.celas1
-        n, ints = get_ints(data, n, nelements, 6, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.n = nelements
+        n, ints = get_ints(data, n, nelements, 6,
+                           size=op2.size, endian=op2._endian)
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        element._save(element_id, property_id, nodes, components)
         element.write()
-
-        #struct_4i = Struct(mapfmt(op2._endian + b'6i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = struct_4i.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CELAS1=%s\n' % str(out))
-            ##(eid, pid, g1, g2, c1, c2) = out
-            #elem = CELAS1.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += ntotal
         op2.card_count['CELAS1'] = nelements
         return n
 
@@ -1519,26 +1487,16 @@ class GEOM2:
         nelements = (len(data) - n) // ntotal
 
         element = op2.celas2
-        n, ints, floats = get_ints_floats(data, n, nelements, 8, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.k = floats[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.ge = floats[:, 6]
-        element.s = floats[:, 7]
-        element.n = nelements
+        n, ints, floats = get_ints_floats(data, n, nelements, 8,
+                                          size=op2.size, endian=op2._endian)
+        element_id = ints[:, 0]
+        k = floats[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        ge = floats[:, 6]
+        s = floats[:, 7]
+        element._save(element_id, nodes, components, k, ge, s)
         element.write()
-
-        #s1 = Struct(mapfmt(op2._endian + b'if4iff', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = s1.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CELAS2=%s\n' % str(out))
-            ##(eid, k, g1, g2, c1, c2, ge, s) = out
-            #elem = CELAS2.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += ntotal
         op2.card_count['CELAS2'] = nelements
         return n
 
@@ -1552,23 +1510,13 @@ class GEOM2:
         nelements = ndatai // ntotal
 
         element = op2.celas3
-        n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.spoints = ints[:, [2, 3]]
-        element.n = nelements
+        n, ints = get_ints(data, n, nelements, 4,
+                           size=op2.size, endian=op2._endian)
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        spoints = ints[:, [2, 3]]
+        element._save(element_id, property_id, spoints)
         element.write()
-
-        #struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = struct_4i.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CELAS3=%s\n' % str(out))
-            ##(eid, pid, s1, s2) = out
-            #elem = CELAS3.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += ntotal
         op2.card_count['CELAS3'] = nelements
         return n
 
@@ -1582,11 +1530,12 @@ class GEOM2:
         nelements = ndatai // ntotal
 
         element = op2.celas4
-        n, ints, floats = get_ints_floats(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.k = floats[:, 1]
-        element.spoints = ints[:, [2, 3]]
-        element.n = nelements
+        n, ints, floats = get_ints_floats(data, n, nelements, 4,
+                                          size=op2.size, endian=op2._endian)
+        element_id = ints[:, 0]
+        k = floats[:, 1]
+        spoints = ints[:, [2, 3]]
+        element._save(element_id, k, spoints)
         element.write()
 
         #s = Struct(mapfmt(op2._endian + b'ifii', self.size))
@@ -1969,17 +1918,15 @@ class GEOM2:
         #if op2.is_debug_file:
             #op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
 
-        for unused_i in range(nelements):
-            edata = data[n:n + 88]  # 22*4
-            out = s.unpack(edata)
-            (eid, pid, *nodes) = out
-            nodes = list(nodes)
-            if op2.is_debug_file:
-                op2.binary_debug.write(f'  {element.type}=({eid}, {pid}, {nodes}')
-
-            element.add(eid, pid, nodes)
-            #self.add_op2_element(elem)
-            n += 88
+        n, ints = get_ints(data, n, nelements, 22,
+                           size=op2.size, endian=op2._endian)
+        element = op2.chexa
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, 2:]
+        assert nodes.shape[1] == 20
+        element._save(element_id, property_id, nodes)
+        assert len(element) == nelements
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
         op2.card_count[element.type] = nelements
@@ -1997,11 +1944,11 @@ class GEOM2:
         nelements = ndatai // ntotal
         n, ints = get_ints(data, n, nelements, 7, size=op2.size, endian=op2._endian)
         element = op2.chbdye
-        element.element_id = ints[:, [0, 1]]
-        element.side = ints[:, 2]
-        element.iview = ints[:, [3, 4]]
-        element.rad_mid = ints[:, [5, 6]]
-        element.n = nelements
+        element_id = ints[:, [0, 1]]
+        side = ints[:, 2]
+        iview = ints[:, [3, 4]]
+        rad_mid = ints[:, [5, 6]]
+        element._save(element_id, side, iview, rad_mid)
         element.write()
 
         #s = Struct(op2._endian + b'7i')
@@ -2030,7 +1977,7 @@ class GEOM2:
 
         n, ints = get_ints(data, n, nelements, 16, size=op2.size, endian=op2._endian)
         element = op2.chbdyg
-        element.element_id = ints[:, 0]
+        element_id = ints[:, 0]
         # blank
         surface_type_int = ints[:, 2]
 
@@ -2049,40 +1996,23 @@ class GEOM2:
             i = np.where(isurface == surface_type_int)[0]
             surface_type[i] = surface_str
 
-        element.surface_type = surface_type
-        element.iview = ints[:, [3, 4]]
-        element.rad_mid = ints[:, [5, 6]]
-        assert element.rad_mid.shape == (nelements, 2), element.rad_mid.shape
+        iview = ints[:, [3, 4]]
+        rad_mid = ints[:, [5, 6]]
+        assert rad_mid.shape == (nelements, 2), rad_mid.shape
         # blank
         #element.grids = ints[:, [7, 8, 9, 10,
                                  #11, 12, 13, 14]]
-        grids = []
+        grids_list = []
         nnode = np.zeros(nelements, dtype=ints.dtype)
         for i, grid_row in enumerate(ints[:, [7, 8, 9, 10,
                                               11, 12, 13, 14]]):
             i1 = np.where(grid_row != 0)[0]
             nnode[i] = len(i1)
-            grids.append(grid_row[i1])
+            grids_list.append(grid_row[i1])
 
-        element.nnode = nnode
-        element.grid = np.hstack(grids)
-        element.n = nelements
+        grid = np.hstack(grids_list)
+        element._save(element_id, surface_type, iview, rad_mid, nnode, grid)
         element.write()
-
-        #s = Struct(op2._endian + b'16i')
-        #for unused_i in range(nelements):
-            #edata = data[n:n+64]
-            #out = s.unpack(edata)
-            #(eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
-             #g1, g2, g3, g4, g5, g6, g7, g8) = out
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CHBDYG=%s\n' % str(out))
-            ##op2.log.debug('  CHBDYG=%s' % str(out))
-            #data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
-                       #g1, g2, g3, g4, g5, g6, g7, g8]
-            #elem = CHBDYG.add_op2_data(data_in)
-            #op2._add_methods._add_thermal_element_object(elem)
-            #n += ntotal
         op2.card_count['CHBDYG'] = nelements
         return n
 
@@ -2125,21 +2055,6 @@ class GEOM2:
         element._save(element_id, property_id, nodes, g0, surface_type_str,
                       iview, rad_mid, ce, ce_orientation)
         element.write()
-
-        #s = Struct(op2._endian + b'12i 3f')
-        #for unused_i in range(nelements):
-            #edata = data[n:n+60]
-            #out = s.unpack(edata)
-            #(eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
-             #dislin, ce, e1, e2, e3) = out
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CHBDYP=%s\n' % str(out))
-            ##op2.log.debug('  CHBDYP=%s' % str(out))
-            #data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
-                       #dislin, ce, e1, e2, e3]
-            #elem = CHBDYP.add_op2_data(data_in)
-            #self._add_thermal_element_object_safe(elem)
-            #n += ntotal
         op2.card_count['CHBDYP'] = nelements
         return n
 
@@ -2160,12 +2075,13 @@ class GEOM2:
         ntotal = 88 * self.factor  # 22*4
         nelements = (len(data) - n) // ntotal
 
-        n, ints = get_ints(data, n, nelements, 22, size=op2.size, endian=op2._endian)
+        n, ints = get_ints(data, n, nelements, 22,
+                           size=op2.size, endian=op2._endian)
         element = op2.chexa
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, 2:]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, 2:]
+        element._save(element_id, property_id, nodes)
         filter_large_element_ids(element)
         filter_large_property_ids(element)
         #for unused_i in range(nelements):
@@ -2196,24 +2112,15 @@ class GEOM2:
         s = Struct(mapfmt(op2._endian + b'22i 2i', self.size))
         ntotal = 96 * self.factor  # 24*4
         nelements = (len(data) - n) // ntotal
-        for unused_i in range(nelements):
-            edata = data[n:n+ntotal]
-            out = s.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('  CHEXCZ=%s\n' % str(out))
-            (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
-             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20,
-             dummy1, dummy2) = out
-            dummy = (dummy1, dummy2)
-            assert dummy == (0, 0), dummy
-            big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
-                         g17, g18, g19, g20]
-            #print(eid, pid, big_nodes)
-
-            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ] + big_nodes
-            elem = CHEXCZ.add_op2_data(data_in)
-            self.add_op2_element(elem)
-            n += ntotal
+        n, ints = get_ints(data, n, nelements, 24,
+                           size=op2.size, endian=op2._endian)
+        element = op2.chexcz
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, 2:]
+        # dummy = ints[:, [22, 23]]
+        assert nodes.shape[1] == 20
+        element._save(element_id, property_id, nodes)
         op2.card_count['CHEXCZ'] = nelements
         return n
 
@@ -2247,11 +2154,11 @@ class GEOM2:
         n, ints = get_ints(data, n, nelements, 6, size=op2.size, endian=op2._endian)
         element = op2.cmass1
         #(eid, pid, g1, g2, c1, c2) = out
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        element._save(element_id, property_id, nodes, components)
         filter_large_element_ids(element)
         filter_large_property_ids(element)
         element.write()
@@ -2279,11 +2186,11 @@ class GEOM2:
 
         n, ints, floats = get_ints_floats(data, n, nelements, 6, size=op2.size, endian=op2._endian)
         element = op2.cmass2
-        element.element_id = ints[:, 0]
-        element._mass = floats[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.components = ints[:, [4, 5]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        mass = floats[:, 1]
+        nodes = ints[:, [2, 3]]
+        components = ints[:, [4, 5]]
+        element._save(element_id, mass, nodes, components)
         filter_large_element_ids(element)
         element.write()
 
@@ -2394,9 +2301,9 @@ class GEOM2:
         n, ints, floats = get_ints_floats(data, n, nelements, 24,
                                           size=op2.size, endian=op2._endian)
         element = op2.conm1
-        element.element_id = ints[:, 0]
-        element.node_id = ints[:, 1]
-        element.coord_id = ints[:, 2]
+        element_id = ints[:, 0]
+        node_id = ints[:, 1]
+        coord_id = ints[:, 2]
         mass = floats[:, 3:] # .reshape(nelements, 6, 6)
         assert mass.shape == (nelements, 21), mass.shape
         mass2 = np.full((nelements, 6, 6), np.nan, dtype=floats.dtype)
@@ -2421,8 +2328,7 @@ class GEOM2:
         mass2[:, 5, 3] = mass[:, 18]
         mass2[:, 5, 4] = mass[:, 19]
         mass2[:, 5, 5] = mass[:, 20]
-        element._mass = mass2
-        element.n = nelements
+        element._save(element_id, node_id, coord_id, mass2)
 
         filter_large_element_ids(element)
         element.write()
@@ -2450,13 +2356,13 @@ class GEOM2:
         n, ints, floats = get_ints_floats(data, n, nelements, 13,
                                           size=op2.size, endian=op2._endian)
         element = op2.conm2
-        element.element_id = ints[:, 0]
-        element.node_id = ints[:, 1]
-        element.coord_id = ints[:, 2]
-        element._mass = floats[:, 3]
-        element.xyz_offset = floats[:, [4, 5, 6]]
-        element.inertia = floats[:, 7:]
-        element.n = nelements
+        element_id = ints[:, 0]
+        node_id = ints[:, 1]
+        coord_id = ints[:, 2]
+        mass = floats[:, 3]
+        xyz_offset = floats[:, [4, 5, 6]]
+        inertia = floats[:, 7:]
+        element._save(element_id, mass, coord_id, node_id, xyz_offset, inertia)
         filter_large_element_ids(element)
         element.write()
         #s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
@@ -2482,27 +2388,17 @@ class GEOM2:
         n, ints, floats = get_ints_floats(data, n, nelements, 8,
                                           size=op2.size, endian=op2._endian)
         element = op2.conrod
-        element.element_id = ints[:, 0]
-        element.nodes = ints[:, [1, 2]]
-        element.material_id = ints[:, 3]
-        element.A = floats[:, 4]
-        element.J = floats[:, 5]
-        element.c = floats[:, 6]
-        element.nsm = floats[:, 7]
-        element.n = nelements
+        element_id = ints[:, 0]
+        nodes = ints[:, [1, 2]]
+        material_id = ints[:, 3]
+        A = floats[:, 4]
+        J = floats[:, 5]
+        c = floats[:, 6]
+        nsm = floats[:, 7]
+        element._save(element_id, material_id, nodes, A, J, c, nsm)
 
         filter_large_element_ids(element)
         element.write()
-        #s = Struct(mapfmt(op2._endian + b'4i4f', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CONROD=%s\n' % str(out))
-            ##(eid, n1, n2, mid, a, j, c, nsm) = out
-            #elem = CONROD.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #n += ntotal
         op2.card_count['CONROD'] = nelements
         return n
 
@@ -2933,24 +2829,6 @@ class GEOM2:
         nelements = (ndatai - n) // ntotal
         leftover = (ndatai - n) % ntotal
         assert leftover == 0, leftover
-        for unused_i in range(nelements):
-            edata = data[n:n + ntotal]
-            out = struct_16i.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('  CPLSTS4=%s\n' % str(out))
-            (eid, pid, n1, n2, n3, n4, theta, undef8, undef9, undef10, undef11,
-             tflag, t1, t2, t3, t4) = out
-            #print(eid, pid, (n1, n2, n3), theta,
-                  #tflag, t1, t2, t3)
-            nids = [n1, n2, n3, n4]
-            undefs = (undef8, undef9, undef10, undef11)
-            assert min(undefs) == 0, undefs
-            assert max(undefs) == 0, undefs
-            thickness = [t1, t2, t3, t4]
-            #cplsts4 = op2.add_cplsts4(eid, pid, nids, theta=theta,
-                                       #tflag=tflag, T1=t1, T2=t2, T3=t3, T4=t4)
-            #str(cplsts4)
-            n += ntotal
 
         n, ints, floats = get_ints_floats(data, n0, nelements, 16,
                                           size=op2.size, endian=op2._endian)
@@ -3192,23 +3070,6 @@ class GEOM2:
         element = op2.cplstn6
         element._save(element_id, property_id, nodes, theta)
         element.write()
-
-        #struct_16i = Struct(mapfmt(op2._endian + b'2i 6i f 7i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = struct_16i.unpack(edata)
-
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CPLSTN6=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, *undef) = out
-            #nids = [n1, n2, n3, n4, n5, n6]
-            #assert min(nids) > 0, nids
-            #assert min(undef) == 0, undef
-            #assert max(undef) == 0, undef
-            #cplstn6 = op2.add_cplstn6(eid, pid, nids, theta=theta)
-            ##print(cplstn6)
-            #str(cplstn6)
-            #n += ntotal
         return n
 
     def _read_cplstn8(self, data: bytes, n: int) -> int:
@@ -3244,22 +3105,6 @@ class GEOM2:
         filter_large_element_ids(element)
         filter_large_property_ids(element)
         element.write()
-
-        #struct_16i = Struct(mapfmt(op2._endian + b'2i 8i f 5i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = struct_16i.unpack(edata)
-
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CPLSTN8=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta, *undef) = out
-            #nids = [n1, n2, n3, n4, n5, n6, n7, n8]
-            #assert min(nids) > 0, nids
-            #assert min(undef) == 0, undef
-            #assert max(undef) == 0, undef
-            #cplstn8 = op2.add_cplstn8(eid, pid, nids, theta=theta)
-            #str(cplstn8)
-            #n += ntotal
         return n
 
     def _read_cpyram(self, data: bytes, n: int) -> int:
@@ -3320,10 +3165,10 @@ class GEOM2:
 
         n, ints = get_ints(data, n, nelements, 17, size=op2.size, endian=op2._endian)
         element = op2.cpenta
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, 2:]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, 2:]
+        element._save(element_id, property_id, nodes)
         filter_large_element_ids(element)
         filter_large_property_ids(element)
         element.write()
@@ -3687,25 +3532,6 @@ class GEOM2:
         nodes = ints[:, [2, 3, 4]]
         element.set_from_op2(element_id, property_id, nodes,
                              zoffset=None, tflag=None, T=None, theta=None, mcid=None)
-        #if op2.is_debug_file:
-            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
-
-        #if op2.is_debug_file:
-            #op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3]')
-
-        #s = Struct(op2._endian + b'5i')
-        #for unused_i in range(nelements):
-            #edata = data[n:n + 20]  # 5*4
-            #out = s.unpack(edata)
-            #(eid, pid, n1, n2, n3) = out
-            #if op2.is_debug_file:
-                #op2.binary_debug.write(
-                    #f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}]')
-
-            #nids = [n1, n2, n3]
-            #elem = element(eid, pid, nids)
-            #self.add_op2_element(elem)
-            #n += 20
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
         op2.card_count[element.type] = nelements
@@ -3728,18 +3554,6 @@ class GEOM2:
         nodes = ints[:, [2, 3, 4, 5]]
         #element._save(element_id, property_id, nodes)
         element.set_from_op2(element_id, property_id, nodes)
-        #for unused_i in range(nelements):
-            #edata = data[n:n + 24]  # 6*4
-            #out = s.unpack(edata)
-            #(eid, pid, n1, n2, n3, n4) = out
-            #if op2.is_debug_file:
-                #op2.binary_debug.write(
-                    #f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}]')
-
-            #nids = [n1, n2, n3, n4]
-            #elem = element(eid, pid, nids)
-            #self.add_op2_element(elem)
-            #n += 24
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
         op2.card_count[element.type] = nelements
@@ -3788,7 +3602,7 @@ class GEOM2:
         element_id = ints[:, 0]
         property_id = ints[:, 1]
         nodes = ints[:, [2, 3, 4, 5]]
-        theta = floats[:, 6].copy()
+        theta_ = floats[:, 6].copy()
         zoffset = floats[:, 7]
         blank = ints[:, 8]
         assert blank.min() == 0 and blank.max() == 0, np.unique(blank)
@@ -3797,7 +3611,7 @@ class GEOM2:
         minus1 = ints[:, 14]
         assert minus1.min() == -1 and minus1.max() == -1, np.unique(minus1)
 
-        theta, mcid = convert_theta_to_mcid(theta)
+        theta, mcid = convert_theta_to_mcid(theta_)
         element.set_from_op2(element_id, property_id, nodes, zoffset,
                              tflag=tflag, T=T, theta=theta, mcid=mcid)
         #element.theta = theta
@@ -3832,13 +3646,12 @@ class GEOM2:
         element_id = ints[:, 0]
         property_id = ints[:, 1]
         nodes = ints[:, [2, 3, 4, 5]]
-        theta = floats[:, 6].copy()
-        #print(theta)
+        theta_ = floats[:, 6].copy()
         zoffset = floats[:, 7]
         tflag = ints[:, 9]
         T = floats[:, 10:]
         assert T.shape[1] == 4, T.shape
-        theta, mcid = convert_theta_to_mcid(theta)
+        theta, mcid = convert_theta_to_mcid(theta_)
         mcid = mcid
         theta = theta
         element.set_from_op2(element_id, property_id, nodes,
@@ -3955,37 +3768,17 @@ class GEOM2:
         nodes = ints[:, [2, 3, 4, 5,
                          6, 7, 8, 9]]
         T = floats[:, [10, 11, 12, 13]]
-        theta = floats[:, 14].copy()
+        theta_ = floats[:, 14].copy()
         zoffset = floats[:, 15]
         tflag = ints[:, 16]
 
-        theta, mcid = convert_theta_to_mcid(theta)
+        theta, mcid = convert_theta_to_mcid(theta_)
         element.set_from_op2(element_id, property_id, nodes,
                              zoffset=zoffset, tflag=tflag, T=T, theta=theta, mcid=mcid)
         filter_large_element_ids(element)
         element.write()
 
         elements = []
-        #s = Struct(mapfmt(op2._endian + b'10i 6f i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
-            ##(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-             ##t3, t4, theta, zoffs, tflag) = out
-            #tflag = out[-1]
-            ##op2.log.info('cquad8 tflag = %s' % tflag)
-            #assert isinstance(tflag, int), tflag
-            #assert tflag in [-1, 0, 1], tflag
-            ##print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
-                  ##'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
-                      ##eid, pid, n1, n2, n3, n4, theta, zoffs,
-                      ##tflag, t1, t2, t3, t4))
-            ##data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-            #elem = CQUAD8.add_op2_data(out)
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_cquad8_v2001(self, card_obj, data: bytes, n: int) -> int:
@@ -4015,43 +3808,21 @@ class GEOM2:
                                           size=op2.size, endian=op2._endian)
 
         element = op2.cquad8
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4, 5,
-                                 6, 7, 8, 9]]
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4, 5,
+                         6, 7, 8, 9]]
 
-        element.tflag = np.zeros(nelements, dtype=ints.dtype)
-        element.T = floats[:, [10, 11, 12, 13]]
+        tflag = np.zeros(nelements, dtype=ints.dtype)
+        T = floats[:, [10, 11, 12, 13]]
         theta = floats[:, 14].copy()
-        element.zoffset = floats[:, 15]
+        zoffset = floats[:, 15]
 
         theta, mcid = convert_theta_to_mcid(theta)
-        element.theta = theta
-        element.mcid = mcid
-        element.n = nelements
+        element._save(element_id, property_id, nodes,
+                      zoffset=zoffset, theta=theta, mcid=mcid,
+                      tflag=tflag, T=T)
         element.write()
-
-        #sf = Struct(mapfmt(op2._endian + b'10i 6f', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = sf.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-             #t1, t2, t3, t4, theta, zoffs) = out
-            #assert eid > 0
-            #assert pid > 0
-            #tflag = None
-            #out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-                   #t1, t2, t3, t4, theta, zoffs, tflag)
-            ##print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
-                  ##'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
-                      ##eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
-            ##data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-            #elem = CQUAD8.add_op2_data(out)
-            #elements.append(elem)
-            #self.add_op2_element(elem)
-            #n += ntotal
         return n, elements
 
 
@@ -4104,58 +3875,6 @@ class GEOM2:
                              zoffset=zoffset, tflag=tflag, T=T, theta=theta, mcid=mcid)
         filter_large_element_ids(element)
         element.write()
-
-
-        #s = Struct(mapfmt(op2._endian + b'10i 5f 3i', self.size))
-
-        ##sf = Struct(mapfmt(op2._endian + b'10i 6f', self.size))
-        #edata0 = data[n:n + ntotal]
-        #flag = s.unpack(edata0)[-1]
-        #if flag == -1:
-            #for unused_i in range(nelements):
-                #edata = data[n:n + ntotal]
-                #out = s.unpack(edata)
-                #if op2.is_debug_file:
-                    #op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
-                #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-                 #t3, t4, theta, tflag, zoffs, flag) = out
-                #assert eid > 0
-                #assert pid > 0
-                #assert tflag == 0
-                #assert zoffs == 0
-                #assert flag == -1, flag
-                #tflag = None
-                #out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-                       #t3, t4, theta, zoffs, tflag)
-                ##print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
-                      ##'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
-                          ##eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
-                ##data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-                #elem = CQUAD8.add_op2_data(out)
-                #elements.append(elem)
-                #self.add_op2_element(elem)
-                #n += ntotal
-        #else:
-            #for unused_i in range(nelements):
-                #edata = data[n:n + ntotal]
-                #out = s.unpack(edata)
-                #if op2.is_debug_file:
-                    #op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
-                #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-                 #t3, t4, theta, zoffs) = out
-                #assert eid > 0
-                #assert pid > 0
-                #tflag = None
-                #out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-                       #t3, t4, theta, zoffs, tflag)
-                ##print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
-                      ##'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
-                          ##eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
-                ##data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-                #elem = CQUAD8.add_op2_data(out)
-                #elements.append(elem)
-                #self.add_op2_element(elem)
-                #n += ntotal
         return n, elements
 
 # CQUAD9FD
@@ -4340,10 +4059,10 @@ class GEOM2:
 
         element = op2.crod
         n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        element._save(element_id, property_id, nodes)
 
         filter_large_element_ids(element)
         filter_large_property_ids(element)
@@ -4422,10 +4141,10 @@ class GEOM2:
 
         element = op2.cshear
         n, ints = get_ints(data, n, nelements, 6, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4, 5]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4, 5]]
+        element._save(element_id, property_id, nodes)
         element.write()
 
         #struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -4501,10 +4220,10 @@ class GEOM2:
 
         element = op2.ctetra
         n, ints = get_ints(data, n, nelements, 12, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, 2:]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, 2:]
+        element._save(element_id, property_id, nodes)
         filter_large_element_ids(element)
         element.write()
 
@@ -4563,40 +4282,22 @@ class GEOM2:
         n, ints, floats = get_ints_floats(data, n, nelements, 13,
                                           size=op2.size, endian=op2._endian)
         element = op2.ctria3
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4]]
-        theta = floats[:, 5].copy()
-        element.zoffset = floats[:, 6]
-        element.tflag = ints[:, 7]
-        element.T = floats[:, 10:]
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4]]
+        theta_ = floats[:, 5].copy()
+        zoffset = floats[:, 6]
+        tflag = ints[:, 7]
+        T = floats[:, 10:]
         assert element.T.shape[1] == 3, element.T.shape
-        theta, mcid = convert_theta_to_mcid(theta)
-        element.mcid = mcid
-        element.theta = theta
+        theta, mcid = convert_theta_to_mcid(theta_)
+
+        element._save(element_id, property_id, nodes, zoffset, mcid, theta, tflag, T)
         element.write()
         element.n = nelements
         op2.card_count['CTRIA3'] = nelements
 
         elements = []
-        #s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = s.unpack(edata)
-            ##print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
-                  ##'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
-                      ##eid, pid, n1, n2, n3, theta, zoffs,
-                      ##blank1, blank2, tflag, t1, t2, t3))
-            #(eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
-             #unused_blank2, tflag, t1, t2, t3) = out
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
-
-            #theta_mcid = convert_theta_to_mcid(theta)
-            #data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
-            #elem = CTRIA3.add_op2_data(data_in)
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctria3_56(self, card_obj, data: bytes, n: int) -> int:
@@ -4640,27 +4341,6 @@ class GEOM2:
                              T=T)
 
         elements = []
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            #out = s.unpack(edata)
-            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
-                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
-                      #eid, pid, n1, n2, n3, theta, zoffs,
-                      #blank1, blank2, tflag, t1, t2, t3))
-            ##(eid, pid, n1, n2, n3, theta, a, b, c, d,
-             ##t1, t2, t3, minus1) = out
-            #abcd = (a, b, c, d)
-            #assert abcd == (0, 0, 0, 0), abcd
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
-
-            #zoffs = 0.0
-            #tflag = 0
-            #theta_mcid = convert_theta_to_mcid(theta)
-            #data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
-            #elem = CTRIA3.add_op2_data(data_in)
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
 
@@ -4765,24 +4445,6 @@ class GEOM2:
         #element.n = nelements
         element.write()
 
-        #s = Struct(op2._endian + b'10i')
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, a, minus1) = out
-            #assert (a, minus1) == (0, -1), (a, minus1)
-            #assert minus1 == -1
-            #assert n4 == 0, out
-            #assert n5 == 0, out
-            #assert n6 == 0, out
-            #nids = [n1, n2, n3]
-            #elem = CTRIA3(eid, pid, nids,
-                          #theta_mcid=0., zoffset=0., tflag=0,
-                          #T1=None, T2=None, T3=None, comment='')
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctria3fd_32(self, card_obj, data: bytes, n: int) -> int:
@@ -4801,17 +4463,18 @@ class GEOM2:
                                           size=op2.size, endian=op2._endian)
 
         element = op2.ctria3
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4]]
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4]]
 
-        element.zoffset = np.full(nelements, np.nan, dtype=floats.dtype)
-        element.tflag = np.zeros(nelements, dtype=ints.dtype)
-        element.T = np.full((nelements, 3), np.nan, dtype=floats.dtype)
+        zoffset = np.full(nelements, np.nan, dtype=floats.dtype)
+        tflag = np.zeros(nelements, dtype=ints.dtype)
+        T = np.full((nelements, 3), np.nan, dtype=floats.dtype)
         #assert element.T.shape[1] == 4, element.T.shape
         #theta, mcid = convert_theta_to_mcid(theta)
-        element.mcid = np.full(nelements, -1, dtype=floats.dtype)
-        element.theta = np.full(nelements, np.nan, dtype=floats.dtype)
+        mcid = np.full(nelements, -1, dtype=floats.dtype)
+        theta = np.full(nelements, np.nan, dtype=floats.dtype)
+        element._save(element_id, property_id, nodes, zoffset, mcid, theta, tflag, T)
         element.n = nelements
         element.write()
 
@@ -4873,34 +4536,21 @@ class GEOM2:
                                           size=op2.size, endian=op2._endian)
 
         element = op2.ctriax
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4, 5, 6, 7]]
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4, 5, 6, 7]]
 
         #element.zoffset = np.full(nelements, np.nan, dtype=floats.dtype)
         #element.tflag = np.zeros(nelements, dtype=ints.dtype)
         #element.T = np.full((nelements, 3), np.nan, dtype=floats.dtype)
         #assert element.T.shape[1] == 4, element.T.shape
         #theta, mcid = convert_theta_to_mcid(theta)
-        element.mcid = np.full(nelements, -1, dtype=floats.dtype)
-        element.theta = np.full(nelements, np.nan, dtype=floats.dtype)
-        element.n = nelements
+        mcid = np.full(nelements, -1, dtype=floats.dtype)
+        theta = np.full(nelements, np.nan, dtype=floats.dtype)
+        element._save(element_id, property_id, nodes, theta, mcid)
         element.write()
 
         elements = []
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6) = out
-            #nids = [n1, n2, n3, n4, n5, n6]
-            #assert n4 == 0, out
-            #assert n5 == 0, out
-            #assert n6 == 0, out
-            #elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctriax3fd_40(self, card_obj, data: bytes, n: int) -> int:
@@ -5052,8 +4702,6 @@ class GEOM2:
 
         element.set_from_op2(
             element_id, property_id, nodes, zoffset=None, tflag=None, T=None, theta=None, mcid=None)
-
-        element.n = nelements
         element.write()
 
         elements = []
@@ -5114,28 +4762,10 @@ class GEOM2:
         else:
             element = op2.ctria6
         element.set_from_op2(element_id, property_id, nodes,
-                             zoffset=zoffset, tflag=tflag, T=T, theta=theta, mcid=mcid)
+                             zoffset=zoffset, theta=theta, mcid=mcid,
+                             tflag=tflag, T=T)
 
         elements = []
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            ##(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag, minus1) = out
-            ##print('eid=%s pid=%s nids[%s, %s %s] theta=%s zoffs=%s '
-                  ##'tflag=%s t1=%s t2=%s t3=%s' % (
-                      ##eid, pid, n1, n2, n3, theta, zoffs,
-                      ##tflag, t1, t2, t3))
-            #tflag, minus1 = out[-2:]
-            #assert minus1 == -1
-            ##op2.log.info('ctria6 tflag = %s' % tflag)
-            ##print(minus1)
-            #elem = CTRIA6.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #assert tflag in [-1, 0, 1], tflag
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctria6_current_56(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIA6]]:
@@ -5165,39 +4795,17 @@ class GEOM2:
         assert tflag.max() in {-1, 0, 1}, f'{element.type} tflag.max()={tflag.max()}'
 
         element = op2.ctria6
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4, 5,
-                                 6, 7]]
-        element.T = floats[:, [8, 9, 10]]
-        theta = floats[:, 11].copy()
-        element.zoffset = floats[:, 12]
-        element.tflag
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4, 5,
+                         6, 7]]
+        T = floats[:, [8, 9, 10]]
+        theta_ = floats[:, 11].copy()
+        zoffset = floats[:, 12]
 
-
-        theta, mcid = convert_theta_to_mcid(theta)
-        element.theta = theta
-        element.mcid = mcid
+        theta, mcid = convert_theta_to_mcid(theta_)
+        element._save(element_id, property_id, nodes, zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
         element.write()
-
-        #s = Struct(mapfmt(op2._endian + b'8i 5f i', self.size))
-        #for unused_i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            ##print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
-                  ##'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
-                      ##eid, pid, n1, n2, n3, theta, zoffs,
-                      ##blank1, blank2, tflag, t1, t2, t3))
-            ##(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
-            #tflag = out[-1]
-            ##op2.log.info('ctria6 tflag = %s' % tflag)
-            #elem = CTRIA6.add_op2_data(out)
-            #self.add_op2_element(elem)
-            #assert tflag in [-1, 0, 1], tflag
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctria6_v2001_52(self, card_obj, data: bytes, n: int) -> int:
@@ -5236,21 +4844,6 @@ class GEOM2:
         element.set_from_op2(
             element_id, property_id, nodes, zoffset, tflag, T, theta, mcid=None)
         element.write()
-
-        #for unused_i in range(nelements):
-            #edata = data[n:n + 52]
-            #out = s.unpack(edata)
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            ##print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
-                  ##'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
-                      ##eid, pid, n1, n2, n3, theta, zoffs,
-                      ##blank1, blank2, tflag, t1, t2, t3))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
-            #out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
-            #elem = CTRIA6.add_op2_data(out)
-            #elements.append(elem)
-            #n += 52
         return n, elements
 
 # CTRIA6FD
@@ -5291,7 +4884,6 @@ class GEOM2:
         assert (len(data) - n) % ntotal == 0
         elements = []
 
-
         n, ints, floats = get_ints_floats(data, n, nelements, 13,
                                           size=op2.size, endian=op2._endian)
 
@@ -5300,38 +4892,25 @@ class GEOM2:
         assert tflag.min() in {-1, 0, 1}, f'{element.type} tflag.min()={tflag.min()}'
         assert tflag.max() in {-1, 0, 1}, f'{element.type} tflag.max()={tflag.max()}'
 
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3, 4]]
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3, 4]]
         theta = floats[:, 5]
-        element.zoffset = floats[:, 6]
-        element.T = floats[:, [1, 11, 12]]
+        zoffset = floats[:, 6]
 
+        # 7, 8
         blanks = floats[:, [7, 8]]
         assert blanks.max() == 0. and blanks.min() == 0.
 
-        element.tflag = tflag
-        element.mcid = np.full(nelements, -1, dtype='int32')
-        element.theta = theta
+        tflag = ints[:, 9]
+        T = floats[:, [10, 11, 12]]
+
+        #tflag = tflag
+        mcid = np.full(nelements, -1, dtype='int32')
+        #theta = theta
+        element._save(element_id, property_id, nodes, zoffset, theta, mcid, tflag, T)
         filter_large_element_ids(element)
         element.write()
-
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal]
-            ##self.show_data(data[n:n+ntotal+40])
-            #out = s.unpack(edata)
-            #(eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
-             #unused_blank2, tflag, t1, t2, t3) = out
-            ##print('eid=%s pid=%s nodes=(%s,%s,%s) theta=%s zoffs=%s '
-                  ##'blank1=%s blank2=%s tflag=%s t1-t3=(%s,%s,%s)' % (
-                      ##eid, pid, n1, n2, n3, theta, zoffs,
-                      ##unused_blank1, unused_blank2, tflag, t1, t2, t3))
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  CTRIAR=%s\n' % str(out))
-            #data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
-            #elem = CTRIAR.add_op2_data(data_in)
-            #elements.append(elem)
-            #n += ntotal
         return n, elements
 
     def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
@@ -5346,7 +4925,7 @@ class GEOM2:
         element_id = ints[:, 0]
         property_id = ints[:, 1]
         nodes = ints[:, [2, 3, 4]]
-        theta = floats[:, 5].copy()
+        theta_ = floats[:, 5].copy()
         zoffset = floats[:, 6]
         blanks = ints[:, [7, 8]]
         assert blanks.min() == 0 and blanks.max() == 0, blanks
@@ -5354,7 +4933,7 @@ class GEOM2:
         T = floats[:, [10, 11, 12]]
         minus1 = ints[:, 13]
         assert minus1.min() == -1 and minus1.max() == -1, minus1
-        theta, mcid = convert_theta_to_mcid(theta)
+        theta, mcid = convert_theta_to_mcid(theta_)
 
         element = op2.ctriar
         element.set_from_op2(element_id, property_id, nodes,

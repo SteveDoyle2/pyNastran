@@ -17,7 +17,6 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int,
     get_print_card_size)
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-#from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -356,6 +355,7 @@ class CONM2(Element):
         self.xyz_offset = xyz_offset
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
+        self.n = len(element_id)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)

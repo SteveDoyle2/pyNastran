@@ -33,7 +33,6 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_default_int, array_default_float,
     get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import Combination
-#from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 #from .static_loads import get_loads_by_load_id, get_reduced_loads
 from ..bdf_sets import split_set3_ids
 

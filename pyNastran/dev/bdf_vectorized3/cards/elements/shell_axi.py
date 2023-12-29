@@ -502,6 +502,7 @@ class CTRIAX(AxisymmetricShellElement):
         self.nodes = nodes
         self.theta = theta
         self.mcid = mcid
+        self.n = len(element_id)
 
     def __apply_slice__(self, element: CTRIAX, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
