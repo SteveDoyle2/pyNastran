@@ -8,6 +8,26 @@ from cpylog import SimpleLogger
 
 
 class TestThermal(unittest.TestCase):
+    def test_bdyor(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
+        surface_type = 'POINT'
+        iview_front = None
+        iview_back = None
+        rad_mid_front = None
+        rad_mid_back = None
+        pid = 1
+        g0 = None
+        ce = 42
+        card_lines = ['BDYOR', surface_type,
+                      iview_front, iview_back,
+                      rad_mid_front, rad_mid_back, None,
+                      pid, g0,
+                      ce]
+        #model.add_card(card_lines, 'BDYOR')
+        model.add_card_fields(card_lines, 'BDYOR', comment='', has_none=True)
+        model.setup()
+
     def test_radcav(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log, debug=False)
@@ -231,6 +251,7 @@ class TestThermal(unittest.TestCase):
         qbdy2.write()
         qbdy3.write()
         view.write()
+        save_load_deck(model)
         #-------------------------
         bdf_filename = StringIO()
         bdf_filename2 = StringIO()

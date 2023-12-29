@@ -457,6 +457,26 @@ class TestSets(unittest.TestCase):
         qset.set_map
         save_load_deck(model)
 
+    def test_set4(self):
+        """checks the USET/USET1 cards"""
+        model = BDF(debug=False)
+        #add_methods = model._add_methods
+        set4 = model.set4
+        set_id = 42
+        property_type = 'PSHELL'
+        property_ids = [2, 3]
+        set4.add(set_id, property_type, property_ids)
+        mid = 10
+        pid = 2
+        model.add_pshell(pid, mid1=mid, t=1.0)
+        pid = 3
+        model.add_pshell(pid, mid1=mid, t=1.0)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        save_load_deck(model)
+
     def test_uset(self):
         """checks the USET/USET1 cards"""
         model = BDF(debug=False)

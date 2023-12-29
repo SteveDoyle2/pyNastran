@@ -567,15 +567,23 @@ class TestDynamic(unittest.TestCase):
         #print(nlpci)
         save_load_deck(model)
 
-    def _test_rotorg(self):
-        """tests ROTORD"""
+    def test_rotorg(self):
+        """tests ROTORG"""
         model = BDF(debug=False)
         rotorg = model.rotorg
         card_lines = ['ROTORG', '10', '1', '2']
         card_lines = ['ROTORG', '10', '10', ' THRU', '20']
         model.add_card(card_lines, 'ROTORG', comment='rotorg')
+
+        model.add_grid(1, [1., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        for nid in range(10, 21):
+            xyz = [nid, 0., 0.]
+            model.add_grid(nid, xyz)
         model.setup()
-        print(rotorg.write())
+        rotorg.write()
+
+        save_load_deck(model)
 
     def _test_rotord(self):
         """tests ROTORD"""

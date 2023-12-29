@@ -6,6 +6,7 @@ import pathlib
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import (
     read_bdfv, main as test_bdf, IS_PYTABLES)
+from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.op2_vectorized3.test.test_op2 import main as test_op2
 
 PKG_PATH = pathlib.Path(pyNastran.__path__[0])
@@ -216,6 +217,9 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
+        model = BDF(debug=False)
+        model.include_zip(bdf_filename, encoding=None, make_ilines=True)
 
         #if IS_PYTABLES:
             #h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'

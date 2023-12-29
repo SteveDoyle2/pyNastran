@@ -2035,6 +2035,12 @@ class SET4(VectorizedBaseCard):
         #self.n += 1
         #return self.n - 1
 
+    def add(self, set_id, property_type: str, property_ids: list[int],
+            comment: str='') -> int:
+        self.cards.append((set_id, property_type, property_ids, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> None:
         """
         Adds a SET4 card from ``BDF.add_card(...)``
@@ -2051,9 +2057,8 @@ class SET4(VectorizedBaseCard):
         prop = string(card, 2, 'PROP')
         property_type = string(card, 3, 'property_type')
         assert prop == 'PROP', (sid, prop, property_type)
-        ids = read_ids_thru(card, ifield0=4, base_str='ID%d')
-        #return SET3(sid, desc, ids, comment=comment)
-        self.cards.append((sid, property_type, ids, comment))
+        property_ids = read_ids_thru(card, ifield0=4, base_str='ID%d')
+        self.cards.append((sid, property_type, property_ids, comment))
         self.n += 1
         return self.n - 1
 

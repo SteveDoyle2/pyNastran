@@ -28,14 +28,15 @@ from typing import Optional, Union, Any, cast
 from io import StringIO
 
 import numpy as np
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 from pyNastran.nptyping_interface import NDArrayN2int
 from pyNastran.utils import print_bad_path, _filename
 
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
-from pyNastran.bdf.errors import MissingDeckSections, AuxModelError
+from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
+
 
 # these allow spaces
 FILE_MANAGEMENT = (
@@ -1824,3 +1825,37 @@ def _make_ilines(nlines: int, ifile: int) -> NDArrayN2int:
     ilines[:, 0] = ifile
     ilines[:, 1] = np.arange(nlines) # 0 to N-1
     return ilines
+
+def _check_for_spaces(card_name: str, card_lines: list[str], comment: str,
+                      log: SimpleLogger) -> None:
+    if ' ' in card_name:
+        if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
+            msg = (
+                'No spaces allowed in card name %r.\n'
+                'Did you mean to call read_bdf(punch=False) instead of '
+                'read_bdf(punch=True)?\n%s' % (
+                    card_name, card_lines))
+            raise RuntimeError(msg)
+        elif card_name.startswith('BEGIN '):
+            uline = card_lines[0].upper()
+            if 'SUPER' in uline:
+                msg = (
+                    'Misindentified Superelement section.  Use:\n'
+                    '$ pyNastran: is_superelements=True\n')
+            else:
+                msg = (
+                    'Is there a second BEGIN BULK in your deck?\n'
+                    'Another possibility is that punch=True and there is a '
+                    'BEGIN BULK in your deck.\n')
+            msg += '%s\n' % card_lines
+            log.error(msg)
+            raise SuperelementFlagError(msg)
+        else:
+            msg = (
+                'No spaces allowed in card name %r.\n'
+                'Should this be a comment?\n%s%s' % (
+                    card_name, comment, card_lines))
+        raise RuntimeError(msg)
+
+    if card_name in ['SUBCASE ', 'CEND']:
+        raise RuntimeError('No executive/case control deck was defined.')

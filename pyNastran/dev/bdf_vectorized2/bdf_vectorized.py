@@ -27,7 +27,7 @@ from cpylog import get_logger2, __version__ as CPYLOG_VERSION
 
 from pyNastran.bdf.bdf import (LOAD, _bool, _check_replicated_cards,
                                _get_coords_to_update, map_update, map_version,
-                               _prep_comment, _echo_card, _check_for_spaces)
+                               _prep_comment, _echo_card)
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
 from .cards.nodes import GRIDv, Nodes
 from .cards.elements.elements import Elements
@@ -66,7 +66,7 @@ from pyNastran.utils import object_attributes, check_path
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
-    fill_dmigs, _get_card_name, _parse_dynamic_syntax,
+    fill_dmigs, _get_card_name, _parse_dynamic_syntax
 )
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.bdf.bdf_interface.replication import (
@@ -221,7 +221,8 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
-    BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
+    BDFInputPy, _clean_comment, _clean_comment_bulk,
+    _check_for_spaces)
 
 #from .bdf_interface.add_card import CARD_MAP
 if TYPE_CHECKING:  # pragma: no cover

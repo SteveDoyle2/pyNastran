@@ -217,7 +217,7 @@ class TestLoads(unittest.TestCase):
         darea = model.darea
         darea.write(size)
         #darea.raw_fields()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
     def test_grav(self):
         """tests a GRAV"""
@@ -674,7 +674,7 @@ class TestLoads(unittest.TestCase):
                 #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             # subcase
 
-        save_load_deck(model, run_loads=False)
+        save_load_deck(model)
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
@@ -929,7 +929,7 @@ class TestLoads(unittest.TestCase):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-        save_load_deck(model, punch=False, run_loads=False)
+        save_load_deck(model, punch=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
@@ -1558,7 +1558,7 @@ class TestLoads(unittest.TestCase):
                                                         #include_grav=True, xyz_cid0=None)
         #assert np.array_equal(forces1, forces2)
         #assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
     def test_rforce(self):
         """tests RFORCE"""

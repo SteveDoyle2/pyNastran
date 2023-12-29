@@ -197,7 +197,7 @@ from .errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
 from .bdf_interface.pybdf import (
-    BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
+    BDFInputPy, _clean_comment, _clean_comment_bulk, _check_for_spaces)
 
 #from .bdf_interface.add_card import CARD_MAP
 if TYPE_CHECKING:  # pragma: no cover
@@ -4998,39 +4998,6 @@ def _prep_comment(comment):
     #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
-
-def _check_for_spaces(card_name: str, card_lines: list[str], comment: str, log: SimpleLogger) -> None:
-    if ' ' in card_name:
-        if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
-            msg = (
-                'No spaces allowed in card name %r.\n'
-                'Did you mean to call read_bdf(punch=False) instead of '
-                'read_bdf(punch=True)?\n%s' % (
-                    card_name, card_lines))
-            raise RuntimeError(msg)
-        elif card_name.startswith('BEGIN '):
-            uline = card_lines[0].upper()
-            if 'SUPER' in uline:
-                msg = (
-                    'Misindentified Superelement section.  Use:\n'
-                    '$ pyNastran: is_superelements=True\n')
-            else:
-                msg = (
-                    'Is there a second BEGIN BULK in your deck?\n'
-                    'Another possibility is that punch=True and there is a '
-                    'BEGIN BULK in your deck.\n')
-            msg += '%s\n' % card_lines
-            log.error(msg)
-            raise SuperelementFlagError(msg)
-        else:
-            msg = (
-                'No spaces allowed in card name %r.\n'
-                'Should this be a comment?\n%s%s' % (
-                    card_name, comment, card_lines))
-        raise RuntimeError(msg)
-
-    if card_name in ['SUBCASE ', 'CEND']:
-        raise RuntimeError('No executive/case control deck was defined.')
 
 def _check_replicated_cards(replicated_cards):
     """helper method for ``parse_cards_list``"""
