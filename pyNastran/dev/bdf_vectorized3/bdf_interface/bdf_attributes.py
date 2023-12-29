@@ -62,7 +62,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
     CHBDYE, CHBDYP, CHBDYG,
     CONV, PCONV, CONVM, PCONVM, PHBDY)
 from pyNastran.dev.bdf_vectorized3.cards.elements.radiation import (
-    RADCAV, RADLST, RADMTX,
+    RADCAV, RADLST, # RADMTX,
     VIEW, VIEW3D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.bolt import (
     BOLT, BOLTLD, BOLTFOR, BOLTFRC, BOLTSEQ)
@@ -1445,7 +1445,7 @@ class BDFAttributes:
         }
         element_id = []
         property_id = []
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0: # or card.type in NO_MASS:
                 continue
             element_id.append(card.element_id)

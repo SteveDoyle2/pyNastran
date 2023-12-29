@@ -22,9 +22,8 @@ from pyNastran.bdf.cards.bdf_tables import TABLEH1, TABLEHT
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-#from pyNastran.bdf.cards.aero.aero import AESURF
-from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLUTTER, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.aero.static_loads import AEROS #, AESTAT
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2
+from pyNastran.bdf.cards.aero.static_loads import AEROS
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
@@ -1542,8 +1541,15 @@ class Add1dElements(BDFAttributes):
                            #static_stress_constraints=None,
                            #static_strain_constraints=None,
                            #static_force_constraints=None,
-                           group: str='MSCBML0', comment: str='') -> tuple[PBARL, list[DESVAR], list[DVPREL1]]:
+                           group: str='MSCBML0',
+                           comment: str='') -> tuple[int, list[int], list[int]]:
         """
+        Returns
+        -------
+        PBARL id : int
+        DESVAR ids : list[int]
+        DVPREL1 ids : list[int]
+
         dim = [0.1, 0.2, 0.3, 0.4]
         dim_constraints = [
             None,
@@ -3096,7 +3102,7 @@ class AddAero(BDFAttributes):
 
     def add_trim(self, sid: int, mach: float, q: float,
                  labels: list[str], uxs: list[float], aeqr: float=1.0,
-                 trim_type: int=1, comment: str='') -> Union[TRIM, TRIM2]:
+                 trim_type: int=1, comment: str='') -> int:
         """
         Creates a TRIM/TRIM2 card for a static aero (144) analysis.
 
@@ -3123,11 +3129,11 @@ class AddAero(BDFAttributes):
 
         """
         if trim_type == 1:
-            self.trim.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
-            trim = self.trim
+            trim = self.trim.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+            #trim = self.trim
         elif trim_type == 2:
-            self.trim2.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
-            trim = self.trim2
+            trim = self.trim2.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+            #trim = self.trim2
         else:  # pragma: no cover
             raise ValueError(trim_type)
         return trim
@@ -3207,7 +3213,7 @@ class AddAero(BDFAttributes):
                     nvalue: Optional[int]=None,
                     omax: Optional[float]=None,
                     epsilon: float=1.0e-3,
-                    comment: str='', validate: bool=False) -> FLUTTER:
+                    comment: str='', validate: bool=False) -> int:
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -3517,7 +3523,7 @@ class AddAero(BDFAttributes):
         return aesurf
 
     def add_aesurfs(self, aesurfs_id: int, label: str,
-                    list1: int, list2: int, comment: str='') -> AESURFS:
+                    list1: int, list2: int, comment: str='') -> int:
         """
         Creates an AESURFS card
 
@@ -3535,9 +3541,9 @@ class AddAero(BDFAttributes):
 
         """
         aesurfs = self.aesurfs.add(aesurfs_id, label, list1, list2, comment=comment)
-        return self.aesurfs
+        return aesurfs
 
-    def add_aeparm(self, aeparm_id: int, label: str, units: str, comment: str='') -> AEPARM:
+    def add_aeparm(self, aeparm_id: int, label: str, units: str, comment: str='') -> int:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -3554,7 +3560,7 @@ class AddAero(BDFAttributes):
 
         """
         aeparm = self.aeparm.add(aeparm_id, label, units, comment=comment)
-        return self.aeparm
+        return aeparm
 
     def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int, dmij: str, dmiji: str):
         #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
@@ -5180,8 +5186,10 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return boundary_condition
 
-    def add_tempbc(self, sid, Type, nodes, temps, comment: str='') -> int:
-        tempbc = self.tempbc.add(sid, Type, nodes, temps, comment=comment)
+    def add_tempbc(self, sid: int, bc_type: str,
+                   nodes: list[int], temps: list[float],
+                   comment: str='') -> int:
+        tempbc = self.tempbc.add(sid, bc_type, nodes, temps, comment=comment)
         return tempbc
 
     def add_radm(self, radmid, absorb, emissivity, comment: str='') -> int:

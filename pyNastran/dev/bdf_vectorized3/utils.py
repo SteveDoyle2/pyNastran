@@ -22,13 +22,6 @@ def hstack_msg(mylist, msg: str, min_size: int=0) -> np.ndarray:
         raise ValueError(f'empty list; {msg}')
     return stacked
 
-def cast_int_array(list_ints: Union[list[int], list[list[int]]]) -> np.ndarray:
-    asdf
-    try:
-        return np.array(list_ints, dtype='int32')
-    except OverflowError:
-        return np.array(list_ints, dtype='int64')
-
 def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.

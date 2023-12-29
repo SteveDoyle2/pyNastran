@@ -811,6 +811,13 @@ class TEMPBC(VectorizedBaseCard):
         #load.pressure = self.pressure[i, :]
         #return load
 
+    def add(self, sid: int, bc_type: str,
+            nodes: list[int], temps: list[float],
+            comment: str='') -> int:
+        self.cards.append((sid, bc_type, temps, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
         bc_type = string_or_blank(card, 2, 'Type', default='STAT')
@@ -822,8 +829,8 @@ class TEMPBC(VectorizedBaseCard):
         nodes = []
         for i in range(nfields_left // 2):
             ifield = 3 + i*2
-            temp = double(card, ifield, 'temp_%d'%  ((i+1)))
-            nid = integer(card, ifield+1, 'temp_%d'%  ((i+1)))
+            temp = double(card, ifield, 'temp_%d' % ((i+1)))
+            nid = integer(card, ifield+1, 'node_%d' % ((i+1)))
             temps.append(temp)
             nodes.append(nid)
         self.cards.append((sid, bc_type, temps, nodes, comment))
@@ -833,7 +840,8 @@ class TEMPBC(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        spc_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        spc_id = np.zeros(ncards, dtype=idtype)
         bc_type = np.zeros(ncards, dtype='|U4')
         #control_node = np.zeros(ncards, dtype='int32')
         nnode = np.zeros(ncards, dtype='int32')
@@ -851,7 +859,7 @@ class TEMPBC(VectorizedBaseCard):
             all_nodes.extend(nodes)
             all_temps.extend(temps)
 
-        nodes = np.array(all_nodes, dtype='int32')
+        nodes = np.array(all_nodes, dtype=idtype)
         temperature = np.array(all_temps, dtype='float64')
         self._save(spc_id, bc_type, nnode, nodes, temperature)
         self.cards = []
