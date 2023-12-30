@@ -4,14 +4,15 @@ import inspect
 import warnings
 from copy import deepcopy
 from struct import Struct, pack
-from typing import TYPE_CHECKING
+from typing import TextIO, TYPE_CHECKING
 
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
-    write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
+    write_floats_13e, write_floats_13e_long,
+    _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -1174,18 +1175,41 @@ class RealGridPointForcesArray(GridPointForces):
         #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
-    def write_csv(self, csv_file, is_mag_phase=False):
-        name = str(self.__class__.__name__)
-        csv_file.write('%s\n' % name)
-        headers = ['Nid', 'Eid', 'EName', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        csv_file.write('%s,' * len(headers) % tuple(headers) + '\n')
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Grid Point Forces Table
+        -----------------------
+        Flag, NID, SubcaseID, iTime, EID, TYPE,    Fx,      Fy,      Fz,      Mx,      My,      Mz
+        13,   101,         1,     1, 0,   APPLIED, 30.9864, 19.7278, 70.2515, 53.3872, 80.9687, 77.4302
+        13,   101,         1,     1, 301, RBE3,    41.9012, 53.6651, 0.09483, 76.041,  67.506,  98.0225
+        13,   101,         1,     1, 0,   SPC,     71.6306, 97.0527, 89.8733, 5.89262, 61.0523, 48.9043
+        13,   101,         1,     1, 301, CTRIA3,  84.5273, 69.36,   92.3295, 52.7074, 77.9904, 68.905
+        13,   101,         1,     1, 302, CQUAD4,  97.7843, 11.7545, 99.3901, 44.9476, 70.818,  7.47876
+
+        """
+        if write_header:
+            name = str(self.__class__.__name__)
+            csv_file.write('# %s\n' % name)
+            headers = ['Flag', 'NID', 'SubcaseID', 'iTime', 'Nid', 'Eid', 'EName', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+            csv_file.write('# ' + ','.join(headers) + '\n')
         #node = self.node_gridtype[:, 0]
         #gridtype = self.node_gridtype[:, 1]
-        itime = 0
+        #itime = 0
+        flag = 13
+        isubcase = self.isubcase
         #times = self._times
 
         assert self.is_unique, self.is_unique
         # sort1 as sort1
+
+        nids = self.node_element[:, :, 0]
+        eids = self.node_element[:, :, 1]
+        nid_len = '%d' % len(str(nids.max()))
+        eid_len = '%d' % len(str(eids.max()))
+
         for itime in range(self.ntimes):
             #dt = self._times[itime]
             t1 = self.data[itime, :, 0]
@@ -1203,11 +1227,15 @@ class RealGridPointForcesArray(GridPointForces):
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
                 range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
-                csv_file.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (
-                    itime, nid, eid, ename.strip(), t1i, t2i, t3i, r1i, r2i, r3i))
+                if is_exponent_format:
+                    vals2 = write_floats_13e_long([t1i, t2i, t3i, r1i, r2i, r3i])
+                    [t1i, t2i, t3i, r1i, r2i, r3i] = vals2
+
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {nid:{nid_len}d}, {eid:{eid_len}d}, {ename.strip():>8s}, '
+                               f'{t1i}, {t2i}, {t3i}, {r1i}, {r2i}, {r3i}\n')
         return
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []

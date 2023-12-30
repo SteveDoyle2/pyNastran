@@ -2343,4 +2343,289 @@ class BCBODY(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields) + msgi)
         return
 
-BCBODY1 = BSURF
+
+class BCBODY1(VectorizedBaseCard):
+    """
+    Format: (SOLs 101 and 400 only)
+    +---------+-----+------+-----+-------+------+--------+-------+
+    |    1    |  2  |   3  |  4  |   5   |   6  |   7    |   8   |
+    +=========+=====+======+=====+=======+======+========+=======+
+    | BCBODY1 | BID | BPID | DIM | BEHAV | BSID | BCRGID | BCGOUT|
+    +---------+-----+------+-----+-------+------+--------+-------+
+
+    Format: (SOL 700 only)
+    +---------+-----+------+-----+-------+------+--------+-------+
+    |    1    |  2  |   3  |  4  |   5   |   6  |   7    |   8   |
+    +=========+=====+======+=====+=======+======+========+=======+
+    | BCBODY1 | BID |      |     |       | BSID |        |       |
+    +---------+-----+------+-----+-------+------+--------+-------+
+
+    """
+    _id_name = 'bcbody_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.bcbody_id = np.array([], dtype='int32')
+
+    def add(self, bcbody: int,
+            eids: list[int],
+            grids: list[tuple[int, int]],
+            comment: str='') -> int:
+        """Creates a BCBODY1 card
+
+        BID / bcbody_id : int
+            Parameter identification number of a BCBDPRP entry. (Integer > 0 or blank) Ignored in
+            SOL 700. See Remark 2.
+        BPID : int
+            Parameter identification number of a BCBDPRP entry. (Integer > 0 or blank) Ignored in
+            SOL 700. See Remark 2.
+        DIM : str; default='3D'
+            Dimension of body. (Character; Default= 3D) Ignored in SOL 700.
+            DIM=2D: planar body in x-y plane of the basic coordinate system, composed of 2D
+                    elements or curves.
+            DIM=3D: Any 3D body composed of rigid surfaces, shell elements or solid elements.
+        BEHAV : str
+            Behavior of curve or surface (Character; Default = DEFORM) Ignored in SOL 700.
+            DEFORM body is deformable
+            RIGID body is rigid (See Remark 1.)
+            SYMM body is a symmetry rigid body
+            HEAT indicates body is a heat-rigid body (See Remark 3..).
+        """
+        #self.cards.append((bedge_id, eids, grids, comment))
+        #self.n += 1
+        #return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a BCBODY1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        BID : int (4,1)
+           Contact body identification number referenced by
+           BCTABLE, BCHANGE, or BCMOVE. (Integer > 0; Required)
+        DIM : str; default='3D'
+           Dimension of body.
+           DIM=2D planar body in x-y plane of the basic coordinate system,
+                  composed of 2D elements or curves.
+           DIM=3D any 3D body composed of rigid surfaces, shell elements or solid
+                  elements.
+        BEHAV (4,8)
+           Behavior of curve or surface (Character; Default = DEFORM) DEFORM body is
+           deformable, RIGID body is rigid, SYMM body is a symmetry body, ACOUS
+           indicates an acoustic body, WORK indicates body is a workpiece, HEAT indicates
+           body is a heat-rigid body. See Remark 3. for Rigid Bodies..
+        BSID : int
+            Identification number of a BSURF, BCBOX, BCPROP or BCMATL entry if
+            BEHAV=DEFORM. (Integer > 0)
+        ISTYP : int (4,3)
+           Check of contact conditions. (Integer > 0; Default = 0)
+        ISTYP : int
+           is not supported in segment-to-segment contact.
+           For a deformable body:
+           =0 symmetric penetration, double sided contact.
+           =1 unsymmetric penetration, single sided contact. (Integer > 0)
+           =2 double-sided contact with automatic optimization of contact constraint
+              equations (this option is known as “optimized contact”).
+              Notes: single-sided contact (ISTYP=1) with the contact bodies arranged properly
+              using the contact table frequently runs much faster than ISTYP=2.
+              For a rigid body:
+           =0 no symmetry condition on rigid body.
+           =1 rigid body is a symmetry plane.
+        FRIC : int/float (6,7)
+            Friction coefficient. (Real > 0 or integer; Default = 0)
+            If the value is an integer it represents the ID of a TABL3Di.
+        IDSPL : int (4,5)
+            Set IDSPL=1 to activate the SPLINE (analytical contact) option for a deformable
+            body and for a rigid contact surface. Set it to zero or leave blank to not have
+            analytical contact. (Integer; Default = 0)
+        NLOAD : int or None
+            Enter a positive number if "load controlled" and rotations are allowed (Integer). The
+            positive number is the grid number where the moments or rotations are applied. The
+            rotations are specified using SPCD at grid ID NLOAD and can be specified using dof's
+            1-3 (for rotation about x, y, z respectively), or by dof's 4-6 (for rotation about x, y, z
+            respectively).
+            Note: This rotation takes the position of the grid point defined in CGID field as the
+            center of rotation.
+        ANGVEL : int/float; default=0.0
+            Angular velocity or angular position about local axis through center of rotation. If the
+            value is an integer it represents the ID of a TABLED1, TABLED2 or TABL3D, i.e., a
+            time-dependent or multi-dimensional table; however, no log scales, only linear scales.
+            (Real or Integer; Default = 0.0)
+        DCOSi : int/float; default=0.0
+            Components of direction cosine of local axis if ANGVEL is nonzero. If the value is an
+            integer, it represents the ID of a TABLED1, TABLED2 or TABL3D, i.e., a time-dependent
+            or multi-dimensional table; however, no log scales, only linear scales. (Real
+            or Integer; Default=0.0) In 2D contact only DCOS3 is used and the Default is 1.0.
+        VELRBi : int/float; default=0.0
+            Translation velocity or final position (depending on the value of CONTROL) of rigid
+            body at the grid point defined in CGID filed. For velocity control only, if the value is
+            an integer, it represents the ID of TABLED1, TABLED2 or TABL3D, i.e., a time-dependent
+            or multi-dimensional table; however, no log scales, only linear scales. Only
+            VELRB1 and VELRB2 are used in 2D contact. (Real or Integer; Default = 0.0)
+
+        """
+
+
+        #['BCBODY1', '1', '5001', '3D', 'DEFORM', '5']
+        bcbody_id = integer(card, 1, 'bcbody_id')
+        bpid = integer(card, 2, 'bpid')
+        #dimension = string_or_blank(card, 3, 'dim', default='3D')
+        dimension = string_choice_or_blank(card, 3, 'dim',
+                                           ('2D', '3D'),
+                                           default='3D')
+
+        behavior = string_or_blank(card, 4, 'behavior', default='DEFORM')
+
+        assert behavior in {'DEFORM', 'RIGID', 'SYMM', 'HEAT'}, behavior
+
+        #BSID : int
+        #    For SOLs 101 and 400: Identification number of a BSURF or BCPROP entry if
+        #    BEHAV=DEFORM or HEAT, or identification number of a BCRGSRF, BCPATCH,
+        #    BCBZIER, BCNURB2, or BCNURBS entry if BEHAV=RIGID or SYMM (See Remark 4.).
+        #    For SOL 700: Identification number (RBID) of a BSURF, BCBOX, BCPROP, BCMATL,
+        #    BCSEG, BCGRID or BCELIPS entry. (Integer > 0).
+        # BCRGID : int
+        #    For SOLs 101 and 400: Identification number of a BCRIGID entry if BEHAV=RIGID or
+        #    SYMM. Ignored in SOL 700. (Integer > 0)
+        bsid = integer(card, 5, 'bsid')
+
+        bc_rigid = integer_or_blank(card, 6, 'bc_rigid', default=0)
+        assert len(card) < 7, card
+
+        cardi = (bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, comment)
+        self.cards.append(cardi)
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
+        bcbody_id = np.zeros(ncards, dtype='int32')
+        bpid = np.zeros(ncards, dtype='int32')
+        bsid = np.zeros(ncards, dtype='int32')
+        dimension = np.zeros(ncards, dtype='|U8')
+        behavior = np.zeros(ncards, dtype='|U8')
+        bc_rigid = np.zeros(ncards, dtype='int32')
+
+        #comment = {}
+        for icard, card in enumerate(self.cards):
+            (bcbody_idi, bpidi, dimensioni, behaviori, bsidi, bc_rigidi, comment) = card
+            assert isinstance(bsidi, int), bsidi
+            bcbody_id[icard] = bcbody_idi
+            bpid[icard] = bpidi
+            bsid[icard] = bsidi
+            dimension[icard] = dimensioni
+            behavior[icard] = behaviori
+            bc_rigid[icard] = bc_rigidi
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        self._save(bcbody_id, bpid, dimension, behavior, bsid, bc_rigid)
+        self.sort()
+        self.cards = []
+
+    def _save(self, bcbody_id, bpid, dimension, behavior, bsid, bc_rigid) -> None:
+        ncards_existing = len(self.bcbody_id)
+        if ncards_existing != 0:
+            bcbody_id = np.hstack([self.bcbody_id, bcbody_id])
+            #nelement = np.hstack([self.nelement, nelement])
+            #element_id = np.hstack([self.element_id, element_id])
+            #nodes = np.hstack([self.nodes, nodes])
+            asdf
+        #if comment:
+            #self.comment.update(comment)
+        self.bcbody_id = bcbody_id
+        self.bpid = bpid
+        self.dimension = dimension
+        self.behavior = behavior
+        self.bsid = bsid
+        self.bc_rigid = bc_rigid
+        self.n = len(self.bcbody_id)
+
+    def __apply_slice__(self, bcbody: BCBODY1, i: np.ndarray) -> None:
+        #self._slice_comment(bedge, i)
+        bcbody.bcbody_id = self.bcbody_id[i]
+        bcbody.bpid = self.bpid[i]
+        bcbody.dimension = self.dimension[i]
+        bcbody.behavior = self.behavior[i]
+        bcbody.bsid = self.bsid[i]
+        bcbody.bc_rigid = self.bc_rigid[i]
+        bcbody.n = len(i)
+
+    #def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['element_id'].append(self.element_id)
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    #def convert(self, **kwargs) -> None:
+        #pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        """
+        Defines a region of element edges for:
+         - glue (BGSET entry)
+         - contact (BCTSET entry)
+         - fluid pressure load (PLOADFP entry)
+         - wetted edges for a Co-simulation (CSMSET entry)
+        """
+        nids = self.model.grid.node_id
+        #unids = np.unique(self.nodes.ravel())
+        #geom_check(self,
+                   #missing,
+                   #node=(nids, unids))
+
+    #@property
+    #def ielement(self) -> np.ndarray:
+        #return make_idim(self.n, self.nelement)
+
+    @property
+    def max_id(self) -> int:
+        return self.bcbody_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        bcbody_ids = array_str(self.bcbody_id, size=size).tolist()
+        bsids = array_str(self.bsid, size=size).tolist()
+        bpids = array_str(self.bpid, size=size).tolist()
+
+        # RIGID
+        bc_rigids = array_default_int(self.bc_rigid, default=0)
+        bcg_out = ''
+
+        for bcbody_id, bpid, bsid, dim, behav, bc_rigid in zip(
+            bcbody_ids, bpids, bsids, self.dimension, self.behavior, bc_rigids):
+
+            #+---------+-----+------+-----+-------+------+--------+-------+
+            #|    1    |  2  |   3  |  4  |   5   |   6  |   7    |   8   |
+            #+=========+=====+======+=====+=======+======+========+=======+
+            #| BCBODY1 | BID | BPID | DIM | BEHAV | BSID | BCRGID | BCGOUT|
+            #+---------+-----+------+-----+-------+------+--------+-------+
+            list_fields = [
+                'BCBODY1', bcbody_id, bpid, dim, behav, bsid, bc_rigid, bcg_out]
+            bdf_file.write(print_card(list_fields))
+        return

@@ -893,7 +893,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MODTRAK',
 
             #: contact
-            'BCBODY',  ## bcbody
+            'BCBODY', 'BCBODY1',  ## bcbody
             #'BCPARA',  ## bcpara
 
             # nx-contact

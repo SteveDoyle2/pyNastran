@@ -347,7 +347,12 @@ class CONM2(Element):
 
     def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia):
         if len(self.element_id):
-            raise RuntimeError()
+            element_id = np.hstack([self.element_id, element_id])
+            mass = np.hstack([self._mass, mass])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            node_id = np.hstack([self.node_id, node_id])
+            xyz_offset = np.vstack([self.xyz_offset, xyz_offset])
+            inertia = np.vstack([self.inertia, inertia])
         self.element_id = element_id
         self._mass = mass
         self.coord_id = coord_id
