@@ -1195,12 +1195,9 @@ class RealGridPointForcesArray(GridPointForces):
             csv_file.write('# %s\n' % name)
             headers = ['Flag', 'NID', 'SubcaseID', 'iTime', 'Nid', 'Eid', 'EName', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
             csv_file.write('# ' + ','.join(headers) + '\n')
-        #node = self.node_gridtype[:, 0]
-        #gridtype = self.node_gridtype[:, 1]
-        #itime = 0
+
         flag = 13
         isubcase = self.isubcase
-        #times = self._times
 
         assert self.is_unique, self.is_unique
         # sort1 as sort1
@@ -1222,10 +1219,10 @@ class RealGridPointForcesArray(GridPointForces):
             nids = self.node_element[itime, :, 0]
             eids = self.node_element[itime, :, 1]
             enames = self.element_names[itime, :]
-            ntotal = self._ntotals[itime]
+            #ntotal = self._ntotals[itime]
 
-            for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
+            for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                 if is_exponent_format:
                     vals2 = write_floats_13e_long([t1i, t2i, t3i, r1i, r2i, r3i])

@@ -1172,8 +1172,8 @@ class RealTableArray(TableArray):
             csv_file.write('# ' + ','.join(headers) + '\n')
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #itime = 0
-        unused_times = self._times
+
+        #unused_times = self._times
         isubcase = self.isubcase
 
         flag_map = {
@@ -1191,11 +1191,6 @@ class RealTableArray(TableArray):
             #'HeatFlux' : 9,
             'RealTemperatureGradientAndFluxArray': 9,
         }
-        #flag = -1
-        #if self.analysis_code == 1:
-            #assert name == 'RealDisplacementArray', name
-        #else:
-            #raise NotImplementedError(name)
         flag = flag_map[name]
 
         # sort1 as sort1

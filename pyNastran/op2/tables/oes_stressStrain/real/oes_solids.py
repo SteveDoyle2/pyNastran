@@ -2,14 +2,15 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import Any
+from typing import TextIO, Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.utils.numpy_utils import float_types
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
@@ -540,7 +541,97 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s',
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Stress Table - Solid CHEXA
+        --------------------------
+        Flag,  SubcaseID, iTime, EID, NID,     CID,     Sxx,    Syy,     Szz,    Sxy,     Syz,    Szx
+        10,    1,             0, 309,   0,       0, 142.500, 31.219, 589.597, 676.54, 1138.79, 213.68
+        10,    1,             0, 309, 101,       0, 54.3342, 21.410, 553.325, 354.90, 87.0544, 20.192
+        10,    1,             0, 309, 102,       0, 113.506, 80.846, 53.6931, 29.766, 1033.05, 19.109
+        10,    1,             0, 309, 103,       0, 176.472, 721.43, 17.1733, 301.05, 374.726, 372.35
+        10,    1,             0, 309, 104,       0, 21.1607, 81.748, 66.6382, 21.331, 783.494, 796.67
+        10,    1,             0, 309, 105,       0, 114.81,  833.38, 271.391, 65.490, 1773.04, 74.355
+        10,    1,             0, 309, 106,       0, 90.7118, 84.456, 783.545, 573.50, 1623.11, 08.347
+        10,    1,             0, 309, 107,       0, 46.5565, 97.237, 540.913, 777.87, 1824.50, 13.681
+        10,    1,             0, 309, 108,       0, 87.779,  923.94, 211.281, 4.9608, 1387.49, 945.86
+        """
+        name = str(self.__class__.__name__)
+        if write_header:
+            csv_file.write('# %s\n' % name)
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Nid', 'CID', 'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+        # stress vs. strain
+        flag = 10 if 'Stress' in name else 11
+
+        #nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
+        nnodes = self.nnodes
+        isubcase = self.isubcase
+
+        # write the f06
+        ntimes = self.data.shape[0]
+        eids2 = self.element_node[:, 0]
+        nodes = self.element_node[:, 1]
+
+        eids3 = self.element_cid[:, 0]
+        cids3 = self.element_cid[:, 1]
+
+        #fdtype = self.data.dtype
+        oxx = self.data[:, :, 0]
+        oyy = self.data[:, :, 1]
+        ozz = self.data[:, :, 2]
+        txy = self.data[:, :, 3]
+        tyz = self.data[:, :, 4]
+        txz = self.data[:, :, 5]
+        #o1 = self.data[:, :, 6]
+        #o2 = self.data[:, :, 7]
+        #o3 = self.data[:, :, 8]
+        #ovm = self.data[:, :, 9]
+        #p = (o1 + o2 + o3) / -3.
+        eid_len = '%d' % len(str(eids2.max()))
+        nid_len = '%d' % len(str(nodes.max()))
+        #cid_len = '%d' % len(str(cids3.max()))
+
+        #zero = ' 0.000000E+00'
+        for itime in range(ntimes):
+            #dt = self._times[itime]
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #f06_file.write(''.join(header + msg_temp))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            ozz = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            tyz = self.data[itime, :, 4]
+            txz = self.data[itime, :, 5]
+            #o1 = self.data[itime, :, 6]
+            #o2 = self.data[itime, :, 7]
+            #o3 = self.data[itime, :, 8]
+            #ovm = self.data[itime, :, 9]
+            #vi = v[itime, :, :, :]
+            #pi = p[itime, :]
+
+            cnnodes = nnodes + 1
+            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(
+                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
+
+                if is_exponent_format:
+                    [oxxi, oyyi, ozzi, txyi, tyzi, txzi] = write_floats_13e_long(
+                        [doxx, doyy, dozz, dtxy, dtyz, dtxz])
+
+                if i % cnnodes == 0:
+                    j = where(eids3 == deid)[0][0]
+                    cid = cids3[j]
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {deid:{eid_len}d}, {node_id:{nid_len}d}, {cid}, '
+                               f'{oxxi}, {oyyi}, {ozzi}, {txyi}, {tyzi}, {txzi}\n')
+        return
+
+    def write_f06(self, f06_file: TextIO, header=None, page_stamp: str='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         calculate_directional_vectors = True
         if header is None:
@@ -656,7 +747,7 @@ class RealSolidArray(OES_Object):
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
-        nelements_nodes = len(nodes)
+        #nelements_nodes = len(nodes)
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]

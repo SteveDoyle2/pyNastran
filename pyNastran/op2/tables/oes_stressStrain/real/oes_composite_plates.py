@@ -453,15 +453,13 @@ class RealCompositePlateArray(OES_Object):
         name = str(self.__class__.__name__)
         if write_header:
             csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Layer', 'FD', 'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Layer', 'FD',
+                       'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
             csv_file.write('# ' + ','.join(headers) + '\n')
 
         # stress vs. strain
         flag = 10 if 'Stress' in name else 11
 
-        #node = self.node_gridtype[:, 0]
-        #gridtype = self.node_gridtype[:, 1]
-        #itime = 0
         isubcase = self.isubcase
         #times = self._times
 
@@ -471,9 +469,9 @@ class RealCompositePlateArray(OES_Object):
         eids = self.element_layer[:, 0]
         layers = self.element_layer[:, 1]
 
-        zero = '0.000000E+00'
+        zero = ' 0.000000E+00'
         for itime in range(ntimes):
-            dt = self._times[itime]
+            #dt = self._times[itime]
             #header = _eigenvalue_header(self, header, itime, ntimes, dt)
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
@@ -484,19 +482,21 @@ class RealCompositePlateArray(OES_Object):
             t12 = self.data[itime, :, 2]
             t1z = self.data[itime, :, 3]
             t2z = self.data[itime, :, 4]
-            angle = self.data[itime, :, 5]
-            major = self.data[itime, :, 6]
-            minor = self.data[itime, :, 7]
-            ovm = self.data[itime, :, 8]
+            #angle = self.data[itime, :, 5]
+            #major = self.data[itime, :, 6]
+            #minor = self.data[itime, :, 7]
+            #ovm = self.data[itime, :, 8]
 
             #fd = 0.
-            fd = zero
-            for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
-                    eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+            fd = np.nan
+            for eid, layer, o11i, o22i, t12i, t1zi, t2zi in zip(
+                    eids, layers, o11, o22, t12, t1z, t2z):
                 if is_exponent_format:
-                    [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e_long([
-                        o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid}, {layer}, {fd}, {o11i}, {o22i}, {zero}, {t12i}, {t1zi}, {t2zi}, {zero}, {zero}\n')
+                    [o11i, o22i, t12i, t1zi, t2zi] = write_floats_12e_long([
+                        o11i, o22i, t12i, t1zi, t2zi])
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid}, {layer}, {fd}, '
+                               f'{o11i}, {o22i}, {zero}, '
+                               f'{t12i}, {t1zi}, {t2zi}\n')
         return
 
     def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',

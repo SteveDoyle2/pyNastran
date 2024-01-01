@@ -621,7 +621,7 @@ class RealPlateArray(OES_Object):
         nids = self.element_node[:, 1]
         nid_len = '%d' % len(str(nids.max()))
         eid_len = '%d' % len(str(eids.max()))
-        zero = '0.000000E+00'
+        zero = ' 0.000000E+00'
 
         #cen_word = 'CEN/%i' % nnodes
         #cen_word = cen
@@ -637,18 +637,18 @@ class RealPlateArray(OES_Object):
             oxx = self.data[itime, :, 1]
             oyy = self.data[itime, :, 2]
             txy = self.data[itime, :, 3]
-            angle = self.data[itime, :, 4]
-            major_principal = self.data[itime, :, 5]
-            minor_principal = self.data[itime, :, 6]
-            ovm = self.data[itime, :, 7]
+            #angle = self.data[itime, :, 4]
+            #major_principal = self.data[itime, :, 5]
+            #minor_principal = self.data[itime, :, 6]
+            #ovm = self.data[itime, :, 7]
 
             is_linear = self.element_type in {33, 74, 227, 228, 83}
             is_bilinear = self.element_type in {64, 70, 75, 82, 144}
-            for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
+            for (i, eid, nid, fdi, oxxi, oyyi, txyi) in zip(
+                 count(), eids, nids, fiber_dist, oxx, oyy, txy):
                 if is_exponent_format:
-                    [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e_long(
-                        [fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+                    [fdi, oxxi, oyyi, txyi] = write_floats_13e_long(
+                        [fdi, oxxi, oyyi, txyi])
 
                 #Flag, SubcaseID, iTime,  EID,  NID,      FD,      Sxx,        Syy,  Szz,       Sxy,  Syz,  Szx
                 #2,            1,     0,  301,    0,   0.125,  265.173,   1535.666,    0,   169.811,    0,    0
