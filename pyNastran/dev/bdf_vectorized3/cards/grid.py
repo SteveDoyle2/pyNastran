@@ -805,13 +805,13 @@ class POINT(VectorizedBaseCard):
     def clear(self) -> None:
         self._is_sorted = False
         self.n = 0
-        self.node_id = np.array([], dtype='int32')
+        self.point_id = np.array([], dtype='int32')
         self.cp = np.array([], dtype='int32')
         self.xyz = np.zeros((0, 3), dtype='float64')
         self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
-        used_dict['point_id'].append(self.node_id)
+        used_dict['point_id'].append(self.point_id)
         used_dict['coord_id'].append(self.cp)
 
     def convert(self, xyz_scale: float=1., **kwargs):

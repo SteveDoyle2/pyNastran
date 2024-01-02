@@ -429,6 +429,10 @@ class TestAero(unittest.TestCase):
    # def test_aesurf_1(self):
     def test_aesurfs_1(self):
         """checks the AESURFS cards"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        aesurfs = model.aesurfs
+
         aesid = 6001
         label = 'ELEV'
         list1 = 6002
@@ -436,11 +440,9 @@ class TestAero(unittest.TestCase):
         card = ['AESURFS', aesid, label, None, list1, None, list2]
         bdf_card = BDFCard(card, has_none=True)
 
-        log = SimpleLogger(level='warning')
-        model = BDF(log=log)
         model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
                        is_list=True, has_none=True)
-        aesurfs = model.add_aesurfs(aesid, label, list1, list2, comment='aesurfs')
+        aesurfs_id = model.add_aesurfs(aesid, label, list1, list2, comment='aesurfs')
         str(aesurfs)
         aesurfs.write()
 
