@@ -1204,7 +1204,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False, run_mass_properties=False)
+        save_load_deck(model2, run_remove_unused=False, run_convert=False, run_mass_properties=False)
 
     def test_loads_combo(self):
         r"""
