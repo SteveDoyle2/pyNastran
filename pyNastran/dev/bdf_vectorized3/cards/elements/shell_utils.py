@@ -206,7 +206,9 @@ def tri_volume(grid: GRID,
     assert normal.shape == (nelements, 3)
     unit_normal = normal / norm[:, np.newaxis]
 
-    iequal = (dthickness.max(axis=0) == dthickness.min(axis=0))
+    iequal = (dthickness.max(axis=1) == dthickness.min(axis=1))
+    assert len(iequal) == nelements
+
     inot_equal = ~iequal
     nequal = iequal.sum()
     nnot_equal = inot_equal.sum()
@@ -264,7 +266,8 @@ def quad_volume(grid: GRID,
     assert normal.shape == (nelements, 3)
     unit_normal = normal / norm[:, np.newaxis]
 
-    iequal = (dthickness.max(axis=0) == dthickness.min(axis=0))
+    iequal = (dthickness.max(axis=1) == dthickness.min(axis=1))
+    assert len(iequal) == nelements
     inot_equal = ~iequal
     nequal = iequal.sum()
     nnot_equal = inot_equal.sum()
@@ -286,8 +289,6 @@ def quad_volume(grid: GRID,
                                xyz5, xyz6, xyz7, xyz8)
         volume[iequal] = volumei
     return volume
-
-
 
 
 def shell_thickness(model: BDF,

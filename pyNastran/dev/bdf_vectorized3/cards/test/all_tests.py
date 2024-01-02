@@ -19,10 +19,11 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_plot_elements import T
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rigid import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rods import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_sets import *
-from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells, TestAcoustic
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells, TestAxisymmetricShells, TestAcoustic
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_solids import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_springs import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_superelements import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_thermal import *
 
 
 if __name__ == '__main__':  # pragma: no cover

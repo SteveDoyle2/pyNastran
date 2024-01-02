@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF # PCOMP, MAT1, BDF, CTRIA3, CQ
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #from pyNastran.bdf.mesh_utils.mass_properties import (
     #mass_properties, mass_properties_no_xref, mass_properties_nsm)
-
+from pyNastran.dev.bdf_vectorized3.cards.elements.shell_utils import tri_volume, quad_volume
 
 #try:
     #import matplotlib
@@ -1750,6 +1750,54 @@ class TestShells(unittest.TestCase):
         model.setup()
         model.pshln2.write()
         save_load_deck(model)
+
+    def test_tri_volume(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        rho = 0.0
+        nu = 0.3
+        E = 3.0e7
+        G = None
+        t = 1.0
+        nsm = 0.0
+        self._make_ctria3(model, rho, nu, G, E, t, nsm)
+        model.setup()
+
+        ctria3 = model.ctria3
+        nodes = ctria3.nodes
+        nelements = len(ctria3)
+        area = ctria3.area()
+        average_thickness = 3.1
+        expected_volume = area * average_thickness
+
+        dthickness = np.ones((nelements, 3), dtype='float64') * average_thickness
+        vol = tri_volume(model.grid, nodes, dthickness)
+        assert np.allclose(vol, expected_volume), (vol, expected_volume)
+
+
+    def test_quad_volume(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        rho = 0.0
+        nu = 0.3
+        E = 3.0e7
+        G = None
+        t = 1.0
+        nsm = 0.0
+        self._make_cquad4(model, rho, nu, G, E, t, nsm)
+        model.setup()
+
+        cquad4 = model.cquad4
+        nodes = cquad4.nodes
+        nelements = len(cquad4)
+        area = cquad4.area()
+        average_thickness = 3.1
+        expected_volume = area * average_thickness
+
+        dthickness = np.ones((nelements, 4), dtype='float64') * average_thickness
+        vol = quad_volume(model.grid, nodes, dthickness)
+        assert np.allclose(vol, expected_volume), (vol, expected_volume)
+
 
 class TestAxisymmetricShells(unittest.TestCase):
     def test_cquadx4(self):
