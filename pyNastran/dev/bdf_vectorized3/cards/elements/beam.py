@@ -7,6 +7,8 @@ from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
 from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.dev.bdf_vectorized3.cards.elements.utils import basic_mass_material_id
+
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, blank,
@@ -390,6 +392,10 @@ class CBEAM(Element):
         props = [prop for prop in all_properties if prop.n > 0]
         assert len(props) > 0, f'{self.type}: all_props={all_properties}'
         return props
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBEAM')
+        return material_id
 
     def mass(self) -> np.ndarray:
         #pid = self.property_id

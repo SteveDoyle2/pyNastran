@@ -46,6 +46,7 @@ def save_load_deck(model: BDF,
         assert np.allclose(mass1, massi1)
         assert np.allclose(mass2, massi2)
         assert np.allclose(mass1.sum(), mass2.sum())
+        model.get_mass_breakdown_by_property_id_by_material_id()
 
     if run_loads and 0:
         model.sum_forces_moments()

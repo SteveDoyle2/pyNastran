@@ -19,7 +19,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, # array_default_int,
     array_default_float,
     get_print_card_size)
-from .utils import get_density_from_material
+from .utils import get_density_from_material, basic_mass_material_id
 from .shell import quad_area, quad_centroid
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
@@ -166,6 +166,10 @@ class CSHEAR(Element):
         mass_per_area = shear_mass_per_area(
             self.property_id, self.allowed_properties)
         return mass_per_area
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBAR')
+        return material_id
 
     def mass(self) -> np.ndarray:
         mass_per_area = self.mass_per_area()

@@ -272,8 +272,9 @@ class AxiShellElement(Element):
     def total_thickness(self) -> np.ndarray:
         #print(self.tflag)
         #print(self.T)
+        tflag, T = _axi_tflag_T(self)
         thickness = shell_thickness(self.model,
-                                    self.tflag, self.T,
+                                    tflag, self.T,
                                     self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if np.any(inan):
@@ -296,7 +297,7 @@ class AxiShellElement(Element):
                 log.warning(prop.write(size=8))
 
         thickness = shell_thickness(self.model,
-                                    self.tflag, self.T,
+                                    self.tflag, T,
                                     self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if inan.sum():
@@ -307,8 +308,9 @@ class AxiShellElement(Element):
     def mass_per_area(self) -> np.ndarray:
         nelement = len(self.element_id)
         assert nelement > 0, nelement
+        tflag, T = _axi_tflag_T(self)
         mass_per_area = shell_mass_per_area(
-            self.model, self.tflag, self.T,
+            self.model, tflag, T,
             self.property_id, self.allowed_properties)
         assert len(mass_per_area) == nelement, mass_per_area
         return mass_per_area
@@ -723,10 +725,13 @@ class CTRIAX6(Element):
         return volume
 
     def mass(self) -> np.ndarray:
+        material_id = self.material_id
+        assert len(material_id), self.get_stats()
+
         volume = self.volume()
         unused_area = self.area()
         rho = get_density_from_material(
-            self.material_id, self.allowed_materials, debug=False)
+            material_id, self.allowed_materials, debug=False)
         #print('mass_per_area =', mass_per_area)
         #print('area =', area)
         mass = volume * rho
@@ -1257,7 +1262,9 @@ class CTRAX3(AxisymmetricShellElement):
         return
 
     def area(self) -> np.ndarray:
-        return tri_area(self.model.grid, self.base_nodes)
+        base_nodes = self.base_nodes
+        assert len(base_nodes), base_nodes
+        return tri_area(self.model.grid, base_nodes)
 
     def centroid(self) -> np.ndarray:
         centroid = tri_centroid(self.model.grid, self.base_nodes)
@@ -1403,3 +1410,12 @@ def add_empty_nodes(nids: list[int], nnodes_required: int) -> list[int]:
         # gotta do a copy vs. inplace operation
         nids = nids + extra_nodes
     return nids
+
+def _axi_tflag_T(card: CQUADX) -> tuple[Any, Any]:
+    if card.type in {'CQUADX'}:
+        tflag = None
+        T = None
+    else:
+        tflag = card.tflag
+        T = card.T
+    return tflag, T

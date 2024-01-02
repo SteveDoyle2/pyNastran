@@ -264,7 +264,7 @@ class TestMaterials(unittest.TestCase):
         #model.cross_reference()
         #matt3.write(size=16, is_double=False)
 
-        save_load_deck(model)
+        save_load_deck(model, run_remove_unused=False)
 
     def test_mat4_01(self):
         """tests MAT4, MATT4"""
@@ -382,7 +382,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         matt5.write(size=16, is_double=False)
 
-        save_load_deck(model)
+        save_load_deck(model, run_remove_unused=False)
 
     def test_mat8_01(self):  # should fail...
         """tests MAT8"""

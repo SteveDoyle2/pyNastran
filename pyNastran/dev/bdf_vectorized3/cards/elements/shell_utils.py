@@ -221,13 +221,13 @@ def tri_volume(grid: GRID,
 
     if nnot_equal:
         unit_normali = unit_normal[inot_equal, :]
-        xyz4 = xyz1[inot_equal, :] + unit_normali * dthickness[inot_equal, 0]
-        xyz5 = xyz2[inot_equal, :] + unit_normali * dthickness[inot_equal, 1]
-        xyz6 = xyz3[inot_equal, :] + unit_normali * dthickness[inot_equal, 2]
+        xyz4 = xyz1[inot_equal, :] + unit_normali * dthickness[inot_equal, :]
+        xyz5 = xyz2[inot_equal, :] + unit_normali * dthickness[inot_equal, :]
+        xyz6 = xyz3[inot_equal, :] + unit_normali * dthickness[inot_equal, :]
         volumei = volume_cpenta(
             xyz1[inot_equal, :], xyz2[inot_equal, :], xyz3[inot_equal, :],
             xyz4, xyz5, xyz6)
-        volume[iequal] = volumei
+        volume[inot_equal] = volumei
     return volume
 
 def quad_volume(grid: GRID,
@@ -287,7 +287,7 @@ def quad_volume(grid: GRID,
         volumei = volume_chexa(xyz1[inot_equal, :], xyz2[inot_equal, :],
                                xyz3[inot_equal, :], xyz4[inot_equal, :],
                                xyz5, xyz6, xyz7, xyz8)
-        volume[iequal] = volumei
+        volume[inot_equal] = volumei
     return volume
 
 

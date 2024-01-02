@@ -789,10 +789,10 @@ class BDFAttributes:
     @property
     def element_cards(self) -> list[Any]:
         axisymmetric_element_cards = [
-            #self.ctriax,
-            #self.cquadx, self.cquadx4, self.cquadx8,
-            #self.ctriax, self.ctriax6,
-            #self.ctrax3, self.ctrax6,
+            self.ctriax,
+            self.cquadx, self.cquadx4, self.cquadx8,
+            self.ctriax, self.ctriax6,
+            self.ctrax3, self.ctrax6,
         ]
         acoustic_element_cards = [
             self.chacab, # absorber solid
@@ -1464,7 +1464,8 @@ class BDFAttributes:
         #material_id = []
         #mass = []
         NO_DETAILED_MASS = {
-            'CROD', 'CBAR', 'CBEAM',
+            'CROD', 'CTUBE',
+            'CBAR', 'CBEAM',
             'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
         }
         NO_MATERIAL_MASS = {
@@ -1473,7 +1474,7 @@ class BDFAttributes:
 
         #element_cards = [card for card in self.element_cards
                          #if card.n > 0 and card.type not in NO_MASS]
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or (card_type := card.type) in NO_MASS:
                 continue
             nelement = len(card.element_id)
@@ -1485,9 +1486,15 @@ class BDFAttributes:
                 unused_property_id = card.property_id
                 unused_material_id = card.mass_material_id()
                 unused_mass = card.mass()
+            elif card_type in {'CONROD'}: # , 'CTETRA', 'CPENTA', 'CHEXA'
+                unused_property_id = -1
+                unused_material_id = card.material_id
+                unused_mass = card.mass()
             else:
                 # shells
-                unused_element_id, unused_property_id, unused_material_id = card.mass_material_id()
+                unused_element_id = card.element_id
+                unused_property_id = card.property_id
+                unused_material_id = card.mass_material_id()
 
             #card.get_detailed_mass()
             #if card.type in

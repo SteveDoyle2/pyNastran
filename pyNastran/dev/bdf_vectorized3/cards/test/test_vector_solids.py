@@ -731,6 +731,53 @@ class TestSolids(unittest.TestCase):
         assert elem.mass() > 0, elem.mass()
         save_load_deck(model)
 
+    def test_solids_chexa_pcompls(self):
+        """tests a CHEXA8/"""
+        model = BDF(debug=False)
+        chexa = model.chexa
+        pcompls = model.pcompls
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+
+        model.add_grid(15, [0., 0., 2.])
+        model.add_grid(16, [1., 0., 2.])
+        model.add_grid(17, [1., 1., 2.])
+        model.add_grid(18, [0., 1., 2.])
+        nids = [11, 12, 13, 14, 15, 16, 17, 18]
+        elem = model.add_chexa(eid, pid, nids, comment='chexa')
+
+        #model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+
+        #| PCOMPLS |  PID | DIRECT |  CORDM |   SB   |  ANAL  |
+        #|         |  C8  |  BEH8  |  INT8  | BEH8H  | INT8H  |
+        #|         |  C20 |  BEH20 |  INT20 | BEH20H | INT20H |
+        #|         |  ID1 |  MID1  |   T1   | THETA1 |        |
+        #|         |  ID2 |  MID2  |   T2   | THETA2 |        |
+        #| PCOMPLS | 782  | 1      |        |        |        |
+        #|         | 1001 |   171  |   .3   |  12.3  |        |
+        #|         | 100  |   175  |   .7   |  77.7  |        |
+        card_lines = [
+            f'PCOMPLS,{pid},1',
+            ',1001,171,0.3,12.23'
+        ]
+        model.add_card(card_lines, 'PCOMPLS', comment='', ifile=None, is_list=False, has_none=True)
+        model.setup()
+        mass = chexa.mass()
+        rho = chexa.rho()
+        assert np.isnan(mass)
+        assert np.isnan(rho)
+        save_load_deck(model, run_remove_unused=False, run_mass_properties=False, )
+
+
     def check_solid(self, model: BDF, eid, etype, pid, ptype, mid, mtype, nsm, rho, volume):
         """checks that various solid methods work"""
         mass = rho * volume

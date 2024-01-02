@@ -14,7 +14,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
     parse_check, searchsorted_filter, )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
-from .utils import get_density_from_material
+from .utils import get_density_from_material, basic_mass_material_id
+
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
@@ -357,6 +358,10 @@ class CROD(Element):
         nsm = line_pid_nsm_per_length(self.property_id, self.allowed_properties)
         return nsm
 
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CROD')
+        return material_id
+
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
         length = self.length()
@@ -695,6 +700,10 @@ class CTUBE(Element):
     def nonstructural_mass(self) -> np.ndarray:
         nsm_per_length = line_pid_nsm_per_length(self.property_id, self.allowed_properties)
         return nsm_per_length
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CTUBE')
+        return material_id
 
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)

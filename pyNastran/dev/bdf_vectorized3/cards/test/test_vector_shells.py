@@ -1149,7 +1149,7 @@ class TestShells(unittest.TestCase):
 
         #model.uncross_reference()
         #model.safe_cross_reference()
-        save_load_deck(model, run_test_bdf=False)
+        save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
         #mass_properties(model)
 
     def test_shear(self):
@@ -1767,13 +1767,18 @@ class TestShells(unittest.TestCase):
         nodes = ctria3.nodes
         nelements = len(ctria3)
         area = ctria3.area()
-        average_thickness = 3.1
-        expected_volume = area * average_thickness
+        average_thickness1 = 3.1
+        average_thickness2 = np.array([1., 2., 3.])
+        expected_volume1 = area * average_thickness1
+        expected_volume2 = area * 3 # average_thickness2[1]
 
-        dthickness = np.ones((nelements, 3), dtype='float64') * average_thickness
-        vol = tri_volume(model.grid, nodes, dthickness)
-        assert np.allclose(vol, expected_volume), (vol, expected_volume)
+        dthickness1 = np.ones((nelements, 3), dtype='float64') * average_thickness1
+        vol = tri_volume(model.grid, nodes, dthickness1)
+        assert np.allclose(vol, expected_volume1), (vol, expected_volume1)
 
+        dthickness2 = np.ones((nelements, 3), dtype='float64') * average_thickness2
+        vol = tri_volume(model.grid, nodes, dthickness2)
+        assert np.allclose(vol, expected_volume2), (vol, expected_volume2)
 
     def test_quad_volume(self):
         log = get_logger(level='warning')
@@ -1791,12 +1796,18 @@ class TestShells(unittest.TestCase):
         nodes = cquad4.nodes
         nelements = len(cquad4)
         area = cquad4.area()
-        average_thickness = 3.1
-        expected_volume = area * average_thickness
+        average_thickness1 = 3.1
+        average_thickness2 = np.array([1., 2., 4., 5.])
+        expected_volume1 = area * average_thickness1
+        expected_volume2 = area * 17 / 6 # average_thickness2[1]
 
-        dthickness = np.ones((nelements, 4), dtype='float64') * average_thickness
-        vol = quad_volume(model.grid, nodes, dthickness)
-        assert np.allclose(vol, expected_volume), (vol, expected_volume)
+        dthickness1 = np.ones((nelements, 4), dtype='float64') * average_thickness1
+        vol = quad_volume(model.grid, nodes, dthickness1)
+        assert np.allclose(vol, expected_volume1), (vol, expected_volume1)
+
+        dthickness2 = np.ones((nelements, 4), dtype='float64') * average_thickness2
+        vol = quad_volume(model.grid, nodes, dthickness2)
+        assert np.allclose(vol, expected_volume2), (vol, expected_volume2)
 
 
 class TestAxisymmetricShells(unittest.TestCase):
@@ -1804,6 +1815,7 @@ class TestAxisymmetricShells(unittest.TestCase):
         """tests a CQUADX4"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        cquadx4 = model.cquadx4
         eid = 1
         pid = 2
         mid = 3
@@ -1820,10 +1832,13 @@ class TestAxisymmetricShells(unittest.TestCase):
         nu = 0.3
         mat1_id = model.add_mat1(mid, E, G, nu)
         model.setup()
-
         #model.cross_reference()
 
+        cquadx4.base_nodes
+        cquadx4.midside_nodes
+        cquadx4.centroid()
         mass = model.mass_sum()
+        area = model.area()
         assert np.allclose(mass, 0.0), mass  # TODO: not sure
 
         #model.uncross_reference()
@@ -1831,12 +1846,15 @@ class TestAxisymmetricShells(unittest.TestCase):
         #model.uncross_reference()
         #bdf_file = model.write_bdf(bdf_file)
 
-        save_load_deck(model)
+        save_load_deck(model, run_remove_unused=False, run_mass_properties=False)
 
     def test_axi_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        ctrax3 = model.ctrax3
+        ctrax6 = model.ctrax6
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1877,7 +1895,11 @@ class TestAxisymmetricShells(unittest.TestCase):
         #pcomp.lam = 'SYM'
         #assert pcomp.Thickness() == sum(thicknesses)*2, thicknesses
 
+        model.setup()
         model.validate()
+        ctrax3.centroid()
+        ctrax6.centroid()
+        area = model.area()
 
         #ctrax6.raw_fields()
         model.ctrax6.write(size=8)
@@ -1909,13 +1931,13 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.pcomp.write(size=8)
         model.pcomp.write(size=16)
         model.pcomp.write(size=16, is_double=True)
-        save_load_deck(model, run_convert=False)
-
+        save_load_deck(model, run_remove_unused=False, run_mass_properties=False, run_convert=False)
 
     def test_axi_cquadx8(self):
-        """tests a CQUADX, CTRIAX, CTRIAX6"""
+        """tests a CQUADX8"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        cquadx8 = model.cquadx8
         eid = 1
         pid = 10
         mid = 100
@@ -1930,8 +1952,72 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.add_grid(9, [.5, .5, 0.])
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         model.add_cquadx8(eid, pid, nids, theta=0., comment='cquadx8')
+        model.add_psolid(pid, mid)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
 
-        eid = 2
+        model.setup()
+        cquadx8.base_nodes
+        cquadx8.midside_nodes
+        cquadx8.mass()
+        cquadx8.centroid()
+        model.area()
+        save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
+
+    def test_axi_cquadx(self):
+        """tests a CQUADX"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        cquadx = model.cquadx
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        model.add_cquadx(eid, pid, nids, theta_mcid=0., comment='cquadx')
+        #model.add_psolid(pid, mid)
+        model.add_plplane(pid, mid, cid=0, stress_strain_output_location='GRID', comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.setup()
+        cquadx.base_nodes
+        cquadx.midside_nodes
+        cquadx.mass()
+        cquadx.centroid()
+        model.area()
+        save_load_deck(model, run_remove_unused=False,
+                       run_mass_properties=False, run_test_bdf=False)
+
+    def test_axi_ctriax(self):
+        """tests a CTRIAX"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        ctriax = model.ctriax
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        #model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
+        #model.add_psolid(pid, mid)
+
         # 4---7---3
         # |     / |
         # 8   9   6
@@ -1939,12 +2025,53 @@ class TestAxisymmetricShells(unittest.TestCase):
         # 1---5---2
         nids = [1, 2, 3, 5, 6, 9]
         model.add_ctriax(eid, pid, nids, theta_mcid=0., comment='ctriax')
+        #model.add_plsolid(pid, mid, stress_strain='GRID', ge=0., comment='')
+        model.add_plplane(pid, mid, cid=0, stress_strain_output_location='GRID', comment='')
 
-        eid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.setup()
+
+        ctriax.base_nodes
+        ctriax.midside_nodes
+        ctriax.centroid()
+        #ctriax.mass()
+        model.area()
+        save_load_deck(model, run_remove_unused=False, run_mass_properties=False, run_test_bdf=False)
+
+    def test_axi_ctriax6(self):
+        """tests a CTRIAX6"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        ctriax6 = model.ctriax6
+        #cquadx8 = model.cquadx8
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        #model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        #model.add_grid(7, [.5, 1., 0.])
+        #model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
+        #model.add_psolid(pid, mid)
+
+        # 4---7---3
+        # |     / |
+        # 8   9   6
+        # |/      |
+        # 1---5---2
         nids = [1, 5, 2, 6, 3, 9]
         model.add_ctriax6(eid, mid, nids, theta=0., comment='ctriax6')
 
-        model.add_psolid(pid, mid)
+        #model.add_plsolid(pid, mid, stress_strain='GRID', ge=0., comment='')
+        model.add_plplane(pid, mid, cid=0, stress_strain_output_location='GRID', comment='')
 
         E = 3.0e7
         G = None
@@ -1952,7 +2079,14 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
 
         #model.cross_reference()
-        save_load_deck(model, run_test_bdf=False)
+
+        model.setup()
+        ctriax6.base_nodes
+        ctriax6.midside_nodes
+        #ctriax6.mass()
+        ctriax6.mass()
+        model.area()
+        save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
 
 
 def make_dvcrel_optimization(model: BDF, params, element_type: str, eid: int,

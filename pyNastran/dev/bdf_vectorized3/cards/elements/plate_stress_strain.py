@@ -25,7 +25,8 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float, array_float_nan,
     get_print_card_size)
-from .utils import get_density_from_material
+from .utils import get_density_from_material, basic_mass_material_id
+
 from .shell import (
     tri_centroid, tri_area, # tri_area_centroid_normal, tri_quality_xyz, tri_quality_nodes,
     quad_area, quad_centroid, # quad_area_centroid_normal, quad_quality_nodes,
@@ -700,6 +701,11 @@ class PlateStrainElement(Element):
                 #prop = propcard.slice_card_by_property_id(pids)
                 #log.warning(prop.write(size=8))
         return thickness
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(
+            self.property_id, self.allowed_properties, self.type)
+        return material_id
 
     def mass(self) -> np.ndarray:
         A = self.area()
