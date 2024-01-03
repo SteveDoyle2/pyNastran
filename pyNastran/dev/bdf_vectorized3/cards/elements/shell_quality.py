@@ -348,9 +348,12 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     area3 = 0.5 * np.linalg.norm(np.cross(v43, v32), axis=1)  # v43 x v32
     area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43), axis=1) # v14 x v34
     aavg = (area1 + area2 + area3 + area4) / 4.
-    taper_ratio = (abs(area1 - aavg) + abs(area2 - aavg) +
-                   abs(area3 - aavg) + abs(area4 - aavg)) / aavg
-    assert len(taper_ratio) == nelement
+    taper_ratio = np.full(nelement, np.nan, dtype=area.dtype)
+    num = (abs(area1 - aavg) + abs(area2 - aavg) +
+           abs(area3 - aavg) + abs(area4 - aavg))
+    itaper = (aavg != 0.0)
+    taper_ratio[itaper] = num[itaper] / aavg[itaper]
+    #assert len(taper_ratio) == nelement
 
     #    e3
     # 4-------3
@@ -396,13 +399,24 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     #assert len(lengths) == 3, lengths
     length_max = lengths.max(axis=1)
     length_min = lengths.min(axis=1)
-    aspect_ratio = length_max / length_min
-    assert len(aspect_ratio) == nelement
+    aspect_ratio = np.full(nelement, np.nan, dtype=area.dtype)
+    iaspect = (length_min > 0)
+    aspect_ratio[iaspect] = length_max[iaspect] / length_min[iaspect]
+    #assert len(aspect_ratio) == nelement
 
-    cos_theta1 = np.einsum('ij,ij->i', v21, -v14) / (length21 * length14)
-    cos_theta2 = np.einsum('ij,ij->i', v32, -v21) / (length32 * length21)
-    cos_theta3 = np.einsum('ij,ij->i', v43, -v32) / (length43 * length32)
-    cos_theta4 = np.einsum('ij,ij->i', v14, -v43) / (length14 * length43)
+    cos_theta1 = np.full(nelement, np.nan, dtype=area.dtype)
+    cos_theta2 = np.full(nelement, np.nan, dtype=area.dtype)
+    cos_theta3 = np.full(nelement, np.nan, dtype=area.dtype)
+    cos_theta4 = np.full(nelement, np.nan, dtype=area.dtype)
+
+    icos = (length21 * length14) > 0
+    cos_theta1[icos] = np.einsum('ij,ij->i', v21[icos, :], -v14[icos, :]) / (length21[icos] * length14[icos])
+    icos = (length32 * length21) > 0
+    cos_theta2[icos] = np.einsum('ij,ij->i', v32[icos, :], -v21[icos, :]) / (length32[icos] * length21[icos])
+    icos = (length43 * length32) > 0
+    cos_theta3[icos] = np.einsum('ij,ij->i', v43[icos, :], -v32[icos, :]) / (length43[icos] * length32[icos])
+    icos = (length14 * length43) > 0
+    cos_theta4[icos] = np.einsum('ij,ij->i', v14[icos, :], -v43[icos, :]) / (length14[icos] * length43[icos])
     #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
     # dot the local normal with the normal vector
@@ -446,6 +460,8 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     # |/  |
     # 1---2
     #
+    cos_warp1 = np.full(nelement, np.nan, dtype=area.dtype)
+    cos_warp2 = np.full(nelement, np.nan, dtype=area.dtype)
     v41 = -v14
     n123 = np.cross(v21, v31)
     n134 = np.cross(v31, v41)
@@ -453,7 +469,8 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     length134 = np.linalg.norm(n134, axis=1)
     #v1 o v2 = v1 * v2 cos(theta)
     length_warp1 = length123 * length134
-    cos_warp1 = np.einsum('ij,ij->i', n123, n134) / length_warp1
+    iwarp = (length_warp1 != 0.0)
+    cos_warp1[iwarp] = np.einsum('ij,ij->i', n123[iwarp, :], n134[iwarp, :]) / length_warp1[iwarp]
 
     # split the quad in the order direction and take the maximum of the two splits
     # 4---3
@@ -465,7 +482,8 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     legth_124 = np.linalg.norm(n124, axis=1)
     legth_234 = np.linalg.norm(n234, axis=1)
     length_warp2 = legth_124 * legth_234
-    cos_warp2 = np.einsum('ij,ij->i', n124, n234) / length_warp2
+    iwarp = (length_warp1 != 0.0)
+    cos_warp2[iwarp] = np.einsum('ij,ij->i', n124[iwarp, :], n234[iwarp, :]) / length_warp2[iwarp]
 
     warps = np.abs(np.arccos(
         np.clip([cos_warp1, cos_warp2], -1., 1.)))
@@ -476,7 +494,7 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     #https://scicomp.stackexchange.com/questions/35881/fem-shape-functions-on-triangular-elements-transition-from-2d-to-3d
     #dx_d
 
-    if np.isnan(max_warp.max()):
+    if np.isnan(max_warp.max()):  # pramga: no cover
         print(f'NAN max_warp = {max_warp}')
     #for warp in warps:
         #print(warp.tolist())
