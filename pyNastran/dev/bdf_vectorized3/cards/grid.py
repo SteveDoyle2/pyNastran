@@ -4,10 +4,9 @@ from itertools import zip_longest
 from collections import Counter, defaultdict
 from typing import Callable, Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8 # , print_float_8 # , print_field_8
-from pyNastran.bdf.field_writer_16 import print_scientific_16 # , print_field_16 # print_card_16,
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_16 import print_scientific_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
-#from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.nodes import compress_xpoints
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, _format_comment

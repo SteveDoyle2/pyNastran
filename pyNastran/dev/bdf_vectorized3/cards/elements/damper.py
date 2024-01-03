@@ -4,9 +4,6 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank,
     integer_double_or_blank)
@@ -1438,11 +1435,12 @@ class CGAP(Element):
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
+        g0s = array_default_int(self.g0, default=-1, size=size)
         coord_ids = array_default_int(self.coord_id, default=-1, size=size)
         xs = array_float_nan(self.x, size=size, is_double=is_double)
-        for eid, pid, nodes, g0, x, cid in zip_longest(element_id, property_id, nodes_, self.g0, xs, coord_ids):
+        for eid, pid, nodes, g0, x, cid in zip_longest(element_id, property_id, nodes_, g0s, xs, coord_ids):
             ga, gb = nodes
-            if g0 == -1:
+            if g0 == '':
                 x1, x2, x3 = x
             else:
                 x1 = g0

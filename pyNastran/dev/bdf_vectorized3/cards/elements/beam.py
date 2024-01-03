@@ -4,8 +4,8 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import basic_mass_material_id
 

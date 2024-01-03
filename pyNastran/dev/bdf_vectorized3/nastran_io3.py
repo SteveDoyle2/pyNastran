@@ -998,8 +998,11 @@ def _set_quality(icase: int, cases: dict[int, Any],
     except IndexError:
         mean_edge_length = 1.0
         return mean_edge_length, icase, quality_form
+
     if not np.array_equal(element_id, element_id_quality):
-        raise RuntimeError('quality map error')
+        missing_ids = np.setdiff1d(element_id_quality, element_id)
+        extra_ids = np.setdiff1d(element_id, element_id_quality)
+        raise RuntimeError(f'quality map error; missing_eids={missing_ids}; extra_eids={extra_ids}')
 
     # not included in the vtk mesh
     NO_ELEMENT = {'CONM1', 'CONM2'}

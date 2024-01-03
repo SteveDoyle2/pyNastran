@@ -1,10 +1,8 @@
 from __future__ import annotations
 from itertools import zip_longest
 from typing import TYPE_CHECKING
+
 import numpy as np
-#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, # string,

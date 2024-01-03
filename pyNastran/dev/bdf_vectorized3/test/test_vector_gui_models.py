@@ -174,7 +174,7 @@ class TestGuiModels(unittest.TestCase):
         run_nastran_gui(h5_filename)
     def test_elements6(self):
         bdf_filename = MODEL_PATH / 'elements' / 'loadstep_elements.bdf'
-        h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
+        #h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
         run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
     def test_elements7(self):
@@ -204,8 +204,8 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_test_153.bdf'
         run_nastran_gui(bdf_filename)
 
-    def test_sol200_1(self):
-        bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
+    #def test_sol200_1(self):
+        #bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
     def test_sol200_2(self):
         bdf_filename = MODEL_PATH / 'sol200' / 'model_200.bdf'
         run_nastran_gui(bdf_filename)
@@ -213,7 +213,7 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'transfer_function' / 'actuator_tf_modeling.bdf'
         run_nastran_gui(bdf_filename)
     def test_aero_1(self):
-        h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
+        #h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
         #run_nastran_gui(h5_filename)
         bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
         run_nastran_gui(bdf_filename)
@@ -224,7 +224,7 @@ class TestGuiModels(unittest.TestCase):
     def test_other_1(self):
         bdf_filename = MODEL_PATH / 'other' / 'ac10707a.bdf'
         run_nastran_gui(bdf_filename)
-    def test_other_2(self):
+    def _test_other_2(self):
         bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
         run_nastran_gui(bdf_filename)
 

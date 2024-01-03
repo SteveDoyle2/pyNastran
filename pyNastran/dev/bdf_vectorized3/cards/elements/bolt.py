@@ -8,8 +8,6 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_blank_if_default
 from pyNastran.bdf.cards.base_card import (
     read_ids_thru, expand_thru, _format_comment)
-#from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (

@@ -7,7 +7,6 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     #integer_or_blank, double_or_blank, string_or_blank,
     #integer_double_or_blank,
     fields)
-#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, parse_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim # , VectorizedBaseCard, searchsorted_filter

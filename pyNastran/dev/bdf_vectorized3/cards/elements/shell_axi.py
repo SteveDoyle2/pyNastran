@@ -274,7 +274,7 @@ class AxiShellElement(Element):
         #print(self.T)
         tflag, T = _axi_tflag_T(self)
         thickness = shell_thickness(self.model,
-                                    tflag, self.T,
+                                    tflag, T,
                                     self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if np.any(inan):

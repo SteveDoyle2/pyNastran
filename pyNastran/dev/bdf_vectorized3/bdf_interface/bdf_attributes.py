@@ -1798,8 +1798,15 @@ class BDFAttributes:
             #if n > 0:
                 #print(f'adding {card.type} to quality with {n} elements')
 
-            if n == 0:
-                continue
+            #print(f'card_type={card.type}; icard_type={icard}; [{i0}:{i0+n}]; n={n} eids={card.element_id}')
+            #extra = np.setdiff1d(element_ids, card.element_id)
+            #extra = np.setdiff1d(extra, [-1])
+            #if len(extra):
+            #    print('*', card, extra)
+            #    x = 1
+            #else:
+                #print(card, card.element_id)
+            #print(card.type, card.element_id)
 
             #print(f'card_type={card.type}; icard_type={icard}; [{i0}:{i0+n}]; n={n} eids={card.element_id}')
             element_ids[i0:i0+n] = card.element_id

@@ -4,9 +4,8 @@ from functools import wraps
 from io import StringIO
 from typing import Callable, Optional, Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.dev.bdf_vectorized3.utils import print_card_8 # , print_float_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.dev.bdf_vectorized3.utils import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.bdf_interface.assign_type import (
     #integer, integer_or_blank, double_or_blank, components_or_blank)
 #from pyNastran.dev.bdf_vectorized3.cards.line_elements import CBAR, CBEAM, PBAR, PBARL, PBEAM, PBEAML
