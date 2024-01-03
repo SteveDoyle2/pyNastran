@@ -44,6 +44,7 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
         'glue_id': [],         # BGADD  -> BGSET
         'contact_id': [],      # BGSET/BCTSET -> BSURF/BSURFS
         'bfric_id': [],        # BCONP -> BFRIC
+        'bolt_id': [],
     }
     #for card in model._cards_to_setup:
         #print(card)

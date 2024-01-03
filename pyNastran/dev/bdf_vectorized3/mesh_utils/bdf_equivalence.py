@@ -365,6 +365,8 @@ def update_cards(model: BDF,
         # contact
         'BSURF', 'BSURFS', 'BCPROP', 'BCPROPS', 'BCTSET',
         'BGADD', 'BCTADD', 'BFRIC', 'BCONP',
+        # bolt
+        'BOLTLD',
     }
     skip_cards = {
         'GRID', 'SPOINT', 'EPOINT',

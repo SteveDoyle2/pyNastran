@@ -98,15 +98,15 @@ class BOLTLD(Combination):
 
         """
         return super().add(
-            sid, scale, scale_factors, bolt_ids, comment=comment)
+            bolt_id, scale, scale_factors, bolt_ids, comment=comment)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
-        used_dict['load_id'].append(self.load_ids)
+        used_dict['bolt_id'].append(self.bolt_ids)
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
-        load_id = used_dict['load_id']
+        load_id = used_dict['bolt_id']
         ncards_removed = remove_unused_primary(
-            self, load_id, self.load_id, 'load_id')
+            self, load_id, self.bolt_id, 'bolt_id')
         return ncards_removed
 
 

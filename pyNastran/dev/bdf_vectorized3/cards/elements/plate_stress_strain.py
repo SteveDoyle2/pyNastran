@@ -155,6 +155,16 @@ class CPLSTS3(PlateStressElement):
         self.T = np.zeros((0, 3), dtype='float64')
         self.theta = np.array([], dtype='float64')
 
+    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+            tflag: int=0, T1=None, T2=None, T3=None,
+            comment: str='') -> int:
+        """Creates a CPLSTS3 card"""
+        self.cards.append((eid, pid, nids, theta,
+                           tflag, [T1, T2, T3],
+                           comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS3 card from ``BDF.add_card(...)``
@@ -303,6 +313,16 @@ class CPLSTS4(PlateStressElement):
         self.tflag = np.array([], dtype='int32')
         self.T = np.zeros((0, 4), dtype='float64')
         self.theta = np.array([], dtype='float64')
+
+    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+            tflag: int=0, T1=None, T2=None, T3=None, T4=None,
+            comment: str='') -> int:
+        """Creates a CPLSTS4 card"""
+        self.cards.append((eid, pid, nids, theta,
+                           tflag, [T1, T2, T3, T4],
+                           comment))
+        self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """

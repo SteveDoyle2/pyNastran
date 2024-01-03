@@ -869,7 +869,9 @@ class BDFAttributes:
 
     @property
     def property_cards(self) -> list[Any]:
-        acoustic_property_cards = [self.paabsf]
+        acoustic_property_cards = [
+            self.paabsf, self.pacbar,
+        ]
         zero_d_properties = [
             self.pelas, self.pelast,
             self.pdamp, self.pdampt,

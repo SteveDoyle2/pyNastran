@@ -5938,7 +5938,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return elem
 
     def add_cplsts3(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    tflag=0, T1=None, T2=None, T3=None, comment: str='') -> int:
+                    tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> int:
         """Creates a CPLSTS3 card"""
         elem = self.cplsts3.add(
             eid, pid, nids, theta=theta,
@@ -5946,7 +5946,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return elem
 
     def add_cplsts4(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    tflag=0, T1=None, T2=None, T3=None, T4=None,
+                    tflag: int=0, T1=None, T2=None, T3=None, T4=None,
                     comment: str='') -> int:
         """Creates a CPLSTS4 card"""
         elem = self.cplsts4.add(
@@ -8109,9 +8109,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         dphase = self.dphase.add(dphase_id, node, component, phase_lead, comment=comment)
         return dphase
 
-    def add_rotorg(self, sid, nids, comment: str='') -> int:
+    def add_rotorg(self, rotor_id: int, nids: list[int], comment: str='') -> int:
         """Creates a ROTORG card"""
-        rotor = self.rotorg,add(sid, nids, comment=comment)
+        rotor = self.rotorg.add(rotor_id, nids, comment=comment)
         return rotor
 
     def add_rotord(self, sid, rstart, rstep, numstep,
@@ -8457,7 +8457,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
         return paabsf
 
-    def add_pacbar(self, pid, mback, mseptm, freson, kreson, comment: str='') -> PACBAR:
+    def add_pacbar(self, pid: int, mback: float, mseptm: float,
+                   freson: float, kreson: float, comment: str='') -> int:
         """
         Creates a PACBAR card
 
@@ -8475,8 +8476,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             Resonant stiffness of the sandwich construction.
 
         """
-        pacbar = PACBAR(pid, mback, mseptm, freson, kreson, comment=comment)
-        self._add_methods._add_acoustic_property_object(pacbar)
+        pacbar = self.pacbar.add(pid, mback, mseptm, freson, kreson, comment=comment)
         return pacbar
 
     def add_pacabs(self, pid, cutfr, b, k, m,

@@ -464,7 +464,6 @@ class Writer:
 
         # acoustic shells
         model.caabsf.write_file(bdf_file, size=size, is_double=is_double)
-        model.paabsf.write_file(bdf_file, size=size, is_double=is_double)
 
         # acoustic solids
         model.chacab.write_file(bdf_file, size=size, is_double=is_double)
@@ -647,6 +646,7 @@ class Writer:
 
         # acoustic
         model.pacbar.write_file(bdf_file, size=size, is_double=is_double)
+        model.paabsf.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_materials(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                          is_long_ids: Optional[bool]=None) -> None:

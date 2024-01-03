@@ -25,7 +25,43 @@ IS_MATPLOTLIB = False
 
 
 class TestAcoustic(unittest.TestCase):
-    def test_caabsf(self):
+    def test_chacbr_pacbar(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        chacbr = model.chacbr
+        pacbar = model.pacbar
+
+        eid = 2
+        pid = 10
+        nodes = [1, 2, 3, 4, 5, 6, 7, 8]
+        idi = model.add_chacbr(eid, pid, nodes, comment='caabsf') # solid
+
+        mback = 1.0
+        mseptm = 2.
+        freson = 3.
+        kreson = 4.
+        model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_grid(5, [0., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 1., 0.])
+        model.add_grid(8, [0., 1., 0.])
+        #model.add_paabsf(pid, table_reactance_real=None, table_reactance_imag=None,
+                         #s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment='')
+        model.setup()
+
+        assert len(chacbr.write(size=8)) > 0
+        assert len(chacbr.write(size=16)) > 0
+        assert len(pacbar.write(size=8)) > 0
+        assert len(pacbar.write(size=16)) > 0
+
+        save_load_deck(model, run_mass_properties=False, run_equivalence=False)
+
+    def test_caabsf_paabsf(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
         caabsf = model.caabsf
@@ -1750,6 +1786,54 @@ class TestShells(unittest.TestCase):
         model.setup()
         model.pshln2.write()
         save_load_deck(model)
+
+    def test_cplsts3(self):
+        model = BDF(debug=False)
+        cplsts3 = model.cplsts3
+        cplsts4 = model.cplsts4
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        expected_tri_area = 0.5
+        expected_quad_area = 1.0
+
+        eid = 10
+        pid = 11
+        mid = 12
+        nids = [1, 2, 3]
+        model.add_cplsts3(eid, pid, nids, theta=0.0, comment='')
+
+        eid += 1
+        nids = [1, 2, 3, 4]
+        model.add_cplsts4(eid, pid, nids, theta=0.0, comment='')
+
+        t = 0.31
+        rho = 0.13
+        model.add_pplane(pid, mid, t=t, nsm=0.0, formulation_option=0, comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=rho)
+        model.setup()
+        assert len(cplsts3) == 1, cplsts3
+        assert len(cplsts4) == 1, cplsts4
+
+        expected_tri_mass = t * expected_tri_area * rho
+        expected_quad_mass = t * expected_quad_area * rho
+
+        areai = cplsts3.area()
+        massi = cplsts3.mass()
+        assert np.allclose(areai, expected_tri_area), (areai, expected_tri_area)
+        assert np.allclose(massi, expected_tri_mass), (massi, expected_tri_mass)
+
+        areai = cplsts4.area()
+        massi = cplsts4.mass()
+        assert np.allclose(areai, expected_quad_area), (areai, expected_quad_area)
+        assert np.allclose(massi, expected_quad_mass), (massi, expected_quad_mass)
+
+        save_load_deck(model, run_remove_unused=False, run_mass_properties=False)
+        x = 1
 
     def test_tri_volume(self):
         log = get_logger(level='warning')

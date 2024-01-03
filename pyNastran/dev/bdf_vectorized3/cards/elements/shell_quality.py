@@ -317,7 +317,7 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
         assert min_area_min == 0., min_area
         area_ratioi1 = np.full(nelement, np.nan, dtype=area.dtype)
         iarea = np.where(min_area != 0.)[0]
-        area_ratioi1[area] = area[area] / min_area[iarea]
+        area_ratioi1[iarea] = area[iarea] / min_area[iarea]
         is_nan_area_ratio = True
         warnings.warn(f'invalid area_ratio for a quad/hexa/penta because min_area=0')
 
@@ -336,7 +336,10 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     area_ratio = area_ratios.max(axis=0)
     if is_nan_area_ratio:
         inan = np.isnan(area_ratio)
-        area_ratio[inan] = area_ratio[~inan].max() * 2
+        inot_nan = ~inan
+        not_nan_area = area_ratio[inot_nan]
+        if inot_nan.sum() > 0:
+            area_ratio[inan] = not_nan_area.max() * 2
     assert area_ratio.shape == (nelement, )
     del area_ratios
 

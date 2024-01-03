@@ -27,11 +27,11 @@ def get_density_from_material(material_id: np.ndarray,
 
     material_id_check = np.zeros(nmaterials, dtype='int32')
     rho = np.full(nmaterials, np.nan, dtype='float64')
-    if debug:
+    if debug:  # pragma: no cover
         print(f'material_id = {material_id}')
     for mat in allowed_materials:
         mat_material_ids = mat.material_id
-        if debug:
+        if debug:  # pragma: no cover
             print('mat.material_id = ', mat.material_id)
             print('mat.rho = ', mat.rho)
             #print('i_lookup = ', i_lookup)
@@ -39,17 +39,17 @@ def get_density_from_material(material_id: np.ndarray,
         i_lookup, i_all = searchsorted_filter(mat_material_ids, material_id)
         if len(i_all) == 0:
             continue
-        if debug:
+        if debug:  # pragma: no cover
             print('i_lookup = ', i_lookup)
             print('i_all = ', i_all)
 
         material_id_check[i_lookup] = mat_material_ids[i_all]
-        if debug:
+        if debug:  # pragma: no cover
             print('material_id_check = ', material_id_check)
             print('mat_material_ids = ', mat_material_ids)
 
         rho[i_lookup] = mat.rho[i_all]
-        #if debug:
+        #if debug:  # pragma: no cover
             #print('material_id_check = ', material_id_check)
             #print('mat_material_ids = ', mat_material_ids)
             #x = 1

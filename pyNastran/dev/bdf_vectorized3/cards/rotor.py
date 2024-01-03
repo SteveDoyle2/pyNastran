@@ -52,6 +52,7 @@ class ROTORG(VectorizedBaseCard):
         self.node_id = np.array([], dtype='int32')
 
     def add(self, rotor_id: int, nids: list[int], comment: str='') -> int:
+        """Creates a ROTORG card"""
         nids = expand_thru(nids, set_fields=True, sort_fields=False)
         nnodes = len(nids)
         self.cards.append((rotor_id, nids, comment))

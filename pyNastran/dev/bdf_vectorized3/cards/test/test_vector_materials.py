@@ -834,8 +834,8 @@ class TestMaterials(unittest.TestCase):
         mid = 10
         model.add_mat10c(mid, form='REAL', rho_real=0.0, rho_imag=0.0, c_real=0.0, c_imag=0.0, comment='')
         model.setup()
-        print(model.mat10c.write())
-        save_load_deck(model)
+        model.mat10c.write()
+        save_load_deck(model, run_remove_unused=False)
 
     def test_matort(self):
         log = get_logger(level='warning')
@@ -853,10 +853,10 @@ class TestMaterials(unittest.TestCase):
         model.add_matort(mid, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
                          rho=0.0, alpha1=0.0, alpha2=0.0, alpha3=0.0, tref=0.0, ge=0.0, comment='')
         model.setup()
-        print(model.mathort.write())
+        print(model.matort.write())
         save_load_deck(model)
 
-    def test_matort(self):
+    def test_mathp(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
         mid = 10

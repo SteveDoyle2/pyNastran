@@ -96,8 +96,6 @@ def searchsorted_filter(all_ids: np.ndarray,
     expected2 = lookup_ids[i_lookup2]
     actual2 = all_ids[i_all2]
     assert np.array_equal(expected2, actual2)
-    #if debug:
-        #x = 2
     return i_lookup2, i_all2
 
 

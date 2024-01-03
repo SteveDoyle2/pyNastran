@@ -572,8 +572,12 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         rotorg = model.rotorg
         card_lines = ['ROTORG', '10', '1', '2']
+        model.add_card(card_lines, 'ROTORG', comment='rotorg')
         card_lines = ['ROTORG', '10', '10', ' THRU', '20']
         model.add_card(card_lines, 'ROTORG', comment='rotorg')
+
+        nids = [10, 'thru', 15]
+        model.add_rotorg(11, nids, comment='')
 
         model.add_grid(1, [1., 0., 0.])
         model.add_grid(2, [2., 0., 0.])

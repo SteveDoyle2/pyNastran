@@ -701,7 +701,7 @@ class COORD(VectorizedBaseCard):
         assert len(np.unique(self.coord_id)) == len(self.coord_id)
 
         debug = False
-        if debug:
+        if debug:  # pragma: no cover
             print(f'nresolved = {nresolved}')
         while nresolved < ncoords:
             i1 = np.where(self.icoord == 1)[0]
@@ -719,7 +719,7 @@ class COORD(VectorizedBaseCard):
             if len(coords_to_resolve) == 0:
                 raise RuntimeError(f'cannot resolve any coordinate systems...unresolved_cids={unresolved_cids}')
 
-            if debug:
+            if debug:  # pragma: no cover
                 print('-----------------------')
                 n_to_resolve = len(coord1_cids_to_resolve) + len(coord2_cids_to_resolve)
                 log.debug(f'n={n_to_resolve} resolve this cycle: coord1={np.array(coord1_cids_to_resolve)}; '
@@ -728,7 +728,7 @@ class COORD(VectorizedBaseCard):
             nresolved, cord1s_resolved = self._resolve_cord1(
                 coord1_cids_to_resolve, nresolved, resolved, grid,
                 unresolved_cids)
-            if debug:
+            if debug:  # pragma: no cover
                 if nresolved > nresolved1:
                     log.debug(f'n={len(coord1_cids_to_resolve)}; resolved CORD1x={cord1s_resolved} -> {coord1_cids_to_resolve}')
                     log.debug(f'n={len(unresolved_cids)}; unresolved_cids = {unresolved_cids}')
@@ -738,7 +738,7 @@ class COORD(VectorizedBaseCard):
                 coord2_cids_to_resolve, resolved, nresolved, unresolved_cids,
                 rid_to_i_icoord_coordtype)
 
-            if debug:
+            if debug:  # pragma: no cover
                 if nresolved > nresolved2:
                     log.debug(f'n={len(coord2_cids_to_resolve)}; resolved CORD2x={cord2s_resolved} -> {coord2_cids_to_resolve}')
                 if unresolved_cids:
@@ -747,7 +747,7 @@ class COORD(VectorizedBaseCard):
         if 0 in resolved:
             # just limiting log messages
             resolved.remove(0)
-        if debug and resolved:
+        if debug and resolved:  # pragma: no cover
             log.info(f'n={len(resolved)}; resolved={np.array(list(resolved))}')
         if unresolved_cids:
             #print(f'unresolved_cids = {unresolved_cids}\n{self.write()}')

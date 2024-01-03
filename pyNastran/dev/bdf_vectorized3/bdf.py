@@ -2146,9 +2146,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             'BCTPARM' : (BCTPARM, add_methods._add_bctparm_object),
 
-            # nx bolts
-            'BOLTLD' : (RuntimeCrash, None),
-
             #'CBEAR', 'PBEAR', 'ROTORB',
             #'CBEAR' : (Crash, None),
             #'PBEAR' : (Crash, None),

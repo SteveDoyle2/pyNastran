@@ -94,6 +94,12 @@ class CHACBR(SolidElement):
         return midside_nodes
 
     @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.pacbar]
+        return [prop for prop in allowed_properties if prop.n > 0]
+
+    @property
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
