@@ -36,6 +36,65 @@ if TYPE_CHECKING:  # pragma: no cover
     from .nastran_io3 import Nastran3 as NastranIO
 
 
+def create_alt_spcs(gui: MainWindow,
+                    model: BDF,
+                    grid_id: np.ndarray,
+                    xyz_cid0: np.ndarray) -> None:
+    cards_all = (model.spc, model.spc1)
+    cards = [card for card in cards_all if len(card)]
+    ncards = sum([len(card) for card in cards])
+    # TODO: add support for SPCADD
+    if ncards == 0:
+        return
+
+    spc_ids_list = []
+    for card in cards:
+        spc_ids_list.append(card.spc_id)
+    spc_ids = np.hstack(spc_ids_list)
+    uspc_id = np.unique(spc_ids)
+
+    for spc_id in uspc_id:
+        comp_list = []
+        nids_list = []
+        for card in cards:
+            if spc_id not in card.spc_id:
+                continue
+            spc = card.slice_card_by_id(spc_id)
+            comp_list.append(spc.components)
+            nids_list.append(spc.node_id)
+        comp = np.hstack(comp_list)
+        nids = np.hstack(nids_list)
+
+        unids_all = np.unique(nids)
+        ucomp_all = np.unique(comp)
+
+        if len(ucomp_all) == 1:
+            # single dof; don't need "ALL SPCs" cause this
+            # case all has the same DOFs
+            ucomp = unids_all[0]
+            name = f'All SPCs id={spc_id:g}; dof={ucomp}'
+            inid = np.searchsorted(grid_id, unids_all)
+            xyz_cid0s = xyz_cid0[inid, :]
+            _build_dots(gui, name, xyz_cid0s)
+        else:
+            # all nodes
+            name = f'All SPCs id={spc_id:g}'
+            inid = np.searchsorted(grid_id, unids_all)
+            xyz_cid0s = xyz_cid0[inid, :]
+            _build_dots(gui, name, xyz_cid0s)
+
+            # SPCs by DOF
+            for ucompi in ucomp_all:
+                name = f'SPCs id={spc_id:g}; DOF={ucompi}'
+                icomp = np.where(comp == ucompi)[0]
+                unids = nids[icomp]
+                inid = np.searchsorted(grid_id, unids)
+                xyz_cid0s = xyz_cid0[inid, :]
+                _build_dots(gui, name, xyz_cid0s)
+
+        x = 1
+
+
 def create_alt_conm2_grids(gui: MainWindow,
                            model: BDF,
                            grid_id: np.ndarray,

@@ -31,7 +31,7 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from .alt_actor_builder import (
     build_vtk_geometry,
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
-    create_alt_axes,
+    create_alt_spcs, create_alt_axes,
     create_monpnt)
 from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
@@ -273,6 +273,7 @@ class Nastran3:
         #points.SetData(points_data)
 
         ugrid: vtkUnstructuredGrid = gui.grid
+        create_alt_spcs(gui, model, node_id, xyz_cid0)
         create_alt_conm2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
