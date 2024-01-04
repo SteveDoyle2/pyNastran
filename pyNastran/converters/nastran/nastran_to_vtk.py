@@ -23,9 +23,9 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
 
 
-def save_nastran_results(gui: NastranGUI) -> vtkUnstructuredGrid:
+def save_nastran_results(gui: NastranGUI,
+                         vtk_ugrid: vtkUnstructuredGrid) -> None:
     log = gui.log
-    vtk_ugrid = gui.grid
 
     point_data = vtk_ugrid.GetPointData()
     cell_data = vtk_ugrid.GetCellData()
@@ -65,7 +65,6 @@ def save_nastran_results(gui: NastranGUI) -> vtkUnstructuredGrid:
             assert isinstance(case, GuiResult), case
             vtk_array = case.save_vtk_result(used_titles)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
-    return vtk_ugrid
 
 def _save_force_table_results(case: ForceTableResults,
                               key: int,
@@ -185,7 +184,9 @@ def _save_layered_table_results(case: LayeredTableResults,
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
+def nastran_to_vtk(bdf_filename: str,
+                   op2_filename: str,
+                   vtk_filename: str) -> None:
     """kind of a hack, but it will always work assuming the GUI works"""
     gui = NastranGUI()
     gui.create_secondary_actors = False
@@ -196,9 +197,10 @@ def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
     #log.set_level('error')
     #log.set_level('warning')
 
-    gui.load_nastran_geometry(op2_filename)
+    gui.load_nastran_geometry(bdf_filename)
     gui.load_nastran_results(op2_filename)
-    vtk_ugrid = save_nastran_results(gui)
+    vtk_ugrid = gui.grid
+    vtk_ugrid = save_nastran_results(gui, vtk_ugrid)
 
     #root = vtkMultiBlockDataSet()
     #coords_branch = vtkMultiBlockDataSet()
@@ -227,17 +229,18 @@ def add_vtk_array(location: str,
         cell_data.AddArray(vtk_array)
     return
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     PKG_PATH = pyNastran.__path__[0]
     MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
+    bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
     op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
     vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-    nastran_to_vtk(op2_filename, vtk_filename)
+    nastran_to_vtk(bdf_filename, op2_filename, vtk_filename)
 
     op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
     vtk_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.vtu')
-    nastran_to_vtk(op2_filename, vtk_filename)
+    nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

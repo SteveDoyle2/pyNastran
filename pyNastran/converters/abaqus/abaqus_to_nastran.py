@@ -177,6 +177,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     assert nelements > 0, nelements
 
     nastran_model = BDF(debug=True, log=log, mode='msc')
+    nastran_model.add_param('POST', -1, comment='')
     for nid, xyz in zip(nids, nodes):
         nastran_model.add_grid(nid, xyz)
     _create_nastran_nodes_elements(model, nastran_model)
@@ -190,7 +191,12 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         log.error('No case control deck found...skipping')
         #print(f'{nastran_model.case_control_deck}')
         nastran_model.case_control_deck = None
-    nastran_model.write_bdf(nastran_filename_out, size=size)
+    nastran_model.write_bdf(
+        nastran_filename_out, size=size,
+        encoding=None,
+        #nodes_size=None, elements_size=None,
+        #loads_size=None, is_double=False, interspersed=False,
+        enddata=True, write_header=True, close=True)
     x = 1
     return nastran_model
 
@@ -277,7 +283,8 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
             #print(step.cloads)
         #step.cloads
 
-def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None, quiet: str=False) -> None:
+def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
+                          quiet: str=False) -> None:
     """Interface for abaqus_to_nastran"""
     if argv is None:
         argv = sys.argv

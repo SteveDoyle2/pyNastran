@@ -555,7 +555,7 @@ class TestNastranGUI(unittest.TestCase):
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-        nastran_to_vtk(op2_filename, vtk_filename)
+        nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
         assert os.path.exists(vtk_filename), vtk_filename
 
     def test_gui_elements_01b(self):

@@ -566,16 +566,18 @@ class ToolActions:
 
     #---------------------------------------------------------------------------
     def on_save_vtk(self, vtk_filename: Optional[str]=None) -> bool:
+        """
+        The result of "Export VTK..."
+        """
         is_failed = True
         gui = self.gui
         grid = gui.grid
-        log = gui.log
         if grid is None:
             return is_failed
 
         if vtk_filename in {None, False}:
             title = 'Select the VTK file name for export'
-            wildcard_delimited = 'VTK (*.vtu; *.vtk)'
+            wildcard_delimited = 'VTK (*.vtu)'
             default_dirname = os.getcwd()
             vtk_filename, wildcard = save_file_dialog(
                 gui, title,
@@ -584,11 +586,26 @@ class ToolActions:
             if not vtk_filename:
                 return is_failed
 
-        from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results, add_vtk_array
+        vtk_ugrid = self._get_vtk_ugrid()
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(vtk_filename)
+        writer.SetInputData(vtk_ugrid)
+        writer.Write()
+
+        is_failed = False
+        return is_failed
+
+    def _get_vtk_ugrid(self) -> vtkUnstructuredGrid:
+        """gets the vtkUnstructuredGrid with the results loaded"""
+        gui = self.gui
+        log = gui.log
         if gui.format == 'nastran':
-            vtk_ugrid = save_nastran_results(gui)
+            from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results, add_vtk_array
+            vtk_ugrid = gui.grid
+            save_nastran_results(gui, vtk_ugrid)
         else:
             used_titles: set[str] = set()
+            vtk_ugrid = vtkUnstructuredGrid()
             point_data = vtk_ugrid.GetPointData()
             cell_data = vtk_ugrid.GetCellData()
             for case in gui.result_cases:
@@ -600,15 +617,7 @@ class ToolActions:
                     continue
                 vtk_array = case.save_vtk_result(used_titles)
                 add_vtk_array(case.location, point_data, cell_data, vtk_array)
-
-        vtk_ugrid = vtkUnstructuredGrid()
-        writer = vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(vtk_filename)
-        writer.SetInputData(vtk_ugrid)
-        writer.Write()
-
-        is_failed = False
-        return is_failed
+        return vtk_ugrid
 
     def on_load_csv_points(self, csv_filename: Optional[str]=None,
                            name: Optional[str]=None,

@@ -176,6 +176,8 @@ Flag, SubcaseID, iTime,       Eid, BLANK, BLANK,  StrainEnergy,     Percent, Str
 
 class CSVWriter:
     def __init__(self, op2: OP2):
+        self.is_csv = True
+        self.is_frd = False
         self.op2 = op2
 
     def write(self, csv_filename: str,
@@ -220,7 +222,8 @@ class CSVWriter:
 
         csv, csv_filename, matrix_filename = _get_file_obj(
             csv_filename, matrix_filename, quiet=quiet)
-        csv.write(make_csv_header())
+        if self.is_csv:
+            csv.write(make_csv_header())
 
         if model.grid_point_weight:
             if not quiet:
@@ -445,12 +448,19 @@ class CSVWriter:
                         result.is_real
 
                         #check_element_node(result)
-                        if not hasattr(result, 'write_csv'):
-                            log.warning(f'missing write_csv for {result.class_name}')
-                            csv.write(f'# missing write_csv for {result.class_name}\n')
+                        if self.is_csv:
+                            write_csv_str = 'write_csv'
+                        elif self.is_frd:
+                            write_csv_str = 'write_frd'
+
+                        if not hasattr(result, write_csv_str):
+                            log.warning(f'missing {write_csv_str} for {result.class_name}')
+                            csv.write(f'# missing {write_csv_str} for {result.class_name}\n')
                             continue
+
+                        result_write_csv = getattr(result, write_csv_str)
                         try:
-                            result.write_csv(csv, is_exponent_format=is_exponent_format,
+                            result_write_csv(csv, is_exponent_format=is_exponent_format,
                                              is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         except Exception as error:
                             #print_exc(file=sys.stdout)
@@ -519,9 +529,16 @@ if __name__ == '__main__':  # pragma: no cover
     dirname = os.path.dirname(__file__)
     op2_filename = os.path.join(dirname, 'nx.op2')
     csv_filename = os.path.join(dirname, 'nx.csv')
-    op2 = read_op2(op2_filename)
+    #op2 = read_op2(op2_filename)
 
     op2_filename = os.path.join(dirname, 'mystran.op2')
     csv_filename = os.path.join(dirname, 'mystran.csv')
     #op2 = read_op2(op2_filename)
     #write_csv(op2, csv_filename, is_exponent_format=True)
+
+    #csv.is_csv = False
+    #csv.is_frd = True
+    op2_filename = os.path.join(dirname, 'solid_bending.op2')
+    csv_filename = os.path.join(dirname, 'solid_bending.frd')
+    op2 = read_op2(op2_filename)
+    write_csv(op2, csv_filename, is_exponent_format=True)
