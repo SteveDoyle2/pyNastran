@@ -2280,6 +2280,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # tables
             'TABLES1' : (TABLES1, add_methods._add_table_object),
             'TABLEST' : (TABLEST, add_methods._add_table_object),
+            'TABLEHT' : (RuntimeCrash, None),
             #'TABLEHT' : (TABLEHT, add_methods._add_table_object),
             'TABLEH1' : (TABLEH1, add_methods._add_table_object),
 
@@ -2310,10 +2311,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MBOLTUS': (RuntimeCrash, None),
 
             'RADMT': (RuntimeCrash, None),
+            'MATS3' : (RuntimeCrash, None),
+            'MATS8' : (RuntimeCrash, None),
             #'RADMTX' : (RADMTX, add_methods._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
 
             #'SESUP' : (SESUP, add_methods._add_sesup_object),  # pseudo-constraint
 
+            'SEUSET' : (RuntimeCrash, None),
+            'SEUSET1' : (RuntimeCrash, None),
             #'SEUSET' : (SEUSET, add_methods._add_seuset_object),
             #'SEUSET1' : (SEUSET1, add_methods._add_seuset_object),
 
@@ -3462,7 +3467,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def get_displacement_index_xyz_cp_cd(self, fdtype: str='float64',
                                          idtype: str='int32',
-                                         sort_ids: bool=True) -> Any:
+                                         sort_ids: bool=True) -> tuple[dict[int, np.ndarray],
+                                                                       dict[int, np.ndarray],
+                                                                       np.ndarray, np.ndarray]:  # pramga: no cover
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -3577,7 +3584,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
     def get_xyz_in_coord_array(self, cid: int=0,
                                fdtype: str='float64',
                                idtype: str='int32') -> tuple[np.ndarray, np.ndarray, np.ndarray,
-                                                             dict[int, np.ndarray], dict[int, np.ndarray]]:
+                                                             dict[int, np.ndarray], dict[int, np.ndarray]]:  # pramga: no cover
         """
         Gets the xyzs as an array in an arbitrary coordinate system
 
@@ -3630,7 +3637,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                                    icp_transform: dict[int, np.ndarray],
                                    cid: int=0,
                                    in_place: bool=False,
-                                   atol: float=1e-6) -> np.ndarray:
+                                   atol: float=1e-6) -> np.ndarray:  # pramga: no cover
         """
         Vectorized method for calculating node locations in an arbitrary
         coordinate system.

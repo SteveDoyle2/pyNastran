@@ -12,9 +12,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     components_or_blank, parse_components,)
-#from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
+
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     remove_unused_primary, remove_unused_duplicate, parse_check)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -22,7 +20,6 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
     array_str, array_default_int,
     get_print_card_size)
-from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -51,10 +48,10 @@ class SPC(VectorizedBaseCard):
         self.components = np.array([], dtype='int32')
         self.enforced = np.array([], dtype='float64')
 
-    def slice_card_by_index(self, i: np.ndarray, **kwargs) -> SPC:
-        spc = SPC(self.model)
-        self.__apply_slice__(spc, i)
-        return spc
+    #def slice_card_by_index(self, i: np.ndarray, **kwargs) -> SPC:
+        #spc = SPC(self.model)
+        #self.__apply_slice__(spc, i)
+        #return spc
 
     def __apply_slice__(self, spc: SPC, i: np.ndarray) -> None:
         spc.n = len(i)
@@ -308,10 +305,10 @@ class SPC1(VectorizedBaseCard):
         self.__apply_slice__(spc, i)
         return spc
 
-    def slice_card_by_index(self, i: np.ndarray) -> SPC1:
-        spc = SPC1(self.model)
-        self.__apply_slice__(spc, i)
-        return spc
+    #def slice_card_by_index(self, i: np.ndarray) -> SPC1:
+        #spc = SPC1(self.model)
+        #self.__apply_slice__(spc, i)
+        #return spc
 
     def __apply_slice__(self, spc: SPC1, i: np.ndarray) -> None:
         spc.n = len(i)
@@ -792,10 +789,34 @@ class SPCADD(ADD):
                     log.error(msg)
                     if stop_on_failure:
                         raise RuntimeError(msg)
-                reduced_spcsi.append(spcs_found)
+                reduced_spcsi.extend(spcs_found)
             reduced_spcs[sid] = reduced_spcsi
         return reduced_spcs
 
+    def get_reduced_node_component(self,
+                                   reduced_spc_dict: dict[int, list[SPCs]],
+                                   ) -> dict[int, tuple[np.ndarray, np.ndarray]]:
+        """Gets the node/component dict for an SPCADD"""
+        compressed_spc_dict = {}
+        for spcadd_id, cards2 in sorted(reduced_spc_dict.items()):
+            all_spc_ids_list = []
+            for card in cards2:
+                #all_spc_ids_list.append(card.components)
+                all_spc_ids_list.append(card.spc_id)
+            uspc_ids = np.unique(np.hstack(all_spc_ids_list))
+
+            nids_all_list = []
+            comp_all_list = []
+            for spc_idi in uspc_ids:
+                is_failed, nidsi, compsi = spc_cards_to_nid_dof(spc_idi, cards2)
+                if is_failed:
+                    continue
+                nids_all_list.append(nidsi)
+                comp_all_list.append(compsi)
+            nids = np.hstack(nids_all_list)
+            comp = np.hstack(comp_all_list)
+            compressed_spc_dict[spcadd_id] = (nids, comp)
+        return compressed_spc_dict
 
 class MPCADD(ADD):
     _id_name = 'mpc_id'
@@ -1082,6 +1103,46 @@ class BNDGRID(CommonSet):
         #if thru == 'THRU':
             #self.add_set_card(card, comment='')
 
+
+def spc_cards_to_nid_dof(spc_id: int,
+                         cards: list[Union[SPC, SPC1]],
+                         ) -> tuple[bool, np.ndarray, np.ndarray]:
+    """helper for making SPCs/SPCADD node/component"""
+    comp_list = []
+    nids_list = []
+    is_failed = True
+    for card in cards:
+        if spc_id not in card.spc_id:
+            continue
+        spc = card.slice_card_by_id(spc_id)
+
+        if len(spc.components) == len(spc.node_id):
+            component = spc.components
+            comp_list.append(component)
+            nids_list.append(spc.node_id)
+        else:
+            assert spc.type == 'SPC1', spc
+            for i, nnode, (inode0, inode1) in zip(count(), spc.nnodes, spc.inode):
+                componenti = spc.components[i]
+                component = np.ones(nnode, dtype='int32') * componenti
+                node_id = spc.node_id[inode0:inode1]
+                comp_list.append(component)
+                nids_list.append(node_id)
+
+        comp = np.hstack(comp_list)
+        nids = np.hstack(nids_list)
+        assert len(comp) == len(nids)
+        del comp, nids
+
+        #x = 1
+    if len(comp_list) == 0 and len(nids_list) == 0:
+        return is_failed, nids_list, comp_list
+
+    comp = np.hstack(comp_list)
+    nids = np.hstack(nids_list)
+    assert len(comp) == len(nids)
+    is_failed = False
+    return is_failed, nids, comp
 
 SPCs = Union[SPC, SPC1]
 

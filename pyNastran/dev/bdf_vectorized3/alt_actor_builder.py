@@ -1,3 +1,4 @@
+"""Creates a series of Nastran-themed vtkActors"""
 from __future__ import annotations
 from itertools import count
 from typing import TYPE_CHECKING
@@ -24,12 +25,14 @@ from pyNastran.femutils.utils import hstack0
 #from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 #from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
 
+from pyNastran.dev.bdf_vectorized3.cards.constraints import spc_cards_to_nid_dof
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
     get_shell_element_coordinate_system, get_shell_material_coordinate_system)
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.dev.op2_vectorized3.bdf import BDF
-    from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import (
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
+        #SPC, SPC1,
         AECOMP, AECOMPL, SET1, RBE2, RBE3 #, GRID
     )
     from pyNastran.gui.main_window import MainWindow
@@ -40,11 +43,31 @@ def create_alt_spcs(gui: MainWindow,
                     model: BDF,
                     grid_id: np.ndarray,
                     xyz_cid0: np.ndarray) -> None:
+    """
+    Creates SPC/SPC1 constraints:
+     - Single DOF Set
+       - All SPCs id=1; dof=123456
+     - Multiple DOF Sets
+       - All SPCs id=2
+       - SPCs id=2; dof=123
+       - SPCs id=2; dof=456
+
+    Creates SPCADD constraints:
+     - Single DOF Set
+       - All SPCADD id=1; dof=123456
+     - Multiple DOF Sets
+       - All SPCADD id=2
+       - SPCADD id=2; dof=123
+       - SPCADD id=2; dof=456
+
+    TODO: no support for enforced
+    """
+    spcadd = model.spcadd
     cards_all = (model.spc, model.spc1)
     cards = [card for card in cards_all if len(card)]
     ncards = sum([len(card) for card in cards])
-    # TODO: add support for SPCADD
-    if ncards == 0:
+
+    if ncards == 0:  # and len(spcadd) == 0:
         return
 
     spc_ids_list = []
@@ -54,33 +77,23 @@ def create_alt_spcs(gui: MainWindow,
     uspc_id = np.unique(spc_ids)
 
     for spc_id in uspc_id:
-        comp_list = []
-        nids_list = []
-        for card in cards:
-            if spc_id not in card.spc_id:
-                continue
-            spc = card.slice_card_by_id(spc_id)
-            comp_list.append(spc.components)
-            nids_list.append(spc.node_id)
-        comp = np.hstack(comp_list)
-        nids = np.hstack(nids_list)
-
+        is_failed, nids, comp = spc_cards_to_nid_dof(spc_id, cards)
+        if is_failed:
+            continue
         unids_all = np.unique(nids)
         ucomp_all = np.unique(comp)
 
+        inid = np.searchsorted(grid_id, unids_all)
+        xyz_cid0s = xyz_cid0[inid, :]
         if len(ucomp_all) == 1:
             # single dof; don't need "ALL SPCs" cause this
             # case all has the same DOFs
-            ucomp = unids_all[0]
+            ucomp = ucomp_all[0]
             name = f'All SPCs id={spc_id:g}; dof={ucomp}'
-            inid = np.searchsorted(grid_id, unids_all)
-            xyz_cid0s = xyz_cid0[inid, :]
             _build_dots(gui, name, xyz_cid0s)
         else:
             # all nodes
             name = f'All SPCs id={spc_id:g}'
-            inid = np.searchsorted(grid_id, unids_all)
-            xyz_cid0s = xyz_cid0[inid, :]
             _build_dots(gui, name, xyz_cid0s)
 
             # SPCs by DOF
@@ -92,15 +105,49 @@ def create_alt_spcs(gui: MainWindow,
                 xyz_cid0s = xyz_cid0[inid, :]
                 _build_dots(gui, name, xyz_cid0s)
 
-        x = 1
+    if len(spcadd):
+        reduced_spc_dict = spcadd.get_reduced_spcs()
+        spcadd_node_component_dict = spcadd.get_reduced_node_component(reduced_spc_dict)
+        #get_reduced_spcs
+        #spcs_dict = model.spcadd.get_spcs_by_spc_id()
+        for spcadd_id, (nids, comp) in spcadd_node_component_dict.items():
+            unids_all = np.unique(nids)
+            ucomp_all = np.unique(comp)
 
+            inid = np.searchsorted(grid_id, unids_all)
+            xyz_cid0s = xyz_cid0[inid, :]
+            if len(ucomp_all) == 1:
+                # single dof; don't need "ALL SPCs" cause this
+                # case all has the same DOFs
+                ucomp = ucomp_all[0]
+                name = f'All SPCADD id={spcadd_id:g}; dof={ucomp}'
+                _build_dots(gui, name, xyz_cid0s)
+            else:
+                # all nodes
+                name = f'All SPCADD id={spcadd_id:g}'
+                _build_dots(gui, name, xyz_cid0s)
+
+                # SPCs by DOF
+                for ucompi in ucomp_all:
+                    name = f'SPCADD id={spcadd_id:g}; DOF={ucompi}'
+                    icomp = np.where(comp == ucompi)[0]
+                    unids = nids[icomp]
+                    inid = np.searchsorted(grid_id, unids)
+                    xyz_cid0s = xyz_cid0[inid, :]
+                    _build_dots(gui, name, xyz_cid0s)
+        #x = 1
+    pass
 
 def create_alt_conm2_grids(gui: MainWindow,
                            model: BDF,
                            grid_id: np.ndarray,
                            xyz_cid0: np.ndarray) -> None:
-    element = model.conm2
+    """
+    Creates:
+     - global CG actor
+     - idividual CONM2 actors
 
+    """
     try:
         mass_total, cg, inertia = model.inertia_sum()
     except Exception as e:
@@ -115,6 +162,7 @@ def create_alt_conm2_grids(gui: MainWindow,
         #print('inertia =', inertia)
         _build_dot(gui, name, cg)
 
+    element = model.conm2
     if element.n == 0:
         return
 
@@ -143,6 +191,16 @@ def create_alt_rbe3_grids(gui: MainWindow,
                           model: BDF,
                           grid_id: np.ndarray,
                           xyz_cid0: np.ndarray) -> None:
+    """
+    Creates global actors for:
+      - RBE3 independents
+      - RBE3 reference dependents
+      - RBE3 UM dependents
+      - RBE3 lines
+
+    TODO: add individual support
+
+    """
     elem = model.rbe3
     if elem.n == 0:
         return
@@ -236,11 +294,11 @@ def create_alt_axes(self: NastranIO,
                     grid_id: np.ndarray,
                     xyz_cid0: np.ndarray):
     """
-    creates:
+    Creates:
      - shell element coordinate systems
      - shell material coordinate systems
 
-    creates orientation vectors for:
+    Creates orientation vectors for:
      - CBAR
      - CBEAM
      - CBUSH
@@ -270,7 +328,7 @@ def _create_shell_axes(self: NastranIO,
                        grid_id: np.ndarray,
                        xyz_cid0: np.ndarray) -> None:
     """
-    creates:
+    Creates:
      - shell element coordinate systems
      - shell material coordinate systems
     """
@@ -320,7 +378,7 @@ def _create_alt_axes(self: NastranIO,
                      xyz_cid0: np.ndarray,
                      elem, card_name: str) -> None:
     """
-    creates orientation vectors for:
+    Creates orientation vectors for:
      - CBAR
      - CBEAM
      - CBUSH
@@ -402,7 +460,7 @@ def _add_nastran_bar_vectors_to_grid(gui: MainWindow,
                                      name: str,
                                      lines: np.ndarray,
                                      eids: np.ndarray) -> None:
-    """creates the bar orientation vector lines
+    """Creates the bar orientation vector lines
 
     Parameters
     ----------
@@ -444,6 +502,13 @@ def create_alt_rbe2_grids(gui: MainWindow,
                           model: BDF,
                           grid_id: np.ndarray,
                           xyz_cid0: np.ndarray):
+    """
+    Creates global & individual actors for:
+      - RBE2 independents
+      - RBE2 dependents
+      - RBE2 lines
+
+    """
     elem = model.rbe2
     if elem.n == 0:
         return
@@ -758,7 +823,7 @@ def create_aesurf(gui: MainWindow,
 def create_monpnt1(gui: MainWindow,
                   model: BDF,
                   grid_id: np.ndarray,
-                  xyz_cid0: np.ndarray):
+                  xyz_cid0: np.ndarray) -> None:
     """
     Creates MONPNT1 actors
      - points
@@ -890,7 +955,7 @@ def _create_monpnt_aecomp_set1(gui: MainWindow,
                                all_nids: np.ndarray,
                                xyz_cid0: np.ndarray,
                                name: str, label: str,
-                               comp: str, xyz_global: np.ndarray):
+                               comp: str, xyz_global: np.ndarray) -> None:
     """
     Creates MONPNT1 actors
      - points
@@ -923,11 +988,12 @@ def _create_monpnt_aecomp_aelist(gui: MainWindow,
                                  aero_element_ids: np.ndarray,
                                  aero_elements: np.ndarray,
                                  name: str, label: str,
-                                 comp: str, xyz_global: np.ndarray):
+                                 comp: str, xyz_global: np.ndarray) -> None:
     """
     Creates MONPNT1 actors
      - aelist panels
      - xyz summation
+
     """
     aecomp = model.aecomp
 
@@ -971,7 +1037,9 @@ def _create_monpnt_aecomp_aelist(gui: MainWindow,
 
 
 def _build_dot(gui: MainWindow, name: str, xyzi: np.ndarray,
-               point_size: int=3, color=RED_FLOAT, is_visible: bool=False):
+               point_size: int=3, color=RED_FLOAT,
+               is_visible: bool=False) -> None:
+    """creates a vtkActor with 1 point"""
     j = 0
     gui.create_alternate_vtk_grid(
         name, color=color, point_size=point_size, opacity=1.0,
@@ -994,7 +1062,9 @@ def _build_dot(gui: MainWindow, name: str, xyzi: np.ndarray,
 
 
 def _build_dots(gui: MainWindow, name: str, xyzs: np.ndarray,
-                point_size: int=3, color=RED_FLOAT, is_visible: bool=False) -> None:
+                point_size: int=3, color=RED_FLOAT,
+                is_visible: bool=False) -> None:
+    """creates a vtkActor with N points"""
     assert len(xyzs.shape) == 2, xyzs.shape
     gui.create_alternate_vtk_grid(
         name, color=color, point_size=point_size, opacity=1.0,
@@ -1020,6 +1090,7 @@ def _build_lines(gui: MainWindow, name: str,
                  line_width: int=3, color=RED_FLOAT,
                  representation: str = 'wire',
                  is_visible: bool=True) -> None:
+    """Creates a vtkActor with N lines"""
     assert len(xyzs.shape) == 2, xyzs.shape
     assert len(nodes_index.shape) == 2, nodes_index.shape
     nelement = nodes_index.shape[0]
@@ -1045,8 +1116,9 @@ def _build_quads(gui: MainWindow, name: str,
                  nodes_index: np.ndarray,
                  line_width: int=3, color=RED_FLOAT,
                  opacity: float=1.0,
-                 is_visible: bool=True,
-                 representation: str='wire+surf') -> None:
+                 representation: str='wire+surf',
+                 is_visible: bool=True) -> None:
+    """Creates a vtkActor with N quads"""
     assert len(xyzs.shape) == 2, xyzs.shape
     assert len(nodes_index.shape) == 2, nodes_index.shape
     assert nodes_index.shape[1] == 4, nodes_index.shape
@@ -1072,10 +1144,15 @@ def _build_vtk_data_from_dnode(alt_grid: vtkUnstructuredGrid,
                                xyz: np.ndarray,
                                nnodes: np.ndarray,
                                nodes_index: np.ndarray,
-                               nelement: int, cell_typei: int, dnode: int) -> None:
+                               nelement: int, cell_type: int, dnode: int) -> None:
+    """
+    Creates a vtkUnstructuredGrid with a given cell_type for nelements.
+    This helps to avoid the complexity of vtk requiring the number of
+    nodes listed for each element and makes vectorization easy.
+    """
     points = numpy_to_vtk_points(xyz)
 
-    cell_type = np.ones(nelement, dtype='int64') * cell_typei
+    cell_type_ = np.ones(nelement, dtype='int64') * cell_type
     n_nodes = np.hstack([nnodes, nodes_index]).ravel()
 
     # (nnodes+1) = 4+1 = 5
@@ -1089,7 +1166,7 @@ def _build_vtk_data_from_dnode(alt_grid: vtkUnstructuredGrid,
     nelement_total = nelement
     build_vtk_geometry(
         nelement_total, alt_grid,
-        n_nodes, cell_type, cell_offset)
+        n_nodes, cell_type_, cell_offset)
     alt_grid.SetPoints(points)
 
 def build_vtk_geometry(nelement: int,
