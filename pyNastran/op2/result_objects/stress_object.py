@@ -809,9 +809,9 @@ def get_plate_stress_strain(model: OP2, key,
             #print('%s - ilayer = %s' % (case.element_name, inode))
             #print(case.data[itime, j + inode, 1])
             #print(case.data[itime, :, 1])
-            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
-            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
-            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+            oxxi = abs_min_max(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
+            oyyi = abs_min_max(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
+            txyi = abs_min_max(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
             o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
             o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
             ovmi_vstacked = np.vstack([ovmi, case.data[itime, j + inode, 7]])
@@ -928,8 +928,18 @@ def _get_solid_stress_strain_real(case: RealSolidArray,
                                   nnodes_per_element: int,
                                   key: str, itime: int,
                                   header_dict,
-                                  keys_map: KeysMap) -> None:
+                                  keys_map: KeysMap,
+                                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                             np.ndarray, np.ndarray, np.ndarray,
+                                             np.ndarray, np.ndarray, np.ndarray,
+                                             np.ndarray]:
+    """
+    Gets the worst/extreme solid stress/strain for each element and calls that
+    the value.
 
+    For [0, 1, 2, 2, -2.1], the worst stress is -2.1 because it has the
+    largest absolute value (2.1), despite the average being positive.
+    """
     ntotal = len(eidsi)  * nnodes_per_element
 
     #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
@@ -961,86 +971,53 @@ def _get_solid_stress_strain_real(case: RealSolidArray,
     o3i = case.data[itime, j, 8] # mid
     ovmi = case.data[itime, j, 9]
 
-    use_stack = True
-    if use_stack:
-        oxx_list = [oxxi]
-        oyy_list = [oyyi]
-        ozz_list = [ozzi]
-        txy_list = [txyi]
-        tyz_list = [tyzi]
-        txz_list = [txzi]
-        o1_list = [o1i]
-        o2_list = [o2i]
-        o3_list = [o3i]
-        ovm_list = [ovmi]
-
+    # stack em up
+    oxx_list = [oxxi]
+    oyy_list = [oyyi]
+    ozz_list = [ozzi]
+    txy_list = [txyi]
+    tyz_list = [tyzi]
+    txz_list = [txzi]
+    o1_list = [o1i]
+    o2_list = [o2i]
+    o3_list = [o3i]
+    ovm_list = [ovmi]
     for inode in range(1, nnodes_per_element):
-        if use_stack:
-            j_inode = j + inode
-            oxxii = case.data[itime, j_inode, 0]
-            oyyii = case.data[itime, j_inode, 1]
-            ozzii = case.data[itime, j_inode, 2]
-            txyii = case.data[itime, j_inode, 3]
-            tyzii = case.data[itime, j_inode, 4]
-            txzii = case.data[itime, j_inode, 5]
-            o1ii = case.data[itime, j_inode, 6] # max
-            o2ii = case.data[itime, j_inode, 7] # min
-            o3ii = case.data[itime, j_inode, 8] # mid
-            ovmii = case.data[itime, j_inode, 9]
+        j_inode = j + inode
+        oxxii = case.data[itime, j_inode, 0]
+        oyyii = case.data[itime, j_inode, 1]
+        ozzii = case.data[itime, j_inode, 2]
+        txyii = case.data[itime, j_inode, 3]
+        tyzii = case.data[itime, j_inode, 4]
+        txzii = case.data[itime, j_inode, 5]
+        o1ii = case.data[itime, j_inode, 6] # max
+        o2ii = case.data[itime, j_inode, 7] # min
+        o3ii = case.data[itime, j_inode, 8] # mid
+        ovmii = case.data[itime, j_inode, 9]
+        oxx_list.append(oxxii)
+        oyy_list.append(oyyii)
+        ozz_list.append(ozzii)
+        txy_list.append(txyii)
+        tyz_list.append(tyzii)
+        txz_list.append(txzii)
+        o1_list.append(o1ii)
+        o2_list.append(o2ii)
+        o3_list.append(o3ii)
+        ovm_list.append(ovmii)
 
-            oxx_list.append(oxxii)
-            oyy_list.append(oyyii)
-            ozz_list.append(ozzii)
-            txy_list.append(txyii)
-            tyz_list.append(tyzii)
-            txz_list.append(txzii)
-            o1_list.append(o1ii)
-            o2_list.append(o2ii)
-            o3_list.append(o3ii)
-            ovm_list.append(ovmii)
+    # smush them into a vector and get the worst stress
+    # we vstack'd, so we use axis=0 (vs axis=1) because it's 2D
+    oxxi = abs_min_max(np.vstack(oxx_list), axis=0)
+    oyyi = abs_min_max(np.vstack(oyy_list), axis=0)
+    ozzi = abs_min_max(np.vstack(ozz_list), axis=0)
+    txyi = abs_min_max(np.vstack(txy_list), axis=0)
+    tyzi = abs_min_max(np.vstack(tyz_list), axis=0)
+    txzi = abs_min_max(np.vstack(txz_list), axis=0)
 
-        #else:
-        # oxxi (nelements, )
-        #data.shape = (2, nelements)
-        #oxx shape = (nelements,)
-        oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
-        #datai = np.vstack([oxxi, case.data[itime, j + inode, 0]])
-        #print('data, oxx shape =', datai.shape, oxxi.shape)
-        oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
-        ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
-        txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-        tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
-        txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
-
-        o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
-        o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
-        o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
-        ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
-        assert len(oxxi) == len(j)
-
-    if use_stack:
-        # TODO: wrong
-        oxxi2 = abs_min_max(np.vstack(oxx_list), axis=0)
-        oyyi2 = abs_min_max(np.vstack(oyy_list), axis=0)
-        ozzi2 = abs_min_max(np.vstack(ozz_list), axis=0)
-        txyi2 = abs_min_max(np.vstack(txy_list), axis=0)
-        tyzi2 = abs_min_max(np.vstack(tyz_list), axis=0)
-        txzi2 = abs_min_max(np.vstack(txz_list), axis=0)
-        #oxxi2 = np.amax(np.vstack(oxx_list), axis=0)
-        #oyyi2 = np.amax(np.vstack(oyy_list), axis=0)
-        #ozzi2 = np.amax(np.vstack(ozz_list), axis=0)
-        #txyi2 = np.amax(np.vstack(txy_list), axis=0)
-        #tyzi2 = np.amax(np.vstack(tyz_list), axis=0)
-        #txzi2 = np.amax(np.vstack(txz_list), axis=0)
-
-        # right
-        o1i2 = np.amax(np.vstack(o1_list), axis=0)
-        o2i2 = np.amax(np.vstack(o2_list), axis=0)
-        o3i2 = np.amin(np.vstack(o3_list), axis=0)
-        ovmi2 = np.amax(np.vstack(ovm_list), axis=0)
-        #assert np.allclose(oxxi, oxxi2)
-        assert np.allclose(ozzi, ozzi2)
-    #print(oxxi.shape)
+    o1i = np.amax(np.vstack(o1_list), axis=0) # max
+    o2i = abs_min_max(np.vstack(o2_list), axis=0) # mid
+    o3i = np.amin(np.vstack(o3_list), axis=0) # min
+    ovmi = np.amax(np.vstack(ovm_list), axis=0) # max
 
     return oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, ovmi
 

@@ -2072,9 +2072,14 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
     """
     begin massid=1 label='cat dog'
     """
-    if line_upper == 'BEGIN':
+    if line_upper in {'BEGIN', 'BEGINBULK', 'BEGIN BULKS'}:
         line_upper = 'BEGIN BULK'
     if line_upper == 'BEGIN BULK':
+        flag = ('BULK', 0, '')
+        return flag
+
+    words_check = _remove_bulk_words(line_upper.split())
+    if len(words_check) == 0:
         flag = ('BULK', 0, '')
         return flag
 
@@ -2088,19 +2093,24 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
         assert '=' in line_end1, line_end1
         words_start1 = line_start1.split()
         words_end1 = line_end1.split('=', 1)
-        assert len(words_start1) in (2, 3) and words_start1[0] == 'BEGIN', words_start1
+        assert words_start1[0] == 'BEGIN', words_start1
+        words_start1 = _remove_bulk_words(words_start1)
+        words_end1 = _remove_bulk_words(words_end1)
+        assert len(words_start1) in (1, 2), words_start1
         assert len(words_end1) == 2 and words_end1[0] == 'LABEL', words_end1
-        for word in words_start1[1:]:
-            if word == 'BULK':
-                continue
-            words.append(word)
-        assert len(words) == 1, words
-        flag1 = tuple(words[0].split('='))
+
+        if len(words_start1) == 1:
+            assert len(words_start1) == 1, words_start1
+            flag1 = tuple(words_start1[0].split('='))
+        else:
+            assert len(words_start1) == 2, words_start1
+            flag1 = words_start1
         assert len(flag1) == 2, flag1
         assert flag1[0] in ALLOW_LABEL, line_upper
 
         label = words_end1[1].strip('"').strip("'")
         word, value_str = flag1
+        value_str = value_str.rstrip(', ')
         value_int = int(value_str)
         flag = (word, value_int, label)
         #return flag
@@ -2109,8 +2119,7 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
         # 'BEGIN BULK SUPER=2'
         # 'BEGIN BULK SUPER = 2'
         words0 = line_upper.split()
-        words1 = [word for word in words0
-                  if 'BEGIN' != word and 'BULK' != word and '=' != word]
+        words1 = _remove_bulk_words(words0)
         if len(words1) == 1:
             # BEGIN BULK SUPER=2
             sline = words1[0].split('=')
@@ -2118,7 +2127,10 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
             word, value = sline
             assert word in DECK_TAGS, words1
         else:
-            # BEGIN BULK SUPER = 2
+            # 'BEGIN BULK SUPER = 2'
+            # 'BEGIN SUPER= 1'
+            # 'BEGIN AFPM =10001'
+            #'BEGIN SUPER = 1 MASSID = 101'   sad panda :(
             assert len(words1) == 2, words1
             word, value = words1
             assert word in DECK_TAGS, words1
@@ -2127,7 +2139,7 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
 
     elif ' ' in line_upper:
         words0 = line_upper.split()
-        words1 = [word for word in words0 if 'BEGIN' not in word and 'BULK' not in word]
+        words1 = _remove_bulk_words(words0)
         assert len(words1) in (1, 2), line_upper
         if words1[0].startswith(DECK_TAGS):
             if len(words1) == 1:
@@ -2148,6 +2160,11 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
     #value_int = int(value)
     assert len(flag) == 3, flag
     return flag
+
+def _remove_bulk_words(words, *args) -> list[str]:
+    words2 = [word.strip(' =') for word in words
+              if 'BEGIN' != word and 'BULK' != word and 'BULKDATA' != word and '=' != word]
+    return words2
 
 #def _is_begin_bulk2(line_upper: str) -> bool:
     #"""
