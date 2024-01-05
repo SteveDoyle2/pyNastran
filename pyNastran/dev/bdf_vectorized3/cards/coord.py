@@ -19,7 +19,13 @@ from pyNastran.femutils.coord_transforms import (
 )
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.cards.coordinate_systems import _fix_xyz_shape
+from pyNastran.bdf.cards.coordinate_systems import (
+    #_fix_xyz_shape,
+    setup_add_axes,
+    setup_add_ijk,
+    transform_cylindrical_to_rectangular,
+    transform_spherical_to_rectangular,
+)
 # ------------------------------------------------------------------------------
 from pyNastran.dev.bdf_vectorized3.cards.base_card import parse_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
@@ -189,78 +195,9 @@ class COORD(VectorizedBaseCard):
         The axes and planes are defined in the rid coordinate system
 
         """
-        assert coord_type in ['R', 'C', 'S'], coord_type
-        if origin is None:
-            origin = np.array([0., 0., 0.], dtype='float64')
-        else:
-            origin = _fix_xyz_shape(origin, 'origin')
-
-        # check for overdefined axes
-        if xaxis is not None:
-            assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            xaxis = coord_to_xyz(xaxis, coord_type)
-        elif yaxis is not None:
-            assert zaxis is None, 'zaxis=%s' % (zaxis)
-            yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            yaxis = coord_to_xyz(yaxis, coord_type)
-        else:
-            zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            zaxis = coord_to_xyz(zaxis, coord_type)
-
-        # check for invalid planes
-        if xyplane is not None:
-            assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
-            assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
-            xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            xyplane = coord_to_xyz(xyplane, coord_type)
-        elif yzplane is not None:
-            assert xzplane is None, 'xzplane=%s' % (xzplane)
-            assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            yzplane = coord_to_xyz(yzplane, coord_type)
-        else:
-            assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
-            xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            xzplane = coord_to_xyz(xzplane, coord_type)
-
-        if xyplane is not None:
-            if xaxis is not None:
-                i = xaxis / np.linalg.norm(xaxis)
-                khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
-                k = khat / np.linalg.norm(khat)
-                j = np.cross(k, i)
-            elif yaxis is not None:
-                j = yaxis / np.linalg.norm(yaxis)
-                khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-                k = khat / np.linalg.norm(khat)
-                i = np.cross(j, k)
-
-        elif yzplane is not None:
-            if yaxis is not None:
-                j = yaxis / np.linalg.norm(yaxis)
-                ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
-                i = ihat / np.linalg.norm(ihat)
-                k = np.cross(i, j)
-            elif zaxis is not None:
-                k = zaxis / np.linalg.norm(zaxis)
-                ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
-                i = ihat / np.linalg.norm(ihat)
-                j = np.cross(k, i)
-
-        elif xzplane is not None:
-            if xaxis is not None:
-                i = xaxis / np.linalg.norm(xaxis)
-                jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
-                j = jhat / np.linalg.norm(jhat)
-                k = np.cross(i, j)
-            elif zaxis is not None:
-                # standard
-                k = zaxis / np.linalg.norm(zaxis)
-                jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
-                j = jhat / np.linalg.norm(jhat)
-                i = np.cross(j, k)
-        self.add_ijk(cid, coord_type, origin, i, j, k, rid=rid, comment=comment)
+        origin, i, j, k = setup_add_axes()
+        n = self.add_ijk(cid, coord_type, origin, i, j, k, rid=rid, comment=comment)
+        return n
 
     def add_ijk(self, cid: int, coord_type: str, origin=None, i=None, j=None, k=None,
                 rid: int=0, comment: str=''):
@@ -271,6 +208,8 @@ class COORD(VectorizedBaseCard):
         ----------
         cid : int
             the new coordinate system id
+        coord_type : str
+            R, C, S
         origin : (3,) float ndarray
             defines the location of the origin in the global coordinate frame
         rid : int; default=0
@@ -283,48 +222,11 @@ class COORD(VectorizedBaseCard):
             defines the k unit vector
 
         """
-        assert coord_type in ['R', 'C', 'S'], coord_type
-        if origin is None:
-            origin = np.array([0., 0., 0.], dtype='float64')
-        else:
-            origin = _fix_xyz_shape(origin, 'origin')
-
-        # create cross vectors
-        if i is None:
-            if j is not None and k is not None:
-                i = np.cross(k, j)
-            else:
-                raise RuntimeError('i, j and k are None')
-        else:
-            # i is defined
-            if j is not None and k is not None:
-                # all 3 vectors are defined
-                pass
-            elif j is None:
-                j = np.cross(k, i)
-            elif k is None:
-                k = np.cross(i, j)
-            else:
-                raise RuntimeError(f'j or k are None; j={j} k={k}')
-
-        if np.abs(k).max() == 0.0 or np.abs(i).max() == 0.0:
-            msg = (
-                'coordinate vectors arent perpendicular\n'
-                '  origin = %s\n'
-                '  i = %s\n'
-                '  j = %s\n'
-                '  k = %s\n' % (origin, i, j, k))
-            raise RuntimeError(msg)
-        # origin
-        e1 = origin
-        # point on z axis
-        e2 = origin + k
-
-        # point on x-z plane / point on x axis
-        e3 = origin + i
+        origin, e1, e2, e3 = setup_add_ijk(coord_type, origin, i, j, k)
         cardi = (2, coord_type, cid), (rid, e1, e2, e3), comment
         self.cards2.append(cardi)
         self.n += 1
+        return self.n - 1
         #return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     def sort(self) -> None:
@@ -368,7 +270,6 @@ class COORD(VectorizedBaseCard):
         grid_origin = integer(card, 2 + ncoord, 'g1')
         grid_zaxis = integer(card, 3 + ncoord, 'g2')
         grid_xzplane = integer(card, 4 + ncoord, 'g3')
-        self.nodes[icard, :] = [grid_origin, grid_zaxis, grid_xzplane]
         cardi = (1, 'R', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
@@ -384,7 +285,6 @@ class COORD(VectorizedBaseCard):
         grid_origin = integer(card, 2 + ncoord, 'g1')
         grid_zaxis = integer(card, 3 + ncoord, 'g2')
         grid_xzplane = integer(card, 4 + ncoord, 'g3')
-        self.nodes[icard, :] = [grid_origin, grid_zaxis, grid_xzplane]
         cardi = (1, 'C', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
@@ -400,7 +300,6 @@ class COORD(VectorizedBaseCard):
         grid_origin = integer(card, 2 + ncoord, 'g1')
         grid_zaxis = integer(card, 3 + ncoord, 'g2')
         grid_xzplane = integer(card, 4 + ncoord, 'g3')
-        self.nodes[icard, :] = [grid_origin, grid_zaxis, grid_xzplane]
         cardi = (1, 'S', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
@@ -791,7 +690,8 @@ class COORD(VectorizedBaseCard):
                 resolved += self.coord_id[izero].tolist()
         return nresolved
 
-    def _find_cord1s_to_resolve(self, grid: GRID, i1: np.ndarray, resolved: set[int]) -> list[int]:
+    def _find_cord1s_to_resolve(self, grid: GRID, i1: np.ndarray,
+                                resolved: set[int]) -> list[int]:
         coord1_cids_to_resolve = []
         for cid, nodes in zip(self.coord_id[i1], self.nodes[i1, :]):
             if cid in resolved:
@@ -987,6 +887,10 @@ class COORD(VectorizedBaseCard):
             resolved2.add(cid)
             unresolved_cids.remove(cid)
         return nresolved, resolved2
+
+    #@property
+    #def cards(self) -> list[Any]:
+        #return self.cards1 + self.cards2
 
     @property
     def max_id(self) -> int:
@@ -1250,24 +1154,6 @@ def axes_to_coord_vectors(origin, zaxis, xzplane, msg: str) -> tuple[np.ndarray,
     iaxis = np.cross(jaxis, kaxis)
     return iaxis, jaxis, kaxis
 
-def transform_cylindrical_to_rectangular(rtz: np.ndarray) -> np.ndarray:
-    R, t, z = rtz
-    theta = np.radians(t)
-    x = R * np.cos(theta)
-    y = R * np.sin(theta)
-    xyz = np.array([x, y, z], dtype=rtz.dtype)
-    return xyz
-
-def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
-    radius = rtp[0]
-    theta = np.radians(rtp[1])
-    phi = np.radians(rtp[2])
-    x = radius * np.sin(theta) * np.cos(phi)
-    y = radius * np.sin(theta) * np.sin(phi)
-    z = radius * np.cos(theta)
-    xyz = np.array([x, y, z], dtype=rtp.dtype)
-    return xyz
-
 #def _parse_cord1x(card: BDFCard) -> tuple[int, int, int, int]:
     #cid = integer(card, 1, 'cid')
     #return cid, grid_origin, grid_zaxis, grid_xzplane
@@ -1314,13 +1200,3 @@ def _default_cord2_axes(origin: np.ndarray | list[float],
         xzplane = np.array([1., 0., 0.], dtype='float64')
     return origin, zaxis, xzplane
 
-def coord_to_xyz(xyz: np.ndarray, coord_type: str) -> np.ndarray:
-    if coord_type == 'R':
-        pass
-    elif coord_type == 'C':
-        xyz = transform_cylindrical_to_rectangular(xyz)
-    elif coord_type == 'S':
-        xyz = transform_spherical_to_rectangular(xyz)
-    else:
-        raise RuntimeError(coord_type)
-    return xyz

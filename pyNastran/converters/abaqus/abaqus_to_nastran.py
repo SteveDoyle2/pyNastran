@@ -239,7 +239,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
         'S': 'STRESS',
         'E': 'STRAIN',
         'ENER': 'ESE',
-        #'NOD': error estimator,
+        #'NOD': disables the error estimator; nastran doesn't have one :)
     }
     for istep, step in enumerate(model.steps):
         subcase_id = istep + 1

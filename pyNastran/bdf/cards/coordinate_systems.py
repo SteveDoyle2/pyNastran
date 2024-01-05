@@ -1978,78 +1978,86 @@ class Cord2x(Coord):
         The axes and planes are defined in the rid coordinate system
 
         """
-        assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
-        if origin is None:
-            origin = np.array([0., 0., 0.], dtype='float64')
-        else:
-            origin = _fix_xyz_shape(origin, 'origin')
-
-        # check for overdefined axes
-        if xaxis is not None:
-            assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            xaxis = cls.coord_to_xyz(xaxis)
-        elif yaxis is not None:
-            assert zaxis is None, 'zaxis=%s' % (zaxis)
-            yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            yaxis = cls.coord_to_xyz(yaxis)
-        else:
-            zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            zaxis = cls.coord_to_xyz(zaxis)
-
-        # check for invalid planes
-        if xyplane is not None:
-            assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
-            assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
-            xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            xyplane = cls.coord_to_xyz(xyplane)
-        elif yzplane is not None:
-            assert xzplane is None, 'xzplane=%s' % (xzplane)
-            assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            yzplane = cls.coord_to_xyz(yzplane)
-        else:
-            assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
-            xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            xzplane = cls.coord_to_xyz(xzplane)
-
-        if xyplane is not None:
-            if xaxis is not None:
-                i = xaxis / norm(xaxis)
-                khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
-                k = khat / norm(khat)
-                j = np.cross(k, i)
-            elif yaxis is not None:
-                j = yaxis / norm(yaxis)
-                khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-                k = khat / norm(khat)
-                i = np.cross(j, k)
-
-        elif yzplane is not None:
-            if yaxis is not None:
-                j = yaxis / norm(yaxis)
-                ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
-                i = ihat / norm(ihat)
-                k = np.cross(i, j)
-            elif zaxis is not None:
-                k = zaxis / norm(zaxis)
-                ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
-                i = ihat / norm(ihat)
-                j = np.cross(k, i)
-
-        elif xzplane is not None:
-            if xaxis is not None:
-                i = xaxis / norm(xaxis)
-                jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
-                j = jhat / norm(jhat)
-                k = np.cross(i, j)
-            elif zaxis is not None:
-                # standard
-                k = zaxis / norm(zaxis)
-                jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
-                j = jhat / norm(jhat)
-                i = np.cross(j, k)
+        coord_type = cls.type[-1]
+        origin, i, j, k = setup_add_axes(
+            cid, coord_type,
+            origin=origin,
+            xaxis=xaxis, yaxis=yaxis, zaxis=zaxis,
+            xyplane=xyplane, yzplane=yzplane, xzplane=xzplane)
         return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
+
+        #assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
+        #if origin is None:
+            #origin = np.array([0., 0., 0.], dtype='float64')
+        #else:
+            #origin = _fix_xyz_shape(origin, 'origin')
+
+        ## check for overdefined axes
+        #if xaxis is not None:
+            #assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+            #xaxis = _fix_xyz_shape(xaxis, 'xaxis')
+            #xaxis = cls.coord_to_xyz(xaxis)
+        #elif yaxis is not None:
+            #assert zaxis is None, 'zaxis=%s' % (zaxis)
+            #yaxis = _fix_xyz_shape(yaxis, 'yaxis')
+            #yaxis = cls.coord_to_xyz(yaxis)
+        #else:
+            #zaxis = _fix_xyz_shape(zaxis, 'zaxis')
+            #zaxis = cls.coord_to_xyz(zaxis)
+
+        ## check for invalid planes
+        #if xyplane is not None:
+            #assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
+            #assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+            #xyplane = _fix_xyz_shape(xyplane, 'xyplane')
+            #xyplane = cls.coord_to_xyz(xyplane)
+        #elif yzplane is not None:
+            #assert xzplane is None, 'xzplane=%s' % (xzplane)
+            #assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+            #yzplane = _fix_xyz_shape(yzplane, 'yzplane')
+            #yzplane = cls.coord_to_xyz(yzplane)
+        #else:
+            #assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+            #xzplane = _fix_xyz_shape(xzplane, 'xzplane')
+            #xzplane = cls.coord_to_xyz(xzplane)
+
+        #if xyplane is not None:
+            #if xaxis is not None:
+                #i = xaxis / norm(xaxis)
+                #khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
+                #k = khat / norm(khat)
+                #j = np.cross(k, i)
+            #elif yaxis is not None:
+                #j = yaxis / norm(yaxis)
+                #khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
+                #k = khat / norm(khat)
+                #i = np.cross(j, k)
+
+        #elif yzplane is not None:
+            #if yaxis is not None:
+                #j = yaxis / norm(yaxis)
+                #ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
+                #i = ihat / norm(ihat)
+                #k = np.cross(i, j)
+            #elif zaxis is not None:
+                #k = zaxis / norm(zaxis)
+                #ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+                #i = ihat / norm(ihat)
+                #j = np.cross(k, i)
+
+        #elif xzplane is not None:
+            #if xaxis is not None:
+                #i = xaxis / norm(xaxis)
+                #jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
+                #j = jhat / norm(jhat)
+                #k = np.cross(i, j)
+            #elif zaxis is not None:
+                ## standard
+                #k = zaxis / norm(zaxis)
+                #jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
+                #j = jhat / norm(jhat)
+                #i = np.cross(j, k)
+        #return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
     @classmethod
     def add_ijk(cls, cid: int, origin=None, i=None, j=None, k=None,
@@ -2073,46 +2081,8 @@ class Cord2x(Coord):
             defines the k unit vector
 
         """
-        Type = cls.type
-        assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
-        if origin is None:
-            origin = np.array([0., 0., 0.], dtype='float64')
-        else:
-            origin = _fix_xyz_shape(origin, 'origin')
-
-        # create cross vectors
-        if i is None:
-            if j is not None and k is not None:
-                i = np.cross(k, j)
-            else:
-                raise RuntimeError('i, j and k are None')
-        else:
-            # i is defined
-            if j is not None and k is not None:
-                # all 3 vectors are defined
-                pass
-            elif j is None:
-                j = np.cross(k, i)
-            elif k is None:
-                k = np.cross(i, j)
-            else:
-                raise RuntimeError(f'j or k are None; j={j} k={k}')
-
-        if np.abs(k).max() == 0.0 or np.abs(i).max() == 0.0:
-            msg = (
-                'coordinate vectors arent perpendicular\n'
-                '  origin = %s\n'
-                '  i = %s\n'
-                '  j = %s\n'
-                '  k = %s\n' % (origin, i, j, k))
-            raise RuntimeError(msg)
-        # origin
-        e1 = origin
-        # point on z axis
-        e2 = origin + k
-
-        # point on x-z plane / point on x axis
-        e3 = origin + i
+        coord_type = cls.type
+        origin, e1, e2, e3 = setup_add_ijk(coord_type, origin, i, j, k)
         return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
@@ -3229,5 +3199,158 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
         assert len(nids_checked) > 0, nids_checked
     cps_to_check.sort()
     return nids_checked, cps_checked, cps_to_check
+
+def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
+                   xaxis=None, yaxis=None, zaxis=None,
+                   xyplane=None, yzplane=None, xzplane=None,) -> tuple[np.ndarray, np.ndarray,
+                                                                       np.ndarray, np.ndarray]:
+    assert coord_type in ['R', 'C', 'S'], coord_type
+    if origin is None:
+        origin = np.array([0., 0., 0.], dtype='float64')
+    else:
+        origin = _fix_xyz_shape(origin, 'origin')
+
+    # check for overdefined axes
+    if xaxis is not None:
+        assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        xaxis = _fix_xyz_shape(xaxis, 'xaxis')
+        xaxis = _coord_to_xyz(xaxis, coord_type)
+    elif yaxis is not None:
+        assert zaxis is None, 'zaxis=%s' % (zaxis)
+        yaxis = _fix_xyz_shape(yaxis, 'yaxis')
+        yaxis = _coord_to_xyz(yaxis, coord_type)
+    else:
+        zaxis = _fix_xyz_shape(zaxis, 'zaxis')
+        zaxis = _coord_to_xyz(zaxis, coord_type)
+
+    # check for invalid planes
+    if xyplane is not None:
+        assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
+        assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+        xyplane = _fix_xyz_shape(xyplane, 'xyplane')
+        xyplane = _coord_to_xyz(xyplane, coord_type)
+    elif yzplane is not None:
+        assert xzplane is None, 'xzplane=%s' % (xzplane)
+        assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        yzplane = _fix_xyz_shape(yzplane, 'yzplane')
+        yzplane = _coord_to_xyz(yzplane, coord_type)
+    else:
+        assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+        xzplane = _fix_xyz_shape(xzplane, 'xzplane')
+        xzplane = _coord_to_xyz(xzplane, coord_type)
+
+    if xyplane is not None:
+        if xaxis is not None:
+            i = xaxis / np.linalg.norm(xaxis)
+            khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
+            k = khat / np.linalg.norm(khat)
+            j = np.cross(k, i)
+        elif yaxis is not None:
+            j = yaxis / np.linalg.norm(yaxis)
+            khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
+            k = khat / np.linalg.norm(khat)
+            i = np.cross(j, k)
+
+    elif yzplane is not None:
+        if yaxis is not None:
+            j = yaxis / np.linalg.norm(yaxis)
+            ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
+            i = ihat / np.linalg.norm(ihat)
+            k = np.cross(i, j)
+        elif zaxis is not None:
+            k = zaxis / np.linalg.norm(zaxis)
+            ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+            i = ihat / np.linalg.norm(ihat)
+            j = np.cross(k, i)
+
+    elif xzplane is not None:
+        if xaxis is not None:
+            i = xaxis / np.linalg.norm(xaxis)
+            jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
+            j = jhat / np.linalg.norm(jhat)
+            k = np.cross(i, j)
+        elif zaxis is not None:
+            # standard
+            k = zaxis / np.linalg.norm(zaxis)
+            jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
+            j = jhat / np.linalg.norm(jhat)
+            i = np.cross(j, k)
+    return origin, i, j, k
+
+def setup_add_ijk(coord_type: str,
+                  origin=None, i=None, j=None, k=None,) -> tuple[np.ndarray, np.ndarray,
+                                                                 np.ndarray, np.ndarray]:
+    assert coord_type in ['CORD2R', 'CORD2C', 'CORD2S'], coord_type
+    if origin is None:
+        origin = np.array([0., 0., 0.], dtype='float64')
+    else:
+        origin = _fix_xyz_shape(origin, 'origin')
+
+    # create cross vectors
+    if i is None:
+        if j is not None and k is not None:
+            i = np.cross(k, j)
+        else:
+            raise RuntimeError('i, j and k are None')
+    else:
+        # i is defined
+        if j is not None and k is not None:
+            # all 3 vectors are defined
+            pass
+        elif j is None:
+            j = np.cross(k, i)
+        elif k is None:
+            k = np.cross(i, j)
+        else:
+            raise RuntimeError(f'j or k are None; j={j} k={k}')
+
+    if np.abs(k).max() == 0.0 or np.abs(i).max() == 0.0:
+        msg = (
+            'coordinate vectors arent perpendicular\n'
+            '  origin = %s\n'
+            '  i = %s\n'
+            '  j = %s\n'
+            '  k = %s\n' % (origin, i, j, k))
+        raise RuntimeError(msg)
+    # origin
+    e1 = origin
+    # point on z axis
+    e2 = origin + k
+
+    # point on x-z plane / point on x axis
+    e3 = origin + i
+    return origin, e1, e2, e3
+
+def _coord_to_xyz(xyz: np.ndarray, coord_type: str) -> np.ndarray:
+    if coord_type == 'R':
+        pass
+    elif coord_type == 'C':
+        xyz = transform_cylindrical_to_rectangular(xyz)
+    elif coord_type == 'S':
+        xyz = transform_spherical_to_rectangular(xyz)
+    else:
+        raise RuntimeError(coord_type)
+    return xyz
+
+def transform_cylindrical_to_rectangular(rtz: np.ndarray) -> np.ndarray:
+    """vectorized?"""
+    R, t, z = rtz
+    theta = np.radians(t)
+    x = R * np.cos(theta)
+    y = R * np.sin(theta)
+    xyz = np.array([x, y, z], dtype=rtz.dtype)
+    return xyz
+
+def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
+    """vectorized?"""
+    radius = rtp[0]
+    theta = np.radians(rtp[1])
+    phi = np.radians(rtp[2])
+    x = radius * np.sin(theta) * np.cos(phi)
+    y = radius * np.sin(theta) * np.sin(phi)
+    z = radius * np.cos(theta)
+    xyz = np.array([x, y, z], dtype=rtp.dtype)
+    return xyz
+
 
 CORDx = Union[CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S]
