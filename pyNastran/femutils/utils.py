@@ -9,6 +9,7 @@ This includes:
 
 """
 import numpy as np
+from pyNastran.utils.mathematics import get_abs_max
 
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
@@ -310,3 +311,10 @@ def underflow_norm(x: np.ndarray, ord=None, axis=None, keepdims: bool=False) -> 
             # the next step would be to nan the min=max depending on the axis
             raise
     return normi
+
+def abs_min_max(x: np.ndarray, axis: int) -> np.ndarray:
+    max_values = np.amax(x, axis=axis)
+    min_values = np.amin(x, axis=axis)
+    y = get_abs_max(min_values, max_values, dtype='float32')
+    return y
+

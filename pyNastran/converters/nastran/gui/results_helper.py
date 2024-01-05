@@ -1059,12 +1059,18 @@ class NastranGuiResults(NastranGuiAttributes):
         except Exception as e:
             log.error(str(e))
 
+        #o = 'ϵ' if is_strain else 'σ'
+        #t = 'ϵ' if is_strain else '𝜏'
         if is_stress:
             word = 'Stress'
             fmt = '%.3f'
+            sigma = 'σ'
+            tau = '𝜏'
         else:
             word = 'Strain'
             fmt = '%.4e'
+            sigma = 'ϵ'
+            tau = 'ϵ'
 
         # a form is the table of output...
         # Subcase 1         <--- formi  - form_isubcase
@@ -1083,7 +1089,7 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[2]
         header = header_dict[(key, itime)]
         formi: list[Form] = []
-        form_dict[(key, itime)].append(('Combined ' + word, None, formi))
+        form_dict[(key, itime)].append(('Extreme ' + word, None, formi))
 
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
@@ -1102,73 +1108,73 @@ class NastranGuiResults(NastranGuiAttributes):
         #print('max/min', max_principal.max(), max_principal.min())
         # header = _get_nastran_header(case, dt, itime)
         if np.any(np.isfinite(oxx)):
-            oxx_res = GuiResult(subcase_id, header=word + f'XX: {header}', title=word + 'XX',
+            oxx_res = GuiResult(subcase_id, header=sigma + f'XX: {header}', title=sigma + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
-            cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
-            formi.append((word + 'XX', icase, []))
+            cases[icase] = (oxx_res, (subcase_id, sigma + 'XX'))
+            formi.append((sigma + 'XX', icase, []))
             icase += 1
 
         if np.any(np.isfinite(oyy)):
-            oyy_res = GuiResult(subcase_id, header=word + f'YY: {header}', title=word + 'YY',
+            oyy_res = GuiResult(subcase_id, header=word + f'YY: {header}', title=sigma + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
-            cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
-            formi.append((word + 'YY', icase, []))
+            cases[icase] = (oyy_res, (subcase_id, sigma + 'YY'))
+            formi.append((sigma + 'YY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(ozz)):
-            ozz_res = GuiResult(subcase_id, header=word + f'ZZ: {header}', title=word + 'ZZ',
+            ozz_res = GuiResult(subcase_id, header=word + f'ZZ: {header}', title=sigma + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
-            cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
-            formi.append((word + 'ZZ', icase, []))
+            cases[icase] = (ozz_res, (subcase_id, sigma + 'ZZ'))
+            formi.append((sigma + 'ZZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txy)):
             oxy_res = GuiResult(subcase_id, header=word + f'XY: {header}', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
-            cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
-            formi.append((word + 'XY', icase, []))
+            cases[icase] = (oxy_res, (subcase_id, tau + 'XY'))
+            formi.append((tau + 'XY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(tyz)):
             oyz_res = GuiResult(subcase_id, header=word + f'YZ: {header}', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
-            cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
-            formi.append((word + 'YZ', icase, []))
+            cases[icase] = (oyz_res, (subcase_id, tau + 'YZ'))
+            formi.append((tau + 'YZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txz)):
             oxz_res = GuiResult(subcase_id, header=word + f'XZ: {header}', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
-            cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
-            formi.append((word + 'XZ', icase, []))
+            cases[icase] = (oxz_res, (subcase_id, tau + 'XZ'))
+            formi.append((tau + 'XZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(max_principal)):
-            maxp_res = GuiResult(subcase_id, header=f'MaxPrincipal: {header}', title='MaxPrincipal',
+            maxp_res = GuiResult(subcase_id, header=f'MaxPrincipal: {header}', title=sigma + 'Max',
                                  location='centroid', scalar=max_principal, data_format=fmt)
-            cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
-            formi.append(('Max Principal', icase, []))
+            cases[icase] = (maxp_res, (subcase_id, sigma + 'Max'))
+            formi.append((sigma + 'Max', icase, []))
             icase += 1
 
         if np.any(np.isfinite(mid_principal)):
-            midp_res = GuiResult(subcase_id, header=f'MidPrincipal: {header}', title='MidPrincipal',
+            midp_res = GuiResult(subcase_id, header=f'MidPrincipal: {header}', title=sigma + 'Mid',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
-            cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
-            formi.append(('Mid Principal', icase, []))
+            cases[icase] = (midp_res, (subcase_id, sigma + 'Mid'))
+            formi.append((sigma + 'Mid', icase, []))
             icase += 1
 
         if np.any(np.isfinite(min_principal)):
-            minp_res = GuiResult(subcase_id, header=f'MinPrincipal: {header}', title='MinPrincipal',
+            minp_res = GuiResult(subcase_id, header=f'MinPrincipal: {header}', title=sigma + 'Min',
                                  location='centroid', scalar=min_principal, data_format=fmt)
-            cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
-            formi.append(('Min Principal', icase, []))
+            cases[icase] = (minp_res, (subcase_id, sigma + 'Min'))
+            formi.append((sigma + 'Min', icase, []))
             icase += 1
 
         if vm_word is not None:
-            ovm_res = GuiResult(subcase_id, header=f'{vm_word}: {header}', title=vm_word,
+            ovm_res = GuiResult(subcase_id, header=f'{sigma} {vm_word}: {header}', title=sigma + vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
             cases[icase] = (ovm_res, (subcase_id, vm_word))
-            formi.append((vm_word, icase, []))
+            formi.append((sigma + vm_word, icase, []))
             icase += 1
 
         #, case, header, form0

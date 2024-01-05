@@ -350,7 +350,7 @@ class GuiResult(GuiResultCommon):
         subcase_id : int
             the flag that points to self.subcases for a message
         header : str
-            the sidebar word
+            the sidebar word that goes in the lower left
         title : str
             the legend title
         location : str

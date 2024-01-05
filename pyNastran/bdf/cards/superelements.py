@@ -801,8 +801,9 @@ class SETREE(BaseCard):
         missing_superelements = []
         superelements_ref = []
         for super_id in self.superelements:
+            super_key = ('SUPER', super_id, '')
             if super_id in model.superelement_models:
-                superelement = model.superelement_models[super_id]
+                superelement = model.superelement_models[super_key]
             else:
                 missing_superelements.append(super_id)
                 continue

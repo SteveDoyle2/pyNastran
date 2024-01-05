@@ -531,14 +531,14 @@ def get_plate_stress_strains(eids: np.ndarray,
             results.ctria6_stress, results.cquad8_stress,
             results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
         ]
-        word = preword + 'Stress'
+        word = preword + 'Stress (centroid)'
     else:
         plates = [
             results.ctria3_strain, results.cquad4_strain,
             results.ctria6_strain, results.cquad8_strain,
             results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
         ]
-        word = preword + 'Strain'
+        word = preword + 'Strain (centroid)'
 
     #titles = []
     plate_cases = []
@@ -866,11 +866,12 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
 
     #titles = []  # legend title
     headers = [] # sidebar word
+    uname = f'Composite Plate {word}'
     res = LayeredTableResults(
         subcase_id, headers, composite_plates_ieids,
         ieid_max, scalars_array, methods,
         data_formats=None,
-        colormap='jet', uname='Composite Plate ' + word)
+        colormap='jet', uname=uname)
     form_names = res.form_names
 
     #times = case._times
@@ -881,7 +882,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
 
         formi = []
         form = form_dict[(key, itime)]
-        form.append(('Composite Plate ' + word, None, formi))
+        form.append((f'Composite Plate {word}', None, formi))
         # formi = form[0][2]
         form_dict[(key, itime)] = form
 
@@ -926,12 +927,12 @@ def get_solid_stress_strains(eids: np.ndarray,
         solids = [
             results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
         ]
-        word = 'Stress'
+        word = 'Stress (centroid)'
     else:
         solids = [
             results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
         ]
-        word = 'Strain'
+        word = 'Strain (centroid)'
 
     #titles = []
     solid_cases = []
@@ -1069,10 +1070,11 @@ def get_solid_stress_strains(eids: np.ndarray,
     #titles = []  # legend title
     headers = [] # sidebar word
     assert scalars_array.shape[2] == len(methods), f'shape={scalars_array.shape}; methods={methods} n={len(methods)}'
+    uname = f'Solid {word}'
     res = SimpleTableResults(
         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
-        colormap='jet', uname='Solid ' + word)
+        colormap='jet', uname=uname)
     icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                        form_dict, header_dict, methods,
                                        name='Solid')
