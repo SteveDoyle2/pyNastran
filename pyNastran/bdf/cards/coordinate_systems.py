@@ -2081,7 +2081,7 @@ class Cord2x(Coord):
             defines the k unit vector
 
         """
-        coord_type = cls.type
+        coord_type = cls.type[-1]
         origin, e1, e2, e3 = setup_add_ijk(coord_type, origin, i, j, k)
         return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
@@ -3278,9 +3278,9 @@ def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
     return origin, i, j, k
 
 def setup_add_ijk(coord_type: str,
-                  origin=None, i=None, j=None, k=None,) -> tuple[np.ndarray, np.ndarray,
-                                                                 np.ndarray, np.ndarray]:
-    assert coord_type in ['CORD2R', 'CORD2C', 'CORD2S'], coord_type
+                  origin=None, i=None, j=None, k=None,
+                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    assert coord_type in ['R', 'C', 'S'], coord_type
     if origin is None:
         origin = np.array([0., 0., 0.], dtype='float64')
     else:

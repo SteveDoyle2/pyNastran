@@ -195,7 +195,10 @@ class COORD(VectorizedBaseCard):
         The axes and planes are defined in the rid coordinate system
 
         """
-        origin, i, j, k = setup_add_axes()
+        origin, i, j, k = setup_add_axes(
+            cid, coord_type, rid=rid, origin=origin,
+            xaxis=xaxis, yaxis=yaxis, zaxis=zaxis,
+            xyplane=xyplane, yzplane=yzplane, xzplane=xzplane,)
         n = self.add_ijk(cid, coord_type, origin, i, j, k, rid=rid, comment=comment)
         return n
 
