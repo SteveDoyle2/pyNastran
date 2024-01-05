@@ -147,8 +147,16 @@ class WriteMesh(BDFAttributes):
 
         if self.superelement_models:
             bdf_file.write('$' + '*'*80+'\n')
-            for superelement_id, superelement in sorted(self.superelement_models.items()):
-                bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
+            for superelement_tuple, superelement in self.superelement_models.items():
+                if isinstance(superelement_tuple, int):
+                    superelement_id = superelement_tuple
+                    bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
+                else:
+                    word, value, label = superelement_tuple
+                    if label:
+                        bdf_file.write(f'BEGIN {word}={value:d} LABEL={label}\n')
+                    else:
+                        bdf_file.write(f'BEGIN {word}={value:d}\n')
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
                                        interspersed=interspersed, enddata=False,
@@ -265,6 +273,8 @@ class WriteMesh(BDFAttributes):
             for line in self.executive_control_lines:
                 msg += line + '\n'
             bdf_file.write(msg)
+            if 'CEND' not in msg:
+                bdf_file.write('CEND\n')
 
     def _write_case_control_deck(self, bdf_file: Any) -> None:
         """Writes the Case Control Deck."""

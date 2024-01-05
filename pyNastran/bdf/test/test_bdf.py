@@ -417,6 +417,7 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
+    fem1.use_new_deck_parser = True
     if version:
         map_version(fem1, version)
     fem1.dumplines = dumplines
@@ -932,6 +933,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     assert isinstance(ierror, int), ierror
 
     fem2 = BDF(debug=debug, log=log)
+    fem2.use_new_deck_parser = True
     if not quiet:
         fem2.log.info('starting fem2')
     sys.stdout.flush()

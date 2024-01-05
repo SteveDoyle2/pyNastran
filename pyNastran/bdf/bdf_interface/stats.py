@@ -185,6 +185,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         # ----
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
+        'use_new_deck_parser',
 
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
@@ -340,8 +341,16 @@ def get_bdf_stats(model: BDF, return_type: str='string',
                 msg.append('  %-8s %s' % (name + ':', counter))
     msg.append('')
 
-    for super_id, superelement in model.superelement_models.items():
-        msg += get_bdf_stats(superelement, return_type='list', word=' (Superelement %i)' % super_id)
+    for superelement_tuple, superelement in model.superelement_models.items():
+        if isinstance(superelement_tuple, int):
+            wordi = f' (Superelement {superelement_tuple:d})'
+        else:
+            word, value, label = superelement_tuple
+            if label:
+                wordi = f'BEGIN {word}={value:d} LABEL={label}\n'
+            else:
+                wordi = f'BEGIN {word}={value:d}\n'
+        msg += get_bdf_stats(superelement, return_type='list', word=wordi)
 
     if return_type == 'string':
         return '\n'.join(msg)

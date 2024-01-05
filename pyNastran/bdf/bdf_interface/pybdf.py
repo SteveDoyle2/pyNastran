@@ -22,10 +22,11 @@ BEGIN TRMC=102
 """
 import os
 import shlex
-from collections import defaultdict
-from itertools import count
-from typing import Optional, Union, Any, cast
+import warnings
 from io import StringIO
+from itertools import count
+from collections import defaultdict
+from typing import Optional, Union, Any, cast
 
 import numpy as np
 from cpylog import get_logger2, SimpleLogger
@@ -183,10 +184,15 @@ class BDFInputPy:
         self.consider_superelements = consider_superelements
         self.debug = debug
         self.log = get_logger2(log, debug)
+        self.use_new_parser = False
 
     def get_lines(self, bdf_filename: Union[str, StringIO],
                   punch: Optional[bool]=False,
-                  make_ilines: bool=True) -> list[str]:
+                  make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
+                                                   list[str], Optional[np.ndarray],
+                                                   dict[tuple[str, str], list[str]],
+                                                    #list[str], Optional[np.ndarray],
+                                                   ]:
         """
         Opens the bdf and extracts the lines by group
 
@@ -218,29 +224,61 @@ class BDFInputPy:
             if make_ilines = False:
                  ilines = None
 
+        superelement_lines : dict[int, list[str]]
+            the superelement data lines (stores geometry, boundary conditions, loads, etc.)
+        superelement_ilines : dict[int, np.ndarray]
+            data: None / (nlines, 2) int ndarray  ???
+            if make_ilines = True:
+                the [ifile, iline] pair for each line in the file
+            if make_ilines = False:
+                 ilines = None
+
         """
         main_lines = self.get_main_lines(bdf_filename)
         all_lines, ilines = self.lines_to_deck_lines(main_lines, make_ilines=make_ilines)
 
-        out = _lines_to_decks(all_lines, ilines, punch, self.log,
-                              keep_enddata=True,
-                              consider_superelements=self.consider_superelements,
-                              nastran_format=self.nastran_format)
-        (
-            system_lines, executive_control_lines, case_control_lines,
-            bulk_data_lines, bulk_data_ilines,
-            superelement_lines, superelement_ilines) = out
-        if self.nastran_format in {'msc', 'nx', 'optistruct', 'nasa95', 'mystran'}:
+        nastran_format = self.nastran_format
+
+        #superelement_lines = {}
+        #superelement_ilines = None
+
+        log = self.log
+        if self.use_new_parser and nastran_format != 'optistruct': # make_ilines is False
+            self.log.warning('using new deck splitter')
+            out = lines_to_decks2(all_lines, ilines, punch, log,
+                                  nastran_format=nastran_format)
+            (system_lines, executive_control_lines, case_control_lines,
+             bulk_data_lines, bulk_data_ilines,
+             additional_deck_lines) = out
+        else:
+            out = _lines_to_decks(all_lines, ilines, punch, log,
+                                  keep_enddata=True,
+                                  consider_superelements=self.consider_superelements,
+                                  nastran_format=nastran_format)
+            (
+                system_lines, executive_control_lines, case_control_lines,
+                bulk_data_lines, bulk_data_ilines,
+                superelement_lines, superelement_ilines) = out
+
+            additional_deck_lines = {}
+            for superelement_id, super_lines in superelement_lines.items():
+                assert isinstance(super_lines, list), super_lines
+                super_tuple = ('SUPER', superelement_id, '')
+                additional_deck_lines[super_tuple] = super_lines
+            del superelement_lines, superelement_ilines
+
+        if nastran_format in {'msc', 'nx', 'optistruct', 'nasa95', 'mystran'}:
             pass
-        elif self.nastran_format == 'zona':
+        elif nastran_format == 'zona':
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = f'nastran_format={self.nastran_format!r} and must be msc, nx, optistruct, nasa95, mystran, or zona'
+            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, nasa95, mystran, or zona'
             raise NotImplementedError(msg)
+
         return (system_lines, executive_control_lines, case_control_lines,
                 bulk_data_lines, bulk_data_ilines,
-                superelement_lines, superelement_ilines)
+                additional_deck_lines)
 
     def _get_lines_zona(self, system_lines: list[str], bulk_data_lines: list[str],
                         bulk_data_ilines: NDArrayN2int,
@@ -878,12 +916,14 @@ def _clean_comment(comment: str) -> Optional[str]:
 def _lines_to_decks(lines: list[str],
                     ilines: NDArrayN2int,
                     punch: Optional[bool],
-                    log: Any,
+                    log: SimpleLogger,
                     keep_enddata: bool=True,
                     consider_superelements: bool=False,
                     nastran_format: str='msc') -> tuple[
                         list[str], list[str], list[str], list[str], NDArrayN2int,
-                        list[str], list[str], list[str]]:
+                        dict[int, list[str]], dict[int, np.ndarray],
+                        dict[int, list[str]],
+                    ]:
     """
     Splits the BDF lines into:
      - system lines
@@ -919,9 +959,9 @@ def _lines_to_decks(lines: list[str],
     bulk_data_ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [ifile, iline] pair for each line in the file
-    superelement_lines : list[str]
+    superelement_lines : dict[int, list[str]]
         ???
-    superelement_ilines : list[str]
+    superelement_ilines : dict[int, np.ndarray]
         ???
     auxmodel_lines : list[str]
         ???
@@ -980,13 +1020,16 @@ def _lines_to_decks(lines: list[str],
                                if _clean_comment(line) is not None]
     case_control_lines = [_clean_comment(line) for line in case_control_lines
                           if _clean_comment(line) is not None]
+    assert isinstance(superelement_lines, dict), superelement_lines
+    assert isinstance(superelement_ilines, dict), superelement_ilines
     return (
         system_lines, executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
         superelement_lines, superelement_ilines)
 
 def _lines_to_decks_main(lines: list[str],
-                         ilines: Any, log: Any,
+                         ilines: Any,
+                         log: SimpleLogger,
                          punch: Optional[bool]=False,
                          keep_enddata: bool=True,
                          consider_superelements: bool=False,
@@ -1323,7 +1366,7 @@ def _lines_to_decks_main(lines: list[str],
     out = (
         executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
-        superelement_lines, superelement_ilines,
+        dict(superelement_lines), dict(superelement_ilines),
         auxmodel_lines, afpm_lines,
     )
     return out
@@ -1859,3 +1902,296 @@ def _check_for_spaces(card_name: str, card_lines: list[str], comment: str,
 
     if card_name in ['SUBCASE ', 'CEND']:
         raise RuntimeError('No executive/case control deck was defined.')
+
+#-------------------------------------------------------------------------------
+
+DECK_TAGS = ('AFPM', 'ARBMODEL', 'AUXMODEL', 'MASSID', 'MODULE', 'FLXBDY', 'SUPER', 'TRMC', 'UDS')
+ALLOW_LABEL = ('MASSID', 'MODULE')
+
+def lines_to_decks2(lines: list[str],
+                    ilines: NDArrayN2int,
+                    punch: Optional[bool],
+                    log: SimpleLogger,
+                    nastran_format: str='msc') -> tuple[list[str],
+                                                        list[str], list[str], list[str],
+                                                        dict[tuple[str, str], list[str]]]:
+    """
+    Splits the BDF lines into:
+     - system lines
+     - executive control deck
+     - case control deck
+     - bulk data deck
+
+    Parameters
+    ----------
+    lines : list[str]
+        all the active lines in the deck
+    ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [iline, ifile] pair for each line in the file
+    punch : bool / None
+        None : guess
+        True : starts from the bulk data deck
+        False : read the entire deck
+    keep_enddata : bool; default=True
+        True : don't throw away the enddata card
+        False : throw away the enddata card
+
+    Returns
+    -------
+    system_lines : list[str]
+        the system control lines (typically empty; used for alters)
+    executive_control_lines : list[str]
+        the executive control lines (stores SOL 101)
+    case_control_lines : list[str]
+        the case control lines (stores subcases)
+    bulk_data_lines : list[str]
+        the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+    bulk_data_ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [ifile, iline] pair for each line in the file
+    superelement_lines : list[str]
+        ???
+    superelement_ilines : list[str]
+        ???
+    auxmodel_lines : list[str]
+        ???
+
+    """
+    system_lines = []
+    executive_control_lines = []   # flag = 1
+    case_control_lines = []        # flag = 2
+    bulk_data_lines = []           # flag = 3
+    additional_deck_lines = {}
+    if punch: # True
+        bulk_data_lines = lines
+        bulk_data_ilines = ilines
+        return (
+            system_lines, executive_control_lines, case_control_lines,
+            bulk_data_lines, bulk_data_ilines,
+            additional_deck_lines,
+        )
+
+    # flag = -1 (dunno)
+    flag = 'N/A'
+
+    # AFPM = afpmid
+    # ARBMODEL = arbmid
+    # AUXMODEL = auxmind
+    # MASSID = massidLABEL = masslabel
+    # MODULE= moduleidAPPENDLABEL = modlabel
+    # FLXBDY = flexbody
+    # SUPER = seid
+    # TRMC = trimid
+    # UDS
+
+    #AFPM = afpmid
+    #ARBMODEL = arbmid
+    #AUXMODEL = auxmind
+    #MASSID = massid LABEL = masslabel
+    #MODULE= moduleid APPENDLABEL = modlabel
+    #FLXBDY = flexbody
+    #SUPER = seid
+    #TRMC = trimid
+    #UDS
+
+    #isol_line = -1
+    #sol_line = ''
+    #is_sol = False
+    flags = []
+    active_lines = executive_control_lines
+    for i, line in enumerate(lines):
+        line_upper = line.split('$')[0].strip().upper()
+        if len(line_upper) == 0:
+            continue
+
+        #if line_upper.startswith('SOL '):
+            #isol_line = i+1
+            #sol_line = line
+            #assert flag == -1, flag
+            #executive_control_lines.append(line)
+        #if line_upper.startswith(FILE_MANAGEMENT):
+            #assert flag == -1, flag
+            #executive_control_lines.append(line)
+        if line_upper.startswith('CEND'):
+            # start of case control deck
+            #executive_control_lines = lines[:i]
+            if flag != 'N/A':
+                warnings.warn('No Executive Control Deck')
+            flag = 'case_control'
+            #active_lines.append(line)
+            active_lines = case_control_lines
+
+        elif line_upper.startswith('BEGIN'):
+            #active_lines.append(line)
+            begin_tag = _get_begin_flag(line_upper)
+            begin_flag, idi, label = begin_tag
+            assert isinstance(idi, int), (begin_flag, idi, label)
+
+            begin_flag_old = f'{begin_flag}={idi:d}'
+            if begin_flag == 'BULK':
+                assert flag in {'N/A', 'case_control'} or flag.startswith(DECK_TAGS), flag
+                flag = 'bulk'
+                active_lines = bulk_data_lines
+            elif begin_flag.startswith(DECK_TAGS):
+                #tag = (begin_flag, idi, label)
+                active_lines = []
+                additional_deck_lines[begin_tag] = active_lines
+                flag = begin_flag_old
+            else:
+                raise RuntimeError(begin_flag)
+            flags.append(' '.join(str(value) for value in begin_tag))
+            continue
+        else:
+            active_lines.append(line)
+
+        assert isinstance(flag, str), flag
+        flags.append(flag)
+
+    system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
+
+    # clean comments
+    system_lines = [_clean_comment(line) for line in system_lines
+                    if _clean_comment(line) is not None]
+    executive_control_lines = [_clean_comment(line) for line in executive_control_lines
+                               if _clean_comment(line) is not None]
+    case_control_lines = [_clean_comment(line) for line in case_control_lines
+                          if _clean_comment(line) is not None]
+
+    bulk_data_ilines = None
+    out = (
+        #isol_line, sol_line,
+        system_lines, executive_control_lines, case_control_lines,
+        bulk_data_lines, bulk_data_ilines,
+        dict(additional_deck_lines),
+    )
+    return out
+
+
+def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
+    """
+    begin massid=1 label='cat dog'
+    """
+    if line_upper == 'BEGIN':
+        line_upper = 'BEGIN BULK'
+    if line_upper == 'BEGIN BULK':
+        flag = ('BULK', 0, '')
+        return flag
+
+    words = []
+    if 'LABEL' in line_upper:
+        #sline = split_quoted_string(line_upper)
+        ilabel = line_upper.index('LABEL')
+        line_start1 = line_upper[:ilabel]
+        line_end1 = line_upper[ilabel:]
+        assert '=' in line_start1, line_start1
+        assert '=' in line_end1, line_end1
+        words_start1 = line_start1.split()
+        words_end1 = line_end1.split('=', 1)
+        assert len(words_start1) in (2, 3) and words_start1[0] == 'BEGIN', words_start1
+        assert len(words_end1) == 2 and words_end1[0] == 'LABEL', words_end1
+        for word in words_start1[1:]:
+            if word == 'BULK':
+                continue
+            words.append(word)
+        assert len(words) == 1, words
+        flag1 = tuple(words[0].split('='))
+        assert len(flag1) == 2, flag1
+        assert flag1[0] in ALLOW_LABEL, line_upper
+
+        label = words_end1[1].strip('"').strip("'")
+        word, value_str = flag1
+        value_int = int(value_str)
+        flag = (word, value_int, label)
+        #return flag
+
+    elif '=' in line_upper:
+        # 'BEGIN BULK SUPER=2'
+        # 'BEGIN BULK SUPER = 2'
+        words0 = line_upper.split()
+        words1 = [word for word in words0
+                  if 'BEGIN' != word and 'BULK' != word and '=' != word]
+        if len(words1) == 1:
+            # BEGIN BULK SUPER=2
+            sline = words1[0].split('=')
+            assert len(sline) == 2, line_upper
+            word, value = sline
+            assert word in DECK_TAGS, words1
+        else:
+            # BEGIN BULK SUPER = 2
+            assert len(words1) == 2, words1
+            word, value = words1
+            assert word in DECK_TAGS, words1
+        value_int = int(value)
+        flag = (word, value_int, '')
+
+    elif ' ' in line_upper:
+        words0 = line_upper.split()
+        words1 = [word for word in words0 if 'BEGIN' not in word and 'BULK' not in word]
+        assert len(words1) in (1, 2), line_upper
+        if words1[0].startswith(DECK_TAGS):
+            if len(words1) == 1:
+                value = 0
+            elif len(words1) == 2:
+                value = words1[1]
+                assert words1[1].isdigit(), line_upper
+            else:  # pragma: no cover
+                raise RuntimeError(line_upper)
+            value_int = int(value)
+            flag = (words1[0], value_int, '')
+        else:
+            raise NotImplementedError(line_upper)
+    else:
+        raise NotImplementedError(line_upper)
+
+    #word, value_str = flag1
+    #value_int = int(value)
+    assert len(flag) == 3, flag
+    return flag
+
+#def _is_begin_bulk2(line_upper: str) -> bool:
+    #"""
+    #is this a:
+      #'BEGIN'
+      #'BEGIN BULK'
+    #but not:
+      #'BEGIN SUPER'
+      #'BEGIN BULK SUPER=2'
+      #'BEGIN BULK AUXMODEL=2'
+      #'BEGIN BULK AFPM=2'
+
+    #"""
+    #words = line_upper.split()
+    #if words in ('BEGIN', ('BEGIN', 'BULK')):
+        #return True
+    #return False
+
+def add_superelements_from_deck_lines(self,
+                                      BDF,
+                                      additional_deck_lines: dict[tuple[str, str], list[str]]) -> dict:
+    for superelement_key, superelement_lines in sorted(additional_deck_lines.items()):
+        #if
+        #superelement_id_str = superelement_key[0].split('=')[1]
+        #superelement_id = int(superelement_id_str)
+        assert len(superelement_key) == 3, superelement_key
+        #superelement_id = superelement_key[1]
+        assert isinstance(superelement_lines, list), superelement_lines
+
+        # hack to get rid of extra 'BEGIN SUPER=2' lines
+        iminus = 0
+        for line in superelement_lines:
+            uline = line.upper()
+            if not uline.startswith('BEGIN '):
+                continue
+            iminus += 1
+
+        nlines = len(superelement_lines) - iminus
+        model = BDF()
+        model.active_filenames = self.active_filenames
+        model.log = self.log
+        model.punch = True
+
+        superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
+        model._parse_all_cards(superelement_lines[iminus:], superelement_ilines)
+        self.superelement_models[superelement_key] = model
+        self.initial_superelement_models.append(superelement_key)

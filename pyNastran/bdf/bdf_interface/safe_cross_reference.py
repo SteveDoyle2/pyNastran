@@ -83,7 +83,16 @@ class SafeXrefMesh(XrefMesh):
         self._safe_cross_reference_superelements(create_superelement_geometry)
 
         self.pop_xref_errors()
-        for super_id, superelement in sorted(self.superelement_models.items()):
+        for superelement_tuple, superelement in sorted(self.superelement_models.items()):
+            if isinstance(superelement_tuple, int):
+                word = f' (Superelement {super_tuple:d})'
+            else:
+                wordi, value, label = superelement_tuple
+                if label:
+                    word = f'BEGIN {wordi}={value:d} LABEL={label}\n'
+                else:
+                    word = f'BEGIN {wordi}={value:d}\n'
+
             superelement.safe_cross_reference(
                 xref=xref, xref_nodes=xref_nodes, xref_elements=xref_elements,
                 xref_nodes_with_elements=xref_nodes_with_elements,
@@ -91,7 +100,7 @@ class SafeXrefMesh(XrefMesh):
                 xref_materials=xref_materials, xref_loads=xref_loads,
                 xref_constraints=xref_constraints, xref_aero=xref_aero,
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
-                word=' (Superelement %i)' % super_id)
+                word=word)
 
     def _safe_cross_reference_constraints(self) -> None:
         """

@@ -9,7 +9,10 @@ from cpylog import get_logger
 
 import numpy as np
 from pyNastran.bdf.bdf_interface.pybdf import (
-    BDFInputPy, _show_bad_file, _lines_to_decks, MissingDeckSections)
+    BDFInputPy, _show_bad_file, _lines_to_decks,
+    MissingDeckSections,
+    lines_to_decks2,
+)
 
 
 class TestPyBDF(unittest.TestCase):
@@ -292,6 +295,178 @@ class TestPyBDF(unittest.TestCase):
             unused_bulk_data_lines3 = pybdf.get_lines(bdf_filename, punch=True, make_ilines=True)
         os.remove('main.bdf')
         os.remove('inc.inc')
+
+    def test_line_to_decks_nominal(self):
+        read_includes = True
+        dumplines = False
+        encoding = None
+        #consider_superelements = True
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=True, log=None, debug=False)
+        main_lines = [
+            'SOL 101',                              # executive
+            'CEND',                                 # executive
+            'SUBCASE 1',                            # case
+            '  LOAD = 1',                           # case
+            'BEGIN BULK',                           # tag
+            'GRID,1',                               # bulk
+            'ENDDATA',                              # bulk
+        ]
+        bdf_filename = StringIO()
+        bdf_filename.write('\n'.join(main_lines))
+        bdf_filename.seek(0)
+
+        log = get_logger(log=None, level='debug', encoding='utf-8')
+        iline = None
+        punch = None
+        decks = lines_to_decks2(main_lines, iline, punch, log)
+        out = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
+        (system_lines, executive_control_lines, case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         additional_deck_lines) = out
+
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 2, executive_control_lines
+        assert len(case_control_lines) == 3, case_control_lines
+        assert len(bulk_data_lines) == 2, bulk_data_lines
+        assert len(additional_deck_lines) == 0, additional_deck_lines
+
+        decks = lines_to_decks2(main_lines, iline, punch, log)
+        system_lines, executive_control_lines, case_control_lines, \
+            bulk_data_lines, bulk_data_ilines, \
+            additional_deck_lines = decks
+
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 1, executive_control_lines
+        assert len(case_control_lines) == 2, case_control_lines
+        assert len(bulk_data_lines) == 2, bulk_data_lines
+        assert len(additional_deck_lines) == 0, additional_deck_lines
+
+    def test_line_to_decks_massid(self):
+        #read_includes = True
+        #dumplines = False
+        #encoding = None
+        #consider_superelements = True
+        #pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           #consider_superelements=True, log=None, debug=False)
+        main_lines = [
+            'SOL 101',                         # executive
+            'CEND',                            # tag
+            'SUBCASE 1',                       # case
+            '  LOAD = 1',                      # case
+            "begin massid=1 label='cat dog' ", # tag
+            'CONM2,1',                         # MASSID=1
+            "begin massid=2 label='cat dog' ", # tag
+            'CONM2,2',                         # MASSID=2
+            'GRID,1',
+            'ENDDATA',
+        ]
+        log = get_logger(log=None, level='debug', encoding='utf-8')
+        iline = None
+        punch = None
+        decks = lines_to_decks2(main_lines, iline, punch, log)
+        system_lines, executive_control_lines, case_control_lines, \
+            bulk_data_lines, bulk_data_ilines, \
+            additional_deck_lines = decks
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 1, executive_control_lines
+        assert len(case_control_lines) == 2, case_control_lines
+        assert len(bulk_data_lines) == 0, bulk_data_lines
+        assert len(additional_deck_lines) == 2, additional_deck_lines
+        assert len(additional_deck_lines[('MASSID', 1, 'CAT DOG')]) == 1
+        assert len(additional_deck_lines[('MASSID', 2, 'CAT DOG')]) == 3
+
+    def test_line_to_decks_super_1(self):
+        log = get_logger(log=None, level='debug', encoding='utf-8')
+        read_includes = True
+        dumplines = False
+        encoding = None
+        #consider_superelements = True
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=True, log=None, debug=False)
+        main_lines = [
+            # system
+            'SOL 101',       # executive
+            'CEND',          # tag
+            'SUBCASE 1',     # case
+            '  LOAD = 1',    # case
+            "begin super=1", # tag
+            'CONM2,1',       # SUPER=1
+            "begin super=2", # tag
+            'CONM2,2',       # SUPER=2
+            'GRID,1',        # SUPER=2
+            'GRID,2',        # SUPER=2
+            'begin bulk',    # tag
+            'GRID,1',        # bulk
+            'ENDDATA',       # bulk
+        ]
+        bdf_filename = StringIO()
+        bdf_filename.write('\n'.join(main_lines))
+        bdf_filename.seek(0)
+
+        out = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
+        (system_lines, executive_control_lines, case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         additional_deck_lines) = out
+
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 2, executive_control_lines
+        assert len(case_control_lines) == 3, case_control_lines
+        assert len(bulk_data_lines) == 2, bulk_data_lines
+        assert len(additional_deck_lines) == 2, additional_deck_lines
+        ntrash_lines = 2
+        assert len(additional_deck_lines[('SUPER', 1, '')]) == 1 + ntrash_lines, additional_deck_lines[('SUPER', 1, '')]
+        assert len(additional_deck_lines[('SUPER', 2, '')]) == 3 + ntrash_lines, additional_deck_lines[('SUPER', 2, '')]
+
+        #-----------------------------------------------
+        iline = None
+        punch = None
+        decks = lines_to_decks2(main_lines, iline, punch, log)
+        system_lines, executive_control_lines, case_control_lines, \
+            bulk_data_lines, bulk_data_ilines, \
+            additional_deck_lines = decks
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 1, executive_control_lines
+        assert len(case_control_lines) == 2, case_control_lines
+        assert len(bulk_data_lines) == 2, bulk_data_lines
+        assert len(additional_deck_lines) == 2, additional_deck_lines
+        assert len(additional_deck_lines[('SUPER', 1, '')]) == 1
+        assert len(additional_deck_lines[('SUPER', 2, '')]) == 3
+
+    def test_line_to_decks_super_2(self):
+        #read_includes = True
+        #dumplines = False
+        #encoding = None
+        #consider_superelements = True
+        #pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           #consider_superelements=True, log=None, debug=False)
+        main_lines = [
+            # system
+            'SOL 101',       # executive
+            'CEND',          # tag
+            'SUBCASE 1',     # case
+            '  LOAD = 1',    # case
+            "begin super=1", # tag
+            'CONM2,1',       # SUPER=1
+            "begin super",   # tag
+            'CONM2,2',       # SUPER=0
+            'GRID,1',        # SUPER=0
+            'ENDDATA',       # SUPER=0
+        ]
+        log = get_logger(log=None, level='debug', encoding='utf-8')
+        iline = None
+        punch = None
+        decks = lines_to_decks2(main_lines, iline, punch, log)
+        system_lines, executive_control_lines, case_control_lines, \
+            bulk_data_lines, bulk_data_ilines, \
+            additional_deck_lines = decks
+        assert len(system_lines) == 0, system_lines
+        assert len(executive_control_lines) == 1, executive_control_lines
+        assert len(case_control_lines) == 2, case_control_lines
+        assert len(bulk_data_lines) == 0, bulk_data_lines
+        assert len(additional_deck_lines) == 2, additional_deck_lines
+        assert len(additional_deck_lines[('SUPER', 1, '')]) == 1
+        assert len(additional_deck_lines[('SUPER', 0, '')]) == 3
 
 if __name__ == '__main__':   # pragma: no cover
     unittest.main()

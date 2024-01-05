@@ -96,8 +96,8 @@ class TestSuperelements(unittest.TestCase):
 
         super1 = create_superelement(debug=False)
         super2 = create_superelement(debug=False)
-        model.superelement_models[seid_a] = super1
-        model.superelement_models[seid_b] = super2
+        model.superelement_models[('SUPER', seid_a, '')] = super1
+        model.superelement_models[('SUPER', seid_b, '')] = super2
 
         card_fields = ['SEEXCLUD', seid_a, seid_b, 11, 30]
         seexcld = model.add_card_fields(card_fields, 'SEEXCLUD', comment='',

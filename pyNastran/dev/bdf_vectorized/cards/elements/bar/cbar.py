@@ -54,17 +54,17 @@ class CBAR(Element):
             assert isinstance(ncards, int), ncards
             float_fmt = self.model.float_fmt
             #: Element ID
-            self.element_id = zeros(ncards, 'int32')
+            self.element_id = zeros(ncards, dtype='int32')
             #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 2), 'int32')
-            self.is_g0 = zeros(ncards, 'bool')
-            self.g0 = full(ncards, nan, 'int32')
-            self.x = full((ncards, 3), nan, float_fmt)
-            self.offt = full(ncards, nan, '|U3')
-            self.pin_flags = zeros((ncards, 2), 'int32')
-            self.wa = zeros((ncards, 3), float_fmt)
-            self.wb = zeros((ncards, 3), float_fmt)
+            self.property_id = zeros(ncards, dtype='int32')
+            self.node_ids = zeros((ncards, 2), dtype='int32')
+            self.is_g0 = zeros(ncards, dtype='bool')
+            self.g0 = full(ncards, nan, dtype='int32')
+            self.x = full((ncards, 3), nan, dtype=float_fmt)
+            self.offt = full(ncards, nan,dtype= '|U3')
+            self.pin_flags = zeros((ncards, 2), dtype='int32')
+            self.wa = zeros((ncards, 3), dtype=float_fmt)
+            self.wb = zeros((ncards, 3), dtype=float_fmt)
 
     def add_card(self, card, comment=''):
         i = self.i

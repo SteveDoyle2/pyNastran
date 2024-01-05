@@ -222,7 +222,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk,
-    _check_for_spaces)
+    _check_for_spaces, add_superelements_from_deck_lines)
 
 #from .bdf_interface.add_card import CARD_MAP
 if TYPE_CHECKING:  # pragma: no cover
@@ -1310,12 +1310,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          nastran_format=self.nastran_format,
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
+        obj.use_new_parser = self.use_new_deck_parser
+
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         (system_lines,
          executive_control_lines,
          case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         superelement_lines, superelement_ilines) = out
+         additional_deck_lines) = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
@@ -1343,8 +1345,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                           encoding=encoding)
             return
 
-        if superelement_lines:
-            self._add_superelements(superelement_lines, superelement_ilines)
+        if additional_deck_lines:
+            add_superelements_from_deck_lines(self, BDF, additional_deck_lines)
 
         self.pop_parse_errors()
         fill_dmigs(self)
@@ -1361,10 +1363,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             rejected_cards.sort()
             self.log.warning(f'rejecting {rejected_cards}')
         #for card_type in self.reject_cards:
-
-    def _add_superelements(self, superelement_lines: list[str],
-                           superelement_ilines: Any) -> None:  # pragma: no cover
-        self.log.warning('_add_superelements should be overwritten')
 
     def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
@@ -4416,6 +4414,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
+        obj.use_new_parser = self.use_new_deck_parser
+
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
@@ -4625,6 +4625,7 @@ class BDF(BDF_):
                  log: Optional[SimpleLogger]=None,
                  mode: str='msc'):
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
+        self.use_new_deck_parser = False
         #super(BDF, self).__init__(debug=debug, log=log, mode=mode)
         #self._grids_temp = []
 
@@ -4830,28 +4831,7 @@ class BDF(BDF_):
         #self.lseqs = defaultdict(lseqi)
         self.lseq = LSEQv(model)
         self.loads = Loads(model)
-
-    def _add_superelements(self, superelement_lines, superelement_ilines):
-        for superelement_id, superelement_line in sorted(superelement_lines.items()):
-            assert isinstance(superelement_line, list), superelement_line
-
-            # hack to get rid of extra 'BEGIN SUPER=2' lines
-            iminus = 0
-            for line in superelement_line:
-                uline = line.upper()
-                if not uline.startswith('BEGIN '):
-                    break
-                iminus += 1
-
-            nlines = len(superelement_line) - iminus
-            model = BDF()
-            model.active_filenames = self.active_filenames
-            model.log = self.log
-            model.punch = True
-            #model.nastran_format = ''
-            superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
-            model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
-            self.superelement_models[superelement_id] = model
+        #add_superelements_from_deck_lines(self, BDF, additional_deck_lines)
 
     def uncross_reference(self) -> None:
         pass

@@ -98,7 +98,11 @@ def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict
         superelements = []
         if nelements:
             superelements.append(np.zeros(nelements, dtype='int32'))
-        for super_id, superelement in sorted(model.superelement_models.items()):
+        for super_tuple, superelement in sorted(model.superelement_models.items()):
+            if isinstance(super_tuple, int):
+                super_id = super_tuple
+            else:
+                super_id = super_tuple[1]
             nelements2 = len(superelement.elements)
             if nelements2:
                 superelements.append(np.ones(nelements2, dtype='int32') * super_id)

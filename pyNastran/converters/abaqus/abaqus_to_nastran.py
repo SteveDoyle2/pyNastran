@@ -226,6 +226,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
     def xyz():
         return np.zeros(3, dtype='float32')
 
+    log = nastran_model.log
     if nastran_model.case_control_deck is None:
         nastran_model.case_control_deck = CaseControlDeck([], log=nastran_model.log)
 
@@ -234,10 +235,11 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
 
     output_map = {
         'U': 'DISP',
-        'RF': 'SPCFORCE',
+        'RF': 'SPCFORCE',  # Reaction Force
         'S': 'STRESS',
         'E': 'STRAIN',
         'ENER': 'ESE',
+        #'NOD': error estimator,
     }
     for istep, step in enumerate(model.steps):
         subcase_id = istep + 1
@@ -248,6 +250,9 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
         for output in step.node_output + step.element_output:
+            if output in {'NOD'}:
+                log.warning(f'skipping output request={output}')
+                continue
 
             try:
                 base_output = output_map[output.upper()]

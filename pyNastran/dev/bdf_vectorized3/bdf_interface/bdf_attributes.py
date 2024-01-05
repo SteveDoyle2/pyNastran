@@ -173,6 +173,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class BDFAttributes:
     def __init__(self):
+        # old and busted
+        # fancy superelments/massid -> True
+        self.use_new_deck_parser = True
+
         # basic settings
         self.filter_midside_nodes = True
 

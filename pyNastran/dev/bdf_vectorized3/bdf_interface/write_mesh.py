@@ -79,6 +79,25 @@ class WriteMesh(BDFAttributes):
 
         #log.warning('write_bdf')
         #-------------------------------------------------------------
+        if self.superelement_models:
+            bdf_file.write('$' + '*'*80+'\n')
+            for superelement_tuple, superelement in sorted(self.superelement_models.items()):
+                if isinstance(superelement_tuple, int):
+                    superelement_id = superelement_tuple
+                    bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
+                else:
+                    word, value, label = superelement_tuple
+                    if label:
+                        bdf_file.write(f'BEGIN {word}={value:d} LABEL={label}\n')
+                    else:
+                        bdf_file.write(f'BEGIN {word}={value:d}\n')
+                superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
+                                       size=size, is_double=is_double,
+                                       interspersed=interspersed, enddata=False,
+                                       write_header=False, close=False)
+                bdf_file.write('$' + '*'*80+'\n')
+            bdf_file.write('BEGIN BULK\n')
+
         self.write_bulk_data(
             bdf_file, size=size, is_double=is_double, interspersed=interspersed,
             enddata=enddata, close=close,
@@ -277,6 +296,8 @@ class Writer:
 
             for line in model.executive_control_lines:
                 msg += line + '\n'
+            if 'CEND' not in msg:
+                msg += 'CEND\n'
         elif model.sol is not None:
             msg += '$EXECUTIVE CONTROL DECK\n'
             msg += f'SOL {model.sol}\n'

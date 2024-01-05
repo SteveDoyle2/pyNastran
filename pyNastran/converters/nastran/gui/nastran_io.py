@@ -4466,6 +4466,7 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
         cards_to_skip=None, log=None, debug=False)
 
     _model2 = BDF(debug=None, log=log, mode='msc')
+    _model2.use_new_deck_parser = True
     _model2.read_bdf(bdf_filename=bdf_filename_out,
                      validate=False, xref=False, punch=False, read_includes=True,
                      save_file_structure=False, encoding=model._encoding)

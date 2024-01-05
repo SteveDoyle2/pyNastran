@@ -2523,7 +2523,11 @@ def build_superelement_model(model: BDF, cid: int=0, fdtype: str='float32'):
     #nid_map = {}
     #inode = 0
 
-    for super_id, modeli in sorted(models.items()):
+    for superelement_tuple, modeli in models.items():
+        if isinstance(superelement_tuple, int):
+            super_id = superelement_tuple
+        else:
+            super_id = superelement_tuple[1]
         out = modeli.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype='int32', sort_ids=True)
         icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
