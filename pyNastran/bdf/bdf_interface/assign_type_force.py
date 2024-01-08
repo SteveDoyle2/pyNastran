@@ -154,15 +154,16 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         except Exception:
             svalue = svalue.strip().upper()
             if not svalue:
-                return default
+                out = default
             try:
-                return double(card, ifield, fieldname)
+                out = double(card, ifield, fieldname)
             except Exception:
                 if svalue == '.':
                     return 0.
                 dtype = _get_dtype(svalue)
                 raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                                   'card=%s' % (fieldname, svalue, ifield, dtype, card))
+            return out
     return default
 
 def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):

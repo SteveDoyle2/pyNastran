@@ -2009,6 +2009,7 @@ class MAT10(Material):
             a comment for the card
 
         """
+        bulk, rho, c = _check_mat10_bulk_rho_c(mid, bulk, rho, c)
         alpha_gamma = gamma
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
                            table_bulk, table_rho, table_ge, table_gamma, comment))
@@ -2018,9 +2019,11 @@ class MAT10(Material):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         mid = integer(card, 1, 'mid')
-        bulk = fdouble_or_blank(card, 2, 'bulk')
+        bulk = fdouble_or_blank(card, 2, 'bulk', default=None)
         rho = fdouble_or_blank(card, 3, 'rho', default=0.0)
-        c = fdouble_or_blank(card, 4, 'c', default=np.nan)
+        c = fdouble_or_blank(card, 4, 'c', default=None)
+
+        bulk, rho, c = _check_mat10_bulk_rho_c(mid, bulk, rho, c)
         ge = fdouble_or_blank(card, 5, 'ge', default=0.0)
 
         alpha_gamma = fdouble_or_blank(card, 6, 'gamma', default=np.nan)
@@ -2159,7 +2162,9 @@ class MAT10(Material):
 
     @property
     def max_id(self) -> int:
-        return self.material_id.max()
+        return max(self.material_id.max(), self.table_id_bulk.max(),
+                   self.table_id_rho.max(), self.table_id_ge.max(),
+                   self.table_id_gamma.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2183,6 +2188,20 @@ class MAT10(Material):
             bdf_file.write(print_card(list_fields))
         return
 
+def _check_mat10_bulk_rho_c(mid: int,
+                            bulk: Optional[float],
+                            rho: Optional[float],
+                            c: Optional[float]) -> tuple[float, float, float]:
+    if bulk is None:
+        bulk = c ** 2 * rho
+        assert isinstance(rho, float) and isinstance(c, float), f'mid={mid} bulk={bulk}, rho={rho}; c={c}; 2/3 must be specified'
+    elif rho is None:
+        rho = c ** 2 / bulk
+        assert isinstance(bulk, float) and isinstance(c, float), f'mid={mid} bulk={bulk}, rho={rho}; c={c}; 2/3 must be specified'
+    elif c is None:
+        assert isinstance(bulk, float) and isinstance(rho, float), f'mid={mid} bulk={bulk}, rho={rho}; c={c}; 2/3 must be specified'
+        c = (bulk / rho) ** 0.5
+    return bulk, rho, c
 
 class MAT11(Material):
     """

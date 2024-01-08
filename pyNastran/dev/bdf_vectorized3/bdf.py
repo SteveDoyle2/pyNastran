@@ -54,7 +54,14 @@ from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 
 #-------------------------------
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
-from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
+try:
+    import tables
+    IS_TABLES = True
+except ImportError:
+    IS_TABLES = False
+if IS_TABLES:
+    from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
+
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
 from .cards.elements.thermal import BDYOR

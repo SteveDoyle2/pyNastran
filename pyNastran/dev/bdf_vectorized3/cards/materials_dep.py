@@ -1739,19 +1739,29 @@ class MATT8(Material):
 
 class MATT9(Material):
     """
-    Specifies temperature-dependent material properties on MAT2 entry
+    Solid Element Anisotropic Material Temperature Dependence
+    Specifies temperature-dependent material properties on MAT9 entry
     fields via TABLEMi entries.
 
-    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |   1   |   2    |   3    |   4   |    5    |   6    |   7    |    8   |   9    |
-    +=======+========+========+=======+=========+========+========+========+========+
-    | MATT8 |  MID   | T(E1)  | T(E2) | T(Nu12) | T(G12) | T(G1z) | T(G2z) | T(RHO) |
-    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Xc)  | T(Yt)  | T(Yc)  | T(S)   |
-    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |       |  T(GE) | T(F12) |       |         |        |        |        |        |
-    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |    1   |    2    |     3   |     4   |     5   |     6   |    7    |     8   |    9    |
+    +========+=========+=========+=========+=========+=========+=========+=========+=========+
+    | MATT9  |   MID   |  T(G11) |  T(G12) |  T(G13) |  T(G14) |  T(G15) |  T(G16) |  T(G22) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        |  T(G23) |  T(G24) |  T(G25) |  T(G26) |  T(G33) |  T(G34) |  T(G35) |  T(G36) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        |  T(G44) |  T(G45) |  T(G46) |  T(G55) |  T(G56) |  T(G66) |  T(RHO) |  T(A1)  |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        |  T(A2)  |  T(A3)  |  T(A4)  |  T(A5)  |  T(A6)  |         |   T(GE) |         |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | T(GE11) | T(GE12) | T(GE13) | T(GE14) | T(GE15) | T(GE16) | T(GE22) | T(GE23) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | T(GE24) | T(GE25) | T(GE26) | T(GE33) | T(GE34) | T(GE35) | T(GE36) | T(GE44) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | T(GE45) | T(GE46) | T(GE55) | T(GE56) | T(GE66) |         |         |         |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
 
+    NX ends at T(GE)
     """
     @Material.clear_check
     def clear(self) -> None:
@@ -1766,8 +1776,21 @@ class MATT9(Material):
             g66_table=None, rho_table=None,
             a1_table=None, a2_table=None, a3_table=None,
             a4_table=None, a5_table=None, a6_table=None,
-            ge_table=None, comment: str='') -> int:
+            ge_table=None,
+            ge11_table=None, ge12_table=None, ge13_table=None, ge14_table=None, ge15_table=None, ge16_table=None,
+            ge22_table=None, ge23_table=None, ge24_table=None, ge25_table=None, ge26_table=None,
+            ge33_table=None, ge34_table=None, ge35_table=None, ge36_table=None,
+            ge44_table=None, ge45_table=None, ge46_table=None,
+            ge55_table=None, ge56_table=None,
+            ge66_table=None, comment: str='') -> int:
         """Creates a MATT9 card"""
+        ges_tables = [
+            ge11_table, ge12_table, ge13_table, ge14_table, ge15_table, ge16_table,
+            ge22_table, ge23_table, ge24_table, ge25_table, ge26_table,
+            ge33_table, ge34_table, ge35_table, ge36_table,
+            ge44_table, ge45_table, ge46_table,
+            ge55_table, ge56_table,
+            ge66_table, ]
         self.cards.append((mid,
                            g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                            g22_table, g23_table, g24_table, g25_table, g26_table,
@@ -1775,7 +1798,7 @@ class MATT9(Material):
                            g44_table, g45_table, g46_table,
                            g55_table, g56_table, g66_table, rho_table,
                            a1_table, a2_table, a3_table,
-                           a4_table, a5_table, a6_table, ge_table, comment))
+                           a4_table, a5_table, a6_table, ge_table, ges_tables, comment))
         self.n += 1
         return self.n - 1
 
@@ -1827,8 +1850,43 @@ class MATT9(Material):
         a6_table = integer_or_blank(card, 29, 'T(A6)', default=0)
 
         ge_table = integer_or_blank(card, 31, 'T(GE)', default=0)
+        # end of NX
 
-        assert len(card) <= 32, f'len(MATT9 card) = {len(card):d}\ncard={card}'
+        #T(GE11) T(GE12) T(GE13) T(GE14) T(GE15) T(GE16) T(GE22) T(GE23)
+        #T(GE24) T(GE25) T(GE26) T(GE33) T(GE34) T(GE35) T(GE36) T(GE44)
+        #T(GE45) T(GE46) T(GE55) T(GE56) T(GE66)
+        ge11_table = integer_or_blank(card, 33, 'T(GE11)', default=0)
+        ge12_table = integer_or_blank(card, 34, 'T(GE12)', default=0)
+        ge13_table = integer_or_blank(card, 35, 'T(GE13)', default=0)
+        ge14_table = integer_or_blank(card, 36, 'T(GE14)', default=0)
+        ge15_table = integer_or_blank(card, 37, 'T(GE15)', default=0)
+        ge16_table = integer_or_blank(card, 38, 'T(GE16)', default=0)
+        ge22_table = integer_or_blank(card, 39, 'T(GE22)', default=0)
+        ge23_table = integer_or_blank(card, 40, 'T(GE23)', default=0)
+        ge24_table = integer_or_blank(card, 41, 'T(GE24)', default=0)
+        ge25_table = integer_or_blank(card, 42, 'T(GE25)', default=0)
+        ge26_table = integer_or_blank(card, 43, 'T(GE26)', default=0)
+        ge33_table = integer_or_blank(card, 44, 'T(GE33)', default=0)
+        ge34_table = integer_or_blank(card, 45, 'T(GE34)', default=0)
+        ge35_table = integer_or_blank(card, 46, 'T(GE35)', default=0)
+        ge36_table = integer_or_blank(card, 47, 'T(GE36)', default=0)
+        ge44_table = integer_or_blank(card, 48, 'T(GE44)', default=0)
+        ge45_table = integer_or_blank(card, 49, 'T(GE45)', default=0)
+        ge46_table = integer_or_blank(card, 50, 'T(GE46)', default=0)
+        ge55_table = integer_or_blank(card, 51, 'T(GE55)', default=0)
+        ge56_table = integer_or_blank(card, 52, 'T(GE56)', default=0)
+        ge66_table = integer_or_blank(card, 53, 'T(GE66)', default=0)
+
+        ges_tables = [
+            ge11_table, ge12_table, ge13_table, ge14_table, ge15_table, ge16_table,
+            ge22_table, ge23_table, ge24_table, ge25_table, ge26_table,
+            ge33_table, ge34_table, ge35_table, ge36_table,
+            ge44_table, ge45_table, ge46_table,
+            ge55_table, ge56_table,
+            ge66_table, ]
+
+        #assert len(card) <= 32, f'len(MATT9 card) = {len(card):d}\ncard={card}'   # NX
+        assert len(card) <= 54, f'len(MATT9 card) = {len(card):d}\ncard={card}'    # MSC
         #return MATT9(mid, g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                      #g22_table, g23_table, g24_table, g25_table, g26_table,
                      #g33_table, g34_table, g35_table, g36_table,
@@ -1844,7 +1902,7 @@ class MATT9(Material):
                            g44_table, g45_table, g46_table,
                            g55_table, g56_table, g66_table, rho_table,
                            a1_table, a2_table, a3_table,
-                           a4_table, a5_table, a6_table, ge_table, comment))
+                           a4_table, a5_table, a6_table, ge_table, ges_tables, comment))
         self.n += 1
         return self.n - 1
 
@@ -1852,7 +1910,7 @@ class MATT9(Material):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        fdtype = self.model.fdtype
+        #fdtype = self.model.fdtype
         material_id = np.zeros(ncards, dtype=idtype)
 
         g11_table = np.zeros(ncards, dtype=idtype)
@@ -1884,6 +1942,7 @@ class MATT9(Material):
         a5_table = np.zeros(ncards, dtype=idtype)
         a6_table = np.zeros(ncards, dtype=idtype)
         ge_table = np.zeros(ncards, dtype=idtype)
+        ges_table = np.zeros((ncards, 21), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (mid,
              g11_tablei, g12_tablei, g13_tablei, g14_tablei, g15_tablei, g16_tablei,
@@ -1894,7 +1953,7 @@ class MATT9(Material):
              rho_tablei,
              a1_tablei, a2_tablei, a3_tablei,
              a4_tablei, a5_tablei, a6_tablei,
-             ge_tablei, comment) = card
+             ge_tablei, ges_tablei, comment) = card
 
             g11_tablei = 0 if g11_tablei is None else g11_tablei
             g12_tablei = 0 if g12_tablei is None else g12_tablei
@@ -1961,6 +2020,8 @@ class MATT9(Material):
             a5_table[icard] = a5_tablei
             a6_table[icard] = a6_tablei
             ge_table[icard] = ge_tablei
+            ges_table[icard] = ges_tablei
+
         self._save(material_id,
                    g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                    g22_table, g23_table, g24_table, g25_table, g26_table,
@@ -1968,7 +2029,7 @@ class MATT9(Material):
                    g44_table, g45_table, g46_table,
                    g55_table, g56_table, g66_table, rho_table,
                    a1_table, a2_table, a3_table,
-                   a4_table, a5_table, a6_table, ge_table)
+                   a4_table, a5_table, a6_table, ge_table, ges_table)
         self.sort()
         self.cards = []
 
@@ -1979,7 +2040,7 @@ class MATT9(Material):
               g44_table, g45_table, g46_table,
               g55_table, g56_table, g66_table, rho_table,
               a1_table, a2_table, a3_table,
-              a4_table, a5_table, a6_table, ge_table):
+              a4_table, a5_table, a6_table, ge_table, ges_table):
         if len(self.material_id):
             asdf
             #material_id = np.hstack([self.material_id, material_id])
@@ -2016,6 +2077,7 @@ class MATT9(Material):
         self.a5_table = a5_table
         self.a6_table = a6_table
         self.ge_table = ge_table
+        self.ges_table = ges_table
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         pass
@@ -2085,6 +2147,7 @@ class MATT9(Material):
         mat.a6_table = self.a6_table[i]
 
         mat.ge_table = self.ge_table[i]
+        mat.ges_table = self.ges_table[i, :]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -2099,7 +2162,9 @@ class MATT9(Material):
             self.g44_table, self.g45_table, self.g46_table,
             self.g55_table, self.g56_table, self.g66_table, self.rho_table,
             self.a1_table, self.a2_table, self.a3_table,
-            self.a4_table, self.a5_table, self.a6_table, self.ge_table])
+            self.a4_table, self.a5_table, self.a6_table,
+            self.ge_table, self.ges_table.ravel(),
+        ])
         return tables.max()
 
     @parse_check
@@ -2140,6 +2205,7 @@ class MATT9(Material):
         a6_table = array_default_int(self.a6_table, default=0, size=size)
 
         ge_table = array_default_int(self.ge_table, default=0, size=size)
+        ges_table = array_default_int(self.ges_table, default=0, size=size).tolist()
 
         for (mid,
              g11_tablei, g12_tablei, g13_tablei, g14_tablei, g15_tablei, g16_tablei,
@@ -2148,14 +2214,15 @@ class MATT9(Material):
              g44_tablei, g45_tablei, g46_tablei,
              g55_tablei, g56_tablei, g66_tablei, rho_tablei,
              a1_tablei, a2_tablei, a3_tablei, a4_tablei, a5_tablei, a6_tablei,
-             ge_tablei,) in zip_longest(
+             ge_tablei, ges_tablei) in zip_longest(
                  material_id,
                  g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                  g22_table, g23_table, g24_table, g25_table, g26_table,
                  g33_table, g34_table, g35_table, g36_table,
                  g44_table, g45_table, g46_table,
                  g55_table, g56_table, g66_table, rho_table,
-                 a1_table, a2_table, a3_table, a4_table, a5_table, a6_table, ge_table):
+                 a1_table, a2_table, a3_table, a4_table, a5_table, a6_table, ge_table,
+                 ges_table):
             list_fields = [
                 'MATT9', mid,
                 g11_tablei, g12_tablei, g13_tablei, g14_tablei, g15_tablei, g16_tablei,
@@ -2166,7 +2233,7 @@ class MATT9(Material):
                 rho_tablei,
                 a1_tablei, a2_tablei, a3_tablei, a4_tablei, a5_tablei, a6_tablei,
                 ge_tablei,
-            ]
+            ] + ges_tablei
 
             bdf_file.write(print_card(list_fields))
         return

@@ -828,6 +828,7 @@ def create_monpnt1(gui: MainWindow,
     Creates MONPNT1 actors
      - points
      - xyz summation
+
     """
     monpnt = model.monpnt1
     ncards = len(monpnt)

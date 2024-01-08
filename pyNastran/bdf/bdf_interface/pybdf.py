@@ -244,7 +244,7 @@ class BDFInputPy:
 
         log = self.log
         if self.use_new_parser and nastran_format != 'optistruct': # make_ilines is False
-            self.log.warning('using new deck splitter')
+            self.log.info('using new deck splitter')
             out = lines_to_decks2(all_lines, ilines, punch, log,
                                   nastran_format=nastran_format)
             (system_lines, executive_control_lines, case_control_lines,
@@ -1272,7 +1272,7 @@ def _lines_to_decks_main(lines: list[str],
                     msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
-                print('%s: %s' % (flag_word, line.rstrip()))
+                #print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
             elif line_upper.startswith('SUPER'):
                 # case control line
@@ -1958,6 +1958,7 @@ def lines_to_decks2(lines: list[str],
         ???
 
     """
+
     system_lines = []
     executive_control_lines = []   # flag = 1
     case_control_lines = []        # flag = 2
@@ -1998,6 +1999,7 @@ def lines_to_decks2(lines: list[str],
     #isol_line = -1
     #sol_line = ''
     #is_sol = False
+    guess_deck_sections = punch is None
     flags = []
     active_lines = executive_control_lines
     for i, line in enumerate(lines):
@@ -2024,7 +2026,9 @@ def lines_to_decks2(lines: list[str],
 
         elif line_upper.startswith('BEGIN'):
             #active_lines.append(line)
-            begin_tag = _get_begin_flag(line_upper)
+            begin_tags = _get_begin_flag(line_upper)
+            assert len(begin_tags) == 1, begin_tags
+            begin_tag = begin_tags[0]
             begin_flag, idi, label = begin_tag
             assert isinstance(idi, int), (begin_flag, idi, label)
 
@@ -2042,10 +2046,20 @@ def lines_to_decks2(lines: list[str],
                 raise RuntimeError(begin_flag)
             flags.append(' '.join(str(value) for value in begin_tag))
             continue
+        elif guess_deck_sections and _is_bulk_data_line(line) and flag in {'N/A', 'case_control'}: #  and flag in [1, 2]
+            section_name = flag
+            log.warning(f'currently in {section_name} deck and skipping directly '
+                        f'to bulk data section\n{line}')
+            log.warning(line)
+
+            flag = 'bulk'
+            active_lines = bulk_data_lines
+            active_lines.append(line)
         else:
             active_lines.append(line)
 
         assert isinstance(flag, str), flag
+        #print(flag)
         flags.append(flag)
 
     system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
@@ -2068,7 +2082,7 @@ def lines_to_decks2(lines: list[str],
     return out
 
 
-def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
+def _get_begin_flag_old(line_upper: str) -> tuple[str, int, str]:
     """
     begin massid=1 label='cat dog'
     """
@@ -2161,6 +2175,82 @@ def _get_begin_flag(line_upper: str) -> tuple[str, int, str]:
     assert len(flag) == 3, flag
     return flag
 
+def _get_begin_flag(line_upper: str) -> list[tuple[str, int, str]]:
+    """
+    begin massid=1 label='cat dog'
+    'BEGIN   SUPER=7 MASSID=300'
+    """
+    if line_upper in {'BEGIN', 'BEGINBULK', 'BEGIN BULKS'}:
+        line_upper = 'BEGIN BULK'
+    if line_upper == 'BEGIN BULK':
+        flag = [('BULK', 0, '')]
+        return flag
+
+    sline0 = shlex.split(line_upper)
+    words1 = _remove_bulk_words(sline0)
+
+    # split the words by =
+    words2 = []
+    for word in words1:
+        if '=' in word:
+            sline = word.split('=', 1)
+            words2.extend(sline)
+        else:
+            words2.append(word)
+    words3 = _remove_bulk_words(words2)
+
+
+    i = 0
+    word = ''
+    active_key = ''
+    out_words = []
+    temp_words = []
+    while i < len(words3):
+        word = words3[i]
+        if active_key and word.isdigit():
+            active_key = ''
+            temp_words[-2] = int(word)
+            out_words.append(tuple(temp_words))
+            temp_words = []
+            i += 1
+            continue
+        if active_key == 'LABEL':
+            active_key = ''
+            strip_label = word.strip('" ').strip("'")
+            out_wordi = out_words.pop()
+
+            out_wordi = list(out_wordi)
+            out_wordi[-1] = strip_label
+            out_words.append(tuple(out_wordi))
+            #out_words.extend(temp_words)
+            i += 1
+            continue
+
+        if word in DECK_TAGS:
+            assert len(temp_words) == 0, temp_words
+            active_key = word
+            temp_words = [word, 0, '']
+        elif word == 'LABEL':
+            assert len(temp_words) == 0, temp_words
+            active_key = word
+        elif word == 'APPEND':
+            out_words.append(('APPEND', -1, ''))
+        else:
+            assert len(temp_words) == 0, temp_words
+            raise RuntimeError(f'i={i}; word={word!r}; words={words3}')
+        i += 1
+
+    if active_key:
+        #active_key = ''
+        out_words.append(tuple(temp_words))
+        #i += 1
+        #continue
+
+    if len(out_words) == 0:
+        return [('BULK', 0, '')]
+    write_tag(out_words)
+    return out_words
+
 def _remove_bulk_words(words, *args) -> list[str]:
     words2 = [word.strip(' =') for word in words
               if 'BEGIN' != word and 'BULK' != word and 'BULKDATA' != word and '=' != word]
@@ -2204,6 +2294,7 @@ def add_superelements_from_deck_lines(self,
 
         nlines = len(superelement_lines) - iminus
         model = BDF()
+        model.is_lax_parser = self.is_lax_parser
         model.active_filenames = self.active_filenames
         model.log = self.log
         model.punch = True
@@ -2212,3 +2303,18 @@ def add_superelements_from_deck_lines(self,
         model._parse_all_cards(superelement_lines[iminus:], superelement_ilines)
         self.superelement_models[superelement_key] = model
         self.initial_superelement_models.append(superelement_key)
+
+def write_tag(begin_tags: list[tuple[str, int, str]]):
+    word = 'BEGIN'
+    for begin_tag in begin_tags:
+        name, value, label = begin_tag
+        if name in DECK_TAGS:
+            word += f' {name}={value:d}'
+        elif name == 'APPEND':
+            word += ' APPEND'
+        else:
+            raise RuntimeError(name)
+
+        if label:
+            word += f" LABEL='{label}'"
+    return word

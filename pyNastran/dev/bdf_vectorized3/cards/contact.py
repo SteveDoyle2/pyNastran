@@ -1864,12 +1864,18 @@ class BCBODY(VectorizedBaseCard):
 
         contact_id = integer(card, 1, 'contact_id')
         field2 = card.field(2)  # string/None
-        if field2 in {'2', '3'}:
-            dim = field2 + 'D'
+
+        default = '3D'
+        if field2 is None:
+            dim = default
         else:
-            dim = string_choice_or_blank(card, 2, 'dim',
-                                         ('2D', '3D'),
-                                         default='3D')
+            field2 = field2.strip()
+            if field2 in {'2', '3'}:
+                dim = field2 + 'D'
+            else:
+                dim = string_choice_or_blank(card, 2, 'dim',
+                                             ('2D', '3D'),
+                                             default=default)
 
         behav = string_choice_or_blank(card, 3, 'behav',
                                        ('RIGID', 'DEFORM', 'SYMM', 'ACOUS', 'WORK', 'HEAT'),
@@ -2390,6 +2396,7 @@ class BCBODY1(VectorizedBaseCard):
             SYMM body is a symmetry rigid body
             HEAT indicates body is a heat-rigid body (See Remark 3..).
         """
+        afsd
         #self.cards.append((bedge_id, eids, grids, comment))
         #self.n += 1
         #return self.n - 1
@@ -2474,7 +2481,7 @@ class BCBODY1(VectorizedBaseCard):
 
         #['BCBODY1', '1', '5001', '3D', 'DEFORM', '5']
         bcbody_id = integer(card, 1, 'bcbody_id')
-        bpid = integer(card, 2, 'bpid')
+        bpid = integer_or_blank(card, 2, 'bpid', default=0)
         #dimension = string_or_blank(card, 3, 'dim', default='3D')
         dimension = string_choice_or_blank(card, 3, 'dim',
                                            ('2D', '3D'),
@@ -2496,9 +2503,15 @@ class BCBODY1(VectorizedBaseCard):
         bsid = integer(card, 5, 'bsid')
 
         bc_rigid = integer_or_blank(card, 6, 'bc_rigid', default=0)
-        assert len(card) < 7, card
 
-        cardi = (bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, comment)
+        #BCGOUT Reference point in basic coordinate system to calculate the
+        #       global resultant contact force/moment (integer)
+        #  -1 Origin
+        #   0 Estimated centroid of deformable body (default)
+        bcg_out = integer_or_blank(card, 7, 'bcg_out', default=0)
+        assert len(card) < 9, card
+
+        cardi = (bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out, comment)
         self.cards.append(cardi)
         self.n += 1
         return self.n - 1
@@ -2517,10 +2530,11 @@ class BCBODY1(VectorizedBaseCard):
         dimension = np.zeros(ncards, dtype='|U8')
         behavior = np.zeros(ncards, dtype='|U8')
         bc_rigid = np.zeros(ncards, dtype='int32')
+        bcg_out = np.zeros(ncards, dtype='int32')
 
         #comment = {}
         for icard, card in enumerate(self.cards):
-            (bcbody_idi, bpidi, dimensioni, behaviori, bsidi, bc_rigidi, comment) = card
+            (bcbody_idi, bpidi, dimensioni, behaviori, bsidi, bc_rigidi, bcg_outi, comment) = card
             assert isinstance(bsidi, int), bsidi
             bcbody_id[icard] = bcbody_idi
             bpid[icard] = bpidi
@@ -2528,15 +2542,16 @@ class BCBODY1(VectorizedBaseCard):
             dimension[icard] = dimensioni
             behavior[icard] = behaviori
             bc_rigid[icard] = bc_rigidi
+            bcg_out[icard] = bcg_outi
             #if commenti:
                 #comment[i] = commenti
                 #comment[nidi] = commenti
 
-        self._save(bcbody_id, bpid, dimension, behavior, bsid, bc_rigid)
+        self._save(bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out)
         self.sort()
         self.cards = []
 
-    def _save(self, bcbody_id, bpid, dimension, behavior, bsid, bc_rigid) -> None:
+    def _save(self, bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out) -> None:
         ncards_existing = len(self.bcbody_id)
         if ncards_existing != 0:
             bcbody_id = np.hstack([self.bcbody_id, bcbody_id])
@@ -2552,6 +2567,7 @@ class BCBODY1(VectorizedBaseCard):
         self.behavior = behavior
         self.bsid = bsid
         self.bc_rigid = bc_rigid
+        self.bcg_out = bcg_out
         self.n = len(self.bcbody_id)
 
     def __apply_slice__(self, bcbody: BCBODY1, i: np.ndarray) -> None:
@@ -2562,17 +2578,18 @@ class BCBODY1(VectorizedBaseCard):
         bcbody.behavior = self.behavior[i]
         bcbody.bsid = self.bsid[i]
         bcbody.bc_rigid = self.bc_rigid[i]
+        bcbody.bcg_out = self.bcg_out[i]
         bcbody.n = len(i)
 
     #def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         #used_dict['element_id'].append(self.element_id)
 
-    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
-        """helper for bdf_equivalence_nodes"""
-        nodes = self.nodes.ravel()
-        for i, nid1 in enumerate(nodes):
-            nid2 = nid_old_to_new.get(nid1, nid1)
-            nodes[i] = nid2
+    #def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        #"""helper for bdf_equivalence_nodes"""
+        #nodes = self.nodes.ravel()
+        #for i, nid1 in enumerate(nodes):
+            #nid2 = nid_old_to_new.get(nid1, nid1)
+            #nodes[i] = nid2
 
     #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         #asd
@@ -2611,14 +2628,14 @@ class BCBODY1(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
         bcbody_ids = array_str(self.bcbody_id, size=size).tolist()
         bsids = array_str(self.bsid, size=size).tolist()
-        bpids = array_str(self.bpid, size=size).tolist()
+        bpids = array_default_int(self.bpid, default=0, size=size).tolist()
 
         # RIGID
         bc_rigids = array_default_int(self.bc_rigid, default=0)
-        bcg_out = ''
+        bcg_outs = array_default_int(self.bcg_out, default=0, size=size).tolist()
 
-        for bcbody_id, bpid, bsid, dim, behav, bc_rigid in zip(
-            bcbody_ids, bpids, bsids, self.dimension, self.behavior, bc_rigids):
+        for bcbody_id, bpid, bsid, dim, behav, bc_rigid, bcg_out in zip(
+            bcbody_ids, bpids, bsids, self.dimension, self.behavior, bc_rigids, bcg_outs):
 
             #+---------+-----+------+-----+-------+------+--------+-------+
             #|    1    |  2  |   3  |  4  |   5   |   6  |   7    |   8   |

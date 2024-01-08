@@ -1058,7 +1058,7 @@ def get_solid_stress_strains(eids: np.ndarray,
 
         if isinstance(case, (RealSolidArray, ComplexSolidArray)):
             scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
-            scalars_array.append(scalars_save[:, :, 0, :])
+            scalars_array.append(scalars_save[:, :, 0, :])  # centroidal stress
         else:
             raise NotImplementedError(case.class_name)
 

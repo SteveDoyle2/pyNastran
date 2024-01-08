@@ -297,7 +297,7 @@ class AxiShellElement(Element):
                 log.warning(prop.write(size=8))
 
         thickness = shell_thickness(self.model,
-                                    self.tflag, T,
+                                    tflag, T,
                                     self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if inan.sum():
