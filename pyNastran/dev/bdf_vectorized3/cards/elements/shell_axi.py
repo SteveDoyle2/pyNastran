@@ -622,9 +622,10 @@ class CTRIAX6(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 6), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
         #mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):

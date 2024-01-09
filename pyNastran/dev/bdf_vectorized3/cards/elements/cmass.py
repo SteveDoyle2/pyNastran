@@ -65,7 +65,7 @@ class CMASS1(Element):
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
-        n1 = integer(card, 3, 'g1')
+        n1 = integer_or_blank(card, 3, 'g1', default=0)
         c1 = integer_or_blank(card, 4, 'c1', default=0)
         n2 = integer_or_blank(card, 5, 'g2', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
@@ -422,8 +422,13 @@ class CMASS3(Element):
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
+        #if size == 8:
+            #for eid, pid, (spoint1, spoint2) in zip(element_id, property_id, spoints_):
+                #msg = 'CMASS3  %8s%8s%8s%8s\n' % (eid, pid, spoint1, spoint2)
+                #bdf_file.write(msg)
+        #else:
         for eid, pid, (spoint1, spoint2) in zip(element_id, property_id, spoints_):
-            msg = 'CMASS3  %8s%8s%8s%8s\n' % (eid, pid, spoint1, spoint2)
+            msg = print_card(['CMASS3', eid, pid, spoint1, spoint2])
             bdf_file.write(msg)
         return
 

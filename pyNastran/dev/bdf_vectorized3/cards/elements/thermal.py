@@ -395,10 +395,11 @@ class CONV(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         #: (Integer > 0)
-        element_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
 
         #: Convection property identification number of a PCONV entry
         pconv_id = np.zeros(ncards, dtype='int32')
@@ -412,7 +413,7 @@ class CONV(VectorizedBaseCard):
         #: Ambient points used for convection 0's are allowed for TA2 and
         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         #: Default for TA2 through TA8 is TA1.)
-        temp_ambient = np.zeros((ncards, 8), dtype='int32')
+        temp_ambient = np.zeros((ncards, 8), dtype=idtype)
 
         #grids = []
         for icard, card in enumerate(self.cards):
@@ -421,7 +422,7 @@ class CONV(VectorizedBaseCard):
             pconv_id[icard] = pconid
             film_node[icard] = film_nodei
             control_node[icard] = cntrlnd
-            temp_ambient[icard] = ta
+            temp_ambient[icard, :] = ta
         self._save(element_id, pconv_id, film_node, control_node, temp_ambient)
         self.sort()
         self.cards = []
@@ -531,10 +532,11 @@ class CHBDYG(ThermalElement):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: eid1: Surface element ID number for a side of an element. (0 < Integer < 100,000,000)
         #: eid2: A heat conduction element identification
-        element_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
 
         #: A consistent element side identification number
         #: (1 < Integer < 6)
@@ -571,7 +573,7 @@ class CHBDYG(ThermalElement):
             rad_mid[icard] = rad_midi
             nnode[icard] = len(nodesi)
             grid_list.extend(nodesi)
-        grid = np.array(grid_list, dtype='int32')
+        grid = np.array(grid_list, dtype=idtype)
         self._save(element_id, surface_type, iview, rad_mid, nnode, grid)
         apply_bydor_default(self)
         self.cards = []
@@ -768,9 +770,10 @@ class CHBDYP(ThermalElement):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: Surface element ID
-        element_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
 
         #: PHBDY property entry identification numbers. (Integer > 0)
         property_id = np.zeros(ncards, dtype='int32')
@@ -784,10 +787,10 @@ class CHBDYP(ThermalElement):
         # 0/1: g1/g2: Grid point identification numbers of grids bounding the surface
         # 2:   gmid:  Grid point identification number of a midside node if it is used
         #:            with the line type surface element.
-        nodes = np.zeros((ncards, 3), dtype='int32')
+        nodes = np.zeros((ncards, 3), dtype=idtype)
 
         #: Orientation grid point. (Integer > 0; Default = 0)
-        g0 = np.zeros(ncards, dtype='int32')
+        g0 = np.zeros(ncards, dtype=idtype)
 
         #: RADM identification number for front/back face of surface element.
         #: (Integer > 0)

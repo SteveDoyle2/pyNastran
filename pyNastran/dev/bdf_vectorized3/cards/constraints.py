@@ -1063,12 +1063,12 @@ class CommonSet(VectorizedBaseCard):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
         component_to_nodes = defaultdict(list)
         for nid, comp in zip(self.node_id, self.component):
             component_to_nodes[comp].append(nid)
 
-        class_name = f'{self.type}1'
+        # BNDGRID1 doesn't exist, but BNDGRID has that format
+        class_name = self.type if self.type == 'BNDGRID' else f'{self.type}1'
         for component, nodes in component_to_nodes.items():
             nodes_collapsed = collapse_thru(nodes, nthru=None)
             list_fields = [class_name, component] + nodes_collapsed

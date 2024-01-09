@@ -22,7 +22,7 @@ class TestSets(unittest.TestCase):
         name = 'test'
         label = 'test2'
         axes = '123'
-        component = '123'
+        component = 'aecomp'
         xyz = [0., 0., 0.]
         mondsp1.add(name, label, axes, component, xyz,
                     cp=0, cd=None, ind_dof='123',

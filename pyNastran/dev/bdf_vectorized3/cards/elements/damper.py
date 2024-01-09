@@ -776,7 +776,7 @@ class PDAMP5(Property):
 
     def add_card(self, card: BDFCard, comment: str='') -> list[int]:
         """adds a PDAMP"""
-        ns = [self.n]
+        #ns = [self.n]
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')

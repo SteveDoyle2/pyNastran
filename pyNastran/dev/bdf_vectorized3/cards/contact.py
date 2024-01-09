@@ -1311,7 +1311,7 @@ class BCRPARA(VectorizedBaseCard):
         """
         contact_region_id = integer(card, 1, 'crid')
         surf = string_or_blank(card, 2, 'surf', default='TOP')
-        offset = double_or_blank(card, 3, 'offset', default=None)
+        offset = double_or_blank(card, 3, 'offset', default=np.nan)
         surface_type = string_or_blank(card, 4, 'type', default='FLEX')
         grid_point = integer_or_blank(card, 5, 'grid_point', default=0)
         #return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
@@ -1420,7 +1420,7 @@ class BCRPARA(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
         contact_ids = array_str(self.contact_region_id, size=size)
-        offsets = array_float(self.offset, size=size, is_double=False)
+        offsets = array_float_nan(self.offset, size=size, is_double=False)
         grid_points = array_str(self.grid_point, size=size)
 
         for contact_id, surf, offset, surface_type, grid_point in zip(contact_ids, self.surf,

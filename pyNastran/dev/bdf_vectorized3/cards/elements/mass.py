@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import Combination
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -21,6 +22,145 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
+
+
+class MASSSET(Combination):
+    """
+    +---------+-----+------+------+----+-----+----+----+----+
+    |    1    |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +=========+=====+======+======+====+=====+====+====+====+
+    | MASSSET | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +---------+-----+------+------+----+-----+----+----+----+
+    |         | S4  |  L4  | etc. |    |     |    |    |    |
+    +---------+-----+------+------+----+-----+----+----+----+
+    | MASSSET | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +---------+-----+------+------+----+-----+----+----+----+
+
+    """
+    _id_name = 'masset_id'
+    @property
+    def masset_id(self) -> np.ndarray:
+        return self._idi
+    @property
+    def nmassets(self) -> np.ndarray:
+        return self._n_ids
+    @property
+    def element_ids(self) -> np.ndarray:
+        return self._ids_data
+
+    @masset_id.setter
+    def masset_id(self, masset_id: np.ndarray) -> None:
+        self._idi = masset_id
+    @nmassets.setter
+    def nmassets(self, nmassets: np.ndarray) -> None:
+        self._n_ids = nmassets
+    @element_ids.setter
+    def element_ids(self, element_ids: np.ndarray) -> None:
+        self._ids_data = element_ids
+    @property
+    def imassset(self) -> np.ndarray:
+        return self._iids
+    #def clear(self) -> None:
+        #self.n = 0
+        #self.load_id = np.array([], dtype='int32')
+        #self.nloads = np.array([], dtype='int32')
+        #self.load_ids = np.array([], dtype='int32')
+        #self.scale_factors = np.array([], dtype='float64')
+
+    def add(self, sid: int, scale: float,
+            scale_factors: list[float], element_ids: list[int],
+            comment: str='') -> int:
+        """
+        Creates a MASSSET card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. See Remarks 1. and 4. (Integer > 0)
+        scale : float
+            Scale factor. See Remarks 2. and 8. (Real)
+        Si : list[float]
+            Scale factors. See Remarks 2., 7. and 8. (Real)
+        element_ids : list[int]
+            Load set identification numbers of masses.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        return super().add(
+            sid, scale, scale_factors, element_ids, comment=comment)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_ids)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        element_id = used_dict['element_id']
+        ncards_removed = remove_unused_primary(
+            self, element_id, self.element_ids, 'element_id')
+        return ncards_removed
+
+    #def get_loads_by_load_id(self) -> dict[int, Loads]:
+        #model = self.model
+        #""""""
+        ##uload_ids = np.unique(self.load_ids)
+        #loads_by_load_id = defaultdict(list)
+
+        #for load in model.dynamic_load_cards:
+            #if load.type in {'DLOAD'}:
+                #continue
+            ##print(load)
+            #uload_idsi = np.unique(load.load_id)
+            #for uload_id in uload_idsi:
+                #i = np.where(uload_id == load.load_id)[0]
+                #if len(i) == 0:
+                    #continue
+                #loadi = load.slice_card_by_index(i)
+
+                #loads_by_load_id[uload_id].append(loadi)
+        #return dict(loads_by_load_id)
+
+    #def get_reduced_loads(self,
+                          #remove_missing_loads: bool=False,
+                          #filter_zero_scale_factors: bool=False,
+                          #stop_on_failure: bool=True) -> dict[int, Loads]:
+        #"""
+        #Parameters
+        #----------
+        #resolve_load_card : bool; default=False
+            #???
+        #remove_missing_loads: bool; default=False
+            #LOAD cards can reference loads (e.g., GRAV) that don't exist
+            #Nastran sometimes ignores these loads leading to potentially incorrect results
+        #filter_zero_scale_factors: bool; default=False
+            #remove loads that are 0.0
+        #"""
+        #reduced_loads = {}
+        #if self.n == 0:
+            #return reduced_loads
+
+        #stop_on_failure = True
+        #loads_by_load_id = self.get_loads_by_load_id()
+        #log = self.model.log
+        #for sid, global_scale, iload in zip(self.load_id, self.scale_factors, self.iload):
+            #reduced_loadsi = []
+            ##print(self.load_id, self.scale_factors, self.iload, iload)
+            #iload0, iload1 = iload
+            #if global_scale == 0. and filter_zero_scale_factors:
+                #continue
+            #scale_factors = global_scale * self.scale_factors[iload0:iload1]
+            #load_ids = self.load_ids[iload0:iload1]
+            #for (scale_factor, load_id) in zip_longest(scale_factors, load_ids):
+                #if scale_factor == 0. and filter_zero_scale_factors:
+                    #continue
+                #loads_found = loads_by_load_id[load_id]
+                #if len(loads_found) == 0:
+                    #msg = f'No referenced loads found for load_id={load_id} on DLOAD load_id={sid}'
+                    #log.error(msg)
+                    #if stop_on_failure:
+                        #raise RuntimeError(msg)
+                #reduced_loadsi.append((scale_factor, loads_found))
+            #reduced_loads[sid] = reduced_loadsi
+        #return reduced_loads
 
 
 class CONM1(Element):
@@ -311,15 +451,6 @@ class CONM2(Element):
         self.n += 1
         return self.n - 1
 
-    def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
-        elem.element_id = self.element_id[i]
-        elem._mass = self._mass[i]
-        elem.coord_id = self.coord_id[i]
-        elem.node_id = self.node_id[i]
-        elem.xyz_offset = self.xyz_offset[i, :]
-        elem.inertia = self.inertia[i, :]
-        elem.n = len(i)
-
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
@@ -361,6 +492,15 @@ class CONM2(Element):
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
         self.n = len(element_id)
+
+    def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem._mass = self._mass[i]
+        elem.coord_id = self.coord_id[i]
+        elem.node_id = self.node_id[i]
+        elem.xyz_offset = self.xyz_offset[i, :]
+        elem.inertia = self.inertia[i, :]
+        elem.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)

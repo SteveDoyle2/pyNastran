@@ -831,7 +831,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SEBSET', 'SEBSET1',  ## se_bset
             'SECSET', 'SECSET1',  ## se_cset
             'SEQSET', 'SEQSET1',  ## se_qset
-            #'SEUSET', 'SEUSET1',  ## se_uset
+            'SEUSET', 'SEUSET1',  ## se_uset
             'RELEASE',
             #'SEQSEP',
 
@@ -902,7 +902,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #: contact
             'BCBODY', 'BCBODY1',  ## bcbody
+            'BCSURF', 'BCRGSRF', 'BCTABL1', 'BWIDTH',
             #'BCPARA',  ## bcpara
+
+            # cohesive zone
+            'CIFQDX', 'CIFQUAD', 'PCOHE',
+
+            # other
+            'BDYLIST',
+            'MASSSET',
 
             # nx-contact
             #-----------
@@ -2204,7 +2212,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CGEN' : (CGEN, add_methods._add_element_object),   # elements
             #'GMLOAD' : (GMLOAD, add_methods._add_load_object),  # basic loads
 
-            #'CBEAM3' : (CBEAM3, add_methods._add_element_object),
             #'PBEAM3' : (PBEAM3, add_methods._add_property_object),
 
             # nastran95
@@ -2313,9 +2320,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGC' : (EIGC, add_methods._add_cmethod_object),
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
 
-            # 'BOLTFRC',
-            'MBOLTUS': (RuntimeCrash, None),
-
             'RADMT': (RuntimeCrash, None),
             'MATS3' : (RuntimeCrash, None),
             'MATS8' : (RuntimeCrash, None),
@@ -2323,8 +2327,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'SESUP' : (SESUP, add_methods._add_sesup_object),  # pseudo-constraint
 
-            'SEUSET' : (RuntimeCrash, None),
-            'SEUSET1' : (RuntimeCrash, None),
             #'SEUSET' : (SEUSET, add_methods._add_seuset_object),
             #'SEUSET1' : (SEUSET1, add_methods._add_seuset_object),
 
@@ -2341,6 +2343,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BOLTFOR' : partial(self._prepare_card, self.boltfor),
             'BOLTFRC' : partial(self._prepare_card, self.boltfrc),
             'BOLTSEQ' : partial(self._prepare_card, self.boltseq),
+            # 'BOLTFRC',
+            'MBOLTUS': partial(self._prepare_card, self.bolt),  # MSC BOLTUS -> BOLT
 
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'PLOTEL3': partial(self._prepare_card, self.plotel3),
@@ -2450,6 +2454,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PBCOMP' : partial(self._prepare_card, self.pbcomp),
             #'PBMSECT' : (PBMSECT, add_methods._add_property_object),
             'POINT' : partial(self._prepare_card, self.point),
+
+            # beam3
+            'CBEAM3': partial(self._prepare_card, self.cbeam3),
 
             # bend
             'CBEND' : partial(self._prepare_card, self.cbend),
@@ -2657,6 +2664,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RSSCON': partial(self._prepare_card, self.rsscon),  # not supported
             #'RSPLINE' : (RSPLINE, add_methods._add_rigid_element_object),
             'RSPLINE' : (RuntimeCrash, None),
+            'BCSURF': (RuntimeCrash, None),
+            'BCRGSRF': (RuntimeCrash, None),
+
+            'BCRGSRF': (RuntimeCrash, None),
+            'BCTABL1': (RuntimeCrash, None),
+            'BWIDTH': (RuntimeCrash, None),
 
             # mpcs
             'MPC': partial(self._prepare_card, self.mpc),
@@ -2672,6 +2685,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BNDFREE' : partial(self._prepare_card_by_method, self.bndfree.add_set_card),
             'BNDFREE1' : partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
             'BNDGRID' : partial(self._prepare_card_by_method, self.bndgrid.add_set1_card),
+
+            #'BNDFIX' : (Crash, None),
+            #'BNDFIX1' : (Crash, None),
 
             #'ROTORD' : partial(self._prepare_card_by_method, self.rotord.add_set1_card),
             'ROTORG' : partial(self._prepare_card_by_method, self.rotorg.add_card),
@@ -2704,6 +2720,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCRPARA' : partial(self._prepare_card, self.bcrpara),
             'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
 
+            # cohesive zone
+            'CIFQDX': (RuntimeCrash, None),
+            'CIFQUAD': (RuntimeCrash, None),
+            'PCOHE': (RuntimeCrash, None),
+
+            'BDYLIST': (RuntimeCrash, None),
+            'MASSSET': partial(self._prepare_card, self.massset),
+
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
             'SUPORT1': partial(self._prepare_card_by_method, self.suport.add_set1_card),
@@ -2726,6 +2750,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'USET': partial(self._prepare_card_by_method, self.uset.add_set_card),
             'USET1': partial(self._prepare_card_by_method, self.uset.add_set1_card),
 
+            'SEUSET': partial(self._prepare_card_by_method, self.seuset.add_set_card),
+            'SEUSET1': partial(self._prepare_card_by_method, self.seuset.add_set1_card),
+
             'SESET': partial(self._prepare_card_by_method, self.seset.add_card),
             'SEBSET': partial(self._prepare_card_by_method, self.sebset.add_set_card),
             'SECSET': partial(self._prepare_card_by_method, self.secset.add_set_card),
@@ -2735,7 +2762,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SECSET1': partial(self._prepare_card_by_method, self.secset.add_set1_card),
             'SEQSET1': partial(self._prepare_card_by_method, self.seqset.add_set1_card),
 
-            #'RELEASE': partial(self._prepare_card_by_method, self.release.add_card),
             'RELEASE': partial(self._prepare_card, self.release),
 
             # aero
@@ -3438,6 +3464,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 #raise
         else:
             self.log.warning(f'rejecting {card_obj}')
+            #asdf
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 

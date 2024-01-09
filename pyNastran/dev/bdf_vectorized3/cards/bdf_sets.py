@@ -1408,6 +1408,324 @@ class USET(VectorizedBaseCard):
         #return inid
 
 
+class SEUSET(VectorizedBaseCard):
+    """
+    +--------+------+-------+-----+----+-----+----+-----+----+
+    |    1   |   2  |   3   |  4  | 5  |  6  |  7 |  8  | 9  |
+    +========+======+=======+=====+====+=====+====+=====+====+
+    | SEUSET | SEID | SNAME | ID1 | C1 | ID2 | C2 | ID3 | C3 |
+    +--------+------+-------+-----+----+-----+----+-----+----+
+
+    """
+    _id_name = 'seid'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        #self._is_sorted = False
+        self.seid = np.array([], dtype='int32')
+        self.name = np.array([], dtype='|U8')
+        self.component = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+
+    def add_set(self, seid: int, name: str,
+                nids: list[int], components: list[int],
+                comment: str='') -> int:
+        assert isinstance(nids, (list, np.ndarray, tuple))
+        assert isinstance(components, (list, np.ndarray, tuple))
+        nnodes = len(nids)
+        ncomp = len(components)
+        assert nnodes == ncomp, (nnodes, ncomp)
+        self.cards.append((seid, name, nids, components, comment))
+        #if comment:
+            #self.comment[nid] = _format_comment(comment)
+        self.n += nnodes
+        return self.n - 1
+
+    def add_set1(self, seid: int, name: str,
+                 nids: list[int], component: list[int],
+                  comment: str='') -> int:
+        assert isinstance(component, (str, integer_types)), component
+        nids = expand_thru(nids, set_fields=True, sort_fields=False)
+        nnodes = len(nids)
+        components = [component] * nnodes
+        self.cards.append((seid, name, nids, components, comment))
+        #if comment:
+            #self.comment[nid] = _format_comment(comment)
+        self.n += nnodes
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        card_name = card[0].upper()
+        msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
+        raise AttributeError(msg)
+
+    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        seid = integer(card, 1, 'seid')
+        name = string(card, 2, 'name')
+        nodes = []
+        components = []
+        nsets = (len(card) - 2) // 2
+        for iset in range(nsets):
+            i = iset * 2 + 3
+            idi = integer(card, i, 'node_id' + str(iset))
+            component = parse_components(card, i + 1, 'component' + str(iset))
+            components.append(component)
+            nodes.append(idi)
+
+        self.cards.append((seid, name, nodes, components, comment))
+        #if comment:
+            #self.comment[nid] = comment
+        self.n += len(nodes)
+        return self.n - 1
+
+    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a USET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        seid = integer(card, 1, 'seid')
+        name = string(card, 2, 'name')
+        component = fcomponents_or_blank(card, 3, 'components', default='0')
+
+        nodes = read_ids_thru(card, ifield0=4, base_str='node_id%d')
+        #return SEUSET1(name, nodes, components, comment=comment)
+
+        nodes = expand_thru(nodes, set_fields=True, sort_fields=True)
+        nnodes = len(nodes)
+        components = [component] * nnodes
+        assert len(nodes) == len(components)
+        self.cards.append((seid, name, nodes, components, comment))
+        #if comment:
+            #self.comment[nid] = comment
+        self.n += len(nodes)
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        seid, name, node_id, component = self._setup(ncards, self.cards, self.model.idtype)
+        self._save(seid, name, node_id, component)
+
+        self.sort()
+        self.cards = []
+
+    def _setup(self, ncards: int, cards: list[Any],
+               idtype: str) -> tuple[np.ndarray, np.ndarray]:
+
+        seid = []
+        name = []
+        node_id = []
+        component_list = []
+        #comment = {}
+        for icard, card in enumerate(cards):
+            (seidi, namei, nidi, componenti, commenti) = card
+            assert isinstance(nidi, list), nidi
+            assert isinstance(componenti, list), componenti
+            #nidi = expand_thru(nidi, set_fields=True, sort_fields=True)
+            nnodes = len(nidi)
+            seid.extend([seidi]*nnodes)
+            name.extend([namei]*nnodes)
+            node_id.extend(nidi)
+            component_list.extend(componenti)
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+        seid2 = np.array(seid, dtype=idtype)
+        name2 = np.array(name, dtype='|U8')
+        node_id2 = np.array(node_id, dtype=idtype)
+        component2 = np.array(component_list, dtype=idtype)
+        return seid2, name2, node_id2, component2
+
+    def _save(self,
+              seid: np.ndarray,
+              name: np.ndarray,
+              node_id: np.ndarray,
+              component: np.ndarray,
+              comment: dict[int, str]=None) -> None:
+        #ncards = len(node_id)
+        ncards_existing = len(self.node_id)
+        assert len(name) == len(node_id)
+        assert len(name) == len(component)
+        if ncards_existing != 0:
+            asdf
+            name = np.hstack([self.name, name])
+            node_id = np.hstack([self.node_id, node_id])
+            component = np.hstack([self.component, component])
+        #if comment:
+            #self.comment.update(comment)
+        self.seid = seid
+        self.name = name
+        self.node_id = node_id
+        self.component = component
+        #print(node_id, component)
+        self.n = len(node_id)
+        #self.sort()
+        #self.cards = []
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['node_id'].append(self.nodes.ravel())
+        pass
+
+    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #inid = self._node_index(node_id)
+        #return self.slice_card(inid)
+
+    #def slice_card_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #"""uses a node_ids to extract GRIDs"""
+        #inid = self.index(node_id)
+        ##assert len(self.node_id) > 0, self.node_id
+        ##i = np.searchsorted(self.node_id, node_id)
+        #grid = self.slice_card_by_index(inid)
+        #return grid
+
+    #def slice_card_by_index(self, i: np.ndarray) -> GRID:
+        #"""uses a node_index to extract GRIDs"""
+        #assert self.xyz.shape == self._xyz_cid0.shape
+        #assert len(self.node_id) > 0, self.node_id
+        #i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
+        #i.sort()
+        #grid = GRID(self.model)
+        #self.__apply_slice__(grid, i)
+        #return grid
+
+    def _index(self, ids: np.ndarray,
+              assume_sorted: bool=True,
+              check_index: bool=True,
+              inverse: bool=False) -> np.ndarray:
+        """
+        Parameters
+        ----------
+        ids: (n,) int array
+            the node/element/property/material/etc. ids
+        assume_sorted: bool; default=True
+            assume the parent array (e.g., elem.element_id is sorted)
+        check_index: bool; default=True
+            validate the lookup
+        inverse: bool; default=False
+            False: get the indices for the ids
+            True: get the inverse indices for the ids
+
+        Returns
+        -------
+        index: (n,) int array
+            the indicies in the node_ids array (or other array)
+
+        Example
+        -------
+        >>> all_ids   = [1, 2, 3, 4, 5]
+        >>> all_index = [0, 1, 2, 3, 4]
+        >>> ids = [3, 4]
+        >>> index(all_ids, ids, inverse=False)
+        [2, 3]
+        >>> index(all_ids, ids, inverse=True)
+        [0, 1, 4]
+
+        """
+        if not assume_sorted:
+            self.sort()
+        self_ids = self._ids
+        assert len(self_ids) > 0, f'{self.type}: {self._id_name}={self_ids}'
+        if ids is None:
+            return None # np.arange(len(ids), dtype='int32')
+        ids = np.atleast_1d(np.asarray(ids, dtype=self_ids.dtype))
+
+        ielem = np.array([
+            ii for ii, suport_idi in enumerate(ids)
+            if suport_idi in self.suport_id])
+        #ielem = np.searchsorted(self_ids, ids)
+
+        if check_index:
+            actual_ids = self_ids[ielem]
+            if not np.array_equal(actual_ids, ids):
+                raise KeyError(f'{self.type}: expected_{self._id_name}={ids}; actual_{self._id_name}={actual_ids}')
+        if inverse:
+            i = np.arange(len(self_ids), dtype=self_ids.dtype)
+            index = np.setdiff1d(i, ielem)
+            return index
+        return ielem
+
+    def __apply_slice__(self, name: SEUSET, i: np.ndarray) -> None:
+        self._slice_comment(name, i)
+        name.n = len(i)
+        name.seid = self.seid[i]
+        name.name = self.name[i]
+        name.node_id = self.node_id[i]
+        name.component = self.component[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        seid_name_to_nid_comp = defaultdict(list)
+        for seid in np.unique(self.seid):
+            iseid = (seid == self.seid)
+            seid_name_to_nid_comp[seid] = {}
+            for name in np.unique(self.name[iseid]):
+                seid_name_to_nid_comp[seid][name] = defaultdict(list)
+        for seid, name, nid, comp in zip_longest(self.seid, self.name, self.node_id, self.component):
+            seid_name_to_nid_comp[seid][name][comp].append(nid)
+
+        for seid, name_nid_comps in seid_name_to_nid_comp.items():
+            for name, nid_comps in name_nid_comps.items():
+                for comp, nids in nid_comps.items():
+                    nids.sort()
+                    list_fields = ['SEUSET1', seid, name, comp] + nids
+                    bdf_file.write(print_card(list_fields))
+        return
+
+    #def index(self, node_id: np.ndarray, safe: bool=False) -> np.ndarray:
+        #assert len(self.node_id) > 0, self.node_id
+        #node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
+        #inid = np.searchsorted(self.node_id, node_id)
+        #if safe:
+            #ibad = inid >= len(self.node_id)
+            #if sum(ibad):
+                ##self.model.log.error(f'bad nids; node_id={node_id[ibad]}')
+                #raise RuntimeError(f'bad nids; node_id={node_id[ibad]}')
+            #inids_leftover = inid[~ibad]
+            #if len(inids_leftover):
+                #actual_nids = self.node_id[inids_leftover]
+                #assert np.array_equal(actual_nids, node_id)
+        #return inid
+
+
 class RADSET(VectorizedBaseCard):
     _id_name = 'cavity_id'
     @VectorizedBaseCard.clear_check

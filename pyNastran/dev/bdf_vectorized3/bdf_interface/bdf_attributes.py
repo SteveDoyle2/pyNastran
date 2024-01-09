@@ -9,7 +9,8 @@ from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI,
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, OMIT, USET, SUPORT,
-    SEBSET, SECSET, SEQSET, SESET, RELEASE,
+    SEBSET, SECSET, SEQSET, SEUSET,
+    SESET, RELEASE,
     SET1, SET2, SET3, SET4, RADSET)
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
@@ -24,6 +25,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     PDAMP, PDAMP5, PDAMPT, CVISC, PVISC, CGAP, PGAP)
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import (
     CBEAM, PBEAM, PBEAML, PBCOMP, # , PBMSECT
+    CBEAM3, # PBEAM3,
     CBEND, PBEND)
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
@@ -55,7 +57,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.acoustic import (
     CHACAB, CHACBR, PACBAR,
 )
-from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
+from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2, MASSSET
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import (
@@ -301,9 +303,10 @@ class BDFAttributes:
         self.uset = USET(self)  # USET, USET1
 
         self.seset = SESET(self)
-        self.sebset = SEBSET(self)
-        self.secset = SECSET(self)
-        self.seqset = SEQSET(self)
+        self.sebset = SEBSET(self)  # SEBSET, SEBSET1
+        self.secset = SECSET(self)  # SECSET, SECSET1
+        self.seqset = SEQSET(self)  # SEQSET, SEQSET1
+        self.seuset = SEUSET(self)  # SEUSET, SEUSET1
         self.release = RELEASE(self)
 
         self.set1 = SET1(self)
@@ -404,6 +407,10 @@ class BDFAttributes:
         self.pbcomp = PBCOMP(self)
         #self.beam_properties = [self.pbeaml]
 
+        # beam3
+        self.cbeam3 = CBEAM3(self)
+        #self.pbeam3 = PBEAM3(self)
+
         self.cbend = CBEND(self)
         self.pbend = PBEND(self)
 
@@ -496,6 +503,7 @@ class BDFAttributes:
         self.cmass4 = CMASS4(self)
         self.conm1 = CONM1(self)
         self.conm2 = CONM2(self)
+        self.massset = MASSSET(self)
 
         # nonstructural mass
         self.nsmadd = NSMADD(self)
@@ -803,20 +811,22 @@ class BDFAttributes:
             self.chacbr, # barrier solid
             self.caabsf, # absorber shell
         ]
+        masses = [
+            self.conm1, self.conm2, self.massset,
+            self.cmass1, self.cmass2, self.cmass3, self.cmass4,
+        ]
         elements = self.spring_element_cards + self.damper_element_cards + [
             self.cvisc, self.cgap,
             self.cbush, self.cbush1d, # self.cbush2d,
             self.cfast,
             self.crod, self.conrod, self.ctube,
             self.cbar,
-            self.cbeam,
+            self.cbeam, self.cbeam3,
             self.cbend,
             self.cshear,
             self.genel,
-        ] + self.shell_element_cards + self.solid_element_cards + \
+        ] + self.shell_element_cards + self.solid_element_cards + masses + \
         axisymmetric_element_cards + [
-            self.conm1, self.conm2,
-            self.cmass1, self.cmass2, self.cmass3, self.cmass4,
             self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
             self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
         ] + acoustic_element_cards
@@ -1048,9 +1058,8 @@ class BDFAttributes:
     def seset_cards(self) -> list[Any]:
         """handles SEBSET/SEBSET1, ..."""
         sesets = [
-            self.sebset, self.secset, self.seqset, self.release,
-            self.seset,
-            #self.seuset,
+            self.sebset, self.secset, self.seqset, self.seuset,
+            self.release, self.seset,
         ]
         return sesets
 
@@ -1762,7 +1771,7 @@ class BDFAttributes:
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
-            'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM',
+            'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBEAM3',
             'CVISC', 'CGAP',
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
             'CSHEAR',

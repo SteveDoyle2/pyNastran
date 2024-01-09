@@ -579,13 +579,16 @@ class MONDSP1(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        row0 = card[0]
-        row1 = card[1]
+        row0 = card[0].rstrip(',\t ')
+        row1 = card[1].rstrip(',\t ')
         assert len(card) == 2, card
         assert len(row0) > 8, row0
         assert ',' not in row1, row1
+        if '\t' in row0:
+            #card_fields0 = row0.split('\t')
+            row0 = row0.expandtabs(tabsize=8)
         if '\t' in row1:
-            card_fields = row1.split('\t')
+            #card_fields1 = row1.split('\t')
             row1 = row1.expandtabs(tabsize=8)
 
         name = row0[8:16]
@@ -603,7 +606,10 @@ class MONDSP1(VectorizedBaseCard):
         # assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        comp = str(integer(card, 10, 'comp'))
+
+        # Name of an AECOMP or AECOMPL entry that defines the set of
+        # grid points over which the monitor point is defined.
+        component = string(card, 10, 'AECOMP/AECOMPL component')
         cp = integer_or_blank(card, 11, 'cp', default=0)
         xyz = [
             double_or_blank(card, 12, 'x', default=0.0),
@@ -614,7 +620,7 @@ class MONDSP1(VectorizedBaseCard):
         ind_dof = components_or_blank(card, 16, 'ind_dof', default='123')
         #return MONDSP1(name, label, axes, comp, xyz, cp=cp,
                        #cd=cd, ind_dof=ind_dof, comment=comment)
-        self.cards.append((name, label, axes, comp, xyz, cp,
+        self.cards.append((name, label, axes, component, xyz, cp,
                            cd, ind_dof, comment))
         self.n += 1
         return self.n - 1

@@ -174,13 +174,15 @@ def create_alt_conm2_grids(gui: MainWindow,
 
     # total - cg & all
     conm2_mass_total = mass.sum()
-    cg_mass_total = (mass[:, np.newaxis] * centroid).sum(axis=0) / conm2_mass_total
-    assert len(cg_mass_total) == 3, cg_mass_total
-    name = f'All CONM2s CG mass={conm2_mass_total:g} xyz=[{cg_mass_total[0]:g}, {cg_mass_total[1]:g}, {cg_mass_total[2]:g}]'
-    _build_dot(gui, name, cg_mass_total)
+    cg_mass_total = np.full(3, np.nan, dtype=mass.dtype)
+    if conm2_mass_total != 0:
+        cg_mass_total = (mass[:, np.newaxis] * centroid).sum(axis=0) / conm2_mass_total
+        assert len(cg_mass_total) == 3, cg_mass_total
+        name = f'All CONM2s CG mass={conm2_mass_total:g} xyz=[{cg_mass_total[0]:g}, {cg_mass_total[1]:g}, {cg_mass_total[2]:g}]'
+        _build_dot(gui, name, cg_mass_total)
 
-    name = f'All CONM2s mass={conm2_mass_total:g}'
-    _build_dots(gui, name, centroid)
+        name = f'All CONM2s mass={conm2_mass_total:g}'
+        _build_dots(gui, name, centroid)
 
     # individual
     for eid, nid, massi, xyzi in zip(element.element_id, element.node_id, mass, centroid):

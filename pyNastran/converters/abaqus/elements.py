@@ -54,7 +54,7 @@ allowed_element_types = [
     # springs?
     'conn2d2', 'springa',
 
-    #
+    # shells
     'cpe3', 'cpe4', 'cpe4r', 'cpe8r', # plane strain
     'cps3', 'cps4', 'cps4r', 'cps8r', # plane stress
 
@@ -62,7 +62,8 @@ allowed_element_types = [
     'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2',
 
     # 6/8 plates
-    's8r',
+    's3', 's4', 's8',
+    's3r', 's4r', 's8r',
 
     # solid
     'c3d4', 'c3d4r', # tet4s
@@ -90,6 +91,13 @@ class Elements:
             beams:
                 b31h : (nelements, 3) int ndarray - 2 nodes and g0
             shells:
+                s3 : (nelements, 3) int ndarray
+                s4 : (nelements, 4) int ndarray
+                s8 : (nelements, 8) int ndarray
+                s3r : (nelements, 3) int ndarray
+                s4r : (nelements, 4) int ndarray
+                s8r : (nelements, 8) int ndarray
+
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
                 cpe4r : (nelements, 4) int ndarray
@@ -158,7 +166,18 @@ class Elements:
         self.cax4r_eids = None
 
         # 6/8 shells
+        self.s3 = None
+        self.s4 = None
+        self.s8 = None
+        self.s3_eids = None
+        self.s4_eids = None
+        self.s8_eids = None
+
+        self.s3r = None
+        self.s4r = None
         self.s8r = None
+        self.s3r_eids = None
+        self.s4r_eids = None
         self.s8r_eids = None
 
         # solids
@@ -212,6 +231,7 @@ class Elements:
 
             ('cps3', 3),
             ('cps4', 4),
+            ('cps3r', 3),
             ('cps4r', 4), # quad, plane stress, reduced
 
             ('coh2d4', 4), #  cohesive zone
@@ -219,6 +239,12 @@ class Elements:
             ('cax3', 3),
             ('cax4r', 4), # reduced
 
+            ('s3', 3),
+            ('s4', 4),
+            ('s8', 8),
+
+            ('s3r', 3),
+            ('s4r', 4),
             ('s8r', 8), # CQUAD8 reduced
 
             #  solids
@@ -240,7 +266,7 @@ class Elements:
         ]
         return etypes_nnodes
 
-    def _store_elements(self, element_types: dict[str, list[int]]):
+    def _store_elements(self, element_types: dict[str, list[int]]) -> None:
         """helper method for the init"""
         if len(element_types) == 0:
             return
@@ -257,8 +283,11 @@ class Elements:
                     continue
                 is_elements = True
                 eids_elements = np.array(elements, dtype='int32')
-                setattr(self, etype, eids_elements[:, 1:])  # r2d2
-                setattr(self, etype_eids, eids_elements[:, 0]) #  r2d2_eids
+                eids = eids_elements[:, 0]
+                node_ids = eids_elements[:, 1:]
+                #print(f'eids[{etype}] = {eids}')
+                setattr(self, etype, node_ids)  # r2d2
+                setattr(self, etype_eids, eids) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
             #else:
                 #self.log.warning(f'skipping etype={etype!r}')
@@ -310,6 +339,11 @@ class Elements:
         n_cax4r = self.cax4r.shape[0] if self.cax4r is not None else 0
 
         # 6/8
+        n_s3 = self.s3.shape[0] if self.s3 is not None else 0
+        n_s4 = self.s4.shape[0] if self.s4 is not None else 0
+        n_s8 = self.s8.shape[0] if self.s8 is not None else 0
+        n_s3r = self.s3r.shape[0] if self.s3r is not None else 0
+        n_s4r = self.s4r.shape[0] if self.s4r is not None else 0
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
 
         # solids
@@ -336,7 +370,8 @@ class Elements:
                  n_coh2d4 +
                  n_cohax4 + n_cax3 + n_cax4r +
                  #6 / 8 shells
-                 n_s8r +
+                 n_s3 + n_s4 + n_s8 +
+                 n_s3r + n_s4r + n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
                  n_c3d6 + n_c3d6r +
@@ -373,6 +408,11 @@ class Elements:
         n_cax4r = self.cax4r.shape[0] if self.r2d2 is not None else 0
 
         # 6/8 shells
+        n_s3 = self.s3.shape[0] if self.s3 is not None else 0
+        n_s4 = self.s4.shape[0] if self.s4 is not None else 0
+        n_s8 = self.s8.shape[0] if self.s8 is not None else 0
+        n_s3r = self.s3r.shape[0] if self.s3r is not None else 0
+        n_s4r = self.s4r.shape[0] if self.s4r is not None else 0
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
 
         # solids
@@ -399,7 +439,8 @@ class Elements:
                  n_coh2d4 +
                  n_cohax4 + n_cax3 + n_cax4r +
                  # 6/8 shells
-                 n_s8r +
+                 n_s3 + n_s4 + n_s8 +
+                 n_s3r + n_s4r + n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
                  n_c3d6 + n_c3d6r +
@@ -413,6 +454,8 @@ class Elements:
             f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n' # bar/beam
             f'        n_cpe3={n_cpe3}, n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r},\n' # plane strain
             f'        n_cps3={n_cps3}, n_cps4={n_cps4}, n_cps4r={n_cps4r},\n' # plane stress
+            f'        n_s3={n_s3}, n_s4={n_s4}, n_s8={n_s8},\n'
+            f'        n_s3r={n_s3r}, n_s4r={n_s4r}, n_s8r={n_s8r},\n'
             f'        n_coh2d4={n_coh2d4},\n'
             f'        n_cohax4={n_cohax4}, n_cax3={n_cax3}, n_cax4r={n_cax4r},\n'
             # solids
@@ -452,6 +495,11 @@ class Elements:
         element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
 
         # 6/8 shells
+        element_types['s3'] = (self.s3_eids, self.s3)
+        element_types['s4'] = (self.s4_eids, self.s4)
+        element_types['s8'] = (self.s8_eids, self.s8)
+        element_types['s3r'] = (self.s3r_eids, self.s3r)
+        element_types['s4r'] = (self.s4r_eids, self.s4r)
         element_types['s8r'] = (self.s8r_eids, self.s8r)
 
         # solids

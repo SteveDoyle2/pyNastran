@@ -896,10 +896,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## ???
             #'PANEL', 'SWLDPRM',
             #'CWELD', 'PWELD',
-            # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
+            # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP',
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            #'BNDFIX', 'BNDFIX1',
             #'AEFORCE', 'UXVEC', 'GUST2',
+
+            #'BNDGRID',
+            #'BNDFREE', 'BNDFREE1',
+            #'BNDFIX', 'BNDFIX1',
 
             # cyclic
             'CYJOIN', 'CYAX',
@@ -2175,7 +2178,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'PSEAM' : (Crash, None),
 
             #'DVSHAP' : (Crash, None),
-            #'BNDGRID' : (Crash, None),
 
             #'CYSYM' : (Crash, None),
             #'TEMPP1' : (Crash, None),
@@ -2183,6 +2185,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'DVAR' : (Crash, None),
             #'DVSET' : (Crash, None),
             #'DYNRED' : (Crash, None),
+
+            #'BNDGRID' : (Crash, None),
             #'BNDFIX' : (Crash, None),
             #'BNDFIX1' : (Crash, None),
 

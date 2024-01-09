@@ -297,6 +297,7 @@ def shell_thickness(model: BDF,
                     property_id: np.ndarray,
                     allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]]) -> np.ndarray:
     log = model.log
+    allow_nan_thickness = model.allow_nan_thickness
     thickness = np.full(len(property_id), np.nan, dtype='float64')
 
     if T is not None:
@@ -319,6 +320,11 @@ def shell_thickness(model: BDF,
             # no properties are used for the given element
             continue
         ti = prop.total_thickness()
+        inan_ti = np.isnan(ti)
+        if inan_ti.sum():
+            pid_sliced = prop.property_id[inan_ti]
+            propi = prop.slice_card_by_property_id(pid_sliced)
+            log.error(f'There are NAN thicknesses on the {prop.type} card\n{propi.write()}')
         ti_all = ti[iall]
 
         # set the thickness, even if it's nan
@@ -385,10 +391,12 @@ def shell_thickness(model: BDF,
         inan = np.isnan(ti_all)
         if np.any(inan):
             msg = (
-                f'tflag={tflag_nan[inan]}\n'
-                f'T={ti_all[inan, :]}')
+                f'pid={property_id[inan]}\n'
+                f'tflag={tflag[inan]}\n'
+                f'T={ti_all[inan]}')
             log.error(msg)
-            raise RuntimeError(msg)
+            if not allow_nan_thickness:
+                raise RuntimeError(msg)
         thickness[ilookup] = ti_all
 
     inan = np.isnan(thickness)
@@ -490,9 +498,10 @@ def shell_mass_per_area(model: BDF,
         if np.any(inan):
             msg = (
                 f'tflag={tflag_nan[inan]}\n'
-                f'T={ti_all[inan, :]}')
+                f'T={ti_all[inan]}')
             model.log.error(msg)
-            raise RuntimeError(msg)
+            if not model.allow_nan_thickness:
+                raise RuntimeError(msg)
 
         mass_per_area_all = nsm_all + rho_all * ti_all
         #nsm_all = nsm[iall]
@@ -504,7 +513,8 @@ def shell_mass_per_area(model: BDF,
         if np.any(inan):
             msg = f'Thickness has nan\nt={ti_all}'
             model.log.error(msg)
-            raise RuntimeError(msg)
+            if not model.allow_nan_thickness:
+                raise RuntimeError(msg)
     assert nelement > 0, nelement
     assert len(mass_per_area) == nelement, mass_per_area
 

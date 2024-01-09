@@ -1108,33 +1108,33 @@ class CBEAM3(LineElement):  # was CBAR
 
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
         gc = integer_or_blank(card, 5, 'gc')
 
         # card, eid, x1_default, x2_default, x3_default
         x, g0 = init_x_g0_cbeam3(card, eid, 0., 0., 0.)
-        wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
-                       double_or_blank(card, 10, 'w2a', 0.0),
-                       double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 9, 'w1a', default=0.0),
+                       double_or_blank(card, 10, 'w2a', default=0.0),
+                       double_or_blank(card, 11, 'w3a', default=0.0)], dtype='float64')
 
-        wb = np.array([double_or_blank(card, 12, 'w1b', 0.0),
-                       double_or_blank(card, 13, 'w2b', 0.0),
-                       double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
+        wb = np.array([double_or_blank(card, 12, 'w1b', default=0.0),
+                       double_or_blank(card, 13, 'w2b', default=0.0),
+                       double_or_blank(card, 14, 'w3b', default=0.0)], dtype='float64')
 
-        wc = np.array([double_or_blank(card, 15, 'w1c', 0.0),
-                       double_or_blank(card, 16, 'w2c', 0.0),
-                       double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
+        wc = np.array([double_or_blank(card, 15, 'w1c', default=0.0),
+                       double_or_blank(card, 16, 'w2c', default=0.0),
+                       double_or_blank(card, 17, 'w3c', default=0.0)], dtype='float64')
 
         tw = np.array([double_or_blank(card, 18, 'twa', 0.),
                        double_or_blank(card, 19, 'twb', 0.),
                        double_or_blank(card, 20, 'twc', 0.)], dtype='float64')
 
         # TODO: what are the defaults?
-        s = np.array([integer_or_blank(card, 21, 'sa', -1),
-                      integer_or_blank(card, 22, 'sb', -1),
-                      integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
+        s = np.array([integer_or_blank(card, 21, 'sa', default=-1),
+                      integer_or_blank(card, 22, 'sb', default=-1),
+                      integer_or_blank(card, 23, 'sc', default=-1)], dtype='int32')
         assert len(card) <= 24, f'len(CBEAM3 card) = {len(card):d}\ncard={card}'
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)

@@ -17,13 +17,68 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
     log = nastran_model.log
 
     log.debug('starting part...')
-    for etype, eids_nids in elements.element_types.items():
+    element_types = {etype: eids_nids
+                     for etype, eids_nids in elements.element_types.items()
+                     if eids_nids[0] is not None}
+
+    unstacked_eids = [eids_nodes[0] for eids_nodes in element_types.values()]
+    all_eids = np.hstack(unstacked_eids)
+    ueids = np.unique(all_eids)
+    map_eids = (len(all_eids) != len(ueids))
+    abaqus_type_to_etype = {
+        'b31h': 'CBEAM',
+        's3': 'CTRIA3',
+        's3r': 'CTRIA3',
+        'cpe3': 'CTRIA3',
+        'cpe3r': 'CTRIA3',
+
+        's4': 'CQUAD4',
+        's4r': 'CQUAD4',
+        'cpe4': 'CQUAD4',
+        'cpe4r': 'CQUAD4',
+
+        'c3d4': 'CTETRA',
+        'c3d4r': 'CTETRA',
+        'c3d10': 'CTETRA',
+        'c3d10r': 'CTETRA',
+        'c3d10h': 'CTETRA',
+
+        'c3d6': 'CPENTA',
+        'c3d15': 'CPENTA',
+        'c3d6r': 'CPENTA',
+        'c3d15r': 'CPENTA',
+
+        'c3d8': 'CHEXA',
+        'c3d20': 'CHEXA',
+        'c3d8r': 'CHEXA',
+        'c3d20r': 'CHEXA',
+
+        'cohax4': None,
+        'coh2d4': None,
+        'cax3': None,
+        'cax4r': None,
+        'r2d2': None,
+    }
+
+    type_eid_map_to_eid = {}
+    for etype, eids_nids in element_types.items():
         eids_, part_nids = eids_nids
         if eids_ is None and part_nids is None:
             continue
 
-        eids = (eid_offset + 1 - eids_.min()) + eids_
+        # TODO: well that's annoying...abaqus can have duplicate ids
+        #if eid_offset:
+        #eids = (eid_offset + 1 - eids_.min()) + eids_
+        if map_eids:
+            nastran_etype = abaqus_type_to_etype[etype]
+            eids = eid_offset + np.arange(len(eids_)) + 1
+            for eid1, eid2 in zip(eids_, eids):
+                type_eid_map_to_eid[(nastran_etype, eid1)] = eid2
+        else:
+            eids = eids_
 
+
+        #print(f'eids[{etype} = {eids}; eid_offset={eid_offset}')
         log.warning(f'writing etype={etype} eids={eids_}->{eids}')
         if nid_offset > 0:
             # don't use += or it's an inplace operation
@@ -33,7 +88,7 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
             log.warning('skipping r2d2; should this be a RBE1/RBAR?')
             continue
 
-        elif etype == 'b31h':
+        if etype == 'b31h':
             for eid, nids in zip(eids, part_nids):
                 x = None
                 g0 = nids[2]
@@ -41,15 +96,15 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
                 nastran_model.add_cbeam(
                     eid, pid, nids, x, g0, offt='GGG', bit=None,
                     pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-        elif etype == 'cpe3':
+        elif etype in {'s3', 's3r', 'cpe3', 'cpe3r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctria3(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, comment='')
-        elif etype in {'cpe4', 'cpe4r'}:
+        elif etype in {'s4', 's4r', 'cpe4', 'cpe4r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
-        elif etype == 's8r':
+        elif etype in {'s8', 's8r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
@@ -58,16 +113,18 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
         elif etype in {'c3d6', 'c3d15', 'c3d6r', 'c3d15r'}:
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_penta(eid, pid, nids, comment='')
+                nastran_model.add_cpenta(eid, pid, nids, comment='')
         elif etype in {'c3d8', 'c3d20', 'c3d8r', 'c3d20r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_chexa(eid, pid, nids, comment='')
         elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
+            del eids, part_nids
             log.warning(f'skipping etype={etype!r}')
             continue
         else:
             raise NotImplementedError(etype)
         eid_offset += len(eids)
+        del eids, part_nids
         #print(etype, eid_offset)
 
     #add_lines(grid, nidsi, part.r2d2, nid_offset)

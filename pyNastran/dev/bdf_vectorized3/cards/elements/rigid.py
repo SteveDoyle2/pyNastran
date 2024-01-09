@@ -14,8 +14,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_double, integer_double_or_blank, integer_double_or_string,
     parse_components, components_or_blank,
 )
-from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
-from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16,
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+#from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
+#from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16,
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -978,6 +979,7 @@ class RBE3(RigidElement):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         refgrid = integer(card, 3, 'refgrid')
@@ -1009,7 +1011,7 @@ class RBE3(RigidElement):
         while i < iwt_max:
             Gij = []
             wtname = 'wt' + str(n)
-            wt = double_or_blank(card, i, wtname)
+            wt = fdouble_or_blank(card, i, wtname)
             if wt is not None:
                 cname = 'c' + str(n)
                 compi = components_or_blank(card, i + 1, cname)

@@ -254,8 +254,10 @@ class ShellElement(Element):
                 msg += (
                     f'tflag={self.tflag[inan]}\n'
                     f'T={self.T[inan, :]}')
-            self.model.log.error(msg)
-            raise RuntimeError(msg)
+            model = self.model
+            model.log.error(msg)
+            if not model.allow_nan_thickness:
+                raise RuntimeError(msg)
         return volume
 
     def get_allowed_property_index(self, allowed_properties: list[Any]) -> np.ndarray:
@@ -312,7 +314,8 @@ class ShellElement(Element):
         #inan = np.isnan(thickness)
         if inan.sum():
             self.model.log.error(thickness[inan])
-        assert thickness.sum() > 0., thickness
+        if not self.model.allow_nan_thickness:
+            assert thickness.sum() > 0., thickness
         return thickness
 
     def mass_per_area(self) -> np.ndarray:
@@ -491,8 +494,10 @@ def _check_shell_mass(element: ShellElement, mass: np.ndarray, area=np.ndarray):
         msg += f'mass_per_area={mass_per_area[inan]}\n'
         msg += f't={t[inan]}\n'
         msg += f'all_properties={element.all_properties}\n'
-        element.model.log.warning(msg)
-        raise RuntimeError(msg)
+        model: BDF = element.model
+        model.log.warning(msg)
+        if not model.allow_nan_mass:
+            raise RuntimeError(msg)
         #self.model.log.warning(f'eids={self.element_id[inan]} with pids={pids} has nan mass')
 
 

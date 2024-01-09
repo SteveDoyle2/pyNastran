@@ -18,6 +18,7 @@ NO_LENGTH = {
     'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
     'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
     'GENEL', 'CAABSF', 'CHACAB', 'CHACBR',
+    'CTRAX3', 'CTRAX4', 'CTRAX6',
 }
 NO_AREA = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -61,8 +62,10 @@ def get_mass_breakdown(model: BDF, stop_if_no_mass: bool=True) -> tuple[dict[int
     """
     pid_to_mass = defaultdict(float)
     mass_type_to_mass = {}
+    element_cards = [element for element in model.element_cards
+                     if element.n > 0]
     #mass_by_material_type = {}
-    for card in model.element_cards:
+    for card in element_cards:
         if card.n == 0 or card.type in NO_MASS:
             continue
         mass = card.mass()
@@ -78,7 +81,7 @@ def get_mass_breakdown(model: BDF, stop_if_no_mass: bool=True) -> tuple[dict[int
             pid_to_mass[pidi] += massi
     pid_to_mass = dict(pid_to_mass)
     if stop_if_no_mass and len(pid_to_mass) == 0 and len(pid_to_mass) == 0 and len(mass_type_to_mass) == 0:
-        elements_str = ', '.join([str(element.type) for element in model.elements
+        elements_str = ', '.join([str(element.type) for element in element_cards
                                 if element.n > 0 ])
         raise RuntimeError(f'No elements with mass found\nelements = [{elements_str}]')
 

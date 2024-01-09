@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_double,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank, double_string_or_blank)
-from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
+from pyNastran.bdf.cards.elements.bars import init_x_g0_cbeam3, set_blank_if_default # init_x_g0,
 from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate_unit_line,
 
@@ -2830,6 +2830,756 @@ def _linearly_interpolate(i: int, x: np.ndarray, y: np.ndarray):
     return yi
 
 
+class CBEAM3(Element):
+    """
+    Defines a three-node beam element
+
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +========+=====+=====+=====+=====+=====+=====+=====+=====+
+    | CBEAM3 | EID | PID |  GA |  GB |  GC |  X1 |  X2 | X3  |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | W1A | W2A | W3A | W1B | W2B | W3B | W1C | W2C |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | W3C | TWA | TWB | TWC |  SA |  SB |  SC |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id: np.array = np.array([], dtype='int32')
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.nodes: np.array = np.zeros((0, 2), dtype='int32')
+        self.g0: np.array = np.array([], dtype='int32')
+        self.x: np.array = np.zeros((0, 3), dtype='float64')
+
+        # offset vectors at A/B/C
+        self.wa: np.array = np.zeros((0, 3), dtype='float64')
+        self.wb: np.array = np.zeros((0, 3), dtype='float64')
+        self.wc: np.array = np.zeros((0, 3), dtype='float64')
+
+        self.tw: np.array = np.zeros((0, 3), dtype='float64')
+
+        # scalar points at A/B/C for warping
+        self.wc: np.array = np.zeros((0, 3), dtype='int32')
+        #self.sa: np.array = np.zeros([], dtype='int32')
+        #self.sb: np.array = np.zeros([], dtype='int32')
+        #self.sc: np.array = np.zeros([], dtype='int32')
+
+    def add(self, eid: int, pid: int, nids: list[int],
+            x: Optional[list[float]], g0: Optional[int],
+            wa=None, wb=None, tw=None,
+            sa: int=0, sb: int=0, sc: int=0,
+            comment: str='') -> int:
+        if wa is None:
+            wa = [0., 0., 0.]
+        if wb is None:
+            wb = [0., 0., 0.]
+        if wc is None:
+            wc = [0., 0., 0.]
+        if tw is None:
+            tw = [0., 0., 0.]
+        self.cards.append((eid, pid, nids, g0, x,
+                           wa, wb, wc, tw,
+                           [sa, sb, sc], comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        gc = integer_or_blank(card, 5, 'gc')
+
+        # card, eid, x1_default, x2_default, x3_default
+        x, g0 = init_x_g0_cbeam3(card, eid, 0., 0., 0.)
+        wa = [
+            double_or_blank(card, 9, 'w1a', default=0.0),
+            double_or_blank(card, 10, 'w2a', default=0.0),
+            double_or_blank(card, 11, 'w3a', default=0.0), ]
+
+        wb = [
+            double_or_blank(card, 12, 'w1b', default=0.0),
+            double_or_blank(card, 13, 'w2b', default=0.0),
+            double_or_blank(card, 14, 'w3b', default=0.0), ]
+
+        wc = [
+            double_or_blank(card, 15, 'w1c', default=0.0),
+            double_or_blank(card, 16, 'w2c', default=0.0),
+            double_or_blank(card, 17, 'w3c', default=0.0), ]
+
+        tw = [
+            double_or_blank(card, 18, 'twa', 0.),
+            double_or_blank(card, 19, 'twb', 0.),
+            double_or_blank(card, 20, 'twc', 0.),]
+
+        # TODO: what are the defaults?
+        s = [
+            integer_or_blank(card, 21, 'sa', default=0),
+            integer_or_blank(card, 22, 'sb', default=0),
+            integer_or_blank(card, 23, 'sc', default=0), ]
+        assert len(card) <= 24, f'len(CBEAM3 card) = {len(card):d}\ncard={card}'
+        #return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
+                      #wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
+        self.cards.append((eid, pid, [ga, gb, gc], g0, x,
+                           wa, wb, wc, tw,
+                           s, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
+        g0 = np.zeros(ncards, dtype=idtype)
+        x = np.full((ncards, 3), np.nan, dtype='float64')
+
+        wa = np.zeros((ncards, 3), dtype='float64')
+        wb = np.zeros((ncards, 3), dtype='float64')
+        wc = np.zeros((ncards, 3), dtype='float64')
+        tw = np.zeros((ncards, 3), dtype='float64')
+        s = np.zeros((ncards, 3), dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (eid, pid, nids, g0i, xi,
+             wai, wbi, wci, twi, si, comment) = card
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
+            if g0i in {None, 0, -1}:
+                assert xi is not None, xi
+                x[icard, :] = xi
+            else:
+                assert g0i > 0, card
+                g0[icard] = g0i
+
+            wa[icard, :] = wai
+            wb[icard, :] = wbi
+            wc[icard, :] = wci
+            tw[icard, :] = twi
+            s[icard, :] = si # [sa, sb, sc]
+
+        self._save(element_id, property_id, nodes,
+                   g0, x,
+                   wa, wb, wc, tw, s)
+        #beamor = self.model.beamor
+        #apply_bar_default(self, beamor)
+        self.cards = []
+
+    def _save(self, element_id, property_id, nodes,
+              g0, x,
+              wa, wb, wc, tw, s) -> None:
+        if len(self.element_id) != 0:
+            asdf
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.g0 = g0
+        self.x = x
+
+        self.wa = wa
+        self.wb = wb
+        self.wc = wc
+        self.tw = tw
+        self.s = s
+        self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        g0 = self.g0[self.is_g0]
+        if len(g0):
+            used_dict['node_id'].append(g0)
+
+        s = self.s[self.s != 0]
+        if len(s):
+            used_dict['spoint_id'].append(s)
+
+    def convert(self, xyz_scale: float=1.0,
+                mass_scale: float=1.0, **kwargs):
+        # easy
+        self.wa *= xyz_scale
+        self.wb *= xyz_scale
+        self.wc *= xyz_scale
+
+        ## TODO: tw??
+
+        ## TODO: probably wrong for CD=1
+        self.x *= xyz_scale
+
+    def __apply_slice__(self, elem: CBEAM, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.g0 = self.g0[i]
+        elem.x = self.x[i, :]
+        elem.wa = self.wa[i, :]
+        elem.wb = self.wb[i, :]
+        elem.wc = self.wc[i, :]
+        elem.tw = self.tw[i, :]
+        elem.s = self.s[i, :]
+        elem.n = len(i)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no beam properties for {self.type}')
+        pids.sort()
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(pids, self.property_id))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.g0.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        element_ids = array_str(self.element_id, size=size)
+        property_ids = array_str(self.property_id, size=size)
+        nodes_ = array_str(self.nodes, size=size)
+        was = array_default_float(self.wa, default=0.0, size=size, is_double=False)
+        wbs = array_default_float(self.wb, default=0.0, size=size, is_double=False)
+        wcs = array_default_float(self.wc, default=0.0, size=size, is_double=False)
+        tws = array_default_float(self.tw, default=0.0, size=size, is_double=False)
+        ss = array_default_int(self.s, size=size)
+        for eid, pid, nodes, g0, x, is_g0, wa, wb, wc, tw, s in zip_longest(
+            element_ids, property_ids, nodes_,
+            self.g0, self.x, self.is_g0, was, wbs, wcs, tws, ss):
+
+            ga, gb, gc = nodes
+            w1a, w2a, w3a = wa
+            w1b, w2b, w3b = wb
+            w1c, w2c, w3c = wc
+            twa, twb, twc = tw
+            sa, sb, sc = s
+            if is_g0:
+                x1 = g0
+                x2 = ''
+                x3 = ''
+            else:
+                x1, x2, x3 = x # self.get_x_g0_defaults()
+
+            # offt doesn't exist in NX nastran
+            #offt = set_blank_if_default(offt, 'GGG')
+
+            list_fields = ['CBEAM3', eid, pid, ga, gb, gc, x1, x2, x3,
+                           w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+                           twa, twb, twc, sa, sb, sc]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    @property
+    def is_x(self) -> np.ndarray:
+        return (self.g0 == 0)
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
+
+    @property
+    def all_properties(self) -> list[PBEAM3]:
+        model = self.model
+        return [model.pbeam3]
+
+    @property
+    def allowed_properties(self):
+        all_properties = self.all_properties
+        props = [prop for prop in all_properties if prop.n > 0]
+        assert len(props) > 0, f'{self.type}: all_props={all_properties}'
+        return props
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBEAM3')
+        return material_id
+
+    def mass(self) -> np.ndarray:
+        #pid = self.property_id
+        mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
+        length = self.length()
+        mass = mass_per_length * length
+        return mass
+
+    def line_vector_length(self) -> tuple[np.ndarray, np.ndarray]:
+        line_vector, length = line_vector_length(self.model, self.nodes)
+        return line_vector, length
+
+    def length(self) -> np.ndarray:
+        missing = np.setdiff1d(self.nodes.flatten(), self.model.grid.node_id)
+        if len(missing):
+            raise RuntimeError(missing)
+        length = line_length(self.model, self.nodes)
+        inan = np.isnan(length)
+        if np.any(inan):
+            msg = 'CBEAM has nan length\n'
+            msg += f'eids={self.element_id[inan]}\n'
+            msg += f'nid1={self.nodes[inan,0]}\n'
+            msg += f'nid2={self.nodes[inan,1]}\n'
+            raise RuntimeError(msg)
+        return length
+
+    def centroid(self) -> np.ndarray:
+        centroid = line_centroid(self.model, self.nodes)
+        return centroid
+
+    def e_g_nu(self) -> np.ndarray:
+        e_g_nu = e_g_nu_from_property_id(self.property_id, self.allowed_properties)
+        return e_g_nu
+
+    #def inertia(self) -> np.ndarray:
+        #inertia = inertia_from_property_id(self.property_id,
+                                           #self.allowed_properties)
+        #return inertia
+
+    #def k(self) -> np.ndarray:
+        #k1_k2 = k_from_property_id(self.property_id,
+                                   #self.allowed_properties)
+        #return k1_k2
+
+    #def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        #v, cd = get_bar_vector(self, xyz1)
+        #return v, cd
+
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
+        #neids = len(self.element_id)
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        return xyz1, xyz2
+
+    #def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 #) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            #np.ndarray, np.ndarray, np.ndarray]:
+        #log = self.model.log
+        #coords = self.model.coord
+        ##xyz1, xyz2 = self.get_xyz()
+
+        #neids = xyz1.shape[0]
+        #i = xyz2 - xyz1
+        #ihat_norm = np.linalg.norm(i, axis=1)
+        #assert len(ihat_norm) == neids
+        #if min(ihat_norm) == 0.:
+            #msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            #log.error(msg)
+            #raise ValueError(msg)
+        #i_offset = i / ihat_norm[:, np.newaxis]
+
+        ##log.info(f'x =\n{self.x}')
+        ##log.info(f'g0   = {self.g0}')
+        #v, cd = self.get_bar_vector(xyz1)
+        #cd1 = cd[:, 0]
+        #cd2 = cd[:, 1]
+
+        #offt_vector, offt_end_a, offt_end_b = split_offt_vector(self.offt)
+        #is_rotate_v_g = (offt_vector == 'G')
+        #is_rotate_wa_g = (offt_end_a == 'G')
+        #is_rotate_wb_g = (offt_end_b == 'G')
+
+        ##is_rotate_v_b = (offt_vector == 'B')
+        ##is_rotate_wa_b = (offt_end_a == 'B')
+        ##is_rotate_wb_b = (offt_end_b == 'B')
+
+        #is_rotate_wa_o = (offt_end_a == 'O')
+        #is_rotate_wb_o = (offt_end_b == 'O')
+
+        #uofft_vector = np.unique(offt_vector)
+        #uofft_end_a = np.unique(offt_end_a)
+        #uofft_end_b = np.unique(offt_end_b)
+
+        #msg = ''
+        #for i, offt_vectori in enumerate(uofft_vector):
+            #if offt_vectori not in 'GB':
+                #msg += f'OFFT field[0]={offt_vectori} and must be G/B; offt={self.offt[i]}\n'
+        #for i, offt_end_ai in enumerate(uofft_end_a):
+            #if offt_end_ai not in 'GBO':
+                #msg += f'OFFT field[1]={offt_end_ai} and must be G/B/O; offt={self.offt[i]}\n'
+        #for i, offt_end_bi in enumerate(uofft_end_b):
+            #if offt_end_bi not in 'GBO':
+                #msg += f'OFFT field[2]={offt_end_bi} and must be G/B/O; offt={self.offt[i]}\n'
+        #if msg:
+            #log.error(msg)
+            #raise ValueError(msg)
+
+        ##--------------------------------------------------------------------------
+        ## rotate v
+        ##log.info(f'offt = {self.offt}')
+        ##log.info(f'v0 =\n{v}')
+        ##log.info(f'cd =\n{cd}')
+
+        #if np.any(is_rotate_v_g):
+            ## end A
+            ## global - cid != 0
+            #icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
+            #cd1_v_vector = cd1[icd1_v_vector]
+            #if np.any(cd1_v_vector):
+                ##v[icd1_vector, :] = np.nan
+                #cd1_ref: COORD = coords.slice_card_by_id(cd1_v_vector)
+                #v1v = v[icd1_v_vector, :]
+                #v[icd1_v_vector, :] = cd1_ref.transform_xyz_to_global_assuming_rectangular(v1v)
+                #del v1v
+            #del icd1_v_vector, cd1_v_vector
+
+        ##elif offt_vector == 'B':
+            ## basic - cid = 0
+            ##pass
+
+        #if np.any(np.isnan(v.max(axis=1))):
+            #raise RuntimeError(f'v = {v}')
+
+        ##--------------------------------------------------------------------------
+        ## determine the bar vectors
+        ##log.info(f'v =\n{v}')
+        ##log.info(f'ihat =\n{i_offset}')
+        #ihat = i_offset
+
+        #vnorm = np.linalg.norm(v, axis=1)
+
+        ##if np.any(np.isnan(v.max(axis=1))):
+        ##print(f'vnorm = {vnorm}')
+
+        #vhat = v / vnorm[:, np.newaxis] # j
+        #z = np.cross(ihat, vhat) # k
+        #norm_z = np.linalg.norm(z, axis=1)
+        #assert len(norm_z) == neids
+
+        ##if np.any(np.isnan(zhat.max(axis=1))):
+        ##print(f'norm_z = {norm_z}')
+
+        #zhat = z / norm_z[:, np.newaxis]
+        #yhat = np.cross(zhat, ihat) # j
+        #norm_i = np.linalg.norm(ihat, axis=1)
+        #norm_yhat = np.linalg.norm(yhat, axis=1)
+        #xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
+        ##del ihat, yhat, zhat, norm_z, norm_yhat
+
+        #if np.any(np.isnan(yhat.max(axis=1))):
+            #self.model.log.error(f'norm_yhat = {norm_yhat}')
+
+        #del norm_i, norm_z, norm_yhat
+        ##aaa
+        ##--------------------------------------------------------------------------
+        ## rotate wa
+        ## wa defines the offset at end A
+        #wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
+
+        #if np.any(is_rotate_wa_g):
+            #icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
+            #cd1_vector = cd1[icd1_vector]
+            #if np.any(icd1_vector):
+                #cd1_ref = coords.slice_card_by_id(cd1_vector)
+                #wai1 = wa[icd1_vector, :]
+                #wai2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(wai1)
+                ##print('eids.shape =', self.element_id.shape)
+                ##print('len(cd1_vector) =', len(cd1_vector))
+                ##print('icd1_vector.shape =', icd1_vector.shape)
+                ##print('is_rotate_wa.shape =', is_rotate_wa.shape)
+                ##print('wai1.shape =', wai1.shape)
+                ##print('wai2.shape =', wai2.shape)
+                ##print('wa.shape =', wa.shape)
+                #wa[icd1_vector, :] = wai2
+            #del cd1_vector, icd1_vector
+        ##elif offt_end_a == 'B':
+            ##pass
+        #if np.any(is_rotate_wa_o):
+            ## rotate point wa from the local frame to the global frame
+            ##wa = wa @ xform_offset
+            #wao1 = wa[is_rotate_wa_o, :]
+            #To = xform_offset[is_rotate_wa_o, :, :]
+            #wao = np.einsum('ni,nij->nj', wao1, To)
+            #wa[is_rotate_wa_o, :] = wao
+            #del wao1, To, wao
+
+        #assert not np.isnan(np.max(wa)), wa
+
+        ##--------------------------------------------------------------------------
+        ## rotate wb
+        ## wb defines the offset at end B
+        #wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
+        #if np.any(is_rotate_wb_g):
+            #icd2_vector = (is_rotate_wb_g) & (cd2 != 0)
+            #cd2_vector = cd2[icd2_vector]
+            ##cd2_vector = cd2[is_rotate_wb]
+            ##icd2_vector = (cd2_vector != 0)
+            #if np.any(icd2_vector):
+                ## MasterModelTaxi
+                ##wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                #cd2_ref = coords.slice_card_by_id(cd2_vector)
+                #wbi1 = wb[icd2_vector, :]
+                #wbi2 = cd2_ref.transform_xyz_to_global_assuming_rectangular(wbi1)
+                #wb[icd2_vector, :] = wbi2
+            #del cd2_vector, icd2_vector
+        ##elif offt_end_b == 'B':
+            ##pass
+
+        #if np.any(is_rotate_wb_o):
+            ## rotate point wb from the local frame to the global frame
+
+            #wbo1 = wb[is_rotate_wb_o, :]
+            #To = xform_offset[is_rotate_wb_o, :, :]
+            #wbo = np.einsum('ni,nij->nj', wbo1, To)
+            #wb[is_rotate_wb_o, :] = wbo
+            #del wbo1, To, wbo
+            ##wb = wb @ xform_offset
+            ##ib = n2 + wb
+
+        #assert not np.isnan(np.max(wb)), wb
+
+        ##ihat = xform[0, :]
+        ##yhat = xform[1, :]
+        ##zhat = xform[2, :]
+        ##wa, wb, _ihat, jhat, khat = out
+
+        ## we finally have the nodal coordaintes!!!! :)
+        #return v, ihat, yhat, zhat, wa, wb
+
+    #def check_missing_ids(self, property_id: np.ndarray):
+        #missing_coords = np.setdiff1d(coord_id, self.coord_id)
+        #if len(missing_coords):
+            #raise RuntimeError(f'coords={missing_coords} not found in {self.coord_id}')
+
+    #def center_of_mass(self) -> np.ndarray:
+        ##self.check_missing(self.property_id)
+        #log = self.model.log
+
+        #xyz1, xyz2 = self.get_xyz()
+        #neids = xyz1.shape[0]
+        #centroid = (xyz1 + xyz2) / 2.
+        #assert centroid.shape[0] == self.nodes.shape[0]
+        #assert not np.isnan(np.max(xyz1)), xyz1
+        #assert not np.isnan(np.max(xyz2)), xyz2
+
+        #v, ihat, jhat, khat, wa, wb = self.get_axes(xyz1, xyz2)
+
+        ## we finally have the nodal coordaintes!!!! :)
+        #p1 = xyz1 + wa
+        #p2 = xyz2 + wb
+        ## ----------------------------------
+        ## now some mass properties :(
+        #mass_per_length = np.full(neids, np.nan, dtype='float64')
+        #nsm_per_length = np.full(neids, np.nan, dtype='float64')
+        #nsm_centroid = np.full((neids, 3), np.nan, dtype='float64')
+
+        ##log.debug(f'property_id = {self.property_id}')
+        #for prop in self.allowed_properties:
+            #pids_common = np.intersect1d(prop.property_id, self.property_id)
+            ##ind = prop.property_id[ipid]
+            #if len(pids_common) == 0:
+                #log.debug(f'  skipping {prop.type}; pids={prop.property_id}')
+                #continue
+
+            #if 0:
+                #ipid = np.searchsorted(prop.property_id, self.property_id)
+                #ipid = ipid[ipid < len(prop.property_id)]
+                #if len(ipid) == 0:
+                    #log.warning(f'skipping {prop.type}; pids={prop.property_id}')
+                    #continue
+                #is_valid = (prop.property_id[ipid] == self.property_id)
+                #ipid = ipid[is_valid]
+            #else:
+                #ipid = np.array([i for i, pid  in enumerate(self.property_id)
+                                 #if pid in prop.property_id])
+                #if len(ipid) == 0:
+                    #log.warning(f'skipping {prop.type}; pids={prop.property_id}')
+                    #continue
+
+            #prop2 = prop.slice_card_by_property_id(pids_common)
+            #log.info(f'running...{prop.type}: pids={prop.property_id}')
+            #if prop.type == 'PBEAM':
+                ##ipid = prop.index(self.property_id)
+                ##ipid = np.array([pid for pid in self.property_id
+                                 ##if pid in pids_common])
+                ##ipid = prop.index(pids_common, assume_sorted=True,
+                                  ##inverse=False)
+                ##ipidrev = prop.index(pids_common, assume_sorted=True,
+                                     ##inverse=True)
+                ##prop2 = prop.slice_card_by_id(ipid)
+                #m1a = prop2.m1a
+                #m1b = prop2.m1b
+                #m2a = prop2.m2a
+                #m2b = prop2.m2b
+                ##rho = prop2.rho()
+
+                ## we don't call the MassPerLength method so we can put the NSM centroid
+                ## on a different axis (the PBEAM is weird)
+                #mass_per_lengths_, nsm_per_lengths_ = prop2.rhoarea_nsm()
+
+                ##ipidrev2 = np.zeros(neids, )
+                #for jpid, pid, mpl, nsmpl in zip(count(), pids_common,
+                                                 #mass_per_lengths_, nsm_per_lengths_):
+                    #iipid = np.where(self.property_id == pid)[0]
+                    #if len(iipid) == 0:
+                        #log.warning(f'  skipping {prop.type}; pid={pid}')
+                        #continue
+                    ##ipidrev2.append(_pid)
+                    ##log.debug(f'iipid = {iipid}')
+
+                    #nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1a[jpid] + khat[iipid, :] * m2a[jpid])
+                    #nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1b[jpid] + khat[iipid, :] * m2b[jpid])
+
+                    ##log.debug(f'  jhat={jhat}')
+                    ##log.debug(f'  khat={khat}')
+                    ##log.debug(f'  m1a={m1a}')
+                    ##log.debug(f'  m2a={m2a}')
+                    ##log.debug(f'  m1b={m1b}')
+                    ##log.debug(f'  m2b={m2b}')
+
+                    ##print("nsm_per_length=%s" % nsm_per_length)
+                    ##log.debug('  nsm_n1=%s' % nsm_n1)
+                    ##log.debug('  nsm_n2=%s' % nsm_n2)
+                    #nsm_centroid[iipid] = (nsm_n1 + nsm_n2) / 2.
+                    #mass_per_length[iipid] = mpl
+                    #nsm_per_length[iipid] = nsmpl
+                    ##nsm_centroid[iipid] = 0.
+
+                ##if nsm != 0.:
+                    ##p1_nsm = p1 + prop.ma
+                    ##p2_nsm = p2 + prop.mb
+            #elif prop.type == 'PBEAML':
+                #prop2 = prop.slice_card_by_property_id(pids_common)
+                #mass_per_lengths_ = prop2.mass_per_length()
+                #for jpid, pid, mpl in zip(count(), pids_common, mass_per_lengths_):
+                    #iipid = np.where(self.property_id == pid)[0]
+                    #if len(iipid) == 0:
+                        #log.warning(f'  skipping {prop.type}; pid={pid}')
+                        #continue
+                    #mass_per_length[iipid] = mpl
+
+                    ##mass_per_length = prop.MassPerLength() # includes simplified nsm
+                    #nsm_centroid[iipid, :] = (p1[iipid, :] + p2[iipid, :]) / 2.
+
+                    ## mass_per_length already includes nsm
+                    #nsm_per_length[iipid] = 0.
+
+                ##print('mass_per_lengths=%s nsm_per_lengths=%s' % (
+                    ##mass_per_lengths, nsm_per_lengths))
+                ##print('mass_per_length=%s nsm_per_length=%s' % (
+                    ##mass_per_length, nsm_per_length))
+            #elif prop.type == 'PBCOMP':
+                #prop2 = prop.slice_card_by_property_id(pids_common)
+                #mass_per_lengths_ = prop2.mass_per_length()
+                #m1s = prop2.m1
+                #m2s = prop2.m2
+                #for jpid, pid, mpl, m1, m2 in zip(count(), pids_common,
+                                                  #mass_per_lengths_, m1s, m2s):
+                    #iipid = np.where(self.property_id == pid)[0]
+                    #if len(iipid) == 0:
+                        #log.warning(f'  skipping {prop.type}; pid={pid}')
+                        #continue
+                    #mass_per_length[iipid] = mpl
+
+                    ## already accounted for in mass_per_length
+                    #nsm_per_length[iipid] = 0.0
+
+                    #nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
+                    #nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
+                    #nsm_centroid[iipid, :] = (nsm_n1 + nsm_n2) / 2.
+            ##elif prop.type == 'PBMSECT':
+                ##continue
+                ##mass_per_length = prop.MassPerLength()
+                ##m = mass_per_length * length
+                ##nsm = prop.nsm
+            #elif prop.type == 'PBMSECT':
+                #raise RuntimeError(prop)
+                ##mass_per_length = 0.  ## TODO: fix me
+                ##nsm_per_length = prop.nsm
+                ##nsm_centroid = (p1 + p2) / 2.
+            #else:
+                #raise NotImplementedError(prop.type)
+
+            #assert isinstance(mass_per_length, np.ndarray), mass_per_length
+            #assert isinstance(nsm_per_length, np.ndarray), nsm_per_length
+            #assert nsm_centroid.shape == (self.n, 3), nsm_centroid.shape
+
+        #if np.isnan(nsm_centroid.max()):
+            #inan = np.isnan(nsm_centroid.max(axis=1))
+            #assert len(inan) == len(self.element_id)
+            ##eid = self.element_id[inan]
+            #pid = self.property_id[inan]
+            #upid = np.unique(pid)
+            ##eid_pid = np.column_stack([eid, pid])
+            ##'[eid,pid]={eid_pid}\n'
+            #raise RuntimeError(f'nan nsm_centroids for upids={upid}')
+
+        #assert not np.isnan(mass_per_length.max()), mass_per_length
+        #assert not np.isnan(nsm_per_length.max()), nsm_per_length
+        #total_mass = mass_per_length + nsm_per_length
+
+        #assert centroid.shape == (self.n, 3), centroid.shape
+        #if np.abs(total_mass).sum() == 0.0:
+            #return centroid
+
+        #center_of_mass = (centroid * mass_per_length[:, np.newaxis] + nsm_centroid * nsm_per_length[:, np.newaxis]) / total_mass[:, np.newaxis]
+        #assert not np.isnan(center_of_mass.max()), center_of_mass
+        #assert mass_per_length.shape == (self.n, ), mass_per_length.shape
+        #assert nsm_per_length.shape == (self.n, ), nsm_per_length.shape
+        #assert total_mass.shape == (self.n, ), total_mass.shape
+        #assert nsm_centroid.shape == (self.n, 3), nsm_centroid.shape
+        #assert center_of_mass.shape == (self.n, 3), center_of_mass.shape
+        #return center_of_mass
+        ##return self.centroid()
+
+    #def area(self) -> np.ndarray:
+        #pid = self.property_id
+        #area = np.full(len(pid), np.nan, dtype='float64')
+        #log = self.model.log
+        #for prop in self.allowed_properties:
+            #i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
+            #if len(i_lookup) == 0:
+                #continue
+            ## we're at least using some properties
+            #areai = prop.area()
+            #area_all = areai[i_all]
+            #inan = np.isnan(area_all)
+            #if np.any(inan):
+                #msg = f'{prop.type} has nan area for property_ids={prop.property_id[inan]}\n'
+                #log.warning(msg)
+
+            #area[i_lookup] = areai[i_all]
+
+        #inan = np.isnan(area)
+        #if np.any(inan):
+            #msg = 'CBEAM has nan area\n'
+            #msg += f'eids={self.element_id[inan]}\n'
+            #msg += f'pid={self.property_id[inan]}\n'
+            #msg += f'all_properties={self.all_properties}'
+            ##msg += f'As={self.nodes[inan]}\n'
+            #self.model.log.error(msg)
+            #if not self.model.allow_nan_area:
+                #raise RuntimeError(msg)
+        #return area
+
+    def volume(self) -> np.ndarray:
+        A = self.area()
+        L = self.length()
+        return A * L
+
+    #@property
+    #def is_offt(self) -> np.ndarray:
+        #is_offt = (self.bit == -1)
+        #return is_offt
+
+    #@property
+    #def is_bit(self) -> np.ndarray:
+        #return not self.is_offt
+
+
 class CBEND(Element):
     """
     NX 2020.1
@@ -3206,7 +3956,8 @@ class CBEND(Element):
     def area(self) -> np.ndarray:
         pid = self.property_id
         area = np.full(len(pid), np.nan, dtype='float64')
-        log = self.model.log
+        model = self.model
+        log = model.log
         for prop in self.allowed_properties:
             i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
             if len(i_lookup) == 0:
@@ -3228,7 +3979,9 @@ class CBEND(Element):
             msg += f'pid={self.property_id[inan]}\n'
             msg += f'all_properties={self.all_properties}'
             #msg += f'As={self.nodes[inan]}\n'
-            raise RuntimeError(msg)
+            log.error(msg)
+            if not model.allow_nan_area:
+                raise RuntimeError(msg)
         return area
 
     def volume(self) -> np.ndarray:
@@ -4021,5 +4774,5 @@ class PBEND(Property):
     def area(self) -> np.ndarray:
         area = np.full(self.n, np.nan, dtype='float64')
         ibeamtype1 = (self.beam_type == 1)
-        area[ibeamtype1] = self.A
+        area[ibeamtype1] = self.A[ibeamtype1]
         return area

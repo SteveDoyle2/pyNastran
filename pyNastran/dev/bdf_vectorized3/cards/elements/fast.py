@@ -113,7 +113,7 @@ class CFAST(Element):
 
         fast_type = np.zeros(ncards, dtype='|U4')
         ids = np.zeros((ncards, 2), dtype=idtype)
-        fastener_node = np.zeros(ncards, dtype='int32')
+        fastener_node = np.zeros(ncards, dtype=idtype)
         fastener_xyz = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
             (eid, pid, fast_typei, idsi, nodesi, gs, xyz, comment) = card

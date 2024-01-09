@@ -1989,6 +1989,9 @@ class MATT9(Material):
             a6_tablei = 0 if a6_tablei is None else a6_tablei
 
             ge_tablei = 0 if ge_tablei is None else ge_tablei
+            ges_tablei = [0 if ge_tablei is None else ge_tablei
+                          for ge_tablei in ges_tablei]
+
             material_id[icard] = mid
 
             g11_table[icard] = g11_tablei
@@ -2020,7 +2023,7 @@ class MATT9(Material):
             a5_table[icard] = a5_tablei
             a6_table[icard] = a6_tablei
             ge_table[icard] = ge_tablei
-            ges_table[icard] = ges_tablei
+            ges_table[icard, :] = ges_tablei
 
         self._save(material_id,
                    g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
