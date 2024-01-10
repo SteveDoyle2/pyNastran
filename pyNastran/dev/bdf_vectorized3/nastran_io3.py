@@ -70,7 +70,7 @@ class Nastran3:
             'Nastran3',
             'Nastran3 (*.bdf; *.dat; *.ecd, *.h5, *.op2)', self.load_nastran3_geometry,
             #'NastranV (*.h5)', self.load_h5_results,
-            'Nastran (*.op2)', self.load_op2_results,
+            'Nastran3 (*.op2)', self.load_op2_results,
         )
         return data
 

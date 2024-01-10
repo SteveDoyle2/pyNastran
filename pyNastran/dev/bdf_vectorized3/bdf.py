@@ -20,6 +20,7 @@ from io import StringIO, IOBase
 from pathlib import PurePath
 from functools import partial
 from collections import defaultdict
+import warnings
 import traceback
 
 from typing import (
@@ -56,11 +57,14 @@ from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
 try:
     import tables
+    import pandas as pd
     IS_TABLES = True
-except ImportError:
+except ImportError:  # pragma: no cover
     IS_TABLES = False
 if IS_TABLES:
     from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
+else:  # pragma: no cover
+    warnings.warn('cannot find tables and/or pandas.  Disabling h5 support')
 
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
