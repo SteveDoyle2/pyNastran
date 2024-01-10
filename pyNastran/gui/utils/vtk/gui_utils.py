@@ -1,9 +1,9 @@
 """
 these are functions not exposed in the GUI that are still useful
 """
-import vtk
+from vtkmodules.vtkRenderingLOD import vtkLODActor
 
-def add_actors_to_gui(gui, actors: list[vtk.vtkLODActor], render: bool=True):
+def add_actors_to_gui(gui, actors: list[vtkLODActor], render: bool=True):
     """adds multiple vtk actors"""
     if not len(actors):
         return
@@ -13,7 +13,7 @@ def add_actors_to_gui(gui, actors: list[vtk.vtkLODActor], render: bool=True):
     if render:
         renderer.Render()
 
-def remove_actors_from_gui(gui, actors: list[vtk.vtkLODActor],
+def remove_actors_from_gui(gui, actors: list[vtkLODActor],
                            render: bool=True, force_render: bool=False):
     """removes multiple vtk actors"""
     if not (len(actors) or force_render):

@@ -27,7 +27,7 @@ from pyNastran.gui.menus.groups_modify.groups_modify import Group
     #vtkGlyph3D,
     #vtkPolyDataMapper,
 #)
-import vtk
+import vtkmodules
 
 from pyNastran.gui.gui_common import GuiVTKCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar

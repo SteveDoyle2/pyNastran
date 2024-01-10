@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
-#import vtk
+#import vtkmodules
 from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.vtk_rendering_core import vtkCamera
 

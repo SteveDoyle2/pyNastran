@@ -5,20 +5,14 @@ import traceback
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-#import vtk
-from vtk import (
-    #vtkmodules.vtkRenderingAnnotation
-    vtkAxesActor,
-    # vtkmodules.vtkFiltersHybrid
-    vtkRenderLargeImage,
-    #vtkmodules.vtkIOImage
-    vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
-    #vtkmodules.vtkCommonTransforms
-    vtkTransform,
-    # ???
-    vtkAxesActor, vtkRenderLargeImage, vtkOrientationMarkerWidget,
-    vtkXMLUnstructuredGridWriter,
-)
+
+from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
+from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
+from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
+from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+
 from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
 from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
 from pyNastran.gui.vtk_rendering_core import (

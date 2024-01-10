@@ -9,12 +9,13 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
-from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
-#from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
-#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-#from vtkmodules.vtkFiltersGeneral import vtkAxes
-#from vtkmodules.vtkFiltersCore import vtkIdFilter
-#from vtkmodules.util.vtkConstants import VTK_ID_TYPE
+#from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
+from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkFiltersGeneral import vtkAxes
+from vtkmodules.vtkFiltersCore import vtkIdFilter
+from vtkmodules.util.vtkConstants import VTK_ID_TYPE
+
 from pyNastran.gui.vtk_common_core import (
     vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT)
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex

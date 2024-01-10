@@ -15,12 +15,12 @@ import numpy as np
 from numpy import issubdtype
 from numpy.linalg import norm  # type: ignore
 
-from vtkmodules.vtkRenderingCore import vtkProperty
 from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT, VTK_VERSION
+from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
+from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 
 #import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkPolyDataMapper
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
@@ -1099,7 +1099,7 @@ class GuiQtCommon(GuiAttributes):
 
         # the backface property is null
         #back_prop = self.geom_actor.GetBackfaceProperty()
-        back_prop = vtk.vtkProperty()
+        back_prop = vtkProperty()
         back_prop.SetColor(BLUE)
         self.geom_actor.SetBackfaceProperty(back_prop)
 
@@ -1776,7 +1776,7 @@ class GuiQtCommon(GuiAttributes):
             plane_actor = self.plane_actor
             add = False
             #alt_grid =
-            #plane_source = vtk.vtkPlaneSource()
+            #plane_source = vtkPlaneSource()
             #self.rend.AddActor(plane_actor)
             #self.plane_actor = plane_actor
         else:
@@ -1786,7 +1786,7 @@ class GuiQtCommon(GuiAttributes):
 
             mapper = vtkDataSetMapper()
             mapper.SetInputData(alt_grid)
-            plane_actor = vkActor()
+            plane_actor = vtkActor()
             plane_actor.SetMapper(mapper)
 
             #plane_source = self.plane_source
@@ -1814,7 +1814,7 @@ class GuiQtCommon(GuiAttributes):
         if actor_name in self.alt_grids:
             point_actor = self.point_actor
             #alt_grid =
-            #plane_source = vtk.vtkPlaneSource()
+            #plane_source = vtkPlaneSource()
             #self.rend.AddActor(point_actor)
             #self.point_actor = point_actor
         else:
@@ -1842,12 +1842,12 @@ class GuiQtCommon(GuiAttributes):
         """trying to make model lines...doesn't work"""
         if not self.make_contour_filter:
             return
-
+        from vtkmodules.vtkFiltersCore import vtkContourFilter
         self.contour_filter = vtkContourFilter()
 
         #if 0:
             # doesn't work...in progress
-            #geometry_filter = vtk.vtkGeometryFilter()
+            #geometry_filter = vtkGeometryFilter()
             #geometry_filter.SetInputData(self.grid_selected)
             #geometry_filter.Update()
             #poly_data = geometry_filter.GetOutput()

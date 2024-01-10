@@ -1,6 +1,7 @@
 """interface to the ScalarBar"""
 import numpy as np
-import vtk
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkTextProperty
+from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
 from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
@@ -33,7 +34,7 @@ class ScalarBar:
 
     def __init__(self, is_horizontal=False):
         """creates the scalar bar"""
-        self.scalar_bar = vtk.vtkScalarBarActor()
+        self.scalar_bar = vtkScalarBarActor()
         prop = self.scalar_bar.GetTitleTextProperty()
         set_vtk_property_to_unicode(prop, bi_font_file)
 
@@ -42,7 +43,7 @@ class ScalarBar:
         #prop.ItalicOn()
         #prop.ShadowOn()
 
-        self.color_function = vtk.vtkColorTransferFunction()
+        self.color_function = vtkColorTransferFunction()
         self.color_function.SetNanColor(1., 1., 1.)
 
         self.is_shown = True
@@ -104,13 +105,13 @@ class ScalarBar:
         self.scalar_bar.SetWidth(width)
         self.scalar_bar.SetPosition(x, y)
 
-        prop_title = vtk.vtkTextProperty()
+        prop_title = vtkTextProperty()
         prop_title.SetFontFamilyToArial()
         #prop_title.ItalicOff()
         prop_title.BoldOn()
         prop_title.ShadowOn()
 
-        prop_label = vtk.vtkTextProperty()
+        prop_label = vtkTextProperty()
         prop_label.BoldOff()
         prop_label.ShadowOn()
 

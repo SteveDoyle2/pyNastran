@@ -17,7 +17,7 @@ from qtpy.QtWidgets import QMessageBox, QApplication
 import urllib
 
 # 3rd party
-import vtk  # if this crashes, make sure you ran setup.py
+import vtkmodules  # if this crashes, make sure you ran setup.py
 
 # pyNastran
 import pyNastran

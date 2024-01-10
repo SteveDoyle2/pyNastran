@@ -435,7 +435,7 @@ class QVTKRenderWindowInteractor(QWidget):
 
 def QVTKRenderWidgetConeExample():
     """A simple example that uses the QVTKRenderWindowInteractor class."""
-    from vtk import vtkConeSource
+    from vtkmodules.vtkFiltersSources import vtkConeSource
 
     # every QT app needs an app
     app = QApplication(['QVTKRenderWindowInteractor'])

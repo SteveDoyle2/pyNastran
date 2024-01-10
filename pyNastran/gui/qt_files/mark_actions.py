@@ -5,7 +5,9 @@ defines:
 """
 from typing import Optional, Any
 import numpy as np
-from vtk import vtkSelection, vtkExtractSelection
+from vtkmodules.vtkCommonDataModel import vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+
 from pyNastran.gui.vtk_rendering_core import vtkBillboardTextActor3D
 
 from pyNastran.utils.numpy_utils import integer_types

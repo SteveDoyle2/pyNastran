@@ -16,10 +16,10 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkDataSetMapper, vtkCamera, vtkTextActor)
 
-try:
-    from vtkmodules.vtkRenderingLOD import vtkLODActor
-except ImportError:
-    from vtk import vtkLODActor
+#try:
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+#except ImportError:
+    #from vtk import vtkLODActor
 
 import pyNastran
 from qtpy import QtCore, QtGui #, API

@@ -15,10 +15,11 @@ from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
 
-from vtk import (
-    vtkImageActor, vtkSelectionNode, vtkSelection, vtkExtractSelection,
-    vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader,
-)
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
+from vtkmodules.vtkRenderingCore import vtkImageActor
+from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
+
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer
 import pyNastran
@@ -617,7 +618,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #splane.SetPoint1(origin + dx * vx)
         #splane.SetPoint2(origin + dy * vy)
 
-        #actor = vtk.vtkLODActor()
+        #actor = vtkLODActor()
         #mapper = vtkPolyDataMapper()
         ##mapper.InterpolateScalarsBeforeMappingOn()
         ##mapper.UseLookupTableScalarRangeOn()

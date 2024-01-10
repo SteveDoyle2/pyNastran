@@ -28,7 +28,7 @@ from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
 from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
-    import vtk
+    from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
 
 
@@ -780,7 +780,7 @@ class Settings:
             msg += '  %r = %r\n' % (key, value)
         return msg
 
-def update_axes_text_size(axes: dict[int, vtk.vtkAxes],
+def update_axes_text_size(axes: dict[int, vtkAxes],
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25):
     """updates the coordinate system text size"""

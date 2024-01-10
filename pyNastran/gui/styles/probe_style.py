@@ -3,12 +3,12 @@ defines the ProbeResultStyle class
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-import vtk
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 if TYPE_CHECKING:
     from pyNastran.gui.gui import MainWindow
 
 
-class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
+class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
     """Custom TrackballCamera"""
 
     def __init__(self, parent=None):

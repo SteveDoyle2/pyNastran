@@ -1,5 +1,6 @@
 """defines the ZoomStyle class"""
-from vtk import vtkInteractorStyleRubberBandZoom
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
+
 from pyNastran.gui.vtk_rendering_core import vtkCamera
 
 #left_button_down=self._zoom_picker,

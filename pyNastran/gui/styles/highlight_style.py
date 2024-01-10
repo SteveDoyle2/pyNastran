@@ -13,7 +13,7 @@ http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
 import numpy as np
-import vtk
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 #from vtk.util.numpy_support import vtk_to_numpy
 #from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.utils.numpy_utils import integer_types
@@ -24,8 +24,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_selection_node_by_cell_ids)
 
 #vtkInteractorStyleRubberBandPick # sucks?
-#class AreaPickStyle(vtk.vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
-class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
+#class AreaPickStyle(vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
+class HighlightStyle(vtkInteractorStyleTrackballCamera):  # works
     """Highlights nodes & elements"""
     def __init__(self, parent=None, is_eids=True, is_nids=True, representation='wire',
                  name=None, callback=None, cleanup=True):

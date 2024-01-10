@@ -8,7 +8,8 @@ import traceback
 from typing import Callable, Optional, Any
 
 import numpy as np
-import vtk
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
+
 from qtpy import QtGui
 from qtpy.QtWidgets import QMainWindow
 
@@ -261,7 +262,7 @@ class GuiAttributes:
             (1.0, 0.662745098039, 0.113725490196)
         ]
 
-        self.color_function_black = vtk.vtkColorTransferFunction()
+        self.color_function_black = vtkColorTransferFunction()
         self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
         self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
 
@@ -499,7 +500,7 @@ class GuiAttributes:
         grid = self.alt_grids[name]
         grid.SetPoints(points)
 
-        etype = 9  # vtk.vtkQuad().GetCellType()
+        etype = 9  # vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         if add:

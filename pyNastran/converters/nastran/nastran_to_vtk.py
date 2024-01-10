@@ -1,7 +1,11 @@
 """tests the NastranIO class"""
 import os
 
-from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
+#from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
+from vtkmodules.vtkCommonCore import vtkFloatArray
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+
 from cpylog import SimpleLogger
 
 import pyNastran

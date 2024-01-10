@@ -1,11 +1,25 @@
 # coding: utf-8
 import numpy as np
-import vtk
 
 from pyNastran.gui.vtk_rendering_core import (
-    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
-    vtkActor, vtkCamera,
-    vtkDataSetMapper, vtkPolyDataMapper)
+    vtkRenderer, # vtkRenderWindow, vtkRenderWindowInteractor,
+    #vtkActor, vtkCamera,
+    #vtkDataSetMapper,
+    vtkPolyDataMapper)
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
+from vtkmodules.vtkFiltersSources import vtkArrowSource
+
+from vtkmodules.vtkFiltersCore import vtkGlyph3D
+import vtkmodules.vtkFiltersExtraction  # mark this file for pyInstaller
+try:
+    # vtk 9.1
+    from vtkmodules.vtkFiltersExtraction import vtkExtractEdges
+except ImportError:
+    # vtk 9.3
+    from vtkmodules.vtkFiltersCore import vtkExtractEdges
+
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from pyNastran.gui.qt_version import qt_version
@@ -16,9 +30,9 @@ from pyNastran.gui.utils.vtk.vtk_utils import map_element_centroid_to_node_fring
 from pyNastran.gui.menus.menus import Group
 
 
-#class Interactor(vtk.vtkGenericRenderWindowInteractor):
+#class Interactor(vtkGenericRenderWindowInteractor):
     #def __init__(self):
-        ##vtk.vtkGenericRenderWindowInteractor()
+        ##vtkGenericRenderWindowInteractor()
         #pass
 
     #def HighlightProp(self):
@@ -62,7 +76,7 @@ class GuiVTKCommon(GuiQtCommon):
     def create_vtk_actors(self, create_rend=True):
         """creates the vtk actors used by the GUI"""
         if create_rend:
-            self.rend = vtk.vtkRenderer()
+            self.rend = vtkRenderer()
 
         xyz = [0., 0., 0.]
         self.min_max_actors.append(create_annotation(self, 'Min', *xyz))
@@ -74,7 +88,7 @@ class GuiVTKCommon(GuiQtCommon):
         self.grid = vtkUnstructuredGrid()
 
         # edges
-        self.edge_actor = vtk.vtkLODActor()
+        self.edge_actor = vtkLODActor()
         self.edge_actor.DragableOff()
         self.edge_mapper = vtkPolyDataMapper()
 
@@ -82,28 +96,28 @@ class GuiVTKCommon(GuiQtCommon):
 
     def create_cell_picker(self):
         """creates the vtk picker objects"""
-        self.cell_picker = vtk.vtkCellPicker()
-        self.node_picker = vtk.vtkPointPicker()
+        self.cell_picker = vtkCellPicker()
+        self.node_picker = vtkPointPicker()
 
-        self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
-        self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
-        #vtk.vtkInteractorStyleRubberBand2D
-        #vtk.vtkInteractorStyleRubberBand3D
-        #vtk.vtkInteractorStyleRubberBandZoom
-        #vtk.vtkInteractorStyleAreaSelectHover
-        #vtk.vtkInteractorStyleDrawPolygon
+        self.area_picker = vtkAreaPicker()  # vtkRenderedAreaPicker?
+        self.rubber_band_style = vtkInteractorStyleRubberBandPick()
+        #vtkInteractorStyleRubberBand2D
+        #vtkInteractorStyleRubberBand3D
+        #vtkInteractorStyleRubberBandZoom
+        #vtkInteractorStyleAreaSelectHover
+        #vtkInteractorStyleDrawPolygon
 
-        #vtk.vtkAngleWidget
-        #vtk.vtkAngleRepresentation2D
-        #vtk.vtkAngleRepresentation3D
-        #vtk.vtkAnnotation
-        #vtk.vtkArrowSource
-        #vtk.vtkGlyph2D
-        #vtk.vtkGlyph3D
-        #vtk.vtkHedgeHog
-        #vtk.vtkLegendBoxActor
-        #vtk.vtkLegendScaleActor
-        #vtk.vtkLabelPlacer
+        #vtkAngleWidget
+        #vtkAngleRepresentation2D
+        #vtkAngleRepresentation3D
+        #vtkAnnotation
+        #vtkArrowSource
+        #vtkGlyph2D
+        #vtkGlyph3D
+        #vtkHedgeHog
+        #vtkLegendBoxActor
+        #vtkLegendScaleActor
+        #vtkLabelPlacer
 
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
@@ -112,7 +126,7 @@ class GuiVTKCommon(GuiQtCommon):
         """
         #(N,)  for stress, x-disp
         #(N,3) for warp vectors/glyphs
-        grid_result = vtk.vtkFloatArray()
+        grid_result = vtkFloatArray()
 
         point_data = self.grid.GetPointData()
         cell_data = self.grid.GetCellData()
@@ -137,17 +151,17 @@ class GuiVTKCommon(GuiQtCommon):
             self.grid_selected = self.grid
         #print('grid_selected =', self.grid_selected)
 
-        self.grid_mapper = vtk.vtkDataSetMapper()
+        self.grid_mapper = vtkDataSetMapper()
         self.grid_mapper.SetInputData(self.grid_selected)
 
         self._make_contour_filter()
 
         #if 0:
-            #self.warp_filter = vtk.vtkWarpVector()
+            #self.warp_filter = vtkWarpVector()
             #self.warp_filter.SetScaleFactor(50.0)
             #self.warp_filter.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
 
-            #self.geom_filter = vtk.vtkGeometryFilter()
+            #self.geom_filter = vtkGeometryFilter()
             #self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
 
             #self.geom_mapper = vtkPolyDataMapper()
@@ -155,15 +169,15 @@ class GuiVTKCommon(GuiQtCommon):
 
         #if 0:
             #from vtk.numpy_interface import algorithms
-            #arrow = vtk.vtkArrowSource()
+            #arrow = vtkArrowSource()
             #arrow.PickableOff()
 
-            #self.glyph_transform = vtk.vtkTransform()
-            #self.glyph_transform_filter = vtk.vtkTransformPolyDataFilter()
+            #self.glyph_transform = vtkTransform()
+            #self.glyph_transform_filter = vtkTransformPolyDataFilter()
             #self.glyph_transform_filter.SetInputConnection(arrow.GetOutputPort())
             #self.glyph_transform_filter.SetTransform(self.glyph_transform)
 
-            #self.glyph = vtk.vtkGlyph3D()
+            #self.glyph = vtkGlyph3D()
             #self.glyph.setInput(xxx)
             #self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
 
@@ -172,15 +186,15 @@ class GuiVTKCommon(GuiQtCommon):
             #self.glyph.SetScaleModeToScaleByVector()
             #self.glyph.SetScaleFactor(1.0)
 
-            #self.append_filter = vtk.vtkAppendFilter()
+            #self.append_filter = vtkAppendFilter()
             #self.append_filter.AddInputConnection(self.grid.GetOutput())
 
 
-        #self.warpVector = vtk.vtkWarpVector()
+        #self.warpVector = vtkWarpVector()
         #self.warpVector.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
         #grid_mapper.SetInput(Filter.GetOutput())
 
-        self.geom_actor = vtk.vtkLODActor()
+        self.geom_actor = vtkLODActor()
         self.geom_actor.DragableOff()
         self.geom_actor.SetMapper(self.grid_mapper)
         #geometryActor.AddPosition(2, 0, 2)
@@ -188,7 +202,7 @@ class GuiVTKCommon(GuiQtCommon):
         #self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
 
         #if 0:
-            #id_filter = vtk.vtkIdFilter()
+            #id_filter = vtkIdFilter()
 
             #ids = np.array([1, 2, 3], dtype='int32')
             #id_array = numpy_to_vtk(
@@ -213,7 +227,7 @@ class GuiVTKCommon(GuiQtCommon):
         self.glyph_mapper = glyph_mapper
         self.arrow_actor = arrow_actor
         #-----------------------------------------
-        glyphs_centroid = vtk.vtkGlyph3D()
+        glyphs_centroid = vtkGlyph3D()
         glyphs_centroid.SetVectorModeToUseVector()
         glyphs_centroid.SetScaleModeToScaleByVector()
         glyphs_centroid.SetColorModeToColorByScale()
@@ -225,7 +239,7 @@ class GuiVTKCommon(GuiQtCommon):
         glyph_mapper_centroid.SetInputConnection(glyphs_centroid.GetOutputPort())
         glyph_mapper_centroid.ScalarVisibilityOff()
 
-        arrow_actor_centroid = vtk.vtkLODActor()
+        arrow_actor_centroid = vtkLODActor()
         arrow_actor_centroid.SetMapper(glyph_mapper_centroid)
 
         self.glyphs_centroid = glyphs_centroid
@@ -253,7 +267,7 @@ class GuiVTKCommon(GuiQtCommon):
 
     def get_edges(self):
         """Create the edge actor"""
-        edges = vtk.vtkExtractEdges()
+        edges = vtkExtractEdges()
         edge_mapper = self.edge_mapper
         edge_actor = self.edge_actor
 
@@ -590,7 +604,7 @@ class GuiVTKCommon(GuiQtCommon):
 
 def build_glyph(grid):
     """builds the glyph actor"""
-    glyphs = vtk.vtkGlyph3D()
+    glyphs = vtkGlyph3D()
     #if filter_small_forces:
         #glyphs.SetRange(0.5, 1.)
 
@@ -607,7 +621,7 @@ def build_glyph(grid):
     glyphs.ClampingOn()
     #glyphs.Update()
 
-    glyph_source = vtk.vtkArrowSource()
+    glyph_source = vtkArrowSource()
     #glyph_source.InvertOn()  # flip this arrow direction
     glyphs.SetInputData(grid)
 
@@ -620,7 +634,7 @@ def build_glyph(grid):
     glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
     glyph_mapper.ScalarVisibilityOff()
 
-    arrow_actor = vtk.vtkLODActor()
+    arrow_actor = vtkLODActor()
     arrow_actor.SetMapper(glyph_mapper)
 
     prop = arrow_actor.GetProperty()

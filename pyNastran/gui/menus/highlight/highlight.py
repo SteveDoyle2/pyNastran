@@ -12,17 +12,12 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
 
-from vtk import (
-    #vtkmodules.vtkRenderingLOD
-    vtkLODActor,
-    #vtkmodules.vtkRenderingLabel
-    vtkLabeledDataMapper,
-    #vtkmodules.vtkFiltersCore
-    vtkCellCenters, vtkIdFilter,
-    #vtkmodules.vtkFiltersGeometry
-    vtkUnstructuredGridGeometryFilter,
-    #vtkmodules.vtkFiltersGeneral
-    vtkVertexGlyphFilter)
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
+from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
+from vtkmodules.vtkFiltersGeometry import vtkUnstructuredGridGeometryFilter
+from vtkmodules.vtkFiltersGeneral import vtkVertexGlyphFilter
+
 from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
 from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid

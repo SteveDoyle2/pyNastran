@@ -15,10 +15,14 @@ http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractU
 from typing import Union, Callable, Optional
 import numpy as np
 
-from vtk import (vtkInteractorStyleRubberBandZoom, vtkActor, vtkPlanes,
-                 vtkIdFilter, vtkRenderedAreaPicker,
-                 vtkExtractSelection, vtkSelectionNode, vtkExtractPoints,
-                 vtkExtractSelectedFrustum, vtkSelection)
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
+from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode, vtkPlanes
+from vtkmodules.vtkFiltersCore import vtkIdFilter
+from vtkmodules.vtkFiltersPoints import vtkExtractPoints
+from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkRenderingCore import vtkActor, vtkRenderedAreaPicker
+
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkPolyData
 
 from pyNastran.gui.vtk_util import vtk_to_numpy

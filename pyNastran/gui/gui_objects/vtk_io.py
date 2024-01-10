@@ -8,10 +8,13 @@ import numpy as np
 #from pyNastran.gui.vtk_common_core import vtkPoints
 #from pyNastran.gui.vtk_interface import vtkVertex
 
-from vtk import (
+from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
+
+#from vtk import (
     #vtkUnstructuredGridReader,
-    vtkXMLUnstructuredGridReader,
-    vtkTypeFloat32Array)
+    #vtkXMLUnstructuredGridReader,
+    #vtkTypeFloat32Array)
 from pyNastran.gui.vtk_common_core import vtkPoints, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.types import Cases, Form, Formi
