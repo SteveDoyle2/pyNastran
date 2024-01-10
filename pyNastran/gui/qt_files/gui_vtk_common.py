@@ -194,7 +194,7 @@ class GuiVTKCommon(GuiQtCommon):
             #id_array = numpy_to_vtk(
                 #num_array=ids,
                 #deep=True,
-                #array_type=vtk.VTK_INT,
+                #array_type=VTK_INT,
             #)
 
             #id_filter.SetCellIds(id_array.GetOutputPort())

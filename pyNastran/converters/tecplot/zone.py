@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TextIO, Optional, Any, Union # , TYPE_CHECKING
 
 import numpy as np
+in1d = np.in1d
 from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3float,
 
 #if TYPE_CHECKING:  # pragma: no cover
@@ -765,7 +766,7 @@ class Zone:
         if nhexas:
             #boolean_hexa = self.hexa_elements.ravel() == inodes
             #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
-            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
+            boolean_hexa = in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
             #print(boolean_hexa)
             # assert len(boolean_hexa) == self.hexa_elements.shape[0]
             assert True in boolean_hexa

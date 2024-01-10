@@ -7,6 +7,7 @@ try:
         vtkProp,
     )
     from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
+    from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 except ImportError:
     print('error vtk_rendering_core')
     from vtk import (
@@ -16,4 +17,5 @@ except ImportError:
         vtkDataSetMapper, vtkPolyDataMapper,
         vtkProp, vtkGenericRenderWindowInteractor,
     )
+    from vtk import vtkRenderingAnnotation
 x = 1

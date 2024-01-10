@@ -40,7 +40,6 @@ Changes by Alex Tsui, Apr. 2015
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
-#import vtk
 from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkActor, vtkRenderWindow, vtkPolyDataMapper,

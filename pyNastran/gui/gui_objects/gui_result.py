@@ -6,6 +6,7 @@ defines:
 """
 from typing import Any, Optional
 import numpy as np
+in1d = np.in1d
 from pyNastran.utils.numpy_utils import integer_float_types
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
@@ -414,7 +415,7 @@ class GuiResult(GuiResultCommon):
                 inan_short = np.where(self.scalar == mask_value)[0]
                 if len(inan_short):
                     # overly complicated way to allow us to use ~inan to invert the array
-                    inan = np.in1d(np.arange(len(self.scalar)), inan_short)
+                    inan = in1d(np.arange(len(self.scalar)), inan_short)
                     inan_remaining = self.scalar[~inan]
 
                     self.scalar = np.asarray(self.scalar, 'f')

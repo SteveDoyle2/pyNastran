@@ -318,7 +318,7 @@ class MarkActions:
         i = np.searchsorted(all_nids, nids)
         xyz = all_xyz[i, :]
 
-        #ugrid = vtk.vtkUnstrucuturedGrid()
+        #ugrid = vtkUnstrucuturedGrid()
         points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
         ugrid = create_unstructured_point_grid(points, npoints)
         actor = self.gui.mouse_actions.create_highlighted_actor(
@@ -343,14 +343,14 @@ class MarkActions:
         #all_eids = self.gui.get_element_ids(model_name=model_name, ids=None)
         #cell_ids = np.searchsorted(all_eids, eids)
 
-        #ids = vtk.vtkIdTypeArray()
+        #ids = vtkIdTypeArray()
         #ids.SetNumberOfComponents(1)
         #for cell_id in cell_ids:
             #ids.InsertNextValue(cell_id)
 
-        #selection_node = vtk.vtkSelectionNode()
-        #selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        #selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        #selection_node = vtkSelectionNode()
+        #selection_node.SetFieldType(vtkSelectionNode.CELL)
+        #selection_node.SetContentType(vtkSelectionNode.INDICES)
         #selection_node.SetSelectionList(ids)
 
         #actor = self._highlight_picker_by_selection_node(

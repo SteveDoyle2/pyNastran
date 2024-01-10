@@ -14,7 +14,9 @@ from typing import Union, Callable, Optional, Any
 import numpy as np
 from numpy import issubdtype
 from numpy.linalg import norm  # type: ignore
-import vtk
+
+from vtkmodules.vtkRenderingCore import vtkProperty
+from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT, VTK_VERSION
 
 #import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
@@ -71,7 +73,7 @@ class GuiQtCommon(GuiAttributes):
         #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             #print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7:  # TODO: should check for 7.1
-            raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
+            raise RuntimeError('VTK %s is no longer supported' % VTK_VERSION)
 
     def _cycle_results(self, icase: int=0) -> int:
         """used for testing"""
@@ -237,7 +239,7 @@ class GuiQtCommon(GuiAttributes):
         prop.SetColor(WHITE)
 
         # the backface property could be null
-        back_prop = vtk.vtkProperty()
+        back_prop = vtkProperty()
         back_prop.SetColor(WHITE)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
@@ -1157,10 +1159,10 @@ class GuiQtCommon(GuiAttributes):
             raise RuntimeError('name=%s case=%s' % (name, case))
 
         if issubdtype(case.dtype, np.integer):
-            data_type = vtk.VTK_INT
+            data_type = VTK_INT
             self.grid_mapper.InterpolateScalarsBeforeMappingOn()
         elif issubdtype(case.dtype, np.floating):
-            data_type = vtk.VTK_FLOAT
+            data_type = VTK_FLOAT
             self.grid_mapper.InterpolateScalarsBeforeMappingOff()
         elif case.dtype.name in ['complex64']:
             if phase:
@@ -1168,7 +1170,7 @@ class GuiQtCommon(GuiAttributes):
                 case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real
             else:
                 case = case.real
-            data_type = vtk.VTK_FLOAT
+            data_type = VTK_FLOAT
             self.grid_mapper.InterpolateScalarsBeforeMappingOff()
         else:
             raise NotImplementedError(case.dtype.type)
@@ -1612,7 +1614,7 @@ class GuiQtCommon(GuiAttributes):
                 self.rend.RemoveActor(sloti)
             del self.geometry_properties[name]
 
-    def reset_label_actors(self, name: str) -> list[vtk.vtkActor]:
+    def reset_label_actors(self, name: str) -> list[vtkActor]:
         slot = self.geometry_properties[name].label_actors
         for sloti in slot:
             self.rend.RemoveActor(sloti)
@@ -1782,9 +1784,9 @@ class GuiQtCommon(GuiAttributes):
             alt_grid = vtkUnstructuredGrid()
             self.alt_grids[actor_name] = alt_grid
 
-            mapper = vtk.vtkDataSetMapper()
+            mapper = vtkDataSetMapper()
             mapper.SetInputData(alt_grid)
-            plane_actor = vtk.vtkActor()
+            plane_actor = vkActor()
             plane_actor.SetMapper(mapper)
 
             #plane_source = self.plane_source
@@ -1819,9 +1821,9 @@ class GuiQtCommon(GuiAttributes):
             alt_grid = vtkUnstructuredGrid()
             self.alt_grids[actor_name] = alt_grid
 
-            mapper = vtk.vtkDataSetMapper()
+            mapper = vtkDataSetMapper()
             mapper.SetInputData(alt_grid)
-            point_actor = vtk.vtkActor()
+            point_actor = vtkActor()
             point_actor.SetMapper(mapper)
 
             #plane_source = self.plane_source
@@ -1841,7 +1843,7 @@ class GuiQtCommon(GuiAttributes):
         if not self.make_contour_filter:
             return
 
-        self.contour_filter = vtk.vtkContourFilter()
+        self.contour_filter = vtkContourFilter()
 
         #if 0:
             # doesn't work...in progress
@@ -1868,7 +1870,7 @@ class GuiQtCommon(GuiAttributes):
 
 
         # Connect the segments of the conours into polylines
-        contour_stripper = vtk.vtkStripper()
+        contour_stripper = vtkStripper()
         contour_stripper.SetInputConnection(self.contour_filter.GetOutputPort())
         contour_stripper.Update()
 
@@ -1885,7 +1887,7 @@ class GuiQtCommon(GuiAttributes):
             label_poly_data.GetPointData().SetScalars(label_scalars)
 
             # The labeled data mapper will place labels at the points
-            label_mapper = vtk.vtkLabeledDataMapper()
+            label_mapper = vtkLabeledDataMapper()
             label_mapper.SetFieldDataName('Isovalues')
             label_mapper.SetInputData(label_poly_data)
 

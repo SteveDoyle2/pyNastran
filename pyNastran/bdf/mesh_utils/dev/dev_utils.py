@@ -17,7 +17,11 @@ from functools import reduce
 from typing import Optional
 
 import numpy as np
-from numpy import array, where, hstack, searchsorted, float32, arccos, degrees
+in1d = np.in1d
+#from numpy import array, where, hstack, searchsorted, float32, arccos, degrees
+#in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
+#if not hasattr(np, 'in'):  # pragma: no cover
+    #setattr(np, 'in', np.in1d)
 
 from numpy.linalg import norm  # type: ignore
 
@@ -331,19 +335,19 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
             #print('    neighbors = %s' % neighboring_eids)
 
             # don't double check eids
-            neigboring_eids_to_check = array(list(neighboring_eids - group), dtype='int32')
+            neigboring_eids_to_check = np.array(list(neighboring_eids - group), dtype='int32')
             nneighbors = len(neigboring_eids_to_check)
             if nneighbors == 0:
                 check.remove(eid)
                 continue
             assert nneighbors > 0, neigboring_eids_to_check
 
-            i = searchsorted(shell_eids, eid)
+            i = np.searchsorted(shell_eids, eid)
             #assert len(i) > 0, 'eid=%s cant be found' % eid
             local_normal = normals[i, :]
 
             # find the normals
-            i = searchsorted(shell_eids, neigboring_eids_to_check)
+            i = np.searchsorted(shell_eids, neigboring_eids_to_check)
             assert len(i) > 0, 'eid=%s cant be found' % eid
             normal = normals[i, :]
 
@@ -353,8 +357,8 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
 
             # we flip the dimensions because matrix shapes are stupid
             #theta = degrees(arccos(dot(local_normal, normal)))
-            theta = arccos((local_normal @ normal.T).T)
-            theta_deg = degrees(theta)
+            theta = np.arccos((local_normal @ normal.T).T)
+            theta_deg = np.degrees(theta)
 
             #print('    theta[eid=%s] = %s; n=%s' % (eid, theta, nneighbors))
             assert len(theta) == nneighbors, len(theta)
@@ -526,9 +530,9 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
         elem = model.elements[eid]
         pid = elem.Pid()
         enids = elem.node_ids
-        common_nids = np.where(np.in1d(enids, nids)) # A in B
+        common_nids = np.where(in1d(enids, nids)) # A in B
         all_common_nids.update(common_nids)
-        i = searchsorted(all_nids, enids)
+        i = np.searchsorted(all_nids, enids)
         xyz = xyz_cid0[i, :]
         etype = elem.type
         if etype == 'CQUAD4':

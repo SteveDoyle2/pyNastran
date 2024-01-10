@@ -155,6 +155,19 @@ class MainWindow(GuiCommon, NastranIO):
         self._load_plugins()
         self.setup_gui(is_gui)
         self.setup_post(inputs)
+
+        try:
+            import pyi_splash
+            # Update the text on the splash screen
+            pyi_splash.update_text("PyInstaller is a great software!")
+            #pyi_splash.update_text("Second time's a charm!")
+
+            # Close the splash screen. It does not matter when the call
+            # to this function is made, the splash screen remains open until
+            # this function is called or the Python program is terminated.
+            pyi_splash.close()
+        except Exception:
+            pass
         self._check_for_latest_version()
 
     def _load_plugins(self, plugin_name_to_path: Optional[list[tuple[str, str, str]]]=None):

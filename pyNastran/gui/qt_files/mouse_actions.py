@@ -1,7 +1,13 @@
 from __future__ import annotations
 from typing import Optional, Callable, TYPE_CHECKING
 import numpy as np
-import vtk
+
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleDrawPolygon
+from vtkmodules.vtkCommonCore import vtkIdTypeArray
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkCommonDataModel import vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkRenderingCore import vtkDataSetMapper, vtkRenderer
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.bdf.utils import write_patran_syntax_dict
@@ -425,19 +431,19 @@ class MouseActions:
 
         def _area_picker_up(*args):
             pass
-        style = vtk.vtkInteractorStyleDrawPolygon()
+        style = vtkInteractorStyleDrawPolygon()
         self.setup_mouse_buttons('area_pick',
                                  #left_button_down=self._area_picker,
                                  left_button_up=_area_picker_up,
                                  #end_pick=self._area_picker_up,
                                  style=style)
-        #self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
-        #self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
-        #vtk.vtkInteractorStyleRubberBand2D
-        #vtk.vtkInteractorStyleRubberBand3D
-        #vtk.vtkInteractorStyleRubberBandZoom
-        #vtk.vtkInteractorStyleAreaSelectHover
-        #vtk.vtkInteractorStyleDrawPolygon
+        #self.area_picker = vtkAreaPicker()  # vtkRenderedAreaPicker?
+        #self.rubber_band_style = vtkInteractorStyleRubberBandPick()
+        #vtkInteractorStyleRubberBand2D
+        #vtkInteractorStyleRubberBand3D
+        #vtkInteractorStyleRubberBandZoom
+        #vtkInteractorStyleAreaSelectHover
+        #vtkInteractorStyleDrawPolygon
 
     def on_zoom(self) -> None:
         """creates a Rubber Band Zoom"""
@@ -522,19 +528,19 @@ class MouseActions:
                 measure_distance_button.setChecked(False)
                 self.setup_mouse_buttons(mode='default')
 
-    def _highlight_picker_node(self, cell_id: int, grid, node_xyz) -> vtk.vtkLODActor:
+    def _highlight_picker_node(self, cell_id: int, grid, node_xyz) -> vtkLODActor:
         """won't handle multiple cell_ids/node_xyz"""
         point_id = find_point_id_closest_to_xyz(grid, cell_id, node_xyz)
 
-        ids = vtk.vtkIdTypeArray()
+        ids = vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
         ids.InsertNextValue(point_id)
 
-        selection_node = vtk.vtkSelectionNode()
+        selection_node = vtkSelectionNode()
         #selection_node.SetContainingCellsOn()
         #selection_node.Initialize()
-        selection_node.SetFieldType(vtk.vtkSelectionNode.POINT)
-        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        selection_node.SetFieldType(vtkSelectionNode.POINT)
+        selection_node.SetContentType(vtkSelectionNode.INDICES)
         selection_node.SetSelectionList(ids)
         actor = self._highlight_picker_by_selection_node(
             grid, selection_node, representation='points')
@@ -542,7 +548,7 @@ class MouseActions:
 
     def _highlight_picker_cell(self,
                                cell_ids: list[int],
-                               grid: vtkUnstructuredGrid) -> vtk.vtkLODActor:
+                               grid: vtkUnstructuredGrid) -> vtkLODActor:
         """won't handle multiple cell_ids/node_xyz"""
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         actor = self._highlight_picker_by_selection_node(
@@ -552,11 +558,11 @@ class MouseActions:
     def _highlight_picker_by_selection_node(self, grid: vtkUnstructuredGrid,
                                             selection_node: vtkSelectionNode,
                                             representation: str='surface',
-                                            add_actor: bool=True) -> vtk.vtkLODActor:
-        selection = vtk.vtkSelection()
+                                            add_actor: bool=True) -> vtkLODActor:
+        selection = vtkSelection()
         selection.AddNode(selection_node)
 
-        extract_selection = vtk.vtkExtractSelection()
+        extract_selection = vtkExtractSelection()
         extract_selection.SetInputData(0, grid)
         extract_selection.SetInputData(1, selection)
         extract_selection.Update()
@@ -570,7 +576,7 @@ class MouseActions:
 
     def create_highlighted_actor(self, ugrid: vtkUnstructuredGrid,
                                  representation: str='wire',
-                                 add_actor: bool=True) -> list[vtk.vtkLODActor]:
+                                 add_actor: bool=True) -> list[vtkLODActor]:
         """creates a highlighted actor given a vtkUnstructuredGrid"""
         actor = create_highlighted_actor(
             self.gui, ugrid, representation=representation, add_actor=add_actor)
@@ -860,7 +866,7 @@ class MouseActions:
         return self.gui.actions
 
     @property
-    def rend(self) -> vtk.vtkRenderer:
+    def rend(self) -> vtkRenderer:
         return self.gui.rend
 
     @property
@@ -943,10 +949,10 @@ class MouseActions:
 
 def create_highlighted_actor(gui, ugrid: vtkUnstructuredGrid,
                              representation: str='wire',
-                             add_actor: bool=True) -> vtk.vtkLODActor:
+                             add_actor: bool=True) -> vtkLODActor:
     """creates a highlighted actor given a vtkUnstructuredGrid"""
-    actor = vtk.vtkLODActor()
-    mapper = vtk.vtkDataSetMapper()
+    actor = vtkLODActor()
+    mapper = vtkDataSetMapper()
     mapper.SetInputData(ugrid)
     # don't use a single color; makes setting prop values work
     mapper.ScalarVisibilityOff()

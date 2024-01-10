@@ -1,18 +1,18 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-import vtk
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 
 from qtpy.QtWidgets import QMainWindow
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.qt_files.mouse_actions import MouseActions
 
-class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
+class TrackballStyleCamera(vtkInteractorStyleTrackballCamera):
     #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
     def __init__(self, iren, parent: MouseActions):
         self.parent = parent
 
         # works
-        vtk.vtkInteractorStyleTrackballCamera.__init__(self)
+        vtkInteractorStyleTrackballCamera.__init__(self)
 
         # TypeError: object.__init__() takes no parameters
         #super(TrackballStyleCamera, self).__init__(self, iren)

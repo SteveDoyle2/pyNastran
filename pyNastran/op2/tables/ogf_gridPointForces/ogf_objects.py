@@ -7,7 +7,9 @@ from struct import Struct, pack
 from typing import TextIO, TYPE_CHECKING
 
 import numpy as np
-from numpy import zeros, unique, array_equal, empty
+in1d = np.in1d
+#in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
+#from numpy import zeros, unique, array_equal, empty
 
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
@@ -256,8 +258,8 @@ class RealGridPointForcesArray(GridPointForces):
 
     @property
     def element_name(self) -> str:
-        headers = [name.strip() for name in unique(self.element_names) if name.strip()]
-        #headers = unique(self.element_names)
+        headers = [name.strip() for name in np.unique(self.element_names) if name.strip()]
+        #headers = np.unique(self.element_names)
         return str(', '.join(headers))
 
     def build(self) -> None:
@@ -288,19 +290,19 @@ class RealGridPointForcesArray(GridPointForces):
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
             assert isinstance(self.ntotal, integer_types), 'ntotal=%r type=%s' % (self.ntotal, type(self.ntotal))
-            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
-            self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
+            self.node_element = np.zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
+            self.element_names = np.empty((self.ntimes, self.ntotal), dtype='U8')
         else:
-            self.node_element = zeros((self.ntotal, 2), dtype=idtype)
-            self.element_names = empty(self.ntotal, dtype='U8')
+            self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
+            self.element_names = np.empty(self.ntotal, dtype='U8')
 
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self) -> None:
         """
@@ -402,7 +404,7 @@ class RealGridPointForcesArray(GridPointForces):
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
-        if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
+        if not np.array_equal(self.node_element, table.node_element) and np.array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
 
@@ -555,7 +557,7 @@ class RealGridPointForcesArray(GridPointForces):
 
         assert isinstance(eids[0], integer_types), type(eids[0])
 
-        is_in = np.in1d(gpforce_eids, eids, assume_unique=False)
+        is_in = in1d(gpforce_eids, eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in]
         nids = gpforce_nids[irange]
 
@@ -565,7 +567,7 @@ class RealGridPointForcesArray(GridPointForces):
             log.debug('eids = %s' % gpforce_eids[irange])
 
         try:
-            is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
+            is_in3 = in1d(nid_cd[:, 0], nids, assume_unique=False)
         except IndexError:
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
@@ -738,7 +740,7 @@ class RealGridPointForcesArray(GridPointForces):
 
         # get analysis coordinate systems
         try:
-            is_in_cd = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
+            is_in_cd = in1d(nid_cd[:, 0], nids, assume_unique=False)
         except IndexError:
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
@@ -790,7 +792,7 @@ class RealGridPointForcesArray(GridPointForces):
         assert isinstance(eids[0], integer_types), type(eids[0])
         assert isinstance(nids[0], integer_types), type(nids[0])
         # filter out rows not in the node set
-        is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
+        is_in = in1d(gpforce_nids, nids, assume_unique=False)
         if not np.any(is_in):
             msg = 'no nodes found\n'
             if log:
@@ -801,7 +803,7 @@ class RealGridPointForcesArray(GridPointForces):
             return gpforce_nids, gpforce_eids, irange, force_out, moment_out
 
         # filter out rows not in the element set
-        is_in2 = np.in1d(gpforce_eids[is_in], eids, assume_unique=False)
+        is_in2 = in1d(gpforce_eids[is_in], eids, assume_unique=False)
         if not np.any(is_in2):
             msg = 'no elements found\n'
             log.warning(msg)
@@ -1140,7 +1142,7 @@ class RealGridPointForcesArray(GridPointForces):
         ntimes = self.ntimes
         #nnodes = self.nnodes
         ntotal = self.ntotal
-        nelements = unique(self.node_element[:, 1]).size
+        nelements = np.unique(self.node_element[:, 1]).size
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
@@ -1528,8 +1530,8 @@ class ComplexGridPointForcesArray(GridPointForces):
 
     @property
     def element_name(self):
-        headers = [name.strip() for name in unique(self.element_names)]
-        #headers = unique(self.element_names)
+        headers = [name.strip() for name in np.unique(self.element_names)]
+        #headers = np.unique(self.element_names)
         return str(', '.join(headers))
 
     def build(self):
@@ -1564,16 +1566,16 @@ class ComplexGridPointForcesArray(GridPointForces):
             #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
         if self.is_unique:
-            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
-            self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
+            self.node_element = np.zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
+            self.element_names = np.empty((self.ntimes, self.ntotal), dtype='U8')
         else:
-            self.node_element = zeros((self.ntotal, 2), dtype=idtype)
-            self.element_names = empty(self.ntotal, dtype='U8')
+            self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
+            self.element_names = np.empty(self.ntotal, dtype='U8')
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
 
     def build_dataframe(self):
         """
@@ -1673,7 +1675,7 @@ class ComplexGridPointForcesArray(GridPointForces):
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
-        if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
+        if not np.array_equal(self.node_element, table.node_element) and np.array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
 
@@ -1773,7 +1775,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         ntimes = self.ntimes
         #nnodes = self.nnodes
         ntotal = self.ntotal
-        nelements = unique(self.node_element[:, 1]).size
+        nelements = np.unique(self.node_element[:, 1]).size
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient

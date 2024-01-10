@@ -1,6 +1,6 @@
 import unittest
 try:
-    import vtk
+    import vtkmodules
     USE_VTK = True
 except ImportError:
     USE_VTK = False

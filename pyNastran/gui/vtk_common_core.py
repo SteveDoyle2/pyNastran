@@ -4,7 +4,7 @@ try:
         vtkIdList, vtkIdTypeArray, vtkUnsignedCharArray,
         vtkMath, vtkVersion,
         VTK_ID_TYPE, VTK_ID_TYPE,
-        VTK_FLOAT,
+        VTK_INT, VTK_FLOAT,
         VTK_FONT_FILE, VTK_VERSION, VTK_VERSION_FULL)
 except ImportError:
     print('error vtk_common_core')
@@ -13,5 +13,5 @@ except ImportError:
         vtkIdList, vtkIdTypeArray, vtkUnsignedCharArray,
         vtkMath, vtkVersion,
         VTK_ID_TYPE, VTK_ID_TYPE,
-        VTK_FLOAT,
+        VTK_INT, VTK_FLOAT,
         VTK_FONT_FILE, VTK_VERSION, VTK_VERSION_FULL)

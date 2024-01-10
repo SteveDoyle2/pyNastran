@@ -133,7 +133,7 @@ class NastranIO(NastranIO_xref):
         self.grid.Allocate(self.nElements, 1000)
         self.grid2.Allocate(ncaeros + nconm2, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
 
         # add the nodes
@@ -157,7 +157,7 @@ class NastranIO(NastranIO_xref):
 
         # add the CAERO/CONM2 elements
         j = 0
-        points2 = vtk.vtkPoints()
+        points2 = vtkPoints()
 
         nsprings = 0
         #if 0:
@@ -222,7 +222,7 @@ class NastranIO(NastranIO_xref):
                     #c = element.Centroid()
                     #d = norm(xyz-c)
                     #elem = vtk.vtkVertex()
-                    ##elem = vtk.vtkSphere()
+                    ##elem = vtkSphere()
 
                     #if d == 0.:
                         #d = sphere_size
