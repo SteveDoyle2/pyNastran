@@ -1,7 +1,7 @@
 """Defines the GUI IO file for STL."""
 from numpy import arange
 
-import vtk
+import vtkmodules
 
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult

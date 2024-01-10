@@ -12,7 +12,8 @@ except ModuleNotFoundError:  # pyparsing is missing
     IS_MATPLOTLIB = False
 #except ImportError:
     #pass
-import vtk
+import vtkmodules
+from vtk import vtkRenderLargeImage, vtkAxesActor, vtkOrientationMarkerWidget
 
 from cpylog import SimpleLogger
 
@@ -787,13 +788,13 @@ class TestNastranGUI(unittest.TestCase):
 
         magnify = None
 
-        render_large = vtk.vtkRenderLargeImage()
+        render_large = vtkRenderLargeImage()
         test.run_vtk = True
         #test.create_corner_axis()
 
         # faking coordinate system
-        axes_actor = vtk.vtkAxesActor()
-        test.corner_axis = vtk.vtkOrientationMarkerWidget()
+        axes_actor = vtkAxesActor()
+        test.corner_axis = vtkOrientationMarkerWidget()
         test.corner_axis.SetOrientationMarker(axes_actor)
 
         #test.on_take_screenshot(fname='chan.png', magnify=None, show_msg=True)

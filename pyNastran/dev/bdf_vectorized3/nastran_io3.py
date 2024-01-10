@@ -6,7 +6,7 @@ from pathlib import PurePath
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-#import vtk
+#import vtkmodules
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 #from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
@@ -268,7 +268,7 @@ class Nastran3:
         #points_data = numpy_to_vtk(xyz_cid0, deep=1)
         #npoints = len(nids)
 
-        #points = vtk.vtkPoints()
+        #points = vtkPoints()
         #points.SetNumberOfPoints(npoints)
         #points.SetData(points_data)
 
@@ -407,7 +407,7 @@ class Nastran3:
 
         # Setup render window interactor
         renderWindowInteractor = vtkRenderWindowInteractor()
-        #style = vtk.vtkInteractorStyleImage()
+        #style = vtkInteractorStyleImage()
 
         # Render and start interaction
         renderWindowInteractor.SetRenderWindow(render_window)
@@ -440,8 +440,8 @@ def load_elements(ugrid: vtkUnstructuredGrid,
     cell_type_ = []
     cell_offset_ = []
 
-    cell_type_point = 1  # vtk.vtkVertex().GetCellType()
-    cell_type_line = 3  # vtk.vtkLine().GetCellType()
+    cell_type_point = 1  # vtkVertex().GetCellType()
+    cell_type_line = 3  # vtkLine().GetCellType()
     cell_type_tri3 = 5
     cell_type_tri6 = 22
     cell_type_quad4 = 9
@@ -1563,8 +1563,8 @@ def _create_solid_vtk_arrays(element: SolidElement,
     """solids"""
     cell_type_tetra4 = 10
     #cell_type_tetra10 = 24
-    cell_type_pyram5 = 14   # vtk.vtkPyramid().GetCellType()
-    #cell_type_pyram13 = 27  # vtk.vtkQuadraticPyramid().GetCellType()
+    cell_type_pyram5 = 14   # vtkPyramid().GetCellType()
+    #cell_type_pyram13 = 27  # vtkQuadraticPyramid().GetCellType()
     cell_type_hexa8 = 12
     #cell_type_hexa20 = 25
     cell_type_penta6 = 13

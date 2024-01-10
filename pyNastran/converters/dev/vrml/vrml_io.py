@@ -1,5 +1,5 @@
 import numpy as np
-import vtk
+import vtkmodules
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (

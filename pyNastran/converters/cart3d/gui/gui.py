@@ -15,7 +15,7 @@ from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import QApplication
 
 # 3rd party
-import vtk
+import vtkmodules
 
 # pyNastran
 import pyNastran

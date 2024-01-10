@@ -17,14 +17,16 @@ import os
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 from numpy import zeros, abs, mean, nan_to_num, amax, amin, array
-from numpy import nan as NaN
+#from numpy import nan as NaN
 from numpy.linalg import norm  # type: ignore
 
-import vtk
+#import vtkmodules
 from pyNastran.gui.vtk_interface import (
-    vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+    vtkVertex, vtkLine, vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
     vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
     vtkQuadraticWedge, vtkQuadraticHexahedron)
+from vtkmodules.vtkCommonCore import vtkPoints
+#from vtkmodules.vtkCommonDataModel import vtkSphere
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -221,7 +223,7 @@ class NastranIO(NastranIO_xref):
                     #xyz = element.nid.get_position()
                     #c = element.Centroid()
                     #d = norm(xyz-c)
-                    #elem = vtk.vtkVertex()
+                    #elem = vtkVertex()
                     ##elem = vtkSphere()
 
                     #if d == 0.:
@@ -246,7 +248,7 @@ class NastranIO(NastranIO_xref):
         """
         Creates the elements
         """
-        sphere_size = self._get_sphere_size(dim_max)
+        unused_sphere_size = self._get_sphere_size(dim_max)
         #self.eid_map = {}
 
         # :param i: the element id in grid
@@ -281,7 +283,7 @@ class NastranIO(NastranIO_xref):
                 eids = rod.element_id
                 for eid, ii1, ii2 in zip(eids, i1, i2):
                     eidMap[eid] = ie
-                    elem = vtk.vtkLine()
+                    elem = vtkLine()
                     elem.GetPointIds().SetId(0, ii1)
                     elem.GetPointIds().SetId(1, ii2)
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -684,11 +686,11 @@ class NastranIO(NastranIO_xref):
                         if nid not in nidMap:
                             # SPOINT
                             continue
-                        c = nidMap[nid]
-                        elem = vtk.vtkVertex()
+                        unused_c = nidMap[nid]
+                        elem = vtkVertex()
                         elem.GetPointIds().SetId(0, j)
 
-                        #elem = vtk.vtkSphere()
+                        #elem = vtkSphere()
                         #if d == 0.:
                             #d = sphere_size
                         #elem.SetRadius(d)
@@ -696,7 +698,7 @@ class NastranIO(NastranIO_xref):
                         # 2 points
                         #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                         self.eid_to_nid_map[eid] = nodeIDs
-                        elem = vtk.vtkLine()
+                        elem = vtkLine()
                         try:
                             elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                             elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
@@ -762,7 +764,7 @@ class NastranIO(NastranIO_xref):
 
         self.isubcase_name_map = {1: ['Nastran', '']}
 
-        nElements = len(self.eid_map)
+        #nElements = len(self.eid_map)
         #print("nElements = ", nElements)
 
         # set to True to enable nodeIDs as an result

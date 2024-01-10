@@ -1209,7 +1209,7 @@ def build_vtk_geometry(nelement: int,
     vtk_cell_offset = numpy_to_vtk(cell_offset, deep=1,
                                    array_type=VTK_ID_TYPE)
 
-    #ugrid = vtk.vtkUnstructuredGrid()
+    #ugrid = vtkUnstructuredGrid()
     ugrid.SetCells(vtk_cell_type, vtk_cell_offset, vtk_cell)
 
     #settings = {}

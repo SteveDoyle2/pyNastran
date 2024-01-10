@@ -11,7 +11,7 @@ PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'bdf' / 'test'
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
-import vtk
+import vtkmodules
 
 #from cpylog import SimpleLogger
 from pyNastran.gui.testing_methods import FakeGUIMethods

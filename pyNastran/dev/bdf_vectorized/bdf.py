@@ -2743,7 +2743,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
-            icd_transform[cd] = np.where(np.in(nids_all, nids))[0]
+            icd_transform[cd] = np.where(in1d(nids_all, nids))[0]
             if cd in nids_cp_transform:
                 icp_transform[cd] = icd_transform[cd]
         for cp, nids in sorted(nids_cd_transform.items()):
@@ -2752,7 +2752,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             if cp in icd_transform:
                 continue
             nids = np.array(nids)
-            icd_transform[cd] = np.where(np.in(nids_all, nids))[0]
+            icd_transform[cd] = np.where(in1d(nids_all, nids))[0]
 
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
@@ -2859,7 +2859,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(nids_transform.keys()):
             nids = np.array(nids_transform[cid])
-            icd_transform[cid] = np.where(np.in(nids_all, nids))[0]
+            icd_transform[cid] = np.where(in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
 
     def get_displacement_index_transforms(self):
