@@ -12,7 +12,6 @@ import numpy as np
 #from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
 from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-from vtkmodules.vtkFiltersGeneral import vtkAxes
 from vtkmodules.vtkFiltersCore import vtkIdFilter
 from vtkmodules.util.vtkConstants import VTK_ID_TYPE
 
@@ -21,13 +20,14 @@ from pyNastran.gui.vtk_common_core import (
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
 from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
-from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
+#from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
+    from vtkmodules.vtkFiltersGeneral import vtkAxes
 # // Linear cells
 # VTK_EMPTY_CELL = 0
 # VTK_VERTEX = 1
