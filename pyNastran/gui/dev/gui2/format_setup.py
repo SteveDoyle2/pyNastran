@@ -27,6 +27,7 @@ def build_fmts(gui: MainWindow2,
                ) -> Any:
     """populates the formats that will be supported"""
     fmts = []
+    supported_formats = []
     for fmt in fmt_order:
         geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
 
@@ -44,13 +45,12 @@ def build_fmts(gui: MainWindow2,
                     print('***', msg)
                 else:
                     gui.log_error(msg)
-        _add_fmt(fmts, fmt, geom_results_funcs, data)
+        _add_fmt(supported_formats, fmts, fmt, geom_results_funcs, data)
 
     if len(fmts) == 0:
         RuntimeError('No formats...expected=%s' % fmt_order)
     #self.fmts = fmts
     #print("fmts =", fmts)
-    supported_formats = [fmt[0] for fmt in fmts]
     if not IS_TESTING:  # pragma: no cover
         print('supported_formats = %s' % supported_formats)
     #assert 'cart3d' in self.supported_formats, self.supported_formats

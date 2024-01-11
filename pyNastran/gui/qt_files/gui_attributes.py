@@ -995,6 +995,7 @@ class GuiAttributes:
     def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False) -> None:
         """populates the formats that will be supported"""
         fmts = []
+        self.supported_formats = []
         #assert 'h5nastran' in fmt_order
         for fmt in fmt_order:
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
@@ -1013,14 +1014,13 @@ class GuiAttributes:
                         print('***', msg)
                     else:
                         self.log_error(msg)
-            _add_fmt(fmts, fmt, geom_results_funcs, data)
+            _add_fmt(self.supported_formats, fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
         self.fmts = fmts
         #print("fmts =", fmts)
 
-        self.supported_formats = [fmt[0] for fmt in fmts]
         if not IS_TESTING:  # pragma: no cover
             print('supported_formats = %s' % self.supported_formats)
         #assert 'h5nastran' in self.supported_formats, self.supported_formats
@@ -1775,12 +1775,16 @@ class ModelData:
                f'result_cases.keys() = {self.result_cases.keys()}')
         return msg
 
-def _add_fmt(fmts: list[str], fmt: str, geom_results_funcs, data):
+def _add_fmt(supported_fmts: list[str],
+             fmts: list[str], fmt: str,
+             geom_results_funcs: str, data: Callable) -> None:
     """
     Adds a format
 
     Parameters
     ----------
+    supported_fmts : list[str]
+        the names in fmts (without duplicates) in the same order
     fmts : list[formats]
         format : list[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
         macro_name : ???
@@ -1809,10 +1813,13 @@ def _add_fmt(fmts: list[str], fmt: str, geom_results_funcs, data):
         assert len(data) == 5, msg % str(data)
         macro_name, geo_fmt, geo_func, res_fmt, res_func = data
         fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        supported_fmts.append(fmt)
     elif isinstance(data, list):
         for datai in data:
             assert len(datai) == 5, msg % str(datai)
             macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
             fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+            if fmt not in supported_fmts:
+                supported_fmts.append(fmt)
     else:
         raise TypeError(data)
