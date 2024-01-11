@@ -11,7 +11,7 @@ with warnings.catch_warnings():  # avoid an imp module deprecation warning
 
 import numpy
 import scipy
-from pyNastran.gui.vtk_common_core import VTK_VERSION # import vtk
+from pyNastran.gui.vtk_common_core import VTK_VERSION
 import docopt
 import pyNastran
 

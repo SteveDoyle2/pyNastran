@@ -12,15 +12,12 @@ from pyNastran.gui.vtk_util import (
 IS_TESTING = 'test' in sys.argv[0]
 _VTK_VERSION = vtkVersion.GetVTKVersion()
 VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
-_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use vtk 7, 8, or 9)'
-if VTK_VERSION_SPLIT[0] < 7:
-    raise NotImplementedError(_VTK_ERROR_MESSAGE)
-elif VTK_VERSION_SPLIT[0] in {7, 8, 9}:
-    # tested in 7.1.1, 8.1.2, 9.0.0
-    pass
-    #vtkConstants = vtk
-#elif VTK_VERSION_SPLIT[0] == vtk_9?:
-    #vtkConstants = vtk.vtkConstants
+_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use vtk>=9.3)'
+if VTK_VERSION_SPLIT[0] == 9:
+    if VTK_VERSION_SPLIT[1] >= 3:
+        pass
+    else:  # pragma: no cover
+        raise NotImplementedError(_VTK_ERROR_MESSAGE)
 else:  # pragma: no cover
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
 

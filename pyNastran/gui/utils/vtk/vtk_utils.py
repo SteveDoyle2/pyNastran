@@ -521,17 +521,11 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
         1 : cell
 
     """
-    try:
-        if VTK_VERSION_SPLIT >= [9, 2]:
-            if point_cell_type == 0:
-                ids.SetPointIdsArrayName(name)
-            elif point_cell_type == 1:
-                ids.SetCellIdsArrayName(name)
-            else:
-                raise RuntimeError(point_cell_type)
-        else:
-            ids.SetIdsArrayName(name)
-    except AttributeError:
-        print(f'  failed setting SetIdsArrayName to name {name!r}')
+    if point_cell_type == 0:
+        ids.SetPointIdsArrayName(name)
+    elif point_cell_type == 1:
+        ids.SetCellIdsArrayName(name)
+    else:
+        raise RuntimeError(point_cell_type)
     return
 

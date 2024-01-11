@@ -10,15 +10,7 @@ from vtkmodules.vtkRenderingLOD import vtkLODActor
 from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
 from vtkmodules.vtkFiltersSources import vtkArrowSource
-
-from vtkmodules.vtkFiltersCore import vtkGlyph3D
-import vtkmodules.vtkFiltersExtraction  # mark this file for pyInstaller
-try:
-    # vtk 9.1
-    from vtkmodules.vtkFiltersExtraction import vtkExtractEdges
-except ImportError:
-    # vtk 9.3
-    from vtkmodules.vtkFiltersCore import vtkExtractEdges
+from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 

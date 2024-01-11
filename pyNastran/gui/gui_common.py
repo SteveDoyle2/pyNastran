@@ -29,10 +29,7 @@ import pyNastran
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
-if VTK_VERSION_SPLIT[0] >= 9:
-    from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
-else:
-    from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
