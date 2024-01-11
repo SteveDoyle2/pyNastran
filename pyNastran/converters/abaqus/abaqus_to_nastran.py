@@ -5,8 +5,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.bdf import BDF, CaseControlDeck
 
+from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.bdf.bdf import BDF, CaseControlDeck
 from pyNastran.converters.abaqus.abaqus import (
     Abaqus, read_abaqus, get_nodes_nnodes_nelements)
 if TYPE_CHECKING:
@@ -297,6 +298,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
         'E': 'STRAIN',
         'ENER': 'ESE',
         #'NOD': disables the error estimator; nastran doesn't have one :)
+        #'NOE': disables the error estimator; nastran doesn't have one :)
     }
     for istep, step in enumerate(model.steps):
         subcase_id = istep + 1
@@ -307,12 +309,13 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
         for output in step.node_output + step.element_output:
-            if output in {'NOD'}:
+            output_upper = output.upper()
+            if output_upper in {'NOD', 'NOE'}:
                 log.warning(f'skipping output request={output}')
                 continue
 
             try:
-                base_output = output_map[output.upper()]
+                base_output = output_map[output_upper]
             except KeyError:
                 raise KeyError(f'output={output!r} is not in [u, rf, s, e, ener]')
             subcase.add(base_output, 'ALL', ['PRINT', 'PLOT'], 'STRESS-type')
@@ -326,6 +329,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
             moments = defaultdict(xyz)
             for cloadi in cload:
                 nid, dof, mag = cloadi
+                assert isinstance(nid, integer_types), nid
                 assert dof in [1, 2, 3], cload
                 if dof in {1, 2, 3}:
                     forces[nid][dof - 1] = mag
@@ -337,9 +341,11 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
             mag = 1.0
             if len(forces):
                 for nid, xyz in forces.items():
+                    assert isinstance(nid, integer_types), nid
                     nastran_model.add_force(load_id, nid, mag, xyz, cid=0, comment='')
             if len(moments):
                 for nid, xyz in moments.items():
+                    assert isinstance(nid, integer_types), nid
                     nastran_model.add_moment(load_id, nid, mag, xyz, cid=0, comment='')
 
             #print(step.cloads)

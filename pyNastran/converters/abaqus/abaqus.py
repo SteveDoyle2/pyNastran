@@ -53,6 +53,9 @@ class Abaqus:
             raise NotImplementedError(msg)
 
         lines = clean_lines(lines)
+        #with open(r'spike.out', 'w') as f:
+            #for line in lines:
+                #f.write(line)
 
         unused_ilines = []
         iline = 0
@@ -569,7 +572,12 @@ class Abaqus:
             #print('word =', word)
             #print('active_line =', line0)
             unused_data_lines = []
-            if word == 'static':
+            if word.startswith('static'):
+                sword = word.split(',')
+                for word in sword[1:]:
+                    word = word.strip()
+                    assert word in {'solver=pardiso'}, f'words={sword}; word={word!r}'
+
                 sline = line0.split(',')
                 _line = lines[iline].strip().lower()
                 if _line.startswith('*'):

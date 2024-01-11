@@ -259,28 +259,30 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
             #log.debug('  matword = %s' % sword)
             if len(sword) == 1:
                 # elastic
+                mat_type = 'isotropic'
                 assert len(sword) in [1, 2], sword
             else:
                 mat_type = sword[1]
                 assert 'type' in mat_type, sword
                 mat_type = mat_type.split('=')[1]
 
-                sline = line0.split(',')
-                if mat_type == 'traction':
-                    assert len(sline) == 3, sline
-                    log.debug('  traction material')
-                elif mat_type in ['iso', 'isotropic']:
-                    #, TYPE=ISO
-                    #1.00000E+07, 3.00000E-01
-                    assert len(sline) == 2, sline
-                    e, nu = sline
-                    e = float(e)
-                    nu = float(nu)
-                    sections['elastic'] = [e, nu]
-                    #print(sections)
-                else:
-                    raise NotImplementedError(f'mat_type={mat_type!r}')
+            sline = line0.split(',')
+            if mat_type == 'traction':
+                assert len(sline) == 3, sline
+                log.debug('  traction material')
+            elif mat_type in ['iso', 'isotropic']:
+                #, TYPE=ISO
+                #1.00000E+07, 3.00000E-01
+                assert len(sline) == 2, sline
+                e, nu = sline
+                e = float(e)
+                nu = float(nu)
+                sections['elastic'] = [e, nu]
+                #print(sections)
+            else:
+                raise NotImplementedError(f'mat_type={mat_type!r}')
             iline += 1
+
         elif word.startswith('plastic'):
             key = 'plastic'
             sword = word.split(',')
@@ -297,6 +299,21 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
             sline = line0.split(',')
             assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
             density = float(sline[0])
+            sections['density'] = [density]
+            iline += 1
+        elif word == 'conductivity':
+            key = 'conductivity'
+            sline = line0.split(',')
+            assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
+            conductivity = float(sline[0])
+            sections['conductivity'] = [conductivity]
+            iline += 1
+        elif word == 'specific heat':
+            key = 'specific_heat'
+            sline = line0.split(',')
+            assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
+            specific_heat = float(sline[0])
+            sections['specific_heat'] = [specific_heat]
             iline += 1
         elif word.startswith('damage initiation'):
             key = 'damage initiation'
@@ -428,13 +445,20 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
         elif word.lower().startswith('expansion'):
             #*Expansion, zero=20.
             #80.,
+            expansion_zero_word = word.split(',')[1]
+            tref_str = expansion_zero_word.split('=')[1]
+            tref = float(tref_str)
+            del expansion_zero_word
             key = 'expansion'
             while '*' not in line0:
                 sline = line0.split(',')
                 iline += 1
                 line0 = lines[iline].strip().lower()
             #iline += 1
-            log.debug(line0)
+            alpha = float(sline[0])
+            sections['expansion'] = [tref, alpha]
+            del tref, alpha
+            #log.debug(line0)
         else:
             msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
             raise NotImplementedError(msg)
@@ -473,6 +497,7 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
     #print(name, sections)
     material = Material(name, sections=sections,
                         is_elastic=True, density=density,
+                        #conductivity=conductivity, specific_heat=specific_heat,
                         ndepvars=ndepvars, ndelete=ndelete)
     iline -= 1
     return iline, line0, material

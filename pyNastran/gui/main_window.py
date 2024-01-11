@@ -9,18 +9,24 @@ import importlib
 #import traceback
 import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
+import urllib
 from typing import Optional
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, QApplication
-import urllib
+#from qtpy.QtCore import QEvent
+
+#QtCore.Qt.WindowMinimized
+#QtCore.Qt.WindowMaximized
+#QtCore.Qt.WindowNoState
 
 # 3rd party
 import vtkmodules  # if this crashes, make sure you ran setup.py
 
 # pyNastran
 import pyNastran
+from pyNastran import is_pynastrangui_exe
 from pyNastran.gui import SCRIPT_PATH, ICON_PATH
 from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
@@ -28,11 +34,11 @@ from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
-try:
-    import pyNastran2
-    ISPY2 = True
-except ImportError:
-    ISPY2 = False
+#try:
+    #import pyNastran2
+    #ISPY2 = True
+#except ImportError:
+ISPY2 = False
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
@@ -156,7 +162,7 @@ class MainWindow(GuiCommon, NastranIO):
         self.setup_gui(is_gui)
         self.setup_post(inputs)
 
-        try:
+        if is_pynastrangui_exe:
             import pyi_splash
             # Update the text on the splash screen
             pyi_splash.update_text("PyInstaller is a great software!")
@@ -166,9 +172,20 @@ class MainWindow(GuiCommon, NastranIO):
             # to this function is made, the splash screen remains open until
             # this function is called or the Python program is terminated.
             pyi_splash.close()
-        except Exception:
-            pass
+
         self._check_for_latest_version()
+
+    #def changeEvent(self, event):
+        # trying to fix the maximize bug by updating the window...doesn't work
+        #if event.type() == QEvent.WindowStateChange:
+            #if event.oldState() and QtCore.Qt.WindowMinimized:
+                #super().changeEvent(event)
+                #print("WindowMinimized")
+            #elif event.oldState() == QtCore.Qt.WindowNoState or self.windowState() == QtCore.Qt.WindowMaximized:
+                #super().changeEvent(event)
+                #self.repaint()
+                #self.update()
+                #print("WindowMaximized")
 
     def _load_plugins(self, plugin_name_to_path: Optional[list[tuple[str, str, str]]]=None):
         """loads the plugins from pyNastran/gui/plugins.py
