@@ -95,7 +95,7 @@ if qt_version not in ['pyqt5', 'pyside2', 'pyqt6', 'pyside6', ]:
 try:
     import pygments  # pylint: disable=unused-import
     is_pygments = True
-except ImportError:
+except ModuleNotFoundError:
     is_pygments = False
 
 QT_AGG_BACKENDS = {

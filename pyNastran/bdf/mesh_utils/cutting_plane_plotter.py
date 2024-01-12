@@ -6,7 +6,7 @@ try:
     import matplotlib
     MPL_VER = int_version('matplotlib', matplotlib.__version__)
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
     MPL_VER = None
 

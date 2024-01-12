@@ -1,7 +1,7 @@
 try:
     import h5py
     IS_H5PY = True
-except ImportError:
+except ModuleNotFoundError:
     IS_H5PY = False
 
 bdf_h5 = ''

@@ -17,7 +17,7 @@ if qt_version == 'pyqt5':
         IS_SCINTILLA = True
         RightArrow = Qsci.QsciScintilla.RightArrow
         SloppyBraceMatch = Qsci.QsciScintilla.SloppyBraceMatch
-    except ImportError:
+    except ModuleNotFoundError:
         IS_SCINTILLA = False
 elif qt_version == 'pyqt6':
     try:
@@ -26,7 +26,7 @@ elif qt_version == 'pyqt6':
         IS_SCINTILLA = True
         RightArrow = Qsci.QsciScintilla.MarkerSymbol.RightArrow
         SloppyBraceMatch = Qsci.QsciScintilla.BraceMatch.SloppyBraceMatch
-    except ImportError:
+    except ModuleNotFoundError:
         IS_SCINTILLA = False
 elif qt_version in {'pyside2', 'pyside6', 'pyqt6'}:
     IS_SCINTILLA = False

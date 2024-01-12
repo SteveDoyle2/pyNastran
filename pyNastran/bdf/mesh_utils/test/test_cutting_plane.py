@@ -10,7 +10,7 @@ from pyNastran.gui.matplotlib_backend import matplotlib_backend
 try:
     import matplotlib  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 if IS_MATPLOTLIB:

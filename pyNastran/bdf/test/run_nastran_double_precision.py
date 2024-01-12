@@ -8,7 +8,7 @@ from pyNastran.op2.op2 import read_op2
 #try:
     #from pyNastran.f06.f06 import F06
     #is_f06 = True
-#except ImportError:
+#except ModuleNotFoundError:
     #is_f06 = False
 
 #class remove_prints:

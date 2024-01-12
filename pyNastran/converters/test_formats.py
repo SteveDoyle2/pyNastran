@@ -17,13 +17,13 @@ from pyNastran.converters.aflr.ugrid.test_ugrid import TestUgrid
 
 #try:
 from pyNastran.converters.dev.avus.test_avus import TestAvus
-#except ImportError:  # pragma: no cover
+#except ModuleNotFoundError:  # pragma: no cover
     #pass
 
 try:
     from pyNastran.converters.dev.code_aster.test_code_aster import TestCodeAster
     from pyNastran.converters.dev.vrml.test_vrml import TestVrml
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     pass
 
 if __name__ == '__main__':  # pragma: no cover

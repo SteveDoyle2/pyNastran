@@ -9,7 +9,7 @@ try:
     import matplotlib.gridspec as gridspec
     from matplotlib.lines import Line2D
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 from pyNastran.utils.atmosphere import (

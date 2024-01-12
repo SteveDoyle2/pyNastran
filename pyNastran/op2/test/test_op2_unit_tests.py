@@ -14,13 +14,13 @@ try:
     #warnings.filterwarnings(
         #'ignore',
         #'.*unorderable dtypes; returning scalar but in the future this will be an error.*')
-except ImportError:
+except ModuleNotFoundError:
     IS_PANDAS = False
 
 try:
     import h5py  # pylint: disable=unused-import
     IS_H5PY = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 

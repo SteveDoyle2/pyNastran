@@ -16,7 +16,7 @@ from qtpy.QtWidgets import QMainWindow
 try:
     import matplotlib
     IS_MATPLOTLIB = True
-except ImportError:
+except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 import pyNastran

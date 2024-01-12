@@ -26,7 +26,7 @@ from pyNastran.op2.op2_geom import read_op2_geom, attach_op2_results_to_bdf, OP2
 try:
     import h5py
     IS_H5PY = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=True,

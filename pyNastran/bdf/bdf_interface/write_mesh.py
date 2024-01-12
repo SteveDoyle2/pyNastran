@@ -19,7 +19,7 @@ from pyNastran.bdf.cards.nodes import write_xpoints
 
 try:
     from natsort import natsorted
-except ImportError:
+except ModuleNotFoundError:
     natsorted = sorted
 
 if TYPE_CHECKING:  # pragma: no cover

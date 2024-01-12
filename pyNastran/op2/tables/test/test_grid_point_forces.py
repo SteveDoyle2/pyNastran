@@ -27,7 +27,7 @@ MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 try:
     import matplotlib.pyplot as plt
     IS_MATPLOTLIB = True
-except ImportError:
+except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 class TestGridPointForcesSMT(unittest.TestCase):

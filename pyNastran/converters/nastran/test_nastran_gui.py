@@ -10,8 +10,7 @@ try:
     IS_MATPLOTLIB = True
 except ModuleNotFoundError:  # pyparsing is missing
     IS_MATPLOTLIB = False
-#except ImportError:
-    #pass
+
 import vtkmodules
 from vtk import vtkRenderLargeImage, vtkAxesActor, vtkOrientationMarkerWidget
 

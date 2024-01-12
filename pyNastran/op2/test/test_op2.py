@@ -20,13 +20,13 @@ np.set_printoptions(precision=3, threshold=20)
 try:
     import pandas
     IS_PANDAS = True
-except ImportError:
+except ModuleNotFoundError:
     IS_PANDAS = False
 
 try:
     import h5py
     IS_HDF5 = True
-except ImportError:
+except ModuleNotFoundError:
     IS_HDF5 = False
 
 #import warnings

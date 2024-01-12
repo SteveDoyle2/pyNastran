@@ -8,7 +8,7 @@ from cpylog import SimpleLogger
 try:
     import h5py  # pylint: disable=unused-import
     IS_H5PY = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 if IS_H5PY:

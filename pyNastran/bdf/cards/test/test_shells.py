@@ -18,7 +18,7 @@ try:
     import matplotlib
     IS_MATPLOTLIB = True
     from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
-except ImportError:
+except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 class TestShells(unittest.TestCase):

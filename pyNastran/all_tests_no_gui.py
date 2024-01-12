@@ -6,7 +6,7 @@ import os
 try:
     import tables
     IS_TABLES = True
-except ImportError:
+except ModuleNotFoundError:
     IS_TABLES = False
 
 import pyNastran

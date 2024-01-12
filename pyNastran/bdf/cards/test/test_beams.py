@@ -13,7 +13,7 @@ import numpy as np
 try:
     import matplotlib
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 if IS_MATPLOTLIB:

@@ -17,7 +17,7 @@ try:
         import imageio.v2 as imageio
     import PIL
     IS_IMAGEIO = True
-except ImportError:
+except ModuleNotFoundError:
     IS_IMAGEIO = False
 
 from pyNastran import is_pynastrangui_exe

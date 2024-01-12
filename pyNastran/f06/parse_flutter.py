@@ -10,7 +10,7 @@ import numpy as np
 try:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 # if you're on linux and you don't have a backend, add this...

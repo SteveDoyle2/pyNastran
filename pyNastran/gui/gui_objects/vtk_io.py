@@ -66,7 +66,7 @@ class VtkIO:
         self.gui = gui
 
     def get_vtk_wildcard_geometry_results_functions(self):
-        data = (/
+        data = (
             'VTK',
             'VTK (*.vtk, *.vtu)', self.load_vtk_geometry,
             None, None)
