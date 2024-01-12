@@ -43,7 +43,7 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str) -> N
     node_output = []
     element_output = []
     static_step = Step(name, boundaries, node_output, element_output,
-                       cloads=cloads, is_nlgeom=False)
+                       cloads=cloads, dloads=[], surfaces=[], is_nlgeom=False)
     model.steps = [static_step]
     model.write(abaqus_inp_filename, is_2d=False)
 

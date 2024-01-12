@@ -150,6 +150,47 @@ class TestAbaqus(unittest.TestCase):
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
 
+    def test_abaqus_to_nastran_pload4_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'pload4_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_force_cquad4(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'force_cquad4.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'force_cquad4.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_grav_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'grav_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'grav_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_pload4_chexa20(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_force_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'force_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'force_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+
 def make_model():
     """makes a test model"""
     dummy_part1 = _make_part('dummy1')

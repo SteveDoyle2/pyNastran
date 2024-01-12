@@ -282,7 +282,16 @@ class Elements:
                 if len(elements) == 0:
                     continue
                 is_elements = True
-                eids_elements = np.array(elements, dtype='int32')
+                idtype = 'int32'
+                try:
+                    eids_elements = np.array(elements, dtype=idtype)
+                except ValueError:
+                    self.log.error(f'expected {etype} elements to be on 1 line...reshaping...')
+                    inline_elements_str = np.hstack(elements)
+                    inline_elements = inline_elements_str.astype(idtype)
+                    nelements = len(inline_elements) // (nnodes + 1)
+                    eids_elements = inline_elements.reshape(nelements, nnodes+1)
+
                 eids = eids_elements[:, 0]
                 node_ids = eids_elements[:, 1:]
                 #print(f'eids[{etype}] = {eids}')

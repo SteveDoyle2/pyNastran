@@ -28,6 +28,14 @@ class Boundary:
         self.type = 'displacement'
         self.nid_dof_to_value = nid_dof_to_value
 
+    def write(self):
+        if len(self.nid_dof_to_value) == 0:
+            return ''
+        msg = '*BOUNDARY\n'
+        for (nid, dof), value in self.nid_dof_to_value.items():
+            msg += f'{nid}, {dof}, {value}\n'
+        return msg
+
     @classmethod
     def from_data(cls, slines: list[list[str]]):
         """
@@ -63,8 +71,11 @@ class Boundary:
                 value = float(sline[3])
             for dof in dofs:
                 nid_dof_to_value[(nid, dof)] = value
-
         return Boundary(nid_dof_to_value)
+
+    def __repr__(self) -> str:
+        msg = f'Boundary(nid_dof_to_value={str(self.nid_dof_to_value)})'
+        return msg
 
 class ShellSection:
     """
@@ -376,6 +387,8 @@ class Step:
                  node_output: list[str],
                  element_output: list[str],
                  cloads: dict[str, Any],
+                 dloads: dict[str, Any],
+                 surfaces: list[Any],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -394,11 +407,13 @@ class Step:
         """
         self.name = name
         self.is_nlgeom = is_nlgeom
-        self.boundaries = boundaries
+        self.boundaries: list[Boundary] = boundaries
         self.node_output = node_output
         self.element_output = element_output
         self.cloads = cloads
+        self.dloads = dloads
         assert isinstance(cloads, list), cloads
+        assert isinstance(dloads, list), dloads
 
     def __repr__(self) -> str:
         msg = (
@@ -412,7 +427,7 @@ class Step:
         )
         return msg
 
-    def write(self, abq_file) -> None:
+    def write(self, abq_file: TextIO) -> None:
         """writes a Step"""
         name = write_name(self.name)
         nlgeom = ', nlgeom=YES' if self.is_nlgeom else ''
@@ -420,7 +435,7 @@ class Step:
         abq_file.write('*Static\n')
         abq_file.write('0.1, 1.0, 0.1, 0.1\n')
         for boundary in self.boundaries:
-            abq_file.write(boundary + '\n')
+            abq_file.write(boundary.write())
 
         for cload in self.cloads:
             abq_file.write('*CLOAD\n')

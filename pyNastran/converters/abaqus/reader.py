@@ -50,7 +50,8 @@ def get_param_map(iline: int, word: str, required_keys: Optional[list[str]]=None
     return param_map
 
 
-def read_cload(line0, lines, iline, log: SimpleLogger) -> tuple[int, str, Any]:
+def read_cload(line0: str, lines: list[str], iline: int,
+               log: SimpleLogger) -> tuple[int, str, Any]:
     """
     First line
     ----------
@@ -98,6 +99,147 @@ def read_cload(line0, lines, iline, log: SimpleLogger) -> tuple[int, str, Any]:
         cloadi = (nid, dof, mag)
         cload.append(cloadi)
     return iline, line0, cload
+
+def read_dload(line0: str, lines: list[str], iline: int,
+               log: SimpleLogger) -> tuple[int, str, Any]:
+    """
+    First line:
+
+    *DLOAD
+    Enter any needed parameters and their value
+    Following line for surface loading:
+
+    Element number or element set label.
+    Distributed load type label.
+    Actual magnitude of the load (for Px type labels) or fluid node number (for PxNU type labels)
+    Repeat this line if needed.
+    Example:
+
+    *DLOAD,AMPLITUDE=A1
+    element_set_name,P3,10.
+    assigns a pressure loading with magnitude 10. times the amplitude curve of
+    amplitude A1 to face number three of all elements belonging to set element_set_name.
+
+    for hexahedral elements:
+    face 1: 1-2-3-4
+    face 2: 5-8-7-6
+    face 3: 1-5-6-2
+    face 4: 2-6-7-3
+    face 5: 3-7-8-4
+    face 6: 4-8-5-1
+
+    for tetrahedral elements:
+    Face 1: 1-2-3
+    Face 2: 1-4-2
+    Face 3: 2-4-3
+    Face 4: 3-4-1
+    for wedge elements:
+
+    Face 1: 1-2-3
+    Face 2: 4-5-6
+    Face 3: 1-2-5-4
+    Face 4: 2-3-6-5
+    Face 5: 3-1-4-6
+    for quadrilateral plane stress, plane strain and axisymmetric elements:
+    Face 1: 1-2
+    Face 2: 2-3
+    Face 3: 3-4
+    Face 4: 4-1
+    for triangular plane stress, plane strain and axisymmetric elements:
+
+    Face 1: 1-2
+    Face 2: 2-3
+    Face 3: 3-1
+    for beam elements:
+
+    Face 1: pressure in 1-direction
+    Face 2: pressure in 2-direction
+
+    Pressure
+    --------
+    ['Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1', 'P1', '-1']
+
+    Gravity
+    -------
+    ['Internal_Selection-1_Gravity-1', ' Grav', ' 9810', ' 0', ' 0', ' -1']
+
+    Following line for gravity loading with known gravity vector:
+    Element number or element set label.
+    GRAV
+    Actual magnitude of the gravity vector.
+    Coordinate 1 of the normalized gravity vector
+    Coordinate 2 of the normalized gravity vector
+    Coordinate 3 of the normalized gravity vector
+    Repeat this line if needed. Here "gravity" really stands for any acceleration vector.
+    Example:
+
+    *DLOAD
+    Eall,GRAV,9810.,0.,0.,-1.
+    assigns gravity loading in the negative z-direction with magnitude 9810. to all elements.
+    """
+    log.debug(f'read_dload {line0!r}')
+    line0 = lines[iline]
+    if len(line0) and line0[0] == '*':
+        dload = None
+        return iline, line0, dload
+
+    dload = []
+    while '*' not in line0:
+        sline = line0.split(',')
+        tag = sline[1].upper().strip()
+        if tag in {'P1', 'P2', 'P3', 'P4', 'P5', 'P6'}:
+            assert len(sline) == 3, sline
+            element_set_name, face, mag_str = sline
+            try:
+                element_set_name = int(element_set_name)
+            except ValueError:
+                element_set_name = sline[0]
+            face = face.strip().upper()
+            assert face in {'P1'}, face
+            mag = float(mag_str)
+            dloadi = (element_set_name, face, mag)
+        elif tag == 'GRAV':
+            element_set_name, unused_tag, mag_str, gx_str, gy_str, gz_str = sline
+            try:
+                element_set_name = int(element_set_name)
+            except ValueError:
+                element_set_name = sline[0]
+            mag = float(mag_str)
+            gx = float(gx_str)
+            gy = float(gy_str)
+            gz = float(gz_str)
+            dloadi = (element_set_name, tag, mag, gx, gy, gz)
+        else:
+            raise NotImplementedError(tag)
+
+        #cload += sline
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        #print(line0)
+        dload.append(dloadi)
+    return iline, line0, dload
+
+def read_surface(line0: str, lines: list[str], iline: int,
+                 log: SimpleLogger) -> tuple[int, str, Any]:
+    """
+    *Surface, Name=Internal_Selection-1_Uniform_Pressure-1, Type=Element
+    Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1, S1
+    """
+    log.debug(f'read_surface {line0!r}')
+    iline += 1
+    line0 = lines[iline]
+    surface = []
+    while '*' not in line0:
+        sline = line0.strip().split(',')
+        assert len(sline) == 2, sline
+        #cload += sline
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        #print(line0)
+        source_eids, surface_name = sline
+        surfacei = (source_eids, surface_name)
+        surface.append(surfacei)
+    return iline, line0, surface
 
 def read_node(lines, iline, log, skip_star=False):
     """reads *node"""
@@ -519,6 +661,10 @@ def read_nset(lines, iline, word, log, is_instance=True):
 def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, int, str]:
     boundary_lines = []
     line0 = lines[iline]
+    if len(line0) and line0[0] == '*':
+        boundary = None
+        return boundary, iline, line0
+
     assert '*' not in line0, line0
     while '*' not in line0:
         # nid, dof1, dof2, disp
@@ -631,21 +777,25 @@ def read_star_block2(lines, iline, line0, log, debug=False):
             log.debug(line)
     return data_lines, iline, line0
 
-def read_set(lines, iline, line0, params_map):
+def read_set(lines: list[str], iline: int, line0: str,
+             params_map: dict[str, Optional[str]]) -> list[Union[str, np.ndarray],
+                                                           int, str]:
     """reads a set"""
-    set_ids = []
+    set_ids_list = []
     while not line0.startswith('*'):
-        set_ids += line0.strip(', ').split(',')
+        set_ids_list += line0.strip(', ').split(',')
         iline += 1
         line0 = lines[iline].strip().lower()
     if 'generate' in params_map:
-        assert len(set_ids) == 3, set_ids
-        set_ids = np.arange(int(set_ids[0]), int(set_ids[1]), int(set_ids[2]))
+        assert len(set_ids_list) == 3, set_ids_list
+        set_ids = np.arange(int(set_ids_list[0]), int(set_ids_list[1]), int(set_ids_list[2]))
+    elif len(set_ids_list) == 1 and not set_ids_list[0].isdigit():
+        set_ids = set_ids_list[0]
     else:
         try:
-            set_ids = np.unique(np.array(set_ids, dtype='int32'))
+            set_ids = np.unique(np.array(set_ids_list, dtype='int32'))
         except ValueError:
-            print(set_ids)
+            print(set_ids_list)
             raise
     return set_ids, iline, line0
 

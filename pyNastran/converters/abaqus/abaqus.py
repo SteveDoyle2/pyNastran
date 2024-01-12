@@ -1,6 +1,7 @@
 """Defines the Abaqus class"""
-from typing import Union, Optional
+import os
 from io import StringIO
+from typing import Union, Optional
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
@@ -33,6 +34,8 @@ class Abaqus:
         self.steps: list[Step] = []
         self.heading = None
         self.preprint = None
+        self.node_sets = {}
+        self.element_sets = {}
 
         self.shell_sections: list[ShellSection] = []
         self.solid_sections: list[SolidSection] = []
@@ -53,9 +56,12 @@ class Abaqus:
             raise NotImplementedError(msg)
 
         lines = clean_lines(lines)
-        #with open(r'spike.out', 'w') as f:
-            #for line in lines:
-                #f.write(line)
+        write_clean_lines = False
+        if write_clean_lines:  # pragma: no cover
+            dirname = os.path.dirname(abaqus_inp_filename)
+            with open(os.path.join(dirname, 'spike.out'), 'w') as file_obj:
+                for line in lines:
+                    file_obj.write(line)
 
         unused_ilines = []
         iline = 0
@@ -71,6 +77,7 @@ class Abaqus:
         solid_sections = []
         shell_sections = []
         boundaries = []
+        surfaces = []
         steps = []
 
         log = self.log
@@ -98,7 +105,8 @@ class Abaqus:
                 elif word == 'boundary':
                     iline += 1
                     boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
-                    boundaries.append(boundary)
+                    if boundary:
+                        boundaries.append(boundary)
                     iline -= 1
                     line0 = lines[iline].strip().lower()
 
@@ -270,7 +278,7 @@ class Abaqus:
                     self.log.debug(line0)
                     iline, line0, set_name, set_ids = reader.read_elset(
                         lines, iline, line0, self.log, is_instance=False)
-                    node_sets[set_name] = set_ids
+                    element_sets[set_name] = set_ids
                     iline -= 1
                     line0 = lines[iline].strip().lower()
                     self.log.info(f'end of elset; line={line0} iline={iline}')
@@ -287,6 +295,12 @@ class Abaqus:
                     shell_sections.append(shell_section)
                     iline -= 1
                     line0 = lines[iline].strip().lower()
+                elif '*surface' in line0:
+                    iline, line0, surface = reader.read_surface(line0, lines, iline, self.log)
+                    surfaces.extend(surface)
+                    iline -= 1
+                    line0 = lines[iline].strip().lower()
+
                 elif '*hourglass stiffness' in line0:
                     iline, hourglass_stiffness = reader.read_hourglass_stiffness(line0, lines, iline, self.log)
                 elif '*orientation' in line0:
@@ -315,7 +329,10 @@ class Abaqus:
         self.element_sets = element_sets
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
+        self.node_sets = node_sets
+        self.element_sets = element_sets
         self.boundaries = boundaries
+        self.surfaces = surfaces
         self.steps = steps
         self.log.debug('nassembly = %s' % nassembly)
         for part_name, part in sorted(self.parts.items()):
@@ -531,6 +548,8 @@ class Abaqus:
         node_output = []
         element_output = []
         cloads = []
+        dloads = []
+        surfaces = []
         # case 1
         # ------
         # *Step, name=Step-1, nlgeom=NO, inc=10000
@@ -655,6 +674,8 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
             elif word.startswith('boundary'):
                 boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
+                if boundary:
+                    boundaries.append(boundary)
             elif word.startswith('buckle'):
                 node_output = []
                 while '*' not in line0:
@@ -665,6 +686,14 @@ class Abaqus:
             elif word.startswith('cload'):
                 iline, line0, cload = reader.read_cload(line0, lines, iline, log)
                 cloads.append(cload)
+            elif word.startswith('dload'):
+                iline, line0, dload = reader.read_dload(line0, lines, iline, log)
+                if dload:
+                    dloads.append(dload)
+
+            elif word.startswith('surface'):
+                iline, line0, surface = reader.read_surface(line0, lines, iline, log)
+                surfaces.append(surface)
             elif word.startswith('node print'):
                 node_output = []
                 while '*' not in line0:
@@ -697,7 +726,7 @@ class Abaqus:
         #iline -= 1
         step = Step(step_name, boundaries,
                     node_output, element_output,
-                    cloads, is_nlgeom=False)
+                    cloads, dloads, surfaces, is_nlgeom=False)
         self.log.debug('  end of step %i...' % istep)
         return iline, line0, step
 
@@ -726,6 +755,10 @@ class Abaqus:
                 amplitude.write(abq_file)
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
+            for set_name, seti in self.node_sets.items():
+                asdf
+            for set_name, seti in self.element_sets.items():
+                asdf
             for step in self.steps:
                 #print(step)
                 #print(abq_file)

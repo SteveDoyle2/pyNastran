@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.bdf.bdf import BDF, CaseControlDeck
+from pyNastran.utils.numpy_utils import integer_types # , float_types
+from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase
 from pyNastran.converters.abaqus.abaqus import (
-    Abaqus, read_abaqus, get_nodes_nnodes_nelements)
+    Abaqus, Step, read_abaqus, get_nodes_nnodes_nelements)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
@@ -109,15 +109,39 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
-        elif etype in {'c3d4', 'c3d4r', 'c3d10', 'c3d10r', 'c3d10h'}:
+        elif etype in {'c3d4', 'c3d4r'}: # , 'c3d10', 'c3d10r', 'c3d10h'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
-        elif etype in {'c3d6', 'c3d15', 'c3d6r', 'c3d15r'}:
+        elif etype in {'c3d10', 'c3d10r', 'c3d10h'}:
+            quadratic_tetra
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_ctetra(eid, pid, nids, comment='')
+        elif etype in {'c3d6', 'c3d6r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cpenta(eid, pid, nids, comment='')
-        elif etype in {'c3d8', 'c3d20', 'c3d8r', 'c3d20r'}:
+        elif etype in {'c3d15', 'c3d15r'}:
+            quadratic_penta
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_cpenta(eid, pid, nids, comment='')
+        elif etype in {'c3d8', 'c3d8r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_chexa(eid, pid, nids, comment='')
+        elif etype in {'c3d20', 'c3d20r'}:
+            for eid, nids in zip(eids, part_nids):
+                # the last 8 nodes are flipped in sets of 2
+                (n1, n2, n3, n4,
+                 n5, n6, n7, n8,
+                 n9, n10, n11, n12,
+                 n13, n14, n15, n16,
+                 n17, n18, n19, n20) = nids
+                nids2 = [
+                    n1, n2, n3, n4,
+                    n5, n6, n7, n8,
+                    n9, n10, n11, n12,
+
+                    n17, n18, n19, n20,
+                    n13, n14, n15, n16,]
+                nastran_model.add_chexa(eid, pid, nids2, comment='')
         elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
             del eids, part_nids
             log.warning(f'skipping etype={etype!r}')
@@ -193,14 +217,11 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         #print(mat)
         nastran_model.add_psolid(pid, mid, cordm=0,
                                  integ=None, stress=None, isop=None, fctn='SMECH', comment='')
-        G = None
-        elastic = mat.sections['elastic']
-        E = elastic[0]
-        nu = elastic[1]
-        nastran_model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0,
-                               ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
-        log.info('shell2')
+        _create_mat1(nastran_model, mat, mid)
+
+        log.info('solid section')
         mid += 1
+
     for shell_section in model.shell_sections:
         #print(shell_section)
         mat_name = shell_section.material_name
@@ -209,14 +230,28 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         t = shell_section.thickness
         nastran_model.add_pshell(pid, mid1=mid, t=t, mid2=mid, twelveIt3=1.0, mid3=None, tst=0.833333,
                                  nsm=0.0, z1=None, z2=None, mid4=None, comment='')
-        G = None
-        elastic = mat.sections['elastic']
-        E = elastic[0]
-        nu = elastic[1]
-        nastran_model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0,
-                               ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
-        log.info('shell2')
+        _create_mat1(nastran_model, mat, mid)
+
+        log.info('shell section')
         mid += 1
+
+def _create_mat1(nastran_model: BDF, mat, mid: int):
+    G = None
+    rho = 0.0
+    tref = None
+    alpha = None
+
+    sections = mat.sections
+    elastic = sections['elastic']
+    E = elastic[0]
+    nu = elastic[1]
+    if 'density' in sections:
+        densities = sections['density']
+        rho = densities[0]
+    if 'expansion' in sections:
+        tref, alpha = sections['expansion']
+    nastran_model.add_mat1(mid, E, G, nu, rho=rho, a=alpha, tref=tref,
+                           ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
 
 def abaqus_to_nastran_filename(abaqus_inp_filename: str,
                                nastran_filename_out: str,
@@ -259,18 +294,21 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     return nastran_model
 
 def _write_boundary_as_nastran(model: Abaqus,
+                               step: Abaqus,
                                nastran_model: BDF,
                                case_control_deck: CaseControlDeck) -> None:
-    if not model.boundaries:
+    if not step.boundaries:
         return
-    for iboundary, boundary in enumerate(model.boundaries):
+    for iboundary, boundary in enumerate(step.boundaries):
         fixed_spcs = defaultdict(list)
         for (nid, dof), value in boundary.nid_dof_to_value.items():
-            assert isinstance(nid, int), nid
-            if value == 0.0:
-                fixed_spcs[dof].append(nid)
-            else:
-                raise RuntimeError((nid, dof, value))
+            nids = _get_nodes(model, nid)
+            #assert isinstance(nid, int), nid
+            for nid in nids:
+                if value == 0.0:
+                    fixed_spcs[dof].append(nid)
+                else:
+                    raise RuntimeError((nid, dof, value))
 
         subcase_id = iboundary + 1
         spc_id = iboundary + 1
@@ -281,15 +319,12 @@ def _write_boundary_as_nastran(model: Abaqus,
             nastran_model.add_spc1(spc_id, str(dof), nids)
 
 def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
-    def xyz():
-        return np.zeros(3, dtype='float32')
-
     log = nastran_model.log
     if nastran_model.case_control_deck is None:
         nastran_model.case_control_deck = CaseControlDeck([], log=nastran_model.log)
 
     case_control_deck = nastran_model.case_control_deck
-    _write_boundary_as_nastran(model, nastran_model, case_control_deck)
+    _write_boundary_as_nastran(model, model, nastran_model, case_control_deck)
 
     output_map = {
         'U': 'DISP',
@@ -308,6 +343,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
         else:
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
+        _write_boundary_as_nastran(model, step, nastran_model, case_control_deck)
         for output in step.node_output + step.element_output:
             output_upper = output.upper()
             if output_upper in {'NOD', 'NOE'}:
@@ -320,17 +356,29 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
                 raise KeyError(f'output={output!r} is not in [u, rf, s, e, ener]')
             subcase.add(base_output, 'ALL', ['PRINT', 'PLOT'], 'STRESS-type')
 
-        for cload in step.cloads:
-            assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
-            nastran_model.sol = 101
-            subcase.add('LOAD', load_id, [], 'STRESS-type')
-            #subcase['LOAD'] = load_id
-            forces = defaultdict(xyz)
-            moments = defaultdict(xyz)
-            for cloadi in cload:
-                nid, dof, mag = cloadi
-                assert isinstance(nid, integer_types), nid
-                assert dof in [1, 2, 3], cload
+        _write_distributed_loads(model, step, nastran_model, subcase, load_id)
+        _write_concentrated_loads(model, step, nastran_model, subcase, load_id)
+
+def _write_concentrated_loads(model: Abaqus,
+                              step: Step,
+                              nastran_model: BDF, subcase: Subcase,
+                              load_id: int) -> None:
+    def fxyz():
+        return np.zeros(3, dtype='float32')
+
+    for cload in step.cloads:
+        assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
+        nastran_model.sol = 101
+        subcase.add('LOAD', load_id, [], 'STRESS-type')
+        #subcase['LOAD'] = load_id
+        forces = defaultdict(fxyz)
+        moments = defaultdict(fxyz)
+        for cloadi in cload:
+            nid, dof, mag = cloadi
+            nids = _get_nodes(model, nid)
+            assert dof in [1, 2, 3], cload
+
+            for nid in nids:
                 if dof in {1, 2, 3}:
                     forces[nid][dof - 1] = mag
                 elif dof in {4, 5, 6}:
@@ -338,18 +386,89 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
                 else:
                     raise NotImplementedError(cloadi)
 
-            mag = 1.0
-            if len(forces):
-                for nid, xyz in forces.items():
-                    assert isinstance(nid, integer_types), nid
-                    nastran_model.add_force(load_id, nid, mag, xyz, cid=0, comment='')
-            if len(moments):
-                for nid, xyz in moments.items():
-                    assert isinstance(nid, integer_types), nid
-                    nastran_model.add_moment(load_id, nid, mag, xyz, cid=0, comment='')
+        mag = 1.0
+        if len(forces):
+            for nid, xyz in forces.items():
+                assert isinstance(nid, integer_types), nid
+                nastran_model.add_force(load_id, nid, mag, xyz, cid=0, comment='')
+        if len(moments):
+            for nid, xyz in moments.items():
+                assert isinstance(nid, integer_types), nid
+                nastran_model.add_moment(load_id, nid, mag, xyz, cid=0, comment='')
 
-            #print(step.cloads)
-        #step.cloads
+        #print(step.cloads)
+    #step.cloads
+
+def _write_distributed_loads(model: Abaqus,
+                             step: Step,
+                             nastran_model: BDF, subcase: Subcase,
+                             load_id: int) -> None:
+    for dload in step.dloads:
+        assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
+        nastran_model.sol = 101
+        subcase.add('LOAD', load_id, [], 'STRESS-type')
+        #pressures = []
+        for dloadi in dload:
+            eid, tag = dloadi[:2]
+            if tag in {'P1', 'P2', 'P3', 'P4', 'P5', 'P6'}:
+                face = tag
+                assert len(dloadi) == 3, dloadi
+                mag = dloadi[-1]
+                eids = _get_elements(model, eid)
+                pressure = mag
+
+                if isinstance(face, str):
+                    assert face[0] == 'P' and len(face) == 2, face
+                    chexa_face_map = {
+                        # take the first and 3rd nodes
+                        1: (1-1, 3-1),  #face 1: 1-2-3-4
+                        2: (5-1, 7-1),  #face 2: 5-8-7-6
+                        3: (1-1, 6-1),  #face 3: 1-5-6-2
+                        4: (2-1, 7-1),  #face 4: 2-6-7-3
+                        5: (3-1, 8-1),  #face 5: 3-7-8-4
+                        6: (4-1, 5-1),  #face 6: 4-8-5-1
+                        # subtract 1 to make it 0 based
+                    }
+                    pressures = [pressure, None, None, None]
+                    face_int = int(face[-1])
+                    for eid in eids:
+                        element = nastran_model.elements[eid]
+                        if element.type == 'CHEXA':
+                            i1, i3 = chexa_face_map[face_int]
+                            n1 = element.nodes[i1]
+                            n3 = element.nodes[i3]
+                            nastran_model.add_pload4(
+                                load_id, [eid], pressures, g1=n1, g34=n3, cid=0, nvector=None,
+                                surf_or_line='SURF', line_load_dir='NORM', comment='')
+                        else:
+                            raise NotImplementedError(element)
+                else:
+                    for eid in eids:
+                        asfd
+                        nastran_model.add_pload2(load_id, pressure, [eid], comment='')
+                        #nastran_model.add_pload(load_id, pressure, nodes, comment='')
+
+            elif tag == 'GRAV':
+                assert len(dloadi) == 6, dloadi
+                mag, gx, gy, gz = dloadi[2:]
+                N = [gx, gy, gz]
+                nastran_model.add_grav(load_id, mag, N, cid=0, mb=0, comment='')
+            else:
+                raise RuntimeError(dloadi)
+
+def _get_nodes(model: Abaqus, nid: Union[int, str]) -> list[int]:
+    if isinstance(nid, integer_types):
+        nids = [nid]
+    else:
+        nids = model.node_sets[nid.lower()]
+    return nids
+
+def _get_elements(model: Abaqus, eid: Union[int, str]) -> list[int]:
+    if isinstance(eid, integer_types):
+        eids = [eid]
+    else:
+        eids = model.element_sets[eid.lower()]
+    return eids
 
 def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
                           quiet: str=False) -> None:
