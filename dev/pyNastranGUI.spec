@@ -13,12 +13,13 @@ except ImportError:
 pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = False
 INCLUDE_BDFV = False
+INCLUDE_PANDAS = False
 INCLUDE_MATPLOTLIB = False
 
 DEBUG = True
 IS_RELEASE = False
 USE_TODAY = True
-IS_ONEDIR = True # True=onedir; False=onefile
+IS_ONEDIR = False # True=onedir; False=onefile
 
 MAKE_SPLASH = True # requires tk
 BUILD_EXE = True
