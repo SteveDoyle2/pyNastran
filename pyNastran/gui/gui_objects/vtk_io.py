@@ -5,17 +5,15 @@ import numpy as np
 #from numpy import vstack, amax, amin, arange, ones, zeros, where
 
 #VTK_TRIANGLE = 5
-#from pyNastran.gui.vtk_common_core import vtkPoints
 #from pyNastran.gui.vtk_interface import vtkVertex
+#from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
+#from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
 
-from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
-
-#from vtk import (
+from vtk import (
     #vtkUnstructuredGridReader,
-    #vtkXMLUnstructuredGridReader,
-    #vtkTypeFloat32Array)
-from pyNastran.gui.vtk_common_core import vtkPoints, VTK_ID_TYPE
+    vtkXMLUnstructuredGridReader,
+)
+from pyNastran.gui.vtk_common_core import vtkPoints, vtkTypeFloat32Array, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.types import Cases, Form, Formi
 from pyNastran.gui.gui_objects.gui_result import GuiResult, INT_TYPES as INT_DTYPES, REAL_TYPES as REAL_DTYPES
@@ -68,7 +66,7 @@ class VtkIO:
         self.gui = gui
 
     def get_vtk_wildcard_geometry_results_functions(self):
-        data = (
+        data = (/
             'VTK',
             'VTK (*.vtk, *.vtu)', self.load_vtk_geometry,
             None, None)

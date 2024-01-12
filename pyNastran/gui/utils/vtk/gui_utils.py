@@ -1,7 +1,8 @@
 """
 these are functions not exposed in the GUI that are still useful
 """
-from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtk import vtkLODActor
+#from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 def add_actors_to_gui(gui, actors: list[vtkLODActor], render: bool=True):
     """adds multiple vtk actors"""

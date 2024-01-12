@@ -6,12 +6,20 @@ from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
-from vtkmodules.vtkCommonTransforms import vtkTransform
-from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
-from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
-from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
-from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtk import (
+    vtkTransform,
+    vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
+    vtkRenderLargeImage,
+    vtkAxesActor,
+    vtkOrientationMarkerWidget,
+    vtkXMLUnstructuredGridWriter,
+)
+#from vtkmodules.vtkCommonTransforms import vtkTransform
+#from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
+#from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
+#from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
+#from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
+#from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
 from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad

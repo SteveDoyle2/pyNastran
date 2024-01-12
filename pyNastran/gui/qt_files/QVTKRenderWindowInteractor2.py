@@ -72,8 +72,9 @@ try:
 except ImportError:
     pass
 
-from vtkmodules.vtkRenderingCore import vtkRenderWindow
-from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
+from pyNastran.gui.vtk_rendering_core import vtkRenderWindow, vtkGenericRenderWindowInteractor
+#from vtkmodules.vtkRenderingCore import vtkRenderWindow
+#from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 
 if PyQtImpl == "PyQt5":
     if QVTKRWIBase == "QGLWidget":

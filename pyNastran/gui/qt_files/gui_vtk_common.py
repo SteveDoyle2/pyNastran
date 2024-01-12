@@ -6,11 +6,17 @@ from pyNastran.gui.vtk_rendering_core import (
     #vtkActor, vtkCamera,
     #vtkDataSetMapper,
     vtkPolyDataMapper)
-from vtkmodules.vtkRenderingLOD import vtkLODActor
-from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
-from vtkmodules.vtkFiltersSources import vtkArrowSource
-from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
+from vtk import (vtkLODActor,
+                 vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper,
+                 vtkInteractorStyleRubberBandPick,
+                 vtkArrowSource,
+                 vtkGlyph3D, vtkExtractEdges,
+)
+#from vtkmodules.vtkRenderingLOD import vtkLODActor
+#from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
+#from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
+#from vtkmodules.vtkFiltersSources import vtkArrowSource
+#from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 

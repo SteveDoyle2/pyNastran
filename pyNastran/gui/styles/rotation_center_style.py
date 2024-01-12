@@ -1,7 +1,8 @@
 """
 defines the RotationCenterStyle class
 """
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
+from vtk import vtkInteractorStyleTrackballCamera
+#from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 
 
 class RotationCenterStyle(vtkInteractorStyleTrackballCamera):

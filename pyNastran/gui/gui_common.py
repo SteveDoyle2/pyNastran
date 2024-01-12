@@ -15,10 +15,14 @@ from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
 
-from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
-from vtkmodules.vtkRenderingCore import vtkImageActor
-from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
+from vtk import (vtkExtractSelection,
+                 vtkSelection, vtkSelectionNode,
+                 vtkImageActor,
+                 vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
+#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+#from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
+#from vtkmodules.vtkRenderingCore import vtkImageActor
+#from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer

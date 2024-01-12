@@ -14,10 +14,11 @@ _VTK_VERSION = vtkVersion.GetVTKVersion()
 VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
 _VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use vtk>=9.3)'
 if VTK_VERSION_SPLIT[0] == 9:
-    if VTK_VERSION_SPLIT[1] >= 3:
-        pass
-    else:  # pragma: no cover
-        raise NotImplementedError(_VTK_ERROR_MESSAGE)
+    pass
+    #if VTK_VERSION_SPLIT[1] >= 3:
+        #pass
+    #else:  # pragma: no cover
+        #raise NotImplementedError(_VTK_ERROR_MESSAGE)
 else:  # pragma: no cover
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
 
