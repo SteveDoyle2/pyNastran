@@ -1,6 +1,7 @@
 # -*- PyInstaller input file -*-
 # -*- mode: python           -*-
 import os
+import sys
 try:
     import pyInstaller
     pyInstaller_path = [os.path.dirname(pyinstaller.__file__)]
@@ -12,15 +13,25 @@ except ImportError:
 pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = False
 INCLUDE_BDFV = False
+INCLUDE_MATPLOTLIB = False
 
-DEBUG = False
+DEBUG = True
 IS_RELEASE = False
 USE_TODAY = True
+IS_ONEDIR = True # True=onedir; False=onefile
 
 MAKE_SPLASH = True # requires tk
-IS_ONEDIR = True # True=onedir; False=onefile
 BUILD_EXE = True
 BUILD_COLLECT = False
+
+# get pyNastran location
+print('sys.version_info.major =', sys.version_info.major)
+pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
+
+site_packages_path = os.path.join(pkg_path, '..', 'env', 'Lib', 'site-packages')
+#vtk_path = os.path.join(site_packages_path, 'vtkmodules')
+vtk_lib_path = os.path.join(site_packages_path, 'vtk.libs')
+assert os.path.exists(site_packages_path), site_packages_path
 
 #-------------------------------------------------------------------------
 ## this block gets/sets the version so it doesnt use git
@@ -179,6 +190,126 @@ if 'Anaconda' not in python_path:
     binaries.append(
         ('python%s.dll' % python_version, os.path.join(python_path, python_version_dllname), 'BINARY'),
     )
+
+
+INCLUDE_VTK_DLLS = False
+vtk_imports = [
+    'vtk',
+    'vtkmodules',
+    'vtkmodules.all',
+    'vtkmodules.vtkCommonDataModel',
+    'vtkmodules.vtkCommonExecutionModel',
+    #'vtkmodules.vtkCommonCore',
+    'vtkmodules.vtkCommonMath',
+    'vtkmodules.vtkCommonTransforms',
+    'vtkmodules.vtkFiltersCore',
+    'vtkmodules.vtkFiltersExtraction',
+    'vtkmodules.vtkFiltersGeneral',
+    'vtkmodules.vtkFiltersGeometry',
+    'vtkmodules.vtkFiltersPoints',
+    'vtkmodules.vtkFiltersSources',
+    'vtkmodules.vtkIOXMLParser',
+    'vtkmodules.vtkRenderingCore',
+    'vtkmodules.vtkRenderingUI',
+    'vtkmodules.vtkRenderingLOD',
+    'vtkmodules.vtkRenderingCore',
+    'vtkmodules.vtkRenderingAnnotation',
+    'vtkmodules.vtkInteractionStyle',
+    'vtkmodules.vtkInteractionWidgets',
+    'vtkmodules.vtkIOImage',
+    'vtkmodules.vtkRenderingLabel',
+    'vtkmodules.vtkFiltersHybrid',
+    'vtkmodules.util.vtkConstants',
+]
+
+if INCLUDE_VTK_DLLS:
+    # I never actually figured how to make vtk 9.3 build...it's hard
+    # vtk.libs is a new directory
+    # I think there's a "glew" DLL missing
+    vtk_version = '9.3'
+    assert os.path.exists(vtk_lib_path), vtk_lib_path
+    pyInstaller_path.append(vtk_lib_path)
+
+    vtk_lib_names = os.listdir(vtk_lib_path)
+    vtk_name_to_lib_name = {
+        name.split('-')[0] : name for name in vtk_lib_names
+        if name.startswith('vtk') and name.endswith('.dll')
+    }
+    print(vtk_name_to_lib_name)
+    for mod_name_all in vtk_imports:
+        mod_name_split = mod_name_all.split('.')
+        if len(mod_name_split) == 1:
+            continue
+        mod_name = mod_name_split[-1]
+        
+        print('mod', mod_name_all, mod_name)
+        #vtkFiltersProgrammable.cp39-win_amd64.pyd
+        #vtkCommonPython-9.2.dll
+        #pyd_name = f'{mod_name}.cp{pythonversion}}-win_amd64.pyd'
+        #dll_name = f'{mod_name}-{vtk_version}.dll'
+        #dll_source_path = os.path.join(vtk_path, dll_name)
+        if mod_name not in vtk_name_to_lib_name:
+            print(f"vtk mod_name {mod_name} doesn't exist?")
+            continue
+        dll_name = vtk_name_to_lib_name[mod_name]
+        dll_source_path = os.path.join(vtk_lib_path, dll_name)
+        assert os.path.exists(dll_source_path), dll_source_path
+        binary = (f'vtkmodules/{dll_name}', dll_source_path, 'BINARY')
+        binaries.append(binary)
+        print(binary)
+
+    vtk_dll_modules = [
+        # modules
+        'vtkFiltersHybrid',
+        'vtkFiltersPoints',
+        'vtkFiltersSources',
+        'vtkInteractionStyle',
+        'vtkInteractionWidgets',
+        'vtkIOImage',
+        'vtkIOXMLParser',
+        'vtkRenderingAnnotation',
+        'vtkRenderingCore',
+        'vtkRenderingLabel',
+        'vtkRenderingLOD',
+        'vtkRenderingUI',
+        # lib
+        'vtkCommonColor',
+        'vtkFiltersModeling',
+        'vtkFiltersTexture',
+        'vtkfreetype',
+        'vtkglew',
+        'vtkImagingColor',
+        'vtkImagingCore',
+        'vtkImagingGeneral',
+        'vtkImagingHybrid',
+        'vtkImagingSources',
+        'vtkjpeg',
+        'vtkmetaio',
+        'vtkpng',
+        'vtkRenderingContext2D',
+        'vtkRenderingOpenGL2',
+        'vtktiff',
+    ]
+    if 0:
+        vtk_dll_modules = list(set(vtk_dll_modules))
+        for dll_base in vtk_dll_modules:
+            dll_name = vtk_name_to_lib_name[dll_base]
+            dll_source_path = os.path.join(vtk_lib_path, dll_name)
+            binary1 = (f'vtkmodules/{dll_name}', dll_source_path, 'BINARY')
+            binary2 = (f'vtk.libs/{dll_name}', dll_source_path, 'BINARY')
+            binaries.append(binary1)
+            binaries.append(binary2)
+            print(binary)
+    for dll_name in vtk_name_to_lib_name.values():
+        dll_source_path = os.path.join(vtk_lib_path, dll_name)
+        binary1 = (f'vtkmodules/{dll_name}', dll_source_path, 'BINARY')
+        binary2 = (f'vtk.libs/{dll_name}', dll_source_path, 'BINARY')
+        binary3 = (dll_name, dll_source_path, 'BINARY')
+        binaries.append(binary1)
+        binaries.append(binary2)
+        binaries.append(binary3)
+        #print(binary)
+    #asdf
 
 pathex = pyInstaller_path + [
     python_path,
@@ -362,9 +493,13 @@ h5py_imports = [
     'h5py.weakref',
 ]
 
+matplotlib_imports = [
+    'matplotlib', 'cycler', 'contourpy', 'dateutil',
+]
+
 excludes = [
     #'unittest',   # why cant I remove this?
-    'matplotlib', 'wx', 'nose', 'Tkinter',
+    'wx', 'nose', 'Tkinter',
 
     'distutils', 'distutils.distutils', 'distutils.errors', 'distutils.os',
     'distutils.re', 'distutils.string', 'distutils.sys',
@@ -390,7 +525,7 @@ excludes = [
     'anaconda-client', 'appdirs', 'astroid', 'astroid', 'astropy'
     'babel', 'backports_abc', 'blackwidow', 'blaze-core', 'bokeh',
     'boto', 'clyent', 'coverage',
-    'curl', 'cycler', 'cytoolz', 'datashape', 'decorator', 'freeimage',
+    'curl', 'cytoolz', 'datashape', 'decorator', 'freeimage',
     'gl2ps', 'oce', 'pythonocc-core', 'tbb', 'enum34', 'et_xmlfile',
     'futures', 'gevent', 'gevent-websocket', 'hdf5', 'ipykernel',
     'ipython', 'ipywidgets', 'jdcal', 'jupyter', 'jupyter_console',
@@ -473,10 +608,15 @@ excludes = [
     'libpng',
     #'sip', 'colorama', 'numpy', 'pillow', 'qt',
     #'vtk', 'six', 'mkl', 'mkl-service',
-] + pandas_imports
+]
+if INCLUDE_PANDAS:
+    excludes.extend(pandas_imports)
 if not INCLUDE_BDFV:
     excludes.append('pytables')
-excludes = ['vtkmodules.all', ]
+if not INCLUDE_MATPLOTLIB:
+    excludes.extend(matplotlib_imports)
+#excludes = ['vtkmodules.all', ]
+excludes = []
 
 qt_imports = [
     'PyQt5.QtOpenGL', 'PyQt5.Qsci',
@@ -487,9 +627,10 @@ qt_imports = [
 #'vtkmodules.util.vtkConstants', 'vtkmodules.util.vtkVariant',
 #'vtkmodules.vtkAcceleratorsVTKmCore', 'vtkmodules.vtkAcceleratorsVTKmDataModel', 'vtkmodules.vtkAcceleratorsVTKmFilters', 'vtkmodules.vtkChartsCore', 'vtkmodules.vtkCommonColor', 'vtkmodules.vtkCommonComputationalGeometry', 'vtkmodules.vtkCommonCore', 'vtkmodules.vtkCommonDataModel', 'vtkmodules.vtkCommonExecutionModel', 'vtkmodules.vtkCommonMath', 'vtkmodules.vtkCommonMisc', 'vtkmodules.vtkCommonPython', 'vtkmodules.vtkCommonSystem', 'vtkmodules.vtkCommonTransforms', 'vtkmodules.vtkDomainsChemistry', 'vtkmodules.vtkDomainsChemistryOpenGL2', 'vtkmodules.vtkFiltersAMR', 'vtkmodules.vtkFiltersCore', 'vtkmodules.vtkFiltersExtraction', 'vtkmodules.vtkFiltersFlowPaths', 'vtkmodules.vtkFiltersGeneral', 'vtkmodules.vtkFiltersGeneric', 'vtkmodules.vtkFiltersGeometry', 'vtkmodules.vtkFiltersHybrid', 'vtkmodules.vtkFiltersHyperTree', 'vtkmodules.vtkFiltersImaging', 'vtkmodules.vtkFiltersModeling', 'vtkmodules.vtkFiltersParallel', 'vtkmodules.vtkFiltersParallelDIY2', 'vtkmodules.vtkFiltersParallelImaging', 'vtkmodules.vtkFiltersParallelStatistics', 'vtkmodules.vtkFiltersPoints', 'vtkmodules.vtkFiltersProgrammable', 'vtkmodules.vtkFiltersPython', 'vtkmodules.vtkFiltersSMP', 'vtkmodules.vtkFiltersSelection', 'vtkmodules.vtkFiltersSources', 'vtkmodules.vtkFiltersStatistics', 'vtkmodules.vtkFiltersTexture', 'vtkmodules.vtkFiltersTopology', 'vtkmodules.vtkFiltersVerdict', 'vtkmodules.vtkGeovisCore', 'vtkmodules.vtkIOAMR', 'vtkmodules.vtkIOAsynchronous', 'vtkmodules.vtkIOCGNSReader', 'vtkmodules.vtkIOCONVERGECFD', 'vtkmodules.vtkIOChemistry', 'vtkmodules.vtkIOCityGML', 'vtkmodules.vtkIOCore', 'vtkmodules.vtkIOEnSight', 'vtkmodules.vtkIOExodus', 'vtkmodules.vtkIOExport', 'vtkmodules.vtkIOExportGL2PS', 'vtkmodules.vtkIOExportPDF', 'vtkmodules.vtkIOGeoJSON', 'vtkmodules.vtkIOGeometry', 'vtkmodules.vtkIOH5Rage', 'vtkmodules.vtkIOH5part', 'vtkmodules.vtkIOHDF', 'vtkmodules.vtkIOIOSS', 'vtkmodules.vtkIOImage', 'vtkmodules.vtkIOImport', 'vtkmodules.vtkIOInfovis', 'vtkmodules.vtkIOLSDyna', 'vtkmodules.vtkIOLegacy', 'vtkmodules.vtkIOMINC', 'vtkmodules.vtkIOMotionFX', 'vtkmodules.vtkIOMovie', 'vtkmodules.vtkIONetCDF', 'vtkmodules.vtkIOOMF', 'vtkmodules.vtkIOOggTheora', 'vtkmodules.vtkIOPIO', 'vtkmodules.vtkIOPLY', 'vtkmodules.vtkIOParallel', 'vtkmodules.vtkIOParallelExodus', 'vtkmodules.vtkIOParallelLSDyna', 'vtkmodules.vtkIOParallelXML', 'vtkmodules.vtkIOSQL', 'vtkmodules.vtkIOSegY', 'vtkmodules.vtkIOTRUCHAS', 'vtkmodules.vtkIOTecplotTable', 'vtkmodules.vtkIOVPIC', 'vtkmodules.vtkIOVeraOut', 'vtkmodules.vtkIOVideo', 'vtkmodules.vtkIOXML', 'vtkmodules.vtkIOXMLParser', 'vtkmodules.vtkIOXdmf2', 'vtkmodules.vtkImagingColor', 'vtkmodules.vtkImagingCore', 'vtkmodules.vtkImagingFourier', 'vtkmodules.vtkImagingGeneral', 'vtkmodules.vtkImagingHybrid', 'vtkmodules.vtkImagingMath', 'vtkmodules.vtkImagingMorphological', 'vtkmodules.vtkImagingOpenGL2', 'vtkmodules.vtkImagingSources', 'vtkmodules.vtkImagingStatistics', 'vtkmodules.vtkImagingStencil', 'vtkmodules.vtkInfovisCore', 'vtkmodules.vtkInfovisLayout', 'vtkmodules.vtkInteractionImage', 'vtkmodules.vtkInteractionStyle', 'vtkmodules.vtkInteractionWidgets', 'vtkmodules.vtkParallelCore', 'vtkmodules.vtkPythonContext2D', 'vtkmodules.vtkRenderingAnnotation', 'vtkmodules.vtkRenderingContext2D', 'vtkmodules.vtkRenderingContextOpenGL2', 'vtkmodules.vtkRenderingCore', 'vtkmodules.vtkRenderingExternal', 'vtkmodules.vtkRenderingFreeType', 'vtkmodules.vtkRenderingGL2PSOpenGL2', 'vtkmodules.vtkRenderingImage', 'vtkmodules.vtkRenderingLICOpenGL2', 'vtkmodules.vtkRenderingLOD', 'vtkmodules.vtkRenderingLabel', 'vtkmodules.vtkRenderingMatplotlib', 'vtkmodules.vtkRenderingOpenGL2', 'vtkmodules.vtkRenderingParallel', 'vtkmodules.vtkRenderingSceneGraph', 'vtkmodules.vtkRenderingUI', 'vtkmodules.vtkRenderingVR', 'vtkmodules.vtkRenderingVolume', 'vtkmodules.vtkRenderingVolumeAMR', 'vtkmodules.vtkRenderingVolumeOpenGL2', 'vtkmodules.vtkRenderingVtkJS', 'vtkmodules.vtkTestingRendering', 'vtkmodules.vtkViewsContext2D', 'vtkmodules.vtkViewsCore', 'vtkmodules.vtkViewsInfovis', 'vtkmodules.vtkWebCore', 'vtkmodules.vtkWebGLExporter'
 
-vtk_imports = [  # 9.3
-    #'vtk', 
-    'vtkmodules', 'vtkmodules.qt', 'vtkmodules.util', 'vtkmodules.util.misc', 'vtkmodules.util.numpy_support', 
+vtk_imports_all = [  # 9.3
+    'vtk',
+    'vtkmodules', 'vtkmodules.all',
+    'vtkmodules.qt', 'vtkmodules.util', 'vtkmodules.util.misc', 'vtkmodules.util.numpy_support', 
     'vtkmodules.util.vtkConstants', 'vtkmodules.util.vtkVariant', 'vtkmodules.vtkAcceleratorsVTKmCore',
     'vtkmodules.vtkAcceleratorsVTKmDataModel', 'vtkmodules.vtkAcceleratorsVTKmFilters',
     'vtkmodules.vtkChartsCore', 'vtkmodules.vtkCommonColor', 'vtkmodules.vtkCommonComputationalGeometry',
@@ -536,29 +677,6 @@ vtk_imports = [  # 9.3
     'vtkmodules.vtkRenderingVtkJS', 'vtkmodules.vtkTestingRendering', 'vtkmodules.vtkViewsContext2D',
     'vtkmodules.vtkViewsCore', 'vtkmodules.vtkViewsInfovis', 'vtkmodules.vtkWebCore', 'vtkmodules.vtkWebGLExporter',
 ]
-vtk_imports = [
-    'vtkmodules', 'vtkmodules.vtkCommonDataModel', 'vtkmodules.vtkCommonMath',
-    'vtkmodules.vtkCommonExecutionModel',
-    'vtkmodules.vtkIOXMLParser',
-    'vtkmodules.vtkRenderingCore',
-    'vtkmodules.vtkRenderingUI',
-    'vtkmodules.vtkRenderingLOD',
-    'vtkmodules.vtkRenderingCore',
-    'vtkmodules.vtkRenderingAnnotation',
-    'vtkmodules.vtkInteractionStyle',
-    'vtkmodules.vtkInteractionWidgets',
-    'vtkmodules.vtkFiltersCore',
-    'vtkmodules.vtkFiltersPoints',
-    'vtkmodules.vtkFiltersGeneral',
-    'vtkmodules.vtkFiltersSources',
-    'vtkmodules.vtkFiltersGeometry',
-    'vtkmodules.vtkFiltersExtraction',
-    'vtkmodules.vtkIOImage',
-    'vtkmodules.vtkRenderingLabel',
-    'vtkmodules.vtkCommonTransforms',
-    'vtkmodules.vtkFiltersHybrid',
-    'vtkmodules.util.vtkConstants',
-]
 
 # can we get rid of scipy.optimize?
 hiddenimports = [
@@ -566,7 +684,7 @@ hiddenimports = [
     #'vtk.vtkRenderingPythonSIP', 
     'scipy._lib.messagestream', # 'scipy',
     'pygments',
-] + qt_imports + vtk_imports
+] + qt_imports + vtk_imports_all
 if INCLUDE_BDFV:
     hiddenimports += ['pytables'] + pandas_imports
     
@@ -589,6 +707,10 @@ assert os.path.exists(png_filename), png_filename
 #print("help(EXE) = \n", help(EXE))
 if BUILD_EXE:
     exe_binaries = a.binaries + binaries + icons
+    if DEBUG:
+        # v: add a debug message each time a module is initialized
+        # u: unbuffered stdio
+        exe_binaries += [('v', None, 'OPTION'), ('u', None, 'OPTION')]
     if MAKE_SPLASH:
         splash = Splash(png_filename,
                         binaries=a.binaries,
@@ -600,10 +722,10 @@ if BUILD_EXE:
                   a.scripts,
                   splash,
                   splash.binaries,
-                  exe_binaries,  # [('v', None, 'OPTION')] was never active..
+                  exe_binaries, # was never active..
                   a.zipfiles,
                   a.datas,
-                  #exclude_binaries=True,
+                  exclude_binaries=IS_ONEDIR,
                   name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
                   debug=DEBUG,
                   strip=None, #
@@ -617,7 +739,7 @@ if BUILD_EXE:
                   exe_binaries,
                   a.zipfiles,
                   a.datas,
-                  #exclude_binaries=True,
+                  exclude_binaries=IS_ONEDIR,
                   name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
                   debug=DEBUG,
                   disable_windowed_traceback=False,
