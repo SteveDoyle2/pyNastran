@@ -36,14 +36,14 @@ else:
     revision = get_git_revision_short_hash()
     __version_release__ = '1.4.0'
     __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2022/8/xx'
-    __releaseDate2__ = 'AUGUST xx, 2022'
+    __releaseDate__ = '2024/8/xx'
+    __releaseDate2__ = 'AUGUST xx, 2024'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__ = 'BSD-3'
-__copyright__ = f'Copyright {__license__}; 2011-2022'
+__copyright__ = f'Copyright {__license__}; 2011-2024'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
