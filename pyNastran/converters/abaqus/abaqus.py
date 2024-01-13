@@ -81,6 +81,9 @@ class Abaqus:
         steps = []
         ties = []
 
+        #for ii, linei in enumerate(lines):
+            #assert isinstance(linei, str), linei
+
         log = self.log
         while iline < nlines:
             # not handling comments right now
@@ -105,7 +108,7 @@ class Abaqus:
                     pass
                 elif word == 'boundary':
                     iline += 1
-                    boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
+                    iline, line0, boundary = reader.read_boundary(iline, line0, lines)
                     if boundary:
                         boundaries.append(boundary)
                     iline -= 1
@@ -114,7 +117,7 @@ class Abaqus:
                 elif word.startswith('assembly'):
                     if nassembly != 0:
                         raise RuntimeError('only one assembly can be defined...')
-                    iline, line0, assembly = self.read_assembly(lines, iline, line0, word)
+                    iline, line0, assembly = self.read_assembly(iline, line0, lines, word)
                     self.assembly = assembly
                     nassembly += 1
 
@@ -126,7 +129,7 @@ class Abaqus:
                         self.log.debug('-------------------------------------')
                 elif 'section controls' in word:
                     # TODO: skips header parsing
-                    data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log)
+                    iline, line0, data_lines = reader.read_star_block(iline, line0, lines, self.log)
 
                 elif word.startswith('amplitude'):
                     param_map = reader.get_param_map(iline, word)
@@ -156,7 +159,7 @@ class Abaqus:
                     #pass
                 elif word.startswith('material'):
                     log.debug('start of material...')
-                    iline, line0, material = reader.read_material(lines, iline, word, log)
+                    iline, line0, material = reader.read_material(iline, word, lines, log)
                     if material.name in self.materials:
                         msg = 'material.name=%r is already defined...\n' % material.name
                         msg += 'old %s' % self.materials[material.name]
@@ -252,8 +255,8 @@ class Abaqus:
                     #print(f'start of element; iline={iline}')
                     iline0 = iline
                     line0 = lines[iline].strip().lower()
-                    line0, iline, etype, elset, elements = reader.read_element(
-                        lines, line0, iline+1, self.log, self.debug)
+                    iline, line0, etype, elset, elements = reader.read_element(
+                        iline+1, line0, lines, self.log, self.debug)
                     element_types[etype] = (elements, elset)
                     #iline -= 1
                     #line0 = lines[iline].strip().lower()
@@ -267,7 +270,7 @@ class Abaqus:
                     iline0 = iline
                     self.log.debug(line0)
                     iline, line0, set_name, set_ids = reader.read_nset(
-                        lines, iline, line0, self.log, is_instance=False)
+                        iline, line0, lines, self.log, is_instance=False)
                     node_sets[set_name] = set_ids
                     iline -= 1
                     line0 = lines[iline].strip().lower()
@@ -278,20 +281,21 @@ class Abaqus:
                     iline0 = iline
                     self.log.debug(line0)
                     iline, line0, set_name, set_ids = reader.read_elset(
-                        lines, iline, line0, self.log, is_instance=False)
+                        iline, line0, lines, self.log, is_instance=False)
                     element_sets[set_name] = set_ids
                     iline -= 1
                     line0 = lines[iline].strip().lower()
                     self.log.info(f'end of elset; line={line0} iline={iline}')
                     assert iline > iline0
                 elif '*solid section' in line0:
-                    iline, solid_section = reader.read_solid_section(line0, lines, iline, self.log)
+                    iline, solid_section = reader.read_solid_section(
+                        iline, line0, lines, self.log)
                     self.log.debug(f'solid_section = {solid_section}')
                     solid_sections.append(solid_section)
                     #iline -= 1
                     #line0 = lines[iline].strip().lower()
                 elif '*shell section' in line0:
-                    iline, shell_section = reader.read_shell_section(line0, lines, iline, self.log)
+                    iline, shell_section = reader.read_shell_section(iline, line0, lines, self.log)
                     #print(shell_section)
                     shell_sections.append(shell_section)
                     iline -= 1
@@ -301,9 +305,9 @@ class Abaqus:
                     surfaces[surface.name] = surface
 
                 elif '*hourglass stiffness' in line0:
-                    iline, hourglass_stiffness = reader.read_hourglass_stiffness(line0, lines, iline, self.log)
+                    iline, hourglass_stiffness = reader.read_hourglass_stiffness(iline, line0, lines, self.log)
                 elif '*orientation' in line0:
-                    iline, line0, orientation = reader.read_orientation(line0, lines, iline, self.log)
+                    iline, line0, orientation = reader.read_orientation(iline, line0, lines, self.log)
                 elif '*system' in line0:
                     iline, line0, system = reader.read_system(line0, lines, iline, self.log)
                 elif '*transform' in line0:
@@ -318,6 +322,7 @@ class Abaqus:
                     #self.log.warning('skipping tie section')
                 else:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
+                assert isinstance(iline, int), word
                 wordi = word.split(',')[0]
                 self.log.info(f'end of main {wordi!r}; line={line0!r} iline={iline}')
             else:
@@ -348,8 +353,12 @@ class Abaqus:
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
 
-    def read_assembly(self, lines, iline, line0, word):
+    def read_assembly(self, iline: int, line0: str, lines: list[str],
+                      word: str) -> tuple[int, str, Assembly]:
         """reads an Assembly object"""
+        assert isinstance(iline, int), iline
+        assert isinstance(line0, str), line0
+        log = self.log
         # TODO: skips header parsing
 
         iline += 1
@@ -388,7 +397,7 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
             elif word.startswith('nset'):
                 iline, line0, set_name, set_ids = reader.read_nset(
-                    lines, iline, word, self.log, is_instance=True)
+                    iline, word, lines, log, is_instance=True)
                 node_sets[set_name] = set_ids
             elif word.startswith('elset'):
                 # TODO: skips header parsing
@@ -396,7 +405,7 @@ class Abaqus:
                 set_name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = reader.read_set(iline, line0, lines, params_map)
+                iline, line0, set_ids = reader.read_set(iline, line0, lines, params_map)
                 element_sets[set_name] = set_ids
             elif word == 'node':
                 iline, line0, nids, nodes = reader.read_node(
@@ -404,13 +413,15 @@ class Abaqus:
             elif '*element' in line0:
                 # doesn't actually start on *element line
                 # 1,263,288,298,265
-                line0, iline, etype, elements = reader.read_element(lines, line0, iline)
+                iline, line0, etype, elements = reader.read_element(iline, line0, lines)
                 element_types[etype] = elements
                 iline += 1
                 line0 = lines[iline].strip().lower()
                 #print('line_end =', line0)
             else:
                 raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
+            assert isinstance(iline, int), iline
+            assert isinstance(line0, str), line0
 
         assembly = Assembly(element_types, node_sets, element_sets)
         return iline, line0, assembly
@@ -459,8 +470,8 @@ class Abaqus:
 
             elif '*element' in line0:
                 #print(line0)
-                line0, iline, etype, elset, elements = reader.read_element(
-                    lines, line0, iline, self.log, self.debug)
+                iline, line0, etype, elset, elements = reader.read_element(
+                    iline, line0, lines, log, self.debug)
                 element_types[etype] = (elements, elset)
                 iline += 1
                 x = 1
@@ -468,7 +479,7 @@ class Abaqus:
             elif '*nset' in line0:
                 #print(line0)
                 iline, line0, set_name, set_ids = reader.read_nset(
-                    lines, iline, line0, log, is_instance=False)
+                    iline, line0, lines, log, is_instance=False)
                 node_sets[set_name] = set_ids
 
             elif '*elset' in line0:
@@ -478,7 +489,7 @@ class Abaqus:
                 params_map = reader.get_param_map(iline, line0, required_keys=['elset'])
                 set_name = params_map['elset']
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = reader.read_set(lines, iline, line0, params_map)
+                iline, line0, set_ids = reader.read_set(iline, line0, lines, params_map)
                 element_sets[set_name] = set_ids
 
             elif '*surface' in line0:
@@ -492,10 +503,10 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
 
             elif '*solid section' in line0:
-                iline, solid_section = reader.read_solid_section(line0, lines, iline, log)
+                iline, solid_section = reader.read_solid_section(iline, line0, lines, log)
                 solid_sections.append(solid_section)
             elif '*shell section' in line0:
-                iline, shell_section = reader.read_shell_section(line0, lines, iline, log)
+                iline, shell_section = reader.read_shell_section(iline, line0, lines, log)
                 shell_sections.append(shell_section)
 
             elif '*cohesive section' in line0:
@@ -526,7 +537,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif '*orientation' in line0:
-                iline, line0, orientation_fields = reader.read_orientation(line0, lines, iline, log)
+                iline, line0, orientation_fields = reader.read_orientation(iline, line0, lines, log)
             else:
                 msg = f'line={line0!r}\n'
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',
@@ -682,7 +693,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('boundary'):
-                boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
+                iline, line0, boundary = reader.read_boundary(iline, line0, lines)
                 if boundary:
                     boundaries.append(boundary)
             elif word.startswith('buckle'):
@@ -693,10 +704,10 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('cload'):
-                iline, line0, cload = reader.read_cload(line0, lines, iline, log)
+                iline, line0, cload = reader.read_cload(iline, line0, lines, log)
                 cloads.append(cload)
             elif word.startswith('dload'):
-                iline, line0, dload = reader.read_dload(line0, lines, iline, log)
+                iline, line0, dload = reader.read_dload(iline, line0, lines, log)
                 if dload:
                     dloads.append(dload)
 

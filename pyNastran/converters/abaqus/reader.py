@@ -53,7 +53,8 @@ def get_param_map(iline: int, word: str,
     return param_map
 
 
-def read_cload(line0: str, lines: list[str], iline: int,
+def read_cload(iline: int, line0: str,
+               lines: list[str],
                log: SimpleLogger) -> tuple[int, str, Any]:
     """
     First line
@@ -103,7 +104,8 @@ def read_cload(line0: str, lines: list[str], iline: int,
         cload.append(cloadi)
     return iline, line0, cload
 
-def read_dload(line0: str, lines: list[str], iline: int,
+def read_dload(iline: int, line0: str,
+               lines: list[str],
                log: SimpleLogger) -> tuple[int, str, Any]:
     """
     First line:
@@ -314,12 +316,14 @@ def read_node(lines, iline, log, skip_star=False):
         raise RuntimeError(msg)
     return iline, line0, nids, nodes
 
-def read_element(lines: list[str], line0: str, iline: int,
+def read_element(iline: int, line0: str, lines: list[str],
                  log: SimpleLogger, debug: bool) -> tuple[str, int,
                                                           str, str, list[list[str]]]:
     """
     '*element, type=mass, elset=topc_inertia-2_mass_'
     """
+    assert isinstance(iline, int), iline
+    assert isinstance(line0, str), line0
     assert '*' in line0, line0
     iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
     assert len(lines_out), lines_out
@@ -352,7 +356,7 @@ def read_element(lines: list[str], line0: str, iline: int,
         element = line.strip('\n\t ,').split(',')
         elements.append(element)
 
-    return line_out, iline, etype, elset, elements
+    return iline, line_out, etype, elset, elements
 
 def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> None:
     """
@@ -387,9 +391,11 @@ def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> N
     iline += 1
     line0 = lines[iline].strip('\n\r\t, ').lower()
 
-def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
-               is_instance: bool=True):
+def read_elset(iline: int, word: str, lines: list[str], log: SimpleLogger,
+               is_instance: bool=True) -> tuple[int, str, str, np.ndarray]:
     """reads *elset"""
+    assert isinstance(iline, int), iline
+    assert isinstance(word, str), word
     log.debug('word=%r' % word)
     assert '*' in word, f'word={word!r} param_map={param_map}'
     params_map = get_param_map(iline, word, required_keys=['elset'])
@@ -399,11 +405,16 @@ def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
     params_map = get_param_map(iline, word, required_keys=['elset'])
     set_name = params_map['elset']
     line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(iline, line0, lines, params_map)
+    iline, line0, set_ids = read_set(iline, line0, lines, params_map)
+    assert isinstance(iline, int), iline
     return iline, line0, set_name, set_ids
 
-def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) -> Material:
+def read_material(iline: int, word: str, lines: list[str],
+                  log: SimpleLogger) -> Material:
     """reads a Material card"""
+    assert isinstance(iline, int), iline
+    assert isinstance(word, str), word
+
     param_map = get_param_map(iline, word, required_keys=['name'])
     #print(param_map)
     name = param_map['name']
@@ -469,7 +480,7 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
                 assert len(sline) in [1, 2], sline
             else:
                 raise NotImplementedError(sline)
-            data_lines, iline, line0 = read_star_block2(lines, iline, line0, log, debug=False)
+            iline, line0, data_lines = read_star_block2(iline, line0, lines, log, debug=False)
             #print(data_lines)
         elif word == 'density':
             key = 'density'
@@ -679,8 +690,10 @@ def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) ->
     iline -= 1
     return iline, line0, material
 
-def read_nset(lines, iline, word, log, is_instance=True):
+def read_nset(iline: int, word: str, lines: list[str], log: SimpleLogger,
+              is_instance: bool=True):
     """reads *nset"""
+    assert isinstance(iline, int), iline
     log.debug('word=%r' % word)
     assert 'nset' in word, word
     # TODO: skips header parsing
@@ -690,15 +703,18 @@ def read_nset(lines, iline, word, log, is_instance=True):
     set_name = params_map['nset']
     iline += 1
     line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(iline, line0, lines, params_map)
+    iline, line0, set_ids = read_set(iline, line0, lines, params_map)
+    assert isinstance(iline, int)
     return iline, line0, set_name, set_ids
 
-def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, int, str]:
+def read_boundary(iline: int, line0: str, lines: list[str]) -> tuple[int, str, Boundary]:
+    assert isinstance(iline, int), iline
+    assert isinstance(line0, str), line0
     boundary_lines = []
     line0 = lines[iline]
     if len(line0) and line0[0] == '*':
         boundary = None
-        return boundary, iline, line0
+        return iline, line0, boundary
 
     assert '*' not in line0, line0
     while '*' not in line0:
@@ -709,10 +725,13 @@ def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, i
         iline += 1
         line0 = lines[iline].strip().lower()
     boundary = Boundary.from_data(boundary_lines)
-    return boundary, iline, line0
+    return iline, line0, boundary
 
-def read_solid_section(line0, lines, iline, log):
+def read_solid_section(iline: int, line0: str, lines: list[str],
+                       log: SimpleLogger) -> tuple[int, SolidSection]:
     """reads *solid section"""
+    assert isinstance(iline, int), iline
+    assert isinstance(line0, str), line0
     # TODO: skips header parsing
     #iline += 1
     assert '*solid' in line0, line0
@@ -720,19 +739,21 @@ def read_solid_section(line0, lines, iline, log):
     params_map = get_param_map(iline, word2, required_keys=['material'])
     log.debug('    param_map = %s' % params_map)
     #line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = read_star_block2(lines, iline, line0, log)
+    iline, line0, data_lines = read_star_block2(iline, line0, lines, log)
     #print('line0 =', iline, line0)
     #print(f'lines[{iline}] = {lines[iline]!r}')
     #print('lines[iline+1] =', lines[iline+1])
     #print('data_lines =', data_lines)
     #for line in data_lines:
         #print(line)
+    assert isinstance(iline, int), iline
     solid_section = SolidSection.add_from_data_lines(params_map, data_lines, log)
     return iline, solid_section
 
-def read_shell_section(line0: str, lines: list[str], iline: int,
-                       log: SimpleLogger) -> ShellSection:
+def read_shell_section(iline: int, line0: str, lines: list[str],
+                       log: SimpleLogger) -> tuple[int, ShellSection]:
     """reads *shell section"""
+    assert isinstance(iline, int), iline
     assert '*shell' in line0, line0
     # TODO: skips header parsing
     #iline += 1
@@ -742,7 +763,7 @@ def read_shell_section(line0: str, lines: list[str], iline: int,
 
     iline += 1
     line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = read_star_block2(lines, iline, line0, log)
+    iline, line0, data_lines = read_star_block2(iline, line0, lines, log)
     log.info(f'params_map = {params_map}')
     log.info(f'data_lines = {data_lines}')
     #for line in data_lines:
@@ -752,8 +773,8 @@ def read_shell_section(line0: str, lines: list[str], iline: int,
     #print(lines[iline])
     return iline, shell_section
 
-def read_hourglass_stiffness(line0: str, lines: list[str], iline: int,
-                             log: SimpleLogger) -> None:
+def read_hourglass_stiffness(iline: int, line0: str, lines: list[str],
+                             log: SimpleLogger) -> tuple[int, Any]:
     """reads *hourglass stiffness"""
     # TODO: skips header parsing
     #iline += 1
@@ -762,7 +783,7 @@ def read_hourglass_stiffness(line0: str, lines: list[str], iline: int,
     #params_map = get_param_map(iline, word2, required_keys=['material'])
     #log.debug('    param_map = %s' % params_map)
     #line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = read_star_block2(lines, iline, line0, log)
+    iline, line0, data_lines = read_star_block2(iline, line0, lines, log)
     assert len(data_lines) == 1, data_lines
     #for line in data_lines:
         #print(line)
@@ -771,11 +792,13 @@ def read_hourglass_stiffness(line0: str, lines: list[str], iline: int,
     return iline, hourglass_stiffness
 
 
-def read_star_block(lines, iline, line0, log, debug=False):
+def read_star_block(iline: int, line0: str, lines: list[str],
+                    log: SimpleLogger, debug: bool=False) -> tuple[int, str, list[str]]:
     """
     because this uses file streaming, there are 30,000 places where a try except
     block is needed, so this should probably be used all over.
     """
+    assert isinstance(iline, int), iline
     data_lines = []
     try:
         iline += 1
@@ -792,14 +815,18 @@ def read_star_block(lines, iline, line0, log, debug=False):
     if debug:
         for line in data_lines:
             log.debug(line)
-    return data_lines, iline, line0
+    return iline, line0, data_lines
 
 
-def read_star_block2(lines, iline, line0, log, debug=False):
+def read_star_block2(iline: int, line0: str,
+                     lines: list[str], log, debug=False):
     """
-    because this uses file streaming, there are 30,000 places where a try except
-    block is needed, so this should probably be used all over.
+    because this uses file streaming, there are 30,000 places where a
+    try except block is needed, so this should probably be used all
+    over.
     """
+    assert isinstance(iline, int), iline
+    assert isinstance(line0, str), line0
     line0 = lines[iline].strip().lower()
     data_lines = []
     while not line0.startswith('*'):
@@ -810,12 +837,12 @@ def read_star_block2(lines, iline, line0, log, debug=False):
     if debug:
         for line in data_lines:
             log.debug(line)
-    return data_lines, iline, line0
+    return iline, line0, data_lines
 
 def read_set(iline: int, line0: str,
              lines: list[str],
-             params_map: dict[str, Optional[str]]) -> list[Union[str, np.ndarray],
-                                                           int, str]:
+             params_map: dict[str, Optional[str]]) -> list[int, str,
+                                                           Union[str, np.ndarray]]:
     """reads a set"""
     assert isinstance(iline, int)
     set_ids_list = []
@@ -834,9 +861,10 @@ def read_set(iline: int, line0: str,
         except ValueError:
             print(set_ids_list)
             raise
-    return set_ids, iline, line0
+    return iline, line0, set_ids
 
-def read_orientation(line0: str, lines: list[str], iline: int, log: SimpleLogger):
+def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger):
+    assert isinstance(iline, int)
     orientation_fields = []
     iline += 1
     line0 = lines[iline].strip().lower()
