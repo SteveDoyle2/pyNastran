@@ -3,7 +3,9 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from .abaqus_cards import (
-    ShellSection, SolidSection, Boundary, Material, Transform)
+    ShellSection, SolidSection, Boundary, Material, Transform,
+    Surface, Tie,
+)
 from .elements import allowed_element_types
 from .reader_utils import split_by_equals, print_data
 
@@ -11,7 +13,8 @@ if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
 
-def get_param_map(iline: int, word: str, required_keys: Optional[list[str]]=None) -> dict[str, str]:
+def get_param_map(iline: int, word: str,
+                  required_keys: Optional[list[str]]=None) -> dict[str, str]:
     """
     get the optional arguments on a line
 
@@ -220,25 +223,56 @@ def read_dload(line0: str, lines: list[str], iline: int,
     return iline, line0, dload
 
 def read_surface(line0: str, lines: list[str], iline: int,
-                 log: SimpleLogger) -> tuple[int, str, Any]:
+                 log: SimpleLogger) -> tuple[int, str, Surface]:
     """
     *Surface, Name=Internal_Selection-1_Uniform_Pressure-1, Type=Element
     Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1, S1
+
+    *Surface, Name=Internal_Selection-1_Uniform_Pressure-1, Type=Element
+    Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1, S1
+    Internal-1_Internal_Selection-1_Uniform_Pressure-1_S2, S2
+
+    First line:
+
+    *SURFACE
+    Enter the parameter NAME and its value, and, if necessary, the TYPE parameter.
+    Following line for nodal surfaces:
+
+    Node or node set to be assigned to this surface (maximum 1 entry per line).
+    Repeat this line if needed.
+    Following line for element face surfaces:
+
+    Element or element set (maximum 1 entry per line).
+    Surface label (maximum 1 entry per line).
+    https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node247.html
     """
     log.debug(f'read_surface {line0!r}')
     iline += 1
-    line0 = lines[iline]
-    surface = []
-    while '*' not in line0:
-        sline = line0.strip().split(',')
+    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+
+    surface_name = ''
+    surface_type = ''
+    for key_value in flags:
+        key, value = key_value.split('=')
+        key = key.strip()
+        value = value.strip()
+        if key == 'name':
+            surface_name = value
+        elif key == 'type':
+            surface_type = value
+        else:
+            raise NotImplementedError(key_value)
+    assert surface_type in {'element'}, surface_type
+
+    set_names = []
+    faces = []
+    for line in lines_out:
+        sline = line.strip().split(',')
         assert len(sline) == 2, sline
-        #cload += sline
-        iline += 1
-        line0 = lines[iline].strip().lower()
-        #print(line0)
-        source_eids, surface_name = sline
-        surfacei = (source_eids, surface_name)
-        surface.append(surfacei)
+        set_name, face = sline
+        set_names.append(set_name.strip().lower())
+        faces.append(face.strip().lower())
+    surface = Surface(surface_name, surface_type, set_names, faces)
     return iline, line0, surface
 
 def read_node(lines, iline, log, skip_star=False):
@@ -287,7 +321,7 @@ def read_element(lines: list[str], line0: str, iline: int,
     '*element, type=mass, elset=topc_inertia-2_mass_'
     """
     assert '*' in line0, line0
-    iline, line_out, flags, lines_out = read_generic_section(line0, lines, iline, log)
+    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
     assert len(lines_out), lines_out
 
     if len(flags) < 1:
@@ -365,7 +399,7 @@ def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
     params_map = get_param_map(iline, word, required_keys=['elset'])
     set_name = params_map['elset']
     line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+    set_ids, iline, line0 = read_set(iline, line0, lines, params_map)
     return iline, line0, set_name, set_ids
 
 def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) -> Material:
@@ -656,7 +690,7 @@ def read_nset(lines, iline, word, log, is_instance=True):
     set_name = params_map['nset']
     iline += 1
     line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+    set_ids, iline, line0 = read_set(iline, line0, lines, params_map)
     return iline, line0, set_name, set_ids
 
 def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, int, str]:
@@ -778,10 +812,12 @@ def read_star_block2(lines, iline, line0, log, debug=False):
             log.debug(line)
     return data_lines, iline, line0
 
-def read_set(lines: list[str], iline: int, line0: str,
+def read_set(iline: int, line0: str,
+             lines: list[str],
              params_map: dict[str, Optional[str]]) -> list[Union[str, np.ndarray],
                                                            int, str]:
     """reads a set"""
+    assert isinstance(iline, int)
     set_ids_list = []
     while not line0.startswith('*'):
         set_ids_list += line0.strip(', ').split(',')
@@ -880,7 +916,7 @@ def read_tie(line0: str, lines: list[str], iline: int,
     ['Internal_Selection-1_Top_to_Hub_Slave, Internal_Selection-1_Top_to_Hub_Master\n']
     https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node251.html
     """
-    iline, line_out, flags, lines_out = read_generic_section(line0, lines, iline, log)
+    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
     assert len(lines_out), lines_out
 
     if len(flags) == 0:
@@ -907,36 +943,22 @@ def read_tie(line0: str, lines: list[str], iline: int,
     assert len(lines_out) == 1, lines_out
     for line in lines_out:
         slave, master = line.strip('\n\t ,').split(',')
-        master = master.strip()
-        slave = slave.strip()
+        master = master.strip().lower()
+        slave = slave.strip().lower()
         #elements.append(element)
 
     tie = Tie(name, master, slave, position_tolerance)
     return iline, line0, tie
 
-class Tie:
-    def __init__(self, name: str, master: str, slave: str,
-                 position_tolerance: float):
-        self.name = name
-        self.master = master
-        self.slave = slave
-        self.position_tolerance = position_tolerance
-    def __repr__(self) -> str:
-        msg = (
-            f'Tie(name={self.name!r}, '
-            f'master={self.master!r}, slave={self.slave!r}, '
-            'position_tolerance={self.position_tolerance})')
-        return msg
-
-def read_generic_section(line0: str, lines: list[str], iline: int,
+def read_generic_section(iline: int, line0: str, lines: list[str],
                          log: SimpleLogger) -> tuple[int, str, list[str]]:
     """
     Parameters
     ----------
-    line0: str
-        the header line
     iline: int
         points to first line (not header line)
+    line0: str
+        the header line
 
     Returns
     -------
@@ -946,6 +968,7 @@ def read_generic_section(line0: str, lines: list[str], iline: int,
         is the start of the next header
 
     """
+    assert isinstance(iline, int)
     assert '*' in line0, line0
     #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
     flags = [val.strip() for val in line0.split(',')[1:]]

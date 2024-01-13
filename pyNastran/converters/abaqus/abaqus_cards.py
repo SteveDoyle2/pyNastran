@@ -534,3 +534,35 @@ class Transform:
         pa = np.array(tranform_fields[:3], dtype='float64')
         pb = np.array(tranform_fields[3:], dtype='float64')
         return Transform(transform_type, nset, pa, pb)
+
+
+class Surface:
+    def __init__(self, name: str, surface_type: str,
+                 set_names: list[str], faces: list[str]):
+        self.name = name
+        self.surface_type = surface_type
+        self.set_names = set_names
+        self.faces = faces
+        str(self)
+
+    def __repr__(self) -> str:
+        msg = (f'Surface(name={self.name!r}, surface_type={self.surface_type!r}, '
+               f'set_names={self.set_names}, faces={self.faces})')
+        return msg
+
+
+class Tie:
+    def __init__(self, name: str, master: str, slave: str,
+                 position_tolerance: float):
+        self.name = name
+        self.master = master
+        self.slave = slave
+        self.position_tolerance = position_tolerance
+        str(self)
+
+    def __repr__(self) -> str:
+        msg = (
+            f'Tie(name={self.name!r}, '
+            f'master={self.master!r}, slave={self.slave!r}, '
+            'position_tolerance={self.position_tolerance})')
+        return msg

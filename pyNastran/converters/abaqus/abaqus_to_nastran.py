@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import sys
+from itertools import count
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
@@ -8,12 +9,52 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types # , float_types
 from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase
+from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.converters.abaqus.abaqus import (
-    Abaqus, Step, read_abaqus, get_nodes_nnodes_nelements)
+    Abaqus, Elements, Step,
+    read_abaqus, get_nodes_nnodes_nelements)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
-def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
+chexa_face_map = {
+    # take the first and 3rd nodes
+    1: (1-1, 3-1),  #face 1: 1-2-3-4
+    2: (5-1, 7-1),  #face 2: 5-8-7-6
+    3: (1-1, 6-1),  #face 3: 1-5-6-2
+    4: (2-1, 7-1),  #face 4: 2-6-7-3
+    5: (3-1, 8-1),  #face 5: 3-7-8-4
+    6: (4-1, 5-1),  #face 6: 4-8-5-1
+    # subtract 1 to make it 0 based
+}
+
+ctetra_face_map = {
+    1: (1-1, 2-1, 3-1), # Face 1: 1-2-3
+    2: (1-1, 4-1, 2-1), # Face 2: 1-4-2
+    3: (2-1, 4-1, 3-1), # Face 3: 2-4-3
+    4: (3-1, 4-1, 1-1), # Face 4: 3-4-1
+}
+
+tri_face_map = {
+    #for triangular shell elements:
+    #Face NEG or 1: in negative normal direction
+    #Face POS or 2: in positive normal direction
+    3: (1-1, 2-1),  #Face 3: 1-2
+    4: (2-1, 3-1),  #Face 4: 2-3
+    5: (3-1, 1-1),  #Face 5: 3-1
+}
+
+quad_face_map = {
+    #for quadrilateral shell elements:
+    #Face NEG or 1: in negative normal direction
+    #Face POS or 2: in positive normal direction
+    3: (1-1, 2-1),  #Face 3: 1-2
+    4: (2-1, 3-1),  #Face 4: 2-3
+    5: (3-1, 4-1),  #Face 5: 3-4
+    6: (4-1, 1-1),  #Face 6: 4-1
+}
+
+def _add_part_to_nastran(nastran_model: BDF,
+                         elements: Elements, pid: int,
                          nid_offset: int, eid_offset: int) -> int:
     log = nastran_model.log
 
@@ -81,7 +122,7 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
 
 
         #print(f'eids[{etype} = {eids}; eid_offset={eid_offset}')
-        log.warning(f'writing etype={etype} eids={eids_}->{eids}')
+        #log.warning(f'writing etype={etype} eids={eids_}->{eids}')
         if nid_offset > 0:
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
@@ -183,7 +224,8 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
     return eid_offset
 
 
-def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
+def _create_nastran_nodes_elements(model: Abaqus,
+                                   nastran_model: BDF) -> None:
     log = model.log
     nid_offset = 0
     eid_offset = 0
@@ -192,10 +234,9 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
     if model.nids is not None and len(model.nids):
         nnodesi = model.nodes.shape[0]
         elements = model.elements
-        eid_offset = _add_part_to_nastran(nastran_model, elements, pid, nid_offset, eid_offset)
-        ties = model.ties
-        if len(ties):
-            log.error(f'Ties found...not supported\n{ties}')
+        eid_offset = _add_part_to_nastran(
+            nastran_model, elements, pid, nid_offset, eid_offset)
+        _build_rigid_ties(model, nastran_model, elements, eid_offset)
         nid_offset += nnodesi
 
     eid_offset = 0
@@ -205,7 +246,8 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         #nidsi = part.nids
 
         elements = part.elements
-        eid_offset = _add_part_to_nastran(nastran_model, elements, pid, nid_offset, eid_offset)
+        eid_offset = _add_part_to_nastran(
+            nastran_model, elements, pid, nid_offset, eid_offset)
         #nids.append(nidsi)
         assert eid_offset > 0, eid_offset
         nid_offset += nnodesi
@@ -219,6 +261,142 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
     mid = 1
     pid, mid = _create_solid_properties(model, nastran_model, log, pid, mid)
     pid, mid = _create_shell_properties(model, nastran_model, log, pid, mid)
+
+
+def _build_rigid_ties(model: Abaqus,
+                      nastran_model: BDF,
+                      elements: Elements,
+                      eid_offset: int) -> int:
+    ties = model.ties
+    if len(ties) == 0:
+        return eid_offset
+    log = model.log
+    eid = eid_offset + 1
+
+    log.error(f'Ties found...not supported\n{ties}')
+    #elset_name_to_element_type = {
+        #value: key for key, value in
+        #elements.element_type_to_elset_name.items()}
+
+    all_nodes_xyz = model.nodes
+    all_nids = model.nids
+
+    # preallocate to avoid doing some faces multiple times
+    face_to_nids_map = {}
+    for tie in ties:
+        master_surface = model.surfaces[tie.master]
+        slave_surface = model.surfaces[tie.slave]
+        assert master_surface.surface_type == 'element', master_surface
+
+        for set_name, face in zip(master_surface.set_names, master_surface.faces):
+            face_to_nids_map[(master_surface.surface_type, set_name, face)] = []
+        for set_name, face in zip(slave_surface.set_names, slave_surface.faces):
+            face_to_nids_map[(slave_surface.surface_type, set_name, face)] = []
+
+    _build_face_to_nids(model, elements, face_to_nids_map)
+
+    for tie in ties:
+        master_surface = model.surfaces[tie.master]
+        slave_surface = model.surfaces[tie.slave]
+        assert master_surface.surface_type == 'element', master_surface
+
+        master_nids_list = []
+        slave_nids_list = []
+        for set_name, face in zip(master_surface.set_names, master_surface.faces):
+            mnids = face_to_nids_map[(master_surface.surface_type, set_name, face)]
+            master_nids_list.append(mnids)
+        for set_name, face in zip(slave_surface.set_names, slave_surface.faces):
+            snids = face_to_nids_map[(slave_surface.surface_type, set_name, face)]
+            slave_nids_list.append(snids)
+        master_nids = np.unique(np.hstack(master_nids_list))
+        slave_nids = np.unique(np.hstack(slave_nids_list))
+
+        #face_to_nids_map[(master_surface.surface_type, )]
+        imaster = np.searchsorted(all_nids, master_nids)
+        islave = np.searchsorted(all_nids, slave_nids)
+        master_xyz = all_nodes_xyz[imaster, :]
+        slave_xyz = all_nodes_xyz[islave, :]
+        # 1 independent, 1 dependent
+        try:
+            master_nids2 = find_closest_nodes(
+                master_xyz, master_nids, slave_xyz,
+                neq_max=1, tol=1e-8, msg='')
+        except IndexError:
+            log.error(f'skipping contact face for tie={tie.name}')
+            continue
+
+        cm = '123456'
+        #eid = eid_offset + 1
+        for i, master_nid, slave_nid in zip(count(), master_nids, slave_nids):
+            gn = master_nid
+            Gmi = slave_nid
+            nastran_model.add_rbe2(
+                eid, gn,  # independent
+                cm, Gmi,  # dependent
+                alpha=0.0, tref=0.0, comment='', validate=False)
+            eid += 1
+        #islave2 = np.searchsorted(all_nids, slave_nids2)
+        #slave_xyz2 = all_nodes_xyz[islave, :]
+        #master_nids2 = find_closest_nodes(
+            #slave_xyz2, slave_nids2, master_xyz,
+            #neq_max=1, tol=None, msg='')
+    eid_offset -= 1
+    return eid_offset
+
+def _build_face_to_nids(
+        model: Abaqus,
+        elements: Elements,
+        face_to_nids_map: dict[tuple[str, str, str], np.ndarray]) -> None:
+    log = model.log
+
+    for set_type, set_name, face in list(face_to_nids_map.keys()):
+        face_int = int(face[-1])
+        if set_type == 'element':
+            eids = model.element_sets[set_name]
+            #eids = elset_name_to_element_type[set_name]
+        else:
+            raise NotImplementedError(set_type)
+        nids_list = []
+        for etypei, seti in elements.element_type_to_elset_name.items():
+            element_eids = getattr(elements, f'{etypei}_eids')
+            common_eids = np.intersect1d(element_eids, eids)
+            if len(common_eids):
+                element_nodes = getattr(elements, etypei)
+                ielement = np.searchsorted(element_eids, common_eids)
+                if etypei == 'c3d10':
+                    #face_int = int(face[-1])
+                    in1, in2, in3 = ctetra_face_map[face_int]
+                    element_nodes2 = element_nodes[ielement, :][:, [in1, in2, in3]]
+                elif etypei == 's6':
+                    #face_int = int(face[-1])
+                    #if face_int == 4:
+                        #log.error(f'etype=s6 and has a face_id={face} for eids={common_eids}?')
+                        #continue
+                    in1, in2 = tri_face_map[face_int]
+                    element_nodes2 = element_nodes[ielement, :][:, [in1, in2]]
+
+                elif etypei in {'cpe3', 'cps3'}:
+                    #for triangular plane stress, plane strain and axisymmetric elements:
+                    #Face 1: 1-2
+                    #Face 2: 2-3
+                    #Face 3: 3-1
+                    #Face N: in negative normal direction (only for plane stress)
+                    #Face P: in positive normal direction (only for plane stress)
+                    asdf
+                #elif etypei in {'cpe4', 'cps4'}:
+                    #asdf
+                elif etypei == 's8':
+                    in1, in2 = quad_face_map[face_int]
+                    element_nodes2 = element_nodes[ielement, :][:, [in1, in2]]
+                else:
+                    raise RuntimeError(etypei)
+                ravel_element_nodes = element_nodes2.ravel()
+                nids_list.append(ravel_element_nodes)
+
+        nids = np.hstack(nids_list)
+        face_to_nids_map[(set_type, set_name, face)] = nids
+        x = 1
+    return
 
 def _create_solid_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
@@ -475,19 +653,6 @@ def _write_distributed_loads(model: Abaqus,
 
                 if isinstance(face, str):
                     assert face[0] == 'P' and len(face) == 2, face
-                    chexa_face_map = {
-                        # take the first and 3rd nodes
-                        1: (1-1, 3-1),  #face 1: 1-2-3-4
-                        2: (5-1, 7-1),  #face 2: 5-8-7-6
-                        3: (1-1, 6-1),  #face 3: 1-5-6-2
-                        4: (2-1, 7-1),  #face 4: 2-6-7-3
-                        5: (3-1, 8-1),  #face 5: 3-7-8-4
-                        6: (4-1, 5-1),  #face 6: 4-8-5-1
-                        # subtract 1 to make it 0 based
-                    }
-
-
-
 
                     #cquad4_cquad8_face_map = {
                         #1: (1-1, 2-1),  # Face 1: 1-2

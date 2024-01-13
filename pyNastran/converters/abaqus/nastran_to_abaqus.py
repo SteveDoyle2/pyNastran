@@ -2,13 +2,15 @@ from collections import defaultdict
 from typing import Any
 
 import numpy as np
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import read_bdf, BDF
 from pyNastran.converters.abaqus.abaqus_cards import Part, Material, Step, ShellSection, SolidSection
 
 from pyNastran.converters.abaqus.abaqus import Abaqus
 
-def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str) -> None:
-    nastran_model = read_bdf(bdf_filename)
+def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
+                               log: SimpleLogger=None) -> None:
+    nastran_model = read_bdf(bdf_filename, log=log)
     log = nastran_model.log
     model = Abaqus(log=None, debug=True)
     name = 'model'

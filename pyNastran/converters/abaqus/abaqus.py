@@ -7,7 +7,7 @@ import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
-    ShellSection, SolidSection)
+    ShellSection, SolidSection, Surface, Tie)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -77,7 +77,7 @@ class Abaqus:
         solid_sections = []
         shell_sections = []
         boundaries = []
-        surfaces = []
+        surfaces: dict[str, Surface] = {}
         steps = []
         ties = []
 
@@ -298,9 +298,7 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
                 elif '*surface' in line0:
                     iline, line0, surface = reader.read_surface(line0, lines, iline, self.log)
-                    surfaces.extend(surface)
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
+                    surfaces[surface.name] = surface
 
                 elif '*hourglass stiffness' in line0:
                     iline, hourglass_stiffness = reader.read_hourglass_stiffness(line0, lines, iline, self.log)
@@ -336,7 +334,6 @@ class Abaqus:
             self.nids, self.nodes = cast_nodes(nids[0], nodes[0], self.log)
         self.elements = Elements(element_types, self.log)
         self.ties = ties
-        self.element_sets = element_sets
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
         self.node_sets = node_sets
@@ -399,7 +396,7 @@ class Abaqus:
                 set_name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = reader.read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = reader.read_set(iline, line0, lines, params_map)
                 element_sets[set_name] = set_ids
             elif word == 'node':
                 iline, line0, nids, nodes = reader.read_node(

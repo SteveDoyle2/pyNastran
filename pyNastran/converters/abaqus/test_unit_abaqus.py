@@ -17,43 +17,47 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class TestAbaqus(unittest.TestCase):
     def test_abaqus_to_nastran_1(self):
         """plate conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate_out.inp')
-        nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+        nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename, log=log)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'plate2_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_2(self):
         """plate conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'in.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_3(self):
         """ctetra4 conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_4(self):
         """ctetra4 conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket_separate.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_separate_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_1(self):
         """simple test"""
@@ -70,7 +74,7 @@ class TestAbaqus(unittest.TestCase):
             abaqus_file.writelines('\n'.join(lines))
 
         bdf_filename = os.path.join(MODEL_PATH, 'spike.bdf')
-        abaqus_to_nastran_filename(model, bdf_filename)
+        abaqus_to_nastran_filename(model, bdf_filename, log=log)
         os.remove(bdf_filename)
 
     def test_abaqus_2(self):
