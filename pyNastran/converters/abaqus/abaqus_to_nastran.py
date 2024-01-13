@@ -61,6 +61,7 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
         'r2d2': None,
     }
 
+    pid = -1
     type_eid_map_to_eid = {}
     for etype, eids_nids in element_types.items():
         eids_, part_nids = eids_nids
@@ -105,6 +106,11 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
+        elif etype in {'s6', 's6r'}:
+            log.warning('found quadratic_tri')
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_ctria6(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                                         T1=None, T2=None, T3=None, comment='')
         elif etype in {'s8', 's8r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
@@ -113,14 +119,14 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
         elif etype in {'c3d10', 'c3d10r', 'c3d10h'}:
-            quadratic_tetra
+            log.warning('found quadratic_tetra')
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
         elif etype in {'c3d6', 'c3d6r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cpenta(eid, pid, nids, comment='')
         elif etype in {'c3d15', 'c3d15r'}:
-            quadratic_penta
+            log.warning('found quadratic_penta')
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cpenta(eid, pid, nids, comment='')
         elif etype in {'c3d8', 'c3d8r'}:
@@ -187,6 +193,9 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         nnodesi = model.nodes.shape[0]
         elements = model.elements
         eid_offset = _add_part_to_nastran(nastran_model, elements, pid, nid_offset, eid_offset)
+        ties = model.ties
+        if len(ties):
+            log.error(f'Ties found...not supported\n{ties}')
         nid_offset += nnodesi
 
     eid_offset = 0
@@ -202,40 +211,86 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         nid_offset += nnodesi
         for shell_section in part.shell_sections:
             log.info('shell')
-        for shell_section in part.shell_sections:
+        for shell_section in part.solid_sections:
             log.info('solid')
     #nids = np.hstack(nids)
 
     pid = 1
     mid = 1
+    pid, mid = _create_solid_properties(model, nastran_model, log, pid, mid)
+    pid, mid = _create_shell_properties(model, nastran_model, log, pid, mid)
+
+def _create_solid_properties(model: Abaqus, nastran_model: BDF,
+                             log: SimpleLogger,
+                             pid: int, mid: int) -> tuple[int, int]:
     for solid_section in model.solid_sections:
         #print(solid_section)
         mat_name = solid_section.material_name
         mat = model.materials[mat_name]
-        element_set = solid_section.elset
-        log.warning(f'element_set = {element_set}')
+        element_set_name = solid_section.elset
+        log.info(f'element_set_name = {element_set_name}')
+
+        map_property_ids(model, nastran_model, element_set_name, pid)
         #print(mat)
         nastran_model.add_psolid(pid, mid, cordm=0,
-                                 integ=None, stress=None, isop=None, fctn='SMECH', comment='')
-        _create_mat1(nastran_model, mat, mid)
+                                 integ=None, stress=None, isop=None, fctn='SMECH', comment=element_set_name)
+        _create_mat1(nastran_model, mat, mid, comment=mat_name)
 
         log.info('solid section')
+        pid += 1
         mid += 1
+    return pid, mid
 
+def _create_shell_properties(model: Abaqus, nastran_model: BDF,
+                             log: SimpleLogger,
+                             pid: int, mid: int) -> tuple[int, int]:
     for shell_section in model.shell_sections:
         #print(shell_section)
         mat_name = shell_section.material_name
         mat = model.materials[mat_name]
+
+        element_set_name = shell_section.elset
+        log.info(f'element_set_name = {element_set_name}')
+        map_property_ids(model, nastran_model, element_set_name, pid)
+
         #print(mat)
         t = shell_section.thickness
         nastran_model.add_pshell(pid, mid1=mid, t=t, mid2=mid, twelveIt3=1.0, mid3=None, tst=0.833333,
-                                 nsm=0.0, z1=None, z2=None, mid4=None, comment='')
-        _create_mat1(nastran_model, mat, mid)
+                                 nsm=0.0, z1=None, z2=None, mid4=None, comment=element_set_name)
+        _create_mat1(nastran_model, mat, mid, comment=mat_name)
 
         log.info('shell section')
+        pid += 1
         mid += 1
+    return pid, mid
 
-def _create_mat1(nastran_model: BDF, mat, mid: int):
+def map_property_ids(model: Abaqus, nastran_model: BDF,
+                     element_set_name: str, pid: int) -> None:
+    log = model.log
+    try:
+        eids = get_eids_from_recursive_element_set(model, element_set_name)
+    except KeyError:
+        log.error(f'cant map section with elset={element_set_name}')
+        return
+
+    if isinstance(eids, str):
+        log.debug(f'mapping section with elset={element_set_name} to {eids}')
+        element_name_to_type = {value: key for key, value in
+                                model.elements.element_type_to_elset_name.items()}
+        etype = element_name_to_type[eids]
+        eids = getattr(model.elements, f'{etype}_eids')
+        #return
+    for eid in eids:
+        nastran_model.elements[eid].pid = pid
+
+def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) -> Union[np.ndarray, str]:
+    """returns None if we cant find a set of eids"""
+    eids = model.element_sets[element_set_name]
+    if isinstance(eids, str):
+        return eids
+    return eids
+
+def _create_mat1(nastran_model: BDF, mat, mid: int, comment: str) -> None:
     G = None
     rho = 0.0
     tref = None
@@ -251,7 +306,7 @@ def _create_mat1(nastran_model: BDF, mat, mid: int):
     if 'expansion' in sections:
         tref, alpha = sections['expansion']
     nastran_model.add_mat1(mid, E, G, nu, rho=rho, a=alpha, tref=tref,
-                           ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+                           ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment=comment)
 
 def abaqus_to_nastran_filename(abaqus_inp_filename: str,
                                nastran_filename_out: str,
@@ -403,6 +458,7 @@ def _write_distributed_loads(model: Abaqus,
                              step: Step,
                              nastran_model: BDF, subcase: Subcase,
                              load_id: int) -> None:
+    log = model.log
     for dload in step.dloads:
         assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
         nastran_model.sol = 101
@@ -429,6 +485,16 @@ def _write_distributed_loads(model: Abaqus,
                         6: (4-1, 5-1),  #face 6: 4-8-5-1
                         # subtract 1 to make it 0 based
                     }
+
+
+
+
+                    #cquad4_cquad8_face_map = {
+                        #1: (1-1, 2-1),  # Face 1: 1-2
+                        #2: (2-1, 3-1),  # Face 2: 2-3
+                        #3: (2-1, 3-1),  # Face 3: 3-4
+                        #4: (2-1, 3-1),  # Face 4: 4-1
+                    #}
                     pressures = [pressure, None, None, None]
                     face_int = int(face[-1])
                     for eid in eids:
@@ -438,7 +504,20 @@ def _write_distributed_loads(model: Abaqus,
                             n1 = element.nodes[i1]
                             n3 = element.nodes[i3]
                             nastran_model.add_pload4(
-                                load_id, [eid], pressures, g1=n1, g34=n3, cid=0, nvector=None,
+                                load_id, [eid], pressures, g1=n1, g34=n3, cid=None, nvector=None,
+                                surf_or_line='SURF', line_load_dir='NORM', comment='')
+                        elif element.type == 'CTRIA6':
+                            log.error(f'DLOAD uses P{face_int} for eid={eid}?  Assuming normal')
+                            #assert face_int == 1, face_int
+                            nastran_model.add_pload4(
+                                load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
+                                surf_or_line='SURF', line_load_dir='NORM', comment='')
+                        elif element.type == 'CQUAD8':
+                            #if face_int != 1:
+                            log.error(f'DLOAD uses P{face_int} for eid={eid}?  Assuming normal')
+                            #assert face_int == 1, face_int
+                            nastran_model.add_pload4(
+                                load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
                         else:
                             raise NotImplementedError(element)

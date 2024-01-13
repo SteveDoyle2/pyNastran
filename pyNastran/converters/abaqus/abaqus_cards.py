@@ -84,10 +84,12 @@ class ShellSection:
     *SHELL SECTION,  ELSET=PLATE,  MATERIAL=A, ORIENTATION=GLOBAL
     5.00000E-02
     """
-    def __init__(self, material_name: str, thickness: float, log: SimpleLogger):
+    def __init__(self, material_name: str, elset: str,
+                 thickness: float, log: SimpleLogger):
         #self.data_lines = data_lines
         #self.material = param_map['material']
         self.material_name = material_name
+        self.elset = elset
         self.thickness = thickness
         self.log = log
 
@@ -96,6 +98,7 @@ class ShellSection:
                             data_lines: list[str],
                             log: SimpleLogger):
         material_name = param_map['material']
+        elset = param_map['elset']
         log.debug(f'material_name = {material_name}')
 
         #if len(data_lines) == 0:
@@ -111,7 +114,7 @@ class ShellSection:
 
         for line in data_lines:
             log.info('shell - %r' % line)
-        return ShellSection(material_name, thickness, log)
+        return ShellSection(material_name, elset, thickness, log)
 
     def __repr__(self):
         """prints a summary for the solid section"""
@@ -273,7 +276,7 @@ class Part:
                  nodes: np.ndarray,
                  element_types: dict[str, np.ndarray],
                  node_sets: dict[str, np.ndarray],
-                 element_sets: dict[str, np.ndarray],
+                 element_sets: dict[str, tuple[np.ndarray, str]],
                  solid_sections: list[SolidSection],
                  shell_sections: list[ShellSection],
                  log: SimpleLogger):
@@ -284,7 +287,7 @@ class Part:
         ----------
         name : str
             the name
-        element_types : dict[element_type] : node_ids
+        element_types : dict[element_type] : (node_ids, set_name)
             element_type : str
                 the element type
             bars:

@@ -187,7 +187,7 @@ def read_dload(line0: str, lines: list[str], iline: int,
     while '*' not in line0:
         sline = line0.split(',')
         tag = sline[1].upper().strip()
-        if tag in {'P1', 'P2', 'P3', 'P4', 'P5', 'P6'}:
+        if tag in {'P1', 'P2', 'P3', 'P4', 'P5', 'P6'}:  # 6 faces on a CHEXA
             assert len(sline) == 3, sline
             element_set_name, face, mag_str = sline
             try:
@@ -195,7 +195,7 @@ def read_dload(line0: str, lines: list[str], iline: int,
             except ValueError:
                 element_set_name = sline[0]
             face = face.strip().upper()
-            assert face in {'P1'}, face
+            assert face in {'P1', 'P2', 'P3', 'P4', 'P5', 'P6'}, face
             mag = float(mag_str)
             dloadi = (element_set_name, face, mag)
         elif tag == 'GRAV':
@@ -281,43 +281,44 @@ def read_node(lines, iline, log, skip_star=False):
     return iline, line0, nids, nodes
 
 def read_element(lines: list[str], line0: str, iline: int,
-                 log: SimpleLogger, debug: bool) -> tuple[str, int, str, list[list[str]]]:
+                 log: SimpleLogger, debug: bool) -> tuple[str, int,
+                                                          str, str, list[list[str]]]:
     """
     '*element, type=mass, elset=topc_inertia-2_mass_'
     """
-    #print('------------------')
     assert '*' in line0, line0
-    sline = line0.split(',')[1:]
-    if len(sline) < 1:
+    iline, line_out, flags, lines_out = read_generic_section(line0, lines, iline, log)
+    assert len(lines_out), lines_out
+
+    if len(flags) < 1:
         raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
                            "line0=%r\nsline=%s; allowed:\n[%s]" % (
-                               line0, sline, ', '.join(allowed_element_types)))
+                               line0, flags, ', '.join(allowed_element_types)))
 
-    etype_sline = sline[0]
-    #print(etype_sline)
-    assert 'type' in etype_sline, etype_sline
-    etype = etype_sline.split('=')[1].strip()
+    etype = ''
+    elset = ''
+    for flag_value in flags:
+        flag, value = flag_value.split('=')
+        flag = flag.strip().lower()
+        value = value.strip()
+        if flag == 'type':
+            assert etype == '', etype
+            etype = value
+        elif flag == 'elset':
+            elset = value
+        else:
+            raise RuntimeError(flag_value)
+
     if etype not in allowed_element_types:
         msg = 'etype=%r allowed=[%s]' % (etype, ','.join(allowed_element_types))
         raise RuntimeError(msg)
 
-    #if debug:
-        #log.debug('    etype = %r' % etype)
-
-    #iline += 1
-    line1 = lines[iline].strip().lower()
-    #log.debug('    line1 = %r' % line1)
-
     elements = []
-    #print(line1)
-    assert '*' not in line1, line1
-    while not line1.startswith('*'):
-        #print(line1)
-        elements.append(line1.strip('\n\t ,').split(','))
-        iline += 1
-        line1 = lines[iline].strip().lower()
-    #log.debug('elements = %s' % elements)
-    return line1, iline, etype, elements
+    for line in lines_out:
+        element = line.strip('\n\t ,').split(',')
+        elements.append(element)
+
+    return line_out, iline, etype, elset, elements
 
 def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> None:
     """
@@ -835,7 +836,8 @@ def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
     assert len(coordinate_system_fields) == 9, coordinate_system_fields
     return iline, line0, coordinate_system_fields
 
-def read_transform(line0: str, lines: list[str], iline: int, log: SimpleLogger):
+def read_transform(line0: str, lines: list[str], iline: int,
+                   log: SimpleLogger):
     """
     *TRANSFORM, TYPE=C, NSET=HM_auto_transform_3
     6414.0    , 0.0       , -678.0    ,  6513.79832,  -4.661E-06,  -684.34787
@@ -869,3 +871,92 @@ def read_transform(line0: str, lines: list[str], iline: int, log: SimpleLogger):
     assert len(transform_fields) == 6, transform_fields
     transform = Transform.from_data(transform_type, nset, transform_fields)
     return iline, line0, transform
+
+def read_tie(line0: str, lines: list[str], iline: int,
+             log: SimpleLogger) -> tuple[str, int,
+                                         str, list[list[str]]]:
+    """
+    '*tie, name=top_to_hub'
+    ['Internal_Selection-1_Top_to_Hub_Slave, Internal_Selection-1_Top_to_Hub_Master\n']
+    https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node251.html
+    """
+    iline, line_out, flags, lines_out = read_generic_section(line0, lines, iline, log)
+    assert len(lines_out), lines_out
+
+    if len(flags) == 0:
+        raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
+                           "line0=%r\nsline=%s; allowed:\n[%s]" % (
+                               line0, flags, ', '.join(allowed_element_types)))
+
+    name = ''
+    position_tolerance = np.nan
+    #elset = ''
+    for flag_value in flags:
+        flag, value = flag_value.split('=')
+        flag = flag.strip().lower()
+        value = value.strip()
+        if flag == 'name':
+            #assert etype == '', etype
+            name = value
+        #elif flag == 'elset':
+            #elset = value
+        else:
+            raise RuntimeError(flag_value)
+
+    #elements = []
+    assert len(lines_out) == 1, lines_out
+    for line in lines_out:
+        slave, master = line.strip('\n\t ,').split(',')
+        master = master.strip()
+        slave = slave.strip()
+        #elements.append(element)
+
+    tie = Tie(name, master, slave, position_tolerance)
+    return iline, line0, tie
+
+class Tie:
+    def __init__(self, name: str, master: str, slave: str,
+                 position_tolerance: float):
+        self.name = name
+        self.master = master
+        self.slave = slave
+        self.position_tolerance = position_tolerance
+    def __repr__(self) -> str:
+        msg = (
+            f'Tie(name={self.name!r}, '
+            f'master={self.master!r}, slave={self.slave!r}, '
+            'position_tolerance={self.position_tolerance})')
+        return msg
+
+def read_generic_section(line0: str, lines: list[str], iline: int,
+                         log: SimpleLogger) -> tuple[int, str, list[str]]:
+    """
+    Parameters
+    ----------
+    line0: str
+        the header line
+    iline: int
+        points to first line (not header line)
+
+    Returns
+    -------
+    iline: int
+        pointer to line
+    line : str
+        is the start of the next header
+
+    """
+    assert '*' in line0, line0
+    #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
+    flags = [val.strip() for val in line0.split(',')[1:]]
+
+    line = ''
+    lines_out = []
+    line = lines[iline]
+    while '*' not in line:
+        lines_out.append(line)
+        iline += 1
+        line = lines[iline]
+    assert len(lines_out), line0
+    iline -= 1
+    return iline, line, flags, lines_out

@@ -79,6 +79,7 @@ class Abaqus:
         boundaries = []
         surfaces = []
         steps = []
+        ties = []
 
         log = self.log
         while iline < nlines:
@@ -251,11 +252,11 @@ class Abaqus:
                     #print(f'start of element; iline={iline}')
                     iline0 = iline
                     line0 = lines[iline].strip().lower()
-                    line0, iline, etype, elements = reader.read_element(
+                    line0, iline, etype, elset, elements = reader.read_element(
                         lines, line0, iline+1, self.log, self.debug)
-                    element_types[etype] = elements
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
+                    element_types[etype] = (elements, elset)
+                    #iline -= 1
+                    #line0 = lines[iline].strip().lower()
                     #print(f'end of element; iline={iline}')
                     #print(line0)
                     assert iline > iline0
@@ -309,6 +310,14 @@ class Abaqus:
                     iline, line0, system = reader.read_system(line0, lines, iline, self.log)
                 elif '*transform' in line0:
                     iline, line0, transform = reader.read_transform(line0, lines, iline, self.log)
+                elif '*tie' in line0:
+                    iline += 1
+                    iline, line0, tie = reader.read_tie(line0, lines, iline, self.log)
+                    ties.append(tie)
+
+                    #iline += 1
+                    #iline, line0, flags, section = reader.read_generic_section(line0, lines, iline, self.log)
+                    #self.log.warning('skipping tie section')
                 else:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
                 wordi = word.split(',')[0]
@@ -326,6 +335,7 @@ class Abaqus:
         if nids or nodes:
             self.nids, self.nodes = cast_nodes(nids[0], nodes[0], self.log)
         self.elements = Elements(element_types, self.log)
+        self.ties = ties
         self.element_sets = element_sets
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
@@ -452,9 +462,11 @@ class Abaqus:
 
             elif '*element' in line0:
                 #print(line0)
-                line0, iline, etype, elements = reader.read_element(
+                line0, iline, etype, elset, elements = reader.read_element(
                     lines, line0, iline, self.log, self.debug)
-                element_types[etype] = elements
+                element_types[etype] = (elements, elset)
+                iline += 1
+                x = 1
 
             elif '*nset' in line0:
                 #print(line0)

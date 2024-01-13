@@ -70,9 +70,10 @@ def _get_properties(nastran_model: BDF) -> tuple[Any, Any, list[ShellSection], l
         element_sets_temp[pid] = []  # 20
         if prop.type == 'PSHELL':
             mid = prop.mid1
+            elset = None
             material_name = f'{prop.mid1_ref.type}_{mid}'
             thickness = prop.t
-            shell_section = ShellSection(material_name, thickness, log)
+            shell_section = ShellSection(material_name, elset, thickness, log)
             shell_sections.append(shell_section)
         elif prop.type == 'PSOLID':
             material_name = f'{prop.mid_ref.type}_{mid}'
@@ -93,33 +94,35 @@ def _get_elements(nastran_model: BDF, element_sets_temp: dict[str, list[int]]):
     chexa8s = []
     chexa20s = []
     element_types = {
-        'cpe3' : ctria3s, # CTRIA3
-        'cpe4' : cquad4s,
-        'c3d10h' : ctetra10s,
-        'c3d4r' : ctetra4s,
-        'c3d8r' : chexa8s,
-        'c3d20r' : chexa20s,
+        # elements, element_set_name
+        'cpe3' : (ctria3s, ''), # CTRIA3
+        'cpe4' : (cquad4s, ''),
+        'c3d10h' : (ctetra10s, ''),
+        'c3d4r' : (ctetra4s, ''),
+        'c3d8r' : (chexa8s, ''),
+        'c3d20r' : (chexa20s, ''),
     }
     for eid, elem in nastran_model.elements.items():
         pid = elem.pid
         nidsi = elem.nodes
-        if elem.type in ['CTRIA3']:
+        if elem.type == 'CTRIA3':
             ctria3s.append([eid] + nidsi)
-        elif elem.type in ['CQUAD4']:
+        elif elem.type == 'CQUAD4':
             cquad4s.append([eid] + nidsi)
-        elif elem.type in ['CTETRA4']:
+        elif elem.type == 'CTETRA4':
             ctetra4s.append([eid] + nidsi)
-        elif elem.type in ['CTETRA10']:
+        elif elem.type == 'CTETRA10':
             ctetra10s.append([eid] + nidsi)
-        elif elem.type in ['CHEXA8']:
+        elif elem.type == 'CHEXA8':
             chexa8s.append([eid] + nidsi)
-        elif elem.type in ['CHEXA20']:
+        elif elem.type == 'CHEXA20':
             chexa20s.append([eid] + nidsi)
         else:
             print(elem)
         element_sets_temp[pid].append(eid)
     assert len(element_sets_temp)
     assert len(element_types)
+
     return element_types, element_sets_temp
 
 def _process_constraints(nastran_model: BDF, node_sets: dict[str, np.ndarray]) -> dict[str, Any]:
