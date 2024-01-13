@@ -7,7 +7,7 @@ import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
-    ShellSection, SolidSection, Surface, Tie)
+    ShellSection, SolidSection, Surface)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -132,6 +132,7 @@ class Abaqus:
                     iline, line0, data_lines = reader.read_star_block(iline, line0, lines, self.log)
 
                 elif word.startswith('amplitude'):
+                    amplitude
                     param_map = reader.get_param_map(iline, word)
                     name = param_map['name']
                     if name in self.amplitudes:
@@ -185,12 +186,14 @@ class Abaqus:
                     steps.append(step)
                     istep += 1
                 elif word.startswith('initial conditions'):
+                    #initial_conditions
                     data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
                     for line in data_lines:
                         self.log.debug(line)
                     self.log.debug(f'line_end_of_IC = {line0!r}')
                 elif word.startswith('surface interaction'):
                     unused_key = 'surface interaction'
+                    #surface_interaction
                     unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
@@ -199,6 +202,7 @@ class Abaqus:
                     self.log.debug(line0)
                 elif word.startswith('friction'):
                     unused_key = 'friction'
+                    #friction
                     unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
@@ -207,6 +211,7 @@ class Abaqus:
                     self.log.debug(line0)
                 elif word.startswith('surface behavior'):
                     unused_key = 'surface behavior'
+                    #surface_behavior
                     unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
@@ -215,6 +220,7 @@ class Abaqus:
                     self.log.debug(line0)
                 elif word.startswith('contact damping'):
                     unused_key = 'contact damping'
+                    #contact_damping
                     unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
@@ -223,6 +229,7 @@ class Abaqus:
                     self.log.debug(line0)
                 elif word.startswith('contact pair'):
                     unused_key = 'contact pair'
+                    #contact_pair
                     unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
@@ -474,7 +481,6 @@ class Abaqus:
                     iline, line0, lines, log, self.debug)
                 element_types[etype] = (elements, elset)
                 iline += 1
-                x = 1
 
             elif '*nset' in line0:
                 #print(line0)
@@ -493,6 +499,7 @@ class Abaqus:
                 element_sets[set_name] = set_ids
 
             elif '*surface' in line0:
+                raise RuntimeError('surface part')
                 # TODO: skips header parsing
                 #iline += 1
                 line0 = lines[iline].strip().lower()
@@ -512,6 +519,7 @@ class Abaqus:
             elif '*cohesive section' in line0:
                 # TODO: skips header parsing
                 #iline += 1
+                #cohesive_section
                 line0 = lines[iline].strip().lower()
                 data_lines = []
                 while not line0.startswith('*'):
@@ -520,22 +528,12 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
             elif '*mass' in line0:
                 # TODO: skips header parsing
-                #iline += 1
-                line0 = lines[iline].strip().lower()
-                data_lines = []
-                while not line0.startswith('*'):
-                    data_lines.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
+                iline += 1
             elif '*rotary inertia' in line0:
                 # TODO: skips header parsing
-                #iline += 1
-                line0 = lines[iline].strip().lower()
-                data_lines = []
-                while not line0.startswith('*'):
-                    data_lines.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
+                iline += 1
             elif '*orientation' in line0:
                 iline, line0, orientation_fields = reader.read_orientation(iline, line0, lines, log)
             else:
@@ -776,9 +774,9 @@ class Abaqus:
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
             for set_name, seti in self.node_sets.items():
-                asdf
+                raise NotImplementedError(('node_set', set_name, seti))
             for set_name, seti in self.element_sets.items():
-                asdf
+                raise NotImplementedError(('element_set', set_name, seti))
             for step in self.steps:
                 #print(step)
                 #print(abq_file)

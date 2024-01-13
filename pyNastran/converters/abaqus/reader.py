@@ -439,6 +439,7 @@ def read_material(iline: int, word: str, lines: list[str],
         data_lines = []
         #log.info('  mat_word = %r' % word)
         #print(sections)
+        word_lower = word.lower()
         if word.startswith('elastic'):
             key = 'elastic'
             sword = word.split(',')
@@ -614,6 +615,7 @@ def read_material(iline: int, word: str, lines: list[str],
                 iline += 1
                 line0 = lines[iline].strip('\n\r\t, ').lower()
         elif word.startswith('initial conditions'):
+            asdf
             # TODO: skips header parsing
             #iline += 1
             #line0 = lines[iline].strip().lower()
@@ -623,30 +625,14 @@ def read_material(iline: int, word: str, lines: list[str],
                 iline += 1
                 line0 = lines[iline].strip().lower()
             log.debug(line0)
-        elif word.lower().startswith('hyperelastic, mooney-rivlin'):
+        elif word_lower.startswith('hyperelastic, mooney-rivlin'):
             key = 'hyperelastic, mooney-rivlin'
-            while '*' not in line0:
-                sline = line0.split(',')
-                iline += 1
-                line0 = lines[iline].strip().lower()
-            log.debug(line0)
-        elif word.lower().startswith('expansion'):
-            #*Expansion, zero=20.
-            #80.,
-            expansion_zero_word = word.split(',')[1]
-            tref_str = expansion_zero_word.split('=')[1]
-            tref = float(tref_str)
-            del expansion_zero_word
-            key = 'expansion'
-            while '*' not in line0:
-                sline = line0.split(',')
-                iline += 1
-                line0 = lines[iline].strip().lower()
-            #iline += 1
-            alpha = float(sline[0])
-            sections['expansion'] = [tref, alpha]
-            del tref, alpha
-            #log.debug(line0)
+            iline, line0, flags, lines_out = read_generic_section(iline, word_line, lines, log)
+            iline += 1
+            log.debug(str((iline, line0)))
+
+        elif word_lower.startswith('expansion'):
+            iline, line0 = read_expansion(iline, word_line, lines, sections, log)
         else:
             msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
             raise NotImplementedError(msg)
@@ -795,8 +781,9 @@ def read_hourglass_stiffness(iline: int, line0: str, lines: list[str],
 def read_star_block(iline: int, line0: str, lines: list[str],
                     log: SimpleLogger, debug: bool=False) -> tuple[int, str, list[str]]:
     """
-    because this uses file streaming, there are 30,000 places where a try except
-    block is needed, so this should probably be used all over.
+    because this uses file streaming, there are 30,000 places where a
+    try except block is needed, so this should probably be used all
+    over.
     """
     assert isinstance(iline, int), iline
     data_lines = []
@@ -850,6 +837,7 @@ def read_set(iline: int, line0: str,
         set_ids_list += line0.strip(', ').split(',')
         iline += 1
         line0 = lines[iline].strip().lower()
+
     if 'generate' in params_map:
         assert len(set_ids_list) == 3, set_ids_list
         set_ids = np.arange(int(set_ids_list[0]), int(set_ids_list[1]), int(set_ids_list[2]))
@@ -865,17 +853,28 @@ def read_set(iline: int, line0: str,
 
 def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger):
     assert isinstance(iline, int)
-    orientation_fields = []
+
     iline += 1
-    line0 = lines[iline].strip().lower()
-    while '*' not in line0:
+    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    assert len(flags) == 2, flags
+
+    system = ''
+    name = ''
+    for key_value in flags:
+        key, value = key_value.split('=')
+        key = key.lower().strip()
+        value = value.strip()
+        if key == 'system':
+            system = value
+        elif key == 'name':
+            name = value
+        else:
+            raise RuntimeError((key, value))
+
+    orientation_fields = []
+    for line in lines_out:
         sline = line0.split(',')
-        iline += 1
-        line0 = lines[iline].strip().lower()
-        orientation_fields.append(sline)
-    log.debug(line0)
-    iline -= 1
-    line0 = lines[iline].strip().lower()
+        lines.append(sline)
     return iline, line0, orientation_fields
 
 def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
@@ -916,25 +915,64 @@ def read_transform(line0: str, lines: list[str], iline: int,
       Global Y-coordinate of point b
       Global Z-coordinate of point b
     """
-    params = get_param_map(iline, line0, required_keys=['type', 'nset'])
-    transform_type = params['type'].upper()
-    nset = params['nset']
+    iline += 1
+    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+
+    transform_type = ''
+    nset = ''
+    for key_value in flags:
+        key, value = key_value.split('=')
+        key = key.strip().lower()
+        value = value .strip().lower()
+        if key == 'type':
+            transform_type = value.upper()
+        elif key == 'nset':
+            nset = value
+        else:
+            raise RuntimeError((key, value))
+
+    #params = get_param_map(iline, line0, required_keys=['type', 'nset'])
+    #transform_type = params['type'].upper()
+    #nset = params['nset']
     assert transform_type in ['R', 'C', 'S'], f'transform_type={transform_type!r}'
 
     transform_fields = []
-    iline += 1
-    line0 = lines[iline].strip().lower()
-    while '*' not in line0:
-        sline = line0.split(',')
-        iline += 1
-        line0 = lines[iline].strip().lower()
+    for line in lines_out:
+        sline = line.split(',')
         transform_fields.extend(sline)
-    log.debug(line0)
-    iline -= 1
-    line0 = lines[iline].strip().lower()
+
     assert len(transform_fields) == 6, transform_fields
     transform = Transform.from_data(transform_type, nset, transform_fields)
     return iline, line0, transform
+
+def read_expansion(iline: int, word_line: str, lines: list[str],
+                          sections, log: SimpleLogger) -> int:
+    """
+    *Expansion, zero=20.
+    80.,
+    """
+    iline, line0, flags, lines_out = read_generic_section(iline, word_line, lines, log)
+    iline += 1
+
+    tref = 0.
+    for key_value in flags:
+        key, value = key_value.split('=')
+        key = key.strip().lower()
+        value = value.strip()
+        if key == 'zero':
+            tref = float(value)
+        else:
+            raise NotImplementedError(key)
+
+    assert len(lines_out) == 1, lines_out
+    for line in lines_out:
+        sline = line.split(',')
+        alpha = float(sline[0])
+
+    sections['expansion'] = [tref, alpha]
+    del tref, alpha
+    #log.debug(line0)
+    return iline, line0
 
 def read_tie(line0: str, lines: list[str], iline: int,
              log: SimpleLogger) -> tuple[str, int,
@@ -997,6 +1035,7 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
 
     """
     assert isinstance(iline, int)
+    assert isinstance(line0, str)
     assert '*' in line0, line0
     #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
     flags = [val.strip() for val in line0.split(',')[1:]]

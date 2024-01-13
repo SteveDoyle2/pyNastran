@@ -5,7 +5,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
-from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename
+from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename, cmd_abaqus_to_nastran
 from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
@@ -190,9 +190,11 @@ class TestAbaqus(unittest.TestCase):
         abaqus_filename = os.path.join(MODEL_PATH, 'force_chexa8.inp')
         bdf_filename = os.path.join(MODEL_PATH, 'force_chexa8.bdf')
         log = get_logger(level='warning', encoding='utf-8')
-        argv = ['format_converter', 'abaqus', abaqus_filename,
-                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
-        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        #argv = ['format_converter', 'abaqus', abaqus_filename,
+                #'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        #cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         os.remove(bdf_filename)
 
 def make_model():

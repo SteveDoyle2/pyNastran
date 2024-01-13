@@ -13,7 +13,7 @@ from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.converters.abaqus.abaqus import (
     Abaqus, Elements, Step,
     read_abaqus, get_nodes_nnodes_nelements)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 chexa_face_map = {
@@ -36,8 +36,8 @@ ctetra_face_map = {
 
 tri_face_map = {
     #for triangular shell elements:
-    #Face NEG or 1: in negative normal direction
-    #Face POS or 2: in positive normal direction
+    1: -1.0,        #Face NEG or 1: in negative normal direction
+    2: 1.0,         #Face POS or 2: in positive normal direction
     3: (1-1, 2-1),  #Face 3: 1-2
     4: (2-1, 3-1),  #Face 4: 2-3
     5: (3-1, 1-1),  #Face 5: 3-1
@@ -45,8 +45,8 @@ tri_face_map = {
 
 quad_face_map = {
     #for quadrilateral shell elements:
-    #Face NEG or 1: in negative normal direction
-    #Face POS or 2: in positive normal direction
+    1: -1.0,        #Face NEG or 1: in negative normal direction
+    2: 1.0,         #Face POS or 2: in positive normal direction
     3: (1-1, 2-1),  #Face 3: 1-2
     4: (2-1, 3-1),  #Face 4: 2-3
     5: (3-1, 4-1),  #Face 5: 3-4
@@ -102,7 +102,7 @@ def _add_part_to_nastran(nastran_model: BDF,
         'r2d2': None,
     }
 
-    pid = -1
+    #pid = -1
     type_eid_map_to_eid = {}
     for etype, eids_nids in element_types.items():
         eids_, part_nids = eids_nids
@@ -148,7 +148,6 @@ def _add_part_to_nastran(nastran_model: BDF,
                 nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
         elif etype in {'s6', 's6r'}:
-            log.warning('found quadratic_tri')
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctria6(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, comment='')
@@ -160,7 +159,7 @@ def _add_part_to_nastran(nastran_model: BDF,
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
         elif etype in {'c3d10', 'c3d10r', 'c3d10h'}:
-            log.warning('found quadratic_tetra')
+            #log.warning('found quadratic_tetra')
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
         elif etype in {'c3d6', 'c3d6r'}:
@@ -672,14 +671,27 @@ def _write_distributed_loads(model: Abaqus,
                                 load_id, [eid], pressures, g1=n1, g34=n3, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
                         elif element.type == 'CTRIA6':
-                            log.error(f'DLOAD uses P{face_int} for eid={eid}?  Assuming normal')
+                            mapped_face = tri_face_map[face_int]
+                            if isinstance(mapped_face, float):
+                                pressures = [mapped_face*pressure, None, None, None]
+                            elif isinstance(mapped_face, tuple):
+                                log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
+                            else:
+                                raise RuntimeError(mapped_face)
                             #assert face_int == 1, face_int
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
                         elif element.type == 'CQUAD8':
                             #if face_int != 1:
-                            log.error(f'DLOAD uses P{face_int} for eid={eid}?  Assuming normal')
+                            mapped_face = quad_face_map[face_int]
+                            if isinstance(mapped_face, float):
+                                pressures = [mapped_face*pressure, None, None, None]
+                            elif isinstance(mapped_face, tuple):
+                                log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
+                            else:
+                                raise RuntimeError(mapped_face)
+
                             #assert face_int == 1, face_int
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
