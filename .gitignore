@@ -27,6 +27,12 @@ htmlcov
 *.gz
 *.json
 
+# pyInstaller building
+#*.qm
+_internal/
+*.toc
+*.res
+
 # C extensions
 *.so
 # Packages

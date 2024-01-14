@@ -1,0 +1,124 @@
+**
+** Heading +++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Heading
+**Hash: bheXxA6U, Date: 01/10/2024, Unit system: MM_TON_S_C
+**
+** Nodes +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Node
+1, 5.00000000E+000, 5.00000000E+000, 1.00000000E+001
+2, 5.00000000E+000, 5.00000000E+000, 0.00000000E+000
+3, 5.00000000E+000, -5.00000000E+000, 1.00000000E+001
+4, 5.00000000E+000, -5.00000000E+000, 0.00000000E+000
+5, -5.00000000E+000, 5.00000000E+000, 0.00000000E+000
+6, -5.00000000E+000, 5.00000000E+000, 1.00000000E+001
+7, -5.00000000E+000, -5.00000000E+000, 1.00000000E+001
+8, -5.00000000E+000, -5.00000000E+000, 0.00000000E+000
+**
+** Elements ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Element, Type=C3D8, Elset=Solid_part-1
+1, 3, 1, 2, 4, 7, 6, 5, 8
+**
+** Node sets +++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Nset, Nset=Internal_Selection-1_Fixed-1
+5, 6, 7, 8
+*Nset, Nset=Internal-1_Internal_Selection-1_Uniform_Pressure-1
+1, 2, 3, 4
+**
+** Element sets ++++++++++++++++++++++++++++++++++++++++++++
+**
+*Elset, Elset=Internal_Selection-1_Solid_Section-1
+Solid_part-1
+*Elset, Elset=Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1
+1
+**
+** Surfaces ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Surface, Name=Internal_Selection-1_Uniform_Pressure-1, Type=Element
+Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1, S1
+**
+** Physical constants ++++++++++++++++++++++++++++++++++++++
+**
+**
+** Materials +++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Material, Name=S185
+*Density
+7.8E-09
+*Elastic
+210000, 0.28
+*Expansion, Zero=20
+1.1E-05
+*Conductivity
+14
+*Specific heat
+440000000
+**
+** Sections ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Solid section, Elset=Internal_Selection-1_Solid_Section-1, Material=S185
+**
+** Pre-tension sections ++++++++++++++++++++++++++++++++++++
+**
+**
+** Constraints +++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Surface interactions ++++++++++++++++++++++++++++++++++++
+**
+**
+** Contact pairs +++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Amplitudes ++++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Initial conditions ++++++++++++++++++++++++++++++++++++++
+**
+**
+** Steps +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Step-1 ++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Step
+*Static, Solver=Pardiso
+**
+** Output frequency ++++++++++++++++++++++++++++++++++++++++
+**
+*Output, Frequency=1
+**
+** Boundary conditions +++++++++++++++++++++++++++++++++++++
+**
+*Boundary, op=New
+** Name: Fixed-1
+*Boundary
+Internal_Selection-1_Fixed-1, 1, 6, 0
+**
+** Loads +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Cload, op=New
+*Dload, op=New
+** Name: Uniform_Pressure-1
+*Dload
+Internal-1_Internal_Selection-1_Uniform_Pressure-1_S1, P1, -1
+**
+** Defined fields ++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** History outputs +++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Field outputs +++++++++++++++++++++++++++++++++++++++++++
+**
+*Node file
+RF, U
+*El file
+S, E, NOE
+**
+** End step ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*End step
