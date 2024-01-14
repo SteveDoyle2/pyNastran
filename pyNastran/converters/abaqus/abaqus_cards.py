@@ -106,11 +106,11 @@ class ShellSection:
         thickness = 0.
         if len(data_lines) == 1:
             assert len(data_lines) == 1, data_lines
-            line0 = data_lines[0]
+            line0 = data_lines[0].split()
             assert len(line0) == 1, data_lines
             thickness = float(line0[0])
-        #else:
-            #aa
+        else:
+            raise RuntimeError(data_lines)
 
         for line in data_lines:
             log.info('shell - %r' % line)
@@ -154,7 +154,7 @@ class SolidSection:
             pass
         elif len(data_lines) == 1:
             assert len(data_lines) == 1, data_lines
-            line0 = data_lines[0]
+            line0 = data_lines[0].split()
             assert len(line0) == 1, data_lines
 
             try:

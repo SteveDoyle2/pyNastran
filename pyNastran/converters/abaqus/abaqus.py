@@ -103,7 +103,13 @@ class Abaqus:
                 word = line0.strip('*').lower()
                 log.debug('main: word = %r' % word)
                 if word == 'heading':
-                    pass
+                    if not lines[iline+1].startswith('*'):
+                        iline += 1
+                        iline, line0, flags, section = reader.read_generic_section(line0, lines, iline, self.log)
+                        iline -= 1
+                    else:
+                        self.log.debug('empty header section')
+
                 elif word.startswith('preprint'):
                     pass
                 elif word == 'boundary':
@@ -131,30 +137,28 @@ class Abaqus:
                     # TODO: skips header parsing
                     iline, line0, data_lines = reader.read_star_block(iline, line0, lines, self.log)
 
-                elif word.startswith('amplitude'):
-                    amplitude
-                    param_map = reader.get_param_map(iline, word)
-                    name = param_map['name']
-                    if name in self.amplitudes:
-                        raise RuntimeError(f'name={name!r} is already defined...')
-                    # TODO: skips header parsing
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                    data_lines = []
-                    while not line0.startswith('*'):
-                        data_lines.append(line0.split(','))
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    amplitude = []
-                    for sline in data_lines[:-1]:
-                        assert len(sline) == 8, sline
-                        amplitude += sline
-                    assert len(data_lines[-1]) <= 8, sline
-                    amplitude += data_lines[-1]
-                    self.amplitudes[name] = np.array(amplitude)
-                    continue
-                    #iline -= 1
+                #elif word.startswith('amplitude'):
+                    #amplitude
+                    #param_map = reader.get_param_map(iline, word)
+                    #name = param_map['name']
+                    #if name in self.amplitudes:
+                        #raise RuntimeError(f'name={name!r} is already defined...')
+                    ## TODO: skips header parsing
+                    #iline += 1
                     #line0 = lines[iline].strip().lower()
+                    #data_lines = []
+                    #while not line0.startswith('*'):
+                        #data_lines.append(line0.split(','))
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #amplitude = []
+                    #for sline in data_lines[:-1]:
+                        #assert len(sline) == 8, sline
+                        #amplitude += sline
+                    #assert len(data_lines[-1]) <= 8, sline
+                    #amplitude += data_lines[-1]
+                    #self.amplitudes[name] = np.array(amplitude)
+                    #continue
 
                 #elif 'include' in word:
                     #pass
@@ -185,57 +189,58 @@ class Abaqus:
                     iline, line0, step = self.read_step(lines, iline, line0, istep)
                     steps.append(step)
                     istep += 1
-                elif word.startswith('initial conditions'):
-                    #initial_conditions
-                    data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
-                    for line in data_lines:
-                        self.log.debug(line)
-                    self.log.debug(f'line_end_of_IC = {line0!r}')
-                elif word.startswith('surface interaction'):
-                    unused_key = 'surface interaction'
-                    #surface_interaction
-                    unused_data = []
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
-                elif word.startswith('friction'):
-                    unused_key = 'friction'
-                    #friction
-                    unused_data = []
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
-                elif word.startswith('surface behavior'):
-                    unused_key = 'surface behavior'
-                    #surface_behavior
-                    unused_data = []
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
-                elif word.startswith('contact damping'):
-                    unused_key = 'contact damping'
-                    #contact_damping
-                    unused_data = []
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
-                elif word.startswith('contact pair'):
-                    unused_key = 'contact pair'
-                    #contact_pair
-                    unused_data = []
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
+                #elif word.startswith('initial conditions'):
+                    ##initial_conditions
+                    #data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
+                    #for line in data_lines:
+                        #self.log.debug(line)
+                    #self.log.debug(f'line_end_of_IC = {line0!r}')
+
+                #elif word.startswith('surface interaction'):
+                    #unused_key = 'surface interaction'
+                    ##surface_interaction
+                    #unused_data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
+                #elif word.startswith('friction'):
+                    #unused_key = 'friction'
+                    ##friction
+                    #unused_data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
+                #elif word.startswith('surface behavior'):
+                    #unused_key = 'surface behavior'
+                    ##surface_behavior
+                    #unused_data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
+                #elif word.startswith('contact damping'):
+                    #unused_key = 'contact damping'
+                    ##contact_damping
+                    #unused_data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
+                #elif word.startswith('contact pair'):
+                    #unused_key = 'contact pair'
+                    ##contact_pair
+                    #unused_data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
                 #elif word.startswith('contact output'):
                     #key = 'contact output'
                     #data = []
@@ -292,24 +297,24 @@ class Abaqus:
                     self.log.info(f'end of elset {set_name!r}; line={line0} iline={iline}')
                     #assert iline > iline0
                 elif '*solid section' in line0:
+                    iline += 1
                     iline, solid_section = reader.read_solid_section(
                         iline, line0, lines, self.log)
                     self.log.debug(f'solid_section = {solid_section}')
                     solid_sections.append(solid_section)
-                    #iline -= 1
-                    #line0 = lines[iline].strip().lower()
+                    line0 = line0.strip().lower()
                 elif '*shell section' in line0:
+                    iline += 1
                     iline, shell_section = reader.read_shell_section(iline, line0, lines, self.log)
                     #print(shell_section)
                     shell_sections.append(shell_section)
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
+                    line0 = line0.strip().lower()
                 elif '*surface' in line0:
                     iline, line0, surface = reader.read_surface(line0, lines, iline, self.log)
                     surfaces[surface.name] = surface
 
-                elif '*hourglass stiffness' in line0:
-                    iline, hourglass_stiffness = reader.read_hourglass_stiffness(iline, line0, lines, self.log)
+                #elif '*hourglass stiffness' in line0:
+                    #iline, hourglass_stiffness = reader.read_hourglass_stiffness(iline, line0, lines, self.log)
                 elif '*orientation' in line0:
                     iline, line0, orientation = reader.read_orientation(iline, line0, lines, self.log)
                 elif '*system' in line0:
@@ -507,9 +512,11 @@ class Abaqus:
 
             elif '*solid section' in line0:
                 iline, solid_section = reader.read_solid_section(iline, line0, lines, log)
+                iline += 1
                 solid_sections.append(solid_section)
             elif '*shell section' in line0:
                 iline, shell_section = reader.read_shell_section(iline, line0, lines, log)
+                iline += 1
                 shell_sections.append(shell_section)
 
             elif '*cohesive section' in line0:

@@ -254,16 +254,13 @@ def read_surface(line0: str, lines: list[str], iline: int,
 
     surface_name = ''
     surface_type = ''
-    for key_value in flags:
-        key, value = key_value.split('=')
-        key = key.strip()
-        value = value.strip()
+    for key, value in split_strict_flags(flags):
         if key == 'name':
             surface_name = value
         elif key == 'type':
             surface_type = value
-        else:
-            raise NotImplementedError(key_value)
+        else:  # pragma: no cover
+            raise NotImplementedError((key, value))
     assert surface_type in {'element'}, surface_type
 
     set_names = []
@@ -276,6 +273,13 @@ def read_surface(line0: str, lines: list[str], iline: int,
         faces.append(face.strip().lower())
     surface = Surface(surface_name, surface_type, set_names, faces)
     return iline, line0, surface
+
+def split_strict_flags(flags: list[str]) -> tuple[str, str]:
+    for key_value in flags:
+        key, value = key_value.split('=')
+        key = key.strip().lower()
+        value = value.strip().lower()
+        yield (key, value)
 
 def read_node(lines, iline, log, skip_star=False):
     """reads *node"""
@@ -413,7 +417,7 @@ def read_nset(iline: int, line0: str, lines: list[str],
             instance_name = value
         elif key == 'nset':
             nset = value
-        else:
+        else:  # pragma: no cover
             raise RuntimeError((key, value))
 
     if is_instance:
@@ -450,7 +454,7 @@ def read_elset(iline: int, line0: str, lines: list[str],
         elif key == 'elset':
             assert instance_name == '', instance_name
             elset = value
-        else:
+        else:  # pramga: no cover
             raise RuntimeError((key, value))
 
     if is_instance:
@@ -758,22 +762,23 @@ def read_solid_section(iline: int, line0: str, lines: list[str],
     """reads *solid section"""
     assert isinstance(iline, int), iline
     assert isinstance(line0, str), line0
-    # TODO: skips header parsing
-    #iline += 1
-    assert '*solid' in line0, line0
-    word2 = line0.strip('*').lower()
-    params_map = get_param_map(iline, word2, required_keys=['material'])
-    log.debug('    param_map = %s' % params_map)
-    #line0 = lines[iline].strip().lower()
-    iline, line0, data_lines = read_star_block2(iline, line0, lines, log)
-    #print('line0 =', iline, line0)
-    #print(f'lines[{iline}] = {lines[iline]!r}')
-    #print('lines[iline+1] =', lines[iline+1])
-    #print('data_lines =', data_lines)
-    #for line in data_lines:
-        #print(line)
-    assert isinstance(iline, int), iline
-    solid_section = SolidSection.add_from_data_lines(params_map, data_lines, log)
+
+    #print(line0)
+    iline, line0, flags, lines_out = read_generic_section(
+        iline, line0, lines, log, require_lines_out=False)
+    params_map = {}
+    for key, value in split_strict_flags(flags):
+        if key == 'material':
+            params_map[key] = value.lower()
+        elif key == 'elset':
+            params_map[key] = value.lower()
+        elif key == 'controls':
+            params_map[key] = value.lower()
+        #elif key == 'offset':
+            #params_map[key] = float(value)
+        else:  # pragma: no cover
+            raise RuntimeError((key, value))
+    solid_section = SolidSection.add_from_data_lines(params_map, lines_out, log)
     return iline, solid_section
 
 def read_shell_section(iline: int, line0: str, lines: list[str],
@@ -781,22 +786,22 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
     """reads *shell section"""
     assert isinstance(iline, int), iline
     assert '*shell' in line0, line0
-    # TODO: skips header parsing
-    #iline += 1
-    word2 = line0.strip('*').lower()
-    params_map = get_param_map(iline, word2, required_keys=['material'])
-    log.debug('    param_map = %s' % params_map)
 
-    iline += 1
-    line0 = lines[iline].strip().lower()
-    iline, line0, data_lines = read_star_block2(iline, line0, lines, log)
-    log.info(f'params_map = {params_map}')
-    log.info(f'data_lines = {data_lines}')
-    #for line in data_lines:
-        #print(line)
-    assert len(data_lines) > 0, data_lines
-    shell_section = ShellSection.add_from_data_lines(params_map, data_lines, log)
-    #print(lines[iline])
+    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    params_map = {}
+    for key, value in split_strict_flags(flags):
+        if key == 'material':
+            params_map[key] = value.lower()
+        elif key == 'elset':
+            params_map[key] = value.lower()
+        elif key == 'orientation':
+            params_map[key] = value.lower()
+        elif key == 'offset':
+            params_map[key] = float(value)
+        else:  # pragma: no cover
+            raise RuntimeError(key)
+
+    shell_section = ShellSection.add_from_data_lines(params_map, lines_out, log)
     return iline, shell_section
 
 def read_hourglass_stiffness(iline: int, line0: str, lines: list[str],
@@ -894,15 +899,12 @@ def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger
 
     system = ''
     name = ''
-    for key_value in flags:
-        key, value = key_value.split('=')
-        key = key.lower().strip()
-        value = value.strip()
+    for key, value in split_strict_flags(flags):
         if key == 'system':
             system = value
         elif key == 'name':
             name = value
-        else:
+        else:  # pramga: no cover
             raise RuntimeError((key, value))
 
     orientation_fields = []
@@ -954,15 +956,12 @@ def read_transform(line0: str, lines: list[str], iline: int,
 
     transform_type = ''
     nset = ''
-    for key_value in flags:
-        key, value = key_value.split('=')
-        key = key.strip().lower()
-        value = value .strip().lower()
+    for key, value in split_strict_flags(flags):
         if key == 'type':
             transform_type = value.upper()
         elif key == 'nset':
             nset = value
-        else:
+        else:  # pragma: no cover
             raise RuntimeError((key, value))
 
     #params = get_param_map(iline, line0, required_keys=['type', 'nset'])
@@ -989,13 +988,10 @@ def read_expansion(iline: int, word_line: str, lines: list[str],
     iline += 1
 
     tref = 0.
-    for key_value in flags:
-        key, value = key_value.split('=')
-        key = key.strip().lower()
-        value = value.strip()
+    for key, value in split_strict_flags(flags):
         if key == 'zero':
             tref = float(value)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(key)
 
     assert len(lines_out) == 1, lines_out
@@ -1051,7 +1047,8 @@ def read_tie(line0: str, lines: list[str], iline: int,
     return iline, line0, tie
 
 def read_generic_section(iline: int, line0: str, lines: list[str],
-                         log: SimpleLogger) -> tuple[int, str, list[str]]:
+                         log: SimpleLogger,
+                         require_lines_out: bool=True) -> tuple[int, str, list[str]]:
     """
     Parameters
     ----------
@@ -1082,6 +1079,8 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
         lines_out.append(line)
         iline += 1
         line = lines[iline]
-    assert len(lines_out), line0
+
+    if require_lines_out:
+        assert len(lines_out), line0
     iline -= 1
     return iline, line, flags, lines_out
