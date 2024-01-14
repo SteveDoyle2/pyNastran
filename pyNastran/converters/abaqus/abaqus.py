@@ -274,26 +274,23 @@ class Abaqus:
 
                 elif word.startswith('nset'):
                     self.log.debug('reading nset')
-                    iline0 = iline
+                    iline += 1
                     self.log.debug(line0)
                     iline, line0, set_name, set_ids = reader.read_nset(
-                        iline, line0, lines, self.log, is_instance=False)
+                        iline, line0, lines, log, is_instance=False)
                     node_sets[set_name] = set_ids
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
                     self.log.info(f'end of nset; line={line0} iline={iline}')
-                    assert iline > iline0
+                    #assert iline > iline0
                 elif word.startswith('elset'):
                     self.log.debug('reading elset')
-                    iline0 = iline
-                    self.log.debug(line0)
+                    iline += 1
+                    #iline0 = iline
+                    #self.log.debug(line0)
                     iline, line0, set_name, set_ids = reader.read_elset(
-                        iline, line0, lines, self.log, is_instance=False)
+                        iline, line0, lines, log, is_instance=False)
                     element_sets[set_name] = set_ids
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
-                    self.log.info(f'end of elset; line={line0} iline={iline}')
-                    assert iline > iline0
+                    self.log.info(f'end of elset {set_name!r}; line={line0} iline={iline}')
+                    #assert iline > iline0
                 elif '*solid section' in line0:
                     iline, solid_section = reader.read_solid_section(
                         iline, line0, lines, self.log)
@@ -392,8 +389,10 @@ class Abaqus:
                 assert line0.startswith('*end instance'), line0
                 iline += 1
                 line0 = lines[iline].strip().lower()
-            elif (word.startswith('surface') or word.startswith('rigid body') or
-                  word.startswith('mpc') or word.startswith('tie')):
+            elif (word.startswith('surface') or
+                  word.startswith('rigid body') or
+                  word.startswith('mpc') or
+                  word.startswith('tie')):
                 # TODO: skips header parsing
                 iline += 1
                 line0 = lines[iline].strip().lower()
@@ -403,17 +402,18 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('nset'):
-                iline, line0, set_name, set_ids = reader.read_nset(
-                    iline, word, lines, log, is_instance=True)
-                node_sets[set_name] = set_ids
-            elif word.startswith('elset'):
-                # TODO: skips header parsing
-                params_map = reader.get_param_map(iline, word, required_keys=['instance'])
-                set_name = params_map['elset']
                 iline += 1
-                line0 = lines[iline].strip().lower()
-                iline, line0, set_ids = reader.read_set(iline, line0, lines, params_map)
+                iline, line0, set_name, set_ids = reader.read_nset(
+                    iline, line0, lines, log, is_instance=True)
+                node_sets[set_name] = set_ids
+                iline += 1
+            elif word.startswith('elset'):
+                iline += 1
+                iline, line0, set_name, set_ids = reader.read_elset(
+                    iline, line0, lines, log, is_instance=True)
                 element_sets[set_name] = set_ids
+                iline += 1
+
             elif word == 'node':
                 iline, line0, nids, nodes = reader.read_node(
                     lines, iline, self.log, skip_star=True)
@@ -483,20 +483,16 @@ class Abaqus:
                 iline += 1
 
             elif '*nset' in line0:
-                #print(line0)
                 iline, line0, set_name, set_ids = reader.read_nset(
                     iline, line0, lines, log, is_instance=False)
                 node_sets[set_name] = set_ids
+                iline += 1
 
             elif '*elset' in line0:
-                # TODO: skips header parsing
-                #iline += 1
-                #print('elset: ', line0)
-                params_map = reader.get_param_map(iline, line0, required_keys=['elset'])
-                set_name = params_map['elset']
-                line0 = lines[iline].strip().lower()
-                iline, line0, set_ids = reader.read_set(iline, line0, lines, params_map)
+                iline, line0, set_name, set_ids = reader.read_elset(
+                    iline, line0, lines, log, is_instance=False)
                 element_sets[set_name] = set_ids
+                iline += 1
 
             elif '*surface' in line0:
                 raise RuntimeError('surface part')

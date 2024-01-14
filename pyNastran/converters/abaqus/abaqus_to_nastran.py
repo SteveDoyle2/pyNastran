@@ -464,7 +464,7 @@ def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) ->
     """returns None if we cant find a set of eids"""
     eids = model.element_sets[element_set_name]
     if isinstance(eids, str):
-        return eids
+        return eids.lower()
     return eids
 
 def _create_mat1(nastran_model: BDF, mat, mid: int, comment: str) -> None:

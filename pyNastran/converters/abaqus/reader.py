@@ -391,22 +391,79 @@ def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> N
     iline += 1
     line0 = lines[iline].strip('\n\r\t, ').lower()
 
-def read_elset(iline: int, word: str, lines: list[str], log: SimpleLogger,
-               is_instance: bool=True) -> tuple[int, str, str, np.ndarray]:
-    """reads *elset"""
+def read_nset(iline: int, line0: str, lines: list[str],
+              log: SimpleLogger,
+              is_instance: bool) -> tuple[int, str, str, np.ndarray]:
+    #line0_backup = line0
+    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+
+    generate = False
+    nset = ''
+    instance_name = ''
+    for key_value in flags:
+        if key_value == 'generate':
+            generate = True
+            continue
+        key, value = key_value.split('=', 1)
+        key = key.strip().lower()
+        value = value.strip().lower()
+
+        instance_name = ''
+        if key == 'instance':
+            instance_name = value
+        elif key == 'nset':
+            nset = value
+        else:
+            raise RuntimeError((key, value))
+
+    if is_instance:
+        set_name = instance_name
+    else:
+        set_name = nset
+    #print(flags)
+
+    set_ids = _generate_set(lines_out, generate)
     assert isinstance(iline, int), iline
-    assert isinstance(word, str), word
-    log.debug('word=%r' % word)
-    assert '*' in word, f'word={word!r} param_map={param_map}'
-    params_map = get_param_map(iline, word, required_keys=['elset'])
-    # TODO: skips header parsing
-    iline += 1
-    #print('elset: ', line0)
-    params_map = get_param_map(iline, word, required_keys=['elset'])
-    set_name = params_map['elset']
-    line0 = lines[iline].strip().lower()
-    iline, line0, set_ids = read_set(iline, line0, lines, params_map)
+    assert len(set_name) > 0, flags
+    return iline, line0, set_name, set_ids
+
+def read_elset(iline: int, line0: str, lines: list[str],
+               log: SimpleLogger,
+               is_instance: bool) -> tuple[int, str, str, np.ndarray]:
+    #line0_backup = line0
+    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+
+    generate = False
+    instance_name = ''
+    elset = ''
+    for key_value in flags:
+        if key_value == 'generate':
+            generate = True
+            continue
+        key, value = key_value.split('=', 1)
+        key = key.strip().lower()
+        value = value.strip().lower()
+
+        if key == 'instance':
+            assert elset == '', elset
+            instance_name = value
+        elif key == 'elset':
+            assert instance_name == '', instance_name
+            elset = value
+        else:
+            raise RuntimeError((key, value))
+
+    if is_instance:
+        assert elset == '', elset
+        set_name = instance_name
+    else:
+        assert instance_name == '', instance_name
+        set_name = elset
+
+    set_ids = _generate_set(lines_out, generate)
     assert isinstance(iline, int), iline
+    assert len(set_name) > 0, flags
+    assert set_name == set_name.lower()
     return iline, line0, set_name, set_ids
 
 def read_material(iline: int, word: str, lines: list[str],
@@ -676,23 +733,6 @@ def read_material(iline: int, word: str, lines: list[str],
     iline -= 1
     return iline, line0, material
 
-def read_nset(iline: int, word: str, lines: list[str], log: SimpleLogger,
-              is_instance: bool=True):
-    """reads *nset"""
-    assert isinstance(iline, int), iline
-    log.debug('word=%r' % word)
-    assert 'nset' in word, word
-    # TODO: skips header parsing
-    required_keys = ['instance'] if is_instance else []
-    params_map = get_param_map(iline, word, required_keys=required_keys)
-    #print('params_map =', params_map)
-    set_name = params_map['nset']
-    iline += 1
-    line0 = lines[iline].strip().lower()
-    iline, line0, set_ids = read_set(iline, line0, lines, params_map)
-    assert isinstance(iline, int)
-    return iline, line0, set_name, set_ids
-
 def read_boundary(iline: int, line0: str, lines: list[str]) -> tuple[int, str, Boundary]:
     assert isinstance(iline, int), iline
     assert isinstance(line0, str), line0
@@ -826,19 +866,13 @@ def read_star_block2(iline: int, line0: str,
             log.debug(line)
     return iline, line0, data_lines
 
-def read_set(iline: int, line0: str,
-             lines: list[str],
-             params_map: dict[str, Optional[str]]) -> list[int, str,
-                                                           Union[str, np.ndarray]]:
-    """reads a set"""
-    assert isinstance(iline, int)
+def _generate_set(lines_out: list[str], generate: bool):
     set_ids_list = []
-    while not line0.startswith('*'):
-        set_ids_list += line0.strip(', ').split(',')
-        iline += 1
-        line0 = lines[iline].strip().lower()
+    for line in lines_out:
+        set_idsi = line.strip(', \n').split(',')
+        set_ids_list.extend(set_idsi)
 
-    if 'generate' in params_map:
+    if generate:
         assert len(set_ids_list) == 3, set_ids_list
         set_ids = np.arange(int(set_ids_list[0]), int(set_ids_list[1]), int(set_ids_list[2]))
     elif len(set_ids_list) == 1 and not set_ids_list[0].isdigit():
@@ -849,7 +883,7 @@ def read_set(iline: int, line0: str,
         except ValueError:
             print(set_ids_list)
             raise
-    return iline, line0, set_ids
+    return set_ids
 
 def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger):
     assert isinstance(iline, int)
@@ -1036,6 +1070,7 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
     """
     assert isinstance(iline, int)
     assert isinstance(line0, str)
+    iline0 = iline
     assert '*' in line0, line0
     #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
     flags = [val.strip() for val in line0.split(',')[1:]]
