@@ -1,9 +1,11 @@
 from __future__ import annotations
 import copy
-from typing import Union, Optional, Any, TYPE_CHECKING
+from itertools import count
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
-import scipy.sparse as sci_sparse
+from scipy.sparse._dok import dok_matrix
+from scipy.sparse.csc import csc_matrix
 
 #from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
 from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
@@ -16,16 +18,21 @@ if TYPE_CHECKING:  # pragma: no cover
         #CBAR, PBAR, PBARL, PBEAM, PBEAML, # , CBEAM
         #MAT1,
     )
+    from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
+        CELAS1, CELAS2,
+        CBAR,
+    )
 
 
-def build_Kgg(model: BDF, dof_map: DOF_MAP,
+def build_Kgg(model: BDF,
+              dof_map: DOF_MAP,
               ndof: int,
               ngrid: int,
               ndof_per_grid: int,
               idtype: str='int32', fdtype: str='float32') -> tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
     model.log.debug(f'starting build_Kgg')
-    Kbb = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
+    Kbb = dok_matrix((ndof, ndof), dtype=fdtype)
     #print(dof_map)
 
     #_get_loadid_ndof(model, subcase_id)
@@ -62,7 +69,9 @@ def build_Kgg(model: BDF, dof_map: DOF_MAP,
     return Kgg
 
 
-def _build_kbb_celas1(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas1(model: BDF,
+                      Kbb: dok_matrix,
+                      dof_map: DOF_MAP) -> None:
     """fill the CELAS1 Kbb matrix"""
     celas = model.celas1
     pelas = model.pelas
@@ -89,7 +98,9 @@ def _build_kbb_celas1(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
                 Kbb[ib1, ib2] += k[ie1, ie2]
     return celas.n
 
-def _build_kbb_celas2(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
+def _build_kbb_celas2(model: BDF,
+                      Kbb: dok_matrix,
+                      dof_map: DOF_MAP) -> int:
     """fill the CELAS2 Kbb matrix"""
     celas = model.celas2
     if celas.n == 0:
@@ -101,11 +112,12 @@ def _build_kbb_celas2(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
     c2s = celas.components[:, 1]
     pelas = model.celas2
     ks = pelas.k
+    k_unscaled = np.array([[1, -1,],
+                           [-1, 1]])
     for nid1, nid2, c1, c2, ki in zip(nids1, nids2, c1s, c2s, ks):
         i = dof_map[(nid1, c1)]
         j = dof_map[(nid2, c2)]
-        k = ki * np.array([[1, -1,],
-                           [-1, 1]])
+        k = ki * k_unscaled
         ibe = [
             (i, 0),
             (j, 1),
@@ -115,18 +127,22 @@ def _build_kbb_celas2(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
                 Kbb[ib1, ib2] += k[ie1, ie2]
     return celas.n
 
-def _build_kbb_celas3(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas3(model: BDF,
+                      Kbb: dok_matrix,
+                      dof_map: DOF_MAP) -> None:
     """fill the CELAS3 Kbb matrix"""
-    celas = model.celas3
-    if celas.n == 0:
-        return celas.n
-    eids = celas.element_id
-    pelas = model.pelas.slice_card_by_id(celas.property_id, assume_sorted=True)
-    nids1 = celas.spoints[:, 0]
-    nids2 = celas.spoints[:, 1]
+    element = model.celas3
+    nelement = len(element)
+    if nelement == 0:
+        return nelement
+    eids = element.element_id
+    pelas = model.pelas.slice_card_by_id(element.property_id, assume_sorted=True)
+    nids1 = element.spoints[:, 0]
+    nids2 = element.spoints[:, 1]
 
     ks = pelas.k
-    for nid1, nid2, ki in zip(nids1, nids2, ks):
+    Ke = np.full((nelement, 2, 2), np.nan, dtype='float64')
+    for ielement, nid1, nid2, ki in zip(count(), nids1, nids2, ks):
         #i = dof_map[(nid1, c1)]
         #j = dof_map[(nid2, c2)]
     #for eid in eids:
@@ -134,63 +150,79 @@ def _build_kbb_celas3(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
         #ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas34(Kbb, dof_map, nid1, nid2, ki)
-    return len(eids)
+        ke = _build_kbbi_celas34(Kbb, dof_map, nid1, nid2, ki)
+        Ke[ielement, :, :] = ke
+    return nelement
 
-def _build_kbb_celas4(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas4(model: BDF,
+                      Kbb: dok_matrix,
+                      dof_map: DOF_MAP) -> int:
     """fill the CELAS4 Kbb matrix"""
-    celas = model.celas4
-    if celas.n == 0:
-        return celas.n
-    eids = model._type_to_id_map['CELAS4']
-    for eid in eids:
-        elem = model.elements[eid]
-        ki = elem.K()
-        #print(elem, ki)
-        #print(elem.get_stats())
-        _build_kbbi_celas34(Kbb, dof_map, elem, ki)
-    return len(eids)
+    element = model.celas4
+    nelement = len(element)
+    if nelement == 0:
+        return nelement
 
-def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
-                        elem: Union[CELAS1, CELAS2], ki: float) -> None:
+    eids = element.element_id
+    ks = element.k
+    nids1 = element.spoints[:, 0]
+    nids2 = element.spoints[:, 1]
+
+    Ke = np.full((nelement, 2, 2), np.nan, dtype='float64')
+    for ielement, eid, nid1, nid2, ki in zip(count(), eids, nids1, nids2, ks):
+        ke = _build_kbbi_celas34(Kbb, dof_map, nid1, nid2, ki)
+        Ke[ielement, :, :] = ke
+    return nelement
+
+def _build_kbbi_celas12(Kbb: dok_matrix,
+                        dof_map: DOF_MAP,
+                        elem: Union[CELAS1, CELAS2],
+                        ki: float) -> np.ndarray:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     c1, c2 = elem.c1, elem.c2
     i = dof_map[(nid1, c1)]
     j = dof_map[(nid2, c2)]
-    k = ki * np.array([[1, -1,],
-                       [-1, 1]])
+    ke = ki * np.array([[1, -1,],
+                        [-1, 1]])
     ibe = [
         (i, 0),
         (j, 1),
     ]
     for ib1, ie1 in ibe:
         for ib2, ie2 in ibe:
-            Kbb[ib1, ib2] += k[ie1, ie2]
+            Kbb[ib1, ib2] += ke[ie1, ie2]
     #Kbb[j, i] += ki
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
+    return ke
 
-def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
-                        nid1: int, nid2: int, ki: float) -> None:
+def _build_kbbi_celas34(Kbb: dok_matrix,
+                        dof_map: DOF_MAP,
+                        nid1: int, nid2: int,
+                        ki: float) -> np.ndarray:
     """fill the CELASx Kbb matrix"""
     #print(dof_map)
     i = dof_map[(nid1, 0)]
     j = dof_map[(nid2, 0)]
-    k = ki * np.array([[1, -1,],
-                       [-1, 1]])
+    ke = ki * np.array([[1, -1,],
+                        [-1, 1]])
     ibe = [
         (i, 0),
         (j, 1),
     ]
     for ib1, ie1 in ibe:
         for ib2, ie2 in ibe:
-            Kbb[ib1, ib2] += k[ie1, ie2]
+            Kbb[ib1, ib2] += ke[ie1, ie2]
     #Kbb[j, i] += ki
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
+    return ke
 
-def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
+def _build_kbb_cbar(model: BDF,
+                    Kbb: dok_matrix,
+                    dof_map: DOF_MAP,
+                    fdtype: str='float64') -> int:
     """fill the CBAR Kbb matrix using an Euler-Bernoulli beam"""
     elem: CBAR = model.cbar
     nelements = elem.n
@@ -210,11 +242,17 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
     k = elem.k()
     e_g_nus = elem.e_g_nu()
-    for eid, (nid1, nid2), areai, (i1, i2, i12, j), pa, pb, ihati, jhati, khati, lengthi, ki, e_g_nu in zip(elem.element_id, elem.nodes,
-                                                                                                            area, inertia,
-                                                                                                            elem.pa, elem.pb,
-                                                                                                            ihat, yhat, zhat, length,
-                                                                                                            k, e_g_nus):
+
+    Ke = np.full((nelements, 12, 12), np.nan, dtype=fdtype)
+    for ielement, eid, (nid1, nid2), areai, inertiai, \
+        pa, pb, ihati, jhati, khati, lengthi, \
+        ki, e_g_nu in zip(count(),
+                          elem.element_id, elem.nodes,
+                          area, inertia,
+                          elem.pa, elem.pb,
+                          ihat, yhat, zhat, length,
+                          k, e_g_nus):
+        i1, i2, i12, j = inertiai
         e, g, nu = e_g_nu
         #nid1, nid2 = elem.nodes
         #is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
@@ -241,6 +279,7 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
                 ki = K[i, j]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
+        Ke[ielement, :, :] = K
     return nelements
 
 def ke_cbar(model: BDF,
@@ -252,7 +291,7 @@ def ke_cbar(model: BDF,
             pa: int, pb: int,
             k1: float, k2: float,
             E: float, G: float,
-            fdtype: str='float64'):
+            fdtype: str='float64') -> tuple[bool, np.ndarray]:
     """get the elemental stiffness matrix in the basic frame"""
     #pid_ref = elem.pid_ref
     #mat = pid_ref.mid_ref
@@ -283,6 +322,7 @@ def ke_cbar(model: BDF,
     #xyz2 = elem.nodes_ref[1].get_position() + wb
     dxyz = xyz2 - xyz1
     L = np.linalg.norm(dxyz)
+    assert L > 0, L
     #pid_ref = elem.pid_ref
     T = np.vstack([ihat, jhat, khat])
     z = np.zeros((3, 3), dtype=fdtype)
@@ -300,7 +340,9 @@ def ke_cbar(model: BDF,
     is_passed = True
     return is_passed, K
 
-def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
+def _build_kbb_crod(model: BDF,
+                    Kbb: dok_matrix,
+                    dof_map: DOF_MAP) -> int:
     """fill the CROD Kbb matrix"""
     elem = model.crod
     if elem.n == 0:
@@ -331,7 +373,9 @@ def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
         _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
     return len(elem)
 
-def _build_kbb_ctube(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
+def _build_kbb_ctube(model: BDF,
+                     Kbb: dok_matrix,
+                     dof_map: DOF_MAP) -> None:
     """fill the CTUBE Kbb matrix"""
     elem = model.ctube
     if elem.n == 0:
@@ -362,7 +406,9 @@ def _build_kbb_ctube(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
         _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
     return len(elem)
 
-def _build_kbb_conrod(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
+def _build_kbb_conrod(model: BDF,
+                      Kbb: dok_matrix,
+                      dof_map: DOF_MAP) -> int:
     """fill the CONROD Kbb matrix"""
     elem = model.conrod
     if elem.n == 0:
@@ -391,8 +437,11 @@ def _build_kbb_conrod(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
         _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
     return len(elem)
 
-def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, nodes,
-                            dxyz12, L, A, E, G, J, fdtype='float64') -> None:
+def _build_kbbi_conrod_crod(Kbb: dok_matrix,
+                            dof_map: DOF_MAP,
+                            nodes,
+                            dxyz12, L, A, E, G, J,
+                            fdtype: str='float64') -> None:
     """fill the ith rod Kbb matrix"""
     nid1, nid2 = nodes
     #mat = elem.mid_ref
@@ -488,8 +537,13 @@ def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, nodes,
     #print(Kbb)
     return
 
-def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
-                     all_nids, xyz_cid0, idtype='int32', fdtype='float64') -> int:
+def _build_kbb_cbeam(model: BDF,
+                     Kbb: dok_matrix,
+                     dof_map: DOF_MAP,
+                     all_nids: np.ndarray,
+                     xyz_cid0: np.ndarray,
+                     idtype: str='int32',
+                     fdtype: str='float64') -> int:
     """TODO: Timoshenko beam, warping, I12"""
     str(all_nids)
     str(xyz_cid0)
@@ -507,21 +561,27 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
     k = elem.k()
     e_g_nus = elem.e_g_nu()
 
-    for eid, (nid1, nid2), areai, (i1, i2, i12, j), pa, pb, ihati, jhati, khati, lengthi, ki, e_g_nu in zip(elem.element_id, elem.nodes,
-                                                                                                            area, inertia,
-                                                                                                            elem.pa, elem.pb,
-                                                                                                            ihat, yhat, zhat, length,
-                                                                                                            k, e_g_nus):
+    Ke = np.full((nelements, 12, 12), np.nan, dtype=fdtype)
+    for ielement, eid, (nid1, nid2), areai, inertiai, \
+        pa, pb, ihati, jhati, khati, lengthi, \
+        ki, e_g_nu in zip(count(), elem.element_id, elem.nodes,
+                          area, inertia,
+                          elem.pa, elem.pb,
+                          ihat, yhat, zhat, length,
+                          k, e_g_nus):
+        i1, i2, i12, j = inertiai
         e, g, nu = e_g_nu
         #nid1, nid2 = elem.nodes
         #is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
         k1, k2 = ki
+
+        dxyz = xyz2 - xyz1
+        L = np.linalg.norm(dxyz)
+        assert L > 0, L
         is_passed, K = ke_cbar(model, xyz1, xyz2, lengthi,
                                ihati, jhati, khati,
                                areai, i1, i2, i12, j,
                                pa, pb, k1, k2, e, g,)
-        dxyz = xyz2 - xyz1
-        L = np.linalg.norm(dxyz)
         #is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
         #print(wa, wb, ihat, jhat, khat)
         #assert is_failed is False
@@ -534,11 +594,11 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
             [z, z, T, z],
             [z, z, z, T],
         ])
-        Ke = _beami_stiffness(areai, j,
-                              e, g,
-                              lengthi, i1, i2,
-                              pa, pb, k1=k1, k2=k2)
-        K = Teb.T @ Ke @ Teb
+        Kei = _beami_stiffness(areai, j,
+                               e, g,
+                               lengthi, i1, i2,
+                               pa, pb, k1, k2)
+        K = Teb.T @ Kei @ Teb
         i1 = dof_map[(nid1, 1)]
         j1 = dof_map[(nid2, 1)]
         n_ijv = [
@@ -550,14 +610,14 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
                 ki = K[i, j]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
+        Ke[ielement, :, :] = Kei
     return nelements
 
 def _beami_stiffness(A: float, J: float,
                      E: float, G: float,
                      L: float, Iy: float, Iz: float,
                      pa: int, pb: int,
-                     k1: Optional[float]=None,
-                     k2: Optional[float]=None):
+                     k1: float, k2: float):
     """gets the ith Euler-Bernoulli beam stiffness"""
     #E = mat.E()
     #G = mat.G()
@@ -641,11 +701,14 @@ def _beami_stiffness(A: float, J: float,
             K[:, pbi] = 0
     return K
 
-def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
-               ngrid: int, ndof_per_grid: int, inplace=True) -> NDArrayNNfloat:
+def Kbb_to_Kgg(model: BDF,
+               Kbb: Union[np.ndarray, csc_matrix],
+               ngrid: int,
+               ndof_per_grid: int,
+               inplace=True) -> NDArrayNNfloat:
     """does an in-place transformation"""
-    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
-    #assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
+    assert isinstance(Kbb, (np.ndarray, csc_matrix)), type(Kbb)
+    #assert isinstance(Kbb, (np.ndarray, csc_matrix, dok_matrix)), type(Kbb)
     if not isinstance(Kbb, np.ndarray):
         Kbb = Kbb.tolil()
 

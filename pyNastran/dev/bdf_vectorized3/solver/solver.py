@@ -13,11 +13,15 @@ from typing import Union, TextIO, Any
 import numpy as np
 import scipy as sp
 import scipy.sparse as sci_sparse
+from scipy.sparse.csc import csc_matrix
+from scipy.sparse._lil import lil_matrix
+from scipy.sparse.dok import dok_matrix
 
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.nptyping_interface import (
     NDArrayNbool, NDArrayNint, NDArrayN2int, NDArrayNfloat, NDArrayNNfloat)
-#from pyNastran.bdf.bdf import BDF, Subcase
+from pyNastran.utils.numpy_utils import integer_types # , float_types
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
@@ -37,6 +41,7 @@ from pyNastran.dev.bdf_vectorized3.solver.recover.static_force import recover_fo
 from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS # , NO_VOLUME
+
 
 class Solver:
     """defines the Nastran knockoff class"""
@@ -205,45 +210,58 @@ class Solver:
         dependents_list = []
         independents_list = []
         independents_eq = defaultdict(list)
-        for element in model.rigid_elements.values():
+        rigid_element_cards = (card for card in model.rigid_element_cards
+                               if card.n > 0)
+        for element in rigid_element_cards:
             #etype = element.type
             #ieq += 1
             raise NotImplementedError(element.get_stats())
 
-        nequations = len(mpcs)
-        Cmpc = sci_sparse.dok_matrix((nequations, ndof), dtype=fdtype)
-        for j, mpc in enumerate(mpcs):
-            mpc_type = mpc.type
-            if mpc_type == 'MPC':
-                print(mpc)
-                # The first degree-of-freedom (G1, C1) in the sequence is defined to
-                # be the dependent DOF.
-                # A dependent DOF assigned by one MPC entry cannot be assigned
-                #  dependent by another MPC entry or by a rigid element.
+        mpc = model.mpc
+        nequations = len(mpc)
+        Cmpc = dok_matrix((nequations, ndof), dtype=fdtype)
+        # TODO: assumes a single set (no MPCADD)
 
-                #: Component number. (Any one of the Integers 1 through 6 for grid
-                #: points; blank or zero for scalar points.)
-                #self.components = components
+        for j, mpc_idi, (idim0, idim1) in zip(count(), mpc.mpc_id, mpc.idim):
+            #coefficients : array([ 1., -1.])
+            #components : array([1, 3])
+            #id     : array([], dtype=int32)
+            #idim   : array([[0, 2]])
+            #max_id : 10
+            #mpc_id : array([10])
+            #n      : 1
+            #nnode  : array([2])
+            #node_id : array([2, 3])
+            coefficients = mpc.coefficients[idim0:idim1]
+            components = mpc.components[idim0:idim1]
+            nodes = mpc.node_id[idim0:idim1]
 
-                #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
-                #self.coefficients = coefficients
+            # The first degree-of-freedom (G1, C1) in the sequence is defined to
+            # be the dependent DOF.
+            # A dependent DOF assigned by one MPC entry cannot be assigned
+            #  dependent by another MPC entry or by a rigid element.
 
-                for i, nid, component, coeff in zip(count(), mpc.nodes, mpc.components, mpc.coefficients):
-                    self.log.debug(f'ieq={ieq} (g,c)={(nid, component)} coeff={coeff}')
-                    assert isinstance(component, int), component
-                    idof = dof_map[(nid, component)]
-                    ieqs_list.append(i)
-                    Cmpc[j, idof] = coeff
+            #: Component number. (Any one of the Integers 1 through 6 for grid
+            #: points; blank or zero for scalar points.)
+            #self.components = components
 
-                    dofs_list.append(idof)
-                    coefficients_list.append(coeff)
-                    if i == 0:
-                        dependents_list.append(idof)
-                    else:
-                        independents_list.append(idof)
-                        independents_eq[ieq].append(idof)
-            else:
-                raise NotImplementedError(mpc.get_stats())
+            #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
+            #self.coefficients = coefficients
+
+            for i, nid, component, coeff in zip(count(), nodes, components, coefficients):
+                self.log.debug(f'ieq={ieq} (g,c)={(nid, component)} coeff={coeff}')
+                assert isinstance(component, integer_types), component
+                idof = dof_map[(nid, component)]
+                ieqs_list.append(i)
+                Cmpc[j, idof] = coeff
+
+                dofs_list.append(idof)
+                coefficients_list.append(coeff)
+                if i == 0:
+                    dependents_list.append(idof)
+                else:
+                    independents_list.append(idof)
+                    independents_eq[ieq].append(idof)
             ieq += 1
 
         #print(f'Cmpc         = {Cmpc}')
@@ -281,7 +299,7 @@ class Solver:
 
         assert nequations > 0, 'No MPC equations despite MPCs being found'
 
-        CmpcI = sci_sparse.dok_matrix((nequations, ndof*2), dtype=fdtype)
+        CmpcI = dok_matrix((nequations, ndof*2), dtype=fdtype)
         CmpcI[:, :ndof] = Cmpc
         for row in range(nequations):
             CmpcI[row, ndof+row] = 1
@@ -485,15 +503,18 @@ class Solver:
             self.log.info(f'SPCD found')
             self.log.info(f'  xg = {xg}')
             self.log.info(f'  Fg = {Fg}')
-            set0 = xg == 0.
+            set0 = (xg == 0.)
             set0_ = np.where(set0)
 
-            #sset = np.array([])
-            sset = np.setdiff1d(sset, set0_)
-            #self.log.info(f'  set0 = {set0}')
-            self.log.info(f'  set0_ = {set0_}')
             self.log.info(f'  aset = {aset}')
-            self.log.info(f'  sset = {sset}')
+            if np.any(set0_):
+                self.log.info(f'  removing set0_ from sset')
+                self.log.info(f'    set0_ = {set0_}')
+                self.log.info(f'    sset = {sset}')
+                sset = np.setdiff1d(sset, set0_)
+                self.log.info(f'    -> sset = {sset}')
+            else:
+                self.log.info(f'  sset = {sset}')
 
             #self.log.info(f'  Fa_solve = {Fa_solve}')
             #Fa = Fa.reshape(len(Fa), 1)
@@ -555,7 +576,7 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Fa_solve = Fa
+        Fa_solve: np.ndarray = Fa
         is_sset = len(sset)
         is_set0 = len(set0)
         is_aset = len(aset)
@@ -990,7 +1011,8 @@ def partition_vector3(vector, sets,
     vectors = (vector[set0], vector[set1], vector[set2])
     return tuple(vectors)
 
-def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype='int32') -> NDArrayNNfloat:
+def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint,
+                idtype: str='int32') -> NDArrayNNfloat:
     """
     Applies AUTOSPC to the model (sz)
 
@@ -1103,11 +1125,11 @@ def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype='int32') -> NDArr
     #izero = np.where((col_kgg == 0.) & (row_kgg == 0))[0]
     if isinstance(Kgg, np.ndarray):
         ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
-    elif isinstance(Kgg, (sci_sparse.csc.csc_matrix, sci_sparse.lil.lil_matrix)):
+    elif isinstance(Kgg, (csc_matrix, lil_matrix)):
         ipositive1 = col_kgg.todense().nonzero()[1]
         ipositive2 = row_kgg.todense().T.nonzero()[1]
         ipositive = np.union1d(ipositive1, ipositive2)
-        if isinstance(Kgg, sci_sparse.lil.lil_matrix):
+        if isinstance(Kgg, lil_matrix):
             Kgg = Kgg.tocsc()
     else:
         raise NotImplementedError(type(Kgg))
@@ -1232,7 +1254,8 @@ def get_qset(model: BDF) -> set[tuple[int, int]]:
     """creates the q-set"""
     return model.qset.set_map
 
-def get_residual_structure(model: BDF, dof_map: DOF_MAP,
+def get_residual_structure(model: BDF,
+                           dof_map: DOF_MAP,
                            fset: NDArrayNbool, idtype: str='int32') -> NDArrayNbool:
     """gets the residual structure dofs"""
     asetmap = get_aset(model)
@@ -1331,7 +1354,10 @@ def get_residual_structure(model: BDF, dof_map: DOF_MAP,
     # v = [o + c + r] Set free to vibrate in dynamic reduction and component mode synthesis
     return aset, tset
 
-def apply_dof_map_to_set(set_map, dof_map: DOF_MAP, idtype: str='int32', use_ints: bool=True) -> NDArrayNbool:
+def apply_dof_map_to_set(set_map,
+                         dof_map: DOF_MAP,
+                         idtype: str='int32',
+                         use_ints: bool=True) -> NDArrayNbool:
     """changes a set defined in terms of (nid, comp) into an array of integers"""
     if use_ints:
         ndof = len(set_map)
@@ -1372,7 +1398,8 @@ def xg_to_xb(model, xg: NDArrayNfloat, ngrid: int, ndof_per_grid: int,
 def write_oload(Fb: NDArrayNfloat,
                 dof_map: DOF_MAP,
                 isubcase: int, ngrid: int, ndof_per_grid: int,
-                f06_file: TextIO, page_stamp: str, page_num: int, log) -> int:
+                f06_file: TextIO, page_stamp: str, page_num: int,
+                log: SimpleLogger) -> int:
     """writes the OLOAD RESULTANT table"""
     str(ngrid)
     str(dof_map)
@@ -1390,11 +1417,16 @@ def write_oload(Fb: NDArrayNfloat,
     page_num = oload.write_f06(f06_file, page_stamp, page_num)
     return page_num + 1
 
-def solve(Kaa, Fa_solve, aset, log, idtype='int32'):
+def solve(Kaa: lil_matrix,
+          Fa_solve: np.ndarray,
+          aset: np.ndarray,
+          log: SimpleLogger,
+          idtype: str='int32'):
     """solves [K]{u} = {F}"""
-    log.info("starting solve")
+    log.info('starting solve')
     Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset, idtype=idtype)
-
+    if len(ipositive) == 0:
+        log.error('empty Kaa')
     #if np.linalg.det(Kaa) == 0.:
         #log.error('singular Kaa')
 
@@ -1427,7 +1459,7 @@ def solve(Kaa, Fa_solve, aset, log, idtype='int32'):
     sparse_error = np.linalg.norm(xa_ - xas_)
     if sparse_error > 1e-12:
         log.warning(f'  sparse_error = {sparse_error}')
-    log.info("finished solve")
+    log.info('finished solve')
     return xas_, ipositive, inegative
 
 def build_Mbb(model: BDF,

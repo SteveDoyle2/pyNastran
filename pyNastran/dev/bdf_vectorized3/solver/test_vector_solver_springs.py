@@ -12,6 +12,7 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_DIR = PKG_PATH / 'dev' / 'solver'
 
+
 class TestSolverTools(unittest.TestCase):
     def test_partition_vector(self):
         xg = np.array([0., 1., 2., 3., 4.], dtype='float64')
@@ -22,7 +23,7 @@ class TestSolverTools(unittest.TestCase):
         assert len(xa) == 3 and np.allclose(xa, [1., 3., 4.]), xa
         assert len(xs) == 2 and np.allclose(xs, [0., 2.]), xs
 
-class TestSolverSpring(unittest.TestCase):
+class TestStaticSpring(unittest.TestCase):
     def test_conm2(self):
         """Tests a CMASS1/PMASS"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -253,7 +254,7 @@ class TestSolverSpring(unittest.TestCase):
         assert np.allclose(solver.xa_[0], d)
 
 
-class TestSolverRod(unittest.TestCase):
+class TestStaticRod(unittest.TestCase):
     """tests the rods"""
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
@@ -609,7 +610,7 @@ class TestSolverRod(unittest.TestCase):
         assert np.allclose(solver.Fg[9], mag_torsion), f'F={mag_torsion} Fg[9]={solver.Fg[9]}'
 
 
-class TestSolverBar(unittest.TestCase):
+class TestStaticBar(unittest.TestCase):
     """tests the CBARs"""
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
@@ -1011,7 +1012,7 @@ class TestHarmonic(unittest.TestCase):
         solver.run()
 
 
-class TestSolverShell(unittest.TestCase):
+class TestStaticShell(unittest.TestCase):
     """tests the shells"""
     def test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
