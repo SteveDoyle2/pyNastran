@@ -21,6 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CELAS1, CELAS2,
         CBAR,
+        CTUBE, PTUBE,
     )
 
 
@@ -321,8 +322,8 @@ def ke_cbar(model: BDF,
     #xyz1 = elem.nodes_ref[0].get_position() + wa
     #xyz2 = elem.nodes_ref[1].get_position() + wb
     dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz)
-    assert L > 0, L
+    #L = np.linalg.norm(dxyz)
+    assert length > 0, length
     #pid_ref = elem.pid_ref
     T = np.vstack([ihat, jhat, khat])
     z = np.zeros((3, 3), dtype=fdtype)
@@ -333,9 +334,10 @@ def ke_cbar(model: BDF,
         [z, z, z, T],
     ])
     Ke = _beami_stiffness(
-        area, j,
-        E, G,
-        length, i1, i2, k1=k1, k2=k2, pa=pa, pb=pb)
+        area, E, G, length,
+        i1, i2, i12, j,
+        k1=k1, k2=k2,
+        pa=pa, pb=pb)
     K = Teb.T @ Ke @ Teb
     is_passed = True
     return is_passed, K
@@ -364,13 +366,20 @@ def _build_kbb_crod(model: BDF,
 
     prop2 = prop.slice_card_by_id(pids, assume_sorted=True)
     area = prop2.area()
-    Js = prop2.J
+    J = prop2.J
     material_id = prop2.material_id
     mat1 = mat.slice_card_by_material_id(material_id)
     assert elem.n == prop.n
     assert elem.n == mat1.n
-    for nodes, dxyzi, L, A, E, G, J in zip(elem.nodes, dxyz, length, area, mat1.E, mat1.G, Js):
-        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
+
+    G = mat1.G
+    E = mat1.E
+    L = length
+    A = area
+    k_axial = A * E / L
+    k_torsion = G * J / L
+    for nodes, dxyzi, k_axiali, k_torsioni in zip(elem.nodes, dxyz, k_axial, k_torsion):
+        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
     return len(elem)
 
 def _build_kbb_ctube(model: BDF,
@@ -380,7 +389,7 @@ def _build_kbb_ctube(model: BDF,
     elem = model.ctube
     if elem.n == 0:
         return elem.n
-    prop = model.ptube
+    prop: PTUBE = model.ptube
     mat = model.mat1
 
     xyz_cid0 = model.grid.xyz_cid0()
@@ -395,15 +404,22 @@ def _build_kbb_ctube(model: BDF,
     length = np.linalg.norm(dxyz, axis=1)
     assert len(length) == elem.n
 
-    prop2 = prop.slice_card_by_id(pids, assume_sorted=True)
+    prop2: PTUBE = prop.slice_card_by_id(pids, assume_sorted=True)
     area = prop2.area()
-    Js = area * 0.
+    J = prop2.J()
     material_id = prop2.material_id
     mat1 = mat.slice_card_by_material_id(material_id)
     assert elem.n == prop.n
     assert elem.n == mat1.n
-    for nodes, dxyzi, L, A, E, G, J in zip(elem.nodes, dxyz, length, area, mat1.E, mat1.G, Js):
-        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
+
+    G = mat1.G
+    E = mat1.E
+    L = length
+    A = area
+    k_axial = A * E / L
+    k_torsion = G * J / L
+    for nodes, dxyzi, k_axiali, k_torsioni in zip(elem.nodes, dxyz, k_axial, k_torsion):
+        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
     return len(elem)
 
 def _build_kbb_conrod(model: BDF,
@@ -428,42 +444,36 @@ def _build_kbb_conrod(model: BDF,
     assert len(length) == elem.n
 
     area = prop.area()
-    Js = prop.J
     material_id = prop.material_id
     mat1 = mat.slice_card_by_material_id(material_id)
     assert elem.n == prop.n
     assert elem.n == mat1.n
-    for nodes, dxyzi, L, A, E, G, J in zip(elem.nodes, dxyz, length, area, mat1.E, mat1.G, Js):
-        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, L, A, E, G, J)
+    J = prop.J
+    G = mat1.G
+    E = mat1.E
+    L = length
+    A = area
+    k_axial = A * E / L
+    k_torsion = G * J / L
+    for nodes, dxyzi, k_axiali, k_torsioni in zip(elem.nodes, dxyz, k_axial, k_torsion):
+        _build_kbbi_conrod_crod(Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
     return len(elem)
 
 def _build_kbbi_conrod_crod(Kbb: dok_matrix,
                             dof_map: DOF_MAP,
                             nodes,
-                            dxyz12, L, A, E, G, J,
+                            dxyz12: np.ndarray,
+                            k_axial: float,
+                            k_torsion: float,
                             fdtype: str='float64') -> None:
     """fill the ith rod Kbb matrix"""
     nid1, nid2 = nodes
-    #mat = elem.mid_ref
-    #xyz1 = elem.nodes_ref[0].get_position()
-    #xyz2 = elem.nodes_ref[1].get_position()
-    #dxyz12 = xyz1 - xyz2
-    #L = np.linalg.norm(dxyz12)
-    #E = mat.E
-    #G = mat.G()
-    #J = elem.J()
-    #A = elem.Area()
     #print(f'A = {A}')
-    #L = elem.Length()
-    k_axial = A * E / L
-    k_torsion = G * J / L
+    #k_axial = A * E / L
+    #k_torsion = G * J / L
 
     assert isinstance(k_axial, float), k_axial
     assert isinstance(k_torsion, float), k_torsion
-    #Kbb[i, i] += ki[0, 0]
-    #Kbb[i, j] += ki[0, 1]
-    #Kbb[j, i] = ki[1, 0]
-    #Kbb[j, j] = ki[1, 1]
     k = np.array([[1., -1.],
                   [-1., 1.]])  # 1D rod
     Lambda = lambda1d(dxyz12, debug=False)
@@ -477,56 +487,34 @@ def _build_kbbi_conrod_crod(Kbb: dok_matrix,
     nki, nkj = K.shape
     K2 = np.zeros((nki*2, nkj*2), dtype=fdtype)
 
-    ni1 = dof_map[(nid1, 1)]
-    nj1 = dof_map[(nid2, 1)]
+    # axial + torsion; assume 3D
+    # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
+    K2[:nki, :nki] = K * k_axial
+
+    # u1mx, u1my, u1mz, u2mx, u2my, u2mz
+    K2[nki:, nki:] = K * k_torsion
 
     i1 = 0
     i2 = 3 # dof_map[(n1, 2)]
-    if k_torsion == 0.0: # axial; 2D or 3D
-        K2 = K * k_axial
-        n_ijv = [
-            # axial
-            ni1, ni1 + 1, ni1 + 2,  # node 1
-            nj1, nj1 + 1, nj1 + 2,  # node 2
-        ]
-        dofs = np.array([
-            i1, i1+1, i1+2,
-            i2, i2+1, i2+2,
-        ], dtype='int32')
-    elif k_axial == 0.0: # torsion; assume 3D
-        K2 = K * k_torsion
-        n_ijv = [
-            # torsion
-            ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
-            nj1 + 3, nj1 + 4, nj1 + 5,  # node 2
-        ]
-        dofs = np.array([
-            i1, i1+1, i1+2,
-            i2, i2+1, i2+2,
-        ], dtype='int32')
-    else:  # axial + torsion; assume 3D
-        # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
-        K2[:nki, :nki] = K * k_axial
+    dofs = np.array([
+        i1, i1+1, i1+2,
+        i2, i2+1, i2+2,
 
-        # u1mx, u1my, u1mz, u2mx, u2my, u2mz
-        K2[nki:, nki:] = K * k_torsion
+        i1+3, i1+4, i1+5,
+        i2+3, i2+4, i2+5,
+    ], dtype='int32')
 
-        dofs = np.array([
-            i1, i1+1, i1+2,
-            i2, i2+1, i2+2,
+    ni1 = dof_map[(nid1, 1)]
+    nj2 = dof_map[(nid2, 1)]
+    n_ijv = [
+        # axial
+        ni1, ni1 + 1, ni1 + 2,  # node 1
+        nj2, nj2 + 1, nj2 + 2,  # node 2
 
-            i1+3, i1+4, i1+5,
-            i2+3, i2+4, i2+5,
-        ], dtype='int32')
-        n_ijv = [
-            # axial
-            ni1, ni1 + 1, ni1 + 2,  # node 1
-            nj1, nj1 + 1, nj1 + 2,  # node 2
-
-            # torsion
-            ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
-            nj1 + 3, nj1 + 4, nj1 + 5,  # node 2
-        ]
+        # torsion
+        ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
+        nj2 + 3, nj2 + 4, nj2 + 5,  # node 2
+    ]
     for dof1, i1 in zip(dofs, n_ijv):
         for dof2, i2 in zip(dofs, n_ijv):
             ki = K2[dof1, dof2]
@@ -594,11 +582,12 @@ def _build_kbb_cbeam(model: BDF,
             [z, z, T, z],
             [z, z, z, T],
         ])
-        Kei = _beami_stiffness(areai, j,
-                               e, g,
-                               lengthi, i1, i2,
-                               pa, pb, k1, k2)
+        Kei = _beami_stiffness(
+            areai, e, g, lengthi,
+            i1, i2, i12, j,
+            pa, pb, k1, k2)
         K = Teb.T @ Kei @ Teb
+
         i1 = dof_map[(nid1, 1)]
         j1 = dof_map[(nid2, 1)]
         n_ijv = [
@@ -613,17 +602,11 @@ def _build_kbb_cbeam(model: BDF,
         Ke[ielement, :, :] = Kei
     return nelements
 
-def _beami_stiffness(A: float, J: float,
-                     E: float, G: float,
-                     L: float, Iy: float, Iz: float,
+def _beami_stiffness(A: float, E: float, G: float, L: float,
+                     Iy: float, Iz: float, Iyz: float, J: float,
                      pa: int, pb: int,
                      k1: float, k2: float):
     """gets the ith Euler-Bernoulli beam stiffness"""
-    #E = mat.E()
-    #G = mat.G()
-    #A = prop.Area()
-    #J = prop.J()
-
     kaxial = E * A / L
     ktorsion = G * J / L
 

@@ -964,14 +964,15 @@ class PTUBE(Property):
         Dout2[inan] = Dout1[inan]
 
         if np.array_equal(Dout1, Dout2):
-            return self._polar(Dout1)
-        # J = pi / 16 * (Do^4 - di^4) / Do
-        Din1 = Dout1 - 2 * self.t
-        Din2 = Dout2 - 2 * self.t
-        J1 = np.pi / 16 * (Dout1**4 - Din1**4) / Dout1
-        J2 = np.pi / 16 * (Dout2**4 - Din2**4) / Dout2
-        #A = (self._areai(Dout1) + self._areai(Dout2)) / 2.
-        J = (J1 + J2) / 2
+            J = _polar(Dout1, self.t)
+        else:
+            # J = pi / 16 * (Do^4 - di^4) / Do
+            Din1 = Dout1 - 2 * self.t
+            Din2 = Dout2 - 2 * self.t
+            J1 = np.pi / 16 * (Dout1**4 - Din1**4) / Dout1
+            J2 = np.pi / 16 * (Dout2**4 - Din2**4) / Dout2
+            #A = (self._areai(Dout1) + self._areai(Dout2)) / 2.
+            J = (J1 + J2) / 2
         return J
 
     @property
@@ -1008,6 +1009,15 @@ def _tube_area(t: np.ndarray, Dout: np.ndarray) -> np.ndarray:
         A[ipos] = np.pi / 4. * (Dout[ipos] * Dout[ipos] - Din[ipos] * Din[ipos])
     return A
 
+def _polar(Dout: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """
+    Second polar moment of area
+    https://en.wikipedia.org/wiki/Second_polar_moment_of_area
+
+    """
+    Din = Dout - 2 * t
+    J = np.pi / 32 * (Dout ** 4 - Din ** 4)
+    return J
 
 def line_mid_mass_per_length(material_id: np.ndarray,
                              nsm: np.ndarray,

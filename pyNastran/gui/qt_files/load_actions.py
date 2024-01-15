@@ -613,11 +613,17 @@ class LoadActions(BaseGui):
         #flt = str(filt).strip()
         #return fname, flt
 
-        if default_filename is None:
-            default_filename = self.gui.last_dir
+        startup_directory = self.settings.startup_directory.strip()
+        if startup_directory == '' and default_filename is None:
+            basedir = self.gui.last_dir
+        elif os.path.exists(startup_directory):
+            basedir = startup_directory
+        else:
+            basedir = ''
+
         fname, wildcard_level = getopenfilename(
             parent=self.gui, caption=title,
-            basedir=default_filename, filters=qt_wildcard,
+            basedir=basedir, filters=qt_wildcard,
             selectedfilter='', options=None)
         return wildcard_level, fname
 

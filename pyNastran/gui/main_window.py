@@ -31,13 +31,13 @@ from pyNastran.gui import SCRIPT_PATH, ICON_PATH
 from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
-from pyNastran.gui.gui_common import GuiCommon
+from pyNastran.gui.gui_common import GuiCommon, QSettingsLike
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
 #try:
     #import pyNastran2
     #ISPY2 = True
-#except ImportError:
+#except ModuleNotFoundError:
 ISPY2 = False
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -47,7 +47,7 @@ ISPY2 = False
 try:
     import qdarkstyle
     IS_DARK = True
-except ImportError:
+except ModuleNotFoundError:
     IS_DARK = False
 
 def get_stylesheet():
@@ -338,9 +338,11 @@ class MainWindow(GuiCommon, NastranIO):
         Handling saving state before application when application is
         being closed.
         """
-        settings = QtCore.QSettings()
-        settings.clear()
-        self.settings.save(settings)
+        qsettings = QSettingsLike()
+        qsettings.clear()
+        self.settings.save(qsettings)
+        if hasattr(qsettings, 'save_json'):
+            qsettings.save_json()
 
         q_app = QApplication.instance()
         if q_app is None:

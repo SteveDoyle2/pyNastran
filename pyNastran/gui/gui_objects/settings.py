@@ -19,6 +19,7 @@ defines:
 
 """
 from __future__ import annotations
+import os
 from typing import Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
@@ -36,14 +37,22 @@ BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
 ORANGE = (229/255., 92/255., 0.)
+
+BACKGROUND_COLOR = GREY
+BACKGROUND_COLOR2 = GREY
+HIGHLIGHT_COLOR = ORANGE
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 10.
 HIGHLIGHT_LINE_THICKNESS = 5.
+ANNOTATION_COLOR = BLACK
 ANNOTATION_SIZE = 18
 FONT_SIZE = 8
 TEXT_SIZE = 14
+TEXT_COLOR = BLACK
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_TEXT_SCALE = 0.5 # percent of nominal
+USE_PARALLEL_PROJECTION = True
+MAGNIFY = 5
 
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
@@ -154,19 +163,21 @@ class Settings:
         self.use_parallel_projection = True
         self.use_gradient_background = True
 
+        self.startup_directory = ''
+
         # rgb tuple
-        self.background_color = GREY
-        self.background_color2 = GREY
+        self.background_color = BACKGROUND_COLOR
+        self.background_color2 = BACKGROUND_COLOR2
 
         # TODO: what is an annotation color?
         self.annotation_color = BLACK
 
         # text in the lower left corner
         self.text_size = TEXT_SIZE
-        self.text_color = BLACK
+        self.text_color = TEXT_COLOR
 
         # used for highlight actors
-        self.highlight_color = ORANGE
+        self.highlight_color = HIGHLIGHT_COLOR
         self.highlight_opacity = HIGHLIGHT_OPACITY
         self.highlight_point_size = HIGHLIGHT_POINT_SIZE
         self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
@@ -180,7 +191,7 @@ class Settings:
         # int
         self.annotation_size = ANNOTATION_SIZE
         self.font_size = FONT_SIZE
-        self.magnify = 5
+        self.magnify = MAGNIFY
 
         # floats
         self.coord_scale = COORD_SCALE
@@ -200,21 +211,23 @@ class Settings:
         """helper method for ``setup_gui``"""
         # rgb tuple
         self.use_gradient_background = True
-        self.background_color = GREY
-        self.background_color2 = GREY
+        self.background_color = BACKGROUND_COLOR
+        self.background_color2 = BACKGROUND_COLOR2
+
+        self.startup_directory = ''
 
         self.annotation_size = ANNOTATION_SIZE
-        self.annotation_color = BLACK
+        self.annotation_color = ANNOTATION_COLOR
 
         self.text_size = TEXT_SIZE
         self.text_color = BLACK
 
-        self.highlight_color = ORANGE
+        self.highlight_color = HIGHLIGHT_COLOR
         self.highlight_opacity = HIGHLIGHT_OPACITY
         self.highlight_point_size = HIGHLIGHT_POINT_SIZE
         self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
 
-        self.use_parallel_projection = True
+        self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
         self.show_debug = True
         self.show_command = True
@@ -241,6 +254,11 @@ class Settings:
 
         self.nastran_settings = NastranSettings()
 
+    def finish_startup(self):
+        self.set_background_color(self.background_color, render=False)
+        self.set_background_color2(self.background_color2, render=False)
+        self.set_gradient_background(self.use_gradient_background, render=True)
+
     def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
         for key in NASTRAN_BOOL_KEYS:
@@ -257,8 +275,14 @@ class Settings:
         # sets the window size/position
         main_window_geometry = get_setting(
             settings, setting_keys, ['main_window_geometry', 'mainWindowGeometry'], None)
+        main_window_state = get_setting(
+            settings, setting_keys, ['main_window_state', 'mainWindowState'], None)
         if main_window_geometry is not None:
             self.parent.restoreGeometry(main_window_geometry)
+        if main_window_state is not None:
+            self.parent.restoreState(main_window_state)
+        #settings.setValue('main_window_geometry', self.parent.saveGeometry())
+        #settings.setValue('main_window_state', self.parent.saveState())
 
         # this is the gui font
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
@@ -266,6 +290,12 @@ class Settings:
         # parallel/perspective
         self._set_setting(settings, setting_keys, ['use_parallel_projection'], self.use_parallel_projection,
                           True, auto_type=bool)
+
+        # launch in local or specified directory
+        self._set_setting(settings, setting_keys, ['startup_directory'], self.startup_directory,
+                          True, auto_type=str)
+        if not os.path.exists(self.startup_directory):
+            self.startup_directory = ''
 
         # the info/debug/gui/command preferences
         self._set_setting(settings, setting_keys, ['show_info'], self.show_info,
@@ -366,7 +396,8 @@ class Settings:
         is_loaded = True
         return is_loaded
 
-    def _load_nastran_settings(self, settings: QSettings, setting_keys: list[str]) -> None:
+    def _load_nastran_settings(self, settings: QSettings,
+                               setting_keys: list[str]) -> None:
         """
         loads the settings from 'nastran_displacement' (or similar)
         and save it to 'nastran_settings.displacement'
@@ -393,6 +424,7 @@ class Settings:
         """
         helper method for ``reapply_settings``
         """
+        assert isinstance(save, bool), save
         set_name = setting_names[0]
         value = get_setting(settings, setting_keys, setting_names, default,
                             auto_type=auto_type)
@@ -402,13 +434,16 @@ class Settings:
 
     def save(self, settings, is_testing: bool=False) -> None:
         """saves the settings"""
-        if not is_testing:
-            settings.setValue('main_window_geometry', self.parent.saveGeometry())
-            settings.setValue('mainWindowState', self.parent.saveState())
+        #if not is_testing:
+        settings.setValue('main_window_geometry', self.parent.saveGeometry())
+        settings.setValue('main_window_state', self.parent.saveState())
 
         # booleans
         settings.setValue('use_parallel_projection', self.use_parallel_projection)
         settings.setValue('use_gradient_background', self.use_gradient_background)
+
+        # startup directory
+        settings.setValue('startup_directory', self.startup_directory)
 
         # rgb tuple
         settings.setValue('background_color', self.background_color)
@@ -625,7 +660,7 @@ class Settings:
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
-            self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
+        self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
     def set_background_color_to_white(self, render: bool=True) -> None:
@@ -633,7 +668,9 @@ class Settings:
         self.set_gradient_background(use_gradient_background=False, render=False)
         self.set_background_color(WHITE, render=render)
 
-    def set_gradient_background(self, use_gradient_background: bool=False, render: bool=True) -> None:
+    def set_gradient_background(self,
+                                use_gradient_background: bool=False,
+                                render: bool=True) -> None:
         """enables/disables the gradient background"""
         self.use_gradient_background = use_gradient_background
         self.parent.rend.SetGradientBackground(self.use_gradient_background)
@@ -670,7 +707,7 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color: list[float]) -> None:
+    def set_highlight_color(self, color: list[float], render: bool=True) -> None:
         """
         Set the highlight color
 
@@ -680,6 +717,8 @@ class Settings:
             RGB values as floats
         """
         self.highlight_color = color
+        if render:
+            self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_highlight_color(%s, %s, %s)' % color)
 
     def set_highlight_opacity(self, opacity: float) -> None:
@@ -693,7 +732,7 @@ class Settings:
             1.0 : solid
         """
         self.highlight_opacity = opacity
-        self.parent.log_command('settings.set_highlight_opacity(%s)' % opacity)
+        self.parent.log_command(f'settings.set_highlight_opacity({opacity})')
 
     def set_highlight_point_size(self, point_size: int) -> None:
         """
@@ -705,12 +744,12 @@ class Settings:
             10.0 : default
         """
         self.highlight_point_size = point_size
-        self.parent.log_command('settings.set_highlight_point_size(%s)' % point_size)
+        self.parent.log_command(f'settings.set_highlight_point_size({point_size})')
 
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color: list[float], render: str=True) -> None:
+    def set_text_color(self, color: list[float], render: bool=True) -> None:
         """
         Set the text color
 
@@ -747,7 +786,7 @@ class Settings:
             i += 1
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_text_size(%s)' % text_size)
+        self.parent.log_command(f'settings.set_text_size({text_size})')
 
     def update_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
