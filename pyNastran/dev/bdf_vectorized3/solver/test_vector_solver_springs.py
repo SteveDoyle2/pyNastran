@@ -13,6 +13,75 @@ PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_DIR = PKG_PATH / 'dev' / 'solver'
 
 
+def setup_static_case_control(model: BDF, extra_case_lines=None):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        'OLOAD(PLOT,PRINT) = ALL',
+        'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 101
+    model.case_control_deck = cc
+
+
+def setup_modal_case_control(model: BDF, extra_case_lines=None):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        #'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        #'OLOAD(PLOT,PRINT) = ALL',
+        #'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+        '  METHOD = 103',
+        #'  FREQUENCY = 100',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 103
+    model.case_control_deck = cc
+
+def setup_harmonic_case_control(model: BDF, extra_case_lines=None):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        #'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        #'OLOAD(PLOT,PRINT) = ALL',
+        #'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+        '  METHOD = 103',
+        '  FREQUENCY = 100',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 111
+    model.case_control_deck = cc
+
+
 class TestSolverTools(unittest.TestCase):
     def test_partition_vector(self):
         xg = np.array([0., 1., 2., 3., 4.], dtype='float64')
@@ -24,8 +93,8 @@ class TestSolverTools(unittest.TestCase):
         assert len(xs) == 2 and np.allclose(xs, [0., 2.]), xs
 
 class TestStaticSpring(unittest.TestCase):
-    def test_conm2(self):
-        """Tests a CMASS1/PMASS"""
+    def test_celas2_conm2(self):
+        """Tests a CELAS2/CONM2"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'celas1.bdf'
@@ -104,7 +173,7 @@ class TestStaticSpring(unittest.TestCase):
         nid = 2
         mass = 1.
         model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-        setup_modes_case_control(model)
+        setup_modal_case_control(model)
         sid = 103
         nmodes = 2
         model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
@@ -610,6 +679,93 @@ class TestStaticRod(unittest.TestCase):
         assert np.allclose(solver.Fg[9], mag_torsion), f'F={mag_torsion} Fg[9]={solver.Fg[9]}'
 
 
+def mesh_line_by_points(xyz1: np.ndarray, xyz2: np.ndarray, nelement: int,
+                        nid0: int=1, eid0: int=1,
+                        idtype='int32',
+                        fdtype='float64') -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    assert nelement >= 1
+    dxyz = xyz2 - xyz1
+    length = np.linalg.norm(dxyz)
+    assert length > 0, length
+    nnodes = nelement + 1
+    nids = np.arange(0, nnodes)
+    eids = np.arange(eid0, eid0+nelement)
+    assert len(nids) == nnodes, nnodes
+    assert len(eids) == nelement, nelement
+
+    line_nodes = nid0 + np.column_stack([nids[:-1], nids[1:]])
+    xyzs = (nids / length)[:, np.newaxis] * dxyz
+    nids += nid0
+    return nids, xyzs, eids, line_nodes
+
+
+class TestModalBar(unittest.TestCase):
+    """tests the CBARs"""
+    def test_cbar_modes(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar_modes.bdf'
+        xyz1 = np.array([0., 0., 0.])
+        xyz2 = np.array([1., 0., 0.])
+        nelement = 100
+        nmodes = 16
+
+        nid0 = 1
+        eid0 = 1
+        pid = 10
+        mid = 100
+        node_id, xyz, element_id, line_nodes = mesh_line_by_points(xyz1, xyz2, nelement, nid0=nid0, eid0=eid0)
+
+        nnode = len(node_id)
+        zero = np.zeros(nnode, dtype='int32')
+        cp = zero
+        cd = zero
+        ps = zero
+        seid = zero
+        model.grid._save(node_id, cp, cd, xyz, ps, seid, comment=None)
+        model.grid._xyz_cid0 = xyz
+
+        one = np.ones(nelement, dtype='int32')
+        property_id = pid * one
+
+        # y-axis
+        x = np.zeros((nelement, 3), dtype='float64')
+        x[:, 1] = 1.
+        model.cbar._save(element_id, property_id, line_nodes, x=x)
+
+        #bar_type = 'BAR'
+        #dim = [1., 2.]
+        #model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=0., comment='')
+
+        A = 1.0
+        b = 3.0
+        h = 3.0
+        i1 = 1 / 12 * b * h ** 3
+        i2 = 1 / 12 * h * b ** 3
+        i12 = 0.
+        j = i1 + i2
+        model.add_pbar(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=0.,
+                       c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                       k1=1.e8, k2=1.e8, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        rho = 0.1
+        model.add_mat1(mid, E, G, nu, rho=rho,
+                       alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+
+        model.add_eigrl(103, nd=nmodes)
+        setup_modal_case_control(model)
+        model.setup()
+        assert len(model.cbar)
+        solver = Solver(model)
+        solver.run()
+        x = 1
+
+
 class TestStaticBar(unittest.TestCase):
     """tests the CBARs"""
     def test_cbar(self):
@@ -847,76 +1003,6 @@ class TestStaticBar(unittest.TestCase):
         dx = fmag / k_axial
         assert dx == solver.xg[6*2], f'dx={dx} xg={xg}'
 
-
-
-def setup_static_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        'MPCFORCE(PLOT,PRINT) = ALL',
-        'OLOAD(PLOT,PRINT) = ALL',
-        'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 101
-    model.case_control_deck = cc
-
-
-def setup_modes_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        #'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        'MPCFORCE(PLOT,PRINT) = ALL',
-        #'OLOAD(PLOT,PRINT) = ALL',
-        #'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        '  METHOD = 103',
-        #'  FREQUENCY = 100',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 103
-    model.case_control_deck = cc
-
-
-def setup_harmonic_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        #'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        'MPCFORCE(PLOT,PRINT) = ALL',
-        #'OLOAD(PLOT,PRINT) = ALL',
-        #'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        '  METHOD = 103',
-        '  FREQUENCY = 100',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 111
-    model.case_control_deck = cc
 
 class TestHarmonic(unittest.TestCase):
     def test_spring_mass_damper(self):

@@ -341,15 +341,28 @@ class CBAR(Element):
                 wa[icard, :] = wai
             if wbi is not None:
                 wb[icard, :] = wbi
-        self._save(element_id, property_id, nodes, g0, x,
+        self._save(element_id, property_id, nodes,
+                   g0, x,
                    offt, pa, pb, wa, wb)
         baror = self.model.baror
         apply_bar_default(self, baror)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, g0, x,
-              offt, pa, pb, wa, wb) -> None:
+    def _save(self, element_id, property_id, nodes,
+              g0=None, x=None,
+              offt=None, pa=None, pb=None, wa=None, wb=None) -> None:
+        neids = len(element_id)
+        idtype = element_id.dtype
+        fdtype = self.wa.dtype
+        g0   = np.zeros(neids, dtype=idtype) if g0 is None else g0
+        x    = np.zeros(neids, dtype=idtype) if x is None else x
+        offt = np.full(neids, 'GGG') if offt is None else offt
+        pa   = np.zeros(neids, dtype=idtype) if pa is None else pa
+        pb   = np.zeros(neids, dtype=idtype) if pb is None else pb
+        wa   = np.zeros((neids, 3), dtype=fdtype) if wa is None else wa
+        wb   = np.zeros((neids, 3), dtype=fdtype) if wb is None else wb
+
         #assert len(element_id) == len(property_id), 'A1'
         #assert len(self.element_id) == len(self.property_id), 'A2'
         if len(self.element_id):
@@ -379,6 +392,7 @@ class CBAR(Element):
         self.pb = pb
         self.wa = wa
         self.wb = wb
+        self.n = len(element_id)
 
     def convert(self, xyz_scale: float=1.0,
                 mass_scale: float=1.0, **kwargs):

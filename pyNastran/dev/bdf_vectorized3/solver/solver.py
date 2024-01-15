@@ -30,7 +30,7 @@ from pyNastran.f06.tables.oload_resultant import Resultant
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.op2_classes import (
     RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray,
-    RealEigenvalues)
+    RealEigenvalues, RealEigenvectorArray)
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 #from pyNastran.bdf.mesh_utils.loads import get_ndof
 
@@ -65,13 +65,14 @@ class Solver:
         self.sset = None
 
         base_name = os.path.splitext(model.bdf_filename)[0]
+        self._bdf_filename = base_name + '.solver.bdf'
         self.f06_filename = base_name + '.solver.f06'
         self.op2_filename = base_name + '.solver.op2'
 
     def run(self):
         page_num = 1
         model = self.model
-        model.write_bdf('junk.bdf')
+        model.write_bdf(self._bdf_filename)
         sol = model.sol
         solmap = {
             101 : self.run_sol_101_statics,  # static
@@ -805,8 +806,10 @@ class Solver:
             slot[isubcase] = spc_forces
         return page_num
 
-    def run_sol_103_modes(self, subcase: Subcase, f06_file: TextIO,
-                          page_stamp: str, title: str='', subtitle: str='', label: str='',
+    def run_sol_103_modes(self, subcase: Subcase,
+                          f06_file: TextIO,
+                          page_stamp: str,
+                          title: str='', subtitle: str='', label: str='',
                           page_num: int=1,
                           idtype: str='int32', fdtype: str='float64'):
         """
@@ -843,27 +846,48 @@ class Solver:
 
         isubcase = subcase.id
         mode_cycles = eigenvalues
-        unused_eigenvalues = RealEigenvalues(title, 'LAMA', nmodes=0)
-        #op2.eigenvalues[title] = eigenvalues
+        eigenvalues_obj = RealEigenvalues(title, 'LAMA', nmodes=nmodes)
+
+        cycle = np.sqrt(np.abs(eigenvalues)) / (2. * np.pi)
+        radians = np.sqrt(np.abs(eigenvalues))
+
+        eigenvalues_obj.mode = np.arange(nmodes, dtype='int32') + 1
+        eigenvalues_obj.extraction_order = np.arange(nmodes, dtype='int32') + 1
+        eigenvalues_obj.eigenvalues = eigenvalues
+        eigenvalues_obj.radians = radians
+        eigenvalues_obj.cycles = cycle
+        eigenvalues_obj.generalized_mass = np.ones(nmodes, dtype='float64')
+        eigenvalues_obj.generalized_stiffness = np.ones(nmodes, dtype='float64')
+
+        op2.eigenvalues[title] = eigenvalues_obj
+        #op2.eigenvalues[isubcase] = eigenvalues_obj
 
         nnodes = node_gridtype.shape[0]
-        data = xg_out.reshape((nmodes, nnodes, 6))
+        data = xg_out.reshape((nmodes, nnodes, 6)).astype('float32')
+        eigenvalues = eigenvalues.astype('float32')
         table_name = 'OUGV1'
         modes = np.arange(1, nmodes + 1, dtype=idtype)
-        unused_eigenvectors = RealDisplacementArray.add_modal_case(
+        eigenvectors_obj = RealEigenvectorArray.add_modal_case(
             table_name, node_gridtype, data, isubcase, modes, eigenvalues, mode_cycles,
             is_sort1=True, is_random=False, is_msc=True, random_code=0,
             title=title, subtitle=subtitle, label=label)
-        #op2.eigenvectors[isubcase] = eigenvectors
+        eigenvectors_obj.nonlinear_factor = 1
+        op2.eigenvectors[isubcase] = eigenvectors_obj
 
         write_f06 = True
         if write_f06:
             str(page_num)
-            #page_num = eigenvectors.write_f06(
-                #f06_file, header=None,
-                #page_stamp=page_stamp, page_num=page_num,
-                #is_mag_phase=False, is_sort1=True)
-            #f06_file.write('\n')
+            header = []
+            page_num = eigenvalues_obj.write_f06(
+                f06_file, header=header,
+                page_stamp=page_stamp, page_num=page_num)
+            f06_file.write('\n')
+
+            page_num = eigenvectors_obj.write_f06(
+                f06_file, header=None,
+                page_stamp=page_stamp, page_num=page_num,
+                is_mag_phase=False, is_sort1=True)
+            f06_file.write('\n')
         #fspc = Ksa @ xa + Kss @ xs
         #Fs[ipositive] = Fsi
 
@@ -1201,17 +1225,17 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
 
     """
     node_gridtype = []
-    fdtype = 'float64'
+    #fdtype = 'float64'
     if model.grid.n:
         nodes = model.grid.node_id
-        ones = np.ones(model.grid.n, dtype=fdtype)
+        ones = np.ones(model.grid.n, dtype=idtype)
         node_gridtype.append(np.column_stack([nodes, ones]))
 
     if model.spoint.n:
         #raise NotImplementedError()
         spoint_id = model.spoint.spoint_id
         spoint_id.sort()
-        twos = np.ones(model.spoint.n, dtype=fdtype) * 2
+        twos = np.ones(model.spoint.n, dtype=idtype) * 2
         node_gridtype.append(np.column_stack([spoint_id, twos]))
 
     assert len(node_gridtype) > 0
@@ -1569,26 +1593,26 @@ def build_Mbb(model: BDF,
                 Mbb[iii, jjj] += mass_rod_2x2 * mass
                 #ii = [i1, i1 + 1, j1, j1 + 1]
                 #print(Mbb[ii, :][:, ii])
-        elif etype in ['CBAR', 'CBEAM']:
+        elif etype in {'CBAR', 'CBEAM'}:
             # TODO: verify
             # TODO: add rotary inertia
             mass = elem.mass()
             if mass.sum() == 0.0:
                 log.warning(f'  no mass for {etype} eid={elem.element_id}')
                 continue
-            nid1, nid2 = elem.nodes
-            i1 = dof_map[(nid1, 1)]
-            j1 = dof_map[(nid2, 1)]
+            for (nid1, nid2), massi in zip(elem.nodes, mass):
+                i1 = dof_map[(nid1, 1)]
+                j1 = dof_map[(nid2, 1)]
 
-            #Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
-            #Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
+                #Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
+                #Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
 
-            #Mbb[i1, j1] = Mbb[j1, i1] = \
-            #Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
-            ii = [i1, i1 + 1,
-                  j1, j1 + 1]
-            iii, jjj = np.meshgrid(ii, ii)
-            Mbb[iii, jjj] += mass_rod_2x2 * mass
+                #Mbb[i1, j1] = Mbb[j1, i1] = \
+                #Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
+                ii = [i1, i1 + 1,
+                      j1, j1 + 1]
+                iii, jjj = np.meshgrid(ii, ii)
+                Mbb[iii, jjj] += mass_rod_2x2 * massi
         elif etype == 'CTRIA3':
             # TODO: verify
             # TODO: add rotary inertia
@@ -1910,7 +1934,8 @@ def conm2_fill_Mbb(model: BDF,
         Mbb[i1+3:i1+6, i1+3:i1+6] += I
     return mass_total
 
-def _run_modes(model: BDF, subcase: Subcase,
+def _run_modes(model: BDF,
+               subcase: Subcase,
                ngrid: int,
                ndof_per_grid: int,
                ndof: int,
@@ -1994,15 +2019,7 @@ def _run_modes(model: BDF, subcase: Subcase,
         neigenvalues = method.nd  # nroots
     #neigenvalues = 10
 
-    Kaa_dense = Kaa_.toarray()
-    if ndof_ <= neigenvalues:
-        eigenvalues, xa_ = sp.linalg.eigh(Kaa_dense, Maa_)
-    else:
-        #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
-        eigenvalues, xa_ = sp.sparse.linalg.eigsh(
-            Kaa_, k=neigenvalues, M=Maa_,
-            sigma=None, which='LM', v0=None, ncv=None, maxiter=None, tol=0,
-            return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
+    eigenvalues, xa_ = solve_eigenvector(Kaa_, Maa_, ndof, neigenvalues)
     nmodes = len(eigenvalues)
     model.log.debug(f'eigenvalues = {eigenvalues}')
     out['eigenvalues'] = eigenvalues
@@ -2010,21 +2027,61 @@ def _run_modes(model: BDF, subcase: Subcase,
     #xa2 = xa_.reshape(nmodes, na, na)
 
     ndof_a = len(xa)
-    xg_out = np.full((nmodes, ndof), np.nan, dtype=fdtype)
-    xa_out = np.full((nmodes, ndof_a), np.nan, dtype=fdtype)
+    xg_out = np.full((nmodes, ndof), 0., dtype=fdtype)
+    #xa_out = xg_out[:, aset]
+    #assert xa_out.shape == (nmodes, ndof_a)
+    #xa_out = np.full((nmodes, ndof_a), np.nan, dtype=fdtype)
+    xa_out = np.zeros((nmodes, ndof_a), dtype=fdtype)
     #xa[ipositive] = xa_
     for imode in range(nmodes):
         xa_out[imode, ipositive] = xa_[:, imode]
     #xa_out[:, ipositive] = xa_
-    xg = np.arange(ndof, dtype=fdtype)
+    #xg = np.arange(ndof, dtype=fdtype)
     #xg[aset] = xa
     #xg[sset] = xs
-    xg_out[:, aset] = xa
+    xg_out[:, aset] = xa_out
     xg_out[:, sset] = xs
 
+    assert np.all(np.isfinite(xa_out))
+    assert np.all(np.isfinite(xg_out))
     out['xg_out'] = xg_out
-
     return out
+
+def solve_eigenvector(Kaa: csc_matrix, Maa: np.ndarray,
+                      ndof: int, neigenvalues: int) -> tuple[np.ndarray, np.ndarray]:
+    Kaa_dense = Kaa.toarray()
+    assert isinstance(Maa, np.ndarray), type(Maa)
+    #Maa_dense = Maa.toarray()
+
+    # reduce the size of the matrix going into the solver
+    # by removing empty rows/columns
+    Kaai = Kaa_dense
+    is_kaa = (np.abs(Kaai) > 0.)
+    is_maa = (np.abs(Maa) > 0.)
+    is_kaa_maa = (is_kaa & is_maa)
+    rows = np.any(is_kaa_maa, axis=0)
+    cols = np.any(is_kaa_maa, axis=1)
+    assert len(rows) == len(cols)
+    is_modes = rows & cols
+    no_modes = ~is_modes
+    Kaa2 = Kaa[is_modes, :][:, is_modes]
+    Maa2 = Maa[is_modes, :][:, is_modes]
+
+    ndof2 = Maa.shape[0]
+    if ndof2 <= neigenvalues:
+        Kaa2_dense = Kaa2.todense()
+        eigenvalues, xa = sp.linalg.eigh(Kaa2_dense, Maa2)
+    else:
+        #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
+        # which = SM (smallest magnitude eigenvalues)
+        eigenvalues, xa_ = sp.sparse.linalg.eigsh(
+            Kaa2, k=neigenvalues, M=Maa2,
+            sigma=None, which='SM', v0=None, ncv=None, maxiter=None, tol=0,
+            return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
+        xa = np.full((ndof, neigenvalues), np.nan, dtype=xa_.dtype)
+        xa[no_modes, :] = 0
+        xa[is_modes, :] = xa_
+    return eigenvalues, xa
 
 def _build_xg(model: BDF, dof_map: DOF_MAP,
               ndof: int, subcase: Subcase) -> NDArrayNfloat:

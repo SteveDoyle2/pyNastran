@@ -29,6 +29,7 @@ htmlcov
 
 # pyInstaller building
 #*.qm
+*.pkg
 _internal/
 *.toc
 *.res

@@ -1,5 +1,6 @@
 from math import sqrt
 from struct import pack
+from typing import TextIO
 
 import numpy as np
 
@@ -13,6 +14,7 @@ class RealEigenvalues(BaseScalarObject):
     """
     cycle = sqrt(abs(eigenvalue)) / (2. * pi)
     radians = sqrt(abs(eigenvalue))
+
     """
     def __init__(self, title, table_name: str, nmodes=0):
         #self.modeNumber = []
@@ -86,7 +88,8 @@ class RealEigenvalues(BaseScalarObject):
         for i, line in enumerate(data):
             self.add_f06_line(line, i)
 
-    def write_f06(self, f06_file, header, page_stamp, page_num=1):
+    def write_f06(self, f06_file: TextIO, header: list[str], page_stamp: str,
+                  page_num: int=1) -> None:
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'
