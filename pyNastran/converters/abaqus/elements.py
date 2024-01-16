@@ -299,7 +299,8 @@ class Elements:
                 try:
                     eids_elements = np.array(elements, dtype=idtype)
                 except ValueError:
-                    self.log.error(f'expected {etype} elements to be on 1 line...reshaping...')
+                    if etype != 'c3d20':
+                        self.log.error(f'expected {etype} elements to be on 1 line...reshaping...')
                     inline_elements_str = np.hstack(elements)
                     inline_elements = inline_elements_str.astype(idtype)
                     nelements = len(inline_elements) // (nnodes + 1)

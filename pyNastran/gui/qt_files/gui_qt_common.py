@@ -197,7 +197,7 @@ class GuiQtCommon(GuiAttributes):
         (obj, (i, resname)) = self.result_cases[self.icase]
         unused_location = obj.get_location(i, resname)
 
-        unused_name_str = self._names_storage.get_name_string(name)
+        unused_name_str = self._names_storage.get_name_string(resname)
         grid = self.grid
 
         if self._is_displaced:
@@ -278,7 +278,8 @@ class GuiQtCommon(GuiAttributes):
         (obj, (i, resname)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
 
-        case = obj.get_result(i, resname)
+        method = obj.get_methods(i, resname)[0]
+        case = obj.get_result(i, resname, method)
         if scale is None:
             scale = 1.0
         else:
@@ -406,7 +407,7 @@ class GuiQtCommon(GuiAttributes):
             self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
             return is_valid, failed_data
 
-        methods = obj.get_methods(i)
+        methods = obj.get_methods(i, name)
         data_format = obj.get_data_format(i, name)
         scale = obj.get_scale(i, name)
         phase = obj.get_phase(i, name)

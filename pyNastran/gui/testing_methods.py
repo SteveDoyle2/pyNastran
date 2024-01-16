@@ -62,7 +62,7 @@ class MockTreeView:
 
 class MockResultCaseWindow:
     def __init__(self):
-        self.treeView = MockTreeView()
+        self.tree_view = MockTreeView()
 
 class MockResWidget:
     def __init__(self):
@@ -212,17 +212,18 @@ class FakeGUIMethods(GuiVTKCommon):
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
             unused_subcase_id = obj.subcase_id
-            unused_case = obj.get_result(i, name)
+            methods = obj.get_methods(i, name)
+            method = methods[0]
+            unused_case = obj.get_result(i, name, method)
             unused_result_type = obj.get_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
-            unused_methods = obj.get_methods(i)
             unused_data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
             unused_label2 = obj.get_header(i, name)
             unused_flag = obj.is_normal_result(i, name)
-            #scalar_result = obj.get_scalar(i, name)
+            #scalar_result = obj.get_scalar(i, name, method)
             nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(
                 i, name)
             if vector_size == 3:
@@ -234,7 +235,7 @@ class FakeGUIMethods(GuiVTKCommon):
                 assert obj.deflects(i, name) in [True, False], obj.deflects(i, name)
                 unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
             else:
-                unused_scalar_result = obj.get_scalar(i, name)
+                unused_scalar_result = obj.get_scalar(i, name, method)
 
             unused_default_data_format = obj.get_default_data_format(i, name)
             default_min, unused_default_max = obj.get_default_min_max(i, name)

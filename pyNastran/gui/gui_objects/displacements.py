@@ -411,7 +411,8 @@ class ElementalTableResults(VectorTable):
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 
-
+forces = ['Magnitude', 'Fx', 'Fy', 'Fz']
+moments = ['Magnitude', 'Mx', 'My', 'Mz']
 class ForceTableResults(VectorTable):
     def __init__(self, subcase_id: int, titles: list[str], headers: list[str],
                  dxyz: Any,
@@ -435,17 +436,17 @@ class ForceTableResults(VectorTable):
             uname=uname)
 
     i_to_method_real = {
-        0: ['Magnitude', 'Fx', 'Fy', 'Fz'],
-        1: ['Magnitude', 'Fx', 'Fy', 'Fz'],
-        2: ['Magnitude', 'Fx', 'Fy', 'Fz'],
+        0: forces,
+        1: forces,
+        2: forces,
 
-        3: ['Magnitude', 'Mx', 'My', 'Mz'],
-        4: ['Magnitude', 'Mx', 'My', 'Mz'],
-        5: ['Magnitude', 'Mx', 'My', 'Mz'],
+        3: moments,
+        4: moments,
+        5: moments,
     }
     def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:
-            out = self.i_to_method_real[i] # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+            out = self.i_to_method_real.get(i, forces) # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
             if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
                 out[0] = 'Reluctant'
         else:
@@ -514,6 +515,8 @@ class ForceTableResults(VectorTable):
         return msg
 
 
+translation = ['Magnitude', 'tx', 'ty', 'tz']
+rotation = ['Magnitude', 'rx', 'ry', 'rz']
 class DisplacementResults(VectorTable):
     def __init__(self, subcase_id: int,
                  titles: list[str],
@@ -587,17 +590,16 @@ class DisplacementResults(VectorTable):
     #-------------------------------------
 
     i_to_method_real = {
-        0: ['Magnitude', 'tx', 'ty', 'tz'],
-        1: ['Magnitude', 'tx', 'ty', 'tz'],
-        2: ['Magnitude', 'tx', 'ty', 'tz'],
-
-        3: ['Magnitude', 'rx', 'ry', 'rz'],
-        4: ['Magnitude', 'rx', 'ry', 'rz'],
-        5: ['Magnitude', 'rx', 'ry', 'rz'],
+        0: translation,
+        1: translation,
+        2: translation,
+        3: rotation,
+        4: rotation,
+        5: rotation,
     }
     def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:
-            out = self.i_to_method_real[i] # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+            out = self.i_to_method_real.get(i, translation) # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
             if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
                 out[0] = 'Reluctant'
         else:

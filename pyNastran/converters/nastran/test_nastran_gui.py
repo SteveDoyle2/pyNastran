@@ -93,6 +93,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(obj_filename)
+        assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
 
     @unittest.skipIf(IS_MATPLOTLIB is False, 'No matplotlib')
     def test_solid_shell_bar_01(self):
@@ -101,7 +102,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 156, len(test.result_cases)  # 55 is probably wrong
         test.cycle_results()
         test.on_rcycle_results()
 
@@ -191,6 +194,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.legend_obj.set_legend_menu()
         test.load_nastran_geometry(bdf_filename)
+        #assert len(test.result_cases) >= 55, len(test.result_cases)  # 55 is probably wrong
         test.load_nastran_results(op2_filename)
         assert len(test.models['main'].elements) > 0
         #test.write_result_cases()
@@ -464,6 +468,7 @@ class TestNastranGUI(unittest.TestCase):
         #test.log.level = 'debug'
         #test.load_nastran_geometry(bdf_filename)
         test.load_nastran_geometry(op2_filename)
+        assert len(test.result_cases) >= 150, len(test.result_cases) #  236-24??? not 100%
         test.load_nastran_results(op2_filename)
         #test.write_result_cases()
 

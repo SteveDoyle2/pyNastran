@@ -165,10 +165,17 @@ class GridPointForceResult(GuiResultCommon):
         super(GridPointForceResult, self).__init__()
         self.gpforce_array = gpforce_array
 
-    def get_scalar(self, i: int, name: str) -> None:
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        return False
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return False
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return False
+
+    def get_scalar(self, i: int, name: str, method: str) -> None:
         return None
 
-    def get_result(self, i: int, name: str) -> None:
+    def get_result(self, i: int, name: str, method: str) -> None:
         return None
     def get_title(self, i: int, name: str) -> str:
         return self.title
@@ -176,8 +183,8 @@ class GridPointForceResult(GuiResultCommon):
         return self.location
     def get_header(self, i: int, name: str) -> str:
         return self.header
-    def get_methods(self, i: int) -> None:
-        return None
+    def get_methods(self, i: int, name: str) -> list[None]:
+        return [None]
     def get_data_format(self, i: int, name: str) -> None:
         return None
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
@@ -250,6 +257,13 @@ class NormalResult(GuiResultCommon):
         self.max_default = 1.
         self.uname = uname
 
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        return False
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return False
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return False
+
     def get_data_type(self, i: int, name: str):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
@@ -278,7 +292,7 @@ class NormalResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str):
+    def get_scalar(self, i: int, name: str, method: str) -> np.ndarray:
         return self.scalar
 
     #------------
@@ -329,19 +343,19 @@ class NormalResult(GuiResultCommon):
 
     #------------
     # unmodifyable getters
-    def get_scale(self, i: int, name: str):
+    def get_scale(self, i: int, name: str) -> float:
         return 0.
 
-    def get_vector_size(self, i: int, name: str):
+    def get_vector_size(self, i: int, name: str) -> int:
         return 1
 
-    def get_methods(self, i: int):
+    def get_methods(self, i: int, name: str) -> list[str]:
+        return ['centroid']
+
+    def get_result(self, i: int, name: str, method: str) -> None:
         return None
 
-    def get_result(self, i: int, name: str):
-        return None
-
-    def is_normal_result(self, i: int, name: str):
+    def is_normal_result(self, i: int, name: str) -> bool:
         return True
 
     def __repr__(self):
@@ -619,7 +633,7 @@ class GuiResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str):
+    def get_scalar(self, i: int, name: str, method: str):
         return self.scalar
 
     #------------

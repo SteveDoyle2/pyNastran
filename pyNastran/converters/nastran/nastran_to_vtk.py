@@ -150,7 +150,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
     titlei =  f'{case.uname}: {method}_{header2}_subcase={case.subcase_id}'
-    res = case.get_result(key, name)
+    res = case.get_result(key, name, method)
 
     # form_name = case.form_names[itime, ilayer, imethod]
     check_title(titlei, used_titles)

@@ -601,7 +601,6 @@ class GuiAttributes:
             assert resname != 'main', resname
             form_tuple = (i, [])
             data.append(form_tuple)
-
         self.res_widget.update_results(formi, self.name)
 
         key = list(self.case_keys)[0]

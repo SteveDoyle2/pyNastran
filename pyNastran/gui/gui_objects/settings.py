@@ -435,8 +435,11 @@ class Settings:
     def save(self, settings, is_testing: bool=False) -> None:
         """saves the settings"""
         #if not is_testing:
-        settings.setValue('main_window_geometry', self.parent.saveGeometry())
-        settings.setValue('main_window_state', self.parent.saveState())
+        parent = self.parent
+        if hasattr(parent, 'saveGeometry'):
+            settings.setValue('main_window_geometry', parent.saveGeometry())
+        if hasattr(parent, 'saveState'):
+            settings.setValue('main_window_state', parent.saveState())
 
         # booleans
         settings.setValue('use_parallel_projection', self.use_parallel_projection)
@@ -490,7 +493,7 @@ class Settings:
             height = main_window.frameGeometry().height()
             settings.setValue('screen_shape', (width, height))
 
-            qpos = self.parent.pos()
+            qpos = parent.pos()
             pos = qpos.x(), qpos.y()
             settings.setValue('pos', pos)
 

@@ -407,15 +407,25 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
         element_set_name = solid_section.elset
         log.info(f'element_set_name = {element_set_name}')
 
-        map_property_ids(model, nastran_model, element_set_name, pid)
-        #print(mat)
-        nastran_model.add_psolid(pid, mid, cordm=0,
-                                 integ=None, stress=None, isop=None, fctn='SMECH', comment=element_set_name)
-        _create_mat1(nastran_model, mat, mid, comment=mat_name)
+        etypes_eids = map_solid_property_ids(model, nastran_model, element_set_name, pid)
+        for etype, eids in etypes_eids.items():
+            eid = eids[0]
+            elem = nastran_model.elements[eid]
+            etype_n = (etype, len(elem.nodes))
+            if etype_n in {('CTETRA', 10), ('CHEXA', 20), ('CPENTA', 15), ('CPYRAM', 13)}:
+                isop = 'FULL'
+            else:
+                assert etype_n in {('CTETRA', 4), ('CHEXA', 8), ('CPENTA', 6), ('CPYRAM', 5)}, etype_n
+                isop = 'REDUCED'
+            nastran_model.add_psolid(
+                pid, mid, cordm=0,
+                integ=None, stress=None, isop=isop,
+                fctn='SMECH', comment=element_set_name)
+            _create_mat1(nastran_model, mat, mid, comment=mat_name+f' for {etype}')
+            pid += 1
+            mid += 1
 
         log.info('solid section')
-        pid += 1
-        mid += 1
     return pid, mid
 
 def _create_shell_properties(model: Abaqus, nastran_model: BDF,
@@ -440,6 +450,34 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
         pid += 1
         mid += 1
     return pid, mid
+
+def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
+                           element_set_name: str, pid: int) -> dict[str, list[int]]:
+    log = model.log
+    try:
+        eids = get_eids_from_recursive_element_set(model, element_set_name)
+    except KeyError:
+        log.error(f'cant map section with elset={element_set_name}')
+        return {}
+
+    if isinstance(eids, str):
+        log.debug(f'mapping section with elset={element_set_name} to {eids}')
+        element_name_to_type = {value: key for key, value in
+                                model.elements.element_type_to_elset_name.items()}
+        etype = element_name_to_type[eids]
+        eids = getattr(model.elements, f'{etype}_eids')
+        #return
+    etypes_eids = defaultdict(list)
+    for eid in eids:
+        elem = nastran_model.elements[eid]
+        etypes_eids[elem.type].append(eid)
+
+    for etype, eids in etypes_eids.items():
+        for eid in eids:
+            elem = nastran_model.elements[eid].pid = pid
+        pid += 1
+    #return pid
+    return etypes_eids
 
 def map_property_ids(model: Abaqus, nastran_model: BDF,
                      element_set_name: str, pid: int) -> None:
