@@ -23,12 +23,24 @@ class GuiResultCommon:
         self.class_name = self.__class__.__name__
         self.is_real = False
         self.is_complex = False
+        self.has_coord_transform(0, 'test')
+        self.has_derivation_transform(0, 'test')
+        self.has_nodal_combine_transform(0, 'test')
+        #self.has_derivation_transform(0, 'test')
+        #self.has_derivation_transform(0, 'test')
 
     #def get_data_type(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
     #def get_header(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
+
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        raise NotImplementedError(self.class_name)
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        raise NotImplementedError(self.class_name)
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        raise NotImplementedError(self.class_name)
 
     def is_normal_result(self, i: int, name: str) -> bool:
         return False
@@ -54,14 +66,14 @@ class GuiResultCommon:
     def get_methods(self, i: int):
         raise NotImplementedError(self.class_name)
 
-    def get_result(self, i: int, name: str):
+    def get_result(self, i: int, name: str, method: str):
         raise NotImplementedError(self.class_name)
 
     def get_vector_size(self, i: int, name: str) -> int:
         return 1
 
     def get_scale(self, i: int, name: str) -> float:
-        return 0.
+        return 0.0
 
     def get_phase(self, i: int, name: str) -> Optional[float]:
         return None
@@ -340,11 +352,14 @@ class NormalResult(GuiResultCommon):
 
 class GuiResult(GuiResultCommon):
     deflects = False
-    def __init__(self, subcase_id: int, header: str, title: str, location: str, scalar: Any,
+    def __init__(self, subcase_id: int, header: str, title: str, location: str,
+                 scalar: np.ndarray,
                  mask_value: Optional[int]=None, nlabels: Optional[int]=None,
                  labelsize: Optional[int]=None, ncolors: Optional[int]=None,
-                 colormap: str='jet', data_map: Any=None,
-                 data_format: Optional[str]=None, uname: str='GuiResult'):
+                 colormap: str='jet',
+                 data_map: Any=None,
+                 data_format: Optional[str]=None,
+                 uname: str='GuiResult'):
         """
         Parameters
         ----------
@@ -366,6 +381,7 @@ class GuiResult(GuiResultCommon):
             ???
         uname : str
             some unique name for ...
+
         """
         GuiResultCommon.__init__(self)
 
@@ -377,7 +393,7 @@ class GuiResult(GuiResultCommon):
         self.header = header
         #self.scale = scale
         self.location = location
-        assert location in ['node', 'centroid'], location
+        assert location in ('node', 'centroid'), location
         self.subcase_id = subcase_id
         self.uname = uname
 
@@ -459,6 +475,13 @@ class GuiResult(GuiResultCommon):
         assert self.location == new.location, f'location={self.location} new.location={new.location}'
         assert self.scalar.shape == new.scalar.shape, f'scalar.shape={self.scalar.shape} new.scalar.shape={new.scalar.shape}'
         return subcase_id, header, title, location
+
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        return False
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return False
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return False
 
     def __neg__(self):
         return self.__mul__(-1)
@@ -568,11 +591,11 @@ class GuiResult(GuiResultCommon):
     # getters
     #def export_hdf5_file(self, hdf5_file, exporter):
         #asd
-    def get_data_type(self, i: int, name: str):
+    def get_data_type(self, i: int, name: str) -> str:
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
 
-    def get_data_format(self, i: int, name: str):
+    def get_data_format(self, i: int, name: str) -> str:
         #print('Bname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_format
 
@@ -580,13 +603,13 @@ class GuiResult(GuiResultCommon):
         #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.location
 
-    def get_header(self, i: int, name: str):
+    def get_header(self, i: int, name: str) -> str:
         return self.header
 
-    def get_title(self, i: int, name: str):
+    def get_title(self, i: int, name: str) -> str:
         return self.title
 
-    def get_phase(self, i: int, name: str):
+    def get_phase(self, i: int, name: str) -> None:
         return None
 
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -648,15 +671,15 @@ class GuiResult(GuiResultCommon):
 
     #------------
     # unmodifyable getters
-    def get_scale(self, i: int, name: str):
+    def get_scale(self, i: int, name: str) -> int:
         return 0.
 
-    def get_vector_size(self, i: int, name: str):
+    def get_vector_size(self, i: int, name: str) -> int:
         return 1
 
-    def get_methods(self, i: int):
+    def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:
-            return self.location
+            return [self.location]
         else:
             raise NotImplementedError('title=%s is not real; fmt=%s' % (self.title, self.data_type))
             #return ['node real', 'node imag', 'node magnitude', 'node phase']
@@ -681,7 +704,7 @@ class GuiResult(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return xyz, dxyz
 
-    def get_result(self, i: int, name: str):
+    def get_result(self, i: int, name: str, method: str='') -> np.ndarray:
         if self.is_real:
             #return self.dxyz[i, :]
             return self.scalar

@@ -139,8 +139,9 @@ class Sidebar(QWidget):
         if data is None:
             data = []
 
-        if actions is None:
-            actions = [
+        right_click_actions = []
+        if actions is not None:
+            right_click_actions = [
                 ('Clear Results...', self.on_clear_results, False),
                 ('Apply Results to Fringe...', self.on_fringe, True),
                 ('Apply Results to Displacement...', self.on_disp, True),
@@ -148,14 +149,17 @@ class Sidebar(QWidget):
             ]
 
         self.result_case_windows = [
-            ResultsWindow(self, self.results_window_title, data, choices, actions=actions)
+            ResultsWindow(self, self.results_window_title, data, choices,
+                          is_single_select=False,
+                          right_click_actions=right_click_actions)
         ]
         data = [
             ('A', 1, []),
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_method_window = ResultsWindow(self, 'Method', data, choices)
+        self.result_method_window = ResultsWindow(self, 'Method', data, choices,
+                                                  is_single_select=False)
         self.result_method_window.setVisible(False)
         #else:
             #self.result_method_window = None
@@ -170,13 +174,8 @@ class Sidebar(QWidget):
         self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
 
-        if name is None:
-            self.name = None
-            self.names = ['N/A']
-            name = 'N/A'
-        else:
-            self.name = str(name)
-            self.names = [name]
+        self.name = str(name)
+        self.names = [name]
 
         self.name_label = QLabel("Name:")
         self.name_pulldown = QComboBox()
@@ -191,10 +190,7 @@ class Sidebar(QWidget):
 
     @property
     def result_case_window(self):
-        if self.name is None:
-            i = 0
-        else:
-            i = self.names.index(self.name)
+        i = self.names.index(self.name)
         i = 0
         return self.result_case_windows[i]
 
@@ -394,15 +390,15 @@ class Sidebar(QWidget):
 
     def on_apply(self):
         unused_data = self.result_case_window.data
-        valid_a, keys_a = self.result_case_window.treeView.get_row()
+        valid_a, keys_a = self.result_case_window.tree_view.get_row()
 
         unused_data = self.result_method_window.data
-        valid_b, keys_b = self.result_method_window.treeView.get_row()
+        valid_b, keys_b = self.result_method_window.tree_view.get_row()
         if valid_a and valid_b:
             if self.debug:  # pragma: no cover
-                print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
+                print('  rows1 = %s' % self.result_case_window.tree_view.old_rows)
                 print('        = %s' % str(keys_a))
-                print('  rows2 = %s' % self.result_method_window.treeView.old_rows)
+                print('  rows2 = %s' % self.result_method_window.tree_view.old_rows)
                 print('        = %s' % str(keys_b))
             else:
                 self.update_vtk_window(keys_a, keys_b)
@@ -423,22 +419,22 @@ class Sidebar(QWidget):
         result_name = None
         self.parent._set_case(result_name, i, explicit=True)
 
-    def on_clear_results(self):
+    def on_clear_results(self) -> None:
         #print('*clear')
         if hasattr(self.parent, 'on_clear_results'):
             self.parent.on_clear_results()
-    def on_fringe(self, icase):
+    def on_fringe(self, icase: int) -> None:
         #print('*fringe', icase)
         if hasattr(self.parent, 'on_fringe'):
             self.parent.on_fringe(icase)
-    def on_disp(self, icase):
+    def on_disp(self, icase: int) -> None:
         #print('*disp', icase)
         if hasattr(self.parent, 'on_disp'):
             self.parent.on_disp(icase)
-    def on_vector(self, icase):
+    def on_vector(self, icase: int) -> None:
         #print('*vector', icase)
         if hasattr(self.parent, 'on_vector'):
             self.parent.on_vector(icase)
 
-    def get_clicked(self):
-        self.result_method_window.treeView.get_clicked()
+    def get_clicked(self) -> None:
+        self.result_method_window.tree_view.get_clicked()

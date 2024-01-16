@@ -1,3 +1,4 @@
+import getpass
 from copy import deepcopy
 from typing import Optional, Any
 
@@ -10,8 +11,9 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 class VectorTable(GuiResultCommon):
     def __init__(self, subcase_id: int, location: str,
                  titles: list[str], headers: list[str],
-                 dxyz: Any, linked_scale_factor: bool, #xyz, scalar,
-                 scales,
+                 dxyz: np.ndarray,
+                 linked_scale_factor: bool, #xyz, scalar,
+                 scales: list[float],
                  data_formats: Optional[str]=None,
                  nlabels: Optional[int]=None,
                  labelsize: Optional[int]=None,
@@ -154,6 +156,13 @@ class VectorTable(GuiResultCommon):
         return
 
     # getters
+    def has_coord_transform(self, i: int, resname: str) -> bool:
+        return True
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return False
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return False
+
     def get_location(self, i: int, unused_name: str) -> str:
         return self.location
 
@@ -208,54 +217,54 @@ class VectorTable(GuiResultCommon):
 
     #-------------------------------------
     # default getters
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i: int, name: str):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i: int, name: str):
         return self.default_mins[i], self.default_maxs[i]
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i, name):
+    #def get_default_min_max(self, i: int, name: str):
         #return self.min_default[i], self.max_default[i]
 
-    def get_default_scale(self, i, name):
+    def get_default_scale(self, i: int, name: str) -> float:
         return self.scales_default[i]
 
-    def get_default_phase(self, i, name):
+    def get_default_phase(self, i: int, name: str) -> Optional[float]:
         if self.is_real:
             return None
         return 0.0
 
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         # TODO: do this right
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i, name):
+    def get_default_title(self, i: int, name: str) -> str:
         return self.titles_default[i]
 
     #-------------------------------------
     # unmodifyable getters
 
-    def get_data_type(self, unused_i, unused_name):
+    def get_data_type(self, unused_i, unused_name: str) -> str:
         """the precision of the data"""
         return self.data_type
 
-    def get_vector_size(self, i, unused_name):
+    def get_vector_size(self, i:int, unused_name: str) -> int:
         """the result size"""
         #print(i)
         #j = self.titles_default.index(name)
         return 3
 
-    def get_plot_value(self, i, unused_name):
+    def get_plot_value(self, i:int, unused_name: str) -> np.ndarray:
         if self.is_real:
             if self.dim == 2:
                 dxyz = self.dxyz
@@ -269,7 +278,7 @@ class VectorTable(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
-    def _get_complex_displacements_by_phase(self, i, phase=0.):
+    def _get_complex_displacements_by_phase(self, i:int, phase: float=0.) -> np.ndarray:
         """
         Get displacements for a complex eigenvector result.
         """
@@ -282,7 +291,7 @@ class VectorTable(GuiResultCommon):
         dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         return dxyz
 
-    def get_result(self, i: int, name: str) -> np.ndarray:
+    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
         if self.is_real:
             if self.dim == 2:
                 # single result
@@ -425,13 +434,25 @@ class ForceTableResults(VectorTable):
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
 
-    def get_methods(self, i: int) -> list[str]:
-        if self.is_real:
-            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
-        else:
-            return ['node real', 'node imag', 'node magnitude', 'node phase']
+    i_to_method_real = {
+        0: ['Magnitude', 'Fx', 'Fy', 'Fz'],
+        1: ['Magnitude', 'Fx', 'Fy', 'Fz'],
+        2: ['Magnitude', 'Fx', 'Fy', 'Fz'],
 
-    #def get_location(self, i, name):
+        3: ['Magnitude', 'Mx', 'My', 'Mz'],
+        4: ['Magnitude', 'Mx', 'My', 'Mz'],
+        5: ['Magnitude', 'Mx', 'My', 'Mz'],
+    }
+    def get_methods(self, i: int, name: str) -> list[str]:
+        if self.is_real:
+            out = self.i_to_method_real[i] # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
+                out[0] = 'Reluctant'
+        else:
+            out = ['node real', 'node imag', 'node magnitude', 'node phase']
+        return out
+
+    #def get_location(self, i:int, name):
         #"""the result type"""
         #return 'node'
 
@@ -494,10 +515,18 @@ class ForceTableResults(VectorTable):
 
 
 class DisplacementResults(VectorTable):
-    def __init__(self, subcase_id, titles, headers, xyz, dxyz, unused_scalar,
-                 scales, data_formats=None,
-                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 set_max_min=False, uname='DisplacementResults'):
+    def __init__(self, subcase_id: int,
+                 titles: list[str],
+                 headers: list[str],
+                 xyz: np.ndarray,
+                 dxyz: np.ndarray,
+                 unused_scalar: np.ndarray,
+                 scales: np.ndarray,
+                 data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None,
+                 colormap: str='jet',
+                 set_max_min: bool=False,
+                 uname: str='DisplacementResults'):
         """
         Defines a Displacement/Eigenvector result
 
@@ -557,22 +586,35 @@ class DisplacementResults(VectorTable):
 
     #-------------------------------------
 
-    def get_methods(self, i: int) -> list[str]:
+    i_to_method_real = {
+        0: ['Magnitude', 'tx', 'ty', 'tz'],
+        1: ['Magnitude', 'tx', 'ty', 'tz'],
+        2: ['Magnitude', 'tx', 'ty', 'tz'],
+
+        3: ['Magnitude', 'rx', 'ry', 'rz'],
+        4: ['Magnitude', 'rx', 'ry', 'rz'],
+        5: ['Magnitude', 'rx', 'ry', 'rz'],
+    }
+    def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:
-            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+            out = self.i_to_method_real[i] # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
+                out[0] = 'Reluctant'
         else:
-            return ['node real', 'node imag', 'node magnitude', 'node phase']
+            out = ['node real', 'node imag', 'node magnitude', 'node phase']
+        return out
 
     #@property
     #def scalar(self):
         #return self.dxyz_norm
 
-    #def get_scalar(self, i, name):
+    #def get_scalar(self, i:int, name):
         #print(self.dxyz_norm)
         #return self.dxyz_norm
 
     def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
-                                         scale: float, phase: float=0.) -> tuple[np.ndarray, np.ndarray]:
+                                         scale: float,
+                                         phase: float=0.) -> tuple[np.ndarray, np.ndarray]:
         """
         Gets the real/complex deflection result
 

@@ -1420,6 +1420,7 @@ def _load_oug(model: OP2,
      - temperature
 
     """
+    del name
     for (res_name, results) in name_results:
         if subcase not in results:
             continue
@@ -1441,8 +1442,8 @@ def _load_oug(model: OP2,
         dxyz = t123
 
         subcase_id = key # [0]
-        titles = [name] * ntimes # legend
-        headers = [name] * ntimes # sidebar
+        titles = [res_name] * ntimes # legend
+        headers = [res_name] * ntimes # sidebar
         data_formats = ['%f'] * ntimes
         unused_scalar = None
         scales = get_vector_scales(
@@ -1454,7 +1455,7 @@ def _load_oug(model: OP2,
             subcase_id, titles, headers,
             xyz_cid0, dxyz, unused_scalar, scales,
             data_formats=data_formats, nlabels=None, labelsize=None, ncolors=None,
-            colormap='jet', set_max_min=True, uname=f'{name}Results')
+            colormap='jet', set_max_min=True, uname=f'{res_name}Results')
 
         for itime, header_name in enumerate(header_names):
             #assert t123.shape[1] == 3, t123.shape
@@ -1462,7 +1463,7 @@ def _load_oug(model: OP2,
             #dxyz[isave, :] = t123[isave, :]
             headers[itime] = f'Txyz {header_name}'
             formi: Form = (header_name, icase, [])
-            cases[icase] = (res, (itime, name))
+            cases[icase] = (res, (itime, res_name))
             res_form.append(formi)
             icase += 1
 

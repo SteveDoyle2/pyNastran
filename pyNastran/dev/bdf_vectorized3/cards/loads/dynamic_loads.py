@@ -518,7 +518,7 @@ class TLOAD1(VectorizedBaseCard):
         return ncards_removed
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.load_id.max(),
                    self.excite_id.max(),
                    self.delay_int.max(),

@@ -1259,8 +1259,8 @@ class AnimationWindow(PyDialog):
 
     def get_min_max(self, icase):
         if self.is_gui:
-            (obj, (i, name)) = self.gui.result_cases[icase]
-            min_value, max_value = obj.get_min_max(i, name)
+            (obj, (i, resname)) = self.gui.result_cases[icase]
+            min_value, max_value = obj.get_min_max(i, resname)
         else:
             return 0., 1.0
         return min_value, max_value

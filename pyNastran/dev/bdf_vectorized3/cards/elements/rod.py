@@ -170,7 +170,7 @@ class CONROD(Element):
                    material_id=(mids, self.material_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.element_id.max(), self.material_id.max(), self.nodes.max())
 
     @parse_check
@@ -324,7 +324,7 @@ class CROD(Element):
                    property_id=(pids, self.property_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
     @parse_check
@@ -539,7 +539,7 @@ class PROD(Property):
                    material_id=(mids, self.material_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
     @parse_check
@@ -660,7 +660,7 @@ class CTUBE(Element):
                    property_id=(pids, self.property_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
     @parse_check
@@ -902,7 +902,7 @@ class PTUBE(Property):
                    material_id=(mids, self.material_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
     @parse_check
@@ -945,12 +945,11 @@ class PTUBE(Property):
 
         if np.array_equal(Dout1, Dout2):
             A = _tube_area(t1, Dout1)
-            return A
-
-        t2 = self.t.copy()
-        inan_t2 = np.isnan(t2)
-        t2[inan_t2] = Dout2[inan_t2] / 2.
-        A = (_tube_area(t1, Dout1) + _tube_area(t2, Dout2)) / 2.
+        else:
+            t2 = self.t.copy()
+            inan_t2 = np.isnan(t2)
+            t2[inan_t2] = Dout2[inan_t2] / 2.
+            A = (_tube_area(t1, Dout1) + _tube_area(t2, Dout2)) / 2.
         return A
 
     def J(self) -> np.ndarray:

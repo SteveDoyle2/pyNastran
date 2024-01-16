@@ -905,7 +905,7 @@ class PDAMPT(Property):
         used_dict['tabled_id'].append(self.table_b)
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.property_id.max(), self.table_b.max())
 
     @parse_check
@@ -1144,7 +1144,7 @@ class PVISC(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return self.property_id.max()
 
     @parse_check
@@ -1422,7 +1422,7 @@ class CGAP(Element):
         return v, ihat, yhat, zhat, wa, wb
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max(), self.coord_id.max())
 

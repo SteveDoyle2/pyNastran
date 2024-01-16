@@ -597,7 +597,8 @@ class GuiAttributes:
         data = []
         for key in self.case_keys:
             assert isinstance(key, int), key
-            unused_obj, (i, unused_name) = self.result_cases[key]
+            unused_obj, (i, resname) = self.result_cases[key]
+            assert resname != 'main', resname
             form_tuple = (i, [])
             data.append(form_tuple)
 

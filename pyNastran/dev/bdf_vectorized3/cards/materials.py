@@ -272,7 +272,7 @@ class MAT1(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.material_id.max(), self.mcsid.max())
 
     @parse_check
@@ -607,7 +607,7 @@ class MAT2(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.material_id.max(), self.mcsid.max())
 
     @parse_check
@@ -818,7 +818,7 @@ class MAT3(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return self.material_id.max()
 
     @parse_check
@@ -973,7 +973,7 @@ class MAT4(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return self.material_id.max()
 
     @parse_check

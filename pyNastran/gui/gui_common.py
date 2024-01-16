@@ -1,8 +1,9 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
+import json
 import os.path
 from math import ceil
-from typing import Optional, Callable, Any
+from typing import Callable, Optional, Union, Any, cast
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -65,9 +66,102 @@ except ImportError:
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.formats import CLASS_MAP
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
 Tool = tuple[str, str, str, Optional[str], str, Callable]
 BANNED_SHORTCUTS = {}
+
+
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+from pyNastran.gui.gui_objects.displacements import (
+    DisplacementResults, ForceTableResults, ElementalTableResults)
+
+
+class QSettingsLike2:
+    _tuples = {
+        'background_color', 'background_color2',
+        'highlight_color', 'text_color', 'annotation_color',
+        'screen_shape', 'pos',
+    }
+    def __init__(self):
+        """
+        json gui loading location is stored in:
+        1) local directory
+        2) exe directory
+        3) home directory
+        The priority goes in that order.
+
+        The last directory would be stored as an additional preference
+        of launch directory as:
+        a) previous working directory
+        b) use working directory
+
+        """
+        self.data = {}
+
+        home_dirname = os.path.expanduser('~')
+        local_dirname = os.getcwd()
+        exe_dirname = os.path.dirname(__file__)
+        home_filename  = os.path.join(home_dirname,  'pyNastranGUI.json')
+        exe_filename   = os.path.join(exe_dirname,   'pyNastranGUI.json')
+        local_filename = os.path.join(local_dirname, 'pyNastranGUI.json')
+        if os.path.exists(local_filename):
+            self._filename = local_filename
+        elif os.path.exists(exe_filename):
+            self._filename = exe_filename
+        elif os.path.exists(home_filename):
+            self._filename = home_filename
+        else:
+            self._filename = ''
+    def clear(self) -> None:
+        self.data = {}
+    def childKeys(self) -> list[str]:
+        return list(self.data.keys())
+
+    def value(self, key: str, default=None):
+        assert isinstance(key, str), key
+        if key in self.data:
+            value = self.data[key]
+        elif default is None:
+            raise RuntimeError('default=None?')
+        else:
+            value = default
+
+        if key in {'main_window_geometry', 'main_window_state'}:
+            value_bytes = value.encode('ascii')
+            value = QtCore.QByteArray(value_bytes)
+
+        if key in self._tuples:
+            value = tuple(value)
+        return value
+
+    def setValue(self, key: str, value) -> None:
+        assert isinstance(key, str), key
+        self.data[key] = value
+    def load_json(self) -> None:
+        with open(self._filename, 'r') as json_file:
+            self.data = json.load(json_file)
+        x = 1
+
+    def save_json(self) -> None:
+        data = {}
+        for key, value in self.data.items():
+            if isinstance(value, (str, integer_types, float_types)):
+                data[key] = value
+            elif value.__class__.__name__ == 'QByteArray':
+                value2 = bytes(value.toBase64())
+                data[key] = value2.decode('ascii')
+            elif key in self._tuples:
+                assert isinstance(value, tuple), (key, value)
+                data[key] = value
+            else:
+                raise NotImplementedError(key)
+
+        with open(self._filename, 'w') as json_file:
+            json.dump(data, json_file, indent=True)
+        #x = 1
+#QSettingsLike = QtCore.QSettings
+QSettingsLike = QSettingsLike2
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon(QMainWindow, GuiVTKCommon):
@@ -173,11 +267,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_dock.setWidget(self.res_widget)
 
         self.res_widget = Sidebar(
-            self,
-            include_case_spinner=True,
-            include_deflection_scale=False,
-            include_vector_scale=False,
-        )
+            self, left_click_callback=self._set_methods_by_icase)
         #self.res_widget.update_results(data)
         #self.res_widget.setWidget(sidebar)
 
@@ -1404,7 +1494,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         assert self.fmts != [], f'supported_formats={self.supported_formats}'
         self.start_logging()
-        settings = QtCore.QSettings()
+        #qsettings = QtCore.QSettings()
+        qsettings = QSettingsLike()
+        if hasattr(qsettings, 'load_json'):
+            qsettings.load_json()
+
         self.create_vtk_actors()
 
         # build GUI and restore saved application state
@@ -1416,15 +1510,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if self.reset_settings or qt_version in [5, 'pyside']:
             #self.settings.reset_settings()
         #else:
-        self.settings.load(settings)
+        self.settings.load(qsettings)
 
         self.init_ui()
         if self.reset_settings:
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        unused_main_window_state = settings.value('mainWindowState')
+        #unused_main_window_state = qsettings.value('main_window_state', default='')
         self.create_corner_axis()
+        self.settings.finish_startup()
         #-------------
         # loading
         if is_gui:
@@ -2027,7 +2122,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
+    def _finish_results_io2(self, model_name: str,
+                            form, cases,
+                            reset_labels: bool=True):
         """
         Adds results to the Sidebar
 
@@ -2080,6 +2177,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         }
         case_keys = [0, 1, 2, 3, 4, 5, 6]
         """
+        for obj, (i, resname) in cases.items():
+            assert resname != 'main', obj
         self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
@@ -2108,7 +2207,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         data = []
         for key in self.case_keys:
             assert isinstance(key, integer_types), key
-            unused_obj, (i, unused_name) = self.result_cases[key]
+            unused_obj, (i, resname) = self.result_cases[key]
+            assert resname != 'main', resname
             tuple_data = (i, [])
             data.append(tuple_data)
 
@@ -2142,6 +2242,39 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
+
+    def _set_methods_by_icase(self, icase: Optional[int]) -> None:
+        """
+        fills up the Methods in the Sidebar
+
+        This is a callback function from the Sidebar
+        """
+        if icase is None:
+            return
+        obj, (i, resname) = self.result_cases[icase]
+
+        obj = cast(Union[GuiResult, DisplacementResults], obj)
+        methods = obj.get_methods(i, resname)
+
+        data = []
+        for method in methods:
+            datai = (method, None, [])
+            data.append(datai)
+        self.res_widget.update_methods(data)
+
+        is_coord_visible = obj.has_coord_transform(i, resname)
+        is_derivation_visible = obj.has_derivation_transform(i, resname)
+        is_nodal_combine_visible = obj.has_nodal_combine_transform(i, resname)
+        self.res_widget.set_coord_transform_visible(is_coord_visible)  # min/max/avg
+        self.res_widget.set_derivation_visible(is_derivation_visible)
+        self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible)
+
+        #self.res_widget.set_displacement_scale_visible(is_visible)
+
+        x = 1
+        pass
+        return True
+
 
     def clear_application_log(self, force=False):
         """

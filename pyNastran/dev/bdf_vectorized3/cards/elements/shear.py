@@ -296,7 +296,7 @@ class PSHEAR(Property):
                    material_id=(mids, self.material_id))
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
     @parse_check

@@ -207,7 +207,7 @@ class MATT1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id,
                             self.e_table, self.g_table, self.nu_table,
                             self.rho_table,
@@ -461,7 +461,7 @@ class MATS1(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.material_id.max(), self.table_id.max())
 
     @parse_check
@@ -744,7 +744,7 @@ class MATT2(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id,
                             self.g11_table, self.g22_table, self.g33_table,
                             self.g12_table, self.g13_table, self.g23_table,
@@ -1000,7 +1000,7 @@ class MATT3(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id,
                             self.ex_table, self.eth_table, self.ez_table,
                             self.nuth_table, self.nuxz_table,
@@ -1192,7 +1192,7 @@ class MATT4(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id,
                             self.k_table, self.cp_table, self.h_table,
                             self.mu_table, self.hgen_table, ])
@@ -1412,7 +1412,7 @@ class MATT5(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id,
                             self.kxx_table, self.kxy_table, self.kxz_table, self.kyy_table,
                             self.kyz_table, self.kzz_table, self.cp_table, self.hgen_table, ])
@@ -1685,7 +1685,7 @@ class MATT8(Material):
         #scale[('tablem', stiffness_scale)] = self.e1_table
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([self.material_id, self.e1_table, self.e2_table, self.nu12_table,
                             self.g12_table, self.g1z_table, self.g2z_table, self.rho_table,
                             self.a1_table, self.a2_table,
@@ -2156,7 +2156,7 @@ class MATT9(Material):
         pass
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         tables = np.hstack([
             self.material_id,
             self.g11_table, self.g12_table, self.g13_table, self.g14_table, self.g15_table, self.g16_table,

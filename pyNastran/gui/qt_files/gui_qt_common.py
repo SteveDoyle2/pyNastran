@@ -194,8 +194,8 @@ class GuiQtCommon(GuiAttributes):
 
     def on_clear_results(self, show_msg: bool=True) -> None:
         """clears the model of all results"""
-        (obj, (i, name)) = self.result_cases[self.icase]
-        unused_location = obj.get_location(i, name)
+        (obj, (i, resname)) = self.result_cases[self.icase]
+        unused_location = obj.get_location(i, resname)
 
         unused_name_str = self._names_storage.get_name_string(name)
         grid = self.grid
@@ -213,18 +213,18 @@ class GuiQtCommon(GuiAttributes):
         point_data = grid.GetPointData()
         npoint_arrays = point_data.GetNumberOfArrays()
         for i in range(npoint_arrays):
-            name = point_data.GetArrayName(i)
-            if name is not None:
-                #print("pointArray ", i, ": ", name)
-                point_data.RemoveArray(name)
+            array_name = point_data.GetArrayName(i)
+            if array_name is not None:
+                #print("pointArray ", i, ": ", array_name)
+                point_data.RemoveArray(array_name)
 
         cell_data = grid.GetCellData()
         ncell_arrays = cell_data.GetNumberOfArrays()
         for i in range(ncell_arrays):
-            name = cell_data.GetArrayName(i)
-            if name is not None:
-                #print("cellArray ", i, ": ", name)
-                cell_data.RemoveArray(name)
+            array_name = cell_data.GetArrayName(i)
+            if array_name is not None:
+                #print("cellArray ", i, ": ", array_name)
+                cell_data.RemoveArray(array_name)
 
         cell_data.SetActiveScalars(None)
         point_data.SetActiveScalars(None)
@@ -248,9 +248,9 @@ class GuiQtCommon(GuiAttributes):
         self.clear_legend()
         self.vtk_interactor.Render()
 
-        self.res_widget.result_case_window.treeView.fringe.setChecked(False)
-        self.res_widget.result_case_window.treeView.disp.setChecked(False)
-        self.res_widget.result_case_window.treeView.vector.setChecked(False)
+        self.res_widget.result_case_window.tree_view.fringe.setChecked(False)
+        self.res_widget.result_case_window.tree_view.disp.setChecked(False)
+        self.res_widget.result_case_window.tree_view.vector.setChecked(False)
         self.icase = -1
         self.icase_fringe = None
         self.icase_disp = None
@@ -275,10 +275,10 @@ class GuiQtCommon(GuiAttributes):
             return is_valid, failed_data
 
         label2 = ''
-        (obj, (i, name)) = self.result_cases[icase]
+        (obj, (i, resname)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
 
-        case = obj.get_result(i, name)
+        case = obj.get_result(i, resname)
         if scale is None:
             scale = 1.0
         else:
@@ -287,28 +287,28 @@ class GuiQtCommon(GuiAttributes):
             case = np.multiply(case, scale, casting="unsafe")
         #else:
             # phase is not None
-            #xyz_nominal, vector_data = obj.get_vector_result(i, name, phase)
+            #xyz_nominal, vector_data = obj.get_vector_result(i, resname, phase)
 
         if case is None:
             # normal result
-            self.res_widget.result_case_window.treeView.fringe.setChecked(False)
-            #self.res_widget.result_case_window.treeView.disp.setChecked(False)
-            #self.res_widget.result_case_window.treeView.vector.setChecked(False)
+            self.res_widget.result_case_window.tree_view.fringe.setChecked(False)
+            #self.res_widget.result_case_window.tree_view.disp.setChecked(False)
+            #self.res_widget.result_case_window.tree_view.vector.setChecked(False)
 
             #is_legend_shown = False
-            self.set_normal_result(icase, name, subcase_id)
+            self.set_normal_result(icase, resname, subcase_id)
             # this is valid, but we want to skip out
             return is_valid, failed_data
 
-        result_type = obj.get_title(i, name)
-        data_format = obj.get_data_format(i, name)
-        vector_size = obj.get_vector_size(i, name)
-        location = obj.get_location(i, name)
-        methods = obj.get_methods(i)
-        #scale = obj.get_scale(i, name)
-        phase = obj.get_phase(i, name)
-        label2 = obj.get_header(i, name)
-        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        result_type = obj.get_title(i, resname)
+        data_format = obj.get_data_format(i, resname)
+        vector_size = obj.get_vector_size(i, resname)
+        location = obj.get_location(i, resname)
+        methods = obj.get_methods(i, resname)
+        #scale = obj.get_scale(i, resname)
+        phase = obj.get_phase(i, resname)
+        label2 = obj.get_header(i, resname)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
         nlabels, labelsize, ncolors, colormap = out
 
         #normi = _get_normalized_data(self.result_cases[icase])
@@ -321,7 +321,7 @@ class GuiQtCommon(GuiAttributes):
             #min_value = normi.min()
 
         #if min_value is None and max_value is None:
-        min_value, max_value = obj.get_min_max(i, name)
+        min_value, max_value = obj.get_min_max(i, resname)
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
@@ -332,11 +332,10 @@ class GuiQtCommon(GuiAttributes):
 
         vector_size = 1
         name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
-        name_str = self._names_storage.get_name_string(name)
-        #return name, normi, vector_size, min_value, max_value, norm_value
+        name_str = self._names_storage.get_name_string(resname)
+        #return resname, normi, vector_size, min_value, max_value, norm_value
 
         grid_result = self.set_grid_values(name_tuple, normi, vector_size, phase)
-
         data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
@@ -545,7 +544,7 @@ class GuiQtCommon(GuiAttributes):
                                     imin, min_value,
                                     imax, max_value)
         self.vtk_interactor.Render()
-        self.res_widget.result_case_window.treeView.fringe.setChecked(True)
+        self.res_widget.result_case_window.tree_view.fringe.setChecked(True)
         is_valid = True
         return is_valid
 
@@ -670,7 +669,7 @@ class GuiQtCommon(GuiAttributes):
         is_disp = True
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
                              stop_on_failure=stop_on_failure)
-        self.res_widget.result_case_window.treeView.disp.setChecked(True)
+        self.res_widget.result_case_window.tree_view.disp.setChecked(True)
 
     def on_vector(self, icase: int,
                   apply_fringe: bool=False,
@@ -681,7 +680,7 @@ class GuiQtCommon(GuiAttributes):
         is_disp = False
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
                              stop_on_failure=stop_on_failure)
-        self.res_widget.result_case_window.treeView.vector.setChecked(True)
+        self.res_widget.result_case_window.tree_view.vector.setChecked(True)
 
     def _on_disp_vector(self, icase: int,
                         is_disp: bool,
@@ -942,22 +941,27 @@ class GuiQtCommon(GuiAttributes):
         case = self.model_data.result_cases[key]
         label2 = ''
         assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.model_data.result_cases[key]
+        (obj, (i, resname)) = self.model_data.result_cases[key]
+        assert resname != 'main', resname
         subcase_id = obj.subcase_id
-        case = obj.get_result(i, name)
-        result_type = obj.get_title(i, name)
-        vector_size0 = obj.get_vector_size(i, name)
-        location = obj.get_location(i, name)
-        methods = obj.get_methods(i)
-        data_format = obj.get_data_format(i, name)
-        scale = obj.get_scale(i, name)
-        phase = obj.get_phase(i, name)
-        label2 = obj.get_header(i, name)
-        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+
+        methods = obj.get_methods(i, resname)
+        methodi = methods[0]
+        case = obj.get_result(i, resname, methodi)
+
+        result_type = obj.get_title(i, resname)
+        vector_size0 = obj.get_vector_size(i, resname)
+        location = obj.get_location(i, resname)
+        data_format = obj.get_data_format(i, resname)
+        scale = obj.get_scale(i, resname)
+        phase = obj.get_phase(i, resname)
+        label2 = obj.get_header(i, resname)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
         nlabels, labelsize, ncolors, colormap = out
-        #default_max, default_min = obj.get_default_min_max(i, name)
+
+        #default_max, default_min = obj.get_default_min_max(i, resname)
         if min_value is None or max_value is None:
-            min_valuei, max_valuei = obj.get_min_max(i, name)
+            min_valuei, max_valuei = obj.get_min_max(i, resname)
             if min_value is None:
                 min_value = min_valuei
             if max_value is None:
@@ -978,7 +982,7 @@ class GuiQtCommon(GuiAttributes):
         #================================================
         if case is None:
             self.icase_fringe = icase
-            self.set_normal_result(icase, name, subcase_id)
+            self.set_normal_result(icase, resname, subcase_id)
             return icase
 
         elif not self._is_fringe:
@@ -1016,11 +1020,11 @@ class GuiQtCommon(GuiAttributes):
         #norm_value = float(max_value - min_value)
 
         vector_size = 1
-        name = (vector_size, subcase_id, result_type, label, scale)
-        if self._names_storage.has_exact_name(name):
+        name_fringe = (vector_size, subcase_id, result_type, label, scale)
+        if self._names_storage.has_exact_name(name_fringe):
             grid_result = None
         else:
-            grid_result = self.set_grid_values(name, normi, vector_size, phase)
+            grid_result = self.set_grid_values(name_fringe, normi, vector_size, phase)
 
         if vector_size0 == 1:
             name_vector = None
@@ -1033,7 +1037,8 @@ class GuiQtCommon(GuiAttributes):
             else:
                 grid_result_vector = self.set_grid_values(name_vector, case, vector_size, phase)
 
-        self.final_grid_update(icase, name, grid_result,
+        self.final_grid_update(icase,
+                               name_fringe, grid_result,
                                name_vector, grid_result_vector,
                                key, subtitle, label,
                                min_value, max_value, show_msg)
@@ -1061,7 +1066,6 @@ class GuiQtCommon(GuiAttributes):
         self.update_text_actors(subcase_id, subtitle,
                                 imin, min_value,
                                 imax, max_value, label, location)
-
 
         arrow_scale = 0.0
         self.legend_obj.update_legend(

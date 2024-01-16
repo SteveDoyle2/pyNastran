@@ -5,10 +5,17 @@ creates:
  - GenericRightClickTreeView - used for more general right click support
 
 """
+from __future__ import annotations
+from typing import Callable, TYPE_CHECKING
 from functools import partial
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
+ClickCallback = Callable[[int], bool]
+
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.results_sidebar import Sidebar
+    from pyNastran.gui.main_window import MainWindow
 
 
 class QTreeView2(QTreeView):
@@ -47,6 +54,7 @@ class QTreeView2(QTreeView):
         elif key in [Qt.Key_Up, Qt.Key_Down]:
             QTreeView.keyPressEvent(self, event)
             self.set_rows()
+            self.on_left_mouse_button()
         else:
             QTreeView.keyPressEvent(self, event)
         return None
@@ -137,7 +145,7 @@ class QTreeView2(QTreeView):
         self.setRowHidden(row, indexes[-1].parent(), True)
         self.update()
 
-    def on_delete_parent_cases(self, cases_to_delete):
+    def on_delete_parent_cases(self, cases_to_delete: list[int]) -> None:
         """delete cases from the parent"""
         sidebar = self.parent.parent
         if hasattr(sidebar.parent, 'delete_cases'):
@@ -170,13 +178,19 @@ class QTreeView2(QTreeView):
             self.on_right_mouse_button()
 
     def on_left_mouse_button(self):
-        self.set_rows()
-        unused_valid, unused_keys = self.get_row()
+        """overwrite this to make a right-click menu"""
+        pass
+        #self.set_rows()
+        #unused_valid, unused_keys = self.get_row()
+        #x = 1
         #if not valid:
             #print('invalid=%s keys=%s' % (valid, keys))
         #else:
             #print('valid=%s keys=%s' % (valid, keys))
             #print('choice =', self.choices[keys])
+
+    def on_left_mouse_button(self):
+        pass
 
     def on_right_mouse_button(self):
         """overwrite this to make a right-click menu"""
@@ -201,7 +215,7 @@ class QTreeView2(QTreeView):
         self.old_rows = rows
         #print('rows =', rows)
 
-    def get_row(self):
+    def get_row(self) -> tuple[bool, int]:
         """
         gets the row
 
@@ -209,6 +223,9 @@ class QTreeView2(QTreeView):
         -------
         is_valid : bool
             is this case valid
+        irow : int
+            the row index
+
         row : None or tuple
             None : invalid case
             tuple : valid case
@@ -244,6 +261,7 @@ class QTreeView2(QTreeView):
                 2 - []
         word : str
             the 0th index of the tuple; 'centroid' in this case
+
         """
         is_valid = True
         irow = 0
@@ -261,12 +279,12 @@ class QTreeView2(QTreeView):
             data = data[row][2]
         return is_valid, irow, data_old[row][0]
 
-    def set_single(self, single):
+    def set_single(self, single: bool) -> None:
         self.single = single
         self.old_rows = [0]
 
 
-class GenericRightClickTreeView(QTreeView2):
+class ClickTreeView(QTreeView2):
     """
     creates a QTreeView with:
      - all the features of QTreeView2
@@ -278,25 +296,66 @@ class GenericRightClickTreeView(QTreeView2):
        - Delete Case
 
     """
-    def __init__(self, parent, data, choices, actions, **kwargs):
+    def __init__(self, parent, data, choices,
+                 left_click_callback: ClickCallback,
+                 right_click_actions: list[tuple[str, ClickCallback, bool]],
+                 include_clear: bool=False,
+                 include_export_case: bool=False,
+                 include_delete: bool=False,
+                 include_results: bool=False):
+        if right_click_actions is None:
+            right_click_actions = []
         QTreeView2.__init__(self, parent, data, choices)
         #
         # TODO: create a menu that only has clear/normals/fringe/delete
         #       if there is no transient result
         #
-        #print(data)
-        #print(choices)
-        #print('kwargs', kwargs)
-        self.right_click_menu = QMenu()
+        right_click_menu = QMenu()
 
-        def false_callback(callback_func):
+        if include_clear:
+            self.clear = right_click_menu.addAction("Clear Results...")
+            self.clear.triggered.connect(self.on_clear_results)
+
+        if include_export_case:
+            self.export_case = right_click_menu.addAction("Export Case...")
+            self.export_case.triggered.connect(self.on_export_case)
+
+        if include_results:
+            self.fringe = right_click_menu.addAction("Apply Results to Fringe...")
+            self.fringe.triggered.connect(self.on_fringe)
+
+            self.disp = right_click_menu.addAction("Apply Results to Displacement...")
+            self.vector = right_click_menu.addAction("Apply Results to Vector...")
+
+            self.disp.triggered.connect(self.on_disp)
+            self.vector.triggered.connect(self.on_vector)
+
+        if include_delete:
+            self.delete = right_click_menu.addAction("Delete...")
+            self.delete.triggered.connect(self.on_delete)
+
+        #self.fringe.setCheckable(True)
+        #self.disp.setCheckable(True)
+        #self.vector.setCheckable(True)
+
+        self.left_click_callback = left_click_callback
+
+        self._setup_right_click_menu_actions(
+            right_click_menu, right_click_actions)
+        self.right_click_menu = right_click_menu
+
+    def _setup_right_click_menu_actions(
+            self, right_click_menu: QMenu,
+            right_click_actions: list[tuple[str, ClickCallback, bool]]) -> None:
+        """populates the right click menu"""
+        def false_callback(callback_func: ClickCallback):
             """dont validate the click"""
             #print('false')
             #print('  ', callback_func)
             #print('  ', menu)
             callback_func()
 
-        def true_callback(callback_func):
+        def true_callback(callback_func: ClickCallback):
             """a validated callback returns the row"""
             #print('true')
             #print('  ', callback_func)
@@ -306,17 +365,25 @@ class GenericRightClickTreeView(QTreeView2):
             #print('callback =', callback_func)
             callback_func(icase)
 
-        for actioni in actions:
-            (right_click_msg, callback_func, validate) = actioni
-            action = self.right_click_menu.addAction(right_click_msg)
+        for right_click_action in right_click_actions:
+            (right_click_msg, callback_func, validate) = right_click_action
+            action = right_click_menu.addAction(right_click_msg)
 
             true_false_callback = true_callback if validate else false_callback
             trigger_func = partial(true_false_callback, callback_func)
             action.triggered.connect(trigger_func)
-            #self.clear = self.right_click_menu.addAction("Clear Results...")
+            #self.clear = right_click_menu.addAction("Clear Results...")
             #self.clear.triggered.connect(self.on_clear_results)
 
-    def on_right_mouse_button(self):
+    def on_left_mouse_button(self) -> None:
+        """interfaces with other menus"""
+        if self.left_click_callback is not None:
+            self.set_rows()
+            is_valid, icase = self.get_row()
+            self.left_click_callback(icase)
+            x = 1
+
+    def on_right_mouse_button(self) -> None:
         """interfaces with the right click menu"""
         self.set_rows()
         is_valid, unused_icase = self.get_row()
@@ -325,58 +392,7 @@ class GenericRightClickTreeView(QTreeView2):
         # TODO: check if we should show disp/vector
         self.right_click_menu.popup(QtGui.QCursor.pos())
 
-
-class RightClickTreeView(QTreeView2):
-    """
-    creates a QTreeView with:
-     - all the features of QTreeView2
-     - a right click context menu with:
-       - Clear Active Results
-       - Export Case
-       - Apply Results to Fringe
-       - Apply Results to Displacement
-       - Apply Results to Vector
-       - Delete Case
-
-    """
-    def __init__(self, parent, data, choices,
-                 include_clear=True, include_export_case=True,
-                 include_delete=True,
-                 include_results=True):
-        QTreeView2.__init__(self, parent, data, choices)
-        #
-        # TODO: create a menu that only has clear/normals/fringe/delete
-        #       if there is no transient result
-        #
-        self.right_click_menu = QMenu()
-
-        if include_clear:
-            self.clear = self.right_click_menu.addAction("Clear Results...")
-            self.clear.triggered.connect(self.on_clear_results)
-
-        if include_export_case:
-            self.export_case = self.right_click_menu.addAction("Export Case...")
-            self.export_case.triggered.connect(self.on_export_case)
-
-        if include_results:
-            self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
-            self.fringe.triggered.connect(self.on_fringe)
-
-            self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
-            self.vector = self.right_click_menu.addAction("Apply Results to Vector...")
-
-            self.disp.triggered.connect(self.on_disp)
-            self.vector.triggered.connect(self.on_vector)
-
-        if include_delete:
-            self.delete = self.right_click_menu.addAction("Delete...")
-            self.delete.triggered.connect(self.on_delete)
-
-        #self.fringe.setCheckable(True)
-        #self.disp.setCheckable(True)
-        #self.vector.setCheckable(True)
-
-    def get_clicked(self):
+    def get_clicked(self) -> dict[str, int]:
         """gets the state of the clickable buttons"""
         is_clicked = {
             'fringe' : self.fringe.isChecked(),
@@ -386,40 +402,40 @@ class RightClickTreeView(QTreeView2):
         return is_clicked
 
     @property
-    def sidebar(self):
+    def sidebar(self) -> Sidebar:
         """gets the sidebar"""
         return self.parent.parent
 
     @property
-    def gui(self):
+    def gui(self) -> MainWindow:
         """get the MainWindow class"""
         return self.sidebar.parent
 
-    def on_clear_results(self):
+    def on_clear_results(self) -> None:
         """clears the active result"""
         self.sidebar.on_clear_results()
 
-    def on_export_case(self):
+    def on_export_case(self) -> None:
         """exports the case to a file"""
         unused_is_valid, icase = self.get_row()
         self.gui.export_case_data(icase)
 
-    def on_fringe(self):
+    def on_fringe(self) -> None:
         """applies a fringe result"""
         unused_is_valid, icase = self.get_row()
         self.sidebar.on_fringe(icase)
 
-    def on_disp(self):
+    def on_disp(self) -> None:
         """applies a displacement result"""
         unused_is_valid, icase = self.get_row()
         self.sidebar.on_disp(icase)
 
-    def on_vector(self):
+    def on_vector(self) -> None:
         """applies a vector result"""
         unused_is_valid, icase = self.get_row()
         self.sidebar.on_vector(icase)
 
-    def on_right_mouse_button(self):
+    def on_right_mouse_button(self) -> None:
         """interfaces with the right click menu"""
         self.set_rows()
         is_valid, unused_icase = self.get_row()
@@ -428,7 +444,7 @@ class RightClickTreeView(QTreeView2):
         # TODO: check if we should show disp/vector
         self.right_click_menu.popup(QtGui.QCursor.pos())
 
-def get_many_cases(data):
+def get_many_cases(data) -> list[int]:
     """
     Get the result case ids that are a subset of the data/form list
 

@@ -621,7 +621,7 @@ class ADD(VectorizedBaseCard):
         self.n = 0
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         return max(self.sid.max(), self.sids.max())
 
     def add(self, sid: int, sets, comment: str='') -> int:
