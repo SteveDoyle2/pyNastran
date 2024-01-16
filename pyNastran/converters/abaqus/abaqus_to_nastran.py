@@ -1,3 +1,6 @@
+"""
+https://2021.help.altair.com/2021/hwdesktop/hwx/topics/conversion_between_solvers/abaqus_nastran_conversion_mapping.htm
+"""
 from __future__ import annotations
 import os
 import sys

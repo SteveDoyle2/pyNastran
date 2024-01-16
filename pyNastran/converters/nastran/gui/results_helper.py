@@ -747,7 +747,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=True,
                     prefix='modal_contribution',
                 )
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
@@ -759,7 +761,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map,
                     self.stress[key].composite_data_dict, log, is_stress=True)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
@@ -770,7 +774,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_rod_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
@@ -780,7 +786,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_bar_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
@@ -790,7 +798,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_beam_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase
@@ -897,7 +907,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=False,
                     prefix='modal_contribution',
                 )
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
 
         if nastran_settings.composite_plate_strain:
@@ -906,7 +918,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map,
                     self.strain[key].composite_data_dict, log, is_stress=False)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
 
         if nastran_settings.rod_strain:
@@ -914,7 +928,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_rod_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=False)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
 
         if nastran_settings.bar_strain:
@@ -922,7 +938,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_bar_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=False)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
 
         if nastran_settings.beam_strain:
@@ -930,7 +948,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_beam_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=False)
-            except Exception as e:
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
                 log.error(str(e))
 
         icase = get_solid_stress_strains(
@@ -993,7 +1013,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx, txy,
                 max_principal, min_principal, ovm, is_element_on,
                 eids, header_dict, keys_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
 
         try:
@@ -1002,7 +1024,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
                 eids, header_dict, keys_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
 
         try:
@@ -1011,7 +1035,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
                 eids, header_dict, keys_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
 
         try:
@@ -1020,7 +1046,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx,
                 max_principal, min_principal, ovm, is_element_on,
                 header_dict, keys_map, self.eid_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
         #-------------------------------------------------------------
         try:
@@ -1028,7 +1056,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 model, key, is_stress, vm_word, itime,
                 oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
                 eids, header_dict, keys_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
 
         #vm_word = get_shear_stress_strain(
@@ -1056,7 +1086,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx, oyy, ozz, txy, tyz, txz,
                 max_principal, mid_principal, min_principal, ovm, is_element_on,
                 eids, header_dict, keys_map, log)
-        except Exception as e:
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:  # pragma: no cover
             log.error(str(e))
 
         #o = 'ϵ' if is_strain else 'σ'

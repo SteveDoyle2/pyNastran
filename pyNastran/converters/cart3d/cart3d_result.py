@@ -86,15 +86,22 @@ class Cart3dGeometry(GuiResultCommon):
         #j = self.titles.index(name)
         return 1
 
-    def get_methods(self, i):
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        return False
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return False
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return False
+
+    def get_methods(self, i: str, name: str):
         if i == 1:
             return ['centroid']
         return ['node']
 
-    def get_scalar(self, i, name):
-        return self.get_result(i, name)
+    def get_scalar(self, i, name, method):
+        return self.get_result(i, name, method)
 
-    def get_result(self, i, name):
+    def get_result(self, i, name, method):
         if name == 'NodeID':
             res = self.nodes
         elif name == 'ElementID':

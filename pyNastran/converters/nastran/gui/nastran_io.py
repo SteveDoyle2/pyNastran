@@ -1241,14 +1241,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         stop_on_failure = IS_TESTING
         build_map_centroidal_result(model, nid_map, stop_on_failure=stop_on_failure)
 
-        if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
-            self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
-            self.sidebar_nastran.set_model(model)
+        #if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
+            #self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
+            #self.sidebar_nastran.set_model(model)
 
-            self.res_dock_nastran = QDockWidget("Nastran Model", self)
-            self.res_dock_nastran.setObjectName("nastran_model")
-            self.res_dock_nastran.setWidget(self.sidebar_nastran)
-            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+            #self.res_dock_nastran = QDockWidget("Nastran Model", self)
+            #self.res_dock_nastran.setObjectName("nastran_model")
+            #self.res_dock_nastran.setWidget(self.sidebar_nastran)
+            #self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
 
         #self.res_dock.setWidget(self.res_widget)
         if plot:

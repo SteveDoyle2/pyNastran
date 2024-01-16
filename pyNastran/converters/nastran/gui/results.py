@@ -37,8 +37,15 @@ class LayeredTableResults(Table):
         self.titles_default = deepcopy(self.titles)
         self.headers_default = deepcopy(self.headers)
 
-    def get_methods(self, i):
+    def get_methods(self, i: int, name: str):
         return self.methods
+
+    def has_coord_transform(self, i: int, name: str) -> bool:
+        return True
+    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+        return True
+    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+        return True
 
     def deflects(self, unused_i, unused_res_name):
         return False
@@ -67,29 +74,29 @@ class LayeredTableResults(Table):
     def get_default_scale(self, i, name):
         return None
 
-    def get_scalar(self, i, name):
-        return self.get_result(i, name)
+    def get_scalar(self, i, name, method):
+        return self.get_result(i, name, method)
 
-    def get_magnitude(self, i, name):
-        scalar = self.get_scalar(i, name)  # TODO: update
+    def get_magnitude(self, i, name, method):
+        scalar = self.get_scalar(i, name, method)  # TODO: update
         mag = scalar
         if scalar.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
         return mag
 
-    def get_min_max(self, i, name):
-        mag = self.get_magnitude(i, name)
+    def get_min_max(self, i, name, method=''):
+        mag = self.get_magnitude(i, name, method)
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_default_min_max(self, i, name):
-        mag = self.get_magnitude(i, name)
+    def get_default_min_max(self, i: int, name: str, method: str=''):
+        mag = self.get_magnitude(i, name, method)
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str, method: str):
         (itime, ilayer, imethod, unused_header) = name
         scalars = self.scalars[itime, :, ilayer, imethod]
 
@@ -198,8 +205,8 @@ class SimpleTableResults(Table):
         mag = self.get_magnitude(i, name, method=method)
         return np.nanmin(mag), np.nanmax(mag)
 
-    def get_default_min_max(self, i, name):
-        mag = self.get_magnitude(i, name, method='')
+    def get_default_min_max(self, i, name, method=''):
+        mag = self.get_magnitude(i, name, method=method)
         return np.nanmin(mag), np.nanmax(mag)
 
     def get_phase(self, i, name):

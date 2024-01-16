@@ -1,5 +1,7 @@
 """tests the NastranIO class"""
+# encoding: utf8
 import os
+import sys
 from copy import deepcopy
 import unittest
 
@@ -102,9 +104,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
+        assert len(test.result_cases) == 56, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 156, len(test.result_cases)  # 55 is probably wrong
+        assert len(test.result_cases) == 278, len(test.result_cases) 
         test.cycle_results()
         test.on_rcycle_results()
 
@@ -194,11 +196,11 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.legend_obj.set_legend_menu()
         test.load_nastran_geometry(bdf_filename)
-        #assert len(test.result_cases) >= 55, len(test.result_cases)  # 55 is probably wrong
+        assert len(test.result_cases) == 55, len(test.result_cases)
         test.load_nastran_results(op2_filename)
         assert len(test.models['main'].elements) > 0
         #test.write_result_cases()
-        assert len(test.result_cases) == 694, len(test.result_cases)
+        assert_result_cases(test, ncases=694)
 
         test.on_rcycle_results()
         test.on_update_legend(
@@ -294,6 +296,7 @@ class TestNastranGUI(unittest.TestCase):
         # map strain energy
         keys = list(test.result_cases.keys())
         assert len(keys) == 694, len(keys)
+        assert_result_cases(test, ncases=694, debug=True)
         icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
@@ -317,7 +320,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 60, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 759, len(test.result_cases)
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
@@ -327,6 +332,8 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 10, len(test.result_cases)
+
         #test.load_nastran_results(op2_filename)
         nresult_cases = len(test.result_cases)
         icase = max(test.result_cases)
@@ -362,6 +369,7 @@ class TestNastranGUI(unittest.TestCase):
 
         # missing nodes
         test.on_load_custom_results(out_filename=deflection_filename2, restype='Deflection')
+        assert len(test.result_cases) == 25, len(test.result_cases)
 
 
     def test_beam_modes_01(self):
@@ -371,7 +379,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 108, len(test.result_cases)
 
     def test_beam_modes_02(self):
         """CBAR/CBEAM - PARAM,POST,-2"""
@@ -381,6 +391,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 108, len(test.result_cases)
 
     def test_beam_modes_03(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -396,6 +407,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 108, len(test.result_cases)
 
     def test_beam_modes_04(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -404,12 +416,17 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 108, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 108, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
 
 
     #@unittest.expectedFailure
@@ -429,7 +446,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 33, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 53, len(test.result_cases)
 
     def test_thermal_01(self):
         """runs models/thermal/thermal_test_153"""
@@ -439,13 +458,17 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 9, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 10, len(test.result_cases)
 
     def test_bwb_gui(self):
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         test = NastranGUI()
         #test.log = get_logger2()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 95, len(test.result_cases)
+
         test.group_actions.create_groups_by_property_id()
         test.group_actions.create_groups_by_visible_result(nlimit=50)
         test.toggle_conms()
@@ -458,7 +481,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
+        assert len(test.result_cases) == 36, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 56, len(test.result_cases)
 
     def test_aero_op2(self):
         """tests the freedlm model (OP2 with aero)"""
@@ -468,13 +493,13 @@ class TestNastranGUI(unittest.TestCase):
         #test.log.level = 'debug'
         #test.load_nastran_geometry(bdf_filename)
         test.load_nastran_geometry(op2_filename)
-        assert len(test.result_cases) >= 150, len(test.result_cases) #  236-24??? not 100%
+        assert_result_cases(test, ncases=150)
         test.load_nastran_results(op2_filename)
         #test.write_result_cases()
 
         #print(test.result_cases[154])
         #print(test.result_cases[160])
-        assert len(test.result_cases) == 236, len(test.result_cases)
+        assert_result_cases(test, ncases=236)
         #print(test.result_cases)
 
     def test_aero(self):
@@ -483,7 +508,10 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.op2')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert_result_cases(test, ncases=7)
         test.load_nastran_results(op2_filename)
+        assert_result_cases(test, ncases=7)
+
         out_datai = deepcopy(test.geometry_properties)
         test.on_update_geometry_properties_override_dialog(out_datai)
 
@@ -526,7 +554,9 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 63, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 202, len(test.result_cases)
 
         idisp = None
         iforce_xyz = None
@@ -580,7 +610,9 @@ class TestNastranGUI(unittest.TestCase):
         #print(model.elements)
         test2 = NastranGUI()
         test2.load_nastran_geometry(model)
+        assert len(test2.result_cases) == 5, len(test2.result_cases)
         test2.load_nastran_results(op2_filename)
+        assert len(test2.result_cases) == 107, len(test2.result_cases)
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -588,7 +620,9 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
+        assert len(test.result_cases) == 58, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 197, len(test.result_cases)
 
         #test = NastranGUI()
         test.settings.nastran_create_coords = False
@@ -605,7 +639,9 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
+        assert len(test.result_cases) == 56, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 443, len(test.result_cases)
         #test.create_groups_by_property_id()
         test.create_groups_by_visible_result()
 
@@ -1027,6 +1063,27 @@ class TestNastranGUI(unittest.TestCase):
 
     #keys = test.result_cases.keys()
     #assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+
+def assert_result_cases(test: NastranGUI, ncases: int,
+                        debug: bool=False) -> None:  # pragma: no cover
+    msg = ''
+    for i, (obj, name) in test.result_cases.items():
+        #if i > 328:
+            #break
+        msg += f'{i}: {str(obj)}'
+    assert isinstance(msg, str)
+    ncases_actual = len(test.result_cases)
+    if ncases_actual != ncases:
+        #print(msg)
+        print(f'ncases_actual={ncases_actual}; ncases={ncases}')
+        raise RuntimeError(msg)
+    if debug:
+        assert isinstance(msg, str)
+        if hasattr(sys.stdin, 'reconfigure'):
+            sys.stdin.reconfigure(encoding='utf-8')
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        print(msg)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

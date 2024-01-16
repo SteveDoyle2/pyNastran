@@ -180,7 +180,8 @@ def _save_layered_table_results(case: LayeredTableResults,
     form_name = case.form_names[itime, ilayer, imethod]
     #for method in case.methods:
     titlei =  f'{form_name}_subcase={case.subcase_id}'
-    res = case.get_result(key, name)
+    method = case.get_methods(key, name)
+    res = case.get_result(key, name, method)
 
     check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
