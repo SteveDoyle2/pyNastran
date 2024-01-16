@@ -517,7 +517,7 @@ class ForceTableResults(VectorTable):
 
 translation = ['Magnitude', 'tx', 'ty', 'tz']
 rotation = ['Magnitude', 'rx', 'ry', 'rz']
-class DisplacementResults(VectorTable):
+class DisplacementResults2(VectorTable):
     def __init__(self, subcase_id: int,
                  titles: list[str],
                  headers: list[str],

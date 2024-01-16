@@ -14,7 +14,8 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar,
+    QMenu, QToolButton)
 
 from vtk import (vtkExtractSelection,
                  vtkSelection, vtkSelectionNode,
