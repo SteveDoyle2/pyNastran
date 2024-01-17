@@ -17,6 +17,7 @@ from pyNastran.op2.result_objects.stress_object import (
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
     get_plate_stress_strain, get_solid_stress_strain
 )
+from pyNastran.gui import USE_NEW_SIDEBAR_OBJS
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, Case, Cases
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
@@ -28,12 +29,14 @@ from .stress import (
     get_plate_stress_strains, get_composite_plate_stress_strains,
     get_solid_stress_strains)
 from .force import get_spring_force, get_bar_force, get_plate_force
+from .result_objects.displacement_results import DisplacementResults2
 
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
+    from pyNastran.op2.result_objects.table_object import RealTableArray
     #from pyNastran.op2.result_objects.design_response import Desvars
 
 #from pyNastran.converters.nastran.gui.types import
@@ -1321,7 +1324,8 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                     name, t123_offset, result[key].__class__.__name__))
     return icase
 
-def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offset,
+def _fill_nastran_ith_displacement(result, resname: str,
+                                   deflects: bool, t123_offset,
                                    cases: Cases, model: OP2,
                                    key: NastranKey,
                                    icase: int,
@@ -1334,10 +1338,12 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
                                    dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
     if t123_offset == 0:
-        title1 = name + ' T_XYZ'
+        title1 = resname + ' T_XYZ'
+        is_translation = True
     else:
         assert t123_offset == 3, t123_offset
-        title1 = name + ' R_XYZ'
+        title1 = resname + ' R_XYZ'
+        is_translation = False
     #title2 = name + ' R_XYZ'
 
     case = result[key]
@@ -1356,12 +1362,23 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
     titles = []
     scales = []
     headers = []
-    #if deflects:
+    disp2_scalar = None
+    disp2_scales = None
     if deflects:
+        if USE_NEW_SIDEBAR_OBJS:
+            nastran_res2 = DisplacementResults2(
+                subcase_idi, node_ids, xyz_cid0, case,
+                disp2_scalar, disp2_scales,
+                title='NEW '+resname,
+                is_translation=is_translation,
+                dim_max=dim_max,
+                data_format='%e', nlabels=None, labelsize=None,
+                ncolors=None, colormap='', set_max_min=False,
+                uname=resname)
         nastran_res = DisplacementResults(subcase_idi, titles, headers,
                                           xyz_cid0, t123, tnorm,
                                           scales,
-                                          uname=name)
+                                          uname=resname)
 
         #dmax = []
         for itime in range(ntimes):
@@ -1400,6 +1417,13 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
             form_dict[(key, itime)].append(formii)
             icase += 1
 
+            if USE_NEW_SIDEBAR_OBJS:
+                # disp2
+                cases[icase] = (nastran_res2, (itime, 'NEW '+title1))  # do I keep this???
+                formii: Form = ('NEW '+title1, icase, [])
+                form_dict[(key, itime)].append(formii)
+                icase += 1
+
         #if name == 'Displacement':
             # Displacement; itime=361 time=3.61 tnorm=1.46723
             #print('dmax = ', max(dmax))
@@ -1409,7 +1433,7 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
         nastran_res = ForceTableResults(subcase_idi, titles, headers,
                                         t123, tnorm,
                                         scales, #deflects=deflects,
-                                        uname=name)
+                                        uname=resname)
         for itime in range(ntimes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
@@ -1497,8 +1521,12 @@ def print_empty_elements(model: BDF,
     print('-----------------------------------')
 
 
-def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
+def _get_t123_tnorm(case: RealTableArray,
+                    nids: np.ndarray,
+                    nnodes: int,
+                    t123_offset: int=0) -> tuple[np.ndarray, np.ndarray, int]:
     """
+    Find the largest x/y/z movement.  Assume axes are independent.
     helper method for _fill_op2_oug_oqg
 
     Parameters
@@ -1517,19 +1545,19 @@ def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
     -------
     t123 : (ntimes, nnodes, 3) float ndarray
        the translations or rotations
-    tnorm : (ntimes, 3) float ndarray
-        ???
+    tnorm : (ntimes, nnodes) float ndarray
+        used to create the scale factor
     ntimes : int
        number of times
 
     """
     assert case.is_sort1, case.is_sort1
 
-    itime0 = 0
-    t1 = case.data[itime0, :, 0]
-    ndata = t1.shape[0]
-    if nnodes != ndata:
-        #print('nnodes=%s ndata=%s' % (nnodes, ndata))
+    #itime0 = 0
+    #t1 = case.data[itime0, :, 0]
+    ntimes1, nnodesi = case.data.shape[:2]
+    if nnodes != nnodesi:
+        #print('nnodes=%s nnodesi=%s' % (nnodes, nnodesi))
         nids_in_disp = case.node_gridtype[:, 0]
         #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
         j = np.searchsorted(nids, nids_in_disp)  # searching for nidsi
@@ -1551,8 +1579,9 @@ def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
     # (901, 6673, 3)
     t123 = case.data[:, :, t123_offset:t123_offset+3]
     ntimes = case.ntimes
+    assert ntimes1 == ntimes, (ntimes1, ntimes)
 
-    if nnodes != ndata:
+    if nnodes != nnodesi:
         dtype = t123.dtype.name
         t123i = np.zeros((ntimes, nnodes, 3), dtype=dtype)
         t123i[:, j, :] = t123
@@ -1565,32 +1594,42 @@ def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
         assert len(tnorm) == t123.shape[0]
     else:
         # (itime, nnodes, xyz)
-        # tnorm (901, 3)
+        # tnorm (901, 100, 3)
+        # tnorm (901, 100)
+        #
+        # TODO: used to be 1.0; that gets the scale factor for
+        #       10% x/y/z direction vs. total
+        tnorm = safe_norm(t123, axis=2)
 
-        # float32s are apparently buggy in numpy if you have small numbers
-        # see models/elements/loadstep_elememnts.op2
-        try:
-            tnorm = norm(t123, axis=1)
-        except FloatingPointError:
-            dtype_map = {
-                'float32': 'float64',
-                'complex64': 'complex128',
-            }
-            dtype = dtype_map[t123.dtype.name]
-            t123 = t123.astype(dtype=dtype)
-            tnorm = norm(t123, axis=1)
-
-            #print('skipping %s' % name)
-            #print(t123.max(axis=1))
-            #for itime, ti in enumerate(t123):
-                #print('itime=%s' % itime)
-                #print(ti.tolist())
-        assert len(tnorm) == t123.shape[0]
+        #print('skipping %s' % name)
+        #print(t123.max(axis=1))
+        #for itime, ti in enumerate(t123):
+            #print('itime=%s' % itime)
+            #print(ti.tolist())
+        assert tnorm.shape == (ntimes, nnodes), tnorm.shape
 
     assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
     assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
     return t123, tnorm, ntimes
 
+def safe_norm(t123: np.ndarray,
+              axis: Optional[int]=None) -> np.ndarray:
+    """
+    float32s are apparently buggy in numpy if you have small numbers
+    see models/elements/loadstep_elememnts.op2
+
+    """
+    try:
+        tnorm = norm(t123, axis=axis)
+    except FloatingPointError:
+        dtype_map = {
+            'float32': 'float64',
+            'complex64': 'complex128',
+        }
+        dtype = dtype_map[t123.dtype.name]
+        t123 = t123.astype(dtype=dtype)
+        tnorm = norm(t123, axis=1)
+    return tnorm
 
 def _get_times(model: OP2, key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
     """

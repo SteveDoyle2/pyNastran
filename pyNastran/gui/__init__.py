@@ -8,6 +8,9 @@ IS_WINDOWS = 'nt' in os.name
 IS_LINUX = 'posix' in os.name
 IS_MAC = 'darwin' in os.name
 
+USE_NEW_SIDEBAR_OBJS = True
+USE_NEW_SIDEBAR = True
+
 
 def _get_fonts() -> tuple[str, str]:
     """gets a font and a bold-italics font"""

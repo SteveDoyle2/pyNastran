@@ -16,8 +16,8 @@ from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult, check_title # NormalResult,
 from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults # , ElementalTableResults
-from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
-
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):

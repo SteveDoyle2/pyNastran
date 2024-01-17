@@ -15,7 +15,6 @@ import ctypes
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
 import pyNastran
 from pyNastran.gui.main_window import MainWindow, get_stylesheet
 

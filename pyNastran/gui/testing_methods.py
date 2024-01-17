@@ -224,16 +224,19 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_label2 = obj.get_header(i, name)
             unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name, method)
-            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(
-                i, name)
+            outi = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            nlabels, labelsize, ncolors, colormap = outi
+            if colormap == '':
+                colormap = 'jet'
+
             if vector_size == 3:
-                unused_plot_value = obj.get_plot_value(i, name) # vector
-                scale = 1.0
-                phase = 2.0
+                unused_plot_value = obj.get_plot_value(i, name, method) # vector
+                scale = 1.1
+                phase = 2.2
                 obj.set_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
-                assert obj.deflects(i, name) in [True, False], obj.deflects(i, name)
-                unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
+                assert obj.deflects(i, name) in {True, False}, obj.deflects(i, name)
+                unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name, method)
             else:
                 unused_scalar_result = obj.get_scalar(i, name, method)
 
@@ -246,7 +249,6 @@ class FakeGUIMethods(GuiVTKCommon):
             nlabels = 4
             labelsize = 10
             ncolors = 20
-            colormap = 'jet'
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, name, nlabels, labelsize, ncolors, colormap)
             (unused_default_nlabels, unused_default_labelsize,

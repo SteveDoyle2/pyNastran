@@ -278,7 +278,7 @@ class Table(GuiResultCommon):
         #assert len(dxyz.shape) == 2, dxyz.shape
         #return dxyz
 
-    def get_vector_result(self, i, name):
+    def get_vector_result(self, i, name, method):
         bbb
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         #if self.is_real:

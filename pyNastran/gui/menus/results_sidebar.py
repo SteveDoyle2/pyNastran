@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
 )
 #from qtpy.QtCore import QSize
 from qtpy import QtCore
+from pyNastran.gui import USE_NEW_SIDEBAR
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NullResult
 from pyNastran.gui.utils.qt.utils import (
@@ -34,7 +35,6 @@ SkippableSpinBox = QSpinBox
             #self.stepChanged.emit()
 
 SHOW_DEV = False
-USE_NEW_SIDEBAR = False
 
 class Sidebar(QWidget):
     """

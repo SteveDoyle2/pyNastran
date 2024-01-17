@@ -434,12 +434,12 @@ class LegendObject(BaseGui):
             obj.set_data_format(i, res_name, data_format)
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, res_name, nlabels, labelsize, ncolors, colormap)
+            is_normal = obj.is_normal_result(i, res_name)
 
             #data_format = obj.get_data_format(i, res_name)
             #obj.set_format(i, res_name, data_format)
             #obj.set_data_format(i, res_name, data_format)
             unused_subtitle, unused_label = self.gui.get_subtitle_label(subcase_id)
-            is_normal = obj.is_normal_result(i, res_name)
             #if scale != scale_old or phase != phase_old:
             #if not from_legend_menu:
             if update_fringe:

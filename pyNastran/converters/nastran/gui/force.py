@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran.converters.nastran.gui.results import SimpleTableResults # , LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults # , LayeredTableResults
 from .stress import add_simple_methods_to_form, concatenate_scalars
 #from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict # , Case, Cases
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap

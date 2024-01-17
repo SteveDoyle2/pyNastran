@@ -402,7 +402,8 @@ class GuiQtCommon(GuiAttributes):
             self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
             return is_valid, failed_data
 
-        xyz_nominal, vector_data = obj.get_vector_result(i, name)
+        method = obj.get_methods(i, name)[0]
+        xyz_nominal, vector_data = obj.get_vector_result(i, name, method)
         if is_disp and xyz_nominal is None:
             self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
             return is_valid, failed_data
@@ -745,12 +746,12 @@ class GuiQtCommon(GuiAttributes):
             if location == 'node':
                 #self._is_displaced = False
                 self._is_forces = True
-                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name, method)
                 self._update_forces(vector_data, set_scalars=apply_fringe, scale=scale)
             else:
                 #self._is_displaced = False
                 self._is_forces = True
-                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name, method)
                 self._update_elemental_vectors(vector_data, set_scalars=apply_fringe, scale=scale)
             self.icase_vector = icase
 
@@ -970,9 +971,9 @@ class GuiQtCommon(GuiAttributes):
 
         complex_types = ['complex64']
         if hasattr(max_value, 'dtype') and max_value.dtype.name in complex_types:
-            raise TypeError(max_value)
+            raise TypeError(max_value)  # pragma: no cover
         if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
-            raise TypeError(min_value)
+            raise TypeError(min_value)  # pragma: no cover
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
@@ -1006,7 +1007,8 @@ class GuiQtCommon(GuiAttributes):
             #print(normi)
             #print(obj)
             print(case)
-            imethod = name[1]
+            imethod = 0
+            #imethod = name[1]
             #print(imethod)
             print(i, methods[imethod])
             return self.icase
@@ -1158,26 +1160,9 @@ class GuiQtCommon(GuiAttributes):
             return None
         #print('name=%r case=%r' % (name, case))
 
-        if not hasattr(case, 'dtype'):
-            raise RuntimeError('name=%s case=%s' % (name, case))
-
-        if issubdtype(case.dtype, np.integer):
-            data_type = VTK_INT
-            self.grid_mapper.InterpolateScalarsBeforeMappingOn()
-        elif issubdtype(case.dtype, np.floating):
-            data_type = VTK_FLOAT
-            self.grid_mapper.InterpolateScalarsBeforeMappingOff()
-        elif case.dtype.name in ['complex64']:
-            if phase:
-                phaser = np.radians(phase)
-                case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real
-            else:
-                case = case.real
-            data_type = VTK_FLOAT
-            self.grid_mapper.InterpolateScalarsBeforeMappingOff()
-        else:
-            raise NotImplementedError(case.dtype.type)
-
+        case, vtk_data_type = set_grid_mapper(
+            self.grid_mapper, case,
+            vector_size, phase)
 
         #if 0: # nan testing
             #if case.dtype.name == 'float32':
@@ -1193,7 +1178,7 @@ class GuiQtCommon(GuiAttributes):
             grid_result = numpy_to_vtk(
                 num_array=case2,
                 deep=True,
-                array_type=data_type
+                array_type=vtk_data_type
             )
             #print('grid_result = %s' % grid_result)
             #print('max2 =', grid_result.GetRange())
@@ -1206,7 +1191,7 @@ class GuiQtCommon(GuiAttributes):
             grid_result = numpy_to_vtk(
                 num_array=case2,
                 deep=True,
-                array_type=data_type
+                array_type=vtk_data_type
             )
         return grid_result
 
@@ -1300,7 +1285,7 @@ class GuiQtCommon(GuiAttributes):
             self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
                                     revert_displaced=False, show_msg=show_msg)
-            #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+            #xyz_nominal, vector_data = obj.get_vector_result(i, res_name method)
             #self._update_grid(vector_data)
 
     def _final_grid_update(self, icase: int, name: str,
@@ -1354,8 +1339,8 @@ class GuiQtCommon(GuiAttributes):
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
-
-                    xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                    method = obj.get_methods(i, res_name)[0]
+                    xyz_nominal, vector_data = obj.get_vector_result(i, res_name, method)
                     if obj.deflects(i, res_name):
                         #grid_result1 = self.set_grid_values(name, case, 1,
                                                             #min_value, max_value, norm_value)
@@ -1370,7 +1355,7 @@ class GuiQtCommon(GuiAttributes):
                         self._is_displaced = False
                         self._is_forces = True
                         scale = obj.get_scale(i, res_name)
-                        xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                        xyz_nominal, vector_data = obj.get_vector_result(i, res_name, method)
                         self._update_forces(vector_data, scale)
                         self.icase_vector = icase
 
@@ -1996,6 +1981,29 @@ def normalize_forces(forces_array):
     #print('new_forces =', new_forces[inonzero])
     #print('mag =', mag[inonzero])
     return new_forces, mag
+
+def set_grid_mapper(grid_mapper: vtkDataSetMapper,
+                    case: np.ndarray,
+                    vector_size: int,
+                    phase: float) -> tuple[np.ndarray, int]:
+    assert isinstance(case, np.ndarray), case
+    if issubdtype(case.dtype, np.integer):
+        vtk_data_type = VTK_INT
+        grid_mapper.InterpolateScalarsBeforeMappingOn()
+    elif issubdtype(case.dtype, np.floating):
+        vtk_data_type = VTK_FLOAT
+        grid_mapper.InterpolateScalarsBeforeMappingOff()
+    elif case.dtype.name == 'complex64':
+        if phase:
+            phaser = np.radians(phase)
+            case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real
+        else:
+            case = case.real
+        vtk_data_type = VTK_FLOAT
+        grid_mapper.InterpolateScalarsBeforeMappingOff()
+    else:  # pragma: no cover
+        raise NotImplementedError(case.dtype.type)
+    return case, vtk_data_type
 
 def show_hide_actor(actor):
     """flips the visibility for an actor"""

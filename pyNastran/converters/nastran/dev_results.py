@@ -253,7 +253,7 @@ class TransientElementResults:
         ##print(self.dxyz_norm)
         #return self.dxyz_norm
 
-    def get_vector_result(self, i, name):
+    def get_vector_result(self, i, name, method):
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             xyz, deflected_xyz = self.get_vector_result_by_scale_phase(

@@ -1,4 +1,5 @@
 """interface to the ScalarBar"""
+from typing import Optional
 import numpy as np
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkTextProperty
 from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
@@ -128,8 +129,11 @@ class ScalarBar:
         #self.scalar_bar.RepositionableOn()
         self.scalar_bar.VisibilityOff()
 
-    def update_color_function(self, min_value, max_value,
-                              colormap='jet', colormap_order=None, is_low_to_high=True):
+    def update_color_function(self,
+                              min_value, max_value,
+                              colormap: str='jet',
+                              colormap_order=None,
+                              is_low_to_high: bool=True):
         """updates the color_function"""
         # jet - HSV :)
         # jet with RGB is red to blue (not a bad colormap, but not jet)
@@ -142,14 +146,7 @@ class ScalarBar:
         # plasma  - RGB
         # magma   - not HSV, RGB
         # inferno - not HSV, RGB
-        if colormap_order is None:
-            if colormap in ['jet', 'jet2', 'blend', None] or colormap in HSV_MAPS:
-                colormap_order = 'hsv'
-                colormap = 'jet'
-            elif colormap in RGB_MAPS:
-                colormap_order = 'rgb'
-            else:
-                raise NotImplementedError(colormap)
+        colormap_order, colormap = get_colormap_order(colormap_order, colormap)
 
         update_color_function = (
             colormap_order != self.colormap_order or
@@ -170,7 +167,7 @@ class ScalarBar:
             self.color_function.SetColorSpaceToRGB()
         elif colormap_order == 'hsv':
             self.color_function.SetColorSpaceToHSV()
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(colormap_order)
 
         if colormap == 'jet':
@@ -189,6 +186,9 @@ class ScalarBar:
             vals = np.linspace(min_value, max_value, num=len(colormap))
             if is_low_to_high:
                 vals = vals[::-1]
+
+            # AddHSVPoint
+            #self.color_function.AddRGBPoints(vals, colormap)
             for val, (red, green, blue) in zip(vals, colormap):
                 self.color_function.AddRGBPoint(val, red, green, blue)
 
@@ -217,7 +217,7 @@ class ScalarBar:
         self.scalar_bar.SetWidth(width)
         self.scalar_bar.SetPosition(x, y)
 
-    def update_title(self, title):
+    def update_title(self, title: str) -> None:
         """Updates the title.  Pads the text so text isn't huge."""
         nchars = len(title)
         if nchars > 10:
@@ -332,3 +332,16 @@ class ScalarBar:
     #if 'i' in data_format:
         #return True
     #return False
+
+def get_colormap_order(colormap_order: Optional[str],
+                       colormap: str) -> tuple[str, str]:
+    if colormap_order is None:
+        if colormap in ['jet', 'jet2', 'blend', '', None] or colormap in HSV_MAPS:
+            colormap_order = 'hsv'
+            colormap = 'jet'
+        elif colormap in RGB_MAPS:
+            colormap_order = 'rgb'
+        else:  # pragma: no cover
+            raise NotImplementedError(colormap)
+    return colormap_order, colormap
+

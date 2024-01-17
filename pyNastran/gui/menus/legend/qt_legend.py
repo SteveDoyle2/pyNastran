@@ -292,8 +292,8 @@ class LegendPropertiesWindow(PyDialog):
             self.ncolors_edit.setText(str(ncolors))
             self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
-            self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
-
+            if colormap != '':
+                self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
             self._set_legend_fringe(self._is_fringe)
 
         if update:
@@ -452,7 +452,9 @@ class LegendPropertiesWindow(PyDialog):
         self.colormap_button = QPushButton("Default")
         for key in colormap_keys:
             self.colormap_edit.addItem(key)
-        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
+
+        if self._colormap != '':
+            self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
 
         # --------------------------------------------------------------
         # the header

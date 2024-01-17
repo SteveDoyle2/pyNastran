@@ -22,6 +22,7 @@ from pyNastran.utils import _filename
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
 from pyNastran.converters.stl.stl import read_stl
 
 
@@ -95,6 +96,16 @@ def create_res_obj(islot: int,
         dxyz = datai
         if is_deflection:
             xyz = xyz_cid0
+            disp_scalar = None
+            disp_scales = None
+            #res_obj = DisplacementResults2(
+            #    islot, xyz, dxyz, disp_scalar, disp_scales,
+            #    dim_max=dim_max, data_format='%e',
+            #    nlabels=None, labelsize=None, ncolors=None,
+            #    colormap='',
+            #    #set_max_min=False, uname='DisplacementResults',
+            #)
+
             res_obj = DisplacementResults(
                 #subcase_id, titles, headers, xyz, dxyz, unused_scalar
                 islot, titles, headers,

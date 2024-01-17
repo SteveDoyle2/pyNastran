@@ -248,23 +248,24 @@ class VectorTable(GuiResultCommon):
         # TODO: do this right
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i: int, name: str) -> str:
+    def get_default_title(self, i: int, resname: str) -> str:
         return self.titles_default[i]
 
     #-------------------------------------
     # unmodifyable getters
 
-    def get_data_type(self, unused_i, unused_name: str) -> str:
+    def get_data_type(self, unused_i, resname: str) -> str:
         """the precision of the data"""
         return self.data_type
 
-    def get_vector_size(self, i:int, unused_name: str) -> int:
+    def get_vector_size(self, i:int, resname: str) -> int:
         """the result size"""
         #print(i)
         #j = self.titles_default.index(name)
         return 3
 
-    def get_plot_value(self, i:int, unused_name: str) -> np.ndarray:
+    def get_plot_value(self, i:int, resname: str, method: str) -> np.ndarray:
+        """plot returns the displacement..."""
         if self.is_real:
             if self.dim == 2:
                 dxyz = self.dxyz
@@ -292,6 +293,7 @@ class VectorTable(GuiResultCommon):
         return dxyz
 
     def get_result(self, i: int, name: str, method: str) -> np.ndarray:
+        """gets the 'typical' result which is a vector"""
         if self.is_real:
             if self.dim == 2:
                 # single result
@@ -310,7 +312,8 @@ class VectorTable(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
-    def get_vector_result(self, i: int, name: str) -> tuple[np.ndarray, np.ndarray]:
+    def get_vector_result(self, i: int, name: str,
+                          method: str) -> tuple[np.ndarray, np.ndarray]:
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
@@ -517,7 +520,7 @@ class ForceTableResults(VectorTable):
 
 translation = ['Magnitude', 'tx', 'ty', 'tz']
 rotation = ['Magnitude', 'rx', 'ry', 'rz']
-class DisplacementResults2(VectorTable):
+class DisplacementResults(VectorTable):
     def __init__(self, subcase_id: int,
                  titles: list[str],
                  headers: list[str],

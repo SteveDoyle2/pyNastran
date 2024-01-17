@@ -8,7 +8,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
 
-from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
 
 
