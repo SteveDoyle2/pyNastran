@@ -16,9 +16,16 @@ if TYPE_CHECKING: # pragma: no cover
 float_types = (float, np.float32, np.float64)
 int_types = (int, np.int32, np.int64)
 
+CompositeResult = tuple[
+    np.ndarray, np.ndarray, np.ndarray,
+    str, int, str,
+]
+CompositeDict = dict[str, dict[Any, CompositeResult]]
+
 #vm_word = get_plate_stress_strain(
     #model, key, is_stress, vm_word, itime,
     #oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
+
     #header_dict, keys_map)
 
 class StressObject:
@@ -35,7 +42,8 @@ class StressObject:
         self.is_stress = is_stress
         assert is_stress in {True, False}, is_stress
 
-        self.composite_data_dict = create_composite_plates(model, key, is_stress, self.keys_map)
+        self.composite_data_dict: CompositeDict = create_composite_plates(
+            model, key, is_stress, self.keys_map)
         #self.plates_data_dict = create_plates(model, key, is_stress)
 
         #for key in self.plates_data_dict.keys():
@@ -268,7 +276,9 @@ def create_plates(model: Any, key: NastranKey, is_stress: bool) -> dict[str, Any
             #del obj_dict[case_key]
     return isotropic_data_dict
 
-def create_composite_plates(model, key: NastranKey, is_stress: bool, keys_map: KeysMap):
+def create_composite_plates(model, key: NastranKey,
+                            is_stress: bool,
+                            keys_map: KeysMap) -> CompositeDict:
     """helper method for _fill_op2_time_centroidal_stress
 
     Returns

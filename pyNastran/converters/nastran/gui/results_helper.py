@@ -48,6 +48,7 @@ FormDict = dict[tuple[Any, Any], Form]
 HeaderDict = dict[tuple[Any, Any], str]
 Case = tuple[GuiResult, tuple[int, str]]
 Cases = dict[int, Case]
+CRASH = True
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -768,6 +769,8 @@ class NastranGuiResults(NastranGuiAttributes):
             except NotImplementedError:  # pragma: no cover
                 raise
             except Exception as e:  # pragma: no cover
+                if CRASH:
+                    raise
                 log.error(str(e))
             #assert icase >= icasei
             #icasei = icase

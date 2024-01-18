@@ -30,7 +30,7 @@ class CompositeResults2(GuiResultCommon):
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
         GuiResultCommon.__init__(self)
-        self.method_indices = (0, )
+        self.layer_indices = (-1, )  # All
         self.is_dense = False
         self.dim = case.data.ndim
         assert self.dim == 3, case.data.shape
@@ -125,6 +125,15 @@ class CompositeResults2(GuiResultCommon):
     #def get_header(self, itime: int, name: str) -> int:
         #return 3
 
+    def _get_default_tuple_indices(self):
+        out = tuple(np.array(self._get_default_layer_indicies()) - 1)
+        return out
+
+    def _get_default_layer_indicies(self):
+        default_indices = list(self.layer_map.keys())
+        default_indices.remove(0)
+        return default_indices
+
     def set_sidebar_args(self,
                          itime: str, res_name: str,
                          min_max_method: str='',
@@ -154,8 +163,7 @@ class CompositeResults2(GuiResultCommon):
         #}
         # if Magnitude is selected, only use magnitude
         # methods = ['T_XYZ', 'TX', 'TY', 'TZ']
-        default_indices = list(self.layer_map.keys())
-        default_indices.remove(0)
+        default_indices = self._get_default_layer_indicies()
         if methods_keys is None or len(methods_keys) == 0:
             # default; All
             indices = default_indices
@@ -167,7 +175,8 @@ class CompositeResults2(GuiResultCommon):
             # update the indices to correspond to the array
             #methods_keys.sort()
             indices = methods_keys
-        self.method_indices = tuple(np.array(indices, dtype='int32') - 1)
+        self.layer_indices = tuple(np.array(indices, dtype='int32') - 1)
+        #self.layer_indices = (1, )
 
         # doesn't matter cause it's already nodal
         assert min_max_method in min_max_methods, min_max_method
@@ -200,14 +209,15 @@ class CompositeResults2(GuiResultCommon):
         """
         (itime, ilayer, imethod, header) = case_tuple
 
-        #method = self.get_methods(itime, res_name)[0]
-        method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
-        self.method_indices
+        default_indices = self._get_default_tuple_indices() # 0-based
+        if self.layer_indices == default_indices:
+            method = 'All Layers'
+        else:
+            self.layer_indices
+            dict_sets = {'': [(idx+1) for idx in self.layer_indices],}
+            method = write_patran_syntax_dict(dict_sets)
 
-        dict_sets = {'': [(idx+1) for idx in self.method_indices],}
-        method = write_patran_syntax_dict(dict_sets)
-
-        #method = method_ + ', '.join(str(idx+1) for idx in self.method_indices)
+        #method = method_ + ', '.join(str(idx+1) for idx in self.layer_indices)
         results = list(self.result.keys())
         result = results[imethod]
         annotation_label = f'{self.title} {method}: {result}'
@@ -218,7 +228,7 @@ class CompositeResults2(GuiResultCommon):
         return None
         #if self.linked_scale_factor:
             #itime = 0
-        #scales = self.default_scales[self.method_indices]
+        #scales = self.default_scales[self.layer_indices]
         #if scales[itime] is not None:
             #return scales[itime]
 
@@ -237,7 +247,7 @@ class CompositeResults2(GuiResultCommon):
         return None
         #if self.linked_scale_factor:
             #itime = 0
-        #scales = self.scales[self.method_indices]
+        #scales = self.scales[self.layer_indices]
         #scale = scales[itime]
         #if scale is None:
             #scale = self.get_default_scale(itime, res_name)
@@ -247,7 +257,7 @@ class CompositeResults2(GuiResultCommon):
         return
         #if self.linked_scale_factor:
             #itime = 0
-        #scales = self.scales[self.method_indices]
+        #scales = self.scales[self.layer_indices]
         #scales[itime] = scale
 
     def get_default_phase(self, itime: int, res_name: str) -> float:
@@ -256,13 +266,13 @@ class CompositeResults2(GuiResultCommon):
         (itime, ilayer, imethod, header) = case_tuple
         if self.is_real:
             return 0.0
-        phases = self.phases[self.method_indices]
+        phases = self.phases[self.layer_indices]
         return phases[itime]
     def set_phase(self, itime: int, case_tuple: str, phase: float) -> None:
         (itime, ilayer, imethod, header) = case_tuple
         if self.is_real:
             return
-        phases = self.phases[self.method_indices]
+        phases = self.phases[self.layer_indices]
         phases[itime] = phase
 
     def get_data_format(self, itime: int, res_name: str) -> str:
@@ -283,8 +293,8 @@ class CompositeResults2(GuiResultCommon):
         return None, None
     def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
         (itime, ilayer, imethod, header) = case_tuple
-        mins = self.mins[(itime, imethod, self.method_indices)]
-        maxs = self.maxs[(itime, imethod, self.method_indices)]
+        mins = self.mins[(itime, imethod, self.layer_indices)]
+        maxs = self.maxs[(itime, imethod, self.layer_indices)]
         if mins[itime] is not None and maxs[itime] is not None:
             return mins[itime], maxs[itime]
 
@@ -299,9 +309,9 @@ class CompositeResults2(GuiResultCommon):
     def get_default_legend_title(self, itime: int, case_tuple: str) -> str:
         (itime, ilayer, imethod, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
-        #self.method_indices
+        #self.layer_indices
         results = list(self.result.values())
-        #method = method_ + ', '.join(str(idx) for idx in (self.method_indices+1))
+        #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #method = method.strip()
         #title = f'{self.title} {method}'
         title = results[itime]
@@ -313,9 +323,9 @@ class CompositeResults2(GuiResultCommon):
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, ilayer, imethod, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
-        #self.method_indices
+        #self.layer_indices
         #self.result
-        #method = method_ + ', '.join(str(idx) for idx in (self.method_indices+1))
+        #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #title = f'{self.title} {method}'
         results = list(self.result.values())
         return results[imethod]
@@ -335,6 +345,15 @@ class CompositeResults2(GuiResultCommon):
         pass
 
     def _get_real_data(self, case_tuple: int) -> np.ndarray:
+        (itime, ilayer, imethod, header) = case_tuple
+
+        data = self.case.data[itime, :, imethod]
+        rows = self.case.element_layer[:, 0]
+        cols = self.case.element_layer[:, 1]
+        ulayer = np.unique(cols)
+
+        if self.layer_indices == (-1, ):
+            self.layer_indices = tuple(ulayer - 1)
         #if self.is_stress:
             #datai = self.dxyz.data[itime, :, :3].copy()
             #assert datai.shape[1] == 3, datai.shape
@@ -344,52 +363,61 @@ class CompositeResults2(GuiResultCommon):
         #if self.result == 'o11':
 
             #case_res = self.case.data[0]
-        (itime, ilayer, imethod, header) = case_tuple
 
         #if imethod == 0:
             ## fiber distance
             #print(self.case.get_stats())
             #asdf
         #else:
-        data = self.case.data[itime, :, imethod]
-        rows = self.case.element_layer[:, 0]
-        cols = self.case.element_layer[:, 1]
+        assert len(data.shape) == 1, data.shape
         data2, eids_new = pivot_table(data, rows, cols)
+        assert len(data2.shape) == 2, data2.shape
+        # element_id is unique & sorted
+        # eids_new   is unique & sorted
+        #
         # bwb_saero.op2
         # data2.shape = (9236, 10)
-        if not hasattr(self, 'ielement'):
-            ieids = np.searchsorted(self.element_id, eids_new)
-            self.ielement = ieids
+        #if not hasattr(self, 'ielement'):
+        ieids = np.searchsorted(self.element_id, eids_new)
+        self.ielement = ieids
         neids = len(self.ielement)
 
-        if data2.shape[1] != len(self.method_indices):
+        data3 = data2
+        if data2.shape[1] != len(self.layer_indices):
             # slice out the correct layers
-            data2 = data2[:, self.method_indices]
+            data3 = data2[:, self.layer_indices]
 
-        if data2.shape[1] == 1:
-            data3 = data2[:, 0]
+        assert len(data3.shape) == 2, data3.shape
+        if data3.shape[1] == 1:
+            # single ply
+            data4 = data3[:, 0]
         else:
+            # multiple plies
             # ['Absolute Max', 'Min', 'Max', 'Derive/Average']
+            axis = 1
             if self.min_max_method == 'Absolute Max':
-                data3 = abs_nan_min_max(data2, axis=1)
+                data4 = abs_nan_min_max(data3, axis=axis)
             elif self.min_max_method == 'Min':
-                data3 = np.nanmin(data2, axis=1)
+                data4 = np.nanmin(data3, axis=axis)
             elif self.min_max_method == 'Max':
-                data3 = np.nanmax(data2, axis=1)
-            elif self.min_max_method == 'Mean':
-                data3 = np.nanmean(data2, axis=1)
+                data4 = np.nanmax(data3, axis=axis)
+            elif self.min_max_method == 'Mean':  #   (Derive/Average)???
+                data4 = np.nanmean(data3, axis=axis)
             elif self.min_max_method == 'Std. Dev.':
-                data3 = np.nanstd(data2, axis=1)
+                data4 = np.nanstd(data3, axis=axis)
             elif self.min_max_method == 'Difference':
-                data3 = np.nanmax(data2, axis=1) - np.nanmin(data2, axis=1)
+                data4 = np.nanmax(data3, axis=axis) - np.nanmin(data2, axis=axis)
+            #elif self.min_max_method == 'Max Over Time':
+                #data4 = np.nanmax(data3, axis=axis) - np.nanmin(data2, axis=axis)
             #elif self.min_max_method == 'Derive/Average':
                 #data3 = np.nanmax(data2, axis=1)
             else:  # pragma: no cover
                 raise NotImplementedError(self.min_max_method)
 
-        assert data3.shape == (neids, )
-        assert len(data2.shape) == 2, data2.shape
-        return data3
+        # TODO: hack to try and debug things...
+        assert data4.shape == (neids, )
+        data4 = eids_new.astype('float32')
+        return data4
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)

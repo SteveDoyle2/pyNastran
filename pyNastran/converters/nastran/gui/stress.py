@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import annotations
+from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -17,6 +18,7 @@ from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
+    from pyNastran.op2.result_objects.stress_object import CompositeDict
 
 
 def get_rod_stress_strains(eids: np.ndarray,
@@ -728,6 +730,102 @@ def get_plate_stress_strains(eids: np.ndarray,
     res.form_names = np.array(form_names)
     return icase
 
+def stack_composite_results(model: OP2, is_stress: bool,
+                            key=None):
+    if is_stress:
+        case_map = {
+            # element_name
+            'CTRIA3' : model.ctria3_composite_stress,
+            'CTRIA6' : model.ctria6_composite_stress,
+            'CTRIAR' : model.ctriar_composite_stress,
+            'CQUAD4' : model.cquad4_composite_stress,
+            'CQUAD8' : model.cquad8_composite_stress,
+            'CQUADR' : model.cquadr_composite_stress,
+        }
+    else:
+        case_map = {
+            # element_name
+            'CTRIA3' : model.ctria3_composite_strain,
+            'CTRIA6' : model.ctria6_composite_strain,
+            'CTRIAR' : model.ctriar_composite_strain,
+            'CQUAD4' : model.cquad4_composite_strain,
+            'CQUAD8' : model.cquad8_composite_strain,
+            'CQUADR' : model.cquadr_composite_strain,
+        }
+
+    keys_map = {}
+    key_cases = defaultdict(list)
+    for res_cases in case_map.values():
+        for case_key, case in res_cases.items():
+            if key is None:
+                continue
+            key_cases[key].append(case)
+            if (case_key != key or key in keys_map):
+                continue
+            keys_map[key] = KeyMap(case.subtitle, case.label,
+                                   case.superelement_adaptivity_index,
+                                   case.pval_step)
+
+    cases2 = {}
+    key_cases = dict(key_cases)
+    for key, cases_ in key_cases.items():
+        case = cases_[0]
+        cases = cases_[1:]
+        nelements = case.nelements
+        ntotal = case.ntotal
+        ntimes = case.ntimes
+        nresults = case.data.shape[2]
+        itotal0 = 0
+        itotal1 = ntotal
+
+        if len(cases):
+            nelements_all = case.nelements + sum([casei.nelements for casei in cases])
+            ntotal_all = case.ntotal + sum([casei.ntotal for casei in cases])
+            #data2 = np.full((ntimes, ntotal, nresults), np.nan, dtype=case.data.dtype)
+            #for itime in range(ntimes):
+                #data2[itime, itotal0:itotal1, :] = case.data[itime, :, :]
+
+            #element_ids = [case.element_id]
+            element_layers = [case.element_layer]
+            datas = [case.data]
+            for casei in cases:
+                #itotal0 += case.ntotal
+                #itotal1 += case.ntotal
+                element_layers.append(casei.element_layer)
+                datas.append(casei.data)
+                #element_ids.append(case.element_id)
+                #data2[itime, itotal0:itotal1, :] = casei.data[itime, :, :]
+
+            #  stack on [*nlayers*, eid_layer]
+            element_layer2 = np.vstack(element_layers)
+            # stack on [itime, *nlayers*, 10]
+            data3 = np.hstack(datas)
+
+            isort1 = np.argsort(element_layer2[:,0])
+            isort2 = np.argsort(element_layer2[isort1,0])
+
+            element_layer4 = element_layer2[isort2]
+            data4 = data3[:, isort2, :]
+
+            #assert np.array_equal(data2, data3), 'wut...'
+
+            case.data = data4
+            #case.element_id = np.hstack(element_ids)
+            case.element_layer = element_layer4
+            case.nelements = nelements_all
+            case.ntotal = ntotal_all
+
+            #case.data = data2
+            cases2[key] = case
+        else:
+            cases2[key] = case
+
+    #keys = keys_map.keys()
+    #for key in keys:
+        #key_cases =
+        #for etype, case in case_map.items():
+    return case_map, keys_map, cases2
+
 def get_composite_plate_stress_strains(eids: np.ndarray,
                                        cases: CasesDict,
                                        model: OP2,
@@ -736,41 +834,29 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                                        icase: int,
                                        form_dict, header_dict,
                                        keys_map: KeysMap,
-                                       composite_data_dict,
+                                       composite_data_dict: CompositeDict,
                                        log: SimpleLogger,
                                        is_stress: bool=True) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the stress/strain for each layer.
+
+    element_type = 'CTRIA3'
+    key = (1, 1, 1, 0, 0, '', '')
+    composite_data_dict[element_type][key]
     """
     #assert len(cases) == icase
     #icase0 = icase
     subcase_id = key[0]
 
-    if is_stress:
-        case_map = {
-            # element_name
-            'CTRIA3' : model.ctria3_composite_stress,
-            'CQUAD4' : model.cquad4_composite_stress,
-            'CTRIAR' : model.ctriar_composite_stress,
-            'CQUADR' : model.cquadr_composite_stress,
-        }
-    else:
-        case_map = {
-            # element_name
-            'CTRIA3' : model.ctria3_composite_strain,
-            'CQUAD4' : model.cquad4_composite_strain,
-            'CTRIAR' : model.ctriar_composite_strain,
-            'CQUADR' : model.cquadr_composite_strain,
-        }
+    case_map, keys_map2, cases2 = stack_composite_results(model, is_stress, key=key)
+    if not cases2:
+        return icase
 
-    for res_cases in case_map.values():
-        for case_key, case in res_cases.items():
-            if case_key != key or key in keys_map:
-                continue
-            keys_map[key] = KeyMap(case.subtitle, case.label,
-                                   case.superelement_adaptivity_index,
-                                   case.pval_step)
+    for key, value in keys_map2.items():
+        if key not in keys_map:
+            keys_map[key] = value
+    #keys_map.update(keys_map2)  # might mess up the order...
 
     composite_plates_ieids = []
     for element_type, composite_data in composite_data_dict.items():
@@ -879,10 +965,11 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
         colormap='jet', uname=uname)
     form_names = res.form_names
 
+    case2 = cases2[key]
     titleii = uname
     res2 = CompositeStrainStressResults2(
         subcase_id, model, eids,
-        case, method_map, titleii,
+        case2, method_map, titleii,
         #dim_max=1.0,
         data_format='%g',
         is_variable_data_format=False,
@@ -915,7 +1002,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             for imethod, method in enumerate(methods):
                 cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method}', icase, []))
-                form_name2 = f'{element_type} Composite Plate2 {word}: {method}'
+                form_name2 = f'Composite Plate {word}: {method}'
                 form_names.append(form_name2)
                 icase += 1
 
