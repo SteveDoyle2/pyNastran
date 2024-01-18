@@ -4875,7 +4875,7 @@ class SPLINE2(VectorizedBaseCard):
 
         #set1_ids = np.unique(set1_ids)
         all_caero_ids = hstack_lists([model.caero1.element_id, model.caero2.element_id],
-                                     unique_sort=False)
+                                     unique_sort=True)
         geom_check(
             self,
             missing,
