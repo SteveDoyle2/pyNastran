@@ -164,6 +164,7 @@ class Settings:
         self.use_gradient_background = True
 
         self.startup_directory = ''
+        self.use_startup_directory = True
 
         # rgb tuple
         self.background_color = BACKGROUND_COLOR
@@ -215,6 +216,7 @@ class Settings:
         self.background_color2 = BACKGROUND_COLOR2
 
         self.startup_directory = ''
+        self.use_startup_directory = True
 
         self.annotation_size = ANNOTATION_SIZE
         self.annotation_color = ANNOTATION_COLOR
@@ -294,7 +296,11 @@ class Settings:
         # launch in local or specified directory
         self._set_setting(settings, setting_keys, ['startup_directory'], self.startup_directory,
                           True, auto_type=str)
-        if not os.path.exists(self.startup_directory):
+        self._set_setting(settings, setting_keys, ['use_startup_directory'], self.use_startup_directory,
+                          True, auto_type=bool)
+        if os.path.exists(self.startup_directory):
+            self.parent.last_dir = self.startup_directory
+        else:
             self.startup_directory = ''
 
         # the info/debug/gui/command preferences
@@ -447,6 +453,7 @@ class Settings:
 
         # startup directory
         settings.setValue('startup_directory', self.startup_directory)
+        settings.setValue('use_startup_directory', self.use_startup_directory)
 
         # rgb tuple
         settings.setValue('background_color', self.background_color)

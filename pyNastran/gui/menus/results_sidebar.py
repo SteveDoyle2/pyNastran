@@ -27,6 +27,8 @@ from pyNastran.gui.utils.qt.qcombobox import (
 if TYPE_CHECKING:
     from pyNastran.gui.main_window import MainWindow
 
+SHOW_CASE_SPINNER = False
+
 SkippableSpinBox = QSpinBox
 #class SkippableSpinBox(QSpinBox):
     #stepChanged = QtCore.Signal() #  tested in PySide2, pyqtSignal?
@@ -247,6 +249,7 @@ class Sidebar(QWidget):
             self.transform_coords_label = QLabel('2: Transform:')
             self.transform_coords_pulldown = QComboBox()
             self.transform_coords_pulldown.addItem('Coord 0')
+            self.transform_coords_pulldown.setEnabled(False)
 
             self.min_max_average_label = QLabel('3: Derivation Method:')
             self.min_max_average_pulldown = QComboBox()
@@ -270,6 +273,8 @@ class Sidebar(QWidget):
 
     def set_methods_table_visible(self, is_visible: bool) -> None:
         if USE_NEW_SIDEBAR:
+            self.result_method_window.setEnabled(is_visible)
+            is_visible = True
             self.result_method_window.setVisible(is_visible)
 
     def set_coord_transform_visible(self, is_visible: bool) -> None:
@@ -312,8 +317,9 @@ class Sidebar(QWidget):
         if self.has_cases:
             if len(cases) == 0:
                 return
-            self.case_spinner_label.setVisible(True)
-            self.case_spinner.setVisible(True)
+            if SHOW_CASE_SPINNER:
+                self.case_spinner_label.setVisible(True)
+                self.case_spinner.setVisible(True)
             # we add the +1, so we can wrap around
             self.case_spinner.setMaximum(max(cases) + 1)
             self._on_case()
@@ -325,7 +331,7 @@ class Sidebar(QWidget):
             self.icase = case_keys[0]
         self.set_max_case(case_keys)
 
-    def update_icase(self, icase_frige: int):
+    def update_icase(self, icase_frige: int) -> None:
         """callback for updating the case spinner"""
         self._update_case = False
         self.case_spinner.setValue(icase_frige)
@@ -596,9 +602,12 @@ class Sidebar(QWidget):
         asdf
 
     def on_apply(self):
+        icase = self.parent.icase
         data = self.result_case_window.data
         valid_a, keys_a, index_list_a = self.result_case_window.tree_view.get_row()
 
+        # apparently this ca be None if you use K/L to cycle...
+        keys_a = icase if keys_a is None else keys_a
         if USE_NEW_SIDEBAR:
             data = self.result_method_window.data
             valid_b, keys_b, index_list_b = self.result_method_window.tree_view.get_row()
@@ -624,11 +633,12 @@ class Sidebar(QWidget):
             the tag in the case tree
         keys_b: list[int]
             the tags in the methods tree?
+            emtpy -> default
 
         """
         assert isinstance(key_a, int), key_a
         assert isinstance(keys_b, list), keys_b
-        assert len(keys_b) >= 1, keys_b
+        #assert len(keys_b) >= 1, keys_b
 
         if 0:  # pragma: no cover
             print('key_a = %s' % str(key_a))

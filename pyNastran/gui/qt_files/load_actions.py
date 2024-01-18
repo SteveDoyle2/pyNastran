@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import time as time_module
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from qtpy.compat import getopenfilename
@@ -13,6 +13,10 @@ from pyNastran.utils import print_bad_path
 from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, create_res_obj)
+
+if TYPE_CHECKING:
+    #from pyNastran.gui.menus.results_sidebar import Sidebar
+    from pyNastran.gui.gui_objects.settings import Settings
 IS_TESTING = 'test' in sys.argv[0]
 
 
@@ -57,7 +61,13 @@ class LoadActions(BaseGui):
         has_results = False
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            self.gui.last_dir = os.path.split(infile_name)[0]
+            settings: Settings = self.gui.settings
+            #if settings.use_startup_directory and os.path.exists(settings.startup_directory):
+                #last_dir = settings.startup_directory
+            #else:
+            last_dir = os.path.split(infile_name)[0]
+            self.gui.last_dir = last_dir
+            settings.startup_directory = last_dir
 
             if self.gui.name == '':
                 name = 'main'
@@ -221,7 +231,7 @@ class LoadActions(BaseGui):
             if infile_name is not None and geometry_format is not None:
                 filter_index = formats.index(geometry_format)
             else:
-                title = 'Choose a Geometry File to Load'
+                title = 'set_legend_title File to Load'
                 wildcard_index, infile_name = self.create_load_file_dialog(wildcard, title)
                 if not infile_name:
                     # user clicked cancel
@@ -613,13 +623,22 @@ class LoadActions(BaseGui):
         #flt = str(filt).strip()
         #return fname, flt
 
+        use_startup_directory = self.settings.use_startup_directory
         startup_directory = self.settings.startup_directory.strip()
-        if startup_directory == '' and default_filename is None:
-            basedir = self.gui.last_dir
-        elif os.path.exists(startup_directory):
+        last_dir = self.gui.last_dir
+
+        basedir = ''
+        if use_startup_directory and os.path.exists(startup_directory):
             basedir = startup_directory
         else:
+            basedir = last_dir
+
+        if not os.path.exists(basedir):
             basedir = ''
+
+        #if startup_directory == '' and default_filename is None and os.path.exists(last_dir):
+        #elif os.path.exists(startup_directory):
+            #basedir = startup_directory
 
         fname, wildcard_level = getopenfilename(
             parent=self.gui, caption=title,

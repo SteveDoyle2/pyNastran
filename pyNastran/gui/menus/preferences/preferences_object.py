@@ -35,7 +35,7 @@ class PreferencesObject(BaseGui):
             'annotation_size' : settings.annotation_size, # int
             'annotation_color' : settings.annotation_color,
 
-            'startup_directory': settings.startup_directory,
+            'use_startup_directory': settings.use_startup_directory,
 
             'use_gradient_background' : settings.use_gradient_background,
             'use_parallel_projection': settings.use_parallel_projection,

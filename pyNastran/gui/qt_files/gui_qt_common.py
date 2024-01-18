@@ -8,7 +8,7 @@ This file defines functions related to the result updating that are VTK specific
 # pylint: disable=C0111
 import sys
 from collections import namedtuple
-from typing import Union, Callable, Optional, Any
+from typing import Union, Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -30,6 +30,10 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui.utils.vtk.gui_utils import set_vtk_fringe, show_hide_actor
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
+
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.results_sidebar import Sidebar
+
 
 WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
@@ -130,6 +134,7 @@ class GuiQtCommon(GuiAttributes):
 
     def update_icase(self) -> None:
         """updates the Qt sidebar"""
+        res_widget: Sidebar = self.res_widget
         self.res_widget.update_icase(self.icase)
 
     def cycle_results(self, case=None,
@@ -744,9 +749,7 @@ class GuiQtCommon(GuiAttributes):
             grid.Modified()
             self.grid_selected.Modified()
             self.icase_disp = icase
-            np.savetxt(r'C:\NASA\m4\formats\git\pyNastran\pyNastran\disp.txt', vector_data)
         else:
-            np.savetxt(r'C:\NASA\m4\formats\git\pyNastran\pyNastran\force.txt', vector_data)
             self.icase_vector = icase
             if location == 'node':
                 #self._is_displaced = False
@@ -956,7 +959,17 @@ class GuiQtCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, resname)) = self.model_data.result_cases[key]
         assert resname != 'main', resname
+
         obj.set_sidebar_args(i, resname, **sidebar_kwargs)
+        is_methods_visible = obj.has_methods_table(i, resname)
+        is_coord_visible = obj.has_coord_transform(i, resname)
+        is_derivation_visible = obj.has_derivation_transform(i, resname)
+        is_nodal_combine_visible = obj.has_nodal_combine_transform(i, resname)
+
+        self.res_widget.set_methods_table_visible(is_methods_visible)
+        self.res_widget.set_coord_transform_visible(is_coord_visible)  # min/max/avg
+        self.res_widget.set_derivation_visible(is_derivation_visible)
+        self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible)
 
         methods = obj.get_methods(i, resname)
         methodi = methods[0]

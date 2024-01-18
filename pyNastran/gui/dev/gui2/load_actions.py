@@ -8,6 +8,7 @@ from qtpy.compat import getopenfilename
 from pyNastran.utils import print_bad_path
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui2 import MainWindow2
+    from pyNastran.gui.gui_objects.settings import Settings
 IS_TESTING = False
 
 class LoadActions:
@@ -55,7 +56,10 @@ class LoadActions:
         log = self.log
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            self.gui.last_dir = os.path.split(infile_name)[0]
+            last_dir = os.path.split(infile_name)[0]
+            settings: Settings = self.gui.settings
+            self.gui.last_dir = last_dir
+            settings.startup_directory = last_dir
 
             if self.gui.name == '':
                 name = 'main'
@@ -221,7 +225,7 @@ class LoadActions:
             if infile_name is not None and geometry_format is not None:
                 filter_index = formats.index(geometry_format)
             else:
-                title = 'Choose a Geometry File to Load'
+                title = 'set_legend_title File to Load'
                 wildcard_index, infile_name = self.create_load_file_dialog(wildcard, title)
                 if not infile_name:
                     # user clicked cancel

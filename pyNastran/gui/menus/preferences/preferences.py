@@ -10,7 +10,6 @@ The preferences menu handles:
 
 """
 from __future__ import annotations
-import os
 from math import log10, ceil
 from typing import TYPE_CHECKING
 
@@ -18,7 +17,6 @@ from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QFileDialog)
-from qtpy.compat import getexistingdirectory
 
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
@@ -69,7 +67,7 @@ class PreferencesWindow(PyDialog):
         self._default_font_size = FONT_SIZE
         self._default_text_size = TEXT_SIZE
 
-        self._default_startup_directory = data['startup_directory']
+        self.use_startup_directory = data['use_startup_directory']
 
         # an annotation is the marked/probe label
         self._default_annotation_size = ANNOTATION_SIZE
@@ -162,28 +160,26 @@ class PreferencesWindow(PyDialog):
         self.font_size_button = QPushButton('Default')
 
         #-----------------------------------------------------------------------
-        self.startup_directory_label = QLabel('Startup Directory:')
-        self.startup_directory_edit = QLineEdit(self)
-        self.startup_directory_edit.setText(self._default_startup_directory)
-        self.startup_directory_button = QPushButton('...')
+        self.startup_directory_label = QLabel('Remember Last Directory:')
+        self.startup_directory_checkbox = QCheckBox(self)
+        self.startup_directory_checkbox.setChecked(self.use_startup_directory)
+        self.startup_directory_checkbox.setToolTip('True: Remember the last directory when saving\n'
+                                                   'False: Start from local directory')
+        #self.startup_directory_button = QPushButton('...')
 
-        #-----------------------------------------------------------------------
-        # Annotation Color
-        self.annotation_color_label = QLabel("Annotation Color:")
-        self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
-        self.annotation_color_label.hide()
-        self.annotation_color_edit.hide()
         #-----------------------------------------------------------------------
         # Text Color
         self.text_size_label = QLabel("Text Size:")
         self.text_size_edit = QSpinBox(self)
         self.text_size_edit.setValue(self._default_text_size)
         self.text_size_edit.setRange(7, 30)
+        self.text_size_edit.setToolTip('Sets the lower left corner text size')
         self.text_size_button = QPushButton("Default")
 
         # Text Color
         self.text_color_label = QLabel("Text Color:")
         self.text_color_edit = QPushButtonColor(self.text_color_int)
+        self.text_color_edit.setToolTip('Sets the lower left corner text color')
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -193,6 +189,7 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit.setRange(0.1, 1.0)
         self.highlight_opacity_edit.setDecimals(1)
         self.highlight_opacity_edit.setSingleStep(0.1)
+        self.highlight_opacity_edit.setToolTip('Sets the highlight opacity')
         self.highlight_opacity_button = QPushButton("Default")
 
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
@@ -201,16 +198,19 @@ class PreferencesWindow(PyDialog):
         self.highlight_point_size_edit.setRange(5.0, 30.0)
         self.highlight_point_size_edit.setDecimals(2)
         self.highlight_point_size_edit.setSingleStep(0.25)
+        self.highlight_point_size_edit.setToolTip('Sets the highlight node size')
         self.highlight_point_size_button = QPushButton("Default")
 
         # Text Color
         self.highlight_color_label = QLabel("Highlight Color:")
         self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
+        self.highlight_color_edit.setToolTip('Sets the highlight opacity')
 
         #-----------------------------------------------------------------------
         # Background Color
         self.background_color_label = QLabel("Btm Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
+        self.background_color_edit.setToolTip('Sets the lower background color')
 
         # Background Color2
         self.gradient_scale_label = QLabel("Gradient Background:")
@@ -219,6 +219,7 @@ class PreferencesWindow(PyDialog):
 
         self.background_color2_label = QLabel("Top Background Color:")
         self.background_color2_edit = QPushButtonColor(self.background_color2_int)
+        self.background_color2_edit.setToolTip('Sets the upper background color')
 
         #-----------------------------------------------------------------------
         # Annotation Size
@@ -226,7 +227,16 @@ class PreferencesWindow(PyDialog):
         self.annotation_size_edit = QSpinBox(self)
         self.annotation_size_edit.setRange(1, 500)
         self.annotation_size_edit.setValue(self._annotation_size)
+        self.annotation_size_edit.setToolTip('Sets the "probe" text size')
+        #self.annotation_size_edit.setToolTip('Sets the hiannotation text size')
         self.annotation_size_button = QPushButton("Default")
+
+        # Annotation Color - unused
+        self.annotation_color_label = QLabel("Annotation Color:")
+        self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
+        self.annotation_color_edit.setToolTip('The "probe" is an annotation')
+        self.annotation_color_label.hide()
+        self.annotation_color_edit.hide()
 
         #-----------------------------------------------------------------------
         # Picker Size
@@ -241,10 +251,13 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setDecimals(decimals)
         self.picker_size_edit.setSingleStep(10. / 5000.)
         self.picker_size_edit.setValue(self._picker_size)
+        self.picker_size_edit.setToolTip('Sets the picker tolerance')
 
         self.parallel_projection_label = QLabel('Parallel Projection:')
         self.parallel_projection_edit = QCheckBox()
         self.parallel_projection_edit.setChecked(self._parallel_projection)
+        self.parallel_projection_edit.setToolTip('Checked: Typical engineering perspective\n'
+                                                 'Unchecked: Distort the model like a real camera')
 
         #-----------------------------------------------------------------------
         # Clipping Min
@@ -266,6 +279,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
+        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system size')
 
         self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
         self.coord_text_scale_button = QPushButton("Default")
@@ -275,6 +289,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit.setDecimals(3)
         self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
+        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system text size')
 
         # Show corner coord
         self.corner_coord_label = QLabel("Show Corner Coordinate System:")
@@ -287,6 +302,7 @@ class PreferencesWindow(PyDialog):
         self.magnify_edit.setMinimum(1)
         self.magnify_edit.setMaximum(10)
         self.magnify_edit.setValue(self._magnify)
+        self.magnify_edit.setToolTip('1: Standard resolution; >1: high quality')
 
         #-----------------------------------------------------------------------
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
@@ -441,8 +457,7 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         grid.addWidget(self.startup_directory_label, irow, 0)
-        grid.addWidget(self.startup_directory_edit, irow, 1)
-        grid.addWidget(self.startup_directory_button, irow, 2)
+        grid.addWidget(self.startup_directory_checkbox, irow, 1)
         irow += 1
 
         grid.addWidget(self.gradient_scale_label, irow, 0)
@@ -658,7 +673,7 @@ class PreferencesWindow(PyDialog):
         self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_font)
 
-        self.startup_directory_button.clicked.connect(self.on_browse_startup_directory)
+        self.startup_directory_checkbox.clicked.connect(self.on_startup_directory_checked)
 
         self.annotation_size_edit.editingFinished.connect(self.on_annotation_size)
         self.annotation_size_edit.valueChanged.connect(self.on_annotation_size)
@@ -707,15 +722,11 @@ class PreferencesWindow(PyDialog):
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
 
-    def on_browse_startup_directory(self):
+    def on_startup_directory_checked(self):
         """opens a folder dialog"""
-        dirname = getexistingdirectory(parent=self, caption='Select a Directory',
-                                       basedir='',
-                                       options=QFileDialog.ShowDirsOnly)
-        if not dirname:
-            return
-        self.startup_directory_edit.setText(dirname)
-        set_startup_directory(self.win_parent, dirname)
+        is_checked = self.startup_directory_checkbox.isCheckable()
+        if self.win_parent is not None:
+            self.nastran_settings.use_startup_directory = is_checked
 
     def on_reset_defaults(self):
         """reset all of the preferences to their defaults"""
@@ -726,7 +737,7 @@ class PreferencesWindow(PyDialog):
         self.on_default_coord_scale()
         self.on_default_coord_text_scale()
         self.on_default_text_size()
-        self.startup_directory_edit.setText('')
+        self.startup_directory_checkbox.setChecked(True)
 
         self.magnify_edit.setValue(MAGNIFY)
         self.picker_size_edit.setValue(self._picker_size)
@@ -1090,8 +1101,6 @@ class PreferencesWindow(PyDialog):
         font_size_value, flag0 = check_float(self.font_size_edit)
         annotation_size_value, flag1 = check_float(self.annotation_size_edit)
 
-        startup_directory = self.startup_directory_edit.text()
-
         assert isinstance(self.annotation_color_float[0], float), self.annotation_color_float
         assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
         picker_size_value, flag2 = check_float(self.picker_size_edit)
@@ -1104,7 +1113,6 @@ class PreferencesWindow(PyDialog):
             self._picker_size = picker_size_value
 
             self.out_data['font_size'] = int(font_size_value)
-            self.out_data['startup_directory'] = startup_directory
             self.out_data['min_clip'] = min(clipping_min_value, clipping_max_value)
             self.out_data['max_clip'] = max(clipping_min_value, clipping_max_value)
             self.out_data['clicked_ok'] = True
@@ -1119,8 +1127,6 @@ class PreferencesWindow(PyDialog):
             #self.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
-            startup_directory = self.out_data['startup_directory'].strip()
-            set_startup_directory(self.win_parent, startup_directory)
             self.win_parent.clipping_obj.apply_clipping(self.out_data)
         return passed
 
@@ -1134,12 +1140,6 @@ class PreferencesWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
-
-def set_startup_directory(parent, startup_directory: str) -> None:
-    if startup_directory and os.path.exists(startup_directory):
-        parent.settings.startup_directory = startup_directory
-    else:
-        parent.settings.startup_directory = ''
 
 def set_label_color(color_edit: QPushButtonColor,
                     color_tuple: tuple[int, int, int]) -> None:
@@ -1178,7 +1178,7 @@ def main():  # pragma: no cover
     #The Main window
     data = {
         'font_size' : 8,
-        'startup_directory': '.',
+        'use_startup_directory': True,
         'use_gradient_background' : True,
         'background_color' : (0., 0., 0.), # black
         'background_color2' : (1., 0., 1.), # purple

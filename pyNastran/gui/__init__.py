@@ -8,8 +8,12 @@ IS_WINDOWS = 'nt' in os.name
 IS_LINUX = 'posix' in os.name
 IS_MAC = 'darwin' in os.name
 
-USE_NEW_SIDEBAR_OBJS = True
-USE_NEW_SIDEBAR = True
+USE_NEW_SIDEBAR_OBJS = False  # DisplacementResults2
+USE_OLD_SIDEBAR_OBJS = True   # DisplacementResults
+USE_NEW_SIDEBAR = False
+
+if not USE_NEW_SIDEBAR_OBJS:
+    USE_NEW_SIDEBAR = False
 
 
 def _get_fonts() -> tuple[str, str]:

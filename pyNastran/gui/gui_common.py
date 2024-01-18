@@ -101,20 +101,20 @@ class QSettingsLike2:
         self.data = {}
 
         home_dirname = os.path.expanduser('~')
-        local_dirname = os.getcwd()
-        exe_dirname = os.path.dirname(__file__)
-        local_filename = os.path.join(local_dirname, 'pyNastranGUI.json')
-        exe_filename   = os.path.join(exe_dirname,   'pyNastranGUI.json')
+        #local_dirname = os.getcwd()
+        #exe_dirname = os.path.dirname(__file__)
+        #local_filename = os.path.join(local_dirname, 'pyNastranGUI.json')
+        #exe_filename   = os.path.join(exe_dirname,   'pyNastranGUI.json')
         home_filename  = os.path.join(home_dirname,  'pyNastranGUI.json')
-        is_pynastrangui_exe = False
-        if os.path.exists(local_filename):
-            self._filename = local_filename
-        elif os.path.exists(exe_filename) and is_pynastrangui_exe:
-            self._filename = exe_filename
-        elif os.path.exists(home_filename):
-            self._filename = home_filename
-        else:
-            self._filename = ''
+        #is_pynastrangui_exe = False
+        #if os.path.exists(local_filename):
+            #self._filename = local_filename
+        #elif os.path.exists(exe_filename) and is_pynastrangui_exe:
+            #self._filename = exe_filename
+        #if os.path.exists(home_filename):
+        self._filename = home_filename
+        #else:
+            #self._filename = ''
     def clear(self) -> None:
         self.data = {}
     def childKeys(self) -> list[str]:
