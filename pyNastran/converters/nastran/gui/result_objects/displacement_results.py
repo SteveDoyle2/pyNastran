@@ -9,9 +9,6 @@ from pyNastran.op2.result_objects.table_object import (
     RealTableArray, ComplexTableArray)
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
-#def safe_norm(data: np.ndarray, axis=None):
-    #return np.linalg.norm(data, axis=axis)
-
 
 translation = ['Magnitude', 'Tx', 'Ty', 'Tz']
 rotation = ['Magnitude', 'Rx', 'Ry', 'Rz']
@@ -89,7 +86,7 @@ class VectorResults2(GuiResultCommon):
         #return 3
 
     def set_sidebar_args(self,
-                         itime: str, name: str,
+                         itime: str, res_name: str,
                          min_max_method: str='',
                          transform: str='',
                          methods_keys: Optional[list[int]]=None,
@@ -97,13 +94,15 @@ class VectorResults2(GuiResultCommon):
                          nodal_combine: str='',
                          **kwargs) -> None:
         assert len(kwargs) == 0, kwargs
+        transforms = self.has_coord_transform(itime, res_name)[1]
+        transform = transform if transform else transforms[0]
         #sidebar_kwargs = {
             #'min_max_method': min_max_method,
             #'transform': coord,
             #'nodal_combine': nodal_combine,
             #'methods_keys': keys_b,
         #}
-        assert transform in {'', 'Coord 0'}, transform
+        assert transform in transforms, transform
 
         # if Magnitude is selected, only use magnitude
         # methods = ['T_XYZ', 'TX', 'TY', 'TZ']
@@ -130,17 +129,18 @@ class VectorResults2(GuiResultCommon):
 
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return True
-    def has_coord_transform(self, i: int, res_name: str) -> bool:
-        return True
-    def has_derivation_transform(self, i: int, res_name: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, res_name: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
+        return True, ['Global']
+    def has_derivation_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def get_vector_size(self, itime: int, res_name: str) -> int:
+        """vector_size=1 is the default and displacement has 3 components"""
         return 3
-    def is_normal_result(self, itime: int, res_name: str) -> int:
-        return False
 
     def get_header(self, itime: int, res_name: str) -> str:
         """
@@ -432,6 +432,7 @@ class DisplacementResults2(VectorResults2):
     # unmodifyable getters
 
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
+        """deflection is opt-in"""
         return True
 
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
@@ -611,9 +612,6 @@ class ForceResults2(VectorResults2):
 
     #-------------------------------------
     # unmodifyable getters
-
-    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
-        return False
 
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
         """the result type"""

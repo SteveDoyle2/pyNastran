@@ -40,15 +40,14 @@ class LayeredTableResults(Table):
     def get_methods(self, i: int, name: str) -> list[str]:
         return self.methods
 
-    def has_coord_transform(self, i: int, name: str) -> bool:
-        return True
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return True
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return True
-
-    def deflects(self, unused_i, unused_res_name):
-        return False
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return True, ['Material']
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return True, ['Absolute Max']
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return True, ['Centroid']
 
     def get_default_legend_title(self, i, name):
         """legend title"""

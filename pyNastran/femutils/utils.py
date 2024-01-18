@@ -387,3 +387,8 @@ def abs_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     y = get_abs_max(min_values, max_values, dtype='float32')
     return y
 
+def abs_nan_min_max(x: np.ndarray, axis: int) -> np.ndarray:
+    max_values = np.nanmax(x, axis=axis)
+    min_values = np.nanmin(x, axis=axis)
+    y = get_abs_max(min_values, max_values, dtype='float32')
+    return y

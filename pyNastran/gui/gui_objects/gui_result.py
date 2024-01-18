@@ -39,14 +39,20 @@ class GuiResultCommon:
         pass
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return False
-    def has_coord_transform(self, i: int, name: str) -> bool:
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         raise NotImplementedError(self.class_name)
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
         raise NotImplementedError(self.class_name)
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
         raise NotImplementedError(self.class_name)
 
+    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
+        """deflection is opt-in"""
+        return False
     def is_normal_result(self, i: int, name: str) -> bool:
+        """normal result is opt-in"""
         return False
 
     def get_data_format(self, i: int, name: str):
@@ -74,6 +80,7 @@ class GuiResultCommon:
         raise NotImplementedError(self.class_name)
 
     def get_vector_size(self, i: int, name: str) -> int:
+        """vector_size=1 is the default"""
         return 1
 
     def get_scale(self, i: int, name: str) -> float:
@@ -169,12 +176,14 @@ class GridPointForceResult(GuiResultCommon):
         super(GridPointForceResult, self).__init__()
         self.gpforce_array = gpforce_array
 
-    def has_coord_transform(self, i: int, name: str) -> bool:
-        return False
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return False, []
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def get_scalar(self, i: int, name: str, method: str) -> None:
         return None
@@ -259,12 +268,14 @@ class NormalResult(GuiResultCommon):
         self.max_default = 1.
         self.uname = uname
 
-    def has_coord_transform(self, i: int, name: str) -> bool:
-        return False
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return False, []
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def get_data_type(self, i: int, name: str):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
@@ -348,9 +359,6 @@ class NormalResult(GuiResultCommon):
     def get_scale(self, i: int, name: str) -> float:
         return 0.
 
-    def get_vector_size(self, i: int, name: str) -> int:
-        return 1
-
     def get_methods(self, i: int, name: str) -> list[str]:
         return ['centroid']
 
@@ -358,6 +366,7 @@ class NormalResult(GuiResultCommon):
         return None
 
     def is_normal_result(self, i: int, name: str) -> bool:
+        """normal result is opt-in"""
         return True
 
     def __repr__(self):
@@ -492,12 +501,14 @@ class GuiResult(GuiResultCommon):
         assert self.scalar.shape == new.scalar.shape, f'scalar.shape={self.scalar.shape} new.scalar.shape={new.scalar.shape}'
         return subcase_id, header, title, location
 
-    def has_coord_transform(self, i: int, name: str) -> bool:
-        return False
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return False, []
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def __neg__(self):
         return self.__mul__(-1)
@@ -690,9 +701,6 @@ class GuiResult(GuiResultCommon):
     # unmodifyable getters
     def get_scale(self, i: int, name: str) -> int:
         return 0.
-
-    def get_vector_size(self, i: int, name: str) -> int:
-        return 1
 
     def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:

@@ -22,7 +22,9 @@ from pyNastran.gui.utils.qt.utils import (
     add_line_widgets_to_grid)
 from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
 from pyNastran.gui.utils.qt.qcombobox import (
-    make_combo_box, get_combo_box_text, set_combo_box_text)
+    make_combo_box, get_combo_box_text, set_combo_box_text,
+    update_combo_box,
+)
 
 if TYPE_CHECKING:
     from pyNastran.gui.main_window import MainWindow
@@ -277,20 +279,29 @@ class Sidebar(QWidget):
             is_visible = True
             self.result_method_window.setVisible(is_visible)
 
-    def set_coord_transform_visible(self, is_visible: bool) -> None:
+    def set_coord_transform_visible(self, is_visible: bool,
+                                    coords: list[str]) -> None:
         if USE_NEW_SIDEBAR:
             self.transform_coords_label.setVisible(is_visible)
             self.transform_coords_pulldown.setVisible(is_visible)
+            update_combo_box(self.transform_coords_pulldown,
+                             coords, is_visible)
 
-    def set_derivation_visible(self, is_visible: bool) -> None:
+    def set_derivation_visible(self, is_visible: bool,
+                               min_max_averages: list[str]) -> None:
         if USE_NEW_SIDEBAR:
             self.min_max_average_label.setVisible(is_visible)
             self.min_max_average_pulldown.setVisible(is_visible)
+            update_combo_box(self.min_max_average_pulldown,
+                             min_max_averages, is_visible)
 
-    def set_nodal_combine_visible(self, is_visible: bool) -> None:
+    def set_nodal_combine_visible(self, is_visible: bool,
+                                  combine_methods: list[str]) -> None:
         if USE_NEW_SIDEBAR:
             self.combine_label.setVisible(is_visible)
             self.combine_pulldown.setVisible(is_visible)
+            update_combo_box(self.combine_pulldown,
+                             combine_methods, is_visible)
 
     def hide_dev(self):
         objs = [

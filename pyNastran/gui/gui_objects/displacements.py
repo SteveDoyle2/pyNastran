@@ -156,12 +156,17 @@ class VectorTable(GuiResultCommon):
         return
 
     # getters
-    def has_coord_transform(self, i: int, resname: str) -> bool:
-        return True
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int,
+                            resname: str) -> tuple[bool, list[str]]:
+        return True, ['Global']
+    def has_derivation_transform(self, i: int,
+                                 resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int,
+                                    resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def get_location(self, i: int, unused_name: str) -> str:
         return self.location
@@ -227,7 +232,8 @@ class VectorTable(GuiResultCommon):
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str,
+                                               nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
@@ -261,7 +267,7 @@ class VectorTable(GuiResultCommon):
         return self.data_type
 
     def get_vector_size(self, i:int, resname: str) -> int:
-        """the result size"""
+        """vector_size=1 is the default and displacement has 3 components"""
         #print(i)
         #j = self.titles_default.index(name)
         return 3
@@ -394,9 +400,6 @@ class ElementalTableResults(VectorTable):
             return ['magnitude', 'x', 'y', 'z']
         raise NotImplementedError('self.is_real=%s' % self.is_real)
 
-    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
-        return False
-
     def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
                                          unused_scale: float,
                                          phase: float=0.,
@@ -461,9 +464,6 @@ class ForceTableResults(VectorTable):
     #def get_location(self, i:int, name):
         #"""the result type"""
         #return 'node'
-
-    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
-        return False
 
     def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
                                          unused_scale: float,
@@ -586,6 +586,7 @@ class DisplacementResults(VectorTable):
     # unmodifyable getters
 
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
+        """deflection is opt-in"""
         return True
 
     def get_location(self, unused_i: int, unused_name: str) -> str:

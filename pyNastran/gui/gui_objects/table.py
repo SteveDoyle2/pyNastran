@@ -225,7 +225,7 @@ class Table(GuiResultCommon):
         return self.data_type
 
     #def get_vector_size(self, i, unused_name):
-        #"""the result size"""
+        #"""vector_size=1 is the default and this vector has 3 components"""
         #print(i)
         #j = self.titles_default.index(name)
         #return 3

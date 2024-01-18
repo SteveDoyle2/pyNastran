@@ -82,16 +82,14 @@ class Cart3dGeometry(GuiResultCommon):
         #j = self.titles.index(name)
         #return 0.0
 
-    def get_vector_size(self, i, name):
-        #j = self.titles.index(name)
-        return 1
-
-    def has_coord_transform(self, i: int, name: str) -> bool:
-        return False
-    def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
-        return False
-    def has_nodal_combine_transform(self, i: int, resname: str) -> bool:  # elemental -> nodal
-        return False
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return False, []
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """min/max/avg"""
+        return False, []
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
 
     def get_methods(self, i: str, name: str):
         if i == 1:

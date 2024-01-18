@@ -30,6 +30,16 @@ def make_combo_box(items: list[str], initial_value: str) -> QComboBox:
         raise RuntimeError(msg)
     return combo_box
 
+def update_combo_box(combo_box: QComboBox, new_items: list[str],
+                     is_visible: bool) -> None:
+    all_items = [combo_box.itemText(i)
+                 for i in range(combo_box.count())]
+    if all_items != new_items:
+        combo_box.clear()
+        combo_box.addItems(new_items)
+        is_enabled = (is_visible and len(new_items) > 1)
+        combo_box.setEnabled(is_enabled)
+
 def get_combo_box_text(combo_box: QComboBox) -> str:
     return str(combo_box.currentText())
 

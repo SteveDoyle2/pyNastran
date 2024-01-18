@@ -188,7 +188,7 @@ class TransientElementResults:
         return 'centroid'
 
     def get_vector_size(self, unused_i, unused_name):
-        """the result size"""
+        """vector_size=1 is the default and this vector has 3 components"""
         return 3
 
     #-------------------------------------

@@ -127,8 +127,8 @@ def write_patran_syntax_dict(dict_sets: dict[str, np.ndarray]) -> str:
     msg = ''
     for key, dict_set in sorted(dict_sets.items()):
         singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
-        double_list = ('%s:%s' % (double[0], double[2])
-                       if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
+        double_list = (f'{double[0]}:{double[2]}'
+                       if len(double) == 3 else f'{double[0]}:{double[2]}:{double[4]}'
                        for double in doubles)
         double_str = ' '.join(double_list)
         msg += '%s %s %s ' % (

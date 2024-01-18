@@ -10,8 +10,9 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSoli
 
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
-
+from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
@@ -812,6 +813,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
         word = 'Stress'
         #sigma = 'σ'
         method_map = {
+            #'fiber_distance' : 'FiberDist.',
             'o11' : 'σ11',
             'o22' : 'σ22',
             't12' : 't12',
@@ -827,6 +829,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
         word = 'Strain'
         #sigma = 'ϵ'
         method_map = {
+            #'fiber_distance' : 'FiberDist.',
             'e11' : 'ϵ11',
             'e22' : 'ϵ22',
             'e12' : 'ϵ12',
@@ -837,6 +840,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             'minor' : 'ϵ minor',
             'max_shear' : 'MaxShear',
         }
+    #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
     methods = [method_map[headeri] for headeri in case_headers]
     #methods = case_headers
 
@@ -875,6 +879,16 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
         colormap='jet', uname=uname)
     form_names = res.form_names
 
+    titleii = uname
+    res2 = CompositeStrainStressResults2(
+        subcase_id, model, eids,
+        case, method_map, titleii,
+        #dim_max=1.0,
+        data_format='%g',
+        is_variable_data_format=False,
+        nlabels=None, labelsize=None, ncolors=None, colormap='',
+        set_max_min=False, uname='CompositeStressResults2')
+
     #times = case._times
     for itime, dt in enumerate(times):
         #dt = case._times[itime]
@@ -887,24 +901,48 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
         # formi = form[0][2]
         form_dict[(key, itime)] = form
 
-        form_layers = {}
-        for ilayer in range(nlayers):
-            layer_name = f' Layer {ilayer+1}'
+        form_layers = {'temp': [],}
+        if USE_NEW_SIDEBAR_OBJS:
+            ilayer = -1
+            layer_name = 'temp'
+
             form_layeri = []
-            formi.append((layer_name, None, form_layeri))
+            formi.append((str(case.element_name), None, form_layeri))
             form_layers[layer_name] = form_layeri
 
-        for imethod, method in enumerate(methods):
-            for ilayer in range(nlayers):
-                layer_name = f' Layer {ilayer+1}'
-                form_layeri = form_layers[layer_name]
-                #cases[icase] = (res, (subcase_id, header))
-                cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
-                form_layeri.append((f'{method} ({layer_name})', icase, []))
-
-                form_name2 = f'{element_type} Composite Plate {word}: {method} ({layer_name})'
+            #form_layeri = form_layers[layer_name]
+            for imethod, method in enumerate(methods):
+                cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
+                form_layeri.append((f'{method}', icase, []))
+                form_name2 = f'{element_type} Composite Plate2 {word}: {method}'
                 form_names.append(form_name2)
                 icase += 1
+
+        if USE_OLD_SIDEBAR_OBJS:
+            for ilayer in range(nlayers):
+                layer_name = f' Layer {ilayer+1}'
+                form_layeri = []
+                formi.append((str(case.element_type), None, form_layeri))
+                form_layers[layer_name] = form_layeri
+
+            for imethod, method in enumerate(methods):
+                for ilayer in range(nlayers):
+                    layer_name = f' Layer {ilayer+1}'
+                    form_layeri = form_layers[layer_name]
+                    #cases[icase] = (res, (subcase_id, header))
+                    #if USE_NEW_SIDEBAR_OBJS:
+                        #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
+                        #form_layeri.append((f'{method} ({layer_name})', icase, []))
+                        #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
+                        #form_names.append(form_name2)
+                        #icase += 1
+
+                    if USE_OLD_SIDEBAR_OBJS:
+                        cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
+                        form_layeri.append((f'{method} ({layer_name})', icase, []))
+                        form_name2 = f'{element_type} Composite Plate {word}: {method} ({layer_name})'
+                        form_names.append(form_name2)
+                        icase += 1
     #assert len(cases) == icase
     return icase
 
