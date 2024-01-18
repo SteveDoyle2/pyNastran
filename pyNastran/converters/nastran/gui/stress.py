@@ -903,6 +903,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
 
         form_layers = {'temp': [],}
         if USE_NEW_SIDEBAR_OBJS:
+            # TODO: doesn't support multiple element types...only the last...
             ilayer = -1
             layer_name = 'temp'
 
@@ -922,7 +923,8 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             for ilayer in range(nlayers):
                 layer_name = f' Layer {ilayer+1}'
                 form_layeri = []
-                formi.append((str(case.element_type), None, form_layeri))
+                formi.append((layer_name.strip().lstrip(), None, form_layeri))
+                #formi.append((layer_name.strip() + ' ' + str(case.element_name), None, form_layeri))
                 form_layers[layer_name] = form_layeri
 
             for imethod, method in enumerate(methods):
@@ -940,7 +942,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                     if USE_OLD_SIDEBAR_OBJS:
                         cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                         form_layeri.append((f'{method} ({layer_name})', icase, []))
-                        form_name2 = f'{element_type} Composite Plate {word}: {method} ({layer_name})'
+                        form_name2 = f'Composite Plate {word}: {method} ({layer_name})'
                         form_names.append(form_name2)
                         icase += 1
     #assert len(cases) == icase

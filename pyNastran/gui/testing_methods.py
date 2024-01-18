@@ -75,6 +75,23 @@ class MockResWidget:
         pass
     def update_icase(self, icase):
         pass
+    def set_methods_table_visible(self, is_visible: bool) -> None:
+        assert isinstance(is_visible, bool), is_visible
+    def set_coord_transform_visible(self, is_visible: bool, methods: list[str]) -> None:
+        assert isinstance(is_visible, bool), is_visible
+        assert isinstance(methods, list), methods
+        for method in methods:
+            assert isinstance(method, str), method
+    def set_derivation_visible(self, is_visible: bool, methods: list[str]) -> None:
+        assert isinstance(is_visible, bool), is_visible
+        assert isinstance(methods, list), methods
+        for method in methods:
+            assert isinstance(method, str), method
+    def set_nodal_combine_visible(self, is_visible: bool, methods: list[str]) -> None:
+        assert isinstance(is_visible, bool), is_visible
+        assert isinstance(methods, list), methods
+        for method in methods:
+            assert isinstance(method, str), method
 
 class FakeGUIMethods(GuiVTKCommon):
     """all the methods in here are faked"""

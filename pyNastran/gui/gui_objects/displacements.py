@@ -320,6 +320,9 @@ class VectorTable(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
+    def get_force_vector_result(self, i: int, name: str,
+                                method: str) -> tuple[np.ndarray, np.ndarray]:
+        return self.get_vector_result(i, name, method)
     def get_vector_result(self, i: int, name: str,
                           method: str) -> tuple[np.ndarray, np.ndarray]:
         #assert len(self.xyz.shape) == 2, self.xyz.shape

@@ -430,7 +430,6 @@ class CompositeResults2(GuiResultCommon):
 
         return_sparse = not return_dense
         if return_sparse or self.is_dense:
-            asdf
             return data
 
         nelements = len(self.element_id)
@@ -545,10 +544,13 @@ class CompositeStrainStressResults2(CompositeResults2):
         layers = list(self.layer_map.values())
         return layers
 
+    def get_scalar(self, itime: int, res_name: str, method: str) -> np.ndarray:
+        return self.get_plot_value(itime, res_name, method)
+
     def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
         """get_fringe_value"""
-        dxyz = self.get_result(itime, res_name, method, return_dense=False)
-        normi = safe_norm(dxyz, axis=col_axis)
+        normi = self.get_result(itime, res_name, method, return_dense=False)
+        #normi = safe_norm(dxyz, axis=col_axis)
         if self.is_dense:
             return normi
 

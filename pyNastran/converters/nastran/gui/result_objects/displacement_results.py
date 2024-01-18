@@ -27,13 +27,14 @@ class VectorResults2(GuiResultCommon):
                  set_max_min: bool=False,
                  uname: str='VectorResults2'):
         GuiResultCommon.__init__(self)
-        self.method_indices = (0, 1, 2)
         self.is_dense = False
         self.dim = dxyz.data.ndim
         assert self.dim == 3, dxyz.data.shape
+        assert dxyz.data.shape[2] == 6, dxyz.data.shape
 
         self.subcase_id = subcase_id
         self.is_translation = is_translation
+        self._title0 = 'T_' if self.is_translation else 'R_'
 
         if dim_max == 0.0:
             dim_max = 1.0
@@ -52,6 +53,19 @@ class VectorResults2(GuiResultCommon):
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
         #self.is_real = dxyz.data.dtype.name in {'float32', 'float64'}
         self.is_complex = not self.is_real
+
+        if self.is_real:
+            self.method_indices = (0, 1, 2)
+            self.index_map = {0: 'X', 1: 'Y', 2: 'Z',}
+        else:
+            self.method_indices = (7, 8, 9, 10, 11, 12)
+            self.index_map = {
+                0: 'Resultant',
+                1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
+                4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
+                7: 'X Real', 8: 'Y Real', 9: 'Z Real',
+                10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
+            }
 
         ntimes = self.dxyz.data.shape[0]
         nscale = ntimes
@@ -104,21 +118,11 @@ class VectorResults2(GuiResultCommon):
         #}
         assert transform in transforms, transform
 
-        # if Magnitude is selected, only use magnitude
-        # methods = ['T_XYZ', 'TX', 'TY', 'TZ']
-        default_indices = [1, 2, 3]
-        if methods_keys is None or len(methods_keys) == 0:
-            # default
-            indices = default_indices
-        elif 0 in methods_keys:
-            # include all components b/c Magnitude is selected
-            indices = default_indices
+        if self.is_real:
+            method_indices = _get_real_method_indices(methods_keys)
         else:
-            # no 0 (magnitude) in methods_keys
-            # update the indices to correspond to the array
-            #methods_keys.sort()
-            indices = methods_keys
-        self.method_indices = tuple(np.array(indices, dtype='int32') - 1)
+            method_indices = _get_complex_method_indices(methods_keys)
+        self.method_indices = method_indices
 
         # doesn't matter cause it's already nodal
         #nodal_combine
@@ -151,10 +155,8 @@ class VectorResults2(GuiResultCommon):
         returns 'Displacement T_XYZ: Static'
         """
         #method = self.get_methods(itime, res_name)[0]
-        method_ = 'T_' if self.is_translation else 'R_'
-        index_map = {0: 'X', 1: 'Y', 2: 'Z',}
         self.method_indices
-        method = method_ + ''.join(index_map[idx] for idx in self.method_indices)
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
         annotation_label = f'{self.title} {method}: {self.headers[itime]}'
         #return self.uname
         return annotation_label
@@ -237,10 +239,8 @@ class VectorResults2(GuiResultCommon):
         return mins[itime], maxs[itime]
 
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
-        method_ = 'T_' if self.is_translation else 'R_'
-        index_map = {0: 'X', 1: 'Y', 2: 'Z',}
         self.method_indices
-        method = method_ + ''.join(index_map[idx] for idx in self.method_indices)
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
         title = f'{self.title} {method}'
         return title
     def set_legend_title(self, itime: int, res_name: str,
@@ -250,10 +250,8 @@ class VectorResults2(GuiResultCommon):
         """displacement T_XYZ"""
         #method2 = self._update_method(method)
         #return f'{self.title} {method2}'
-        method_ = 'T_' if self.is_translation else 'R_'
-        index_map = {0: 'X', 1: 'Y', 2: 'Z',}
         self.method_indices
-        method = method_ + ''.join(index_map[idx] for idx in self.method_indices)
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
         title = f'{self.title} {method}'
         return title
 
@@ -272,7 +270,8 @@ class VectorResults2(GuiResultCommon):
         self.colormap = colormap
         pass
 
-    def _get_real_data(self, itime: int) -> np.ndarray:
+    def _get_data(self, itime: int) -> np.ndarray:
+        assert self.dxyz.data.shape[2] == 6
         if self.is_translation:
             datai = self.dxyz.data[itime, :, :3].copy()
             assert datai.shape[1] == 3, datai.shape
@@ -281,12 +280,22 @@ class VectorResults2(GuiResultCommon):
             assert datai.shape[1] == 3, datai.shape
 
         assert len(self.method_indices) > 0, self.method_indices
-        for idx in [0, 1, 2]:
-            if idx not in self.method_indices:
-                datai[:, idx] = 0.
-        if not self.is_real:
-            asdf
         return datai
+
+    def _get_real_data(self, itime: int) -> np.ndarray:
+        data = self._get_data(itime)
+        if self.is_real:
+            for idx in [0, 1, 2]:
+                if idx not in self.method_indices:
+                    data[:, idx] = 0.
+        else:
+            for idx in [7, 8, 9]:
+                if idx not in self.method_indices:
+                    data[:, idx].real = 0.
+            for idx in [10, 11, 12]:
+                if idx not in self.method_indices:
+                    data[:, idx].imag = 0.
+        return data
 
     def _get_complex_data(self, itime: int) -> np.ndarray:
         return self._get_real_data(itime)
@@ -344,6 +353,59 @@ class VectorResults2(GuiResultCommon):
     #def _update_method(self, method: str) -> str:
         #assert method != '', method
         #self.active_method = method
+
+def _get_real_method_indices(methods_keys: list[str]) -> np.ndarray:
+    """
+    if Magnitude is selected, only use magnitude
+    methods = ['T_XYZ', 'TX', 'TY', 'TZ']
+    """
+    default_indices = [1, 2, 3]
+    if methods_keys is None or len(methods_keys) == 0:
+        # default
+        indices = default_indices
+    elif 0 in methods_keys:
+        # include all components b/c Magnitude is selected
+        indices = default_indices
+    else:
+        # no 0 (magnitude) in methods_keys
+        # update the indices to correspond to the array
+        #methods_keys.sort()
+        indices = methods_keys
+    method_indices = tuple(np.array(indices, dtype='int32') - 1)
+    return method_indices
+
+def _get_complex_method_indices(methods_keys: list[str]) -> np.ndarray:
+    """
+    if Magnitude is selected, only use magnitude
+    methods = [
+        'Resultant',
+        'X Magnitude', 'Y Magnitude', 'Z Magnitude',
+        'X Phase', 'Y Phase', 'Z Phase',
+        'X Real', 'Y Real', 'Z Real',
+        'X Imaginary', 'Y Imaginary', 'Z Imaginary',
+    ]
+    """
+    # the data is real/imag, so we use that...
+    #default_indices = [1, 2, 3, 4, 5, 6]    # mag/phase
+    default_indices = [7, 8, 9, 10, 11, 12]  # real/imag
+    if methods_keys is None or len(methods_keys) == 0:
+        # default
+        indices = default_indices
+    elif 0 in methods_keys:
+        # include all components b/c Magnitude is selected
+        indices = default_indices
+    else:
+        # no 0 (magnitude) in methods_keys
+        # update the indices to correspond to the array
+        #
+        # first split names by type
+        for key in methods_keys:
+            assert isinstance(key, str), key
+            assert isinstance(key, int), key
+        #
+        indices = methods_keys
+    method_indices = tuple(np.array(indices, dtype='int32') - 1)
+    return method_indices
 
 
 class DisplacementResults2(VectorResults2):
@@ -450,7 +512,16 @@ class DisplacementResults2(VectorResults2):
             if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
                 out[0] = 'Reluctant'
         else:
-            out = ['node real', 'node imag', 'node magnitude', 'node phase']
+            out = [
+                # if results of different type are selected (e.g., Real/Imag)
+                # the "earliest" type is selected
+                # Resultant -> Magnitude -> Phase -> Real -> Imaginary
+                'Resultant',
+                'X Magnitude', 'Y Magnitude', 'Z Magnitude',
+                'X Phase', 'Y Phase', 'Z Phase',
+                'X Real', 'Y Real', 'Z Real',
+                'X Imaginary', 'Y Imaginary', 'Z Imaginary',
+            ]
         return out
 
     def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
@@ -591,6 +662,7 @@ class ForceResults2(VectorResults2):
             set_max_min=set_max_min,
             uname=uname)
         self.title = title
+        self._title0 = 'F_' if self.is_translation else 'M_'
 
         self.is_variable_data_format = is_variable_data_format
 

@@ -1308,6 +1308,11 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
     for (result, name, deflects) in displacement_like:
         if key not in result:
             continue
+        resulti = result[key]
+        if resulti.data.shape[2] != 6:
+            model.log.warning(f'expected a vector and didnt get one...skipping!\n{str(resulti)}')
+            continue
+
         for t123_offset in [0, 3]:
             #if t123_offset == 3:
                 #continue

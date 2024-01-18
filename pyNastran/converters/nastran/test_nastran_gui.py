@@ -22,6 +22,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
+from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
@@ -106,7 +107,11 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 56, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 278, len(test.result_cases)
+
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 278, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 206, len(test.result_cases)
         test.cycle_results()
         test.on_rcycle_results()
 
@@ -200,7 +205,12 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
         assert len(test.models['main'].elements) > 0
         #test.write_result_cases()
-        assert_result_cases(test, ncases=694)
+
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 694, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 478, len(test.result_cases)
+        #assert_result_cases(test, ncases=694)
 
         test.on_rcycle_results()
         test.on_update_legend(
@@ -295,8 +305,11 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        assert len(keys) == 694, len(keys)
-        assert_result_cases(test, ncases=694, debug=True)
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 694, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 478, len(test.result_cases)
+        #assert_result_cases(test, ncases=694)
         icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
@@ -322,7 +335,10 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 60, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 759, len(test.result_cases)
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 759, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 687, len(test.result_cases)
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')

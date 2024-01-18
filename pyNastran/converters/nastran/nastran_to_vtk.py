@@ -66,6 +66,10 @@ def save_nastran_results(gui: NastranGUI,
         else:
             if case.title == 'Normals' and case.scalar is None:
                 continue
+            if not isinstance(case, GuiResult):
+                log.warning(f'skipping case {str(case)} because it is unhandled')
+                log.warning(str(case))
+                return
             assert isinstance(case, GuiResult), case
             vtk_array = case.save_vtk_result(used_titles)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)

@@ -70,7 +70,7 @@ class GuiResultCommon:
     def get_min_max(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_scalar(self, i: int, name: str):
+    def get_scalar(self, i: int, name: str, method: str):
         raise NotImplementedError(self.class_name)
 
     def get_methods(self, i: int, name: str) -> list[str]:
