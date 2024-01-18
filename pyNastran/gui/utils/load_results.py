@@ -22,7 +22,7 @@ from pyNastran.utils import _filename
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults
-from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2, ForceResults2
 from pyNastran.converters.stl.stl import read_stl
 
 

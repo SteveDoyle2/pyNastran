@@ -237,7 +237,12 @@ class VectorResults2(GuiResultCommon):
         return mins[itime], maxs[itime]
 
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
-        return self.title
+        method_ = 'T_' if self.is_translation else 'R_'
+        index_map = {0: 'X', 1: 'Y', 2: 'Z',}
+        self.method_indices
+        method = method_ + ''.join(index_map[idx] for idx in self.method_indices)
+        title = f'{self.title} {method}'
+        return title
     def set_legend_title(self, itime: int, res_name: str,
                          title: str) -> None:
         self.title = title
@@ -245,7 +250,12 @@ class VectorResults2(GuiResultCommon):
         """displacement T_XYZ"""
         #method2 = self._update_method(method)
         #return f'{self.title} {method2}'
-        return self.title
+        method_ = 'T_' if self.is_translation else 'R_'
+        index_map = {0: 'X', 1: 'Y', 2: 'Z',}
+        self.method_indices
+        method = method_ + ''.join(index_map[idx] for idx in self.method_indices)
+        title = f'{self.title} {method}'
+        return title
 
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, itime: int, res_name: str,
@@ -506,6 +516,188 @@ class DisplacementResults2(VectorResults2):
     def __repr__(self) -> str:
         """defines str(self)"""
         msg = 'DisplacementResults2\n'
+        #msg += f'    titles={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
+        return msg
+
+
+class ForceResults2(VectorResults2):
+    def __init__(self,
+                 subcase_id: int,
+                 node_id: np.ndarray,
+                 xyz: np.ndarray,
+                 dxyz: Union[RealTableArray, ComplexTableArray],
+                 unused_scalar: np.ndarray,
+                 scales: np.ndarray,
+                 title: str,
+                 is_translation: bool,
+                 dim_max: float=1.0,
+                 data_format: str='%g',
+                 is_variable_data_format: bool=False,
+                 nlabels=None, labelsize=None, ncolors=None,
+                 colormap: str='',
+                 set_max_min: bool=False,
+                 uname: str='ForceResults2'):
+        """
+        Defines a SPC Force/MPC Force/Applied Load result
+
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : list[str]
+            the sidebar word
+        titles : list[str]
+            the legend title
+        xyz : (nnodes, 3)
+            the nominal xyz locations
+        dxyz : (nnodes, 3)
+            the delta xyz values
+        scalars : (nnodes,n) float ndarray
+            #the data to make a contour plot with
+            does nothing
+        scales : list[float]
+            the deflection scale factors
+            nominally, this starts as an empty list and is filled later
+        data_formats : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        uname : str
+            some unique name for ...
+        """
+        VectorResults2.__init__(
+            self,
+            subcase_id,
+            node_id,
+            dxyz,
+            is_translation,
+            dim_max,
+            data_format=data_format,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap,
+            set_max_min=set_max_min,
+            uname=uname)
+        self.title = title
+
+        self.is_variable_data_format = is_variable_data_format
+
+        #linked_scale_factor = False
+        #location = 'node'
+
+        # setup the node mapping
+        disp_nodes = dxyz.node_gridtype[:, 0]  #  local node id
+        self.inode = np.searchsorted(node_id, disp_nodes)
+
+        # dense -> no missing nodes in the results set
+        self.is_dense = (len(node_id) == len(disp_nodes))
+
+        self.xyz = xyz
+        assert len(self.xyz.shape) == 2, self.xyz.shape
+        assert isinstance(is_translation, bool), is_translation
+        self.location = 'node'
+        str(self)
+
+    #-------------------------------------
+    # unmodifyable getters
+
+    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
+        return False
+
+    def get_location(self, unused_i: int, unused_res_name: str) -> str:
+        """the result type"""
+        return self.location
+
+    def set_min_max(self, i: int, res_name: str,
+                    min_value: float, max_value: float):
+        raise TypeError((i, res_name))
+
+    #-------------------------------------
+    def get_methods(self, itime: int, res_name: str) -> list[str]:
+        if self.is_real:
+            out = translation if self.is_translation else rotation
+            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
+                out[0] = 'Reluctant'
+        else:
+            out = ['node real', 'node imag', 'node magnitude', 'node phase']
+        return out
+
+    def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
+        """get_fringe_value"""
+        dxyz = self.get_result(itime, res_name, method, return_dense=False)
+        normi = safe_norm(dxyz, axis=col_axis)
+        if self.is_dense:
+            return normi
+
+        #case.data.shape = (11, 43, 6)
+        #nnodes = len(self.node_id) =  48
+        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
+        normi2 = np.full(len(self.node_id), np.nan, dtype=normi.dtype)
+        normi2[self.inode] = normi
+        return normi2
+
+    def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
+        dxyz = self.get_result(itime, res_name, method, return_dense=True)
+        scale = 1.
+        return self.xyz, dxyz # * scale
+
+    def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:
+        dxyz = self.get_result(itime, res_name, method, return_dense=True)
+        scale = self.get_scale(itime, res_name)
+        deflected_xyz = dxyz
+        #deflected_xyz = self.xyz + scale * dxyz
+        return self.xyz, deflected_xyz
+
+    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+                                         scale: float,
+                                         phase: float=0.) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Gets the real/complex deflection result
+
+        Parameters
+        ----------
+        i : int
+            mode/time/loadstep number
+        name : str
+            unused; useful for debugging
+        scale : float
+            deflection scale factor; true scale
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
+        assert self.dim == 3, self.dim
+        assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            deflected_xyz = self.xyz + scale * self.dxyz[i, :]
+        else:
+            assert isinstance(i, int), (i, phase)
+            assert isinstance(phase, float), (i, phase)
+            dxyz = self._get_complex_displacements_by_phase(i, phase)
+            deflected_xyz = self.xyz + scale * dxyz
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return self.xyz, deflected_xyz
+
+    def __repr__(self) -> str:
+        """defines str(self)"""
+        msg = 'ForceResults2\n'
         #msg += f'    titles={self.titles!r}\n'
         msg += f'    subcase_id={self.subcase_id}\n'
         msg += f'    data_type={self.data_type!r}\n'
