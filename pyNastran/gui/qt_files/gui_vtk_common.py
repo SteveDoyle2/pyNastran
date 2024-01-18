@@ -562,7 +562,7 @@ class GuiVTKCommon(GuiQtCommon):
             return is_passed
         imin, imax, min_value_actual, max_value_actual = out_data
 
-        title = obj.get_title(i, name)
+        title = obj.get_legend_title(i, name)
         min_value, max_value = obj.get_min_max(i, name)
         if update_limits:
             min_value = min_value_actual

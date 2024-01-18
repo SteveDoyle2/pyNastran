@@ -215,7 +215,7 @@ class FakeGUIMethods(GuiVTKCommon):
             methods = obj.get_methods(i, name)
             method = methods[0]
             unused_case = obj.get_result(i, name, method)
-            unused_result_type = obj.get_title(i, name)
+            unused_result_type = obj.get_legend_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
             unused_data_format = obj.get_data_format(i, name)
@@ -241,9 +241,9 @@ class FakeGUIMethods(GuiVTKCommon):
                 unused_scalar_result = obj.get_scalar(i, name, method)
 
             unused_default_data_format = obj.get_default_data_format(i, name)
-            default_min, unused_default_max = obj.get_default_min_max(i, name)
+            default_min, unused_default_max = obj.get_default_min_max(i, name, method)
             unused_default_scale = obj.get_default_scale(i, name)
-            unused_default_title = obj.get_default_title(i, name)
+            unused_default_title = obj.get_default_legend_title(i, name)
             unused_default_phase = obj.get_default_phase(i, name)
             out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
             nlabels = 4
@@ -254,7 +254,6 @@ class FakeGUIMethods(GuiVTKCommon):
             (unused_default_nlabels, unused_default_labelsize,
              unused_default_ncolors, unused_default_colormap) = out_labels
 
-            #default_max, default_min = obj.get_default_min_max(i, name)
             unused_min_value, unused_max_value = obj.get_min_max(i, name)
 
         self.model_data.result_cases = cases

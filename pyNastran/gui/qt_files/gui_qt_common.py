@@ -7,15 +7,12 @@ This file defines functions related to the result updating that are VTK specific
 # coding: utf-8
 # pylint: disable=C0111
 import sys
-from copy import deepcopy
 from collections import namedtuple
 from typing import Union, Callable, Optional, Any
 
 import numpy as np
-from numpy import issubdtype
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT, VTK_VERSION
 from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 
@@ -30,6 +27,7 @@ from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.gui_utils import set_vtk_fringe, show_hide_actor
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
@@ -197,7 +195,7 @@ class GuiQtCommon(GuiAttributes):
         (obj, (i, resname)) = self.result_cases[self.icase]
         unused_location = obj.get_location(i, resname)
 
-        unused_name_str = self._names_storage.get_name_string(resname)
+        #unused_name_str = self._names_storage.get_name_string(resname)
         grid = self.grid
 
         if self._is_displaced:
@@ -301,7 +299,7 @@ class GuiQtCommon(GuiAttributes):
             # this is valid, but we want to skip out
             return is_valid, failed_data
 
-        result_type = obj.get_title(i, resname)
+        result_type = obj.get_legend_title(i, resname)
         data_format = obj.get_data_format(i, resname)
         vector_size = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
@@ -333,7 +331,7 @@ class GuiQtCommon(GuiAttributes):
 
         vector_size = 1
         name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
-        name_str = self._names_storage.get_name_string(resname)
+        name_str = self._names_storage.get_name_string(name_tuple)
         #return resname, normi, vector_size, min_value, max_value, norm_value
 
         grid_result = self.set_grid_values(name_tuple, normi, vector_size, phase)
@@ -383,29 +381,34 @@ class GuiQtCommon(GuiAttributes):
         label2 = ''
         (obj, (i, name)) = case
         subcase_id = obj.subcase_id
-        #case = obj.get_result(i, name)  # TODO: remove
+        #case = obj.get_result(i, name, method)  # TODO: remove
         #if case is None:
             ## normal result
             #self.log_error('icase=%r is not a displacement/force' % icase)
             #return is_valid, failed_data
 
-        result_type = obj.get_title(i, name)
+        result_type = obj.get_legend_title(i, name)
         vector_size = obj.get_vector_size(i, name)
         if vector_size == 1:
-            msg = 'icase=%r is not a displacement/force' % icase
+            msg = f'icase={icase} is not a displacement/force'
             self.log_error(msg)
             if stop_on_failure:
                 raise ValueError(msg)
             return is_valid, failed_data
         location = obj.get_location(i, name)
         if is_disp and location != 'node':
-            self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
+            self.log_error(f'icase={icase} is not a displacement-like (nodal vector) result')
             return is_valid, failed_data
 
         method = obj.get_methods(i, name)[0]
-        xyz_nominal, vector_data = obj.get_vector_result(i, name, method)
+        if is_disp:
+            xyz_nominal, vector_data = obj.get_vector_result(i, name, method)
+        else:
+            xyz_nominal, vector_data = obj.get_force_vector_result(i, name, method)
+
         if is_disp and xyz_nominal is None:
-            self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
+            self.log_error(f'icase={icase} is not a displacement-like '
+                           '(nodal vector) result and xyz_nominal is None')
             return is_valid, failed_data
 
         methods = obj.get_methods(i, name)
@@ -440,7 +443,7 @@ class GuiQtCommon(GuiAttributes):
 
         vector_size = 3
         name_tuple = (vector_size, subcase_id, result_type, label, scale)
-        name_str = self._names_storage.get_name_string(name)
+        name_str = self._names_storage.get_name_string(name_tuple)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
         #grid_result = self.set_grid_values(name_tuple, normi, vector_size)
@@ -741,7 +744,9 @@ class GuiQtCommon(GuiAttributes):
             grid.Modified()
             self.grid_selected.Modified()
             self.icase_disp = icase
+            np.savetxt(r'C:\NASA\m4\formats\git\pyNastran\pyNastran\disp.txt', vector_data)
         else:
+            np.savetxt(r'C:\NASA\m4\formats\git\pyNastran\pyNastran\force.txt', vector_data)
             self.icase_vector = icase
             if location == 'node':
                 #self._is_displaced = False
@@ -819,7 +824,8 @@ class GuiQtCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
         #subcase_id = obj.subcase_id
-        case = obj.get_result(i, name)
+        method = obj.get_methods(i, name)[0]
+        case = obj.get_result(i, name, method)
         return name, case
 
     def delete_cases(self, icases_to_delete: list[int], ask: bool=True) -> None:
@@ -863,6 +869,7 @@ class GuiQtCommon(GuiAttributes):
         return []
 
     def _set_case(self, unused_result_name, icase: int,
+                  sidebar_kwargs=None,
                   explicit: bool=False,
                   cycle: bool=False,
                   skip_click_check: bool=False,
@@ -873,6 +880,7 @@ class GuiQtCommon(GuiAttributes):
                   update: bool=True) -> Optional[int]:
         """
         Internal method for doing results updating
+        Called by the Sidebar and used for cycle_results_explicit
 
         Parameters
         ----------
@@ -907,6 +915,9 @@ class GuiQtCommon(GuiAttributes):
             False: dont update legend/render
 
         """
+        if sidebar_kwargs is None:
+            sidebar_kwargs = {}
+
         #if icase is None:
             #self.log.warning("icase is None and you're trying to set a result...")
             #return
@@ -945,13 +956,14 @@ class GuiQtCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, resname)) = self.model_data.result_cases[key]
         assert resname != 'main', resname
-        subcase_id = obj.subcase_id
+        obj.set_sidebar_args(i, resname, **sidebar_kwargs)
 
         methods = obj.get_methods(i, resname)
         methodi = methods[0]
         case = obj.get_result(i, resname, methodi)
 
-        result_type = obj.get_title(i, resname)
+        subcase_id = obj.subcase_id
+        result_type = obj.get_legend_title(i, resname)
         vector_size0 = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
         data_format = obj.get_data_format(i, resname)
@@ -961,7 +973,7 @@ class GuiQtCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
         nlabels, labelsize, ncolors, colormap = out
 
-        #default_max, default_min = obj.get_default_min_max(i, resname)
+        #default_max, default_min = obj.get_default_min_max(i, resname, method)
         if min_value is None or max_value is None:
             min_valuei, max_valuei = obj.get_min_max(i, resname)
             if min_value is None:
@@ -975,6 +987,8 @@ class GuiQtCommon(GuiAttributes):
         if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
             raise TypeError(min_value)  # pragma: no cover
 
+        #obj.mins[(0, )] = [0.0]
+        #obj.maxs[(0, )] = [0.01211053]
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
@@ -1151,7 +1165,7 @@ class GuiQtCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-    def set_grid_values(self, name: str, case: Any,
+    def set_grid_values(self, name: str, case: np.ndarray,
                         vector_size: int, phase: float) -> Optional[Any]:
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
@@ -1159,40 +1173,7 @@ class GuiQtCommon(GuiAttributes):
         if self._names_storage.has_exact_name(name):
             return None
         #print('name=%r case=%r' % (name, case))
-
-        case, vtk_data_type = set_grid_mapper(
-            self.grid_mapper, case,
-            vector_size, phase)
-
-        #if 0: # nan testing
-            #if case.dtype.name == 'float32':
-                #case[50] = np.float32(1) / np.float32(0)
-            #else:
-                #case[50] = np.int32(1) / np.int32(0)
-
-        if vector_size == 1:
-            if case.flags.contiguous:
-                case2 = case
-            else:
-                case2 = deepcopy(case)
-            grid_result = numpy_to_vtk(
-                num_array=case2,
-                deep=True,
-                array_type=vtk_data_type
-            )
-            #print('grid_result = %s' % grid_result)
-            #print('max2 =', grid_result.GetRange())
-        else:
-            # vector_size=3
-            if case.flags.contiguous:
-                case2 = case
-            else:
-                case2 = deepcopy(case)
-            grid_result = numpy_to_vtk(
-                num_array=case2,
-                deep=True,
-                array_type=vtk_data_type
-            )
+        grid_result = set_vtk_fringe(self.grid_mapper, case, vector_size, phase)
         return grid_result
 
     def update_grid_by_icase_scale_phase(self,
@@ -1268,7 +1249,7 @@ class GuiQtCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
-        result_type = obj.get_title(i, res_name)
+        result_type = obj.get_legend_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         location = obj.get_location(i, res_name)
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
@@ -1830,7 +1811,6 @@ class GuiQtCommon(GuiAttributes):
         """trying to make model lines...doesn't work"""
         if not self.make_contour_filter:
             return
-        from vtkmodules.vtkFiltersCore import vtkContourFilter
         self.contour_filter = vtkContourFilter()
 
         #if 0:
@@ -1953,7 +1933,7 @@ def _get_normalized_data(case):
     """helper method for ``_get_fringe_data``"""
 #def _get_normalized_data(result_case):
     #(obj, (i, name)) = result_case
-    #case = obj.get_result(i, name)
+    #case = obj.get_result(i, name, method)
     if case is None:
         return None
 
@@ -1981,32 +1961,3 @@ def normalize_forces(forces_array):
     #print('new_forces =', new_forces[inonzero])
     #print('mag =', mag[inonzero])
     return new_forces, mag
-
-def set_grid_mapper(grid_mapper: vtkDataSetMapper,
-                    case: np.ndarray,
-                    vector_size: int,
-                    phase: float) -> tuple[np.ndarray, int]:
-    assert isinstance(case, np.ndarray), case
-    if issubdtype(case.dtype, np.integer):
-        vtk_data_type = VTK_INT
-        grid_mapper.InterpolateScalarsBeforeMappingOn()
-    elif issubdtype(case.dtype, np.floating):
-        vtk_data_type = VTK_FLOAT
-        grid_mapper.InterpolateScalarsBeforeMappingOff()
-    elif case.dtype.name == 'complex64':
-        if phase:
-            phaser = np.radians(phase)
-            case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real
-        else:
-            case = case.real
-        vtk_data_type = VTK_FLOAT
-        grid_mapper.InterpolateScalarsBeforeMappingOff()
-    else:  # pragma: no cover
-        raise NotImplementedError(case.dtype.type)
-    return case, vtk_data_type
-
-def show_hide_actor(actor):
-    """flips the visibility for an actor"""
-    is_visible = actor.GetVisibility()
-    actor.SetVisibility(not is_visible)
-    actor.Modified()

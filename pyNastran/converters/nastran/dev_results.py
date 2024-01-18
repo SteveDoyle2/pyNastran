@@ -114,7 +114,7 @@ class TransientElementResults:
     def get_data_format(self, i, unused_name):
         return self.data_formats[i]
 
-    def get_title(self, i, unused_name):
+    def get_legend_title(self, i, unused_name):
         return self.titles[i]
 
     def get_min_max(self, i, unused_name):
@@ -134,7 +134,7 @@ class TransientElementResults:
             #return
         #self.phases[i] = phase
 
-    def set_title(self, i, unused_name, title):
+    def set_legend_title(self, i, unused_name, title):
         self.titles[i] = title
 
     def set_min_max(self, i, unused_name, min_value, max_value):
@@ -146,7 +146,7 @@ class TransientElementResults:
     def get_default_data_format(self, i, unused_name):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i, unused_name):
+    def get_default_min_max(self, i, unused_name, method: str) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, unused_i, unused_name):
@@ -159,7 +159,7 @@ class TransientElementResults:
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i, name):
+    #def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     #def get_default_scale(self, i, name):
@@ -173,7 +173,7 @@ class TransientElementResults:
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i, unused_sname):
+    def get_default_legend_title(self, i, unused_sname):
         return self.titles_default[i]
 
     #-------------------------------------
@@ -226,7 +226,7 @@ class TransientElementResults:
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    def get_result(self, i, unused_name):
+    def get_result(self, i, unused_name, method):
         if self.is_real:
             if self.dim == 2:
                 # single result

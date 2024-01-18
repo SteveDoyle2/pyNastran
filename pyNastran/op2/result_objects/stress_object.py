@@ -341,7 +341,9 @@ def create_composite_plates(model, key: NastranKey, is_stress: bool, keys_map: K
     return composite_data_dict
 
 
-def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
+def _get_nastran_header(case: Any,
+                        dt: Union[int, float],
+                        itime: int) -> str:
     #if case is None:
         #return None
     try:

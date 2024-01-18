@@ -20,7 +20,7 @@ from pyNastran.gui.qt_files.colors import (
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, # create_axisymmetric_body,
 )
-from pyNastran.femutils.utils import hstack0
+from pyNastran.femutils.utils import hstack_unique
 
 #from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 #from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
@@ -782,7 +782,7 @@ def create_aesurf(gui: MainWindow,
                 raise RuntimeError(msg)
             jj.append(j)
 
-        j = hstack0(jj, unique=True)
+        j = hstack_unique(jj, unique=True)
         #aesurf_id = integer(card, 1, 'aesid')
         #label = string(card, 2, 'label')
 

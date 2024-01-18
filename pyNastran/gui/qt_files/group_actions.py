@@ -20,7 +20,7 @@ class GroupActions:
             #self.scalar_bar.title
             case_key = self.gui.case_keys[self.gui.icase] # int for object
             obj, (i, res_name) = self.gui.result_cases[case_key]
-            default_title = obj.get_default_title(i, res_name)
+            default_title = obj.get_default_legend_title(i, res_name)
             location = obj.get_location(i, res_name)
             if obj.data_format != '%i':
                 self.gui.log.error('not creating result=%r; must be an integer result' % res_name)

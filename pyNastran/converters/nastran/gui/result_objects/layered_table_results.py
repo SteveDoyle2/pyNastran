@@ -37,7 +37,7 @@ class LayeredTableResults(Table):
         self.titles_default = deepcopy(self.titles)
         self.headers_default = deepcopy(self.headers)
 
-    def get_methods(self, i: int, name: str):
+    def get_methods(self, i: int, name: str) -> list[str]:
         return self.methods
 
     def has_coord_transform(self, i: int, name: str) -> bool:
@@ -50,12 +50,12 @@ class LayeredTableResults(Table):
     def deflects(self, unused_i, unused_res_name):
         return False
 
-    def get_default_title(self, i, name):
+    def get_default_legend_title(self, i, name):
         """legend title"""
         (itime, ilayer, imethod, unused_header) = name
         return self.methods[imethod]
 
-    def get_title(self, i, name):
+    def get_legend_title(self, i, name):
         """legend title"""
         (itime, ilayer, imethod, unused_header) = name
         return self.methods[imethod]
@@ -90,7 +90,7 @@ class LayeredTableResults(Table):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_default_min_max(self, i: int, name: str, method: str=''):
+    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
         mag = self.get_magnitude(i, name, method)
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)

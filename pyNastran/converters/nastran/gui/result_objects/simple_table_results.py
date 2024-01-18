@@ -48,12 +48,12 @@ class SimpleTableResults(Table):
     #def deflects(self, unused_i, unused_res_name):
         #return False
 
-    def get_default_title(self, i, name):
+    def get_default_legend_title(self, i, name):
         """legend title"""
         (itime, imethod, unused_header) = name
         return self.methods[imethod]
 
-    def get_title(self, i, name):
+    def get_legend_title(self, i, name):
         """legend title"""
         (itime, imethod, unused_header) = name
         return self.methods[imethod]
@@ -73,21 +73,21 @@ class SimpleTableResults(Table):
         return None
 
     def get_scalar(self, i, name, method):
-        return self.get_result(i, name, method=method)
+        return self.get_result(i, name, method)
 
     def get_magnitude(self, i, name, method):
-        scalar = self.get_scalar(i, name, method=method)  # TODO: update
+        scalar = self.get_scalar(i, name, method)  # TODO: update
         mag = scalar
         if scalar.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
         return mag
 
     def get_min_max(self, i, name, method=''):
-        mag = self.get_magnitude(i, name, method=method)
+        mag = self.get_magnitude(i, name, method)
         return np.nanmin(mag), np.nanmax(mag)
 
-    def get_default_min_max(self, i, name, method=''):
-        mag = self.get_magnitude(i, name, method=method)
+    def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
+        mag = self.get_magnitude(i, name, method)
         return np.nanmin(mag), np.nanmax(mag)
 
     def get_phase(self, i, name):

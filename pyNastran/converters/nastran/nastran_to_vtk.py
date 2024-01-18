@@ -180,7 +180,7 @@ def _save_layered_table_results(case: LayeredTableResults,
     form_name = case.form_names[itime, ilayer, imethod]
     #for method in case.methods:
     titlei =  f'{form_name}_subcase={case.subcase_id}'
-    method = case.get_methods(key, name)
+    method = case.get_methods(key, name)[0]
     res = case.get_result(key, name, method)
 
     check_title(titlei, used_titles)

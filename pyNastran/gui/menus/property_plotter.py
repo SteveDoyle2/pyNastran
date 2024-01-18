@@ -1,6 +1,7 @@
 from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QVBoxLayout, QWidget, QDockWidget, QComboBox, QGridLayout, QSizePolicy, QLabel, QDialog,
+    QVBoxLayout, QWidget, QDockWidget, QComboBox,
+    QGridLayout, QSizePolicy, QLabel, QDialog,
     QPushButton,
 )
 #import matplotlib

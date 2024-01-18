@@ -2265,9 +2265,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             data.append(datai)
         self.res_widget.update_methods(data)
 
+        is_methods_visible = obj.has_methods_table(i, resname)
         is_coord_visible = obj.has_coord_transform(i, resname)
         is_derivation_visible = obj.has_derivation_transform(i, resname)
         is_nodal_combine_visible = obj.has_nodal_combine_transform(i, resname)
+
+        self.res_widget.set_methods_table_visible(is_methods_visible)
         self.res_widget.set_coord_transform_visible(is_coord_visible)  # min/max/avg
         self.res_widget.set_derivation_visible(is_derivation_visible)
         self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible)

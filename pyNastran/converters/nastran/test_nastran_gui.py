@@ -106,7 +106,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 56, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 278, len(test.result_cases) 
+        assert len(test.result_cases) == 278, len(test.result_cases)
         test.cycle_results()
         test.on_rcycle_results()
 
@@ -302,7 +302,7 @@ class TestNastranGUI(unittest.TestCase):
         test.icase_fringe = icase
         str(obj)
 
-        title = obj.get_title(itime, name)
+        title = obj.get_legend_title(itime, name)
         assert title == 'Strain Energy Density', str(obj)
         is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=False)
         assert is_passed == True, 'map_element_centroid_to_node_fringe_result failed'

@@ -65,7 +65,8 @@ class ToolActions:
             subcase_id = obj.subcase_id
             location = obj.get_location(i, name)
 
-            case = obj.get_result(i, name)
+            method = obj.get_methods(i, name)[0]
+            case = obj.get_result(i, name, method)
             if case is None:
                 continue # normals
             subtitle, label = gui.get_subtitle_label(subcase_id)

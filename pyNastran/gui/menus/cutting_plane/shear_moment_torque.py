@@ -18,7 +18,8 @@ from qtpy.QtWidgets import (
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
 
 from pyNastran.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_combo_box, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
+from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float

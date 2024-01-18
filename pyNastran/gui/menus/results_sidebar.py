@@ -1,5 +1,6 @@
+from __future__ import annotations
 import sys
-from typing import Union, Any
+from typing import Union, Any, TYPE_CHECKING
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -20,6 +21,11 @@ from pyNastran.gui.utils.qt.utils import (
     create_hbox_with_widgets,
     add_line_widgets_to_grid)
 from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
+from pyNastran.gui.utils.qt.qcombobox import (
+    make_combo_box, get_combo_box_text, set_combo_box_text)
+
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 SkippableSpinBox = QSpinBox
 #class SkippableSpinBox(QSpinBox):
@@ -135,7 +141,7 @@ class Sidebar(QWidget):
     | - avg/derive |
     +--------------+
     """
-    def __init__(self, parent,
+    def __init__(self, parent: MainWindow,
                  debug: bool=False,
                  data=None, clear_data: bool=True,
                  name: str='main',
@@ -261,6 +267,10 @@ class Sidebar(QWidget):
         self.set_connections()
         if not SHOW_DEV:
             self.hide_dev()
+
+    def set_methods_table_visible(self, is_visible: bool) -> None:
+        if USE_NEW_SIDEBAR:
+            self.result_method_window.setVisible(is_visible)
 
     def set_coord_transform_visible(self, is_visible: bool) -> None:
         if USE_NEW_SIDEBAR:
@@ -587,11 +597,11 @@ class Sidebar(QWidget):
 
     def on_apply(self):
         data = self.result_case_window.data
-        valid_a, keys_a = self.result_case_window.tree_view.get_row()
+        valid_a, keys_a, index_list_a = self.result_case_window.tree_view.get_row()
 
         if USE_NEW_SIDEBAR:
             data = self.result_method_window.data
-            valid_b, keys_b = self.result_method_window.tree_view.get_row()
+            valid_b, keys_b, index_list_b = self.result_method_window.tree_view.get_row()
             if valid_a and valid_b:
                 if self.debug:  # pragma: no cover
                     print('  rows1 = %s' % self.result_case_window.tree_view.old_rows)
@@ -599,18 +609,31 @@ class Sidebar(QWidget):
                     print('  rows2 = %s' % self.result_method_window.tree_view.old_rows)
                     print('        = %s' % str(keys_b))
                 else:
-                    self.update_vtk_window(keys_a, keys_b)
+                    self.update_vtk_window(keys_a, index_list_b)
         else:
-            keys_b = [0]
-            self.update_vtk_window(keys_a, keys_b)
+            index_list_b = [0]
+            self.update_vtk_window(keys_a, index_list_b)
 
     def update_vtk_window(self,
-                          keys_a: int,
-                          keys_b: int) -> None:
+                          key_a: int,
+                          keys_b: list[int]) -> None:
+        """
+        Parameters
+        ----------
+        key_a: int
+            the tag in the case tree
+        keys_b: list[int]
+            the tags in the methods tree?
+
+        """
+        assert isinstance(key_a, int), key_a
+        assert isinstance(keys_b, list), keys_b
+        assert len(keys_b) >= 1, keys_b
+
         if 0:  # pragma: no cover
-            print('keys_a = %s' % str(keys_a))
+            print('key_a = %s' % str(key_a))
             for i, key in enumerate(self.parent.case_keys):
-                if key[1] == keys_a[0]:
+                if key[1] == key_a[0]:
                     break
             print('*i=%s key=%s' % (i, str(key)))
             #self.parent.update_vtk_window_by_key(i)
@@ -618,7 +641,7 @@ class Sidebar(QWidget):
             #self.parent.cycle_results_explicit(result_name=result_name, explicit=True)
             #j = self.parent._get_icase(result_name)
             #j = i
-        icase = keys_a
+        icase = key_a
         if icase is None:
             #self.parent.log.error(f"icase={icase} and you're trying to set a result...")
             return
@@ -635,7 +658,37 @@ class Sidebar(QWidget):
                 self.case_spinner.setValue(icase)
         result_name = None
         #self._set_case(i)
-        self.parent._set_case(result_name, icase, explicit=True)
+
+        keys_b.sort()
+        sidebar_kwargs = {}
+        if USE_NEW_SIDEBAR:
+            coord = get_combo_box_text(self.transform_coords_pulldown)
+            min_max_method = get_combo_box_text(self.min_max_average_pulldown)
+            nodal_combine = get_combo_box_text(self.combine_pulldown)
+            sidebar_kwargs = {
+                'min_max_method': min_max_method,
+                'transform': coord,
+                'nodal_combine': nodal_combine,
+                'methods_keys': keys_b,
+            }
+
+        #self.transform_coords_pulldown = QComboBox()
+        #self.transform_coords_pulldown.addItem('Coord 0')
+
+        #self.min_max_average_label = QLabel('3: Derivation Method:')
+        #self.min_max_average_pulldown = QComboBox()
+        #self.min_max_average_pulldown.addItems(['Derive/Average', 'Max', 'Min'])
+
+        #self.combine_label = QLabel('4: Nodal combine:')
+        #self.combine_pulldown = QComboBox(self)
+        #self.combine_pulldown.addItems(['Across Neighbors', 'Centroid Absolute Max'])
+
+        self.parent._set_case(
+            result_name, icase,
+            sidebar_kwargs=sidebar_kwargs,
+            skip_click_check=True,
+            explicit=True)
+        return
 
     @property
     def has_cases(self) -> bool:

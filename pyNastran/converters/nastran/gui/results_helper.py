@@ -6,8 +6,9 @@ from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING # Union,
 
 import numpy as np
-from numpy.linalg import norm  # type: ignore
+#from numpy.linalg import norm  # type: ignore
 
+from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults) #, TransientElementResults
@@ -17,7 +18,7 @@ from pyNastran.op2.result_objects.stress_object import (
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
     get_plate_stress_strain, get_solid_stress_strain
 )
-from pyNastran.gui import USE_NEW_SIDEBAR_OBJS
+from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, Case, Cases
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
@@ -1362,19 +1363,19 @@ def _fill_nastran_ith_displacement(result, resname: str,
     titles = []
     scales = []
     headers = []
+    headers2 = []
     disp2_scalar = None
     disp2_scales = None
     if deflects:
-        if USE_NEW_SIDEBAR_OBJS:
-            nastran_res2 = DisplacementResults2(
-                subcase_idi, node_ids, xyz_cid0, case,
-                disp2_scalar, disp2_scales,
-                title='NEW '+resname,
-                is_translation=is_translation,
-                dim_max=dim_max,
-                data_format='%e', nlabels=None, labelsize=None,
-                ncolors=None, colormap='', set_max_min=False,
-                uname=resname)
+        nastran_res2 = DisplacementResults2(
+            subcase_idi, node_ids, xyz_cid0, case,
+            disp2_scalar, disp2_scales,
+            title='NEW '+resname,
+            is_translation=is_translation,
+            dim_max=dim_max,
+            data_format='%e', nlabels=None, labelsize=None,
+            ncolors=None, colormap='', set_max_min=False,
+            uname=resname)
         nastran_res = DisplacementResults(subcase_idi, titles, headers,
                                           xyz_cid0, t123, tnorm,
                                           scales,
@@ -1412,13 +1413,14 @@ def _fill_nastran_ith_displacement(result, resname: str,
             scales.append(scale)
             titles.append(title1)
             headers.append(f'{title1}: {header}')
-            cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-            formii: Form = (title1, icase, [])
-            form_dict[(key, itime)].append(formii)
-            icase += 1
+            headers2.append(header)
 
+            if USE_OLD_SIDEBAR_OBJS:
+                cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
+                formii: Form = (title1, icase, [])
+                form_dict[(key, itime)].append(formii)
+                icase += 1
             if USE_NEW_SIDEBAR_OBJS:
-                # disp2
                 cases[icase] = (nastran_res2, (itime, 'NEW '+title1))  # do I keep this???
                 formii: Form = ('NEW '+title1, icase, [])
                 form_dict[(key, itime)].append(formii)
@@ -1429,6 +1431,7 @@ def _fill_nastran_ith_displacement(result, resname: str,
             #print('dmax = ', max(dmax))
             #pass
         nastran_res.save_defaults()
+        nastran_res2.headers = headers2
     else:
         nastran_res = ForceTableResults(subcase_idi, titles, headers,
                                         t123, tnorm,
@@ -1490,7 +1493,7 @@ def _fill_nastran_temperatures(cases: Cases, model: OP2,
                                    case.pval_step)
 
             loads = case.data[itime, :, :]
-            nxyz = norm(loads[:, :3], axis=1)
+            nxyz = safe_norm(loads[:, :3], axis=1)
             assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                 len(nxyz), nnodes)
 
@@ -1582,6 +1585,10 @@ def _get_t123_tnorm(case: RealTableArray,
     assert ntimes1 == ntimes, (ntimes1, ntimes)
 
     if nnodes != nnodesi:
+        #case.data.shape = (11, 43, 6)
+        #nnodes = len(nids) =  48
+        #nnodesi = 43
+
         dtype = t123.dtype.name
         t123i = np.zeros((ntimes, nnodes, 3), dtype=dtype)
         t123i[:, j, :] = t123
@@ -1589,7 +1596,7 @@ def _get_t123_tnorm(case: RealTableArray,
 
         # (itime, nnodes, xyz)
         # tnorm (901, 3)
-        tnorm = norm(t123, axis=2)   # I think this is wrong...
+        tnorm = safe_norm(t123, axis=2)   # I think this is wrong...
         #print('tnorm.shape ', tnorm.shape)
         assert len(tnorm) == t123.shape[0]
     else:
@@ -1611,25 +1618,6 @@ def _get_t123_tnorm(case: RealTableArray,
     assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
     assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
     return t123, tnorm, ntimes
-
-def safe_norm(t123: np.ndarray,
-              axis: Optional[int]=None) -> np.ndarray:
-    """
-    float32s are apparently buggy in numpy if you have small numbers
-    see models/elements/loadstep_elememnts.op2
-
-    """
-    try:
-        tnorm = norm(t123, axis=axis)
-    except FloatingPointError:
-        dtype_map = {
-            'float32': 'float64',
-            'complex64': 'complex128',
-        }
-        dtype = dtype_map[t123.dtype.name]
-        t123 = t123.astype(dtype=dtype)
-        tnorm = norm(t123, axis=1)
-    return tnorm
 
 def _get_times(model: OP2, key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
     """
@@ -1693,7 +1681,7 @@ def get_tnorm_abs_max(case, t123: np.ndarray,
         # 7-pre-buckling
         # 8-post-buckling
         # 9-complex eigenvalues
-        tnorm_abs_max = np.linalg.norm(t123[itime, :, :], axis=1).max()
+        tnorm_abs_max = safe_norm(t123[itime, :, :], axis=1).max()
     else:
         raise NotImplementedError(f'analysis_code={case.analysis_code}\ncase:\n{case}')
     return tnorm_abs_max

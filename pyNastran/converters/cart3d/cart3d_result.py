@@ -136,15 +136,15 @@ class Cart3dGeometry(GuiResultCommon):
 
     #----------------------------------------------------
     # title
-    def get_title(self, i, name):
+    def get_legend_title(self, i, name):
         j = self.titles.index(name)
         return self.result_types[j]
 
-    def set_title(self, i, name, title):
+    def set_legend_title(self, i, name, title):
         j = self.titles.index(name)
         self.result_types[j] = title
 
-    def get_default_title(self, i, name):
+    def get_default_legend_title(self, i, name):
         j = self.titles.index(name)
         return self.title_default[j]
 
@@ -173,7 +173,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.min_value[j] = min_value
         self.max_value[j] = max_value
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
         j = self.titles.index(name)
         return self.min_default[j], self.max_default[j]
 

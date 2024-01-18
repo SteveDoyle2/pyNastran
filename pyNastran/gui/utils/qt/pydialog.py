@@ -5,10 +5,10 @@ defines:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from pyNastran.gui.qt_version import qt_version
+#from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
-from qtpy.QtWidgets import QDialog, QComboBox, QLineEdit
+from qtpy.QtWidgets import QDialog, QLineEdit
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -93,41 +93,6 @@ def check_patran_syntax_dict(cell, pound=None):
         cell.setStyleSheet("QLineEdit{background: red;}")
         cell.setToolTip(str(error))
         return None, False
-
-def make_combo_box(items, initial_value):
-    """
-    Makes a QComboBox, sets the items, and sets an initial value.
-
-    Parameters
-    ----------
-    items : list[str]
-        the values of the combo box
-    initial_value : str
-        the value to set the combo box to
-
-    Returns
-    -------
-    combo_box : QComboBox
-        the pulldown
-    """
-    assert initial_value in items, 'initial_value=%r items=%s' % (initial_value, items)
-    combo_box = QComboBox()
-    combo_box.addItems(items)
-    set_combo_box_text(combo_box, initial_value)
-
-    if initial_value not in items:
-        msg = 'initial_value=%r is not supported in %s' % (initial_value, items)
-        raise RuntimeError(msg)
-    return combo_box
-
-def set_combo_box_text(combo_box, value):
-    """sets the combo_box text"""
-    if qt_version == 'pyside':
-        items = [combo_box.itemText(i) for i in range(combo_box.count())]
-        j = items.index(value)
-        combo_box.setCurrentIndex(j)
-    else:
-        combo_box.setCurrentText(value)
 
 def check_color(color_float):
     assert len(color_float) == 3, color_float

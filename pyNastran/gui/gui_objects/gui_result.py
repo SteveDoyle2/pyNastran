@@ -17,12 +17,12 @@ REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
-
 class GuiResultCommon:
     def __init__(self):
         self.class_name = self.__class__.__name__
         self.is_real = False
         self.is_complex = False
+        self.has_methods_table(0, 'test')
         self.has_coord_transform(0, 'test')
         self.has_derivation_transform(0, 'test')
         self.has_nodal_combine_transform(0, 'test')
@@ -35,6 +35,10 @@ class GuiResultCommon:
     #def get_header(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
+    def set_sidebar_args(self, i: int, name: str, **kwargs) -> None:
+        pass
+    def has_methods_table(self, i: int, res_name: str) -> bool:
+        return False
     def has_coord_transform(self, i: int, name: str) -> bool:
         raise NotImplementedError(self.class_name)
     def has_derivation_transform(self, i: int, resname: str) -> bool:  # min/max/avg
@@ -51,7 +55,7 @@ class GuiResultCommon:
     def get_location(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_title(self, i: int, name: str):
+    def get_legend_title(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -63,10 +67,10 @@ class GuiResultCommon:
     def get_scalar(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_methods(self, i: int):
+    def get_methods(self, i: int, name: str) -> list[str]:
         raise NotImplementedError(self.class_name)
 
-    def get_result(self, i: int, name: str, method: str):
+    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
         raise NotImplementedError(self.class_name)
 
     def get_vector_size(self, i: int, name: str) -> int:
@@ -87,7 +91,7 @@ class GuiResultCommon:
     def set_min_max(self, i: int, name: str, min_value, max_value):
         raise NotImplementedError(self.class_name)
 
-    def set_title(self, i: int, name: str, title):
+    def set_legend_title(self, i: int, name: str, title):
         raise NotImplementedError(self.class_name)
 
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
@@ -105,10 +109,10 @@ class GuiResultCommon:
     def get_default_data_format(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_min_max(self, i: int, name: str):
+    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
         raise NotImplementedError(self.class_name)
 
-    def get_default_title(self, i: int, name: str):
+    def get_default_legend_title(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -177,7 +181,7 @@ class GridPointForceResult(GuiResultCommon):
 
     def get_result(self, i: int, name: str, method: str) -> None:
         return None
-    def get_title(self, i: int, name: str) -> str:
+    def get_legend_title(self, i: int, name: str) -> str:
         return self.title
     def get_location(self, i: int, name: str) -> str:
         return self.location
@@ -191,9 +195,10 @@ class GridPointForceResult(GuiResultCommon):
         return None, None, None, None
     def get_default_data_format(self, i: int, name: str) -> None:
         return None
-    def get_default_min_max(self, i: int, name: str) -> tuple[Optional[float], Optional[float]]:
+    def get_default_min_max(self, i: int, name: str,
+                            method: str) -> tuple[Optional[float], Optional[float]]:
         return None, None
-    def get_default_title(self, i: int, name: str) -> str:
+    def get_default_legend_title(self, i: int, name: str) -> str:
         return self.title
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
         return None, None, None, None
@@ -202,9 +207,6 @@ class GridPointForceResult(GuiResultCommon):
         return
     def get_min_max(self, i: int, name: str) -> tuple[Any, Any]:
         return None, None
-
-    #def get_default_min_max(self, i: int, name: str):
-        #return None, None
 
     #def save_vtk_result(self, used_titles: set[str]) -> None:
 
@@ -279,7 +281,7 @@ class NormalResult(GuiResultCommon):
     def get_header(self, i: int, name: str):
         return self.header
 
-    def get_title(self, i: int, name: str):
+    def get_legend_title(self, i: int, name: str):
         return self.title
 
     def get_phase(self, i: int, name: str):
@@ -308,7 +310,7 @@ class NormalResult(GuiResultCommon):
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
 
-    def set_title(self, i: int, name: str, title):
+    def set_legend_title(self, i: int, res_name: str, title: str) -> None:
         self.title = title
 
     #def set_phase(self, i: int, name: str, phase):
@@ -326,7 +328,7 @@ class NormalResult(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i: int, name: str):
+    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
     def get_default_scale(self, i: int, name: str):
@@ -335,7 +337,7 @@ class NormalResult(GuiResultCommon):
     def get_default_phase(self, i: int, name: str):
         return None
 
-    def get_default_title(self, i: int, name: str):
+    def get_default_legend_title(self, i: int, name: str) -> str:
         return self.title_default
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -620,7 +622,8 @@ class GuiResult(GuiResultCommon):
     def get_header(self, i: int, name: str) -> str:
         return self.header
 
-    def get_title(self, i: int, name: str) -> str:
+    def get_legend_title(self, i: int, name: str) -> str:
+        """a title is the lagend label"""
         return self.title
 
     def get_phase(self, i: int, name: str) -> None:
@@ -667,7 +670,7 @@ class GuiResult(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i: int, name: str):
+    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
     def get_default_scale(self, i: int, name: str):
@@ -676,7 +679,7 @@ class GuiResult(GuiResultCommon):
     def get_default_phase(self, i: int, name: str):
         return None
 
-    def get_default_title(self, i: int, name: str):
+    def get_default_legend_title(self, i: int, name: str):
         return self.title_default
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -703,6 +706,7 @@ class GuiResult(GuiResultCommon):
             #return self.dxyz[i, :]
 
     def get_vector_array_by_phase(self, i: int, unused_name, phase=0.):
+        raise RuntimeError()
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             # e(i*theta) = cos(theta) + i*sin(theta)
@@ -718,7 +722,7 @@ class GuiResult(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return xyz, dxyz
 
-    def get_result(self, i: int, name: str, method: str='') -> np.ndarray:
+    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
         if self.is_real:
             #return self.dxyz[i, :]
             return self.scalar

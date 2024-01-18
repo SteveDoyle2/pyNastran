@@ -291,16 +291,16 @@ class LegendObject(BaseGui):
             #assert isinstance(key, integer_types), key
             #(obj, (i, name)) = self.result_cases[key]
             ##subcase_id = obj.subcase_id
-            ##case = obj.get_result(i, name)
-            ##result_type = obj.get_title(i, name)
+            ##case = obj.get_result(i, name, method)
+            ##result_type = obj.get_legend_title(i, name)
             ##vector_size = obj.get_vector_size(i, name)
             ##location = obj.get_location(i, name)
             ##data_format = obj.get_data_format(i, name)
             ##scale = obj.get_scale(i, name)
             ##label2 = obj.get_header(i, name)
             #default_data_format = obj.get_default_data_format(i, name)
-            #default_min, default_max = obj.get_default_min_max(i, name)
-            #default_title = obj.get_default_title(i, name)
+            #default_min, default_max = obj.get_default_min_max(i, name, method)
+            #default_title = obj.get_default_legend_title(i, name)
             #out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
             #default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
             #is_normals = obj.is_normal_result(i, name)
@@ -541,16 +541,17 @@ class LegendObject(BaseGui):
             key = self.gui.case_keys[icase_fringe]
             assert isinstance(key, integer_types), key
             (obj, (i, res_name)) = self.gui.result_cases[key]
-            #case = obj.get_result(i, res_name)
-            result_type = obj.get_title(i, res_name)
+            #case = obj.get_result(i, res_name, method)
+            result_type = obj.get_legend_title(i, res_name)
 
             scalar_bar = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
             defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
+            method = obj.get_methods(i, res_name)[0]
 
             data_format = obj.get_data_format(i, res_name)
-            default_title = obj.get_default_title(i, res_name)
+            default_title = obj.get_default_legend_title(i, res_name)
             min_value, max_value = obj.get_min_max(i, res_name)
-            default_min, default_max = obj.get_default_min_max(i, res_name)
+            default_min, default_max = obj.get_default_min_max(i, res_name, method)
             default_format = obj.get_default_data_format(i, res_name)
 
         out = (

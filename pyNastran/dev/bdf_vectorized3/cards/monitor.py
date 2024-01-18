@@ -22,7 +22,6 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_check) # , make_idim, hslice_by_idim
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_float, get_print_card_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-#from pyNastran.femutils.utils import hstack_lists
 
 
 if TYPE_CHECKING:  # pragma: no cover

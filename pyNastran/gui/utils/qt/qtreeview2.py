@@ -181,7 +181,7 @@ class QTreeView2(QTreeView):
         """overwrite this to make a right-click menu"""
         pass
         #self.set_rows()
-        #unused_valid, unused_keys = self.get_row()
+        #unused_valid, unused_keys, imethods = self.get_row()
         #x = 1
         #if not valid:
             #print('invalid=%s keys=%s' % (valid, keys))
@@ -233,6 +233,8 @@ class QTreeView2(QTreeView):
                 0 - the location (e.g. node, centroid)
                 1 - icase
                 2 - []
+            index_list : list[int]
+                the sorted??? list indices from the tree; 1d
 
         """
         # if there's only 1 data member, we don't need to extract the data id
@@ -243,8 +245,15 @@ class QTreeView2(QTreeView):
         #     crashes some PyQt cases when clicking on the first
         #     non-results level of the sidebar
         #data = deepcopy(self.data)
-        is_valid, irow, unused_data = self.get_trace()
-        return is_valid, irow
+        is_valid, irow, unused_res_name = self.get_trace()
+        index_list = self.find_list_index()
+        #index_list.sort()
+        #if is_valid and 'NEW' not in unused_res_name:
+            #indexs = self.selectedIndexes()
+            #for index in indexs:
+                #pass
+                #x = 1
+        return is_valid, irow, index_list
 
     def get_trace(self) -> tuple[bool, int, str]:
         """
@@ -361,7 +370,7 @@ class ClickTreeView(QTreeView2):
             #print('  ', callback_func)
             #print('  ', menu)
             #print('  ', self)
-            unused_is_valid, icase = self.get_row()
+            unused_is_valid, icase, imethods = self.get_row()
             #print('callback =', callback_func)
             callback_func(icase)
 
@@ -379,14 +388,14 @@ class ClickTreeView(QTreeView2):
         """interfaces with other menus"""
         if self.left_click_callback is not None:
             self.set_rows()
-            is_valid, icase = self.get_row()
+            is_valid, icase, imethods = self.get_row()
             self.left_click_callback(icase)
             x = 1
 
     def on_right_mouse_button(self) -> None:
         """interfaces with the right click menu"""
         self.set_rows()
-        is_valid, unused_icase = self.get_row()
+        is_valid, unused_icase, imethods = self.get_row()
         if not is_valid:
             return
         # TODO: check if we should show disp/vector
@@ -417,28 +426,31 @@ class ClickTreeView(QTreeView2):
 
     def on_export_case(self) -> None:
         """exports the case to a file"""
-        unused_is_valid, icase = self.get_row()
+        unused_is_valid, icase, imethods = self.get_row()
         self.gui.export_case_data(icase)
 
     def on_fringe(self) -> None:
         """applies a fringe result"""
-        unused_is_valid, icase = self.get_row()
+        unused_is_valid, icase, imethods = self.get_row()
+        # imethods are just the default
         self.sidebar.on_fringe(icase)
 
     def on_disp(self) -> None:
         """applies a displacement result"""
-        unused_is_valid, icase = self.get_row()
+        unused_is_valid, icase, imethods = self.get_row()
+        # imethods are just the default
         self.sidebar.on_disp(icase)
 
     def on_vector(self) -> None:
         """applies a vector result"""
-        unused_is_valid, icase = self.get_row()
+        unused_is_valid, icase, imethods = self.get_row()
+        # imethods are just the default
         self.sidebar.on_vector(icase)
 
     def on_right_mouse_button(self) -> None:
         """interfaces with the right click menu"""
         self.set_rows()
-        is_valid, unused_icase = self.get_row()
+        is_valid, unused_icase, imethods = self.get_row()
         if not is_valid:
             return
         # TODO: check if we should show disp/vector

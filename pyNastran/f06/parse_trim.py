@@ -217,8 +217,9 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
     return trim_results, tables, matrices
 
 def _get_title_subtitle_subcase(f06_file: TextIO,
-                                line: str, i: int, nlines_max: int) -> tuple[str, int,
-                                                                             str, str, str]:
+                                line: str, i: int,
+                                nlines_max: int) -> tuple[str, int,
+                                                          str, str, str]:
     """
     1    144                                                                   FEBRUARY   1, 2021  SIMCENTER NASTRAN  3/12/20   PAGE    10
       SUBTITLE

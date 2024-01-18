@@ -56,7 +56,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
     isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
     isgreater_int)
-from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
+from pyNastran.femutils.utils import duplicates, is_monotonic, safe_norm
 
 
 from pyNastran.bdf.patran_utils.colon_syntax import _apply_colon_set
@@ -2630,7 +2630,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #form0.append(('Theta', icase, []))
             #icase += 1
 
-        normal_mag = underflow_norm(normals, axis=1)
+        normal_mag = safe_norm(normals, axis=1)
         assert len(normal_mag) == nelements
         normals /= normal_mag.reshape(nelements, 1)
         i_not_nan = np.isnan(normal_mag)

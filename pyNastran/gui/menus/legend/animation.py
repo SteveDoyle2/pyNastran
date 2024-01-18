@@ -16,7 +16,8 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getexistingdirectory
 
 from pyNastran.utils.locale import func_str, func_str_or_none
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, set_combo_box_text
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
+from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_int, check_float, check_name_str, check_path)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
@@ -1205,7 +1206,7 @@ class AnimationWindow(PyDialog):
         make_images = self.make_images_checkbox.isChecked()
         delete_images = self.delete_images_checkbox.isChecked()
         make_gif = self.make_gif_checkbox.isChecked()
-        animation_profile = str(self.animation_profile_edit.currentText())
+        animation_profile = get_combo_box_text(self.animation_profile_edit)
 
         icase_fringe_start = icase_fringe_end = icase_fringe_delta = None
         if animate_time and animate_fringe:

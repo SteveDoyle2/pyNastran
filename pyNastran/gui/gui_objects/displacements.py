@@ -4,8 +4,8 @@ from typing import Optional, Any
 
 from numpy import zeros
 import numpy as np
-from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
+from pyNastran.femutils.utils import safe_norm
 
 
 class VectorTable(GuiResultCommon):
@@ -96,7 +96,7 @@ class VectorTable(GuiResultCommon):
             ntimes = 1
             self.default_mins = zeros(1, dtype=self.dxyz.dtype)
             self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
-            normi = norm(self.dxyz, axis=1)
+            normi = safe_norm(self.dxyz, axis=1)
             self.default_mins[0] = normi.min().real
             self.default_maxs[0] = normi.max().real
         elif self.dim == 3:
@@ -104,14 +104,14 @@ class VectorTable(GuiResultCommon):
             self.default_mins = zeros(ntimes)
             self.default_maxs = zeros(ntimes)
             for itime in range(ntimes):
-                normi = norm(self.dxyz[itime, :, :], axis=1)
+                normi = safe_norm(self.dxyz[itime, :, :], axis=1)
                 self.default_mins[itime] = normi.min().real
                 self.default_maxs[itime] = normi.max().real
 
             if not self.is_real:
                 #: stored in degrees
                 self.phases = np.zeros(ntimes)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('dim=%s' % self.dim)
 
         if set_max_min:
@@ -182,7 +182,7 @@ class VectorTable(GuiResultCommon):
     def get_scale(self, i: int, name: str) -> float:
         return self.scales[i]
 
-    def get_title(self, i: int, name: str) -> str:
+    def get_legend_title(self, i: int, name: str) -> str:
         return self.titles[i]
 
     def get_min_max(self, i: int, name: str) -> tuple[float, float]:
@@ -207,7 +207,7 @@ class VectorTable(GuiResultCommon):
         #j = self.titles_default.index(name)
         self.phases[i] = phase
 
-    def set_title(self, i: int, name: str, title: str) -> None:
+    def set_legend_title(self, i: int, name: str, title: str) -> None:
         self.titles[i] = title
 
     def set_min_max(self, i: int, name: str,
@@ -220,7 +220,8 @@ class VectorTable(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i: int, name: str):
+    def get_default_min_max(self, i: int, name: str,
+                            method: str) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -233,7 +234,8 @@ class VectorTable(GuiResultCommon):
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i: int, name: str):
+    #def get_default_min_max(self, i: int, name: str,
+                            #method: str) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     def get_default_scale(self, i: int, name: str) -> float:
@@ -248,7 +250,7 @@ class VectorTable(GuiResultCommon):
         # TODO: do this right
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i: int, resname: str) -> str:
+    def get_default_legend_title(self, i: int, resname: str) -> str:
         return self.titles_default[i]
 
     #-------------------------------------

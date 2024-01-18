@@ -94,7 +94,8 @@ class MarkActions:
         assert isinstance(case_key, integer_types), case_key
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
+        method = obj.get_methods(i, res_name)[0]
+        case = obj.get_result(i, res_name, method)
         result_values = case[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
@@ -178,7 +179,8 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
+        method = obj.get_methods(i, res_name)[0]
+        case = obj.get_result(i, res_name, method)
 
         try:
             result_values = case[cell_id]
@@ -262,7 +264,8 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
+        method = obj.get_methods(i, res_name)
+        case = obj.get_result(i, res_name, method)
 
         try:
             result_values = case[cell_ids]

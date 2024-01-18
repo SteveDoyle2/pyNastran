@@ -8,36 +8,81 @@ This includes:
  - augmented_identity(A)
 
 """
+from typing import Optional
 import numpy as np
 from pyNastran.utils.mathematics import get_abs_max
 
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
 
-def hstack0(list_of_arrays: list[np.ndarray],
-            unique: bool=True,
-            sort: bool=True) -> np.ndarray:
-    myarray = hstack_lists(list_of_arrays)
+def hstack_unique(list_of_arrays: list[np.ndarray],
+                  unique: bool=True,
+                  ) -> np.ndarray:
+    """
+    Stacks an arrays
 
-    if unique and sort:
+    list_of_arrays = [
+        [1, 2, 3], [4, 5, 6, 7, 3],
+    ]
+    stacked = [1, 2, 3, 4, 5, 6, 7, 3]
+    unique_stacked = [1, 2, 3, 4, 5, 6, 7]
+    """
+    myarray = hstack_lists(list_of_arrays, unique_sort=False)
+    if unique:
         myarray = np.unique(myarray)
-    elif sort:
-        myarray = myarray.copy()
-        myarray.sort()
-    else:
-        raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
     return myarray
 
-def hstack_lists(list_of_arrays: list[np.ndarray], sort: bool=True) -> np.ndarray:
+#def hstack_unique_sort(list_of_arrays: list[np.ndarray],
+                       #unique: bool=True,
+                       #sort: bool=True,
+                       #) -> np.ndarray:
+    #myarray = hstack_lists(list_of_arrays)
+    #if unique and sort:
+        #myarray = np.unique(myarray)
+    #elif sort:
+        #myarray = myarray.copy()
+        #myarray.sort()
+    #else:
+        #raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
+    #return myarray
+
+def hstack_lists(list_of_arrays: list[np.ndarray],
+                 unique_sort: bool=False) -> np.ndarray:
+    """
+    Stacks an array
+
+    list_of_arrays = [
+        [1, 2, 3], [4, 5, 6, 7, 3],
+    ]
+    stacked = [1, 2, 3, 4, 5, 6, 7, 3]
+    """
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]
     else:
         array = np.hstack(list_of_arrays)
-    if sort:
+    if unique_sort:
         array = np.unique(array)
     return array
 
 def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
+    """
+    Stacks an array
+
+    list_of_arrays = [
+            [1, 2, 3],
+        ],
+        [
+            [1, 2, 3],
+            [1, 2, 3],
+        ]
+    ]
+    stacked [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+    ]
+
+    """
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]
     else:
@@ -125,7 +170,7 @@ def duplicates(ids):
     counts = np.bincount(ids)
     return np.where(counts > 1)[0]
 
-def is_monotonic(int_array: np.ndarray):
+def is_monotonic(int_array: np.ndarray) -> bool:
     """is the array monotonic?"""
     return np.all(int_array[1:] >= int_array[:-1])
 
@@ -166,7 +211,7 @@ def unique_rows(A: np.ndarray, return_index=False, return_inverse=False):
     else:
         return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
 
-def cross2d(a: np.ndarray, b: np.ndarray):
+def cross2d(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Interface to np.cross for 2d matrices
 
@@ -298,19 +343,43 @@ def perpendicular_vector2d(v_array: np.ndarray) -> np.ndarray:
     vout[is_3d, 2] = -1. * (v[is_3d, 0] + v[is_3d, 1]) / v[is_3d, 2]
     return vout
 
-def underflow_norm(x: np.ndarray, ord=None, axis=None, keepdims: bool=False) -> np.ndarray:
-    """see numpy.linalg.norm"""
+_dtype_map = {
+    'float32': 'float64',
+    'complex64': 'complex128',
+}
+def safe_norm(t123: np.ndarray,
+              ord=None,
+              axis: Optional[int]=None) -> np.ndarray:
+    """
+    float32s are apparently buggy in numpy if you have small numbers
+    see models/elements/loadstep_elememnts.op2
+
+    """
+    assert ord is None, ord
+
     try:
-        normi = np.linalg.norm(x, axis=axis)
+        tnorm = np.linalg.norm(t123, axis=axis)
     except FloatingPointError:
-        # the dreaded underflow
-        if x.dtype == np.float32:
-            x = x.astype('float64')
-            normi = np.linalg.norm(x, axis=axis)
-        else:  # pragma: no cover
-            # the next step would be to nan the min=max depending on the axis
-            raise
-    return normi
+        dtype = _dtype_map[t123.dtype.name]
+        t123 = t123.astype(dtype=dtype)
+        tnorm = np.linalg.norm(t123, axis=axis)
+    return tnorm
+
+#def underflow_norm(x: np.ndarray,
+                   #ord=None, axis=None,
+                   #keepdims: bool=False) -> np.ndarray:
+    #"""see numpy.linalg.norm"""
+    #try:
+        #normi = np.linalg.norm(x, axis=axis)
+    #except FloatingPointError:
+        ## the dreaded underflow
+        #if x.dtype == np.float32:
+            #x = x.astype('float64')
+            #normi = np.linalg.norm(x, axis=axis)
+        #else:  # pragma: no cover
+            ## the next step would be to nan the min=max depending on the axis
+            #raise
+    #return normi
 
 def abs_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     max_values = np.amax(x, axis=axis)
