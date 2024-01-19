@@ -67,6 +67,7 @@ class ResultsWindow(QWidget):
             self, self.data, choices,
             left_click_callback,
             right_click_actions,
+            include_export_case=include_export_case,
             include_clear=include_clear,
             include_delete=include_delete,
             include_results=include_results)

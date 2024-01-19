@@ -31,6 +31,14 @@ class CompositeResults2(GuiResultCommon):
                  uname: str='CompositeResults2'):
         GuiResultCommon.__init__(self)
         self.layer_indices = (-1, )  # All
+        i = -1
+        name = None
+
+        # slice off the methods (from the boolean) and then pull the 0th one
+        self.min_max_method = self.has_derivation_transform(i, name)[1][0]
+        self.transform = self.has_coord_transform(i, name)[1][0]
+        self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
+
         self.is_dense = False
         self.dim = case.data.ndim
         assert self.dim == 3, case.data.shape
@@ -191,9 +199,10 @@ class CompositeResults2(GuiResultCommon):
         return True, ['Material']
     def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, list[str]]:
         """min/max/avg"""
-        (itime, ilayer, imethod, header) = case_tuple
+        #(itime, ilayer, imethod, header) = case_tuple
         return True, ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
-                      'Derive/Average']
+                      #'Derive/Average'
+                      ]
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
@@ -215,12 +224,12 @@ class CompositeResults2(GuiResultCommon):
         else:
             self.layer_indices
             dict_sets = {'': [(idx+1) for idx in self.layer_indices],}
-            method = write_patran_syntax_dict(dict_sets)
+            method = 'Layers ' + write_patran_syntax_dict(dict_sets)
 
         #method = method_ + ', '.join(str(idx+1) for idx in self.layer_indices)
         results = list(self.result.keys())
         result = results[imethod]
-        annotation_label = f'{self.title} {method}: {result}'
+        annotation_label = f'{self.title}; {method}: {result}'
         #return self.uname
         return annotation_label
 
@@ -293,18 +302,19 @@ class CompositeResults2(GuiResultCommon):
         return None, None
     def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
         (itime, ilayer, imethod, header) = case_tuple
-        mins = self.mins[(itime, imethod, self.layer_indices)]
-        maxs = self.maxs[(itime, imethod, self.layer_indices)]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
+        #mins = self.mins[(itime, imethod, self.layer_indices)]
+        #maxs = self.maxs[(itime, imethod, self.layer_indices)]
+        #if mins[itime] is not None and maxs[itime] is not None:
+            #return mins[itime], maxs[itime]
 
         datai = self._get_real_data(case_tuple)
         #tnorm_abs = safe_norm(datai, axis=col_axis)
-        if mins[itime] is None:
-            mins[itime] = datai.min()
-        if maxs[itime] is None:
-            maxs[itime] = datai.max()
-        return mins[itime], maxs[itime]
+        #if mins[itime] is None:
+            #mins[itime] = datai.min()
+        #if maxs[itime] is None:
+            #maxs[itime] = datai.max()
+        #return mins[itime], maxs[itime]
+        return datai.min(), datai.max()
 
     def get_default_legend_title(self, itime: int, case_tuple: str) -> str:
         (itime, ilayer, imethod, header) = case_tuple
@@ -347,7 +357,9 @@ class CompositeResults2(GuiResultCommon):
     def _get_real_data(self, case_tuple: int) -> np.ndarray:
         (itime, ilayer, imethod, header) = case_tuple
 
-        data = self.case.data[itime, :, imethod]
+        #self.case.get_headers()
+        #['o11', 'o22', 't12', 't1z', 't2z', 'angle', 'major', 'minor', 'max_shear']
+        data = self.case.data[itime, :, imethod].copy()
         rows = self.case.element_layer[:, 0]
         cols = self.case.element_layer[:, 1]
         ulayer = np.unique(cols)
@@ -372,6 +384,15 @@ class CompositeResults2(GuiResultCommon):
         assert len(data.shape) == 1, data.shape
         data2, eids_new = pivot_table(data, rows, cols)
         assert len(data2.shape) == 2, data2.shape
+        #with open('data.csv', 'w') as f1, open('data2.csv', 'w') as f2:
+        #    for eid, layer, datai in zip(rows, cols, data):
+        #        f1.write(f'{eid},{layer},{datai:.3f}\n')
+        #    for eid, data2s in zip(eids_new, data2):
+        #        f2.write(f'{eid}')
+        #        for datai2 in data2s:
+        #            f2.write(f',{datai2:.3f}')
+        #        f2.write('\n')
+
         # element_id is unique & sorted
         # eids_new   is unique & sorted
         #
@@ -388,7 +409,7 @@ class CompositeResults2(GuiResultCommon):
             data3 = data2[:, self.layer_indices]
 
         assert len(data3.shape) == 2, data3.shape
-        if data3.shape[1] == 1:
+        if data3.shape[1] == 1 and 0:
             # single ply
             data4 = data3[:, 0]
         else:
@@ -416,7 +437,7 @@ class CompositeResults2(GuiResultCommon):
 
         # TODO: hack to try and debug things...
         assert data4.shape == (neids, )
-        data4 = eids_new.astype('float32')
+        #data4 = eids_new.astype('float32')
         return data4
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:

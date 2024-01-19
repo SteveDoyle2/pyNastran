@@ -801,11 +801,17 @@ def stack_composite_results(model: OP2, is_stress: bool,
             # stack on [itime, *nlayers*, 10]
             data3 = np.hstack(datas)
 
-            isort1 = np.argsort(element_layer2[:,0])
-            isort2 = np.argsort(element_layer2[isort1,0])
+            #isort1 = np.argsort(element_layer2[:,1])
+            #isort2 = np.argsort(element_layer2[isort1,0])
+            #indexs = np.arange(len(isort1))
+            #isort = indexs[isort1][isort2]
 
-            element_layer4 = element_layer2[isort2]
-            data4 = data3[:, isort2, :]
+            iisort = np.lexsort((
+                element_layer2[:, 1],
+                element_layer2[:, 0],
+            ))
+            element_layer4 = element_layer2[iisort]
+            data4 = data3[:, iisort, :]
 
             #assert np.array_equal(data2, data3), 'wut...'
 

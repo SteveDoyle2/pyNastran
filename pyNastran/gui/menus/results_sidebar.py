@@ -152,7 +152,7 @@ class Sidebar(QWidget):
                  left_click_callback=None,
                  # actions
                  include_clear: bool=True,
-                 include_export_case: bool=False,
+                 include_export_case: bool=True,
                  include_delete: bool=True,
                  include_results: bool=True):
         """
@@ -275,9 +275,13 @@ class Sidebar(QWidget):
 
     def set_methods_table_visible(self, is_visible: bool) -> None:
         if USE_NEW_SIDEBAR:
-            self.result_method_window.setEnabled(is_visible)
-            is_visible = True
-            self.result_method_window.setVisible(is_visible)
+            # avoid enabling/hiding if we can
+            is_enabled = self.result_method_window.isEnabled()
+            update = is_enabled is not is_visible
+            if update:
+                self.result_method_window.setEnabled(is_visible)
+                #is_visible = True
+                #self.result_method_window.setVisible(is_visible)
 
     def set_coord_transform_visible(self, is_visible: bool,
                                     coords: list[str]) -> None:
@@ -519,6 +523,11 @@ class Sidebar(QWidget):
             #self.result_method_window.data[0] = (methodi, datai[1], datai[2])
             #print('method=%s datai=%s' % (method, datai))
         if not USE_NEW_SIDEBAR:
+            return
+
+        # avoid updating if the data is is the same
+        # if we do, it'll mess up selection when the user clicks apply
+        if data == self.result_method_window.data:
             return
         self.result_method_window.data = data
         self.result_method_window.update_data(self.result_method_window.data)

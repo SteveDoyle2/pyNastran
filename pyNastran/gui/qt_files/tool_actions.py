@@ -60,6 +60,7 @@ class ToolActions:
         elif isinstance(icases, integer_types):
             icases = [icases]
 
+        csv_filename = 'None'
         for icase in icases:
             (obj, (i, name)) = gui.result_cases[icase]
             subcase_id = obj.subcase_id
@@ -76,11 +77,13 @@ class ToolActions:
             print(subtitle, label, label2, location, name)
 
             word, eids_nids = gui.get_mapping_for_location(location)
-            unused_fname = _export_case(name, eids_nids, case, icase,
-                                        word, label2, data_format)
+            csv_filename = _export_case(
+                name, eids_nids, case, icase,
+                word, label2, data_format)
 
         if icases:
-            gui.log_command(f'self.export_case_data(icases={icases})')
+            gui.log_command(f'self.export_case_data(icases={icases})\n'
+                            f'# -> {csv_filename}')
 
     #---------------------------------------------------------------------------
     def create_corner_axis(self) -> None:
@@ -1072,7 +1075,14 @@ def _export_case(name: str,
 
     fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
     out_data = np.column_stack([eids_nids, case])
-    np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+    try:
+        np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+    except UnicodeEncodeError:  # pragma: no cover
+        try:
+            np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
+        except UnicodeEncodeError:  # pragma: no cover
+            header = 'word,unicode_strikes_again'
+            np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
     return fname
 
 def _remove_invalid_filename_characters(basename: str) -> str:
@@ -1097,6 +1107,9 @@ def _remove_invalid_filename_characters(basename: str) -> str:
     .. todo:: do a check for linux
 
     """
+    if not isinstance(basename, str):
+        basename = str(basename)
+
     invalid_chars = ':*?<>|/\\'
     for char in invalid_chars:
         basename = basename.replace(char, '')
