@@ -2,18 +2,22 @@ Referencing pyNastran (AIAA Format)
 ===================================
 Official Release
 ----------------
-Doyle, Steven.  PyNastran: A Python-based interface tool for Nastran's file formats.  Version 1.3.4. https://github.com/SteveDoyle2/pyNastran.
+Doyle, S., "PyNastran: A Python-based interface tool for Nastran's file formats", Version 1.3.4, https://github.com/SteveDoyle2/pyNastran.
 
 ..
-  this is a comment
+  this is a comment and a rough guid for citiing code (so not AIAA format)
   Smith, J (2011) GraphicsDrawer source code (Version 2.0) [Source code]. http://www.graphicsdrawer.com
 
 Dev Release
 -----------
-Doyle, Steven.  PyNastran: A Python-based interface tool for Nastran's file formats, pyNastran, Version 1.4.0+dev.ed62bb134. https://github.com/SteveDoyle2/pyNastran.
+Doyle, S.,  "PyNastran: A Python-based interface tool for Nastran's file formats", Version 1.4.0+dev.ed62bb134, https://github.com/SteveDoyle2/pyNastran.
 
 You can access the version by typing the following on the command line:
   - pyNastranGUI --version
+
+If you get a **no checksum** error (you didn't checkout the code from git), use:
+
+Doyle, S.,  "PyNastran: A Python-based interface tool for Nastran's file formats", Accessed 19 January 2024, https://github.com/SteveDoyle2/pyNastran.
 
 
 References to pyNastran
