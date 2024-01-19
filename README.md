@@ -16,7 +16,7 @@ for instructions on installing pyNastran.
 
 ### v1.3.4
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2022/5/30)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/1/14)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
@@ -61,7 +61,7 @@ The biggest new features are:
  - improved op2 support
 
 Programmatics:
- - Supports Python 3.7 - 3.10 (later versions of Python requires downloading from github)
+ - Supports Python 3.9 - 3.12 (later versions of Python requires downloading from github)
  - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
  - improved testing of old versions of packages
  - updated nptyping requirements
