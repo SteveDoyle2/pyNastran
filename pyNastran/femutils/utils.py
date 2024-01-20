@@ -89,8 +89,17 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
         array = np.vstack(list_of_arrays)
     return array
 
-def pivot_table(data, rows, cols):
-    """PCOMP: rows=element_ids, cols=layer"""
+def pivot_table(data, rows, cols, shape: int=0):
+    """
+    PCOMP: rows=element_ids, cols=layer
+
+    Parameters
+    ----------
+    data : (nx,), (nx,ny), (nx,ny,nz) array
+
+    shape: int; default=0 -> guess
+       adds a check on the shape
+    """
     ncount = len(rows)
     icount = np.arange(ncount)
     assert len(data.shape) in [1, 2, 3], data.shape
@@ -102,6 +111,8 @@ def pivot_table(data, rows, cols):
     ncols = len(cols_new)
 
     nshape = len(data.shape)
+    if shape != 0:
+        assert nshape == shape, data.shape
     if nshape == 3:
         ntimes = data.shape[0]
         shape2 = (ntimes, nrows, ncols, nresults)

@@ -344,14 +344,14 @@ FLOAT_PARAMS_1 = {
 FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
     b'CM1', b'CM2',
-    b'G1', b'G2', b'G3', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10',
-    b'G11', b'G12', b'G13', b'G14', b'G15', b'G16', b'G17', b'G18', b'G19',
+    # handled as a special case
+    #b'G1', b'G2', b'G3', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10',
+    #b'G11', b'G12', b'G13', b'G14', b'G15', b'G16', b'G17', b'G18', b'G19',
     b'ALPHA1', b'ALPHA2',
     b'CA1', b'CA2',
     b'CP1', b'CP2',
     b'LOADFACS',
     b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
-
 
     # should this be FLOAT_PARAMS_1???
     #b'EPPRT',
@@ -1795,7 +1795,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #self.show_data(data[(i+3)*xword:(i+5)*xword], types='ifsqd', endian=None, force=False)
                 values = struct2f.unpack(slot)
                 values = list(values)
-                assert word in FLOAT_PARAMS_2, f'word={word}'
+                if key[0] == 'G':
+                    if word[1:].isdigit():  # G1, G21, G123
+                        pass
+                    else:
+                        assert word in FLOAT_PARAMS_2, f'word={word}'
+                else:
+                    assert word in FLOAT_PARAMS_2, f'word={word}'
                 i += 5
 
             elif flag == 7: # logical/int

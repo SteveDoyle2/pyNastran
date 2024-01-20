@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QRadioButton,
-    #QWidget, QButtonGroup,
     QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
@@ -120,11 +119,11 @@ class AnimationWindow(PyDialog):
         self.set_connections()
 
         self.is_gui = False
-        self.gui = None  # type: MainWindow
+        self.gui = None
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
-            self.gui = self.win_parent.win_parent
+            self.gui: MainWindow = self.win_parent.win_parent
 
         icase_max = 1000
         if is_gui_parent:
@@ -147,16 +146,12 @@ class AnimationWindow(PyDialog):
         self.icase_vector_start_edit.setRange(0, icase_max)
         self.icase_vector_end_edit.setRange(0, icase_max)
         self.icase_vector_delta_edit.setRange(1, icase_max)
-
         self.on_update_min_max_defaults()
-
 
     def create_widgets(self):
         """creates the menu objects"""
         self.box_scale = QGroupBox('Animate Scale')
         self.box_time = QGroupBox('Animate Time')
-
-        #icase_max = 1000
 
         self.checkbox_fringe = QCheckBox('Animate')
         self.checkbox_fringe.setToolTip('Animate the fringe')
@@ -306,7 +301,6 @@ class AnimationWindow(PyDialog):
         self.time_checkbox_fringe.setEnabled(False)
         self.time_checkbox_disp.setEnabled(False)
         self.time_checkbox_vector.setEnabled(False)
-
 
         self.min_value_enable = QCheckBox()
         self.min_value_label = QLabel('Min Fringe:')
@@ -483,7 +477,7 @@ class AnimationWindow(PyDialog):
         self.repeat_checkbox.setToolTip('Repeating creates an infinitely looping gif')
 
         # endless loop
-        self.make_gif_checkbox = QCheckBox("Make Gif?")
+        self.make_gif_checkbox = QCheckBox('Make Gif?')
         if IS_IMAGEIO:
             self.make_gif_checkbox.setChecked(True)
         else:
@@ -507,8 +501,7 @@ class AnimationWindow(PyDialog):
         self.wipe_button.setEnabled(False)
         #self.wipe_button.hide()
         self.stop_button.setEnabled(False)
-
-        self.cancel_button = QPushButton("Close")
+        self.cancel_button = QPushButton('Close')
 
         #self.set_grid_time(enabled=False)
         #self.set_grid_scale(enabled=self._default_is_scale)
@@ -1085,8 +1078,15 @@ class AnimationWindow(PyDialog):
             name = 'main'
             data = self.fringe_cases
             choices = cases
-            results_widget = ResultsWindow(parent, name, data, choices,
-                                           include_clear=False, include_delete=False)
+            results_widget = ResultsWindow(
+                parent, name, data, choices,
+                left_click_callback=None,
+                #right_click_actions=None,
+                include_export_case=False,
+                include_clear=False,
+                include_delete=False,
+                include_results=True,
+            )
             vbox_results = QVBoxLayout()
             results_widget_label = QLabel('Results:')
             vbox_results.addWidget(results_widget_label)
@@ -1158,7 +1158,8 @@ class AnimationWindow(PyDialog):
             self._make_gif(validate_out, istep=None)
         return passed
 
-    def _make_gif(self, validate_out, istep=None, stop_animation=False):
+    def _make_gif(self, validate_out, istep=None,
+                  stop_animation: bool=False):
         """interface for making the gif"""
         (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
          magnify, output_dir, gifbase,

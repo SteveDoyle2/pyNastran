@@ -153,8 +153,8 @@ class HighlightWindow(PyDialog):
             self.highlight_opacity_edit = QDoubleSpinBox(self)
             self.highlight_opacity_edit.setValue(self._highlight_opacity)
             self.highlight_opacity_edit.setRange(0.1, 1.0)
-            self.highlight_opacity_edit.setDecimals(1)
-            self.highlight_opacity_edit.setSingleStep(0.1)
+            self.highlight_opacity_edit.setDecimals(2)
+            self.highlight_opacity_edit.setSingleStep(0.05)
             self.highlight_opacity_button = QPushButton('Default')
 
             # Text Color

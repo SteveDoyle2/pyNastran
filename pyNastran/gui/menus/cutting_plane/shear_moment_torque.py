@@ -212,8 +212,8 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_opacity_label = QLabel("Plane Opacity:")
         self.plane_opacity_edit = QDoubleSpinBox()
         self.plane_opacity_edit.setRange(0.1, 1.0)
-        self.plane_opacity_edit.setDecimals(1)
-        self.plane_opacity_edit.setSingleStep(0.1)
+        self.plane_opacity_edit.setDecimals(2)
+        self.plane_opacity_edit.setSingleStep(0.05)
         self.plane_opacity_edit.setValue(self.plane_opacity)
 
         self.flip_coord_label = QLabel("Flip Coordinate System:")

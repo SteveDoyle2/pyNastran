@@ -96,8 +96,8 @@ class EditBoundaryConditions(QDialog):
         self.opacity = QLabel('Opacity:')
         self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
-        self.opacity_edit.setDecimals(1)
-        self.opacity_edit.setSingleStep(0.1)
+        self.opacity_edit.setDecimals(2)
+        self.opacity_edit.setSingleStep(0.05)
         self.opacity_edit.setValue(opacity)
 
         self.line_width = QLabel('Line Width:')

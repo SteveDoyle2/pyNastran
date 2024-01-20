@@ -382,7 +382,7 @@ class CompositeResults2(GuiResultCommon):
             #asdf
         #else:
         assert len(data.shape) == 1, data.shape
-        data2, eids_new = pivot_table(data, rows, cols)
+        data2, eids_new = pivot_table(data, rows, cols, shape=1)
         assert len(data2.shape) == 2, data2.shape
         #with open('data.csv', 'w') as f1, open('data2.csv', 'w') as f2:
         #    for eid, layer, datai in zip(rows, cols, data):

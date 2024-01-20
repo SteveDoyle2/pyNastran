@@ -57,6 +57,10 @@ class ShearMomentTorqueObject(BaseGui):
             cids = [0]
 
         icase = self.gui.icase
+        if icase == -1 or len(gui.result_cases) == 0:
+            gui.log.error('Select a Grid Point Forces result.')
+            return
+
         (obj, (unused_i, unused_name)) = gui.result_cases[icase]
         if not hasattr(obj, 'gpforce_array'):
             gui.log.error('Select a Grid Point Forces result.')

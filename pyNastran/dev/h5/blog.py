@@ -92,8 +92,8 @@ def run_source():
     alphaTF.AddPoint(1, 0.01)
     alphaTF.AddPoint(255, 0.5)
     colorTF = vtk.vtkColorTransferFunction() # Color (RGB -TF)
-    colorTF.AddRGBPoint(0, 1, 0.4 , 0)
-    colorTF.AddRGBPoint(255, 1, 0.0 , 0)
+    colorTF.AddRGBPoint(0, 1, 0.4, 0)
+    colorTF.AddRGBPoint(255, 1, 0.0, 0)
 
     volumeProperty = vtk.vtkVolumeProperty() # Property
     volumeProperty.SetColor(colorTF)
