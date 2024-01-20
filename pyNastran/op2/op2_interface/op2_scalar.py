@@ -1639,7 +1639,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             OIBULK, 3, YES,
             OMACHPR, 3, YES,
             POSTEXT, 3, YES,
-            UNITSYS, 3, MN-MM)
+            UNITSYS, 3, MN-MM,
+            G123, 5, 1.0, 2.0,
+            )
         """
         if self.read_mode == 2:
             return ndata
@@ -1829,7 +1831,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'
-                               'table_name={self.table_name!r} len(data)={ndata}')
+                               f'table_name={self.table_name!r} len(data)={ndata}')
 
     def _table_crasher(self, data: bytes, ndata: int):
         """auto-table crasher"""
