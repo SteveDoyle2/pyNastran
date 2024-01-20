@@ -228,7 +228,9 @@ class CalculatorWindow(PyDialog):
 
             self.modules_widget = ResultsWindow(
                 parent, name, data, choices,
-                actions=module_actions,
+                is_single_select=True,
+                left_click_callback=None,
+                right_click_actions=module_actions,
                 include_export_case=False,
                 include_clear=False,
                 include_delete=False)
@@ -240,7 +242,9 @@ class CalculatorWindow(PyDialog):
             choices = cases
             self.results_widget = ResultsWindow(
                 parent, name, data, choices,
-                actions=results_actions,
+                is_single_select=True,
+                left_click_callback=None,
+                right_click_actions=results_actions,
                 #include_export_case=True,
                 #include_delete=True,
                 include_clear=False, include_delete=False)

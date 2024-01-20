@@ -483,7 +483,9 @@ class MouseActions:
         unused_duplicate_key = None
         out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
         if out is None:
+            ## TODO: I think this happens when you do a focal point
             print('MouseActions._get_closest_node_xyz bug')
+            return
         (result_name, unused_result_value, unused_node_id, xyz) = out
         assert self.gui.icase in self.gui.label_actors, result_name
         assert not isinstance(xyz, int), xyz

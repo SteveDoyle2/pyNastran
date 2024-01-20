@@ -151,15 +151,24 @@ class Sidebar(QWidget):
         self.result_case_windows = [
             ResultsWindow(self, self.results_window_title, data, choices,
                           is_single_select=False,
-                          right_click_actions=right_click_actions)
+                          right_click_actions=right_click_actions,
+                          include_clear=False,
+                          include_export_case=False,
+                          include_delete=False,
+                          include_results=False)
         ]
         data = [
             ('A', 1, []),
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_method_window = ResultsWindow(self, 'Method', data, choices,
-                                                  is_single_select=False)
+        self.result_method_window = ResultsWindow(
+            self, 'Method', data, choices,
+            is_single_select=False,
+            include_clear=False,
+            include_export_case=False,
+            include_delete=False,
+            include_results=False)
         self.result_method_window.setVisible(False)
         #else:
             #self.result_method_window = None
@@ -228,7 +237,14 @@ class Sidebar(QWidget):
         for unused_name in self.names[nwindows:]:
             #print('*creating a window')
             result_case_window = ResultsWindow(
-                self, self.results_window_title, data, choices)
+                self, self.results_window_title, data, choices,
+                is_single_select=True,
+                left_click_callback=None,
+                right_click_actions=None,
+                include_clear=False,
+                include_export_case=False,
+                include_delete=False,
+                include_results=False)
             result_case_window.setVisible(False)
             vbox.addWidget(result_case_window)
             self.result_case_windows.append(result_case_window)

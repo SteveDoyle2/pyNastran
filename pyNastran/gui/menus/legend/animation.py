@@ -1080,8 +1080,9 @@ class AnimationWindow(PyDialog):
             choices = cases
             results_widget = ResultsWindow(
                 parent, name, data, choices,
+                is_single_select=True,
                 left_click_callback=None,
-                #right_click_actions=None,
+                right_click_actions=None,
                 include_export_case=False,
                 include_clear=False,
                 include_delete=False,
