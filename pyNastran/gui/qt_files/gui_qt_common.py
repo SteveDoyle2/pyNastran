@@ -960,45 +960,80 @@ class GuiQtCommon(GuiAttributes):
         (obj, (i, resname)) = self.model_data.result_cases[key]
         assert resname != 'main', resname
 
-        obj.set_sidebar_args(i, resname, **sidebar_kwargs)
+        #-----------------------------------------------------------------------
+        # update the model for when we use the cycle options
         is_methods_visible = obj.has_methods_table(i, resname)
         is_coord_visible, coords = obj.has_coord_transform(i, resname)
-        is_derivation_visible, min_max_averages = obj.has_derivation_transform(i, resname)
+        is_derivation_visible, min_max_averages_dict = obj.has_derivation_transform(i, resname)
         is_nodal_combine_visible, combine_methods = obj.has_nodal_combine_transform(i, resname)
+        (is_enabled_fringe, is_checked_fringe,
+         is_enabled_disp, is_checked_disp,
+         is_enabled_vector, is_checked_vector) = obj.has_output_checks(i, resname)
+
+        # assume the thingy is checked if it's active and you cycled
+        is_checked_fringe0 = sidebar_kwargs.get('is_checked_fringe', is_checked_fringe)
+        is_checked_disp0 = sidebar_kwargs.get('is_checked_disp', is_checked_disp)
+        is_checked_vector0 = sidebar_kwargs.get('is_checked_vector', is_checked_vector)
+
+        # can i make so things don't clear out?
+        is_checked_disp0 = True if is_enabled_disp else is_checked_disp0
+
+        # objects don't store checkbox flags
+        remove_keys_from_dict(
+            sidebar_kwargs,
+            ('is_checked_fringe', 'is_checked_disp', 'is_checked_vector'),
+        )
+        obj.set_sidebar_args(i, resname, **sidebar_kwargs)
 
         self.res_widget.set_methods_table_visible(is_methods_visible)
         self.res_widget.set_coord_transform_visible(is_coord_visible, coords)
-        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages)  # min/max/avg
+        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages_dict)  # min/max/avg
         self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible, combine_methods)
+        self.res_widget.set_output_checkbox(
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
 
         methods = obj.get_methods(i, resname)
         methodi = methods[0]
+        #-----------------------------------------------------------------------
+        # methodi is ignored
         case = obj.get_result(i, resname, methodi)
 
         subcase_id = obj.subcase_id
         result_type = obj.get_legend_title(i, resname)
+        if is_checked_fringe0:
+            data_format = obj.get_data_format(i, resname)
+            out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
+            nlabels, labelsize, ncolors, colormap = out
+            label2 = obj.get_header(i, resname)
+
+            #default_max, default_min = obj.get_default_min_max(i, resname, method)
+            if min_value is None or max_value is None:
+                min_valuei, max_valuei = obj.get_min_max(i, resname)
+                if min_value is None:
+                    min_value = min_valuei
+                if max_value is None:
+                    max_value = max_valuei
+
+            complex_types = ['complex64']
+            if hasattr(max_value, 'dtype') and max_value.dtype.name in complex_types:
+                raise TypeError(max_value)  # pragma: no cover
+            if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
+                raise TypeError(min_value)  # pragma: no cover
+        else:
+            data_format = None
+            # don't update anything
+            nlabels = -1
+            labelsize = -1
+            ncolors = -1
+            colormap = -1
+
         vector_size0 = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
-        data_format = obj.get_data_format(i, resname)
-        scale = obj.get_scale(i, resname)
         phase = obj.get_phase(i, resname)
-        label2 = obj.get_header(i, resname)
-        out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
-        nlabels, labelsize, ncolors, colormap = out
-
-        #default_max, default_min = obj.get_default_min_max(i, resname, method)
-        if min_value is None or max_value is None:
-            min_valuei, max_valuei = obj.get_min_max(i, resname)
-            if min_value is None:
-                min_value = min_valuei
-            if max_value is None:
-                max_value = max_valuei
-
-        complex_types = ['complex64']
-        if hasattr(max_value, 'dtype') and max_value.dtype.name in complex_types:
-            raise TypeError(max_value)  # pragma: no cover
-        if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
-            raise TypeError(min_value)  # pragma: no cover
+        #if is_checked_disp or is_checked_vector:
+        scale = obj.get_scale(i, resname)
 
         #obj.mins[(0, )] = [0.0]
         #obj.maxs[(0, )] = [0.01211053]
@@ -1021,51 +1056,59 @@ class GuiQtCommon(GuiAttributes):
             self.show_legend()
             self._set_legend_fringe(True)
 
-        if len(case.shape) == 1:
-            normi = case
-        else:
-            normi = norm(case, axis=1)
+        name_fringe = None
+        name_vector = None
+        grid_result = None
+        grid_result_vector = None
+        if is_checked_fringe:
+            if len(case.shape) == 1:
+                normi = case
+            else:
+                normi = norm(case, axis=1)
 
-        #print(case, len(case))
-        try:
-            imin = np.nanargmin(normi)
-            imax = np.nanargmax(normi)
-        except ValueError:
-            #print(normi)
-            #print(obj)
-            print(case)
-            imethod = 0
-            #imethod = name[1]
-            #print(imethod)
-            print(i, methods[imethod])
-            return self.icase
-        #print(imin, imax, normi[imin], normi[imax])
+            #print(case, len(case))
+            try:
+                imin = np.nanargmin(normi)
+                imax = np.nanargmax(normi)
+            except ValueError:
+                #print(normi)
+                #print(obj)
+                print(case)
+                imethod = 0
+                #imethod = name[1]
+                #print(imethod)
+                print(i, methods[imethod])
+                return self.icase
+            #print(imin, imax, normi[imin], normi[imax])
 
-        #if min_value is None and max_value is None:
-            #max_value = normi.max()
-            #min_value = normi.min()
+            #if min_value is None and max_value is None:
+                #max_value = normi.max()
+                #min_value = normi.min()
 
-        #================================================
-        # flips sign to make colors go from blue -> red
-        #norm_value = float(max_value - min_value)
+            #================================================
+            # flips sign to make colors go from blue -> red
+            #norm_value = float(max_value - min_value)
 
-        vector_size = 1
-        name_fringe = (vector_size, subcase_id, result_type, label, scale)
-        if self._names_storage.has_exact_name(name_fringe):
-            grid_result = None
-        else:
-            grid_result = self.set_grid_values(name_fringe, normi, vector_size, phase)
+            vector_size = 1
+            name_fringe = (vector_size, subcase_id, result_type, label, 0.)
+            if self._names_storage.has_exact_name(name_fringe):
+                grid_result = None
+            else:
+                grid_result = self.set_grid_values(
+                    name_fringe, normi, vector_size, phase)
 
-        if vector_size0 == 1:
-            name_vector = None
-            grid_result_vector = None
-        else:
+        #if vector_size0 >= 3:
+        if is_checked_disp0 or is_checked_vector0:
+            #name_vector = None
+            #grid_result_vector = None
+        #else:
             vector_size = 3
             name_vector = (vector_size, subcase_id, result_type, label, scale)
             if self._names_storage.has_exact_name(name_vector):
                 grid_result_vector = None
             else:
-                grid_result_vector = self.set_grid_values(name_vector, case, vector_size, phase)
+                grid_result_vector = self.set_grid_values(
+                    name_vector, case, vector_size, phase)
 
         self.final_grid_update(icase,
                                name_fringe, grid_result,
@@ -1075,27 +1118,27 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
-        if is_legend_shown is None:
-            is_legend_shown = self.scalar_bar.is_shown
-
-        self.update_scalar_bar(result_type, min_value, max_value,
-                               data_format,
-                               nlabels=nlabels, labelsize=labelsize,
-                               ncolors=ncolors, colormap=colormap,
-                               is_shown=is_legend_shown)
-
+        # should update this...
         icase_fringe = icase
         icase_disp = self.icase_disp
         icase_vector = self.icase_vector
+        if is_checked_fringe0:
+            if is_legend_shown is None:
+                is_legend_shown = self.scalar_bar.is_shown
+            self.update_scalar_bar(result_type, min_value, max_value,
+                                   data_format,
+                                   nlabels=nlabels, labelsize=labelsize,
+                                   ncolors=ncolors, colormap=colormap,
+                                   is_shown=is_legend_shown)
 
-        #print('norm =', normi, location)
-        self._update_min_max_actors(location, icase_fringe,
+            #print('norm =', normi, location)
+            self._update_min_max_actors(location, icase_fringe,
+                                        imin, min_value,
+                                        imax, max_value)
+
+            self.update_text_actors(subcase_id, subtitle,
                                     imin, min_value,
-                                    imax, max_value)
-
-        self.update_text_actors(subcase_id, subtitle,
-                                imin, min_value,
-                                imax, max_value, label, location)
+                                    imax, max_value, label, location)
 
         arrow_scale = 0.0
         self.legend_obj.update_legend(
@@ -1974,3 +2017,8 @@ def normalize_forces(forces_array):
     #print('new_forces =', new_forces[inonzero])
     #print('mag =', mag[inonzero])
     return new_forces, mag
+
+def remove_keys_from_dict(adict: dict[str, Any], names: list[str]) -> None:
+    for name in names:
+        if name in adict:
+            del adict[name]

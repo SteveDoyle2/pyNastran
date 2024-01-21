@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Any
 import numpy as np
 
 from pyNastran.gui.gui_objects.table import Table
@@ -42,12 +43,29 @@ class LayeredTableResults(Table):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
-        return True, ['Absolute Max']
+        out = {
+            'label': 'Derivation: ',
+            'derivation': ['Absolute Max'],
+            'tooltip': '',
+        }
+        return True, out
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+        is_enabled_fringe = False
+        is_checked_fringe = True
+        is_enabled_disp = False
+        is_checked_disp = False
+        is_enabled_vector = False
+        is_checked_vector = False
+        out = (
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
+        return out
 
     def get_default_legend_title(self, i, name):
         """legend title"""

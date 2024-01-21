@@ -123,6 +123,18 @@ class SimpleTableResults(Table):
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
+    #def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+        #is_enabled_fringe = False
+        #is_checked_fringe = True
+        #is_enabled_disp = False
+        #is_checked_disp = False
+        #is_enabled_vector = False
+        #is_checked_vector = False
+        #out = (
+            #is_enabled_fringe, is_checked_fringe,
+            #is_enabled_disp, is_checked_disp,
+            #is_enabled_vector, is_checked_vector)
+        #return out
 
     def get_data_format(self, i, name):
         j = self._get_j(i, name)

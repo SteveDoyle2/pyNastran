@@ -26,8 +26,7 @@ class GuiResultCommon:
         self.has_coord_transform(0, 'test')
         self.has_derivation_transform(0, 'test')
         self.has_nodal_combine_transform(0, 'test')
-        #self.has_derivation_transform(0, 'test')
-        #self.has_derivation_transform(0, 'test')
+        self.has_output_checks(0, 'test')
 
     #def get_data_type(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
@@ -41,12 +40,25 @@ class GuiResultCommon:
         return False
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         raise NotImplementedError(self.class_name)
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, res_name: str,
+                                 ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         raise NotImplementedError(self.class_name)
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         raise NotImplementedError(self.class_name)
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+        is_enabled_fringe = False
+        is_checked_fringe = True
+        is_enabled_disp = False
+        is_checked_disp = False
+        is_enabled_vector = False
+        is_checked_vector = False
+        out = (
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
+        return out
 
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         """deflection is opt-in"""
@@ -178,9 +190,10 @@ class GridPointForceResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, res_name: str,
+                                 ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
-        return False, []
+        return False, {}
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
@@ -270,9 +283,10 @@ class NormalResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, res_name: str,
+                                 ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
-        return False, []
+        return False, {}
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
@@ -503,9 +517,10 @@ class GuiResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, res_name: str,
+                                 ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
-        return False, []
+        return False, {}
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []

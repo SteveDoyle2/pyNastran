@@ -1,6 +1,5 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
-import json
 import os.path
 from math import ceil
 from typing import Callable, Optional, Union, Any, cast
@@ -26,6 +25,7 @@ from vtk import (vtkExtractSelection,
 #from vtkmodules.vtkRenderingCore import vtkImageActor
 #from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer
 import pyNastran
@@ -48,7 +48,7 @@ from .gui_objects.alt_geometry_storage import AltGeometry
 
 from .menus.menus import (
     on_set_modify_groups, Group,
-    Sidebar,
+    ResultsSidebar,
     ApplicationLogWidget,
     PythonConsoleWidget)
 
@@ -67,7 +67,7 @@ except ImportError:
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.formats import CLASS_MAP
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types
 
 Tool = tuple[str, str, str, Optional[str], str, Callable]
 BANNED_SHORTCUTS = {}
@@ -77,94 +77,6 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults, ElementalTableResults)
 
-
-class QSettingsLike2:
-    _tuples = {
-        'background_color', 'background_color2',
-        'highlight_color', 'text_color', 'annotation_color',
-        'screen_shape', 'pos',
-    }
-    def __init__(self):
-        """
-        json gui loading location is stored in:
-        1) local directory
-        2) exe directory
-        3) home directory
-        The priority goes in that order.
-
-        The last directory would be stored as an additional preference
-        of launch directory as:
-        a) previous working directory
-        b) use working directory
-
-        """
-        self.data = {}
-
-        home_dirname = os.path.expanduser('~')
-        #local_dirname = os.getcwd()
-        #exe_dirname = os.path.dirname(__file__)
-        #local_filename = os.path.join(local_dirname, 'pyNastranGUI.json')
-        #exe_filename   = os.path.join(exe_dirname,   'pyNastranGUI.json')
-        home_filename  = os.path.join(home_dirname,  'pyNastranGUI.json')
-        #is_pynastrangui_exe = False
-        #if os.path.exists(local_filename):
-            #self._filename = local_filename
-        #elif os.path.exists(exe_filename) and is_pynastrangui_exe:
-            #self._filename = exe_filename
-        #if os.path.exists(home_filename):
-        self._filename = home_filename
-        #else:
-            #self._filename = ''
-    def clear(self) -> None:
-        self.data = {}
-    def childKeys(self) -> list[str]:
-        return list(self.data.keys())
-
-    def value(self, key: str, default=None):
-        assert isinstance(key, str), key
-        if key in self.data:
-            value = self.data[key]
-        elif default is None:
-            raise RuntimeError('default=None?')
-        else:
-            value = default
-
-        if key in {'main_window_geometry', 'main_window_state'}:
-            value_bytes = value.encode('ascii')
-            value = QtCore.QByteArray(value_bytes)
-
-        if key in self._tuples:
-            value = tuple(value)
-        return value
-
-    def setValue(self, key: str, value) -> None:
-        assert isinstance(key, str), key
-        self.data[key] = value
-    def load_json(self) -> None:
-        if os.path.exists(self._filename):
-            with open(self._filename, 'r') as json_file:
-                self.data = json.load(json_file)
-        x = 1
-
-    def save_json(self) -> None:
-        data = {}
-        for key, value in self.data.items():
-            if isinstance(value, (str, integer_types, float_types)):
-                data[key] = value
-            elif value.__class__.__name__ == 'QByteArray':
-                value2 = bytes(value.toBase64())
-                data[key] = value2.decode('ascii')
-            elif key in self._tuples:
-                assert isinstance(value, tuple), (key, value)
-                data[key] = value
-            else:
-                raise NotImplementedError(key)
-
-        with open(self._filename, 'w') as json_file:
-            json.dump(data, json_file, indent=True)
-        #x = 1
-#QSettingsLike = QtCore.QSettings
-QSettingsLike = QSettingsLike2
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon(QMainWindow, GuiVTKCommon):
@@ -269,8 +181,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
-        self.res_widget = Sidebar(
-            self, left_click_callback=self._set_methods_by_icase)
+        self.res_widget = ResultsSidebar(
+            self,
+            left_click_callback=self._set_methods_by_icase,
+            include_vector_checks=True,
+        )
         #self.res_widget.update_results(data)
         #self.res_widget.setWidget(sidebar)
 
@@ -413,8 +328,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
 
                 # zoom
-                ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
-                ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Zoom In', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
+                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
 
                 # rotation
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
@@ -440,16 +355,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results),
 
                 # view actions
-                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
-                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
-                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
-                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
+                ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
+                ('right_view',  'Right View',  'right.png',  'y',       'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
+                ('top_view',    'Top View',    'top.png',    'z',       'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
+                ('front_view',  'Front View',  'front.png',  'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
+                ('left_view',   'Left View',   'left.png',   'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
                 ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
 
 
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-                ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
+                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
                 ('anti_alias_1', '1x', '', None, 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1)),
                 ('anti_alias_2', '2x', '', None, 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2)),
@@ -457,15 +372,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
 
                 # mouse buttons
-                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
+                ('rotation_center', 'Set the Rotation Center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
                 ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
 
                 # name, gui_name, png, shortcut, desc, func
-                ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
+                ('probe_result', 'Probe the model and mark it with the value of a node/element', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
 
+                #Probe all the results at the given location (slow!)
                 ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
                 ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
 
@@ -552,9 +468,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
-            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'set_preferences', #'cutting_plane',
-            '',
+            'set_preferences', '', #'cutting_plane',
+            'camera_reset', '',
+            'wireframe', 'surface', 'edges', 'edges_black', '',
             'label_clear', 'label_reset', '',
             'legend', 'animation', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
@@ -566,8 +482,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                           'create_groups_by_model_group',]
 
         menu_view += [
-            '', 'clipping', #'axis',
-            'edges', 'edges_black',]
+            '', 'clipping', 'view', #'axis',
+        ]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
             self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
@@ -581,7 +497,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         menu_file = [
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
-            'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
+            'load_csv_user_points', 'load_csv_user_geom', 'script', '',
+            'screenshot', '',
+            'exit']
         toolbar_tools = [
             'reload', 'load_geometry', 'load_results',
             'front_view', 'back_view', 'top_view', 'bottom_view',
@@ -594,7 +512,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
             'wireframe', 'surface', 'edges']
         toolbar_tools += [
-            'camera_reset', 'view', 'screenshot', 'min', 'max', 'map_element_fringe',
+            'camera_reset',
+            'min', 'max', 'map_element_fringe',
             '', # 'exit'
         ]
         hidden_tools = ('cycle_results', 'rcycle_results',
@@ -2267,13 +2186,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         is_methods_visible = obj.has_methods_table(i, resname)
         is_coord_visible, coords = obj.has_coord_transform(i, resname)
-        is_derivation_visible, min_max_averages = obj.has_derivation_transform(i, resname)
+        is_derivation_visible, min_max_averages_dict = obj.has_derivation_transform(i, resname)
         is_nodal_combine_visible, combine_methods = obj.has_nodal_combine_transform(i, resname)
+        (is_enabled_fringe, is_checked_fringe,
+         is_enabled_disp, is_checked_disp,
+         is_enabled_vector, is_checked_vector) = obj.has_output_checks(i, resname)
 
         self.res_widget.set_methods_table_visible(is_methods_visible)
         self.res_widget.set_coord_transform_visible(is_coord_visible, coords)
-        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages) # min/max/avg
+        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages_dict) # min/max/avg
         self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible, combine_methods)
+        self.res_widget.set_output_checkbox(
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
 
         #self.res_widget.set_displacement_scale_visible(is_visible)
 

@@ -403,7 +403,8 @@ class MainWindow2(QMainWindow):
         file_actions_list = [
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
-            'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit', ]
+            'load_csv_user_points', 'load_csv_user_geom', 'script', '',
+            'screenshot', '', 'exit', ]
 
         help = HelpActions(self)
         toolbar_tools = [
@@ -432,7 +433,7 @@ class MainWindow2(QMainWindow):
         ]
 
         menu_view = [
-            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
+            'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', #'cutting_plane',
             '',
             'label_clear', 'label_reset', '',

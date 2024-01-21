@@ -9,7 +9,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QApplication, QGridLayout,
     QComboBox, QLabel, QSpinBox, QLineEdit,
-    QSplitter, QStyleFactory,
+    QSplitter, QStyleFactory, QCheckBox,
 )
 #from qtpy.QtCore import QSize
 from qtpy import QtCore
@@ -46,7 +46,7 @@ SkippableSpinBox = QSpinBox
 
 SHOW_DEV = False
 
-class Sidebar(QWidget):
+class ResultsSidebar(QWidget):
     """
     +----------------------+
     |        Results       |
@@ -154,7 +154,8 @@ class Sidebar(QWidget):
                  include_clear: bool=True,
                  include_export_case: bool=True,
                  include_delete: bool=True,
-                 include_results: bool=True):
+                 include_results: bool=True,
+                 include_vector_checks: bool=False):
         """
         Creates the buttons in the Sidebar, not the actual layout
 
@@ -252,7 +253,6 @@ class Sidebar(QWidget):
             self.transform_coords_pulldown = QComboBox()
             self.transform_coords_pulldown.addItem('Coord 0')
             self.transform_coords_pulldown.setEnabled(False)
-
             self.min_max_average_label = QLabel('3: Derivation Method:')
             self.min_max_average_pulldown = QComboBox()
             self.min_max_average_pulldown.addItems(['Derive/Average', 'Max', 'Min'])
@@ -261,6 +261,16 @@ class Sidebar(QWidget):
             self.combine_pulldown = QComboBox(self)
             self.combine_pulldown.addItems(['Across Neighbors', 'Centroid Absolute Max'])
             self.combine_pulldown.setEnabled(False)
+
+            if include_vector_checks:
+                self.fringe_checkbox = QCheckBox('Fringe')
+                self.fringe_checkbox.setChecked(True)
+
+                self.disp_checkbox = QCheckBox('Displacement')
+                self.disp_checkbox.setChecked(False)
+
+                self.vector_checkbox = QCheckBox('Vector')
+                self.vector_checkbox.setChecked(False)
 
         self.deflection_label = QLabel('Deflection Scale:')
         self.deflection_edit = QLineEdit()
@@ -292,9 +302,20 @@ class Sidebar(QWidget):
                              coords, is_visible)
 
     def set_derivation_visible(self, is_visible: bool,
-                               min_max_averages: list[str]) -> None:
+                               min_max_averages_dict: dict[str, Any]) -> None:
         if USE_NEW_SIDEBAR:
+
+            label = min_max_averages_dict.get('label', 'Derivation Method:')
+            if is_visible and label != self.min_max_average_label:
+                self.min_max_average_label.setText(label)
             self.min_max_average_label.setVisible(is_visible)
+
+            #----------------------------------------------------------------
+            tooltip = min_max_averages_dict.get('tooltip', 'Derivation Method:')
+            min_max_averages = min_max_averages_dict.get('derivation', [])
+
+            #if is_visible and self.min_max_average_pulldown.text():
+            self.min_max_average_pulldown.setToolTip(tooltip)
             self.min_max_average_pulldown.setVisible(is_visible)
             update_combo_box(self.min_max_average_pulldown,
                              min_max_averages, is_visible)
@@ -306,6 +327,26 @@ class Sidebar(QWidget):
             self.combine_pulldown.setVisible(is_visible)
             update_combo_box(self.combine_pulldown,
                              combine_methods, is_visible)
+
+    def set_output_checkbox(self,
+                            is_enabled_fringe: bool, is_checked_fringe: bool,
+                            is_enabled_disp: bool, is_checked_disp: bool,
+                            is_enabled_vector: bool, is_checked_vector: bool) -> None:
+        if USE_NEW_SIDEBAR:
+            #if is_enabled_fringe
+            # this should always be enabled (what about normals?)
+            #self.fringe_checkbox.setEnabled(is_enabled_fringe)
+            #self.fringe_checkbox.setChecked(is_checked_fringe)
+
+            is_enabled = self.disp_checkbox.isEnabled()
+            if is_enabled is not is_enabled_disp:
+                self.disp_checkbox.setEnabled(is_enabled_disp)
+                self.disp_checkbox.setChecked(is_checked_disp)
+
+            is_enabled = self.vector_checkbox.isEnabled()
+            if is_enabled is not is_enabled_vector:
+                self.vector_checkbox.setEnabled(is_enabled_vector)
+                self.vector_checkbox.setChecked(is_checked_vector)
 
     def hide_dev(self):
         objs = [
@@ -421,6 +462,8 @@ class Sidebar(QWidget):
             hbox_avg = create_hbox_with_widgets([self.min_max_average_label, self.min_max_average_pulldown])
             hbox_coord = create_hbox_with_widgets([self.transform_coords_label, self.transform_coords_pulldown])
             hbox_combine = create_hbox_with_widgets([self.combine_label, self.combine_pulldown])
+            if 1: # include_vector_checks:
+                hbox_checks = create_hbox_with_widgets([self.fringe_checkbox, self.disp_checkbox, self.vector_checkbox])
 
         #self.case_spinner_label, self.case_spinner,
         #self.deflection_label, self.deflection_edit,
@@ -484,6 +527,7 @@ class Sidebar(QWidget):
             vbox.addLayout(hbox_coord)
             vbox.addLayout(hbox_avg)
             vbox.addLayout(hbox_combine)
+            vbox.addLayout(hbox_checks)
         self._add_grid_to_vbox(vbox)
 
         vbox.addWidget(self.apply_button)
@@ -695,11 +739,22 @@ class Sidebar(QWidget):
             coord = get_combo_box_text(self.transform_coords_pulldown)
             min_max_method = get_combo_box_text(self.min_max_average_pulldown)
             nodal_combine = get_combo_box_text(self.combine_pulldown)
+
+            is_checked_fringe = self.fringe_checkbox.isEnabled() and self.fringe_checkbox.isChecked()
+            is_checked_disp = self.disp_checkbox.isEnabled() and self.disp_checkbox.isChecked()
+            is_checked_vector = self.vector_checkbox.isEnabled() and self.vector_checkbox.isChecked()
+            if not(is_checked_fringe or is_checked_disp or is_checked_vector):
+                return
+
             sidebar_kwargs = {
                 'min_max_method': min_max_method,
                 'transform': coord,
                 'nodal_combine': nodal_combine,
                 'methods_keys': keys_b,
+
+                'is_checked_fringe': is_checked_fringe,
+                'is_checked_disp': is_checked_disp,
+                'is_checked_vector': is_checked_vector,
             }
 
         #self.transform_coords_pulldown = QComboBox()

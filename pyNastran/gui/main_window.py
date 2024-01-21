@@ -13,8 +13,10 @@ import urllib
 from typing import Optional
 
 from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, QApplication
+
 #from qtpy.QtCore import QEvent
 
 #QtCore.Qt.WindowMinimized
@@ -28,10 +30,11 @@ import vtkmodules  # if this crashes, make sure you ran setup.py
 import pyNastran
 from pyNastran import is_pynastrangui_exe
 from pyNastran.gui import SCRIPT_PATH, ICON_PATH
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
-from pyNastran.gui.gui_common import GuiCommon, QSettingsLike
+from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
 #try:
@@ -338,7 +341,7 @@ class MainWindow(GuiCommon, NastranIO):
         Handling saving state before application when application is
         being closed.
         """
-        qsettings = QSettingsLike()
+        qsettings = QSettingsLike2()
         qsettings.clear()
         self.settings.save(qsettings)
         if hasattr(qsettings, 'save_json'):

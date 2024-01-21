@@ -1,7 +1,7 @@
 import getpass
 from collections import defaultdict
 import numpy as np
-from typing import Union, Optional # , TYPE_CHECKING
+from typing import Union, Optional, Any # , TYPE_CHECKING
 
 from pyNastran.femutils.utils import safe_norm
 #if TYPE_CHECKING:
@@ -14,60 +14,28 @@ translation = ['Magnitude', 'Tx', 'Ty', 'Tz']
 rotation = ['Magnitude', 'Rx', 'Ry', 'Rz']
 col_axis = 1
 
-class VectorResults2(GuiResultCommon):
+class VectorResultsCommon(GuiResultCommon):
     def __init__(self,
                  subcase_id: int,
-                 node_id: np.ndarray,
-                 dxyz: Union[RealTableArray, ComplexTableArray],
-                 is_translation: bool,
-                 dim_max: float,
+                 #node_id: np.ndarray,
+                 case,
+                 #dxyz: Union[RealTableArray, ComplexTableArray],
+                 #is_translation: bool,
+                 #dim_max: float,
                  data_format: str='%g',
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
-                 set_max_min: bool=False,
+                 #set_max_min: bool=False,
                  uname: str='VectorResults2'):
         GuiResultCommon.__init__(self)
         self.is_dense = False
-        self.dim = dxyz.data.ndim
-        assert self.dim == 3, dxyz.data.shape
-        assert dxyz.data.shape[2] == 6, dxyz.data.shape
-
         self.subcase_id = subcase_id
-        self.is_translation = is_translation
-        self._title0 = 'T_' if self.is_translation else 'R_'
-
-        if dim_max == 0.0:
-            dim_max = 1.0
-        self.dim_max = dim_max
-        self.linked_scale_factor = False
-
-        self.data_format = data_format
-
-        #  global node ids
-        self.node_id = node_id
 
         # local case object
-        self.dxyz = dxyz
+        self.case = case
 
-        self.data_type = self.dxyz.data.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type in ['<f4', '<f8'] else False
-        #self.is_real = dxyz.data.dtype.name in {'float32', 'float64'}
-        self.is_complex = not self.is_real
-
-        if self.is_real:
-            self.method_indices = (0, 1, 2)
-            self.index_map = {0: 'X', 1: 'Y', 2: 'Z',}
-        else:
-            self.method_indices = (7, 8, 9, 10, 11, 12)
-            self.index_map = {
-                0: 'Resultant',
-                1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
-                4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
-                7: 'X Real', 8: 'Y Real', 9: 'Z Real',
-                10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
-            }
-
-        ntimes = self.dxyz.data.shape[0]
+        self.linked_scale_factor = False
+        ntimes = case.data.shape[0]
         nscale = ntimes
         if self.linked_scale_factor:
             nscale = 1
@@ -85,6 +53,7 @@ class VectorResults2(GuiResultCommon):
         self.maxs = defaultdict(ftimes)
         self.phases = defaultdict(fphases)
 
+        self.data_format = data_format
         self.data_formats = [self.data_format]
         self.headers = ['headers'] * ntimes
 
@@ -94,73 +63,20 @@ class VectorResults2(GuiResultCommon):
         self.colormap = colormap
 
         self.uname = uname
-        self.active_method = ''
+        self.location = ''
 
-    #def get_header(self, itime: int, name: str) -> int:
-        #return 3
+    # --------------------------------------------------------------------------
+    # unmodifyable getters
+    def set_min_max(self, i: int, res_name: str,
+                    min_value: float, max_value: float):
+        raise TypeError((i, res_name))
 
-    def set_sidebar_args(self,
-                         itime: str, res_name: str,
-                         min_max_method: str='',
-                         transform: str='',
-                         methods_keys: Optional[list[int]]=None,
-                         # unused
-                         nodal_combine: str='',
-                         **kwargs) -> None:
-        assert len(kwargs) == 0, kwargs
-        transforms = self.has_coord_transform(itime, res_name)[1]
-        transform = transform if transform else transforms[0]
-        #sidebar_kwargs = {
-            #'min_max_method': min_max_method,
-            #'transform': coord,
-            #'nodal_combine': nodal_combine,
-            #'methods_keys': keys_b,
-        #}
-        assert transform in transforms, transform
+    def get_location(self, unused_i: int, unused_res_name: str) -> str:
+        """the result location (node/centroid)"""
+        assert self.location, self.location
+        return self.location
 
-        if self.is_real:
-            method_indices = _get_real_method_indices(methods_keys)
-        else:
-            method_indices = _get_complex_method_indices(methods_keys)
-        self.method_indices = method_indices
-
-        # doesn't matter cause it's already nodal
-        #nodal_combine
-        #min_max_method
-        self.transform = transform
-        x = 1
-
-
-    def has_methods_table(self, i: int, res_name: str) -> bool:
-        return True
-    def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
-        return True, ['Global']
-    def has_derivation_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
-        """min/max/avg"""
-        return False, []
-    def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
-        """elemental -> nodal"""
-        return False, []
-
-    def get_vector_size(self, itime: int, res_name: str) -> int:
-        """vector_size=1 is the default and displacement has 3 components"""
-        return 3
-
-    def get_header(self, itime: int, res_name: str) -> str:
-        """
-        A header is the thingy that goes in the lower left corner
-        header = 'Static'
-        title = 'Displacement'
-        method = 'T_XYZ'
-        returns 'Displacement T_XYZ: Static'
-        """
-        #method = self.get_methods(itime, res_name)[0]
-        self.method_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
-        annotation_label = f'{self.title} {method}: {self.headers[itime]}'
-        #return self.uname
-        return annotation_label
-
+    # --------------------------------------------------------------------------
     def get_default_scale(self, itime: int, res_name: str) -> float:
         if self.linked_scale_factor:
             itime = 0
@@ -168,8 +84,8 @@ class VectorResults2(GuiResultCommon):
         if scales[itime] is not None:
             return scales[itime]
 
-        unused_ntimes, nnodes = self.dxyz.data.shape[:2]
-        datai = self._get_real_data(itime)
+        unused_ntimes, nnodes = self.case.data.shape[:2]
+        datai, idxs = self._get_real_data(itime)
         tnorm_abs = safe_norm(datai, axis=col_axis)
         assert len(tnorm_abs) == nnodes
         tnorm_abs_max = np.nanmax(tnorm_abs)
@@ -216,27 +132,186 @@ class VectorResults2(GuiResultCommon):
     def get_default_data_format(self, itime: int, res_name: str) -> str:
         return self.data_format
 
+    def get_default_nlabels_labelsize_ncolors_colormap(self, itime: int, res_name: str,
+                                                       ) -> tuple[None, None, None, str]:
+        return None, None, None, ''
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str):
+        return self.nlabels, self.labelsize, self.ncolors, self.colormap
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str,
+                                               nlabels, labelsize,
+                                               ncolors, colormap: str) -> None:
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
+        pass
+
+
+class VectorResults2(VectorResultsCommon):
+    def __init__(self,
+                 subcase_id: int,
+                 node_id: np.ndarray,
+                 case: Union[RealTableArray, ComplexTableArray],
+                 is_translation: bool,
+                 dim_max: float,
+                 data_format: str='%g',
+                 nlabels=None, labelsize=None, ncolors=None,
+                 colormap: str='',
+                 set_max_min: bool=False,
+                 uname: str='VectorResults2'):
+        VectorResultsCommon.__init__(
+            self, subcase_id, case, data_format,
+            nlabels, labelsize, ncolors,
+            colormap, uname)
+
+        self.dim = case.data.ndim
+        assert self.dim == 3, case.data.shape
+        assert case.data.shape[2] == 6, case.data.shape
+
+        self.is_translation = is_translation
+        self._title0 = 'T_' if self.is_translation else 'R_'
+
+        if dim_max == 0.0:
+            dim_max = 1.0
+        self.dim_max = dim_max
+
+        #  global node ids
+        self.node_id = node_id
+
+        self.data_type = self.case.data.dtype.str # '<c8', '<f4'
+        self.is_real = True if self.data_type in ['<f4', '<f8'] else False
+        #self.is_real = case.data.dtype.name in {'float32', 'float64'}
+        self.is_complex = not self.is_real
+
+        if self.is_real:
+            self.method_indices = (0, 1, 2)
+            self.index_map = {0: 'X', 1: 'Y', 2: 'Z',}
+        else:
+            self.method_indices = (7, 8, 9, 10, 11, 12)
+            self.index_map = {
+                0: 'Resultant',
+                1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
+                4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
+                7: 'X Real', 8: 'Y Real', 9: 'Z Real',
+                10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
+            }
+
+    def set_sidebar_args(self,
+                         itime: str, res_name: str,
+                         min_max_method: str='',
+                         transform: str='',
+                         methods_keys: Optional[list[int]]=None,
+                         # unused
+                         nodal_combine: str='',
+                         **kwargs) -> None:
+        assert len(kwargs) == 0, kwargs
+        transforms = self.has_coord_transform(itime, res_name)[1]
+        min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
+        transform = transform if transform else transforms[0]
+        min_max_method = min_max_method if min_max_method else min_max_methods[0]
+        #sidebar_kwargs = {
+            #'min_max_method': min_max_method,
+            #'transform': coord,
+            #'nodal_combine': nodal_combine,
+            #'methods_keys': keys_b,
+        #}
+        assert transform in transforms, transform
+
+        if self.is_real:
+            method_indices = _get_real_method_indices(methods_keys)
+        else:
+            method_indices = _get_complex_method_indices(methods_keys)
+        self.method_indices = method_indices
+
+        # handle confusing data (can't plot a scalar for 2 components)
+        if len(self.method_indices) > 1 and min_max_method == 'Value':
+            min_max_method = 'Magnitude'
+
+        # doesn't matter cause it's already nodal
+        #nodal_combine
+        #min_max_method
+        self.transform = transform
+        self.min_max_method = min_max_method
+        x = 1
+
+    def has_methods_table(self, i: int, res_name: str) -> bool:
+        return True
+    def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
+        return True, ['Global']
+    def has_derivation_transform(self, i: int, res_name: str,
+                                 ) -> tuple[bool, dict[str, Any]]:
+        """min/max/avg"""
+        out = {
+            'label': 'Derivation',
+            'derivation': ['Magnitude', 'Value'],
+            'tooltip': 'Magnitude is automatically selected if multiple cmponents are selected',
+        }
+        return True, out
+    def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+        is_enabled_fringe = True
+        is_checked_fringe = True
+        is_enabled_disp = True
+        is_checked_disp = True
+        is_enabled_vector = False
+        is_checked_vector = False
+        out = (
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
+        return out
+
+    def get_vector_size(self, itime: int, res_name: str) -> int:
+        """vector_size=1 is the default and displacement has 3 components"""
+        return 3
+
+    def get_header(self, itime: int, res_name: str) -> str:
+        """
+        A header is the thingy that goes in the lower left corner
+        header = 'Static'
+        title = 'Displacement'
+        method = 'T_XYZ'
+        returns 'Displacement T_XYZ: Static'
+        """
+        #method = self.get_methods(itime, res_name)[0]
+        self.method_indices
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
+        annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
+        #return self.uname
+        return annotation_label
+
     def set_method(self, method: str):
         methods = self.get_methods()
         assert method in methods, (method, methods)
-        self.active_method = method
+        #self.active_method = method
 
     def get_default_min_max(self, itime: int, res_name: str,
                             method: str) -> tuple[float, float]:
         return None, None
-    def get_min_max(self, itime, resname) -> tuple[float, float]:
-        mins = self.mins[self.method_indices]
-        maxs = self.maxs[self.method_indices]
+    def get_min_max(self, itime, res_name) -> tuple[float, float]:
+        mins = self.mins[(self.method_indices, self.min_max_method)]
+        maxs = self.maxs[(self.method_indices, self.min_max_method)]
         if mins[itime] is not None and maxs[itime] is not None:
             return mins[itime], maxs[itime]
 
-        datai = self._get_real_data(itime)
-        tnorm_abs = safe_norm(datai, axis=col_axis)
+        data = self.get_result(itime, res_name, method='', return_dense=True)
+
+        normi = self._get_normi(data)
         if mins[itime] is None:
-            mins[itime] = tnorm_abs.min()
+            mins[itime] = np.nanmin(normi)
         if maxs[itime] is None:
-            maxs[itime] = tnorm_abs.max()
+            maxs[itime] = np.nanmax(normi)
         return mins[itime], maxs[itime]
+
+    def _get_normi(self, data: np.ndarray) -> np.ndarray:
+        if self.min_max_method == 'Value' and len(self.method_indices) == 1:
+            tnorm_abs = data
+        else:
+            self.min_max_method = 'Magnitude'
+            tnorm_abs = safe_norm(data, axis=col_axis)
+        return tnorm_abs
 
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
         self.method_indices
@@ -255,64 +330,64 @@ class VectorResults2(GuiResultCommon):
         title = f'{self.title} {method}'
         return title
 
-
-    def get_default_nlabels_labelsize_ncolors_colormap(self, itime: int, res_name: str,
-                                                       ) -> tuple[None, None, None, str]:
-        return None, None, None, ''
-    def get_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str):
-        return self.nlabels, self.labelsize, self.ncolors, self.colormap
-    def set_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str,
-                                               nlabels, labelsize,
-                                               ncolors, colormap: str) -> None:
-        self.nlabels = nlabels
-        self.labelsize = labelsize
-        self.ncolors = ncolors
-        self.colormap = colormap
-        pass
-
     def _get_data(self, itime: int) -> np.ndarray:
-        assert self.dxyz.data.shape[2] == 6
+        assert self.case.data.shape[2] == 6
         if self.is_translation:
-            datai = self.dxyz.data[itime, :, :3].copy()
+            datai = self.case.data[itime, :, :3].copy()
             assert datai.shape[1] == 3, datai.shape
         else:
-            datai = self.dxyz.data[itime, :, 3:].copy()
+            datai = self.case.data[itime, :, 3:].copy()
             assert datai.shape[1] == 3, datai.shape
-
         assert len(self.method_indices) > 0, self.method_indices
         return datai
 
-    def _get_real_data(self, itime: int) -> np.ndarray:
+
+    def _get_real_data(self, itime: int) -> tuple[np.ndarray, list[int]]:
+        """
+        Gets the real data
+
+        Returns
+        -------
+        data : (3, ) float np.ndarray
+            real/complex ndarray
+        idxs : list[int]
+            the indicies that were used
+
+        """
         data = self._get_data(itime)
+        idxs = []
         if self.is_real:
             for idx in [0, 1, 2]:
                 if idx not in self.method_indices:
                     data[:, idx] = 0.
+                    idxs.append(idx)
         else:
+            # real
             for idx in [7, 8, 9]:
                 if idx not in self.method_indices:
                     data[:, idx].real = 0.
+                    idxs.append(idx)
+            # complex
             for idx in [10, 11, 12]:
                 if idx not in self.method_indices:
                     data[:, idx].imag = 0.
-        return data
+                    idxs.append(idx)
+        return data, idxs
 
-    def _get_complex_data(self, itime: int) -> np.ndarray:
+    def _get_complex_data(self, itime: int) -> tuple[np.ndarray, list[int]]:
         return self._get_real_data(itime)
         #if self.is_translation:
-            #datai = self.dxyz.data[itime, :, :3]
+            #datai = self.case.data[itime, :, :3]
             #assert datai.shape[1] == 3, datai.shape
         #else:
-            #datai = self.dxyz.data[itime, :, 3:]
+            #datai = self.case.data[itime, :, 3:]
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
-    def get_result(self, itime: int, res_name: str,
-                   method: str='',
-                   return_dense: bool=True) -> np.ndarray:
+    def _get_vector_result(self, itime: int, res_name: str,
+                           return_dense: bool=True) -> tuple[np.ndarray, list[int]]:
         """
-        gets the 'typical' result which is a vector
-         - GuiResult:           fringe; (n,)   array
+        gets the 'typical' result as a vector
          - DisplacementResults: vector; (n, 3) array
 
         Parameters
@@ -321,43 +396,65 @@ class VectorResults2(GuiResultCommon):
             Rreturns the data array in a way that the gui can use.
             Handles the null result case (e.g; SPC forces only
             at the SPC location).
+
         """
-        method = self._update_method(itime, res_name, method)
         if self.is_real:
             # multiple results
             # .0006 -> 0.0
             # .057 -> 0.0123
             # min
-            dxyz = self._get_real_data(itime)
+            dxyz, idxs = self._get_real_data(itime)
             #dxyz = data[itime, :, :]
         else:
-            dxyz = self._get_complex_data(itime)
+            dxyz, idxs = self._get_complex_data(itime)
         assert len(dxyz.shape) == 2, dxyz.shape
+        return dxyz, idxs
 
+    def get_result(self, itime: int, res_name: str,
+                   method: str='',
+                   return_dense: bool=True) -> np.ndarray:
+        """
+        gets the 'typical' result which is a vector
+         - GuiResult:           fringe; (n,)   array
+
+        Parameters
+        ----------
+        return_dense: bool
+            Rreturns the data array in a way that the gui can use.
+            Handles the null result case (e.g; SPC forces only
+            at the SPC location).
+
+        """
+        dxyz, idxs = self._get_vector_result(itime, res_name, return_dense=False)
         return_sparse = not return_dense
-        if return_sparse or self.is_dense:
+        if (return_sparse or self.is_dense) and len(self.method_indices) > 1:
             return dxyz
 
+        # apply dense
         nnodes = len(self.node_id)
-        dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
-        dxyz2[self.inode, :] = dxyz
-        return dxyz2
+        if self.min_max_method == 'Value' and len(self.method_indices) == 1:
+            dxyz2 = np.full(nnodes, np.nan, dtype=dxyz.dtype)
+            dxyz2[self.inode] = dxyz[:, self.method_indices[0]]
+        else:
+            dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
+            dxyz2[self.inode, :] = dxyz
 
-    def _update_method(self, i: int, res_name: str,
-                       method: str) -> str:
-        if method == '':
-            method = 'Magnitude'
-        self.active_method = method
-        assert method in self.get_methods(i, res_name)
-        return method
-    #def _update_method(self, method: str) -> str:
-        #assert method != '', method
-        #self.active_method = method
+        # set the min/max if they're not set
+        normi = self._get_normi(dxyz2)
+        mins = self.mins[(self.method_indices, self.min_max_method)]
+        maxs = self.maxs[(self.method_indices, self.min_max_method)]
+        if mins[itime] is None:
+            mins[itime] = np.nanmin(normi)
+        if maxs[itime] is None:
+            maxs[itime] = np.nanmax(normi)
+        return normi
 
-def _get_real_method_indices(methods_keys: list[str]) -> np.ndarray:
+
+def _get_real_method_indices(methods_keys: list[int]) -> np.ndarray:
     """
     if Magnitude is selected, only use magnitude
     methods = ['T_XYZ', 'TX', 'TY', 'TZ']
+    method_keys = [0,    1      2     3]
     """
     default_indices = [1, 2, 3]
     if methods_keys is None or len(methods_keys) == 0:
@@ -402,7 +499,6 @@ def _get_complex_method_indices(methods_keys: list[str]) -> np.ndarray:
         for key in methods_keys:
             assert isinstance(key, str), key
             assert isinstance(key, int), key
-        #
         indices = methods_keys
     method_indices = tuple(np.array(indices, dtype='int32') - 1)
     return method_indices
@@ -438,7 +534,7 @@ class DisplacementResults2(VectorResults2):
             the legend title
         xyz : (nnodes, 3)
             the nominal xyz locations
-        dxyz : (nnodes, 3)
+        case : RealTableArray, ComplexTableArray
             the delta xyz values
         scalars : (nnodes,n) float ndarray
             #the data to make a contour plot with
@@ -474,9 +570,6 @@ class DisplacementResults2(VectorResults2):
 
         self.is_variable_data_format = is_variable_data_format
 
-        #linked_scale_factor = False
-        #location = 'node'
-
         # setup the node mapping
         disp_nodes = dxyz.node_gridtype[:, 0]  #  local node id
         self.inode = np.searchsorted(node_id, disp_nodes)
@@ -492,14 +585,9 @@ class DisplacementResults2(VectorResults2):
 
     #-------------------------------------
     # unmodifyable getters
-
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         """deflection is opt-in"""
         return True
-
-    def get_location(self, unused_i: int, unused_res_name: str) -> str:
-        """the result type"""
-        return self.location
 
     def set_min_max(self, i: int, res_name: str,
                     min_value: float, max_value: float):
@@ -530,21 +618,33 @@ class DisplacementResults2(VectorResults2):
         normi = safe_norm(dxyz, axis=col_axis)
         if self.is_dense:
             return normi
-
         #case.data.shape = (11, 43, 6)
         #nnodes = len(self.node_id) =  48
-        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
+        #nnodesi = len(self.inode) = len(self.case.node_gridtype) = 43
         normi2 = np.full(len(self.node_id), np.nan, dtype=normi.dtype)
         normi2[self.inode] = normi
         return normi2
 
     def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        dxyz = self.get_result(itime, res_name, method, return_dense=True)
+        dxyz = self._get_vector_result(itime, res_name, method, return_dense=True)
         scale = 1.
         return self.xyz, dxyz * scale
 
-    def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:
-        dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    def get_vector_result(self, itime: int, res_name: str, method: str,
+                          return_dense: bool=True) -> tuple[np.ndarray, np.ndarray]:
+        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+
+        dxyz, idxs = self._get_vector_result(itime, res_name, return_dense=False)
+
+        # map vectored data to dense
+        nnodes = len(self.node_id)
+        return_sparse = not return_dense
+        if (return_sparse or self.is_dense):
+            pass
+        else:
+            dxyz = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
+            dxyz[self.inode, :] = dxyz
+
         scale = self.get_scale(itime, res_name)
         deflected_xyz = self.xyz + scale * dxyz
         return self.xyz, deflected_xyz
@@ -683,17 +783,6 @@ class ForceResults2(VectorResults2):
         str(self)
 
     #-------------------------------------
-    # unmodifyable getters
-
-    def get_location(self, unused_i: int, unused_res_name: str) -> str:
-        """the result type"""
-        return self.location
-
-    def set_min_max(self, i: int, res_name: str,
-                    min_value: float, max_value: float):
-        raise TypeError((i, res_name))
-
-    #-------------------------------------
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         if self.is_real:
             out = translation if self.is_translation else rotation
@@ -712,7 +801,7 @@ class ForceResults2(VectorResults2):
 
         #case.data.shape = (11, 43, 6)
         #nnodes = len(self.node_id) =  48
-        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
+        #nnodesi = len(self.inode) = len(self.case.node_gridtype) = 43
         normi2 = np.full(len(self.node_id), np.nan, dtype=normi.dtype)
         normi2[self.inode] = normi
         return normi2
@@ -752,6 +841,7 @@ class ForceResults2(VectorResults2):
             the nominal state
         deflected_xyz : (nnodes, 3) float ndarray
             the deflected state
+
         """
         assert self.dim == 3, self.dim
         assert len(self.xyz.shape) == 2, self.xyz.shape

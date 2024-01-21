@@ -2,10 +2,11 @@
 defines GuiAttributes, which defines Gui getter/setter methods
 and is inherited from many GUI classes
 """
+from __future__ import annotations
 import os
 import sys
 import traceback
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
@@ -54,6 +55,8 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.results_sidebar import ResultsSidebar
 
 
 class GeometryObject(BaseGui):
@@ -137,7 +140,7 @@ class GuiAttributes:
 
         self.obj_names = []
         self.case_keys = []
-        self.res_widget = res_widget
+        self.res_widget: ResultsSidebar = res_widget
         self._show_flag = True
         self.observers = {}
 

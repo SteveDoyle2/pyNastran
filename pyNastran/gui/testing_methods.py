@@ -92,6 +92,11 @@ class MockResWidget:
         assert isinstance(methods, list), methods
         for method in methods:
             assert isinstance(method, str), method
+    def set_output_checkbox(self,
+                            is_enabled_fringe: bool, is_checked_fringe: bool,
+                            is_enabled_disp: bool, is_checked_disp: bool,
+                            is_enabled_vector: bool, is_checked_vector: bool) -> None:
+        pass
 
 class FakeGUIMethods(GuiVTKCommon):
     """all the methods in here are faked"""
