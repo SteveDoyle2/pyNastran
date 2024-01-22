@@ -6,12 +6,12 @@ import os
 import sys
 from itertools import count
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types # , float_types
-from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase
+from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase, CQUAD4
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.converters.abaqus.abaqus import (
     Abaqus, Elements, Step,
@@ -126,6 +126,8 @@ def _add_part_to_nastran(nastran_model: BDF,
 
         #print(f'eids[{etype} = {eids}; eid_offset={eid_offset}')
         #log.warning(f'writing etype={etype} eids={eids_}->{eids}')
+        elset_name = elements.element_type_to_elset_name[etype]
+        comment = elset_name
         if nid_offset > 0:
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
@@ -145,36 +147,45 @@ def _add_part_to_nastran(nastran_model: BDF,
         elif etype in {'s3', 's3r', 'cpe3', 'cpe3r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctria3(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                                         T1=None, T2=None, T3=None, comment='')
+                                         T1=None, T2=None, T3=None, comment=comment)
+                comment = ''
         elif etype in {'s4', 's4r', 'cpe4', 'cpe4r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                                         T1=None, T2=None, T3=None, T4=None, comment='')
+                                         T1=None, T2=None, T3=None, T4=None, comment=comment)
+                comment = ''
         elif etype in {'s6', 's6r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctria6(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                                         T1=None, T2=None, T3=None, comment='')
+                                         T1=None, T2=None, T3=None, comment=comment)
+                comment = ''
         elif etype in {'s8', 's8r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                                         T1=None, T2=None, T3=None, T4=None, comment='')
+                                         T1=None, T2=None, T3=None, T4=None, comment=comment)
+                comment = ''
         elif etype in {'c3d4', 'c3d4r'}: # , 'c3d10', 'c3d10r', 'c3d10h'}:
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_ctetra(eid, pid, nids, comment='')
+                nastran_model.add_ctetra(eid, pid, nids, comment=comment)
+                comment = ''
         elif etype in {'c3d10', 'c3d10r', 'c3d10h'}:
             #log.warning('found quadratic_tetra')
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_ctetra(eid, pid, nids, comment='')
+                nastran_model.add_ctetra(eid, pid, nids, comment=comment)
+                comment = ''
         elif etype in {'c3d6', 'c3d6r'}:
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_cpenta(eid, pid, nids, comment='')
+                nastran_model.add_cpenta(eid, pid, nids, comment=comment)
+                comment = ''
         elif etype in {'c3d15', 'c3d15r'}:
             log.warning('found quadratic_penta')
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_cpenta(eid, pid, nids, comment='')
+                nastran_model.add_cpenta(eid, pid, nids, comment=comment)
+                comment = ''
         elif etype in {'c3d8', 'c3d8r'}:
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_chexa(eid, pid, nids, comment='')
+                nastran_model.add_chexa(eid, pid, nids, comment=comment)
+                comment = ''
         elif etype in {'c3d20', 'c3d20r'}:
             for eid, nids in zip(eids, part_nids):
                 # the last 8 nodes are flipped in sets of 2
@@ -190,7 +201,8 @@ def _add_part_to_nastran(nastran_model: BDF,
 
                     n17, n18, n19, n20,
                     n13, n14, n15, n16,]
-                nastran_model.add_chexa(eid, pid, nids2, comment='')
+                nastran_model.add_chexa(eid, pid, nids2, comment=comment)
+                comment = ''
         elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
             del eids, part_nids
             log.warning(f'skipping etype={etype!r}')
@@ -261,8 +273,14 @@ def _create_nastran_nodes_elements(model: Abaqus,
 
     pid = 1
     mid = 1
-    pid, mid = _create_solid_properties(model, nastran_model, log, pid, mid)
-    pid, mid = _create_shell_properties(model, nastran_model, log, pid, mid)
+    cid = 1
+    mat_name_to_mid_dict = {}
+    pid, mid = _create_solid_properties(
+        model, nastran_model, log, pid, mid,
+        mat_name_to_mid_dict)
+    pid, mid, cid = _create_shell_properties(
+        model, nastran_model, log, pid, mid, cid,
+        mat_name_to_mid_dict)
 
 
 def _build_rigid_ties(model: Abaqus,
@@ -402,9 +420,11 @@ def _build_face_to_nids(
 
 def _create_solid_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
-                             pid: int, mid: int) -> tuple[int, int]:
+                             pid: int, mid: int,
+                             mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int]:
     for solid_section in model.solid_sections:
         #print(solid_section)
+
         mat_name = solid_section.material_name
         mat = model.materials[mat_name]
         element_set_name = solid_section.elset
@@ -423,36 +443,154 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
             nastran_model.add_psolid(
                 pid, mid, cordm=0,
                 integ=None, stress=None, isop=isop,
-                fctn='SMECH', comment=element_set_name)
-            _create_mat1(nastran_model, mat, mid, comment=mat_name+f' for {etype}')
+                fctn='SMECH', comment=element_set_name + f'; etype={etype}')
+            _create_material(nastran_model, mat, mid, comment=mat_name+f' for {etype}')
             pid += 1
             mid += 1
 
-        log.info('solid section')
+        #if mat_name in mat_name_to_mid_dict:
+            #midi = mat_name_to_mid_dict[mat_name]
+        #else:
+            #mat = model.materials[mat_name]
+            #mat = _create_material(nastran_model, mat, mid, comment=mat_name)
+            #midi = mid
+            #delta_mid = 1
+
     return pid, mid
+
+def build_coord(model: Abaqus,
+                nastran_model: BDF,
+                cid: int,
+                orientation_name: str) -> int:
+
+    orient = model.orientations[orientation_name]
+    if orient.axis is None:
+        R = np.eye(3)
+        comment = orient.name
+    else:
+        c = np.cos(orient.alpha)
+        s = np.sin(orient.alpha)
+        if orient.axis == 1:
+            R = np.array([
+                [1., 0., 0.],
+                [0.,  c, -s],
+                [0.,  s,  c],
+            ])
+        elif orient.axis == 2:
+            R = np.array([
+                [c,  0., -s],
+                [0., 1., 0.],
+                [-s, 0.,  c],
+            ])
+        elif orient.axis == 3:
+            R = np.array([
+                [c,  -s, 0.],
+                [s,   c, 0.],
+                [0., 0., 1.],
+            ])
+        else:  # pragma: no cover
+            raise NotImplementedError(orient.axis)
+        comment = orient.name + f'\n  axis={orient.axis}; alpha={orient.alpha}'
+
+    if orient.system == 'rectangular':
+        origin = orient.origin
+        i = orient.x_axis - origin
+        ijplane = orient.xy_plane - origin
+        i /= np.linalg.norm(i)
+        ijplane /= np.linalg.norm(ijplane)
+
+        k = np.cross(i, ijplane)
+        k /= np.linalg.norm(k)
+
+        j = np.cross(k, i)
+        beta = np.vstack([i, j, k])
+        beta2 = R @ beta
+
+        xzplane = origin + beta2[0, :]  # xaxis, xzplane
+        #yaxis = beta2[:, 1]
+        zaxis = origin + beta2[2, :]
+
+        coord = nastran_model.add_cord2r(
+            cid, origin, zaxis, xzplane,
+            rid=0, setup=True, comment=comment)
+        x = 1
+    else:
+        raise RuntimeError(orient.system)
+
+    return cid
 
 def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
-                             pid: int, mid: int) -> tuple[int, int]:
+                             pid: int, mid: int, cid: int,
+                             mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int]:
     for shell_section in model.shell_sections:
+        coord = -1
         #print(shell_section)
-        mat_name = shell_section.material_name
-        mat = model.materials[mat_name]
-
+        orientation_name = shell_section.orientation
         element_set_name = shell_section.elset
         log.info(f'element_set_name = {element_set_name}')
-        map_property_ids(model, nastran_model, element_set_name, pid)
 
-        #print(mat)
-        t = shell_section.thickness
-        nastran_model.add_pshell(pid, mid1=mid, t=t, mid2=mid, twelveIt3=1.0, mid3=None, tst=0.833333,
-                                 nsm=0.0, z1=None, z2=None, mid4=None, comment=element_set_name)
-        _create_mat1(nastran_model, mat, mid, comment=mat_name)
+        shell_comment = element_set_name
+        if orientation_name:
+            build_coord(model, nastran_model,
+                        cid, orientation_name)
+            coord = cid
+            shell_comment += f'; mcid={cid}'
+            cid += 1
 
-        log.info('shell section')
+        delta_mid = 0
+        mat_name = shell_section.material_name
+        if isinstance(mat_name, str):
+            # PSHELL
+            if mat_name in mat_name_to_mid_dict:
+                midi = mat_name_to_mid_dict[mat_name]
+            else:
+                midi = mid
+                mat = model.materials[mat_name]
+                mat = _create_material(nastran_model, mat, mid, comment=mat_name)
+                mat_name_to_mid_dict[mat_name] = midi
+                delta_mid = 1
+
+            #*Shell section, Elset=Base, Orientation=OR1, Material=CF, Offset=0
+            #1.
+            t = shell_section.thickness
+            nastran_model.add_pshell(
+                pid, mid1=midi, t=t, mid2=midi, twelveIt3=1.0, mid3=None, tst=0.833333,
+                nsm=0.0, z1=None, z2=None, mid4=None, comment=shell_comment)
+        else:
+            mat_names = shell_section.material_name
+            #*Shell section, Elset=Internal_Selection-1_Shell_section-1, COMPOSITE
+            #0.25,,Steel
+            #0.25,,Steel
+            umat_names = np.unique(mat_names)
+            mids = np.zeros(len(mat_names), dtype='int32')
+            imid = 0
+            for mat_name in umat_names:
+                imidi = (mat_name == mat_name)
+
+                if mat_name in mat_name_to_mid_dict:
+                    midi = mat_name_to_mid_dict[mat_name]
+                else:
+                    midi = mid + imid
+                    mat = model.materials[mat_name]
+                    unused_material = _create_material(nastran_model, mat, midi, comment=mat_name)
+                    mat_name_to_mid_dict[mat_name] = midi
+                    imid += 1
+                    delta_mid += 1
+                mids[imidi] = midi
+
+            thicknesses = shell_section.thickness
+            nastran_model.add_pcomp(
+                pid, mids, thicknesses, thetas=None, souts=None,
+                nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                lam=None, z0=None, comment=shell_comment)
+
+        zoffset = shell_section.offset
+        map_shell_property_ids(model, nastran_model, element_set_name, pid,
+                               coord=coord, zoffset=zoffset)
         pid += 1
-        mid += 1
-    return pid, mid
+        mid += delta_mid
+    return pid, mid, cid
 
 def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
                            element_set_name: str, pid: int) -> dict[str, list[int]]:
@@ -482,8 +620,9 @@ def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
     #return pid
     return etypes_eids
 
-def map_property_ids(model: Abaqus, nastran_model: BDF,
-                     element_set_name: str, pid: int) -> None:
+def map_shell_property_ids(model: Abaqus, nastran_model: BDF,
+                           element_set_name: str, pid: int,
+                           coord: int=-1, zoffset: float=0.0) -> None:
     log = model.log
     try:
         eids = get_eids_from_recursive_element_set(model, element_set_name)
@@ -498,8 +637,13 @@ def map_property_ids(model: Abaqus, nastran_model: BDF,
         etype = element_name_to_type[eids]
         eids = getattr(model.elements, f'{etype}_eids')
         #return
+
+    theta_mcid = 0. if coord == -1 else coord
     for eid in eids:
-        nastran_model.elements[eid].pid = pid
+        elem = nastran_model.elements[eid]
+        elem.pid = pid
+        elem.zoffset = zoffset
+        elem.theta_mcid = theta_mcid
 
 def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) -> Union[np.ndarray, str]:
     """returns None if we cant find a set of eids"""
@@ -508,27 +652,46 @@ def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) ->
         return eids.lower()
     return eids
 
-def _create_mat1(nastran_model: BDF, mat, mid: int, comment: str) -> None:
+def _create_material(nastran_model: BDF, mat, mid: int, comment: str) -> Union[MAT1, MAT8]:
     G = None
     rho = 0.0
     tref = None
     alpha = None
 
     sections = mat.sections
-    elastic = sections['elastic']
-    E = elastic[0]
-    nu = elastic[1]
+    assert 'elastic' in sections or 'engineering constants' in sections, sections
+
     if 'density' in sections:
         densities = sections['density']
+        assert len(densities) == 1, sections
         rho = densities[0]
     if 'expansion' in sections:
         tref, alpha = sections['expansion']
-    nastran_model.add_mat1(mid, E, G, nu, rho=rho, a=alpha, tref=tref,
-                           ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment=comment)
+
+    if 'elastic' in sections:
+        elastic = sections['elastic']
+        E = elastic[0]
+        nu = elastic[1]
+        material = nastran_model.add_mat1(
+            mid, E, G, nu, rho=rho, a=alpha, tref=tref,
+            ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment=comment)
+    elif 'engineering constants' in sections:
+        e11, e22, e3, nu12, nu13, n23, g12, g13, \
+            g23, tref = sections['engineering constants']
+        material = nastran_model.add_mat8(
+            mid, e11, e22, nu12, g12=g12, g1z=g13, g2z=g23,
+            rho=rho, a1=0., a2=0., tref=0.,
+            Xt=0., Xc=None, Yt=0., Yc=None, S=0.,
+            ge=0., F12=0., strn=0., comment=comment)
+    else:
+        raise RuntimeError(sections)
+    return material
+
 
 def abaqus_to_nastran_filename(abaqus_inp_filename: str,
                                nastran_filename_out: str,
                                size: int=8,
+                               xform: bool=False,
                                encoding: Optional[str]=None,
                                log: Optional[SimpleLogger]=None) -> BDF:
     if isinstance(abaqus_inp_filename, Abaqus):
@@ -536,6 +699,8 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     else:
         model = read_abaqus(abaqus_inp_filename, encoding=encoding, log=log, debug=True)
     log = model.log
+    if xform:
+        log.error('xform is super buggy and largely untested')
 
     nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(
         model, stop_for_no_elements=True)
@@ -543,7 +708,8 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     assert nelements > 0, nelements
 
     nastran_model = BDF(debug=True, log=log, mode='msc')
-    nastran_model.add_param('POST', -1, comment='')
+    comment = '\n'.join(model.heading)
+    nastran_model.add_param('POST', -1, comment=comment)
     for nid, xyz in zip(nids, nodes):
         nastran_model.add_grid(nid, xyz)
     _create_nastran_nodes_elements(model, nastran_model)
@@ -557,14 +723,38 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         log.error('No case control deck found...skipping')
         #print(f'{nastran_model.case_control_deck}')
         nastran_model.case_control_deck = None
+
+    _xform_model(nastran_model, xform)
     nastran_model.write_bdf(
         nastran_filename_out, size=size,
         encoding=None,
         #nodes_size=None, elements_size=None,
         #loads_size=None, is_double=False, interspersed=False,
         enddata=True, write_header=True, close=True)
+
     x = 1
     return nastran_model
+
+def _xform_model(nastran_model: BDF, xform: bool):
+    if not xform:
+        return
+    log = nastran_model.log
+    log.error('xform is super buggy and largely untested')
+    nastran_model.cross_reference()
+    for eid, elem in nastran_model.elements.items():
+        if hasattr(elem, 'theta_mcid') and isinstance(elem.theta_mcid, integer_types):
+            # mcid is active
+            #elem = cast(CQUAD4, elem)
+            dxyz2, centroid, imat, jmat, normal1 = elem.material_coordinate_system()
+            dxyz, centroid, ielement, jelement, normal2 = elem.element_coordinate_system()
+            # angle between two normalized vectors
+            # a o b = |a| |b| cos(theta)
+            # theta = acos(a o b)
+            theta = np.arccos(np.clip(np.dot(imat, ielement), -1, 1))
+            theta_deg = np.degrees(theta)
+            elem.theta_mcid = theta_deg
+            elem.uncross_reference()
+    log.error('xform is super buggy and largely untested')
 
 def _write_boundary_as_nastran(model: Abaqus,
                                step: Abaqus,
@@ -572,9 +762,13 @@ def _write_boundary_as_nastran(model: Abaqus,
                                case_control_deck: CaseControlDeck) -> None:
     if not step.boundaries:
         return
+    comment_list = []
     for iboundary, boundary in enumerate(step.boundaries):
         fixed_spcs = defaultdict(list)
         for (nid, dof), value in boundary.nid_dof_to_value.items():
+            if isinstance(nid, str) and nid not in comment_list:
+                comment_list.append(nid)
+
             nids = _get_nodes(model, nid)
             #assert isinstance(nid, int), nid
             for nid in nids:
@@ -590,6 +784,9 @@ def _write_boundary_as_nastran(model: Abaqus,
         for dof, nids in fixed_spcs.items():
             #  spc_id: int, components: str, nodes
             nastran_model.add_spc1(spc_id, str(dof), nids)
+    if comment_list:
+        comment = '\n'.join(comment_list)
+        nastran_model.spcs[spc_id][0].comment = comment
 
 def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
     log = nastran_model.log
@@ -627,15 +824,24 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
                 base_output = output_map[output_upper]
             except KeyError:
                 raise KeyError(f'output={output!r} is not in [u, rf, s, e, ener]')
-            subcase.add(base_output, 'ALL', ['PRINT', 'PLOT'], 'STRESS-type')
 
-        _write_distributed_loads(model, step, nastran_model, subcase, load_id)
-        _write_concentrated_loads(model, step, nastran_model, subcase, load_id)
+            request_flags = ['PLOT', 'PRINT']
+            if base_output in {'STRESS', 'STRAIN'}:
+                request_flags.append('CENTER')
+            subcase.add(base_output, 'ALL', request_flags, 'STRESS-type')
+
+        comment_list = []
+        _write_distributed_loads(model, step, nastran_model, subcase, load_id, comment_list)
+        _write_concentrated_loads(model, step, nastran_model, subcase, load_id, comment_list)
+        if comment_list:
+            comment = '\n'.join(comment_list)
+            nastran_model.loads[load_id][0].comment = comment
 
 def _write_concentrated_loads(model: Abaqus,
                               step: Step,
                               nastran_model: BDF, subcase: Subcase,
-                              load_id: int) -> None:
+                              load_id: int,
+                              comment_list: list[str]) -> None:
     def fxyz():
         return np.zeros(3, dtype='float32')
 
@@ -648,6 +854,8 @@ def _write_concentrated_loads(model: Abaqus,
         moments = defaultdict(fxyz)
         for cloadi in cload:
             nid, dof, mag = cloadi
+            if isinstance(nid, str) and nid not in comment_list:
+                comment_list.append(nid)
             nids = _get_nodes(model, nid)
             assert dof in [1, 2, 3], cload
 
@@ -675,7 +883,8 @@ def _write_concentrated_loads(model: Abaqus,
 def _write_distributed_loads(model: Abaqus,
                              step: Step,
                              nastran_model: BDF, subcase: Subcase,
-                             load_id: int) -> None:
+                             load_id: int,
+                             comment_list: list[str]) -> None:
     log = model.log
     for dload in step.dloads:
         assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
@@ -774,10 +983,12 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
         argv = sys.argv
 
     default_encoding = sys.getdefaultencoding()
+    other = '[--large] [--encoding ENCODING] [--debug]'
+    other += ' [--xform]'
     msg = (
         'Usage:\n'
-        '  abaqus_to_nastran ABAQUS_INP_IN [--large] [--encoding ENCODING]\n'
-        '  abaqus_to_nastran ABAQUS_INP_IN NASTRAN_BDF_OUT [--large] [--encoding ENCODING]\n'
+        f'  abaqus_to_nastran ABAQUS_INP_IN                 {other}\n'
+        f'  abaqus_to_nastran ABAQUS_INP_IN NASTRAN_BDF_OUT {other}\n'
         '  abaqus_to_nastran -h | --help\n'
         '  abaqus_to_nastran -v | --version\n'
         '\n'
@@ -791,7 +1002,8 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
         '\n'
 
         'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
-        f'  -encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        f'  --encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        f'  --debug              Turns on debugging\n'
         '\n'
 
         'Info:\n'
@@ -815,15 +1027,17 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
     data = docopt(msg, version=ver, argv=argv[1:])
 
     encoding = default_encoding
-    if data['ENCODING']:
-        encoding = data['ENCODING']
+    if data['--encoding']:
+        encoding = data['--encoding']
     if not quiet:  # pragma: no cover
         print(data)
     abaqus_inp_filename = data['ABAQUS_INP_IN']
     nastran_filename_out = os.path.splitext(abaqus_inp_filename)[0] + '.bdf'
 
     if log is None:
-        level = 'warning' if quiet else 'debug'
+        is_debug = data['--debug']
+        default_level = 'debug' if is_debug else 'info'
+        level = 'warning' if quiet else default_level
         from cpylog import SimpleLogger
         log = SimpleLogger(level=level)
 
@@ -836,8 +1050,11 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
     if data['--large']:
         size = 16
 
-    abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out,
-                               encoding=encoding, size=size, log=log)
+    xform = ['--xform']
+    abaqus_to_nastran_filename(
+        abaqus_inp_filename, nastran_filename_out,
+        encoding=encoding, size=size,
+        xform=xform, log=log)
 
 if __name__ == '__main__':
     cmd_abaqus_to_nastran()

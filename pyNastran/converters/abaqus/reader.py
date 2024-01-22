@@ -4,7 +4,7 @@ import numpy as np
 
 from .abaqus_cards import (
     ShellSection, SolidSection, Boundary, Material, Transform,
-    Surface, Tie,
+    Surface, Tie, Orientation,
 )
 from .elements import allowed_element_types
 from .reader_utils import split_by_equals, print_data
@@ -473,6 +473,7 @@ def read_elset(iline: int, line0: str, lines: list[str],
 def read_material(iline: int, word: str, lines: list[str],
                   log: SimpleLogger) -> Material:
     """reads a Material card"""
+    lines2 = lines[iline:]
     assert isinstance(iline, int), iline
     assert isinstance(word, str), word
 
@@ -487,7 +488,8 @@ def read_material(iline: int, word: str, lines: list[str],
     unallowed_words = [
         'shell section', 'solid section',
         'material', 'step', 'boundary', 'amplitude', 'surface interaction',
-        'assembly', 'spring']
+        'assembly', 'spring', 'orientation']
+    #orientations = {}
     iline += 1
     line0 = lines[iline].strip('\n\r\t, ').lower()
     #print('  wordA =', word)
@@ -529,6 +531,18 @@ def read_material(iline: int, word: str, lines: list[str],
                 nu = float(nu)
                 sections['elastic'] = [e, nu]
                 #print(sections)
+            elif mat_type in ['engineering constants']:
+                # https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node193.html
+                #  two lines:
+                # - E_1, E_2, E_3, nu12, nu13, nu23, G12, G13,
+                # - G23, Temperature
+                e1, e2, e3, nu12, nu13, n23, g12, g13 = [float(val) if val else 0. for val in sline]
+                iline += 1
+                sline = lines[iline].split(',')
+                g23, tref = [float(val) if val else 0. for val in sline]
+                key = 'engineering constants'
+                sections['engineering constants'] = [e1, e2, e3, nu12, nu13, n23, g12, g13,
+                                                     g23, tref]
             else:
                 raise NotImplementedError(f'mat_type={mat_type!r}')
             iline += 1
@@ -730,8 +744,10 @@ def read_material(iline: int, word: str, lines: list[str],
             iline -= 1
             break
     #print(name, sections)
+    #assert 'elastic' in sections or 'engineering constants' in sections, sections
     material = Material(name, sections=sections,
-                        is_elastic=True, density=density,
+                        #is_elastic=True,
+                        density=density,
                         #conductivity=conductivity, specific_heat=specific_heat,
                         ndepvars=ndepvars, ndelete=ndelete)
     iline -= 1
@@ -788,7 +804,14 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
     assert '*shell' in line0, line0
 
     iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
-    params_map = {}
+    is_composite = 'composite' in flags
+    if is_composite:
+        flags.remove('composite')
+
+    params_map = {
+        'is_composite': is_composite,
+        'orientation': '',
+    }
     for key, value in split_strict_flags(flags):
         if key == 'material':
             params_map[key] = value.lower()
@@ -893,25 +916,59 @@ def _generate_set(lines_out: list[str], generate: bool):
 def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger):
     assert isinstance(iline, int)
 
-    iline += 1
     iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
-    assert len(flags) == 2, flags
+    #assert len(flags) == 2, flags
 
-    system = ''
+    system = 'rectangular'
+    definition = 'coordinates'
     name = ''
     for key, value in split_strict_flags(flags):
         if key == 'system':
             system = value
+            assert system in ('cylindrical'), system
         elif key == 'name':
             name = value
+        elif key == 'name':
+            definition = value
         else:  # pramga: no cover
             raise RuntimeError((key, value))
 
-    orientation_fields = []
-    for line in lines_out:
-        sline = line0.split(',')
-        lines.append(sline)
-    return iline, line0, orientation_fields
+    if system in {'rectangular', 'r'}:
+        system = 'rectangular'
+
+    assert definition == 'coordinates', definition
+    if system == 'rectangular':
+        assert len(lines_out) in {1, 2}, lines_out
+        sline1 = lines_out[0].split(',')
+        if len(sline1) == 6:
+            i1, i2, i3, j1, j2, j3 = [float(val) for val in sline1]
+            origin = np.zeros(3)
+        elif len(sline1) == 9 and system in {'rectangular', 'z rectangular'}:
+            i1, i2, i3, j1, j2, j3, origin1, origin2, origin3 = [float(val) for val in sline1]
+            origin = np.array([origin1, origin2, origin3])
+        else:
+            raise RuntimeError(sline1)
+        x_axis = np.array([i1, i2, i3])
+        xy_plane = np.array([j1, j2, j3])
+
+        axis = None
+        alpha = None
+        if len(lines_out) == 2:
+            sline2 = lines_out[1].split(',')
+            assert len(sline2) == 2, sline2
+            axis, alpha = [float(val) for val in sline2]
+    else:
+        raise RuntimeError(system)
+
+    #if system == ''
+    #orientation_fields = []
+    #for line in lines_out:
+        #sline = line.split(',')
+        #orientation_fields.append(sline)
+    orientation = Orientation(name, system, origin,
+                              x_axis=x_axis, xy_plane=xy_plane,
+                              axis=axis, alpha=alpha)
+    return iline, line0, orientation
 
 def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
     """
@@ -1084,3 +1141,14 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
         assert len(lines_out), line0
     iline -= 1
     return iline, line, flags, lines_out
+
+def read_heading(iline: int, line0: str, lines: list[str],
+                         log: SimpleLogger) -> tuple[int, str, list[str]]:
+    heading = []
+    if not lines[iline+1].startswith('*'):
+        iline += 1
+        iline, line0, flags, heading = read_generic_section(iline, line0, lines, log)
+        #iline -= 1
+    else:
+        log.debug('empty header section')
+    return iline, line0, heading

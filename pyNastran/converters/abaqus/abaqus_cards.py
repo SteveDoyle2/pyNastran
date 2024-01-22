@@ -84,37 +84,73 @@ class ShellSection:
     *SHELL SECTION,  ELSET=PLATE,  MATERIAL=A, ORIENTATION=GLOBAL
     5.00000E-02
     """
-    def __init__(self, material_name: str, elset: str,
-                 thickness: float, log: SimpleLogger):
+    def __init__(self, log: SimpleLogger,
+                 material_name: str, elset: str,
+                 thickness: float,
+                 orientation: int=-1,
+                 offset: float=0.0):
         #self.data_lines = data_lines
         #self.material = param_map['material']
         self.material_name = material_name
         self.elset = elset
         self.thickness = thickness
+        self.orientation = orientation
+        self.offset = offset
         self.log = log
 
     @classmethod
     def add_from_data_lines(cls, param_map: dict[str, str],
                             data_lines: list[str],
                             log: SimpleLogger):
-        material_name = param_map['material']
         elset = param_map['elset']
-        log.debug(f'material_name = {material_name}')
+        orientation = param_map.get('orientation', -1)
+        offset = param_map.get('offset', 0.0)
 
-        #if len(data_lines) == 0:
-            #pass
-        thickness = 0.
-        if len(data_lines) == 1:
-            assert len(data_lines) == 1, data_lines
-            line0 = data_lines[0].split()
-            assert len(line0) == 1, data_lines
-            thickness = float(line0[0])
+        if param_map['is_composite']:
+            material_name = []
+            thickness = []
+            orientation_name = []
+            for line in data_lines:
+                #thickness (required)
+                #not used
+                #name of the material to be used for this layer (required)
+                #name of the orientation to be used for this layer (optional)
+                sline = line.split(',')
+                if len(sline) == 3:
+                    thicknessi, junk, material_namei = sline
+                    orientation_namei = None
+                else:
+                    thicknessi, junk, material_namei, orientation_namei = sline
+                    ## TODO: how does orientation work (from the flags)
+                    ##       with the orientation name in this table?
+                    raise RuntimeError(sline)
+                material_namei = material_namei.strip().lower()
+                thicknessi = float(thicknessi)
+                thickness.append(thicknessi)
+                material_name.append(material_namei)
+                orientation_name.append(orientation_namei)
         else:
-            raise RuntimeError(data_lines)
+            orientation_name = None
+            material_name = param_map['material']
+            log.debug(f'material_name = {material_name}')
+
+            #if len(data_lines) == 0:
+                #pass
+            thickness = 0.
+            if len(data_lines) == 1:
+                assert len(data_lines) == 1, data_lines
+                line0 = data_lines[0].split()
+                assert len(line0) == 1, data_lines
+                thickness = float(line0[0])
+            else:
+                raise RuntimeError(data_lines)
 
         for line in data_lines:
-            log.info('shell - %r' % line)
-        return ShellSection(material_name, elset, thickness, log)
+            log.debug('shell - %r' % line)
+        return ShellSection(log,
+                            material_name, elset, thickness,
+                            orientation=orientation,
+                            offset=offset)
 
     def __repr__(self):
         """prints a summary for the solid section"""
@@ -122,6 +158,8 @@ class ShellSection:
         #msg += '    param_map = %r,\n' % self.param_map
         msg += f'    material_name = {self.material_name},\n'
         msg += f'    thickness = {self.thickness},\n'
+        msg += f'    orientation = {self.orientation},\n'
+        msg += f'    offset = {self.offset},\n'
         msg += ')\n'
         return msg
 
@@ -181,13 +219,13 @@ class Material:
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name: str,
                  sections: dict[str, float],
-                 is_elastic: bool=True,
+                 #is_elastic: bool=True,
                  density: Optional[float]=None,
                  ndepvars: Optional[int]=None,
                  ndelete: Optional[int]=None):
         self.name = name
         self.density = density
-        self.is_elastic = is_elastic
+        #self.is_elastic = is_elastic
 
         #self.depvar = None
         self.ndelete = ndelete
@@ -235,8 +273,31 @@ class Material:
         *Elastic
             2e+11, 0.3
         """
-        elastic_word = 'elastic, ' if self.is_elastic else ''
-        abq_file.write('*Material, %sname=%s\n' % (elastic_word, write_name(self.name)))
+        name = write_name(self.name)
+        if 'elastic' in self.sections:
+            assert 'engineering constants' not in self.sections, self.sections
+            abq_file.write(f'*Material, elastic, name={name}\n')
+        else:
+            abq_file.write(f'*Material, name={name}\n')
+
+        if 'engineering constants' in self.sections:
+            #*Shell section, Elset=Internal_Selection-1_Shell_section-1, COMPOSITE
+            #0.25,,Steel
+            #0.25,,Steel
+            #*Material, Name=CF
+            #*ELASTIC,TYPE=ENGINEERING CONSTANTS
+            #135000.,10000.,10000.,0.3,0.3,,5000.,5000.,
+            #5000,273
+            eng_consts = self.sections['engineering constants']
+            eng_const_strs = ['%g' % val for val in eng_consts]
+            args1 = eng_const_strs[:8]
+            args2 = eng_const_strs[8:]
+            assert len(args1) == 8, args1
+            assert len(args2) == 2, args2
+            abq_file.write(f'*ELASTIC,TYPE=ENGINEERING CONSTANTS\n')
+            abq_file.write.write(','.join(args1))
+            abq_file.write.write(','.join(args2))
+
         if self.density is not None:
             abq_file.write(f'*Density\n  {self.density},\n')
         if self.ndepvars:
@@ -566,3 +627,19 @@ class Tie:
             f'master={self.master!r}, slave={self.slave!r}, '
             'position_tolerance={self.position_tolerance})')
         return msg
+
+
+class Orientation:
+    def __init__(self, name: str, system: str,
+                 origin: np.ndarray,
+                 x_axis=None, xy_plane=None,
+                 axis=None, alpha=None):
+        self.name = name.lower()
+        self.system = system
+
+        self.origin = origin
+        self.x_axis = x_axis
+        self.xy_plane = xy_plane
+
+        self.axis = axis
+        self.alpha = alpha

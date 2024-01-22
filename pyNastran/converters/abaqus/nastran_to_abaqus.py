@@ -185,5 +185,5 @@ def _get_materials(nastran_model: BDF, model: Abaqus):
             'elastic': 'cat',
         }
         material = Material(name, sections, density=density,
-                            is_elastic=True, ndepvars=None, ndelete=None)
+                            ndepvars=None, ndelete=None)
         model.materials[name] = material

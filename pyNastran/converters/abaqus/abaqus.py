@@ -32,7 +32,7 @@ class Abaqus:
         self.assembly = None
         self.initial_conditions = {}
         self.steps: list[Step] = []
-        self.heading = None
+        self.heading: list[str] = []
         self.preprint = None
         self.node_sets = {}
         self.element_sets = {}
@@ -69,11 +69,13 @@ class Abaqus:
         nassembly = 0
         istep = 1
 
+        heading = []
         nids = []
         nodes = []
         node_sets = {}
         element_types = {}
         element_sets = {}
+        orientations = {}
         solid_sections = []
         shell_sections = []
         boundaries = []
@@ -103,12 +105,9 @@ class Abaqus:
                 word = line0.strip('*').lower()
                 log.debug('main: word = %r' % word)
                 if word == 'heading':
-                    if not lines[iline+1].startswith('*'):
-                        iline += 1
-                        iline, line0, flags, section = reader.read_generic_section(line0, lines, iline, self.log)
-                        iline -= 1
-                    else:
-                        self.log.debug('empty header section')
+                    assert len(heading) == 0, heading
+                    iline, line0, heading = reader.read_heading(iline, line0, lines, self.log)
+                    x = 1
 
                 elif word.startswith('preprint'):
                     pass
@@ -284,7 +283,7 @@ class Abaqus:
                     iline, line0, set_name, set_ids = reader.read_nset(
                         iline, line0, lines, log, is_instance=False)
                     node_sets[set_name] = set_ids
-                    self.log.info(f'end of nset; line={line0} iline={iline}')
+                    self.log.debug(f'end of nset; line={line0} iline={iline}')
                     #assert iline > iline0
                 elif word.startswith('elset'):
                     self.log.debug('reading elset')
@@ -316,7 +315,10 @@ class Abaqus:
                 #elif '*hourglass stiffness' in line0:
                     #iline, hourglass_stiffness = reader.read_hourglass_stiffness(iline, line0, lines, self.log)
                 elif '*orientation' in line0:
+                    iline += 1
                     iline, line0, orientation = reader.read_orientation(iline, line0, lines, self.log)
+                    orientations[orientation.name] = orientation
+                    x = 1
                 elif '*system' in line0:
                     iline, line0, system = reader.read_system(line0, lines, iline, self.log)
                 elif '*transform' in line0:
@@ -333,7 +335,7 @@ class Abaqus:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
                 assert isinstance(iline, int), word
                 wordi = word.split(',')[0]
-                self.log.info(f'end of main {wordi!r}; line={line0!r} iline={iline}')
+                self.log.debug(f'end of main {wordi!r}; line={line0!r} iline={iline}')
             else:
                 # pass
                 raise NotImplementedError(f'this should not happen; last_word={word!r} line={line0!r}')
@@ -346,12 +348,15 @@ class Abaqus:
         self.nodes = None
         if nids or nodes:
             self.nids, self.nodes = cast_nodes(nids[0], nodes[0], self.log)
+
+        self.heading = heading
         self.elements = Elements(element_types, self.log)
         self.ties = ties
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
         self.node_sets = node_sets
         self.element_sets = element_sets
+        self.orientations = orientations
         self.boundaries = boundaries
         self.surfaces = surfaces
         self.steps = steps
