@@ -182,8 +182,13 @@ def _get_materials(nastran_model: BDF, model: Abaqus):
         name = f'{mat.type}_mid{mid}'
         density = mat.rho if mat.rho else 0.0
         sections = {
-            'elastic': 'cat',
+            #'elastic': 'cat',
         }
+        if mat.type == 'MAT1':
+            sections['elastic'] = [mat.e, mat.g]
+            sections['expansion'] = [mat.tref, mat.a]
+        else:
+            raise NotImplementedError()
         material = Material(name, sections, density=density,
                             ndepvars=None, ndelete=None)
         model.materials[name] = material

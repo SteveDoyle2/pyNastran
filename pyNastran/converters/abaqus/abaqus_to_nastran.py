@@ -11,11 +11,14 @@ from typing import cast, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types # , float_types
-from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase, CQUAD4
+from pyNastran.bdf.bdf import BDF, CaseControlDeck, Subcase, CQUAD4, MAT1, MAT8
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.converters.abaqus.abaqus import (
-    Abaqus, Elements, Step,
+    Abaqus,
     read_abaqus, get_nodes_nnodes_nelements)
+from pyNastran.converters.abaqus.abaqus_cards import (
+    Elements, Step, Material,
+)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
@@ -422,6 +425,11 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
                              pid: int, mid: int,
                              mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int]:
+    """
+    Creates PSOLIDs for each solid section.  We break the single PSOLID into
+    multiple PSOLIDs in order to better define the integration parameters
+    in order to match abaqus/calculix better.
+    """
     for solid_section in model.solid_sections:
         #print(solid_section)
 
@@ -444,7 +452,10 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
                 pid, mid, cordm=0,
                 integ=None, stress=None, isop=isop,
                 fctn='SMECH', comment=element_set_name + f'; etype={etype}')
-            _create_material(nastran_model, mat, mid, comment=mat_name+f' for {etype}')
+            _create_material(
+                nastran_model, mat, mid,
+                comment=mat_name+f' for {etype}',
+                is_solid=True)
             pid += 1
             mid += 1
 
@@ -452,7 +463,9 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
             #midi = mat_name_to_mid_dict[mat_name]
         #else:
             #mat = model.materials[mat_name]
-            #mat = _create_material(nastran_model, mat, mid, comment=mat_name)
+            #mat = _create_material(
+                #nastran_model, mat, mid, comment=mat_name,
+                #is_solid=True)
             #midi = mid
             #delta_mid = 1
 
@@ -462,14 +475,26 @@ def build_coord(model: Abaqus,
                 nastran_model: BDF,
                 cid: int,
                 orientation_name: str) -> int:
+    """
+    Creates a coordinate system with a specified ID from an orientation_name
 
+    supports:
+      - rectangular with/without axis-alpha
+
+    doesn't support:
+     - rectangular z
+     - cylindrical
+     - spherical
+
+    """
     orient = model.orientations[orientation_name]
     if orient.axis is None:
         R = np.eye(3)
         comment = orient.name
     else:
-        c = np.cos(orient.alpha)
-        s = np.sin(orient.alpha)
+        alpha = np.radians(orient.alpha)
+        c = np.cos(alpha)
+        s = np.sin(alpha)
         if orient.axis == 1:
             R = np.array([
                 [1., 0., 0.],
@@ -513,7 +538,7 @@ def build_coord(model: Abaqus,
         coord = nastran_model.add_cord2r(
             cid, origin, zaxis, xzplane,
             rid=0, setup=True, comment=comment)
-        x = 1
+        #x = 1
     else:
         raise RuntimeError(orient.system)
 
@@ -523,12 +548,26 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
                              pid: int, mid: int, cid: int,
                              mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int]:
+    """
+    Creates a series of PSHELL/PCOMP and associated coordinate systems and
+    materials.
+
+    PSHELL
+     - zoffset is applied to elements
+     - material is split into mid1 and mid2
+     - TODO: no NSM support
+
+    PCOMP:
+     - TODO: no theta support
+     - TODO: no NSM support
+
+    """
     for shell_section in model.shell_sections:
         coord = -1
         #print(shell_section)
         orientation_name = shell_section.orientation
         element_set_name = shell_section.elset
-        log.info(f'element_set_name = {element_set_name}')
+        log.debug(f'element_set_name={element_set_name!r}')
 
         shell_comment = element_set_name
         if orientation_name:
@@ -547,7 +586,10 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
             else:
                 midi = mid
                 mat = model.materials[mat_name]
-                mat = _create_material(nastran_model, mat, mid, comment=mat_name)
+                mat = _create_material(
+                    nastran_model, mat, mid,
+                    comment=mat_name,
+                    is_solid=False)
                 mat_name_to_mid_dict[mat_name] = midi
                 delta_mid = 1
 
@@ -573,7 +615,10 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                 else:
                     midi = mid + imid
                     mat = model.materials[mat_name]
-                    unused_material = _create_material(nastran_model, mat, midi, comment=mat_name)
+                    unused_material = _create_material(
+                        nastran_model, mat, midi,
+                        comment=mat_name,
+                        is_solid=False)
                     mat_name_to_mid_dict[mat_name] = midi
                     imid += 1
                     delta_mid += 1
@@ -593,7 +638,13 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
     return pid, mid, cid
 
 def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
-                           element_set_name: str, pid: int) -> dict[str, list[int]]:
+                           element_set_name: str,
+                           pid: int) -> dict[str, list[int]]:
+    """
+    Updates all the solid elements in a given set to have new properties.
+    Uses a unique property_id for each element type because we want to set
+    the integration parameters per element type.  We may back off on this later.
+    """
     log = model.log
     try:
         eids = get_eids_from_recursive_element_set(model, element_set_name)
@@ -617,7 +668,6 @@ def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
         for eid in eids:
             elem = nastran_model.elements[eid].pid = pid
         pid += 1
-    #return pid
     return etypes_eids
 
 def map_shell_property_ids(model: Abaqus, nastran_model: BDF,
@@ -652,7 +702,13 @@ def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) ->
         return eids.lower()
     return eids
 
-def _create_material(nastran_model: BDF, mat, mid: int, comment: str) -> Union[MAT1, MAT8]:
+def _create_material(nastran_model: BDF,
+                     mat: Material,
+                     mid: int,
+                     comment: str,
+                     is_solid: bool=None) -> Union[MAT1, MAT8]:
+    """creates a material"""
+    assert isinstance(is_solid, bool), is_solid
     G = None
     rho = 0.0
     tref = None
@@ -699,8 +755,6 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     else:
         model = read_abaqus(abaqus_inp_filename, encoding=encoding, log=log, debug=True)
     log = model.log
-    if xform:
-        log.error('xform is super buggy and largely untested')
 
     nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(
         model, stop_for_no_elements=True)
@@ -731,8 +785,6 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         #nodes_size=None, elements_size=None,
         #loads_size=None, is_double=False, interspersed=False,
         enddata=True, write_header=True, close=True)
-
-    x = 1
     return nastran_model
 
 def _xform_model(nastran_model: BDF, xform: bool):
@@ -749,11 +801,24 @@ def _xform_model(nastran_model: BDF, xform: bool):
             dxyz, centroid, ielement, jelement, normal2 = elem.element_coordinate_system()
             # angle between two normalized vectors
             # a o b = |a| |b| cos(theta)
+            # a x b = |a| |b| sin(theta)
             # theta = acos(a o b)
+            #
+            # TODO: probably wrong sign on the angle...oh well
             theta = np.arccos(np.clip(np.dot(imat, ielement), -1, 1))
             theta_deg = np.degrees(theta)
-            elem.theta_mcid = theta_deg
+            #axb = np.clip(np.linalg.norm(np.cross(imat, ielement)), -1, 1)
+            axb = np.cross(imat, ielement)
+            axb_norm = np.linalg.norm(axb)
+            if axb_norm > 0.:
+                # axb_norm=0. corresponds to imat=ielement
+                axb /= axb_norm
+                if np.allclose(axb, -normal1):
+                    theta_deg *= -1.
+
             elem.uncross_reference()
+            elem.theta_mcid = theta_deg
+            #x = 1
     log.error('xform is super buggy and largely untested')
 
 def _write_boundary_as_nastran(model: Abaqus,
@@ -1051,10 +1116,11 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
         size = 16
 
     xform = ['--xform']
-    abaqus_to_nastran_filename(
+    nastran_model = abaqus_to_nastran_filename(
         abaqus_inp_filename, nastran_filename_out,
         encoding=encoding, size=size,
         xform=xform, log=log)
+    nastran_model.log.info(f"finished creating Nastran BDF = '{nastran_filename_out}'")
 
 if __name__ == '__main__':
     cmd_abaqus_to_nastran()

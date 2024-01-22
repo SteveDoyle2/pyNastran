@@ -90,7 +90,7 @@ class Abaqus:
         while iline < nlines:
             # not handling comments right now
             line0 = lines[iline].strip().lower()
-            self.log.debug('%s: %s' % (iline, line0))
+            self.log.debug('%s: %r' % (iline, line0))
             #sline = line.split('**', 1)
             #if len(sline) == 1:
                 #line0 = sline[0]
@@ -163,7 +163,7 @@ class Abaqus:
                     #pass
                 elif word.startswith('material'):
                     log.debug('start of material...')
-                    iline, line0, material = reader.read_material(iline, word, lines, log)
+                    iline, line0, word, material = reader.read_material(iline, word, lines, log)
                     if material.name in self.materials:
                         msg = 'material.name=%r is already defined...\n' % material.name
                         msg += 'old %s' % self.materials[material.name]
@@ -283,7 +283,7 @@ class Abaqus:
                     iline, line0, set_name, set_ids = reader.read_nset(
                         iline, line0, lines, log, is_instance=False)
                     node_sets[set_name] = set_ids
-                    self.log.debug(f'end of nset; line={line0} iline={iline}')
+                    self.log.debug(f'{iline}: end of nset; line={line0}')
                     #assert iline > iline0
                 elif word.startswith('elset'):
                     self.log.debug('reading elset')
@@ -293,7 +293,7 @@ class Abaqus:
                     iline, line0, set_name, set_ids = reader.read_elset(
                         iline, line0, lines, log, is_instance=False)
                     element_sets[set_name] = set_ids
-                    self.log.info(f'end of elset {set_name!r}; line={line0} iline={iline}')
+                    self.log.debug(f'{iline}: end of elset {set_name!r}; line={line0}')
                     #assert iline > iline0
                 elif '*solid section' in line0:
                     iline += 1
@@ -543,7 +543,8 @@ class Abaqus:
                 iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
                 iline += 1
             elif '*orientation' in line0:
-                iline, line0, orientation_fields = reader.read_orientation(iline, line0, lines, log)
+                iline, line0, orientation = reader.read_orientation(iline, line0, lines, log)
+                orientations[orientation.name] = orientation
             else:
                 msg = f'line={line0!r}\n'
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',

@@ -18,6 +18,7 @@ class TestAbaqus(unittest.TestCase):
     def test_abaqus_to_nastran_1(self):
         """plate conversion"""
         log = get_logger(level='warning', encoding='utf-8')
+        #log = get_logger(level='debug', encoding='utf-8')
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate_out.inp')
         nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename, log=log)

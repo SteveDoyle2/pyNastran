@@ -79,10 +79,15 @@ class Boundary:
 
 class ShellSection:
     """
-    A ShellSection defines thickness and a material
+    A ShellSection defines thickness and a material for a PSHELL/PCOMP
 
-    *SHELL SECTION,  ELSET=PLATE,  MATERIAL=A, ORIENTATION=GLOBAL
-    5.00000E-02
+    *SHELL SECTION, ELSET=PLATE, MATERIAL=A, ORIENTATION=GLOBAL, OFFSET=0.0
+    0.005
+    *SHELL SECTION, ELSET=CARBON_FIBER, ORIENTATION=GLOBAL, OFFSET=0.0
+    0.005,,CF
+    0.005,,CF
+    0.005,,CF
+
     """
     def __init__(self, log: SimpleLogger,
                  material_name: str, elset: str,
@@ -219,10 +224,10 @@ class Material:
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name: str,
                  sections: dict[str, float],
-                 #is_elastic: bool=True,
-                 density: Optional[float]=None,
+                 density: float=0.0,
                  ndepvars: Optional[int]=None,
                  ndelete: Optional[int]=None):
+        assert isinstance(density, float), density
         self.name = name
         self.density = density
         #self.is_elastic = is_elastic
@@ -274,11 +279,11 @@ class Material:
             2e+11, 0.3
         """
         name = write_name(self.name)
+        abq_file.write(f'*Material, name={name}\n')
         if 'elastic' in self.sections:
-            assert 'engineering constants' not in self.sections, self.sections
-            abq_file.write(f'*Material, elastic, name={name}\n')
-        else:
-            abq_file.write(f'*Material, name={name}\n')
+            e, g = self.sections['elastic']
+            abq_file.write(f'*Elastic\n')
+            abq_file.write(f'{e},{g}\n')
 
         if 'engineering constants' in self.sections:
             #*Shell section, Elset=Internal_Selection-1_Shell_section-1, COMPOSITE
@@ -294,11 +299,11 @@ class Material:
             args2 = eng_const_strs[8:]
             assert len(args1) == 8, args1
             assert len(args2) == 2, args2
-            abq_file.write(f'*ELASTIC,TYPE=ENGINEERING CONSTANTS\n')
+            abq_file.write(f'*Elastic,type=Engineering Constants\n')
             abq_file.write.write(','.join(args1))
             abq_file.write.write(','.join(args2))
 
-        if self.density is not None:
+        if self.density > 0.:
             abq_file.write(f'*Density\n  {self.density},\n')
         if self.ndepvars:
             ndelete = '' if self.ndelete is None else f', delete={self.ndelete}'

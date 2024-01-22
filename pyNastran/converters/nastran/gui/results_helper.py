@@ -1128,7 +1128,7 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[2]
         header = header_dict[(key, itime)]
         formi: list[Form] = []
-        form_dict[(key, itime)].append(('Extreme ' + word, None, formi))
+        form_dict[(key, itime)].append(('Absolute Max Corner ' + word, None, formi))
 
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on

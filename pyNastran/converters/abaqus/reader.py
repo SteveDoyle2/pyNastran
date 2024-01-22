@@ -470,8 +470,9 @@ def read_elset(iline: int, line0: str, lines: list[str],
     assert set_name == set_name.lower()
     return iline, line0, set_name, set_ids
 
-def read_material(iline: int, word: str, lines: list[str],
-                  log: SimpleLogger) -> Material:
+def read_material(iline: int, word: str,
+                  lines: list[str],
+                  log: SimpleLogger) -> tuple[int, str, str, Material]:
     """reads a Material card"""
     lines2 = lines[iline:]
     assert isinstance(iline, int), iline
@@ -495,56 +496,18 @@ def read_material(iline: int, word: str, lines: list[str],
     #print('  wordA =', word)
     #while word in allowed_words:
     sections = {}
-    density = None
+    density = 0.0
     ndelete = None
     ndepvars = None
     while word not in unallowed_words:
         data_lines = []
-        #log.info('  mat_word = %r' % word)
+        log.info('  mat_word = %r' % word)
         #print(sections)
         word_lower = word.lower()
         if word.startswith('elastic'):
-            key = 'elastic'
-            sword = word.split(',')
-            #print(key, sword)
-
-            #log.debug('  matword = %s' % sword)
-            if len(sword) == 1:
-                # elastic
-                mat_type = 'isotropic'
-                assert len(sword) in [1, 2], sword
-            else:
-                mat_type = sword[1]
-                assert 'type' in mat_type, sword
-                mat_type = mat_type.split('=')[1]
-
-            sline = line0.split(',')
-            if mat_type == 'traction':
-                assert len(sline) == 3, sline
-                log.debug('  traction material')
-            elif mat_type in ['iso', 'isotropic']:
-                #, TYPE=ISO
-                #1.00000E+07, 3.00000E-01
-                assert len(sline) == 2, sline
-                e, nu = sline
-                e = float(e)
-                nu = float(nu)
-                sections['elastic'] = [e, nu]
-                #print(sections)
-            elif mat_type in ['engineering constants']:
-                # https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node193.html
-                #  two lines:
-                # - E_1, E_2, E_3, nu12, nu13, nu23, G12, G13,
-                # - G23, Temperature
-                e1, e2, e3, nu12, nu13, n23, g12, g13 = [float(val) if val else 0. for val in sline]
-                iline += 1
-                sline = lines[iline].split(',')
-                g23, tref = [float(val) if val else 0. for val in sline]
-                key = 'engineering constants'
-                sections['engineering constants'] = [e1, e2, e3, nu12, nu13, n23, g12, g13,
-                                                     g23, tref]
-            else:
-                raise NotImplementedError(f'mat_type={mat_type!r}')
+            iline, key = _read_material_elastic(
+                iline, line0, lines,
+                word, sections, log)
             iline += 1
 
         elif word.startswith('plastic'):
@@ -707,13 +670,13 @@ def read_material(iline: int, word: str, lines: list[str],
             log.debug(str((iline, line0)))
 
         elif word_lower.startswith('expansion'):
-            iline, line0 = read_expansion(iline, word_line, lines, sections, log)
+            iline, line0 = _read_material_expansion(iline, word_line, lines, sections, log)
         else:
             msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
             raise NotImplementedError(msg)
 
         if key in sections:
-            msg = f'key={key!r} already defined for Material name={name!r}'
+            msg = f'  key={key!r} already defined for Material name={name!r}'
             log.warning(msg)
         else:
             #raise RuntimeError(msg)
@@ -728,6 +691,7 @@ def read_material(iline: int, word: str, lines: list[str],
         word_line = line.strip('\n\r\t, ').lower()
         del line
         word = word_line.strip('*').lower()
+        log.debug(f'{iline}: word_line={word_line!r}; word={word!r}')
 
         iline += 1
         line0 = lines[iline].strip('\n\r\t, ').lower()
@@ -751,7 +715,57 @@ def read_material(iline: int, word: str, lines: list[str],
                         #conductivity=conductivity, specific_heat=specific_heat,
                         ndepvars=ndepvars, ndelete=ndelete)
     iline -= 1
-    return iline, line0, material
+    return iline, line0, word, material
+
+def _read_material_elastic(iline: int,
+                           line0: str,
+                           lines: [str],
+                           word: str,
+                           sections: dict[str, Any],
+                           log: SimpleLogger) -> str:
+    """reads a *Material/*Elastic block"""
+    key = 'elastic'
+    sword = word.split(',')
+    #print(key, sword)
+
+    #log.debug('  matword = %s' % sword)
+    if len(sword) == 1:
+        # elastic
+        mat_type = 'isotropic'
+        assert len(sword) in [1, 2], sword
+    else:
+        mat_type = sword[1]
+        assert 'type' in mat_type, sword
+        mat_type = mat_type.split('=')[1]
+
+    sline = line0.split(',')
+    if mat_type == 'traction':
+        assert len(sline) == 3, sline
+        log.debug('  traction material')
+    elif mat_type in ('iso', 'isotropic'):
+        #, TYPE=ISO
+        #1.00000E+07, 3.00000E-01
+        assert len(sline) == 2, sline
+        e, nu = sline
+        e = float(e)
+        nu = float(nu)
+        sections['elastic'] = [e, nu]
+        #print(sections)
+    elif mat_type == 'engineering constants':
+        # https://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node193.html
+        #  two lines:
+        # - E_1, E_2, E_3, nu12, nu13, nu23, G12, G13,
+        # - G23, Temperature
+        e1, e2, e3, nu12, nu13, n23, g12, g13 = [float(val) if val else 0. for val in sline]
+        iline += 1
+        sline = lines[iline].split(',')
+        g23, tref = [float(val) if val else 0. for val in sline]
+        key = 'engineering constants'
+        sections['engineering constants'] = [e1, e2, e3, nu12, nu13, n23, g12, g13,
+                                             g23, tref]
+    else:
+        raise NotImplementedError(f'mat_type={mat_type!r}')
+    return iline, key
 
 def read_boundary(iline: int, line0: str, lines: list[str]) -> tuple[int, str, Boundary]:
     assert isinstance(iline, int), iline
@@ -1035,8 +1049,8 @@ def read_transform(line0: str, lines: list[str], iline: int,
     transform = Transform.from_data(transform_type, nset, transform_fields)
     return iline, line0, transform
 
-def read_expansion(iline: int, word_line: str, lines: list[str],
-                          sections, log: SimpleLogger) -> int:
+def _read_material_expansion(iline: int, word_line: str, lines: list[str],
+                             sections, log: SimpleLogger) -> int:
     """
     *Expansion, zero=20.
     80.,
