@@ -297,9 +297,9 @@ class LegendObject(BaseGui):
             ##location = obj.get_location(i, name)
             ##data_format = obj.get_data_format(i, name)
             ##scale = obj.get_scale(i, name)
-            ##label2 = obj.get_header(i, name)
+            ##label2 = obj.get_annotation(i, name)
             #default_data_format = obj.get_default_data_format(i, name)
-            #default_min, default_max = obj.get_default_min_max(i, name, method)
+            #default_min, default_max = obj.get_default_min_max(i, name)
             #default_title = obj.get_default_legend_title(i, name)
             #out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
             #default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
@@ -551,7 +551,7 @@ class LegendObject(BaseGui):
             data_format = obj.get_data_format(i, res_name)
             default_title = obj.get_default_legend_title(i, res_name)
             min_value, max_value = obj.get_min_max(i, res_name)
-            default_min, default_max = obj.get_default_min_max(i, res_name, method)
+            default_min, default_max = obj.get_default_min_max(i, res_name)
             default_format = obj.get_default_data_format(i, res_name)
 
         out = (

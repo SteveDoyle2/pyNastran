@@ -80,7 +80,7 @@ class VectorResultsCommon(GuiResultCommon):
     def get_default_scale(self, itime: int, res_name: str) -> float:
         if self.linked_scale_factor:
             itime = 0
-        scales = self.default_scales[self.method_indices]
+        scales = self.default_scales[self.component_indices]
         if scales[itime] is not None:
             return scales[itime]
 
@@ -99,7 +99,7 @@ class VectorResultsCommon(GuiResultCommon):
         if self.linked_scale_factor:
             itime = 0
 
-        scales = self.scales[self.method_indices]
+        scales = self.scales[self.component_indices]
         scale = scales[itime]
         if scale is None:
             scale = self.get_default_scale(itime, res_name)
@@ -108,7 +108,7 @@ class VectorResultsCommon(GuiResultCommon):
     def set_scale(self, itime: int, res_name: str, scale: float) -> None:
         if self.linked_scale_factor:
             itime = 0
-        scales = self.scales[self.method_indices]
+        scales = self.scales[self.component_indices]
         scales[itime] = scale
 
     def get_default_phase(self, itime: int, res_name: str) -> float:
@@ -116,12 +116,12 @@ class VectorResultsCommon(GuiResultCommon):
     def get_phase(self, itime: int, res_name: str) -> int:
         if self.is_real:
             return 0.0
-        phases = self.phases[self.method_indices]
+        phases = self.phases[self.component_indices]
         return phases[itime]
     def set_phase(self, itime: int, res_name: str, phase: float) -> None:
         if self.is_real:
             return
-        phases = self.phases[self.method_indices]
+        phases = self.phases[self.component_indices]
         phases[itime] = phase
 
     def get_data_format(self, itime: int, res_name: str) -> str:
@@ -147,7 +147,7 @@ class VectorResultsCommon(GuiResultCommon):
         pass
 
 
-class VectorResults2(VectorResultsCommon):
+class DispForceVectorResults(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  node_id: np.ndarray,
@@ -184,17 +184,18 @@ class VectorResults2(VectorResultsCommon):
         self.is_complex = not self.is_real
 
         if self.is_real:
-            self.method_indices = (0, 1, 2)
+            self.component_indices = (0, 1, 2)
             self.index_map = {0: 'X', 1: 'Y', 2: 'Z',}
         else:
-            self.method_indices = (7, 8, 9, 10, 11, 12)
+            self.component_indices = (7, 8, 9, 10, 11, 12)
             self.index_map = {
-                0: 'Resultant',
+                0: 'Magnitude',
                 1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
                 4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
                 7: 'X Real', 8: 'Y Real', 9: 'Z Real',
                 10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
             }
+        self.min_max_method = 'Magnitude'
 
     def set_sidebar_args(self,
                          itime: str, res_name: str,
@@ -218,13 +219,13 @@ class VectorResults2(VectorResultsCommon):
         assert transform in transforms, transform
 
         if self.is_real:
-            method_indices = _get_real_method_indices(methods_keys)
+            component_indices = _get_real_component_indices(methods_keys)
         else:
-            method_indices = _get_complex_method_indices(methods_keys)
-        self.method_indices = method_indices
+            component_indices = _get_complex_component_indices(methods_keys)
+        self.component_indices = component_indices
 
         # handle confusing data (can't plot a scalar for 2 components)
-        if len(self.method_indices) > 1 and min_max_method == 'Value':
+        if len(self.component_indices) > 1 and min_max_method == 'Value':
             min_max_method = 'Magnitude'
 
         # doesn't matter cause it's already nodal
@@ -232,7 +233,7 @@ class VectorResults2(VectorResultsCommon):
         #min_max_method
         self.transform = transform
         self.min_max_method = min_max_method
-        x = 1
+        str(self)
 
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return True
@@ -267,7 +268,7 @@ class VectorResults2(VectorResultsCommon):
         """vector_size=1 is the default and displacement has 3 components"""
         return 3
 
-    def get_header(self, itime: int, res_name: str) -> str:
+    def get_annotation(self, itime: int, res_name: str) -> str:
         """
         A header is the thingy that goes in the lower left corner
         header = 'Static'
@@ -276,23 +277,22 @@ class VectorResults2(VectorResultsCommon):
         returns 'Displacement T_XYZ: Static'
         """
         #method = self.get_methods(itime, res_name)[0]
-        self.method_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
-        annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
+        self.component_indices
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        #annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
+        annotation_label = f'{self.title} {method}: {self.headers[itime]}'
         #return self.uname
         return annotation_label
 
-    def set_method(self, method: str):
-        methods = self.get_methods()
-        assert method in methods, (method, methods)
-        #self.active_method = method
-
-    def get_default_min_max(self, itime: int, res_name: str,
-                            method: str) -> tuple[float, float]:
+    def get_default_min_max(self, itime: int, res_name: str) -> tuple[float, float]:
         return None, None
+    def get_case_flag(self, itime: int, res_name: str):
+        case_flag = (self.component_indices, self.min_max_method)
+        return itime, case_flag
     def get_min_max(self, itime, res_name) -> tuple[float, float]:
-        mins = self.mins[(self.method_indices, self.min_max_method)]
-        maxs = self.maxs[(self.method_indices, self.min_max_method)]
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        mins = self.mins[case_flag]
+        maxs = self.maxs[case_flag]
         if mins[itime] is not None and maxs[itime] is not None:
             return mins[itime], maxs[itime]
 
@@ -306,7 +306,7 @@ class VectorResults2(VectorResultsCommon):
         return mins[itime], maxs[itime]
 
     def _get_normi(self, data: np.ndarray) -> np.ndarray:
-        if self.min_max_method == 'Value' and len(self.method_indices) == 1:
+        if self.min_max_method == 'Value' and len(self.component_indices) == 1:
             tnorm_abs = data
         else:
             self.min_max_method = 'Magnitude'
@@ -314,8 +314,8 @@ class VectorResults2(VectorResultsCommon):
         return tnorm_abs
 
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
-        self.method_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
+        self.component_indices
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         title = f'{self.title} {method}'
         return title
     def set_legend_title(self, itime: int, res_name: str,
@@ -325,8 +325,8 @@ class VectorResults2(VectorResultsCommon):
         """displacement T_XYZ"""
         #method2 = self._update_method(method)
         #return f'{self.title} {method2}'
-        self.method_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.method_indices)
+        self.component_indices
+        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         title = f'{self.title} {method}'
         return title
 
@@ -338,7 +338,7 @@ class VectorResults2(VectorResultsCommon):
         else:
             datai = self.case.data[itime, :, 3:].copy()
             assert datai.shape[1] == 3, datai.shape
-        assert len(self.method_indices) > 0, self.method_indices
+        assert len(self.component_indices) > 0, self.component_indices
         return datai
 
 
@@ -358,18 +358,18 @@ class VectorResults2(VectorResultsCommon):
         idxs = []
         if self.is_real:
             for idx in [0, 1, 2]:
-                if idx not in self.method_indices:
+                if idx not in self.component_indices:
                     data[:, idx] = 0.
                     idxs.append(idx)
         else:
             # real
             for idx in [7, 8, 9]:
-                if idx not in self.method_indices:
+                if idx not in self.component_indices:
                     data[:, idx].real = 0.
                     idxs.append(idx)
             # complex
             for idx in [10, 11, 12]:
-                if idx not in self.method_indices:
+                if idx not in self.component_indices:
                     data[:, idx].imag = 0.
                     idxs.append(idx)
         return data, idxs
@@ -425,24 +425,25 @@ class VectorResults2(VectorResultsCommon):
             at the SPC location).
 
         """
+        itime, case_flag = self.get_case_flag(itime, res_name)
         dxyz, idxs = self._get_vector_result(itime, res_name, return_dense=False)
         return_sparse = not return_dense
-        if (return_sparse or self.is_dense) and len(self.method_indices) > 1:
+        if (return_sparse or self.is_dense) and len(self.component_indices) > 1:
             return dxyz
 
         # apply dense
         nnodes = len(self.node_id)
-        if self.min_max_method == 'Value' and len(self.method_indices) == 1:
+        if self.min_max_method == 'Value' and len(self.component_indices) == 1:
             dxyz2 = np.full(nnodes, np.nan, dtype=dxyz.dtype)
-            dxyz2[self.inode] = dxyz[:, self.method_indices[0]]
+            dxyz2[self.inode] = dxyz[:, self.component_indices[0]]
         else:
             dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
             dxyz2[self.inode, :] = dxyz
 
         # set the min/max if they're not set
         normi = self._get_normi(dxyz2)
-        mins = self.mins[(self.method_indices, self.min_max_method)]
-        maxs = self.maxs[(self.method_indices, self.min_max_method)]
+        mins = self.mins[case_flag]
+        maxs = self.maxs[case_flag]
         if mins[itime] is None:
             mins[itime] = np.nanmin(normi)
         if maxs[itime] is None:
@@ -450,7 +451,7 @@ class VectorResults2(VectorResultsCommon):
         return normi
 
 
-def _get_real_method_indices(methods_keys: list[int]) -> np.ndarray:
+def _get_real_component_indices(methods_keys: list[int]) -> np.ndarray:
     """
     if Magnitude is selected, only use magnitude
     methods = ['T_XYZ', 'TX', 'TY', 'TZ']
@@ -468,10 +469,10 @@ def _get_real_method_indices(methods_keys: list[int]) -> np.ndarray:
         # update the indices to correspond to the array
         #methods_keys.sort()
         indices = methods_keys
-    method_indices = tuple(np.array(indices, dtype='int32') - 1)
-    return method_indices
+    component_indices = tuple(np.array(indices, dtype='int32') - 1)
+    return component_indices
 
-def _get_complex_method_indices(methods_keys: list[str]) -> np.ndarray:
+def _get_complex_component_indices(methods_keys: list[str]) -> np.ndarray:
     """
     if Magnitude is selected, only use magnitude
     methods = [
@@ -500,11 +501,11 @@ def _get_complex_method_indices(methods_keys: list[str]) -> np.ndarray:
             assert isinstance(key, str), key
             assert isinstance(key, int), key
         indices = methods_keys
-    method_indices = tuple(np.array(indices, dtype='int32') - 1)
-    return method_indices
+    component_indices = tuple(np.array(indices, dtype='int32') - 1)
+    return component_indices
 
 
-class DisplacementResults2(VectorResults2):
+class DisplacementResults2(DispForceVectorResults):
     def __init__(self,
                  subcase_id: int,
                  node_id: np.ndarray,
@@ -554,7 +555,7 @@ class DisplacementResults2(VectorResults2):
         uname : str
             some unique name for ...
         """
-        VectorResults2.__init__(
+        DispForceVectorResults.__init__(
             self,
             subcase_id,
             node_id,
@@ -634,16 +635,16 @@ class DisplacementResults2(VectorResults2):
                           return_dense: bool=True) -> tuple[np.ndarray, np.ndarray]:
         #dxyz = self.get_result(itime, res_name, method, return_dense=True)
 
-        dxyz, idxs = self._get_vector_result(itime, res_name, return_dense=False)
+        dxyzi, idxs = self._get_vector_result(itime, res_name, return_dense=False)
 
         # map vectored data to dense
         nnodes = len(self.node_id)
         return_sparse = not return_dense
         if (return_sparse or self.is_dense):
-            pass
+            dxyz = dxyzi
         else:
-            dxyz = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
-            dxyz[self.inode, :] = dxyz
+            dxyz = np.full((nnodes, 3), np.nan, dtype=dxyzi.dtype)
+            dxyz[self.inode, :] = dxyzi
 
         scale = self.get_scale(itime, res_name)
         deflected_xyz = self.xyz + scale * dxyz
@@ -699,7 +700,7 @@ class DisplacementResults2(VectorResults2):
         return msg
 
 
-class ForceResults2(VectorResults2):
+class ForceResults2(DispForceVectorResults):
     def __init__(self,
                  subcase_id: int,
                  node_id: np.ndarray,
@@ -749,7 +750,7 @@ class ForceResults2(VectorResults2):
         uname : str
             some unique name for ...
         """
-        VectorResults2.__init__(
+        DispForceVectorResults.__init__(
             self,
             subcase_id,
             node_id,

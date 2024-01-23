@@ -311,7 +311,7 @@ class GuiQtCommon(GuiAttributes):
         methods = obj.get_methods(i, resname)
         #scale = obj.get_scale(i, resname)
         phase = obj.get_phase(i, resname)
-        label2 = obj.get_header(i, resname)
+        label2 = obj.get_annotation(i, resname)
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
         nlabels, labelsize, ncolors, colormap = out
 
@@ -420,7 +420,7 @@ class GuiQtCommon(GuiAttributes):
         data_format = obj.get_data_format(i, name)
         scale = obj.get_scale(i, name)
         phase = obj.get_phase(i, name)
-        label2 = obj.get_header(i, name)
+        label2 = obj.get_annotation(i, name)
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
@@ -1006,9 +1006,9 @@ class GuiQtCommon(GuiAttributes):
             data_format = obj.get_data_format(i, resname)
             out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
             nlabels, labelsize, ncolors, colormap = out
-            label2 = obj.get_header(i, resname)
+            label2 = obj.get_annotation(i, resname)
 
-            #default_max, default_min = obj.get_default_min_max(i, resname, method)
+            #default_max, default_min = obj.get_default_min_max(i, resname)
             if min_value is None or max_value is None:
                 min_valuei, max_valuei = obj.get_min_max(i, resname)
                 if min_value is None:

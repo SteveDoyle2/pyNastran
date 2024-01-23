@@ -311,7 +311,7 @@ class ResultsSidebar(QWidget):
             self.min_max_average_label.setVisible(is_visible)
 
             #----------------------------------------------------------------
-            tooltip = min_max_averages_dict.get('tooltip', 'Derivation Method:')
+            tooltip = min_max_averages_dict.get('tooltip', 'Method to reduce multiple nodal/elemental values to a single value')
             min_max_averages = min_max_averages_dict.get('derivation', [])
 
             #if is_visible and self.min_max_average_pulldown.text():

@@ -123,7 +123,7 @@ class Table(GuiResultCommon):
     def get_location(self, i, unused_name):
         return self.location
 
-    def get_header(self, i, unused_name):
+    def get_annotation(self, i, unused_name):
         #j = self.titles_default.index(name)
         #return self.titles[j]
         return self.headers[i]

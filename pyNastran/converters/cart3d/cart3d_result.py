@@ -49,7 +49,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.ncolors = [None] * ntitles
         self.colormap = [self.colormap_default] * ntitles
 
-    def get_header(self, i, name):
+    def get_annotation(self, i, name):
         """
         header : str
             the sidebar word
@@ -183,7 +183,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.min_value[j] = min_value
         self.max_value[j] = max_value
 
-    def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i, name) -> tuple[float, float]:
         j = self.titles.index(name)
         return self.min_default[j], self.max_default[j]
 

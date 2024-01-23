@@ -2478,12 +2478,45 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     if not nastran_settings.acceleration:
         exclude_results.add('accelerations')
 
+    if not nastran_settings.spc_force:
+        exclude_results.add('spc_forces')
+    if not nastran_settings.mpc_force:
+        exclude_results.add('mpc_forces')
+
     if not nastran_settings.force:
         exclude_results.add('element_forces')
+
+    plate_etypes = [
+        'ctria3', 'ctria6', 'ctriar',
+        'cquad4', 'cquad8', 'cquadr',
+    ]
+    bar_types = ['crod', 'ctube', 'cbar', 'cbeam']
+    flag = 'stress'
     if not nastran_settings.stress:
-        exclude_results.add('stress')
+        exclude_results.add(flag)
+    if not nastran_settings.composite_plate_stress:
+        names = {f'{name}_composite_plate_{flag}' for name in plate_etypes}
+        exclude_results.add(names)
+    if not nastran_settings.plate_stress:
+        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        exclude_results.add(names)
+    if not nastran_settings.bar_stress:
+        names = {f'{name}_{flag}' for name in bar_types}
+        exclude_results.add(names)
+
+    flag = 'strain'
     if not nastran_settings.strain:
-        exclude_results.add('strain')
+        exclude_results.add(flag)
+    if not nastran_settings.composite_plate_strain:
+        names = {f'{name}_composite_plate_{flag}' for name in plate_etypes}
+        exclude_results.add(names)
+    if not nastran_settings.plate_strain:
+        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        exclude_results.add(names)
+    if not nastran_settings.bar_strain:
+        names = {f'{name}_{flag}' for name in bar_types}
+        exclude_results.add(names)
+
     if not nastran_settings.strain_energy:
         exclude_results.add('strain_energy*')
     if not nastran_settings.grid_point_force:

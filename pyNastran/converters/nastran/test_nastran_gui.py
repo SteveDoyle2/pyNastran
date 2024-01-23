@@ -34,6 +34,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         FakeGUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
         self.build_fmts(['nastran'], stop_on_failure=True)
+        self.stop_on_failure = True
 
     def write_result_cases(self):
         case_id0 = 0

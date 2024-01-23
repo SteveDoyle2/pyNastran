@@ -183,7 +183,7 @@ class VectorTable(GuiResultCommon):
     def get_location(self, i: int, unused_name: str) -> str:
         return self.location
 
-    def get_header(self, i: int, unused_name: str) -> str:
+    def get_annotation(self, i: int, unused_name: str) -> str:
         #j = self.titles_default.index(name)
         #return self.titles[j]
         return self.headers[i]
@@ -237,8 +237,7 @@ class VectorTable(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i: int, name: str,
-                            method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
@@ -252,8 +251,7 @@ class VectorTable(GuiResultCommon):
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i: int, name: str,
-                            #method: str) -> tuple[float, float]:
+    #def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     def get_default_scale(self, i: int, name: str) -> float:

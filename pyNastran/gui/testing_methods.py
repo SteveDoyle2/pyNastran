@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 from cpylog import get_logger
 
@@ -14,7 +15,7 @@ from vtk import (
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.test.mock_vtk import (
-    GeometryProperty,
+    #GeometryProperty,
     GridMapper,
     VTKInteractor, vtkRenderer,
 )
@@ -82,11 +83,16 @@ class MockResWidget:
         assert isinstance(methods, list), methods
         for method in methods:
             assert isinstance(method, str), method
-    def set_derivation_visible(self, is_visible: bool, methods: list[str]) -> None:
+    def set_derivation_visible(self, is_visible: bool, methods_dict: dict[str, Any]) -> None:
         assert isinstance(is_visible, bool), is_visible
-        assert isinstance(methods, list), methods
+        assert isinstance(methods_dict, dict), methods_dict
+        tooltip = methods_dict.get('tooltip', '')
+        label =  methods_dict.get('label', '')
+        default = []
+        methods =  methods_dict.get('derivation', default)
         for method in methods:
             assert isinstance(method, str), method
+
     def set_nodal_combine_visible(self, is_visible: bool, methods: list[str]) -> None:
         assert isinstance(is_visible, bool), is_visible
         assert isinstance(methods, list), methods
@@ -243,7 +249,7 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
-            unused_label2 = obj.get_header(i, name)
+            unused_label2 = obj.get_annotation(i, name)
             unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name, method)
             outi = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
@@ -263,7 +269,7 @@ class FakeGUIMethods(GuiVTKCommon):
                 unused_scalar_result = obj.get_scalar(i, name, method)
 
             unused_default_data_format = obj.get_default_data_format(i, name)
-            default_min, unused_default_max = obj.get_default_min_max(i, name, method)
+            default_min, unused_default_max = obj.get_default_min_max(i, name)
             unused_default_scale = obj.get_default_scale(i, name)
             unused_default_title = obj.get_default_legend_title(i, name)
             unused_default_phase = obj.get_default_phase(i, name)

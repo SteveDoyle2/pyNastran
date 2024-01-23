@@ -484,7 +484,7 @@ class MouseActions:
         out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
         if out is None:
             ## TODO: I think this happens when you do a focal point
-            print('MouseActions._get_closest_node_xyz bug')
+            print(f'MouseActions._get_closest_node_xyz bug')
             return
         (result_name, unused_result_value, unused_node_id, xyz) = out
         assert self.gui.icase in self.gui.label_actors, result_name
@@ -811,8 +811,9 @@ class MouseActions:
             out = gui.mark_actions.get_result_by_xyz_cell_id(
                 world_position, cell_id, icase=icase)
             if out is None:
-                print('MouseActions._cell_node_pick bug')
-                #return return_flag, None, None, None, None
+                print(f'MouseActions._cell_node_pick bug for icase={icase}')
+                return_flag = True
+                return return_flag, None, None, None, None
             result_name, result_value, node_id, xyz = out
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id

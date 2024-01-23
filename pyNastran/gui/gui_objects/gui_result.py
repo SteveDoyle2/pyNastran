@@ -31,7 +31,7 @@ class GuiResultCommon:
     #def get_data_type(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
-    #def get_header(self, i: int, name: str):
+    #def get_annotation(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
     def set_sidebar_args(self, i: int, name: str, **kwargs) -> None:
@@ -128,7 +128,7 @@ class GuiResultCommon:
     def get_default_data_format(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         raise NotImplementedError(self.class_name)
 
     def get_default_legend_title(self, i: int, name: str):
@@ -207,7 +207,7 @@ class GridPointForceResult(GuiResultCommon):
         return self.title
     def get_location(self, i: int, name: str) -> str:
         return self.location
-    def get_header(self, i: int, name: str) -> str:
+    def get_annotation(self, i: int, name: str) -> str:
         return self.header
     def get_methods(self, i: int, name: str) -> list[None]:
         return [None]
@@ -217,8 +217,7 @@ class GridPointForceResult(GuiResultCommon):
         return None, None, None, None
     def get_default_data_format(self, i: int, name: str) -> None:
         return None
-    def get_default_min_max(self, i: int, name: str,
-                            method: str) -> tuple[Optional[float], Optional[float]]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[Optional[float], Optional[float]]:
         return None, None
     def get_default_legend_title(self, i: int, name: str) -> str:
         return self.title
@@ -303,7 +302,7 @@ class NormalResult(GuiResultCommon):
         #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return None
 
-    def get_header(self, i: int, name: str):
+    def get_annotation(self, i: int, name: str):
         return self.header
 
     def get_legend_title(self, i: int, name: str):
@@ -353,7 +352,7 @@ class NormalResult(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
     def get_default_scale(self, i: int, name: str):
@@ -645,7 +644,7 @@ class GuiResult(GuiResultCommon):
         #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.location
 
-    def get_header(self, i: int, name: str) -> str:
+    def get_annotation(self, i: int, name: str) -> str:
         return self.header
 
     def get_legend_title(self, i: int, name: str) -> str:
@@ -696,7 +695,7 @@ class GuiResult(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
     def get_default_scale(self, i: int, name: str):

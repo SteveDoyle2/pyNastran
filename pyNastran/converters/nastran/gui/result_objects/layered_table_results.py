@@ -77,7 +77,7 @@ class LayeredTableResults(Table):
         (itime, ilayer, imethod, unused_header) = name
         return self.methods[imethod]
 
-    def get_header(self, i, name):
+    def get_annotation(self, i, name):
         """a header shows up in the text"""
         (itime, ilayer, imethod, header) = name
         return self.methods[imethod] + ': ' + header
@@ -107,8 +107,8 @@ class LayeredTableResults(Table):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_default_min_max(self, i: int, name: str, method: str) -> tuple[float, float]:
-        mag = self.get_magnitude(i, name, method)
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
+        mag = self.get_magnitude(i, name, method='')
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan

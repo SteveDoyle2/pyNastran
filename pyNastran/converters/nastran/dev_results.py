@@ -103,7 +103,7 @@ class TransientElementResults:
     #-------------------------------------
     # getters
 
-    def get_header(self, i, unused_name):
+    def get_annotation(self, i, unused_name):
         return self.headers[i]
 
     #def get_phase(self, i, name):
@@ -146,7 +146,7 @@ class TransientElementResults:
     def get_default_data_format(self, i, unused_name):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i, unused_name, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i, unused_name) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, unused_i, unused_name):
@@ -159,7 +159,7 @@ class TransientElementResults:
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
+    #def get_default_min_max(self, i, name) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     #def get_default_scale(self, i, name):

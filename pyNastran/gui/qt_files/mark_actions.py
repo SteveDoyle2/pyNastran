@@ -96,6 +96,8 @@ class MarkActions:
         unused_subcase_id = obj.subcase_id
         method = obj.get_methods(i, res_name)[0]
         case = obj.get_result(i, res_name, method)
+        if case is None:
+            return None
         result_values = case[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz

@@ -188,6 +188,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.export_vtk = False
         self.create_secondary_actors = True
 
+        self.stop_on_failure = False
+
     def get_nastran_wildcard_geometry_results_functions(self):
         """gets the Nastran wildcard loader used in the file load menu"""
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
@@ -2851,6 +2853,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 self._build_mcid_vectors(model, nplies)
             except Exception as exception:
                 model.log.error(str(exception))
+                if self.stop_on_failure:
+                    raise
 
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
@@ -3252,38 +3256,47 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             unused_form_time = []
 
             ncases_old = icase
-            icase = self._fill_op2_oug_oqg(cases, model, key, icase,
-                                           disp_dict, header_dict, keys_map,
-                                           log)
+            stop_on_failure = self.stop_on_failure
+            icase = self._fill_op2_oug_oqg(
+                cases, model, key, icase,
+                disp_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # TODO: why is this disp_dict and does it matter?
-            icase = self._fill_grid_point_forces(cases, model, key, icase,
-                                                 disp_dict, header_dict, keys_map)
+            icase = self._fill_grid_point_forces(
+                cases, model, key, icase,
+                disp_dict, header_dict, keys_map,
+                stop_on_failure=stop_on_failure)
 
             # stress
             icase = self._fill_op2_centroidal_stress(
                 cases, model, times, key, icase,
-                stress_dict, header_dict, keys_map, log)
+                stress_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # strain
             icase = self._fill_op2_centroidal_strain(
                 cases, model, times, key, icase,
-                strain_dict, header_dict, keys_map, log)
+                strain_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # force
             icase = self._fill_op2_centroidal_force(
                 cases, model, times, key, icase,
-                force_dict, header_dict, keys_map, log)
+                force_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # strain energy
             icase = self._fill_op2_centroidal_strain_energy(
                 cases, model, times, key, icase,
-                strain_energy_dict, header_dict, keys_map, log)
+                strain_energy_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # force
             icase = self._fill_op2_gpstress(
                 cases, model, times, key, icase,
-                gpstress_dict, header_dict, keys_map, log)
+                gpstress_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))

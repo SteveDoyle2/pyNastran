@@ -585,7 +585,7 @@ class GuiVTKCommon(GuiQtCommon):
 
         subcase_id = obj.subcase_id
         subtitle, label = self.get_subtitle_label(subcase_id)
-        label2 = obj.get_header(i, name)
+        label2 = obj.get_annotation(i, name)
         if label2:
             label += '; ' + label2
 

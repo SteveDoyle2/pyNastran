@@ -3,11 +3,11 @@ from collections import defaultdict
 import numpy as np
 from typing import Optional, TYPE_CHECKING
 
-from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
+from .displacement_results import VectorResultsCommon
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateArray
@@ -16,7 +16,7 @@ pcomp_stress = ['o11', 'o22', 't12', 't1z', 't2z', 'oangle', 'Max Principal', 'm
 pcomp_strain = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'eangle', 'Max Principal', 'minor', 'evm', 'emax_shear']
 col_axis = 1
 
-class CompositeResults2(GuiResultCommon):
+class CompositeResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
@@ -35,7 +35,7 @@ class CompositeResults2(GuiResultCommon):
         name = None
 
         # slice off the methods (from the boolean) and then pull the 0th one
-        self.min_max_method = self.has_derivation_transform(i, name)[1][0]
+        self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
 
@@ -115,6 +115,8 @@ class CompositeResults2(GuiResultCommon):
 
         #self.default_scales = defaultdict(fscales)
         #self.scales = defaultdict(fscales)
+        self.default_mins = defaultdict(ftimes)
+        self.default_maxs = defaultdict(ftimes)
         self.mins = defaultdict(ftimes)
         self.maxs = defaultdict(ftimes)
         self.phases = defaultdict(fphases)
@@ -129,9 +131,6 @@ class CompositeResults2(GuiResultCommon):
 
         self.uname = uname
         self.active_method = ''
-
-    #def get_header(self, itime: int, name: str) -> int:
-        #return 3
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -152,7 +151,7 @@ class CompositeResults2(GuiResultCommon):
                          **kwargs) -> None:
         assert len(kwargs) == 0, kwargs
         transforms = self.has_coord_transform(itime, res_name)[1]
-        min_max_methods = self.has_derivation_transform(itime, res_name)[1]
+        min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
         combine_methods = self.has_nodal_combine_transform(itime, res_name)[1]
 
         transform = transform if transform else transforms[0]
@@ -199,125 +198,103 @@ class CompositeResults2(GuiResultCommon):
         return True, ['Material']
     def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, list[str]]:
         """min/max/avg"""
-        #(itime, ilayer, imethod, header) = case_tuple
-        return True, ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
-                      #'Derive/Average'
-                      ]
+        #(itime, iresult, header) = case_tuple
+        out = {
+            'tooltip': 'Method to reduce multiple layers into a single elemental value',
+            'derivation': ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
+                           #'Derive/Average'
+                           ],
+
+        }
+        return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
         #return True, ['Absolute Max', 'Min', 'Max']
 
-    def get_header(self, itime: int, case_tuple: str) -> str:
+    def get_annotation(self, itime: int, case_tuple: str) -> str:
         """
         A header is the thingy that goes in the lower left corner
+        title = 'Compostite Plate Stress'
+        method = 'Absolute Max'
         header = 'Static'
-        title = 'Displacement'
-        method = 'T_XYZ'
-        returns 'Displacement T_XYZ: Static'
+        returns 'Compostite Plate Stress All Layers (Absolute Max; Static): sigma11'
         """
-        (itime, ilayer, imethod, header) = case_tuple
+        # overwrite itime based on linked_scale factor
+        (itime, iresult, header) = case_tuple
+        itime, unused_case_flag = self.get_case_flag(case_tuple)
 
         default_indices = self._get_default_tuple_indices() # 0-based
         if self.layer_indices == default_indices:
-            method = 'All Layers'
+            layer_str = 'All Layers'
         else:
             self.layer_indices
             dict_sets = {'': [(idx+1) for idx in self.layer_indices],}
-            method = 'Layers ' + write_patran_syntax_dict(dict_sets)
+            layer_str = 'Layers ' + write_patran_syntax_dict(dict_sets)
 
-        #method = method_ + ', '.join(str(idx+1) for idx in self.layer_indices)
         results = list(self.result.keys())
-        result = results[imethod]
-        annotation_label = f'{self.title}; {method}: {result}'
+        result = results[iresult]
+
+        #'Compostite Plate Stress (Absolute Max; Static): sigma11'
+        annotation_label = f'{self.title}; {layer_str} ({self.min_max_method}, {header}): {result}'
         #return self.uname
         return annotation_label
 
-    def get_default_scale(self, itime: int, res_name: str) -> float:
-        return None
-        #if self.linked_scale_factor:
-            #itime = 0
-        #scales = self.default_scales[self.layer_indices]
-        #if scales[itime] is not None:
-            #return scales[itime]
-
-        #unused_ntimes, nnodes = self.dxyz.data.shape[:2]
-        #datai = self._get_real_data(itime)
-        #tnorm_abs = safe_norm(datai, axis=col_axis)
-        #assert len(tnorm_abs) == nnodes
-        #tnorm_abs_max = np.nanmax(tnorm_abs)
-        #if tnorm_abs_max > 0.0:
-            #scale = self.dim_max / tnorm_abs_max * 0.10
-        #else:
-            #scale = 1.0
-        #scales[itime] = scale
-        #return scale
-    def get_scale(self, itime: int, res_name: str) -> int:
-        return None
-        #if self.linked_scale_factor:
-            #itime = 0
-        #scales = self.scales[self.layer_indices]
-        #scale = scales[itime]
-        #if scale is None:
-            #scale = self.get_default_scale(itime, res_name)
-            #scales[itime] = scale
-        #return scale
-    def set_scale(self, itime: int, res_name: str, scale: float) -> None:
-        return
-        #if self.linked_scale_factor:
-            #itime = 0
-        #scales = self.scales[self.layer_indices]
-        #scales[itime] = scale
-
-    def get_default_phase(self, itime: int, res_name: str) -> float:
-        return 0.0
-    def get_phase(self, itime: int, case_tuple: str) -> int:
-        (itime, ilayer, imethod, header) = case_tuple
-        if self.is_real:
-            return 0.0
-        phases = self.phases[self.layer_indices]
-        return phases[itime]
-    def set_phase(self, itime: int, case_tuple: str, phase: float) -> None:
-        (itime, ilayer, imethod, header) = case_tuple
-        if self.is_real:
-            return
-        phases = self.phases[self.layer_indices]
-        phases[itime] = phase
-
-    def get_data_format(self, itime: int, res_name: str) -> str:
-        """TODO: currently single value for all results"""
-        return self.data_format
-    def set_data_format(self, itime: int, res_name: str, data_format: str) -> None:
-        self.data_format = data_format
-    def get_default_data_format(self, itime: int, res_name: str) -> str:
-        return self.data_format
-
-    def set_method(self, method: str):
-        methods = self.get_methods()
-        assert method in methods, (method, methods)
-        self.active_method = method
-
-    def get_default_min_max(self, itime: int, res_name: str,
-                            method: str) -> tuple[float, float]:
-        return None, None
-    def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
-        (itime, ilayer, imethod, header) = case_tuple
-        #mins = self.mins[(itime, imethod, self.layer_indices)]
-        #maxs = self.maxs[(itime, imethod, self.layer_indices)]
-        #if mins[itime] is not None and maxs[itime] is not None:
-            #return mins[itime], maxs[itime]
+    def get_default_min_max(self, itime: int,
+                            case_tuple: str) -> tuple[float, float]:
+        #(itime, iresult, unused_header) = case_tuple
+        itime, case_flag = self.get_case_flag(case_tuple)
+        mins = self.default_mins[case_flag]
+        maxs = self.default_maxs[case_flag]
+        if mins[itime] is not None and maxs[itime] is not None:
+            return mins[itime], maxs[itime]
 
         datai = self._get_real_data(case_tuple)
-        #tnorm_abs = safe_norm(datai, axis=col_axis)
-        #if mins[itime] is None:
-            #mins[itime] = datai.min()
-        #if maxs[itime] is None:
-            #maxs[itime] = datai.max()
-        #return mins[itime], maxs[itime]
-        return datai.min(), datai.max()
+        mins[itime] = np.nanmin(datai)
+        maxs[itime] = np.nanmax(datai)
+        return mins[itime], maxs[itime]
+
+    def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
+        #(itime, iresult, header) = case_tuple
+        itime, case_flag = self.get_case_flag(case_tuple)
+        mins = self.mins[case_flag]
+        maxs = self.maxs[case_flag]
+        if mins[itime] is not None and maxs[itime] is not None:
+            return mins[itime], maxs[itime]
+
+        # save the defaults if they're not None
+        mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
+        if mini2 is not None:
+            mins[itime] = mini2
+        if maxi2 is not None:
+            maxs[itime] = maxi2
+        return mins[itime], maxs[itime]
+
+    def set_min_max(self, itime, case_tuple, min_value, max_value) -> tuple[float, float]:
+        #(itime, iresult, header) = case_tuple
+        itime, case_flag = self.get_case_flag(case_tuple)
+
+        mins = self.mins[case_flag]
+        maxs = self.maxs[case_flag]
+        mins[itime] = min_value
+        maxs[itime] = max_value
+
+    def get_case_flag(self, case_tuple: tuple[int, int, str]) -> tuple[int,
+                                                                       tuple[int, int, tuple, str]]:
+        """
+        itime = 0
+        iresult = 0 # o11
+        layer_indices = (1, 2, 3, 4, 5)
+        min_max_method = 'Absolute Max'
+        """
+        (itime, iresult, header) = case_tuple
+        #if self.is_linked_scale_factor:
+            #itime = 0
+
+        return itime, (itime, iresult, self.layer_indices, self.min_max_method)
 
     def get_default_legend_title(self, itime: int, case_tuple: str) -> str:
-        (itime, ilayer, imethod, header) = case_tuple
+        (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
         results = list(self.result.values())
@@ -331,35 +308,21 @@ class CompositeResults2(GuiResultCommon):
         self.title = title
     def get_legend_title(self, itime: int, case_tuple: str):
         """Composite Stress Layers: 1, 2, 3, 4"""
-        (itime, ilayer, imethod, header) = case_tuple
+        (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
         #self.result
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #title = f'{self.title} {method}'
         results = list(self.result.values())
-        return results[imethod]
-
-    def get_default_nlabels_labelsize_ncolors_colormap(self, itime: int, res_name: str,
-                                                       ) -> tuple[None, None, None, str]:
-        return None, None, None, ''
-    def get_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str):
-        return self.nlabels, self.labelsize, self.ncolors, self.colormap
-    def set_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str,
-                                               nlabels, labelsize,
-                                               ncolors, colormap: str) -> None:
-        self.nlabels = nlabels
-        self.labelsize = labelsize
-        self.ncolors = ncolors
-        self.colormap = colormap
-        pass
+        return results[iresult]
 
     def _get_real_data(self, case_tuple: int) -> np.ndarray:
-        (itime, ilayer, imethod, header) = case_tuple
+        (itime, iresult, header) = case_tuple
 
         #self.case.get_headers()
         #['o11', 'o22', 't12', 't1z', 't2z', 'angle', 'major', 'minor', 'max_shear']
-        data = self.case.data[itime, :, imethod].copy()
+        data = self.case.data[itime, :, iresult].copy()
         rows = self.case.element_layer[:, 0]
         cols = self.case.element_layer[:, 1]
         ulayer = np.unique(cols)
@@ -384,14 +347,6 @@ class CompositeResults2(GuiResultCommon):
         assert len(data.shape) == 1, data.shape
         data2, eids_new = pivot_table(data, rows, cols, shape=1)
         assert len(data2.shape) == 2, data2.shape
-        #with open('data.csv', 'w') as f1, open('data2.csv', 'w') as f2:
-        #    for eid, layer, datai in zip(rows, cols, data):
-        #        f1.write(f'{eid},{layer},{datai:.3f}\n')
-        #    for eid, data2s in zip(eids_new, data2):
-        #        f2.write(f'{eid}')
-        #        for datai2 in data2s:
-        #            f2.write(f',{datai2:.3f}')
-        #        f2.write('\n')
 
         # element_id is unique & sorted
         # eids_new   is unique & sorted
@@ -409,7 +364,7 @@ class CompositeResults2(GuiResultCommon):
             data3 = data2[:, self.layer_indices]
 
         assert len(data3.shape) == 2, data3.shape
-        if data3.shape[1] == 1 and 0:
+        if data3.shape[1] == 1 and 0:  # pragma: no cover
             # single ply
             data4 = data3[:, 0]
         else:
@@ -497,6 +452,32 @@ class CompositeResults2(GuiResultCommon):
         #assert method != '', method
         #self.active_method = method
 
+    def get_default_scale(self, itime: int, res_name: str) -> float:
+        return None
+    def get_scale(self, itime: int, res_name: str) -> float:
+        return 0.0
+    def set_scale(self, itime: int, res_name: str) -> None:
+        return
+
+    def get_default_phase(self, itime: int, res_name: str) -> float:
+        return 0.0
+    def get_phase(self, itime: int, res_name: str) -> float:
+        return 0.0
+    def set_phase(self, itime: int, res_name: str) -> None:
+        return
+    #def get_phase(self, itime: int, case_tuple: str) -> int:
+        #(itime, iresult, header) = case_tuple
+        #if self.is_real:
+            #return 0.0
+        #phases = self.phases[self.layer_indices]
+        #return phases[itime]
+    #def set_phase(self, itime: int, case_tuple: str, phase: float) -> None:
+        #(itime, iresult, header) = case_tuple
+        #if self.is_real:
+            #return
+        #phases = self.phases[self.layer_indices]
+        #phases[itime] = phase
+
 
 class CompositeStrainStressResults2(CompositeResults2):
     def __init__(self,
@@ -583,10 +564,6 @@ class CompositeStrainStressResults2(CompositeResults2):
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
         """the result type"""
         return self.location
-
-    def set_min_max(self, i: int, res_name: str,
-                    min_value: float, max_value: float):
-        raise TypeError((i, res_name))
 
     #-------------------------------------
     def get_methods(self, itime: int, res_name: str) -> list[str]:

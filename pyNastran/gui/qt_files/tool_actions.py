@@ -71,7 +71,7 @@ class ToolActions:
             if case is None:
                 continue # normals
             subtitle, label = gui.get_subtitle_label(subcase_id)
-            label2 = obj.get_header(i, name)
+            label2 = obj.get_annotation(i, name)
             data_format = obj.get_data_format(i, name)
             unused_vector_size = obj.get_vector_size(i, name)
             print(subtitle, label, label2, location, name)

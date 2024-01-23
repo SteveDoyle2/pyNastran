@@ -55,7 +55,7 @@ class SimpleTableResults(Table):
         (itime, imethod, unused_header) = name
         return self.methods[imethod]
 
-    def get_header(self, i, name):
+    def get_annotation(self, i, name):
         """a header shows up in the text"""
         (itime, imethod, header) = name
         return self.methods[imethod] + ': ' + header
@@ -83,8 +83,8 @@ class SimpleTableResults(Table):
         mag = self.get_magnitude(i, name, method)
         return np.nanmin(mag), np.nanmax(mag)
 
-    def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
-        mag = self.get_magnitude(i, name, method)
+    def get_default_min_max(self, i, name) -> tuple[float, float]:
+        mag = self.get_magnitude(i, name, method='')
         return np.nanmin(mag), np.nanmax(mag)
 
     def get_phase(self, i, name):
@@ -119,7 +119,8 @@ class SimpleTableResults(Table):
         return True, ['Material']
     def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """min/max/avg"""
-        return True, ['Absolute Max']
+        out = {'derivation': ['Absolute Max'], }
+        return True, out
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
