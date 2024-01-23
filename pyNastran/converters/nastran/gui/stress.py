@@ -891,7 +891,8 @@ def _get_plates(model: OP2,
     plates2 = [plate for plate in plates if len(plates)]
     return plates2, word, subcase_id, analysis_code
 
-def _stack_composite_results(model: OP2, is_stress: bool,
+def _stack_composite_results(model: OP2, log: SimpleLogger,
+                             is_stress: bool,
                              key=None):
     if is_stress:
         case_map = {
@@ -920,6 +921,10 @@ def _stack_composite_results(model: OP2, is_stress: bool,
         for case_key, case in res_cases.items():
             if key is None:
                 continue
+
+            if case.table_name_str in {'OESCP', 'OESTRCP'}:
+                log.warning(f'skipping strength ratio {case.table_name_str}')
+                continue
             key_cases[key].append(case)
             if (case_key != key or key in keys_map):
                 continue
@@ -929,7 +934,7 @@ def _stack_composite_results(model: OP2, is_stress: bool,
 
     cases2 = {}
     key_cases = dict(key_cases)
-    for key, cases_ in key_cases.items():
+    for key_, cases_ in key_cases.items():
         case = deepcopy(cases_[0])
         cases = cases_[1:]
         #nelements = case.nelements
@@ -962,7 +967,18 @@ def _stack_composite_results(model: OP2, is_stress: bool,
 
             eids = np.hstack(eids_list)
             ueids = np.unique(eids)
-            assert len(eids) == len(ueids), eids
+            if len(eids) != len(ueids):  # pragma: no cover
+                msg = f'eids = {eids}\n'
+                for casei_ in cases_:
+                    msg += str(casei_)
+                    msg += f'  eids = {np.unique(casei_.element_layer[:, 0])}\n'
+                    msg += f'  element_layer:\n{casei_.element_layer}\n\n'
+                    log.error(msg)
+                    case_map = {}
+                    keys_map2 = {}
+                    cases2 = []
+                    return case_map, keys_map2, cases2
+                raise RuntimeError(msg)
             #  stack on [*nlayers*, eid_layer]
             element_layer2 = np.vstack(element_layers)
             # stack on [itime, *nlayers*, 10]
@@ -1019,7 +1035,7 @@ def get_composite_plate_stress_strains2(eids: np.ndarray,
     if not USE_NEW_SIDEBAR_OBJS:  # pragma: no cover
         return icase
 
-    case_map, keys_map2, cases2 = _stack_composite_results(model, is_stress, key=key)
+    case_map, keys_map2, cases2 = _stack_composite_results(model, log, is_stress, key=key)
     subcase_id = key[0]
 
     if not cases2:
@@ -1100,7 +1116,11 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     """
     if not USE_OLD_SIDEBAR_OBJS:  # pragma: no cover
         return icase
-    case_map, keys_map2, cases2 = _stack_composite_results(model, is_stress, key=key)
+    case_map, keys_map2, cases2 = _stack_composite_results(
+        model, log, is_stress, key=key)
+    if len(case_map) == 0:
+        # we got into an error state
+        return icase
     subcase_id = key[0]
 
     #assert len(cases) == icase
