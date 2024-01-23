@@ -3,6 +3,7 @@ defines:
  - Cart3dGeometry
 
 """
+from typing import Any
 from copy import deepcopy
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
@@ -10,8 +11,9 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 class Cart3dGeometry(GuiResultCommon):
     """Stores the cart3d results."""
     def __init__(self, subcase_id, labels,
-                 nodes, elements, regions, area, cnormals, colormap='jet',
-                 uname='Cart3dGeometry'):
+                 nodes, elements, regions, area, cnormals,
+                 colormap: str='jet',
+                 uname: str='Cart3dGeometry'):
         GuiResultCommon.__init__(self)
         self.colormap_default = colormap
         self.uname = uname
@@ -84,9 +86,9 @@ class Cart3dGeometry(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
-        return False, []
+        return False, {}
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
