@@ -28,7 +28,7 @@ from .stress import (
     get_spring_stress_strains, get_rod_stress_strains,
     get_bar_stress_strains, get_beam_stress_strains,
     get_composite_plate_stress_strains, get_composite_plate_stress_strains2,
-    get_plate_stress_strains,
+    get_plate_stress_strains, get_plate_stress_strains2,
     get_solid_stress_strains)
 from .force import get_spring_force, get_bar_force, get_plate_force
 from .result_objects.displacement_results import DisplacementResults2, ForceResults2
@@ -763,6 +763,10 @@ class NastranGuiResults(NastranGuiAttributes):
         eids = self.element_ids
         assert isinstance(icase, int), icase
         if nastran_settings.plate_stress:
+            icase = get_plate_stress_strains2(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+
             try:
                 icase = get_plate_stress_strains(
                     eids, cases, model, times, key, icase,

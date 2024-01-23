@@ -14,6 +14,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSoli
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 from pyNastran.converters.nastran.gui.result_objects.stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
 from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 
@@ -519,32 +520,35 @@ def get_plate_stress_strains(eids: np.ndarray,
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
     """
-    analysis_code = key[1]
-    #print("***stress eids=", eids)
-    subcase_id = key[0]
-    if prefix == 'modal_contribution':
-        results = model.op2_results.modal_contribution
-        preword = 'Modal Contribution '
-    elif prefix == '':
-        results = model
-        preword = ''
-    else:  # pragma: no cover
-        raise NotImplementedError(prefix)
+    plates, word, subcase_id, analysis_code = _get_plates(model, key, is_stress, prefix)
+    word += ' (centroid)'
 
-    if is_stress:
-        plates = [
-            results.ctria3_stress, results.cquad4_stress,
-            results.ctria6_stress, results.cquad8_stress,
-            results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
-        ]
-        word = preword + 'Stress (centroid)'
-    else:
-        plates = [
-            results.ctria3_strain, results.cquad4_strain,
-            results.ctria6_strain, results.cquad8_strain,
-            results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
-        ]
-        word = preword + 'Strain (centroid)'
+    #analysis_code = key[1]
+    ##print("***stress eids=", eids)
+    #subcase_id = key[0]
+    #if prefix == 'modal_contribution':
+        #results = model.op2_results.modal_contribution
+        #preword = 'Modal Contribution '
+    #elif prefix == '':
+        #results = model
+        #preword = ''
+    #else:  # pragma: no cover
+        #raise NotImplementedError(prefix)
+
+    #if is_stress:
+        #plates = [
+            #results.ctria3_stress, results.cquad4_stress,
+            #results.ctria6_stress, results.cquad8_stress,
+            #results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
+        #]
+        #word = preword + 'Stress (centroid)'
+    #else:
+        #plates = [
+            #results.ctria3_strain, results.cquad4_strain,
+            #results.ctria6_strain, results.cquad8_strain,
+            #results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
+        #]
+        #word = preword + 'Strain (centroid)'
 
     #titles = []
     plate_cases = []
@@ -732,6 +736,162 @@ def get_plate_stress_strains(eids: np.ndarray,
     res.form_names = np.array(form_names)
     return icase
 
+def _get_plates(model: OP2,
+                key,
+                is_stress: bool,
+                prefix: str) -> tuple[str, list, int, int]:
+    analysis_code = key[1]
+    #print("***stress eids=", eids)
+    subcase_id = key[0]
+    if prefix == 'modal_contribution':
+        results = model.op2_results.modal_contribution
+        preword = 'Modal Contribution '
+    elif prefix == '':
+        results = model
+        preword = ''
+    else:  # pragma: no cover
+        raise NotImplementedError(prefix)
+
+    if is_stress:
+        plates = [
+            results.ctria3_stress, results.cquad4_stress,
+            results.ctria6_stress, results.cquad8_stress,
+            results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
+        ]
+        word = preword + 'Stress'
+    else:
+        plates = [
+            results.ctria3_strain, results.cquad4_strain,
+            results.ctria6_strain, results.cquad8_strain,
+            results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
+        ]
+        word = preword + 'Strain'
+
+    plates2 = [plate for plate in plates if len(plates)]
+    return plates2, word, subcase_id, analysis_code
+
+def get_plate_stress_strains2(node_id: np.ndarray,
+                              element_id: np.ndarray,
+                              cases: CasesDict,
+                              model: OP2,
+                              times: np.ndarray,
+                              key: NastranKey,
+                              icase: int,
+                              form_dict, header_dict,
+                              keys_map: KeysMap,
+                              log: SimpleLogger,
+                              is_stress: bool,
+                              prefix: str='') -> int:
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    Gets the max/min stress for each layer.
+
+    key : varies
+        (1, 5, 1, 0, 0, '', '')
+        (isubcase, analysis_code, sort_method, count, ogs,
+         superelement_adaptivity_index, pval_step)
+    """
+    plates, word, subcase_id, analysis_code = _get_plates(model, key, is_stress, prefix)
+
+    #titles = []
+    plate_cases = []
+    #plates_ieids = []
+    plate_cases = []
+    for iplate, result in enumerate(plates):
+        #if result:
+        #print(f'keys[{iplate}] = {result.keys()}')
+        if key not in result:
+            continue
+        case = result[key]
+        if case.is_complex:
+            continue
+        plate_cases.append(case)
+    if len(cases) == 0:
+        return icase
+
+    #ieid_max = len(element_id)
+
+    plate_case = cases[0]
+    plate_case_headers = case.get_headers()
+    #print(case_headers)
+    if is_stress:
+        #sigma = 'σ'
+        method_map = {
+            'fiber_distance' : 'FiberDistance',
+            'oxx' : 'σxx',
+            'oyy' : 'σyy',
+            'txy' : 'τxy',
+            'angle' : 'θ',
+            'omax' : 'σmax',
+            'omin' : 'σmin',
+            'von_mises' : 'σ von Mises',
+            'max_shear' : 'τmax',
+        }
+        word = 'Stress'
+    else:
+        #sigma = 'ϵ'
+        method_map = {
+            'fiber_curvature' : 'FiberCurvature',
+            'fiber_distance' : 'FiberDistance',
+            'exx' : 'ϵxx',
+            'eyy' : 'ϵyy',
+            'exy' : 'ϵxy',
+            'angle' : 'θ',
+            'emax' : 'ϵmax',
+            'emin' : 'ϵmin',
+            'evm' : 'ϵ von Mises',
+            'von_mises' : 'ϵ von Mises',
+            'max_shear' : '𝛾max',
+        }
+        word = 'Strain'
+    methods = [method_map[headeri] for headeri in plate_case_headers]
+
+    title = f'Plate {word}'
+    keys_map[key] = KeyMap(plate_case.subtitle, plate_case.label,
+                           plate_case.superelement_adaptivity_index,
+                           plate_case.pval_step)
+
+    #element_name = plate_case.element_name
+
+    #if 'fiber_curvature' in case_headers:
+        #layer_names = {
+            #0 : 'Layer 1 (Mean)',
+            #1 : 'Layer 2 (Slope)',
+        #}
+    #else:
+        #layer_names = {
+            #0 : 'Layer 1 (Upper)',
+            #1 : 'Layer 2 (Lower)',
+        #}
+
+    res = PlateStrainStressResults2(
+        subcase_id, model,
+        node_id, element_id,
+        cases, result, title,
+        data_format='%g', is_variable_data_format=False,
+        nlabels=None, labelsize=None, ncolors=None, colormap='',
+        set_max_min=False, uname='PlateStressStrainResults2')
+
+    #form_names = []
+    times = plate_case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(plate_case, dt, itime)
+        header2 = header.replace(' = ', '=')
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append(('Plate ' + word, None, formi))
+        # formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        for imethod, method in enumerate(methods):
+            cases[icase] = (res, (subcase_id, (itime, imethod, header2)))
+            formi.append((f'{method}', icase, []))
+            icase += 1
+    return icase
+
 def _stack_composite_results(model: OP2, is_stress: bool,
                              key=None):
     if is_stress:
@@ -773,12 +933,12 @@ def _stack_composite_results(model: OP2, is_stress: bool,
     for key, cases_ in key_cases.items():
         case = cases_[0]
         cases = cases_[1:]
-        nelements = case.nelements
+        #nelements = case.nelements
         ntotal = case.ntotal
-        ntimes = case.ntimes
-        nresults = case.data.shape[2]
-        itotal0 = 0
-        itotal1 = ntotal
+        #ntimes = case.ntimes
+        #nresults = case.data.shape[2]
+        #itotal0 = 0
+        #itotal1 = ntotal
 
         if len(cases):
             nelements_all = case.nelements + sum([casei.nelements for casei in cases])
@@ -880,9 +1040,9 @@ def get_composite_plate_stress_strains2(eids: np.ndarray,
     _datai = case.data[0, :, 0]
     _eids = case.element_layer[:, 0]
     _layer = case.element_layer[:, 1]
-    _mytable, _myrows = pivot_table(_datai, _eids, _layer, shape=1)
-    _utable = unique2d(case.element_layer)
-    assert np.array_equal(case.element_layer, _utable)
+    unused_mytable, unused_myrows = pivot_table(_datai, _eids, _layer, shape=1)
+    utable = unique2d(case.element_layer)
+    assert np.array_equal(case.element_layer, utable)
 
     if len(case._times) != case.data.shape[0]:
         return icase
@@ -1048,7 +1208,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
 
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer_name})', icase, []))
-                form_name2 = f'Composite Plate {word}: {method} ({layer_name})'
+                #form_name2 = f'Composite Plate {word}: {method} ({layer_name})'
                 #form_names.append(form_name2)
                 icase += 1
     #assert len(cases) == icase
