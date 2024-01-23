@@ -38,6 +38,7 @@ class CompositeResults2(VectorResultsCommon):
         self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
+        #assert len(element_id) >= self.case.
 
         self.is_dense = False
         self.dim = case.data.ndim
@@ -143,11 +144,11 @@ class CompositeResults2(VectorResultsCommon):
 
     def set_sidebar_args(self,
                          itime: str, res_name: str,
-                         min_max_method: str='',
-                         transform: str='',
+                         min_max_method: str='', # Absolute Max
+                         transform: str='', # Material
                          methods_keys: Optional[list[int]]=None,
                          # unused
-                         nodal_combine: str='',
+                         nodal_combine: str='', # Centroid
                          **kwargs) -> None:
         assert len(kwargs) == 0, kwargs
         transforms = self.has_coord_transform(itime, res_name)[1]

@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.femutils.utils import pivot_table
+from pyNastran.femutils.utils import pivot_table, unique2d
 
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
@@ -790,14 +790,20 @@ def _stack_composite_results(model: OP2, is_stress: bool,
             #element_ids = [case.element_id]
             element_layers = [case.element_layer]
             datas = [case.data]
+            eids_list = [np.unique(case.element_layer[:, 0])]
             for casei in cases:
                 #itotal0 += case.ntotal
                 #itotal1 += case.ntotal
+                eidsi = np.unique(casei.element_layer[:, 0])
                 element_layers.append(casei.element_layer)
                 datas.append(casei.data)
+                eids_list.append(eidsi)
                 #element_ids.append(case.element_id)
                 #data2[itime, itotal0:itotal1, :] = casei.data[itime, :, :]
 
+            eids = np.hstack(eids_list)
+            ueids = np.unique(eids)
+            assert len(eids) == len(ueids), eids
             #  stack on [*nlayers*, eid_layer]
             element_layer2 = np.vstack(element_layers)
             # stack on [itime, *nlayers*, 10]
@@ -807,13 +813,9 @@ def _stack_composite_results(model: OP2, is_stress: bool,
             #isort2 = np.argsort(element_layer2[isort1,0])
             #indexs = np.arange(len(isort1))
             #isort = indexs[isort1][isort2]
-
-            iisort = np.lexsort((
-                element_layer2[:, 1],
-                element_layer2[:, 0],
-            ))
-            element_layer4 = element_layer2[iisort]
+            element_layer4, iisort = get_composite_sort(element_layer2)
             data4 = data3[:, iisort, :]
+            assert data3.shape == data4.shape
 
             #assert np.array_equal(data2, data3), 'wut...'
 
@@ -822,17 +824,28 @@ def _stack_composite_results(model: OP2, is_stress: bool,
             case.element_layer = element_layer4
             case.nelements = nelements_all
             case.ntotal = ntotal_all
-
             #case.data = data2
-            cases2[key] = case
-        else:
-            cases2[key] = case
+        cases2[key] = case
 
     #keys = keys_map.keys()
     #for key in keys:
         #key_cases =
         #for etype, case in case_map.items():
     return case_map, keys_map, cases2
+
+def get_composite_sort(element_layers: list[np.ndarray]):
+    uelement_layers = unique2d(element_layers)
+    assert len(element_layers) == len(uelement_layers)
+
+    iisort = np.lexsort((
+        element_layers[:, 1],
+        element_layers[:, 0],
+    ))
+    element_layer_stacked = element_layers[iisort]
+
+    uelement_layers_stacked = unique2d(element_layer_stacked)
+    assert len(element_layer_stacked) == len(uelement_layers_stacked)
+    return element_layer_stacked, iisort
 
 def get_composite_plate_stress_strains2(eids: np.ndarray,
                                         cases: CasesDict,
@@ -864,10 +877,15 @@ def get_composite_plate_stress_strains2(eids: np.ndarray,
 
     # verify we don't crash when we try to pivot later
     # why does this happen???
-    datai = case.data[0, :, 0]
-    eids = case.element_layer[:, 0]
-    layer = case.element_layer[:, 1]
-    mytable = pivot_table(datai, eids, layer, shape=1)
+    _datai = case.data[0, :, 0]
+    _eids = case.element_layer[:, 0]
+    _layer = case.element_layer[:, 1]
+    _mytable, _myrows = pivot_table(_datai, _eids, _layer, shape=1)
+    _utable = unique2d(case.element_layer)
+    assert np.array_equal(case.element_layer, _utable)
+
+    if len(case._times) != case.data.shape[0]:
+        return icase
 
     titleii = f'Composite Plate {word}'
     res = CompositeStrainStressResults2(

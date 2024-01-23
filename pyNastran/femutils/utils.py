@@ -89,7 +89,7 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
         array = np.vstack(list_of_arrays)
     return array
 
-def pivot_table(data, rows, cols, shape: int=0):
+def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]:
     """
     PCOMP: rows=element_ids, cols=layer
 

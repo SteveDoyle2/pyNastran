@@ -1,4 +1,5 @@
 # coding: utf-8
+from typing import Optional
 import numpy as np
 
 from pyNastran.gui.vtk_rendering_core import (
@@ -426,12 +427,16 @@ class GuiVTKCommon(GuiQtCommon):
         #self.vtk_interactor.Render()
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def cell_centroid_grid(self, grid, cell_id, dtype='float32'):
+    def cell_centroid_grid(self, grid, cell_id: int, dtype: int='float32') -> Optional[np.ndarray]:
         """gets the cell centroid"""
         if not self.is_gui:
             centroid = np.zeros(3, dtype=dtype)
             return centroid
         cell = grid.GetCell(cell_id)
+        ncells = grid.GetNumberOfCells()
+        if cell_id > ncells:
+            return None
+
         try:
             nnodes = cell.GetNumberOfPoints()
         except AttributeError:

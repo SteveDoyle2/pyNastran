@@ -328,11 +328,50 @@ class TestNastranGUI(unittest.TestCase):
         test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
                               plot=True, raise_error=True)
 
+    def test_stack_composites(self):
+        e1 = np.array([
+            [18,  1],
+            [18,  2],
+            [18,  3],
+            [18,  4],
+            [19,  1],
+            [19,  2],
+            [19,  3],
+            [19,  4],
+            [20,  1],
+            [20,  2],
+            [20,  3],
+            [20,  4],
+            [20,  5],
+            [21,  1],
+            [21,  2],
+            [21,  3],
+            [21,  4],
+            [21,  5],
+        ])
+
+        e2 = np.array([
+            [16,  1],
+            [16,  2],
+            [16,  3],
+            [16,  4],
+            [17,  1],
+            [17,  2],
+            [17,  3],
+            [17,  4],
+            [17,  5],
+        ])
+        e1_e2 = np.vstack([e1, e2])
+        from pyNastran.converters.nastran.gui.stress import get_composite_sort
+        out, isort = get_composite_sort(e1_e2)
+        print(out)
+
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
 
         test = NastranGUI()
+        test.stop_on_failure = True
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 60, len(test.result_cases)
         test.load_nastran_results(op2_filename)

@@ -738,7 +738,7 @@ class NastranGuiResults(NastranGuiAttributes):
         nastran_settings: NastranSettings = self.settings.nastran_settings
         assert isinstance(icase, int), icase
         if nastran_settings.stress:
-            for itime, unused_dt in enumerate(times):
+            for itime in range(len(times)):
                 # shell stress
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
@@ -750,12 +750,14 @@ class NastranGuiResults(NastranGuiAttributes):
                     log.error('problem getting stress...')
                     #raise
                     break
+                    #pass
                 except Exception as e:  # pragma: no cover
                     log.error(str(e))
                     if stop_on_failure:
                         raise
-            if icase == icase_old:
-                return icase
+            del itime
+            #if icase == icase_old:
+                #return icase
 
         #self.settings.nastran_plate_stress
         eids = self.element_ids
@@ -900,6 +902,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 except IndexError:
                     log.error('problem getting force...')
                     break
+                except Exception as e:  # pragma: no cover
+                    log.error(str(e))
+                    if stop_on_failure:
+                        raise
 
         eids = self.element_ids
         if nastran_settings.bar_force:
@@ -948,7 +954,7 @@ class NastranGuiResults(NastranGuiAttributes):
         """Creates the time accurate strain objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.strain:
-            for itime, unused_dt in enumerate(times):
+            for itime in range(len(times)):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
                         cases, model, key, icase, itime, form_dict, header_dict, keys_map,
@@ -956,6 +962,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 except IndexError:
                     log.error('problem getting strain...')
                     break
+                    #pass
+                except Exception as e:  # pragma: no cover
+                    log.error(str(e))
+                    if stop_on_failure:
+                        raise
+            del itime
 
         eids = self.element_ids
         if nastran_settings.plate_strain:

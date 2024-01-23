@@ -304,7 +304,6 @@ class ResultsSidebar(QWidget):
     def set_derivation_visible(self, is_visible: bool,
                                min_max_averages_dict: dict[str, Any]) -> None:
         if USE_NEW_SIDEBAR:
-
             label = min_max_averages_dict.get('label', 'Derivation Method:')
             if is_visible and label != self.min_max_average_label:
                 self.min_max_average_label.setText(label)
