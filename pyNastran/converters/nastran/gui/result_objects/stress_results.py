@@ -556,6 +556,10 @@ class CompositeStrainStressResults2(CompositeResults2):
         #self.xyz = xyz
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         self.location = 'centroid'
+        if self.is_stress:
+            self.headers = ['CompositeStress2']
+        else:
+            self.headers = ['CompositeStrain2']
         str(self)
 
     #-------------------------------------

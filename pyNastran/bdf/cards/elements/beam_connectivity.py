@@ -760,7 +760,7 @@ def z_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
 def hexa_setup(dim1: Dim3,
                dim2: Dim3) -> tuple[Faces,
                                     NDArrayN3float, NDArrayN3float]:
-    """
+    r"""
           ^ y
           |
        0-----5        ^ hall

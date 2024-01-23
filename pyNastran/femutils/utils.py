@@ -133,9 +133,9 @@ def pivot_table(data, rows, cols, shape: int=0):
 
     if nshape == 3:
         data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
-    elif  nshape == 2:
+    elif nshape == 2:
         data2[ipivot_row, ipivot_col, :] = data[icount, :]
-    elif  nshape == 1:
+    elif nshape == 1:
         data2[ipivot_row, ipivot_col] = data[icount]
     else:  # pragma: no cover
         raise NotImplementedError(nshape)

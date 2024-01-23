@@ -626,9 +626,15 @@ class TestNastranGUI(unittest.TestCase):
         model.read_bdf(bdf_filename)
         #print(model.elements)
         test2 = NastranGUI()
+        test2.stop_on_failure = False
         test2.load_nastran_geometry(model)
         assert len(test2.result_cases) == 5, len(test2.result_cases)
         test2.load_nastran_results(op2_filename)
+        print(test2.result_cases[27])
+        print(test2.write_result_cases())
+        #if USE_OLD_SIDEBAR_OBJS:
+        assert len(test2.result_cases) == 107, len(test2.result_cases)
+        #else:
         assert len(test2.result_cases) == 107, len(test2.result_cases)
 
     def test_gui_elements_02(self):
@@ -655,6 +661,7 @@ class TestNastranGUI(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         test = NastranGUI()
+        #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
         assert len(test.result_cases) == 56, len(test.result_cases)
         test.load_nastran_results(op2_filename)

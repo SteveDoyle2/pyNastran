@@ -27,7 +27,8 @@ from .geometry_helper import NastranGuiAttributes
 from .stress import (
     get_spring_stress_strains, get_rod_stress_strains,
     get_bar_stress_strains, get_beam_stress_strains,
-    get_plate_stress_strains, get_composite_plate_stress_strains,
+    get_composite_plate_stress_strains, get_composite_plate_stress_strains2,
+    get_plate_stress_strains,
     get_solid_stress_strains)
 from .force import get_spring_force, get_bar_force, get_plate_force
 from .result_objects.displacement_results import DisplacementResults2, ForceResults2
@@ -48,7 +49,7 @@ FormDict = dict[tuple[Any, Any], Form]
 HeaderDict = dict[tuple[Any, Any], str]
 Case = tuple[GuiResult, tuple[int, str]]
 Cases = dict[int, Case]
-CRASH = True
+#CRASH = True
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -60,7 +61,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                 model: OP2, key, icase: int,
                                 form_dict: FormDict,
                                 header_dict: HeaderDict,
-                                keys_map: KeysMap) -> int:
+                                keys_map: KeysMap,
+                                stop_on_failure: bool) -> int:
         if key not in model.grid_point_forces:
             return icase
         grid_point_forces = model.grid_point_forces[key]
@@ -94,7 +96,8 @@ class NastranGuiResults(NastranGuiAttributes):
                           form_dict: FormDict,
                           header_dict: HeaderDict,
                           keys_map: KeysMap,
-                          log: SimpleLogger) -> int:
+                          log: SimpleLogger,
+                          stop_on_failure: bool) -> int:
         """
         loads nodal results vector results (e.g., displacements/temperatures)
         """
@@ -106,7 +109,9 @@ class NastranGuiResults(NastranGuiAttributes):
             cases, model, key, icase,
             form_dict, header_dict, keys_map,
             self.xyz_cid0,
-            nnodes, node_ids, log, dim_max=settings.dim_max)
+            nnodes, node_ids, log, dim_max=settings.dim_max,
+            stop_on_failure=stop_on_failure,
+        )
 
         icase = _fill_nastran_displacements(
             cases, model, key, icase,
@@ -114,12 +119,15 @@ class NastranGuiResults(NastranGuiAttributes):
             self.xyz_cid0,
             nnodes, node_ids, log, dim_max=settings.dim_max,
             prefix='acoustic',
+            stop_on_failure=stop_on_failure,
         )
 
         icase = _fill_nastran_temperatures(
             cases, model, key, icase,
             form_dict, header_dict, keys_map,
-            nnodes, log)
+            nnodes, log,
+            stop_on_failure=stop_on_failure,
+        )
         return icase
 
     def _fill_op2_gpstress(self, cases: Cases,
@@ -128,7 +136,8 @@ class NastranGuiResults(NastranGuiAttributes):
                            form_dict: FormDict,
                            header_dict: HeaderDict,
                            keys_map: KeysMap,
-                           log: SimpleLogger) -> int:
+                           log: SimpleLogger,
+                           stop_on_failure: bool) -> int:
         """Creates the time accurate grid point stress objects"""
         if key in model.grid_point_stress_discontinuities:
             case = model.grid_point_stress_discontinuities[key]
@@ -157,7 +166,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                            form_dict: FormDict,
                                            header_dict: HeaderDict,
                                            keys_map: KeysMap,
-                                           log: SimpleLogger) -> int:
+                                           log: SimpleLogger,
+                                           stop_on_failure: bool) -> int:
         """Creates the time accurate strain energy objects"""
         case = None
 
@@ -312,7 +322,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                                  itime: int,
                                                  header_dict: HeaderDict,
                                                  keys_map: KeysMap,
-                                                 log: SimpleLogger) -> Any:
+                                                 log: SimpleLogger,
+                                                 stop_on_failure: bool) -> Any:
         """
         creates the following force outputs:
          - fx, fy, fz, mx, my, mz
@@ -493,13 +504,15 @@ class NastranGuiResults(NastranGuiAttributes):
                                         #form_dict: dict[tuple[Any, int], Any],
                                         header_dict: dict[Any, Any],
                                         keys_map: dict[Any, Any],
-                                        log: SimpleLogger) -> int:
+                                        log: SimpleLogger,
+                                        stop_on_failure: bool) -> int:
         """
         Creates the time accurate force objects
         """
         nelements = self.nelements
         out = self._create_op2_time_centroidal_force_arrays(
-            model, nelements, key, itime, header_dict, keys_map, log)
+            model, nelements, key, itime, header_dict, keys_map,
+            log, stop_on_failure)
         found_force, fx, fy, fz, rx, ry, rz, is_element_on = out
 
         #new_cases = True
@@ -714,7 +727,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
-                                    log: SimpleLogger) -> int:
+                                    log: SimpleLogger,
+                                    stop_on_failure: bool) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
         #ncases_old = len(cases)
@@ -722,6 +736,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #icasei = icase_old
         log = model.log
         nastran_settings: NastranSettings = self.settings.nastran_settings
+        assert isinstance(icase, int), icase
         if nastran_settings.stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
@@ -730,15 +745,21 @@ class NastranGuiResults(NastranGuiAttributes):
                         cases, model, key, icase_old, itime,
                         form_dict, header_dict, keys_map, log,
                         is_stress=True)
+                    assert isinstance(icase, int), icase
                 except IndexError:
                     log.error('problem getting stress...')
                     #raise
                     break
+                except Exception as e:  # pragma: no cover
+                    log.error(str(e))
+                    if stop_on_failure:
+                        raise
             if icase == icase_old:
                 return icase
 
         #self.settings.nastran_plate_stress
         eids = self.element_ids
+        assert isinstance(icase, int), icase
         if nastran_settings.plate_stress:
             try:
                 icase = get_plate_stress_strains(
@@ -746,21 +767,40 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict, header_dict, keys_map, log, is_stress=True)
                 #assert icase >= icasei
                 #icasei = icase
+                assert isinstance(icase, int), icase
 
                 icase = get_plate_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True,
                     prefix='modal_contribution',
                 )
-            except NotImplementedError:  # pragma: no cover
-                raise
+                assert isinstance(icase, int), icase
+            #except NotImplementedError:  # pragma: no cover
+                #raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
             #assert icase >= icasei
             #icasei = icase
             #assert len(cases) == icase
 
+        assert isinstance(icase, int), icase
         if nastran_settings.composite_plate_stress:
+            try:
+                icase = get_composite_plate_stress_strains2(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map,
+                    log, is_stress=True)
+                assert isinstance(icase, int), icase
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
+                #if CRASH:
+                    #raise
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
             try:
                 icase = get_composite_plate_stress_strains(
                     eids, cases, model, times, key, icase,
@@ -769,9 +809,11 @@ class NastranGuiResults(NastranGuiAttributes):
             except NotImplementedError:  # pragma: no cover
                 raise
             except Exception as e:  # pragma: no cover
-                if CRASH:
-                    raise
+                #if CRASH:
+                    #raise
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
             #assert icase >= icasei
             #icasei = icase
             #assert len(cases) == icase
@@ -781,10 +823,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_rod_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
+                assert isinstance(icase, int), icase
             except NotImplementedError:  # pragma: no cover
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
             #assert icase >= icasei
             #icasei = icase
 
@@ -793,10 +838,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_bar_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
+                assert isinstance(icase, int), icase
             except NotImplementedError:  # pragma: no cover
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
             #assert icase >= icasei
             #icasei = icase
 
@@ -805,28 +853,32 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = get_beam_stress_strains(
                     eids, cases, model, times, key, icase,
                     form_dict, header_dict, keys_map, log, is_stress=True)
+                assert isinstance(icase, int), icase
             except NotImplementedError:  # pragma: no cover
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
             #assert icase >= icasei
             #icasei = icase
+
 
         if 1:
             icase = get_solid_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
+            assert isinstance(icase, int), icase
             #assert icase >= icasei
             #icasei = icase
 
             icase = get_spring_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
+            assert isinstance(icase, int), icase
             #assert icase >= icasei
             #icasei = icase
-
         return icase
-
 
     def _fill_op2_centroidal_force(self, cases: Cases, model: OP2,
                                    times: np.ndarray,
@@ -835,7 +887,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                    form_dict: FormDict,
                                    header_dict: HeaderDict,
                                    keys_map: KeysMap,
-                                   log: SimpleLogger) -> int:
+                                   log: SimpleLogger,
+                                   stop_on_failure: bool) -> int:
         """Creates the time accurate force objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.force:
@@ -843,7 +896,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 try:
                     icase = self._fill_op2_time_centroidal_force(
                         cases, model, key, icase, itime,
-                        form_dict, header_dict, keys_map, log)
+                        form_dict, header_dict, keys_map, log, stop_on_failure)
                 except IndexError:
                     log.error('problem getting force...')
                     break
@@ -890,7 +943,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
-                                    log: SimpleLogger) -> int:
+                                    log: SimpleLogger,
+                                    stop_on_failure: bool) -> int:
         """Creates the time accurate strain objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.strain:
@@ -904,7 +958,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     break
 
         eids = self.element_ids
-        if nastran_settings.composite_plate_strain:
+        if nastran_settings.plate_strain:
             try:
                 icase = get_plate_stress_strains(
                     eids, cases, model, times, key, icase,
@@ -918,8 +972,24 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
 
         if nastran_settings.composite_plate_strain:
+            try:
+                icase = get_composite_plate_stress_strains2(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map,
+                    log, is_stress=False)
+            except NotImplementedError:  # pragma: no cover
+                raise
+            except Exception as e:  # pragma: no cover
+                #if CRASH:
+                    #raise
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
+
             try:
                 icase = get_composite_plate_stress_strains(
                     eids, cases, model, times, key, icase,
@@ -929,6 +999,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
 
         if nastran_settings.rod_strain:
             try:
@@ -939,6 +1011,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
 
         if nastran_settings.bar_strain:
             try:
@@ -949,6 +1023,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
 
         if nastran_settings.beam_strain:
             try:
@@ -959,6 +1035,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
+                if stop_on_failure:
+                    raise
 
         icase = get_solid_stress_strains(
             eids, cases, model, times, key, icase,
@@ -1024,6 +1102,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
 
         try:
             vm_word = get_bar_stress_strain(
@@ -1035,6 +1115,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
 
         try:
             vm_word = get_bar100_stress_strain(
@@ -1046,6 +1128,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
 
         try:
             vm_word = get_beam_stress_strain(
@@ -1057,6 +1141,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
         #-------------------------------------------------------------
         try:
             vm_word = get_plate_stress_strain(
@@ -1067,6 +1153,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
 
         #vm_word = get_shear_stress_strain(
             #model, key, is_stress, vm_word, itime,
@@ -1097,6 +1185,8 @@ class NastranGuiResults(NastranGuiAttributes):
             raise
         except Exception as e:  # pragma: no cover
             log.error(str(e))
+            if stop_on_failure:
+                raise
 
         #o = 'ϵ' if is_strain else 'σ'
         #t = 'ϵ' if is_strain else '𝜏'
@@ -1276,7 +1366,8 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                                 nnodes: int, node_ids: np.ndarray,
                                 log: SimpleLogger,
                                 dim_max: float=1.0,
-                                prefix: str='') -> int:
+                                prefix: str='',
+                                stop_on_failure: bool=False) -> int:
     """
     loads the nodal displacements/velocity/acceleration/eigenvector/spc/mpc forces
     """
@@ -1331,6 +1422,8 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                     raise
                 log.error('skipping %s result; t123_offset=%s; type=%s' % (
                     name, t123_offset, result[key].__class__.__name__))
+                if stop_on_failure:
+                    raise
     return icase
 
 def _fill_nastran_ith_displacement(result, resname: str,
@@ -1475,7 +1568,8 @@ def _fill_nastran_temperatures(cases: Cases, model: OP2,
                                form_dict: FormDict,
                                header_dict: HeaderDict,
                                keys_map: KeysMap,
-                               nnodes: int, log) -> int:
+                               nnodes: int, log: SimpleLogger,
+                               stop_on_failure: bool=False) -> int:
     """loads the nodal temperatures"""
     #nids = self.node_ids
     temperature_like = [
@@ -1517,7 +1611,8 @@ def _fill_nastran_temperatures(cases: Cases, model: OP2,
 
 def print_empty_elements(model: BDF,
                          element_ids: np.ndarray,
-                         is_element_on: bool, log: SimpleLogger):
+                         is_element_on: bool,
+                         log: SimpleLogger):
     """prints the first 20 elements that aren't supported as part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
     eids_off = []

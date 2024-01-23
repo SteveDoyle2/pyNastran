@@ -1086,7 +1086,7 @@ def _export_case(name: str,
     return fname
 
 def _remove_invalid_filename_characters(basename: str) -> str:
-    """
+    r"""
     Helper method for exporting cases of 12*I/t^3.csv,
     which have invalid characters.
 

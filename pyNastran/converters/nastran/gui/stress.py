@@ -4,6 +4,8 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.femutils.utils import pivot_table
+
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
@@ -730,8 +732,8 @@ def get_plate_stress_strains(eids: np.ndarray,
     res.form_names = np.array(form_names)
     return icase
 
-def stack_composite_results(model: OP2, is_stress: bool,
-                            key=None):
+def _stack_composite_results(model: OP2, is_stress: bool,
+                             key=None):
     if is_stress:
         case_map = {
             # element_name
@@ -832,6 +834,71 @@ def stack_composite_results(model: OP2, is_stress: bool,
         #for etype, case in case_map.items():
     return case_map, keys_map, cases2
 
+def get_composite_plate_stress_strains2(eids: np.ndarray,
+                                        cases: CasesDict,
+                                        model: OP2,
+                                        times: np.ndarray,
+                                        key: NastranKey,
+                                        icase: int,
+                                        form_dict, header_dict,
+                                        keys_map: KeysMap,
+                                        log: SimpleLogger,
+                                        is_stress: bool=True) -> int:
+    if not USE_NEW_SIDEBAR_OBJS:
+        return icase
+
+    case_map, keys_map2, cases2 = _stack_composite_results(model, is_stress, key=key)
+    subcase_id = key[0]
+
+    if not cases2:
+        return icase
+
+    for key, value in keys_map2.items():
+        if key not in keys_map:
+            keys_map[key] = value
+
+    case = cases2[key]
+    case_headers = case.get_headers()
+    word, method_map = _composite_method_map(is_stress)
+    methods = [method_map[headeri] for headeri in case_headers]
+
+    # verify we don't crash when we try to pivot later
+    # why does this happen???
+    datai = case.data[0, :, 0]
+    eids = case.element_layer[:, 0]
+    layer = case.element_layer[:, 1]
+    mytable = pivot_table(datai, eids, layer, shape=1)
+
+    titleii = f'Composite Plate {word}'
+    res = CompositeStrainStressResults2(
+        subcase_id, model, eids,
+        case, method_map, titleii,
+        #dim_max=1.0,
+        data_format='%g',
+        is_variable_data_format=False,
+        nlabels=None, labelsize=None, ncolors=None, colormap='',
+        set_max_min=False, uname='CompositeStressResults2')
+
+    #form_layers = {'temp': [],}
+    form_names = []
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append((f'Composite Plate {word}', None, formi))
+        form_dict[(key, itime)] = form
+
+        for imethod, method in enumerate(methods): # o11, o22, o12, maxprincipal, ...
+            cases[icase] = (res, (subcase_id, (itime, imethod, header)))
+            formi.append((f'{method}', icase, []))
+            form_name2 = f'Composite Plate {word}: {method}'
+            form_names.append(form_name2)
+            icase += 1
+    return icase
+
 def get_composite_plate_stress_strains(eids: np.ndarray,
                                        cases: CasesDict,
                                        model: OP2,
@@ -851,18 +918,13 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     key = (1, 1, 1, 0, 0, '', '')
     composite_data_dict[element_type][key]
     """
-    #assert len(cases) == icase
-    #icase0 = icase
+    if not USE_OLD_SIDEBAR_OBJS:
+        return icase
+    case_map, keys_map2, cases2 = _stack_composite_results(model, is_stress, key=key)
     subcase_id = key[0]
 
-    case_map, keys_map2, cases2 = stack_composite_results(model, is_stress, key=key)
-    if not cases2:
-        return icase
-
-    for key, value in keys_map2.items():
-        if key not in keys_map:
-            keys_map[key] = value
-    #keys_map.update(keys_map2)  # might mess up the order...
+    #assert len(cases) == icase
+    #icase0 = icase
 
     composite_plates_ieids = []
     for element_type, composite_data in composite_data_dict.items():
@@ -901,6 +963,80 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
 
     case_headers = case.get_headers()
     #print('case_headers =', case_headers, vm_word)
+    word, method_map = _composite_method_map(is_stress)
+    methods = [method_map[headeri] for headeri in case_headers]
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+    #titles = []
+
+    scalars_array = []
+    for element_type, composite_data in composite_data_dict.items():
+        unused_element_layer, unused_ueids, data2, unused_vm_word, unused_ntimes, unused_headers = composite_data[key]
+        scalars_array.append(data2)
+    if len(scalars_array) == 0:
+        return icase
+
+    try:
+        scalars_array = concatenate_scalars(scalars_array)
+    except ValueError:
+        log.error('problem concatenating composite plates')
+        return icase
+
+    #print('scalars_array.shape =', scalars_array.shape)
+    unused_ntimes, unused_nelements, nlayers, unused_nresults = scalars_array.shape
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    uname = f'Composite Plate {word}'
+    res = LayeredTableResults(
+        subcase_id, headers, composite_plates_ieids,
+        ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet', uname=uname)
+    form_names = res.form_names
+
+    #times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append((f'Composite Plate {word}', None, formi))
+        # formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        form_layers = {'temp': [],}
+        for ilayer in range(nlayers):
+            layer_name = f' Layer {ilayer+1}'
+            form_layeri = []
+            formi.append((layer_name.strip().lstrip(), None, form_layeri))
+            #formi.append((layer_name.strip() + ' ' + str(case.element_name), None, form_layeri))
+            form_layers[layer_name] = form_layeri
+
+        for imethod, method in enumerate(methods): # o11, o22, o12, maxprincipal, ...
+            for ilayer in range(nlayers):
+                layer_name = f' Layer {ilayer+1}'
+                form_layeri = form_layers[layer_name]
+                #cases[icase] = (res, (subcase_id, header))
+                #if USE_NEW_SIDEBAR_OBJS:
+                    #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
+                    #form_layeri.append((f'{method} ({layer_name})', icase, []))
+                    #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
+                    #form_names.append(form_name2)
+                    #icase += 1
+
+                cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
+                form_layeri.append((f'{method} ({layer_name})', icase, []))
+                form_name2 = f'Composite Plate {word}: {method} ({layer_name})'
+                #form_names.append(form_name2)
+                icase += 1
+    #assert len(cases) == icase
+    return icase
+
+def _composite_method_map(is_stress: bool) -> tuple[str, dict[str, str]]:
     if is_stress:
         word = 'Stress'
         #sigma = 'σ'
@@ -933,113 +1069,13 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
             'max_shear' : 'MaxShear',
         }
     #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
-    methods = [method_map[headeri] for headeri in case_headers]
     #methods = case_headers
 
     #if 'Mises' in methods:
         #methods.append('Max shear')
     #else:
         #methods.append(f'{sigma} von Mises')
-
-    #headersi = case.get_headers()
-    #print('headersi =', headersi)
-    #titles = []
-
-    scalars_array = []
-    for element_type, composite_data in composite_data_dict.items():
-        unused_element_layer, unused_ueids, data2, unused_vm_word, unused_ntimes, unused_headers = composite_data[key]
-        scalars_array.append(data2)
-    if len(scalars_array) == 0:
-        return icase
-
-    try:
-        scalars_array = concatenate_scalars(scalars_array)
-    except ValueError:
-        log.error('problem concatenating composite plates')
-        return icase
-
-    #print('scalars_array.shape =', scalars_array.shape)
-    unused_ntimes, unused_nelements, nlayers, unused_nresults = scalars_array.shape
-
-    #titles = []  # legend title
-    headers = [] # sidebar word
-    uname = f'Composite Plate {word}'
-    res = LayeredTableResults(
-        subcase_id, headers, composite_plates_ieids,
-        ieid_max, scalars_array, methods,
-        data_formats=None,
-        colormap='jet', uname=uname)
-    form_names = res.form_names
-
-    case2 = cases2[key]
-    titleii = uname
-    res2 = CompositeStrainStressResults2(
-        subcase_id, model, eids,
-        case2, method_map, titleii,
-        #dim_max=1.0,
-        data_format='%g',
-        is_variable_data_format=False,
-        nlabels=None, labelsize=None, ncolors=None, colormap='',
-        set_max_min=False, uname='CompositeStressResults2')
-
-    #times = case._times
-    for itime, dt in enumerate(times):
-        #dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-
-        formi = []
-        form = form_dict[(key, itime)]
-        form.append((f'Composite Plate {word}', None, formi))
-        # formi = form[0][2]
-        form_dict[(key, itime)] = form
-
-        form_layers = {'temp': [],}
-        if USE_NEW_SIDEBAR_OBJS:
-            # TODO: doesn't support multiple element types...only the last...
-            ilayer = -1
-            layer_name = 'temp'
-
-            form_layeri = []
-            formi.append((str(case.element_name), None, form_layeri))
-            form_layers[layer_name] = form_layeri
-
-            #form_layeri = form_layers[layer_name]
-            for imethod, method in enumerate(methods):
-                cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
-                form_layeri.append((f'{method}', icase, []))
-                form_name2 = f'Composite Plate {word}: {method}'
-                form_names.append(form_name2)
-                icase += 1
-
-        if USE_OLD_SIDEBAR_OBJS:
-            for ilayer in range(nlayers):
-                layer_name = f' Layer {ilayer+1}'
-                form_layeri = []
-                formi.append((layer_name.strip().lstrip(), None, form_layeri))
-                #formi.append((layer_name.strip() + ' ' + str(case.element_name), None, form_layeri))
-                form_layers[layer_name] = form_layeri
-
-            for imethod, method in enumerate(methods):
-                for ilayer in range(nlayers):
-                    layer_name = f' Layer {ilayer+1}'
-                    form_layeri = form_layers[layer_name]
-                    #cases[icase] = (res, (subcase_id, header))
-                    #if USE_NEW_SIDEBAR_OBJS:
-                        #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
-                        #form_layeri.append((f'{method} ({layer_name})', icase, []))
-                        #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
-                        #form_names.append(form_name2)
-                        #icase += 1
-
-                    if USE_OLD_SIDEBAR_OBJS:
-                        cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
-                        form_layeri.append((f'{method} ({layer_name})', icase, []))
-                        form_name2 = f'Composite Plate {word}: {method} ({layer_name})'
-                        form_names.append(form_name2)
-                        icase += 1
-    #assert len(cases) == icase
-    return icase
+    return word, method_map
 
 def get_solid_stress_strains(eids: np.ndarray,
                              cases: CasesDict,
