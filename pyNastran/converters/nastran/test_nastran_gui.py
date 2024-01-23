@@ -22,10 +22,13 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
+
 from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
 from pyNastran.gui.testing_methods import FakeGUIMethods
+
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
+from pyNastran.converters.nastran.gui.stress import get_composite_sort
 RED = (1., 0., 0.)
 
 
@@ -362,9 +365,8 @@ class TestNastranGUI(unittest.TestCase):
             [17,  5],
         ])
         e1_e2 = np.vstack([e1, e2])
-        from pyNastran.converters.nastran.gui.stress import get_composite_sort
         out, isort = get_composite_sort(e1_e2)
-        print(out)
+        assert out.shape == e1_e2.shape
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
@@ -437,7 +439,15 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 108, len(test.result_cases)
+        nmodes = 10
+        nresults = get_nreal_nresults(
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        assert nresults == 231, nresults  # 238-7
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_02(self):
         """CBAR/CBEAM - PARAM,POST,-2"""
@@ -447,7 +457,16 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 108, len(test.result_cases)
+
+        nmodes = 10
+        nresults = get_nreal_nresults(
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        assert nresults == 231, nresults  # 238-7
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_03(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -463,7 +482,15 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 108, len(test.result_cases)
+        nmodes = 10
+        nresults = get_nreal_nresults(
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        assert nresults == 231, nresults  # 238-7
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_04(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -474,16 +501,23 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 108, len(test.result_cases)
+        nmodes = 10
+        nresults = get_nreal_nresults(
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        assert nresults == 231, nresults  # 238-7
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 108, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
-
 
     #@unittest.expectedFailure
     #def test_contact(self):
@@ -1147,6 +1181,73 @@ def assert_result_cases(test: NastranGUI, ncases: int,
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8')
         print(msg)
+
+def get_nreal_nresults(
+        neigenvectors=0,
+        nspring_stress=0, nspring_strain=0,
+        nrod_stress=0, ctube_stress=0, nconrod_stress=0,
+        nrod_strain=0, ctube_strain=0, nconrod_strain=0,
+        nbar_stress=0, nbar_strain=0,
+        nbeam_stress=0, nbeam_strain=0,
+        nplate_stress=0, nplate_strain=0,
+        nshear_stress=0, nshear_strain=0,
+        ncomposite_layers=0, ncomposite_plate_stress=0, ncomposite_plate_strain=0,
+        nsolid_stress=0, nsolid_strain=0,
+        #
+        nbar_force=0,
+        nbeam_force=0,
+        nplate_force=0,
+        nshear_force=0) -> int:
+    """the beginnings of trying to calculate the number of results vs. guessing"""
+    nresults = (
+        neigenvectors * 2 + # txyz, rxyz
+
+        #-----------------------------------------------------------
+        # oxx
+        (nspring_stress + nspring_strain) +
+
+        # [oxx, MS_axial, txy, MS_torsion]
+        (nrod_stress + ctube_stress + nconrod_stress +
+         nrod_strain + ctube_strain + nconrod_strain) * 4 +
+
+        #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+        # s1b, s2b, s3b, s4b,        smaxb, sminb, MS_compression]
+        # no MS_tension/compression
+        (nbar_stress + nbar_strain) * 13 +
+        (nbeam_stress + nbeam_strain) * 0 +  # sxc, sxd, sxe, sxf, smax, smin
+
+        # [max_shear, avg_shear, margin]; no margin
+        (nshear_stress + nshear_strain) * 2 +
+
+        #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]; # 8; old
+        #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises, oabs, max_shear]  # 10; new
+        # added oabs???
+        (nplate_stress + nplate_strain) * 8 +
+
+        # [o11, o22, t12, t1z, t2z, angle, major, minor, max_shea]
+        (ncomposite_plate_stress + ncomposite_plate_strain) * ncomposite_layers * 0 +
+
+        # [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises]
+        (nsolid_stress + nsolid_strain) * 10 +
+
+        # ---------------------------------------------
+
+        # order is different, but close enough
+        # [bending_moment_a1, bending_moment_a2, shear1,
+        #  bending_moment_b1, bending_moment_b2, shear2,
+        #  axial, torque]
+        nbar_force * 8 +
+        nbeam_force * 0
+    )
+    if nbar_force:
+        # isBarOn flag
+        nresults += 1
+
+    if nplate_stress + nplate_strain > 0:
+        # absolute max corner stress
+        nresults += 10
+    assert nresults > 0, nresults
+    return nresults
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

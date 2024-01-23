@@ -760,11 +760,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 #return icase
 
         #self.settings.nastran_plate_stress
+        nids = self.node_ids
         eids = self.element_ids
         assert isinstance(icase, int), icase
         if nastran_settings.plate_stress:
             icase = get_plate_stress_strains2(
-                eids, cases, model, times, key, icase,
+                nids, eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
 
             try:

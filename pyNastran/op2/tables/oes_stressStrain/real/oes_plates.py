@@ -5,6 +5,7 @@ import warnings
 from typing import TextIO
 import numpy as np
 
+from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
@@ -196,6 +197,31 @@ class RealPlateArray(OES_Object):
             self.element_node = element_node
             self.data = data
         #print(self.element_node.shape, self.data.shape)
+
+    def abs_principal(self) -> np.ndarray:
+        """hasn't been checked for strain; 2d von mises"""
+        omax = self.data[:, :, 5]
+        omin = self.data[:, :, 6]
+        abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
+        return abs_principal
+    def von_mises(self) -> np.ndarray:
+        """hasn't been checked for strain; 2d von mises"""
+        if self.is_von_mises:
+            return self.data[:, :, -1]
+        σxx = self.data[:, :, 1]
+        σyy = self.data[:, :, 2]
+        τxy = self.data[:, :, 3]
+        ovm = np.sqrt(σxx**2 + σyy**2 - σxx*σyy +3*(τxy**2) )
+        return ovm
+    def max_shear(self) -> np.ndarray:
+        """hasn't been checked for strain"""
+        if not self.is_von_mises:
+            return self.data[:, :, -1]
+        #headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
+        omax = self.data[:, :, 5]
+        omin = self.data[:, :, 6]
+        max_shear = (omax - omin) / 2.
+        return max_shear
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

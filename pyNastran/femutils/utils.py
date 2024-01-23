@@ -395,11 +395,11 @@ def safe_norm(t123: np.ndarray,
 def abs_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     max_values = np.amax(x, axis=axis)
     min_values = np.amin(x, axis=axis)
-    y = get_abs_max(min_values, max_values, dtype='float32')
+    y = get_abs_max(min_values, max_values, dtype=x.dtype)
     return y
 
 def abs_nan_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     max_values = np.nanmax(x, axis=axis)
     min_values = np.nanmin(x, axis=axis)
-    y = get_abs_max(min_values, max_values, dtype='float32')
+    y = get_abs_max(min_values, max_values, dtype=x.dtype)
     return y
