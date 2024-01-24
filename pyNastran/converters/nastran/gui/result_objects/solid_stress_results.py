@@ -436,12 +436,16 @@ class SolidResults2(VectorResultsCommon):
         ## TODO: consider implementing Average/Derive
         # ----------------------------------------------------------
         # setup
+        nodal_combine_func = nodal_combine_map[self.nodal_combine]
+
         element_node = self.element_node
         nids = np.unique(element_node[:, 1])
+        #ids = np.arange(len(unode_id))
 
-        nodal_combine_func = nodal_combine_map[self.nodal_combine]
-        inid = np.searchsorted(self.node_id, nids)
-        nid_to_inid_map = {nid: inidi for nid, inidi in zip(nids, inid)}
+        #inid = self.inode   # this is the global mapper
+        #inid = np.searchsorted(unode_id, nids)
+        #nid_to_inid_map = {nid: inidi for nid, inidi in zip(nids, inid)}
+        nid_to_inid_map = {nid: i for i, nid in enumerate(nids)}
 
         ## Derive/Average
         if isinstance(iresult, int):
@@ -449,7 +453,7 @@ class SolidResults2(VectorResultsCommon):
             data = nodal_average(
                 nodal_combine_func,
                 element_node, datai,
-                nids, inid, nid_to_inid_map)
+                nids, nid_to_inid_map)
 
         elif iresult == 'von_mises':
             oxx = self.node_data[itime, :, ioxx]
@@ -462,7 +466,7 @@ class SolidResults2(VectorResultsCommon):
             data = nodal_average(
                 nodal_combine_func,
                 element_node, ovm_data,
-                nids, inid, nid_to_inid_map)
+                nids, nid_to_inid_map)
 
         elif iresult == 'max_shear':
             omax = self.node_data[itime, :, imax]
@@ -471,7 +475,7 @@ class SolidResults2(VectorResultsCommon):
             data = nodal_average(
                 nodal_combine_func,
                 element_node, max_shear_data,
-                nids, inid, nid_to_inid_map)
+                nids, nid_to_inid_map)
 
         elif iresult == 'abs_principal':
             data_max = self.node_data[itime, :, imax]
@@ -481,7 +485,7 @@ class SolidResults2(VectorResultsCommon):
             data = nodal_average(
                 nodal_combine_func,
                 element_node, abs_data,
-                nids, inid, nid_to_inid_map)
+                nids, nid_to_inid_map)
         else:
             raise NotImplementedError(iresult)
         return data
@@ -527,9 +531,14 @@ class SolidResults2(VectorResultsCommon):
         if return_sparse or self.is_dense:
             return data
 
-        nelements = len(self.element_id)
-        result_out = np.full(nelements, np.nan, dtype=data.dtype)
-        result_out[self.ielement_centroid] = data
+        if self.get_location(0, 0) == 'node':
+            nnode = len(self.node_id)
+            result_out = np.full(nnode, np.nan, dtype=data.dtype)
+            result_out[self.inode] = data
+        else:
+            nelements = len(self.element_id)
+            result_out = np.full(nelements, np.nan, dtype=data.dtype)
+            result_out[self.ielement_centroid] = data
         return result_out
 
     def get_default_scale(self, itime: int, res_name: str) -> float:
@@ -672,9 +681,11 @@ class SolidStrainStressResults2(SolidResults2):
             #self.centroid_data = self.centroid_data[:, icommon, :]
             raise RuntimeError('some common elements were found...but some are missing')
 
-
+        nids = np.unique(self.element_node[:, 1])
+        self.inode = np.searchsorted(node_id, nids)
         self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
 
+        assert np.array_equal(element_id[self.ielement_centroid], self.centroid_eids)
         # dense -> no missing nodes in the results set
         self.is_dense = (len(element_id) == len(self.centroid_eids))
         #self.is_dense = False
@@ -715,8 +726,12 @@ class SolidStrainStressResults2(SolidResults2):
         #case.data.shape = (11, 43, 6)
         #nnodes = len(self.node_id) =  48
         #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
-        normi2 = np.full(len(self.element_id), np.nan, dtype=normi.dtype)
-        normi2[self.ielement_centroid] = normi
+        if self.get_location(0, 0) == 'node':
+            normi2 = np.full(len(self.node_id), np.nan, dtype=normi.dtype)
+            normi2[self.inode] = normi
+        else:
+            normi2 = np.full(len(self.element_id), np.nan, dtype=normi.dtype)
+            normi2[self.ielement_centroid] = normi
         return normi2
 
     #def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
@@ -826,7 +841,7 @@ def nodal_average(nodal_combine_func: Callable[np.ndarray],
                   element_node: np.ndarray,
                   data: np.ndarray,
                   nids: np.ndarray,
-                  inid: np.ndarray,
+                  #inid: np.ndarray,
                   nid_to_inid_map: dict[int, int]) -> np.ndarray:
     data_dict = defaultdict(list)
     nnode = len(nids)

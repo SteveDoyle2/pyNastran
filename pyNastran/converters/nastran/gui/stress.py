@@ -24,7 +24,7 @@ from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
 from pyNastran.gui import (USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS,
-                           USE_NEW_PLATE_TERMS, USE_NEW_SOLID_TERMS)
+                           USE_NEW_TERMS)
 
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
@@ -829,7 +829,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
         }
         word = 'Strain'
 
-    if not USE_NEW_PLATE_TERMS:
+    if not USE_NEW_TERMS:
         del iresult_to_title_annotation_map[max_shear]
         del iresult_to_title_annotation_map['abs_principal']
 
@@ -1363,7 +1363,7 @@ def get_solid_stress_strains2(node_id: np.ndarray,
         }
         word = 'Strain'
 
-    if not USE_NEW_SOLID_TERMS:
+    if not USE_NEW_TERMS:
         del iresult_to_title_annotation_map[max_shear]
         #del iresult_to_title_annotation_map['abs_principal']
 
