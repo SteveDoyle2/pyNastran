@@ -13,7 +13,6 @@ from qtpy.QtWidgets import (
 )
 #from qtpy.QtCore import QSize
 from qtpy import QtCore
-from pyNastran.gui import USE_NEW_SIDEBAR
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NullResult
 from pyNastran.gui.utils.qt.utils import (
@@ -155,7 +154,8 @@ class ResultsSidebar(QWidget):
                  include_export_case: bool=True,
                  include_delete: bool=True,
                  include_results: bool=True,
-                 include_vector_checks: bool=False):
+                 include_vector_checks: bool=False,
+                 use_new_sidebar: bool=False):
         """
         Creates the buttons in the Sidebar, not the actual layout
 
@@ -177,6 +177,7 @@ class ResultsSidebar(QWidget):
         """
         #include_case_spinner = False
         QWidget.__init__(self)
+        self._use_new_sidebar = use_new_sidebar
         self.parent = parent
         self.debug = debug
         self._update_case = True
@@ -203,7 +204,7 @@ class ResultsSidebar(QWidget):
             #('C', 3, []),
         ]
 
-        if USE_NEW_SIDEBAR:
+        if use_new_sidebar:
             self.result_method_window = ResultsWindow(
                 self, 'Method', data, choices,
                 left_click_callback=None,
@@ -248,7 +249,7 @@ class ResultsSidebar(QWidget):
         if self.has_cases:
             self.set_max_case(self.parent.result_cases)
 
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             self.transform_coords_label = QLabel('2: Transform:')
             self.transform_coords_pulldown = QComboBox()
             self.transform_coords_pulldown.addItem('Coord 0')
@@ -294,7 +295,7 @@ class ResultsSidebar(QWidget):
         This is a multi-selection window with (typically) the first entry
         being the default
         """
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             # avoid enabling/hiding if we can
             is_enabled = self.result_method_window.isEnabled()
             update = is_enabled is not is_visible
@@ -306,7 +307,7 @@ class ResultsSidebar(QWidget):
     def set_coord_transform_visible(self, is_visible: bool,
                                     coords: list[str]) -> None:
         """Simple pulldown to indicate the coordinate system"""
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             self.transform_coords_label.setVisible(is_visible)
             self.transform_coords_pulldown.setVisible(is_visible)
             update_combo_box(self.transform_coords_pulldown,
@@ -323,7 +324,7 @@ class ResultsSidebar(QWidget):
         The subsequent step is to average the values across elements
         (see nodal_combine).
         """
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             label = min_max_averages_dict.get('label', 'Derivation Method:')
             if is_visible and label != self.min_max_average_label:
                 self.min_max_average_label.setText(label)
@@ -345,7 +346,7 @@ class ResultsSidebar(QWidget):
         Now that we have 1 value for each node on each element, we
         can merge the results across elements by averaging/min/max.
         """
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             self.combine_label.setVisible(is_visible)
             self.combine_pulldown.setVisible(is_visible)
             update_combo_box(self.combine_pulldown,
@@ -359,7 +360,7 @@ class ResultsSidebar(QWidget):
         is_disp_vector = is_enabled_disp or is_enabled_vector
         is_fringe_only = not is_disp_vector
 
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             # disable this (and check it) when there's only the fringe
             is_enabled = self.fringe_checkbox.isEnabled()
             if is_fringe_only:
@@ -489,7 +490,7 @@ class ResultsSidebar(QWidget):
         vbox = QVBoxLayout()
 
         hbox_name = create_hbox_with_widgets([self.name_label, self.name_pulldown])
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             hbox_avg = create_hbox_with_widgets([self.min_max_average_label, self.min_max_average_pulldown])
             hbox_coord = create_hbox_with_widgets([self.transform_coords_label, self.transform_coords_pulldown])
             hbox_combine = create_hbox_with_widgets([self.combine_label, self.combine_pulldown])
@@ -501,7 +502,7 @@ class ResultsSidebar(QWidget):
         #self.vector_label, self.vector_edit,
         vbox.addLayout(hbox_name)
 
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             vbox_top = QVBoxLayout(self)
             vbox_btm = QVBoxLayout(self)
         else:
@@ -524,7 +525,7 @@ class ResultsSidebar(QWidget):
             self.result_case_windows.append(result_case_window)
 
         iname = 0
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             vbox_top_widget = QWidget(self); vbox_top_widget.setLayout(vbox_top)
             vbox_btm_widget = QWidget(self); vbox_btm_widget.setLayout(vbox_btm)
 
@@ -554,7 +555,7 @@ class ResultsSidebar(QWidget):
 
         if self.show_pulldown:
             vbox.addWidget(self.pulldown)
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             vbox.addLayout(hbox_coord)
             vbox.addLayout(hbox_avg)
             vbox.addLayout(hbox_combine)
@@ -597,7 +598,7 @@ class ResultsSidebar(QWidget):
             data.append((methodi, None, []))
             #self.result_method_window.data[0] = (methodi, datai[1], datai[2])
             #print('method=%s datai=%s' % (method, datai))
-        if not USE_NEW_SIDEBAR:
+        if not self._use_new_sidebar:
             return
 
         # avoid updating if the data is is the same
@@ -672,7 +673,7 @@ class ResultsSidebar(QWidget):
 
     def update_methods(self, data):
         """the methods is a hidden box"""
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             self.result_method_window.update_data(data)
             self.result_method_window.tree_view.selectAll()
         assert len(data), data
@@ -680,7 +681,7 @@ class ResultsSidebar(QWidget):
 
     def clear_data(self):
         self.result_case_window.clear_data()
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             self.result_method_window.clear_data()
         self.apply_button.setEnabled(False)
 
@@ -703,7 +704,7 @@ class ResultsSidebar(QWidget):
 
         # apparently this ca be None if you use K/L to cycle...
         keys_a = icase if keys_a is None else keys_a
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             data = self.result_method_window.data
             valid_b, keys_b, index_list_b = self.result_method_window.tree_view.get_row()
             if valid_a and valid_b:
@@ -766,7 +767,7 @@ class ResultsSidebar(QWidget):
 
         keys_b.sort()
         sidebar_kwargs = {}
-        if USE_NEW_SIDEBAR:
+        if self._use_new_sidebar:
             coord = get_combo_box_text(self.transform_coords_pulldown)
             min_max_method = get_combo_box_text(self.min_max_average_pulldown)
             nodal_combine = get_combo_box_text(self.combine_pulldown)
@@ -858,7 +859,7 @@ def main():  # pragma: no cover
         print(f'case={case}')
         x = 1
 
-    res_widget = Sidebar(
+    res_widget = ResultsSidebar(
         app, data=form,
         #left_click_callback=func,
         clear_data=False, debug=True)

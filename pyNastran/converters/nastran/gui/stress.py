@@ -23,8 +23,6 @@ from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
-from pyNastran.gui import (USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS,
-                           USE_NEW_TERMS)
 
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
@@ -523,6 +521,7 @@ def get_plate_stress_strains(eids: np.ndarray,
                              form_dict, header_dict,
                              keys_map: KeysMap,
                              log: SimpleLogger,
+                             use_old_sidebar_objects: bool,
                              is_stress: bool,
                              prefix: str='') -> int:
     """
@@ -534,7 +533,7 @@ def get_plate_stress_strains(eids: np.ndarray,
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
     """
-    if not USE_OLD_SIDEBAR_OBJS:  # pragma: no cover
+    if not use_old_sidebar_objects:  # pragma: no cover
         return icase
     plates, word, subcase_id, analysis_code = _get_plates(model, key, is_stress, prefix)
     word += ' (centroid)'
@@ -762,6 +761,8 @@ def get_plate_stress_strains2(node_id: np.ndarray,
                               keys_map: KeysMap,
                               eid_to_nid_map: dict[int, list[int]],
                               log: SimpleLogger,
+                              use_new_sidebar_objects: bool,
+                              use_new_terms: bool,
                               is_stress: bool,
                               prefix: str='') -> int:
     """
@@ -773,7 +774,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
     """
-    if not USE_NEW_SIDEBAR_OBJS:  # pragma: no cover
+    if not use_new_sidebar_objects:  # pragma: no cover
         return icase
     plates, word, subcase_id, analysis_code = _get_plates(model, key, is_stress, prefix)
 
@@ -830,7 +831,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
         }
         word = 'Strain'
 
-    if not USE_NEW_TERMS:
+    if not use_new_terms:
         del iresult_to_title_annotation_map[max_shear]
         del iresult_to_title_annotation_map['abs_principal']
 
@@ -1042,8 +1043,9 @@ def get_composite_plate_stress_strains2(eids: np.ndarray,
                                         form_dict, header_dict,
                                         keys_map: KeysMap,
                                         log: SimpleLogger,
+                                        use_new_sidebar_objects: bool,
                                         is_stress: bool=True) -> int:
-    if not USE_NEW_SIDEBAR_OBJS:  # pragma: no cover
+    if not use_new_sidebar_objects:  # pragma: no cover
         return icase
 
     case_map, keys_map2, cases2 = _stack_composite_results(model, log, is_stress, key=key)
@@ -1116,6 +1118,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                                        keys_map: KeysMap,
                                        composite_data_dict: CompositeDict,
                                        log: SimpleLogger,
+                                       use_old_sidebar_objects: bool,
                                        is_stress: bool=True) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
@@ -1125,7 +1128,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     key = (1, 1, 1, 0, 0, '', '')
     composite_data_dict[element_type][key]
     """
-    if not USE_OLD_SIDEBAR_OBJS:  # pragma: no cover
+    if not use_old_sidebar_objects:  # pragma: no cover
         return icase
     case_map, keys_map2, cases2 = _stack_composite_results(
         model, log, is_stress, key=key)
@@ -1232,7 +1235,7 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
                 layer_name = f' Layer {ilayer+1}'
                 form_layeri = form_layers[layer_name]
                 #cases[icase] = (res, (subcase_id, header))
-                #if USE_NEW_SIDEBAR_OBJS:
+                #if use_new_sidebar_objects:
                     #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
                     #form_layeri.append((f'{method} ({layer_name})', icase, []))
                     #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
@@ -1292,6 +1295,8 @@ def get_solid_stress_strains2(node_id: np.ndarray,
                               form_dict, header_dict,
                               keys_map: KeysMap,
                               log: SimpleLogger,
+                              use_new_sidebar_objects: bool,
+                              use_new_terms: bool,
                               is_stress: bool,
                               prefix: str='') -> int:
     """
@@ -1304,7 +1309,7 @@ def get_solid_stress_strains2(node_id: np.ndarray,
          superelement_adaptivity_index, pval_step)
 
     """
-    if not USE_NEW_SIDEBAR_OBJS:  # pragma: no cover
+    if not use_new_sidebar_objects:  # pragma: no cover
         return icase
     solids, word, subcase_id, analysis_code = _get_solids(
         model, key, is_stress, prefix)
@@ -1361,7 +1366,7 @@ def get_solid_stress_strains2(node_id: np.ndarray,
         }
         word = 'Strain'
 
-    if not USE_NEW_TERMS:
+    if not use_new_terms:
         del iresult_to_title_annotation_map[max_shear]
         #del iresult_to_title_annotation_map['abs_principal']
 
@@ -1440,11 +1445,12 @@ def get_solid_stress_strains(eids: np.ndarray,
                              form_dict, header_dict,
                              keys_map: KeysMap,
                              log: SimpleLogger,
+                             use_old_sidebar_objects: bool,
                              is_stress: bool) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
-    if not USE_OLD_SIDEBAR_OBJS:
+    if not use_old_sidebar_objects:
         return icase
     #print("***stress eids=", eids)
     subcase_id = key[0]

@@ -32,6 +32,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
 
+from pyNastran.gui import (
+    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
+    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJECTS,
+    USE_NEW_TERMS_ as USE_NEW_TERMS)
+
+USE_NEW_SIDEBAR = False
+if USE_NEW_SIDEBAR_OBJECTS:
+    USE_NEW_SIDEBAR = False
+
 
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
@@ -166,6 +175,11 @@ class Settings:
         self.startup_directory = ''
         self.use_startup_directory = True
 
+        self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
+        self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
+        self.use_new_sidebar = USE_NEW_SIDEBAR
+        self.use_new_terms = USE_NEW_TERMS
+
         # rgb tuple
         self.background_color = BACKGROUND_COLOR
         self.background_color2 = BACKGROUND_COLOR2
@@ -217,6 +231,10 @@ class Settings:
 
         self.startup_directory = ''
         self.use_startup_directory = True
+
+        self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
+        self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
+        self.use_new_sidebar = USE_NEW_SIDEBAR
 
         self.annotation_size = ANNOTATION_SIZE
         self.annotation_color = ANNOTATION_COLOR
@@ -287,83 +305,113 @@ class Settings:
         #settings.setValue('main_window_state', self.parent.saveState())
 
         # this is the gui font
-        self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
+        self._set_setting(settings, setting_keys, ['font_size'],
+                          default=self.font_size,
+                          save=True, auto_type=int)
 
         # parallel/perspective
-        self._set_setting(settings, setting_keys, ['use_parallel_projection'], self.use_parallel_projection,
-                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_parallel_projection'],
+                          default=self.use_parallel_projection,
+                          save=True, auto_type=bool)
 
         # launch in local or specified directory
-        self._set_setting(settings, setting_keys, ['startup_directory'], self.startup_directory,
-                          True, auto_type=str)
-        self._set_setting(settings, setting_keys, ['use_startup_directory'], self.use_startup_directory,
-                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['startup_directory'],
+                          default=self.startup_directory,
+                          save=True, auto_type=str)
+        self._set_setting(settings, setting_keys, ['use_startup_directory'],
+                          default=self.use_startup_directory,
+                          save=True, auto_type=bool)
         if os.path.exists(self.startup_directory):
             self.parent.last_dir = self.startup_directory
         else:
             self.startup_directory = ''
 
+        self._set_setting(settings, setting_keys, ['use_old_sidebar_objects'],
+                          default=self.use_old_sidebar_objects,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_new_sidebar_objects'],
+                          default=self.use_new_sidebar_objects,
+                          save=True, auto_type=bool)
+        self.use_new_sidebar = self.use_new_sidebar_objects
+        #self._set_setting(settings, setting_keys, ['use_new_sidebar'], self.use_new_sidebar,
+                          #USE_NEW_SIDEBAR, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_new_terms'],
+                          default=self.use_new_terms,
+                          save=True, auto_type=bool)
+
         # the info/debug/gui/command preferences
-        self._set_setting(settings, setting_keys, ['show_info'], self.show_info,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_command'], self.show_command,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_warning'], self.show_warning,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_error'], self.show_error,
-                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_info'],
+                          default=self.show_info,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_debug'],
+                          default=self.show_debug,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_command'],
+                          default=self.show_command,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_warning'],
+                          default=self.show_warning,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_error'],
+                          default=self.show_error,
+                          save=True, auto_type=bool)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
-                          False, auto_type=bool)
+                          default=False, save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'],
-                          GREY, auto_type=float)
-        self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=float)
+                          default=GREY, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['background_color2'],
+                          default=GREY, save=True, auto_type=float)
 
         # scales the coordinate systems
-        self._set_setting(settings, setting_keys, ['coord_scale'], COORD_SCALE, auto_type=float)
-        self._set_setting(settings, setting_keys, ['coord_text_scale'], COORD_TEXT_SCALE, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_scale'],
+                          default=COORD_SCALE, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_text_scale'],
+                          default=COORD_TEXT_SCALE, save=True, auto_type=float)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
-                          BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['annotation_size'], ANNOTATION_SIZE, auto_type=int) # int
+                          default=BLACK, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['annotation_size'],
+                          default=ANNOTATION_SIZE, save=True, auto_type=int) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = ANNOTATION_SIZE
-        elif isinstance(self.annotation_size, int):
-            pass
-        else:
-            print('annotation_size = ', self.annotation_size)
+        #elif isinstance(self.annotation_size, int):
+            #pass
+        #else:
+            #print('annotation_size = ', self.annotation_size)
 
-        self._set_setting(settings, setting_keys, ['magnify'], self.magnify, auto_type=int)
+        self._set_setting(settings, setting_keys, ['magnify'],
+                          default=self.magnify, save=True, auto_type=int)
 
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
-                          BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['text_size'], TEXT_SIZE, auto_type=int)
+                          default=BLACK, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['text_size'],
+                          default=TEXT_SIZE, save=True, auto_type=int)
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
-                          ORANGE, auto_type=float)
+                          default=ORANGE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_opacity'],
-                          HIGHLIGHT_OPACITY, auto_type=float)
+                          default=HIGHLIGHT_OPACITY, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_point_size'],
-                          HIGHLIGHT_POINT_SIZE, auto_type=float)
+                          default=HIGHLIGHT_POINT_SIZE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
-                          HIGHLIGHT_LINE_THICKNESS, auto_type=float)
+                          default=HIGHLIGHT_LINE_THICKNESS, save=True, auto_type=float)
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
         # default colormap for legend
-        self._set_setting(settings, setting_keys, ['colormap'], 'jet')
+        self._set_setting(settings, setting_keys, ['colormap'],
+                          default='jet', save=True)
 
 
         # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
-                                         screen_shape_default, save=False, auto_type=int)
+                                         default=screen_shape_default, save=False, auto_type=int)
 
         #try:
             #screen_shape = settings.value("screen_shape", screen_shape_default)
@@ -454,6 +502,11 @@ class Settings:
         # startup directory
         settings.setValue('startup_directory', self.startup_directory)
         settings.setValue('use_startup_directory', self.use_startup_directory)
+
+        #settings.setValue('use_new_sidebar', self.use_new_sidebar)
+        settings.setValue('use_old_sidebar_objects', self.use_old_sidebar_objects)
+        settings.setValue('use_new_sidebar_objects', self.use_new_sidebar_objects)
+        settings.setValue('use_new_terms', self.use_new_terms)
 
         # rgb tuple
         settings.setValue('background_color', self.background_color)

@@ -181,10 +181,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
+        settings = self.settings
         self.res_widget = ResultsSidebar(
             self,
             left_click_callback=self._set_methods_by_icase,
             include_vector_checks=True,
+            use_new_sidebar=settings.use_new_sidebar,
         )
         #self.res_widget.update_results(data)
         #self.res_widget.setWidget(sidebar)

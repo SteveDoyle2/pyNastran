@@ -23,7 +23,11 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
-from pyNastran.gui import USE_NEW_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS, USE_NEW_TERMS
+from pyNastran.gui import (
+    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJS,
+    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJS,
+    USE_NEW_TERMS_ as USE_NEW_TERMS)
+
 USE_OLD_TERMS = not USE_NEW_TERMS
 from pyNastran.gui.testing_methods import FakeGUIMethods
 
