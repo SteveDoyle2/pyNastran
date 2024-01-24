@@ -982,7 +982,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
                         cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                        log, is_stress=False)
+                        log, stop_on_failure, is_stress=False)
                 except IndexError:
                     log.error('problem getting strain...')
                     break

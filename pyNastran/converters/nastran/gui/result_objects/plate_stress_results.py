@@ -148,6 +148,9 @@ class PlateResults2(VectorResultsCommon):
         self.uname = uname
         self.location = 'centroid'
 
+        #[ntime, nelement, nlayer, nresult]
+        self.centroid_data = np.zeros((0, 0, 2, 8), dtype='float32')
+
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
         return out
@@ -226,6 +229,11 @@ class PlateResults2(VectorResultsCommon):
         """elemental -> nodal"""
         return True, ['Centroid'] # 'Nodal Max'
         #return True, ['Absolute Max', 'Min', 'Max']
+
+    def get_location(self, itime: int, case_tuple: str) -> str:
+        if self.nodal_combine == 'Centroid':
+            return 'centroid'
+        return 'node'
 
     def get_annotation(self, itime: int, case_tuple: str) -> str:
         """
@@ -344,44 +352,18 @@ class PlateResults2(VectorResultsCommon):
         #self.centroid_eids = np.hstack(centroid_elements_list)
         #self.centroid_data = np.hstack(data_list)
 
-        ilayer = self.layer_indices
         if self.layer_indices == (-1, ):
             self.layer_indices = (0, 1)
+        ilayer = self.layer_indices
 
         #self.case.get_headers()
         #[fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
         results = list(self.result.keys())
+
         neids = self.centroid_data.shape[1]
 
         if self.nodal_combine == 'Centroid':
-            # [itime, ielement, ilayer, iresult]
-            #'eabs' : ('eAbs Principal', -1),
-            #'von_mises' : ('ϵ von Mises', -2),
-            #'max_shear' : ('𝛾max', -3),
-            if iresult == 'abs_principal': # abs max
-                omax = self.centroid_data[itime, :, ilayer, 5]
-                omin = self.centroid_data[itime, :, ilayer, 6]
-                abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
-                #'exx' : ('Strain XX', 1),
-                #'eyy' : ('Strain YY', 2),
-                #'exy' : ('Strain XY', 3),
-                data = abs_principal
-            elif iresult == 'von_mises': # von mises
-                oxx = self.centroid_data[itime, :, ilayer, 1]
-                oyy = self.centroid_data[itime, :, ilayer, 2]
-                txy = self.centroid_data[itime, :, ilayer, 3]
-                ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
-                data = ovm
-            elif iresult == 'max_shear':
-                # not checked for strain
-                omax = self.centroid_data[itime, :, ilayer, 5]
-                omin = self.centroid_data[itime, :, ilayer, 6]
-                max_shear = (omax - omin) / 2.
-                data = max_shear
-            #elif iresult < 0:
-                #data = self.centroid_data[itime, :, ilayer, 0] * 0. + iresult
-            else:
-                data = self.centroid_data[itime, :, ilayer, iresult].copy()
+            data = self._get_centroid_result(itime, iresult, ilayer)
         #elif self.nodal_combine == 'Nodal Max':
         #elif self.nodal_combine == 'Nodal Min':
         #elif self.nodal_combine == 'Nodal Mean':
@@ -431,6 +413,43 @@ class PlateResults2(VectorResultsCommon):
             #datai = self.dxyz.data[itime, :, 3:]
             #assert datai.shape[1] == 3, datai.shape
         #return datai
+
+    def _get_centroid_result(self, itime: int,
+                             iresult: Union[int, str],
+                             ilayer: np.ndarray) -> np.ndarray:
+        centroid_data = self.centroid_data
+        neids = len(self.centroid_eids)
+        (ntime, neidsi_nnode, nlayer, nresult) = centroid_data.shape
+        assert neids == neidsi_nnode
+
+        # [itime, ielement, ilayer, iresult]
+        #'eabs' : ('eAbs Principal', -1),
+        #'von_mises' : ('ϵ von Mises', -2),
+        #'max_shear' : ('𝛾max', -3),
+        if iresult == 'abs_principal': # abs max
+            omax = centroid_data[itime, :, ilayer, 5]
+            omin = centroid_data[itime, :, ilayer, 6]
+            abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
+            #'exx' : ('Strain XX', 1),
+            #'eyy' : ('Strain YY', 2),
+            #'exy' : ('Strain XY', 3),
+            data = abs_principal
+        elif iresult == 'von_mises': # von mises
+            oxx = centroid_data[itime, :, ilayer, 1]
+            oyy = centroid_data[itime, :, ilayer, 2]
+            txy = centroid_data[itime, :, ilayer, 3]
+            data = von_mises_2d(oxx, oyy, txy)
+        elif iresult == 'max_shear':
+            # not checked for strain
+            omax = centroid_data[itime, :, ilayer, 5]
+            omin = centroid_data[itime, :, ilayer, 6]
+            max_shear = (omax - omin) / 2.
+            data = max_shear
+        #elif iresult < 0:
+            #data = self.centroid_data[itime, :, ilayer, 0] * 0. + iresult
+        else:
+            data = centroid_data[itime, :, ilayer, iresult].copy()
+        return data
 
     def get_result(self, itime: int, case_tuple: str,
                    method: str='',
@@ -585,6 +604,8 @@ class PlateStrainStressResults2(PlateResults2):
         self.element_node = element_node
         self.node_data = node_data
 
+        assert len(np.unique(self.centroid_eids)) == len(self.centroid_eids)
+
         common_eids = np.intersect1d(self.centroid_eids, element_id)
         if len(common_eids) == 0:
             raise IndexError('no plate elements found...')
@@ -594,6 +615,9 @@ class PlateStrainStressResults2(PlateResults2):
             raise RuntimeError('some common elements were found...but some are missing')
 
         self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
+
+        nids = np.unique(self.element_node[:, 1])
+        self.inode = np.searchsorted(node_id, nids)
 
         # dense -> no missing nodes in the results set
         self.is_dense = (len(element_id) == len(self.centroid_eids))
@@ -742,27 +766,92 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
 
             element_node_4d = case.element_node.reshape(nelement, nnode, nlayer, 2)
             element_node_3d = element_node_4d[:, 1:, :, :]
-            element_node = element_node_3d.reshape(nplies, 2)
+            element_nodei = element_node_3d.reshape(nplies, 2)
 
             centroid_eidsi = case.element_node[0::2*nnode, 0]
-            centroid_datai = case.data.copy().reshape(ntime, nelement, nnode, nlayer, nresult)
-            centroid_dataii = centroid_datai[:, :, 0, :, :]
-            node_dataii     = centroid_datai[:, :, 1:, :, :]
+            centroid_datai_5d = case.data.copy().reshape(ntime, nelement, nnode, nlayer, nresult)  # reshape to be easier to slice
 
-            node_data_list.append(node_dataii)
-            element_node_list.append(element_node)
+            # pull off the centroid
+            #[ntime, nelement, nlayer, nresult]
+            centroid_datai = centroid_datai_5d[:, :, 0, :, :]
+
+            # pull off the nodes
+            #[ntime, nelement, nnode, nlayer, nresult]
+            node_datai     = centroid_datai_5d[:, :, 1:, :, :]
+
+            node_datai2 = node_datai.reshape(ntime, nelement*(nnode-1), nlayer, nresult)
+            node_data_list.append(node_datai2)
+            element_node_list.append(element_nodei)
+            del node_datai, node_datai2, element_node_3d, element_node_4d, element_nodei, centroid_datai_5d
         else:
             # ctria3 - no nodal
             centroid_eidsi = case.element_node[::2, 0]
-            centroid_datai = case.data.reshape(ntime, nelement_nnode, 1, nlayer, nresult)
-            centroid_dataii = centroid_datai[:, :, 0, :, :]
 
+            # slice off for output
+            centroid_datai = case.data.reshape(ntime, nelement_nnode, nlayer, nresult).copy()
+
+            # setup for nodes
+            node_data_5d = case.data.reshape(ntime, nelement_nnode, 1, nlayer, nresult).copy()
+
+            nelement = len(centroid_eidsi)
             eid0 = centroid_eidsi[0]
             nid0 = eid_to_nid_map[eid0]
 
-            ## TODO: probably wrong for fancy CQUAD8/CTRIA6
-            nnodes = len(nid0)
-            node_data_list.extend([centroid_dataii]*nnodes)
+            # ----------------------------------------------
+            # Spoof the values for the tri
+            # TODO: probably wrong for fancy CQUAD8/CTRIA6
+            nnode = len(nid0)
+
+            ##centroid_dataii (1, 278, 2, 8)
+
+            # prove out stacking...
+            #node_data_5d[0, 0, 0, 0, 0] = 1.
+            #node_data_5d[0, 0, 0, 1, 0] = 2.
+            node_data_3d = node_data_5d.reshape(ntime, nelement*nlayer, nresult)
+            # ------------------------------------------------------------------------
+            # good
+            node_data_shape = (ntime, nelement*nnode*nlayer, nresult)
+            node_datai = np.full(node_data_shape, np.nan, dtype=node_data_3d.dtype)
+
+            ## gross...interleaving the centroid data to fake nodal data
+            # alternate approaches are using np.stack, np.tile, ... I couldn
+            # [0, 1, 2]   0
+            # [3, 4, 5]   1
+            #  +
+            # [6, 7, 8]   2
+            # [9, 10, 11] 3
+            # -------------
+            # [0, 1, 2]   0
+            # [3, 4, 5]   1
+            #
+            # [0, 1, 2]   2
+            # [3, 4, 5]   3
+            #
+            # [0, 1, 2]   4
+            # [3, 4, 5]   5
+            #  +
+            # [6, 7, 8]   6
+            # [9, 10, 11] 7
+            #
+            # [6, 7, 8]   8
+            # [9, 10, 11] 9
+            #
+            # [6, 7, 8]   10
+            # [9, 10, 11] 11
+
+            # every 3rd layer; should be reasonbly fast
+            ilayer0 =  np.arange(nelement*nlayer)
+            ilayer0a = ilayer0[::nlayer]
+            ilayer0b = ilayer0a + 1
+            ilayer1 = nnode * ilayer0a
+            ilayer2 = ilayer1 + 1
+            node_datai2 = np.full(node_data_shape, np.nan, dtype=node_data_3d.dtype)
+            for inode in range(nnode):
+                node_datai2[:, nlayer*inode+ilayer1, :] = node_data_3d[:, ilayer0a, :]
+                node_datai2[:, nlayer*inode+ilayer2, :] = node_data_3d[:, ilayer0b, :]
+            node_datai = node_datai2.reshape(ntime, nelement*nnode, nlayer, nresult)
+            # not nearly as critical as the previous, but could be sped up
+            # using the same method...with only be 3 lines of code
             element_nodei = []
             for eid in centroid_eidsi:
                 nids = eid_to_nid_map[eid]
@@ -770,11 +859,15 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
                     # two layers per node
                     element_nodei.append((eid, nid))
                     element_nodei.append((eid, nid))
-            element_node_list.append(element_nodei)
+            element_node_list.append(np.array(element_nodei))
+            node_data_list.append(node_datai)
+            del eid0, nids, nnode, element_nodei
+            del ilayer0, ilayer0a, ilayer0b, ilayer1, ilayer2
+
         # slice off the centroid
         centroid_elements_list.append(centroid_eidsi)
-        centroid_data_list.append(centroid_dataii)
-        del node_dataii, centroid_dataii, centroid_eidsi, element_nodei
+        centroid_data_list.append(centroid_datai)
+        del centroid_datai, centroid_eidsi
 
     centroid_eids = np.hstack(centroid_elements_list)
     centroid_data = np.hstack(centroid_data_list)
@@ -782,3 +875,9 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
     element_node = np.vstack(element_node_list)
     node_data = np.hstack(node_data_list)
     return centroid_eids, centroid_data, element_node, node_data
+
+def von_mises_2d(oxx: np.ndarray,
+                 oyy: np.ndarray,
+                 txy: np.ndarray) -> np.ndarray:
+    ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
+    return ovm
