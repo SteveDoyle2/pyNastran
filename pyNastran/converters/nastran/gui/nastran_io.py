@@ -3256,6 +3256,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             unused_form_time = []
 
             ncases_old = icase
+
+            eid_to_nid_map = {}
+            for eid, elem in self.model.elements.items():
+                eid_to_nid_map[eid] = elem.nodes
+
             stop_on_failure = self.stop_on_failure
             icase = self._fill_op2_oug_oqg(
                 cases, model, key, icase,
@@ -3272,12 +3277,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             icase = self._fill_op2_centroidal_stress(
                 cases, model, times, key, icase,
                 stress_dict, header_dict, keys_map,
+                eid_to_nid_map,
                 log, stop_on_failure=stop_on_failure)
 
             # strain
             icase = self._fill_op2_centroidal_strain(
                 cases, model, times, key, icase,
                 strain_dict, header_dict, keys_map,
+                eid_to_nid_map,
                 log, stop_on_failure=stop_on_failure)
 
             # force
@@ -3343,6 +3350,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.eid_to_nid_map = {}
         self.element_ids = None
         self.node_ids = None
+        self.model = None
 
 
 class NastranIO(NastranIO_):

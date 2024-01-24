@@ -727,6 +727,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
+                                    eid_to_nid_map: dict[int, list[int]],
                                     log: SimpleLogger,
                                     stop_on_failure: bool) -> int:
         """Creates the time accurate stress objects"""
@@ -744,7 +745,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     icase = self._fill_op2_time_centroidal_stress(
                         cases, model, key, icase_old, itime,
                         form_dict, header_dict, keys_map, log,
-                        is_stress=True)
+                        stop_on_failure, is_stress=True)
                     assert isinstance(icase, int), icase
                 except IndexError:
                     log.error('problem getting stress...')
@@ -767,7 +768,8 @@ class NastranGuiResults(NastranGuiAttributes):
             try:
                 icase = get_plate_stress_strains2(
                 nids, eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, log, is_stress=True)
+                form_dict, header_dict, keys_map, eid_to_nid_map,
+                log, is_stress=True)
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
                 if stop_on_failure:
@@ -970,6 +972,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict: FormDict,
                                     header_dict: HeaderDict,
                                     keys_map: KeysMap,
+                                    eid_to_nid_map: dict[int, list[int]],
                                     log: SimpleLogger,
                                     stop_on_failure: bool) -> int:
         """Creates the time accurate strain objects"""
@@ -996,7 +999,8 @@ class NastranGuiResults(NastranGuiAttributes):
             try:
                 icase = get_plate_stress_strains2(
                     nids, eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=False)
+                    form_dict, header_dict, keys_map, eid_to_nid_map,
+                    log, is_stress=False)
             except Exception as e:  # pragma: no cover
                 log.error(str(e))
                 if stop_on_failure:
@@ -1107,6 +1111,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                          header_dict: HeaderDict,
                                          keys_map: KeysMap,
                                          log: SimpleLogger,
+                                         stop_on_failure: bool,
                                          is_stress: bool=True) -> int:
         """Creates the time accurate stress objects"""
         log = model.log

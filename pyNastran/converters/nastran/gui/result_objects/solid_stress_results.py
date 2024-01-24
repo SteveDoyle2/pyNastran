@@ -4,42 +4,24 @@ import numpy as np
 from typing import Optional, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
+#from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
+from .nodal_averaging import nodal_average, nodal_combine_map
 #from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .displacement_results import VectorResultsCommon
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
-    from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
+    from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 
 
-def abs_max_scalar(x: np.ndarray):
-    mini = np.nanmin(x)
-    maxi = np.nanmax(x)
-    if np.abs(mini) > np.abs(maxi):
-        return mini
-    return maxi
-
-def difference_scalar(x: np.ndarray):
-    out = np.nanmax(x) - np.nanmin(x)
-    return out
-
-nodal_combine_map = {
-    'Absolute Max': abs_max_scalar,
-    'Mean': np.nanmean,
-    'Max': np.nanmax,
-    'Min': np.nanmin,
-    'Difference': difference_scalar,
-    'Std. Dev.': np.nanstd,
-}
 class SolidResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
                  node_id: np.ndarray,
                  element_id: np.ndarray,
-                 cases: list[RealPlateArray],
+                 cases: list[RealSolidArray],
                  result: str,
                  #dim_max: float,
                  data_format: str='%g',
@@ -48,6 +30,12 @@ class SolidResults2(VectorResultsCommon):
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
         GuiResultCommon.__init__(self)
+        self.centroid_data = np.zeros((0, 0, 0), dtype='float32')
+        self.node_data = np.zeros((0, 0, 0), dtype='float32')
+        self.element_node = np.zeros((0, 2), dtype='int32')
+        self.inode = np.zeros(0, dtype='int32')
+        self.ielement_centroid = np.zeros(0, dtype='int32')
+
         self.layer_indices = (-1, )  # All
         i = -1
         name = None
@@ -321,19 +309,11 @@ class SolidResults2(VectorResultsCommon):
     def _get_real_data(self, case_tuple: int) -> np.ndarray:
         (itime, iresult, header) = case_tuple
 
-        # [itime, ielement, ilayer, iresult
-        #self.centroid_eids = np.hstack(centroid_elements_list)
-        #self.centroid_data = np.hstack(data_list)
-
         #ilayer = self.layer_indices
         if self.layer_indices == (-1, ):
             self.layer_indices = (0, )
 
         #self.case.get_headers()
-        #[fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
-        #results = list(self.result.keys())
-        neids = self.centroid_data.shape[1]
-
         #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
         if self.layer_indices == (0, ):
             data = self._get_nodal_result(itime, iresult)
@@ -352,35 +332,6 @@ class SolidResults2(VectorResultsCommon):
         assert len(data.shape) == 1, data.shape
         return data
 
-        # multiple plies
-        # ['Absolute Max', 'Min', 'Max', 'Derive/Average']
-        ## TODO: why is this shape backwards?!!!
-        ## [ilayer, ielement] ???
-        axis = 0
-        if self.min_max_method == 'Absolute Max':
-            data2 = abs_nan_min_max(data, axis=axis)
-        elif self.min_max_method == 'Min':
-            data2 = np.nanmin(data, axis=axis)
-        elif self.min_max_method == 'Max':
-            data2 = np.nanmax(data, axis=axis)
-        elif self.min_max_method == 'Mean':  #   (Derive/Average)???
-            data2 = np.nanmean(data, axis=axis)
-        elif self.min_max_method == 'Std. Dev.':
-            data2 = np.nanstd(data, axis=axis)
-        elif self.min_max_method == 'Difference':
-            data2 = np.nanmax(data, axis=axis) - np.nanmin(data, axis=axis)
-        #elif self.min_max_method == 'Max Over Time':
-            #data2 = np.nanmax(data, axis=axis) - np.nanmin(data2, axis=axis)
-        #elif self.min_max_method == 'Derive/Average':
-            #data2 = np.nanmax(data, axis=1)
-        else:  # pragma: no cover
-            raise NotImplementedError(self.min_max_method)
-
-        # TODO: hack to try and debug things...
-        assert data2.shape == (neids, )
-        #data4 = eids_new.astype('float32')
-        return data2
-
     def _get_centroid_result(self, itime: int,
                              iresult: Union[int, str]) -> np.ndarray:
         """
@@ -397,28 +348,29 @@ class SolidResults2(VectorResultsCommon):
         imin = 8
         ## nodal_combine == 'Centroid':
 
+        centroid_data = self.centroid_data
         if iresult == 'abs_principal': # abs max; should be good
-            omax = self.centroid_data[itime, :, imax]
-            omin = self.centroid_data[itime, :, imin]
+            omax = centroid_data[itime, :, imax]
+            omin = centroid_data[itime, :, imin]
             data = get_abs_max(omin, omax, dtype=omin.dtype)
 
         elif iresult == 'von_mises':
             # von mises
             #Derive
-            oxx = self.centroid_data[itime, :, ioxx]
-            oyy = self.centroid_data[itime, :, ioyy]
-            ozz = self.centroid_data[itime, :, iozz]
-            txy = self.centroid_data[itime, :, itxy]
-            txz = self.centroid_data[itime, :, itxz]
-            tyz = self.centroid_data[itime, :, ityz]
+            oxx = centroid_data[itime, :, ioxx]
+            oyy = centroid_data[itime, :, ioyy]
+            ozz = centroid_data[itime, :, iozz]
+            txy = centroid_data[itime, :, itxy]
+            txz = centroid_data[itime, :, itxz]
+            tyz = centroid_data[itime, :, ityz]
             data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
         elif iresult == 'max_shear': #  probably wrong
             # not checked for strain
-            omax = self.centroid_data[itime, :, imax]
-            omin = self.centroid_data[itime, :, imin]
+            omax = centroid_data[itime, :, imax]
+            omin = centroid_data[itime, :, imin]
             data = max_shear(omax, omin)
         else:
-            data = self.centroid_data[itime, :, iresult].copy()
+            data = centroid_data[itime, :, iresult].copy()
         return data
 
     def _get_nodal_result(self, itime: int,
@@ -448,20 +400,21 @@ class SolidResults2(VectorResultsCommon):
         nid_to_inid_map = {nid: i for i, nid in enumerate(nids)}
 
         ## Derive/Average
+        node_data = self.node_data
         if isinstance(iresult, int):
-            datai = self.node_data[itime, :, iresult]
+            datai = node_data[itime, :, iresult]
             data = nodal_average(
                 nodal_combine_func,
                 element_node, datai,
                 nids, nid_to_inid_map)
 
         elif iresult == 'von_mises':
-            oxx = self.node_data[itime, :, ioxx]
-            oyy = self.node_data[itime, :, ioyy]
-            ozz = self.node_data[itime, :, iozz]
-            txy = self.node_data[itime, :, itxy]
-            txz = self.node_data[itime, :, itxz]
-            tyz = self.node_data[itime, :, ityz]
+            oxx = node_data[itime, :, ioxx]
+            oyy = node_data[itime, :, ioyy]
+            ozz = node_data[itime, :, iozz]
+            txy = node_data[itime, :, itxy]
+            txz = node_data[itime, :, itxz]
+            tyz = node_data[itime, :, ityz]
             ovm_data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
             data = nodal_average(
                 nodal_combine_func,
@@ -469,8 +422,8 @@ class SolidResults2(VectorResultsCommon):
                 nids, nid_to_inid_map)
 
         elif iresult == 'max_shear':
-            omax = self.node_data[itime, :, imax]
-            omin = self.node_data[itime, :, imin]
+            omax = node_data[itime, :, imax]
+            omin = node_data[itime, :, imin]
             max_shear_data = max_shear(omax, omin)
             data = nodal_average(
                 nodal_combine_func,
@@ -478,8 +431,8 @@ class SolidResults2(VectorResultsCommon):
                 nids, nid_to_inid_map)
 
         elif iresult == 'abs_principal':
-            data_max = self.node_data[itime, :, imax]
-            data_min = self.node_data[itime, :, imin]
+            data_max = node_data[itime, :, imax]
+            data_min = node_data[itime, :, imin]
             abs_data = get_abs_max(data_min, data_max, dtype=data_min.dtype)
             assert abs_data.shape == data_min.shape
             data = nodal_average(
@@ -574,10 +527,9 @@ class SolidStrainStressResults2(SolidResults2):
                  model: BDF,
                  node_id: np.ndarray,
                  element_id: np.ndarray,
-                 cases: list[RealPlateArray],
+                 cases: list[RealSolidArray],
                  result: str,
                  title: str,
-                 #is_fiber_distance: bool,
                  #dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -629,49 +581,15 @@ class SolidStrainStressResults2(SolidResults2):
         #linked_scale_factor = False
         #location = 'node'
 
-        # setup the node mapping
-        centroid_data_list = []
-        centroid_elements_list = []
+        out = setup_centroid_node_data(cases)
+        centroid_eids, centroid_data, element_node, node_data = out
 
-        node_data_list = []
-        element_node_list = []
-        for case in cases:
-            ntime, nelement_nnode, nresults = case.data.shape
-            nelements_all = len(np.unique(case.element_node[:, 0]))
-            nnode = case.nnodes_per_element
-            if case.nnodes_per_element != 1:
-                eids = case.element_node[0::nnode, 0]
-                nelement = len(case.element_node) // nnode
-                nnodal_node = nelement * (nnode - 1)
-
-                element_node_3d = case.element_node.reshape(nelement, nnode, 2)
-                element_node = element_node_3d[:, 1:, :].reshape(nnodal_node, 2)
-                eids = element_node_3d[:, 0, 0]
-                data = case.data.copy().reshape(ntime, nelement, nnode, nresults)
-                centroid_elements_list.append(eids)
-                #nodal_elements.append(case.element_node[1::nnodes_per_element, 0])
-                assert nelement == nelements_all, (nelement, nelements_all)
-                node_data = data[:, :, 1:, :]
-                node_data2 = node_data.reshape(ntime, nnodal_node, nresults)
-            else:
-                eids = case.element_node[:, 0]
-                centroid_elements_list.append(case.element_node)
-                data = case.data.reshape(ntime, nelements_all, 1, nresults)
-                node_data = data
-                raise NotImplementedError('centroidal solid elements')
-            # slice off the centroid
-            centroid_datai = data[:, :, 0, :]
-            centroid_data_list.append(centroid_datai)
-
-            node_data_list.append(node_data2)
-            element_node_list.append(element_node)
-
-        self.centroid_eids = np.hstack(centroid_elements_list)
+        self.centroid_eids = centroid_eids
         # [ntimes, nelements, nresults]
-        self.centroid_data = np.hstack(centroid_data_list)
+        self.centroid_data = centroid_data
 
-        self.element_node = np.vstack(element_node_list)
-        self.node_data = np.hstack(node_data_list)
+        self.element_node = element_node
+        self.node_data = node_data
 
         common_eids = np.intersect1d(self.centroid_eids, element_id)
         if len(common_eids) == 0:
@@ -803,19 +721,57 @@ def get_solid_result(result: dict[str, Any],
     ('sAbs Principal', 'Abs Principal')
     """
     assert index in (0, 1), index
-    #if isinstance(iresult, int):
-        #assert iresult >= 0, iresult
     results = result[iresult]
     return results[index]
-    #elif iresult == 'von_mises':
-        #word = 'von Mises'
-    #elif iresult == 'max_shear':
-        #word = 'Max Shear'
-    #elif iresult == 'abs_principal':
-        #word = 'Abs Principal'
-    #else:
-        #raise RuntimeError(iresult)
-    #return word
+
+def setup_centroid_node_data(cases: list[RealSolidArray],
+                             ) -> tuple[np.ndarray, np.ndarray,
+                                        np.ndarray, np.ndarray]:
+
+    # setup the node mapping
+    centroid_data_list = []
+    centroid_elements_list = []
+
+    node_data_list = []
+    element_node_list = []
+    for case in cases:
+        ntime, nelement_nnode, nresults = case.data.shape
+        nelements_all = len(np.unique(case.element_node[:, 0]))
+        nnode = case.nnodes_per_element
+        if case.nnodes_per_element != 1:
+            eids = case.element_node[0::nnode, 0]
+            nelement = len(case.element_node) // nnode
+            nnodal_node = nelement * (nnode - 1)
+
+            element_node_3d = case.element_node.reshape(nelement, nnode, 2)
+            element_node = element_node_3d[:, 1:, :].reshape(nnodal_node, 2)
+            eids = element_node_3d[:, 0, 0]
+            data = case.data.copy().reshape(ntime, nelement, nnode, nresults)
+            centroid_elements_list.append(eids)
+            #nodal_elements.append(case.element_node[1::nnodes_per_element, 0])
+            assert nelement == nelements_all, (nelement, nelements_all)
+            node_data = data[:, :, 1:, :]
+            node_data2 = node_data.reshape(ntime, nnodal_node, nresults)
+        else:
+            eids = case.element_node[:, 0]
+            centroid_elements_list.append(case.element_node)
+            data = case.data.reshape(ntime, nelements_all, 1, nresults)
+            node_data = data
+            raise NotImplementedError('centroidal solid elements')
+        # slice off the centroid
+        centroid_datai = data[:, :, 0, :]
+        centroid_data_list.append(centroid_datai)
+
+        node_data_list.append(node_data2)
+        element_node_list.append(element_node)
+
+    centroid_eids = np.hstack(centroid_elements_list)
+    # [ntimes, nelements, nresults]
+    centroid_data = np.hstack(centroid_data_list)
+
+    element_node = np.vstack(element_node_list)
+    node_data = np.hstack(node_data_list)
+    return centroid_eids, centroid_data, element_node, node_data
 
 def max_shear(omax, omin) -> np.ndarray:
     """
@@ -836,21 +792,3 @@ def von_mises_3d(oxx, oyy, ozz, txy, tyz, txz) -> np.ndarray:
         0.5 * ((oxx - oyy) ** 2 + (oyy - ozz) ** 2 +(oxx - ozz) ** 2) +
         3 * (txy**2 + tyz**2 + txz**2))
     return vm
-
-def nodal_average(nodal_combine_func: Callable[np.ndarray],
-                  element_node: np.ndarray,
-                  data: np.ndarray,
-                  nids: np.ndarray,
-                  #inid: np.ndarray,
-                  nid_to_inid_map: dict[int, int]) -> np.ndarray:
-    data_dict = defaultdict(list)
-    nnode = len(nids)
-
-    data2 = np.full(nnode, np.nan, dtype=data.dtype)
-    for (eid, nid), datai in zip(element_node, data):
-        data_dict[nid].append(datai)
-    for nid, datasi in data_dict.items():
-        collapsed_value = nodal_combine_func(datasi)
-        inidi = nid_to_inid_map[nid]
-        data2[inidi] = collapsed_value
-    return data2

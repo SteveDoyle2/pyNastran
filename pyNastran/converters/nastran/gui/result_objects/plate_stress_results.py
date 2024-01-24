@@ -26,6 +26,7 @@ class PlateResults2(VectorResultsCommon):
                  cases: list[RealPlateArray],
                  result: str,
                  is_fiber_distance: bool,
+                 eid_to_nid_map: dict[int, list[int]],
                  #dim_max: float,
                  data_format: str='%g',
                  nlabels=None, labelsize=None, ncolors=None,
@@ -52,6 +53,7 @@ class PlateResults2(VectorResultsCommon):
 
         self.subcase_id = subcase_id
         self.is_stress = case.is_stress
+        self.eid_to_nid_map = eid_to_nid_map
         if self.is_stress:
             self.iresult_map = {
                 #0 : 'FiberCurvature',
@@ -144,7 +146,7 @@ class PlateResults2(VectorResultsCommon):
         self.colormap = colormap
 
         self.uname = uname
-        #self.active_method = ''
+        self.location = 'centroid'
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -461,9 +463,14 @@ class PlateResults2(VectorResultsCommon):
         if return_sparse or self.is_dense:
             return data
 
-        nelements = len(self.element_id)
-        result_out = np.full(nelements, np.nan, dtype=data.dtype)
-        result_out[self.ielement_centroid] = data
+        if self.get_location(0, 0) == 'node':
+            nnode = len(self.node_id)
+            result_out = np.full(nnode, np.nan, dtype=data.dtype)
+            result_out[self.inode] = data
+        else:
+            nelement = len(self.element_id)
+            result_out = np.full(nelement, np.nan, dtype=data.dtype)
+            result_out[self.ielement_centroid] = data
         return result_out
 
     def get_default_scale(self, itime: int, res_name: str) -> float:
@@ -503,6 +510,7 @@ class PlateStrainStressResults2(PlateResults2):
                  result: str,
                  title: str,
                  is_fiber_distance: bool,
+                 eid_to_nid_map: dict[int, list[int]],
                  #dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -550,6 +558,7 @@ class PlateStrainStressResults2(PlateResults2):
             cases,
             result,
             is_fiber_distance,
+            eid_to_nid_map,
             #dim_max,
             data_format=data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
@@ -563,29 +572,18 @@ class PlateStrainStressResults2(PlateResults2):
         #linked_scale_factor = False
         #location = 'node'
 
-        # setup the node mapping
-        centroid_elements_list = []
-        #nodal_elements_list = []
-        data_list = []
-        nlayers = 2
-        for case in cases:
-            ntimes, nelement_nnode_nlayer, nresults = case.data.shape
-            nelement_nnode = nelement_nnode_nlayer // 2
-            if case.is_bilinear():
-                nnodes = case.nnodes_per_element
-                eids = case.element_node[0::2*nnodes, 0]
-                nelements = len(eids)
-                data = case.data.copy().reshape(ntimes, nelements, nnodes, nlayers, nresults)
-                centroid_elements_list.append(eids)
-                #nodal_elements.append(case.element_node[1::nnodes_per_element, 0])
-            else:
-                centroid_elements_list.append(case.element_node[::2, 0])
-                data = case.data.reshape(ntimes, nelement_nnode, 1, nlayers, nresults)
-            # slice off the centroid
-            datai = data[:, :, 0, :, :]
-            data_list.append(datai)
-        self.centroid_eids = np.hstack(centroid_elements_list)
-        self.centroid_data = np.hstack(data_list)
+        out = setup_centroid_node_data(eid_to_nid_map, cases)
+        centroid_eids, centroid_data, element_node, node_data = out
+        assert centroid_data.ndim == 4, centroid_data.shape
+        assert node_data.ndim == 4, node_data.shape
+
+        self.centroid_eids = centroid_eids
+        # [ntime, nelement_nnode, nlayer, nresult]
+        self.centroid_data = centroid_data
+
+        # [ntime, nelement_nnode, nlayer, nresult]
+        self.element_node = element_node
+        self.node_data = node_data
 
         common_eids = np.intersect1d(self.centroid_eids, element_id)
         if len(common_eids) == 0:
@@ -603,7 +601,6 @@ class PlateStrainStressResults2(PlateResults2):
 
         #self.xyz = xyz
         #assert len(self.xyz.shape) == 2, self.xyz.shape
-        self.location = 'centroid'
         if self.is_stress:
             self.headers = ['PlateStress2']
         else:
@@ -720,4 +717,68 @@ def get_plate_result(result: dict[str, Any],
         #word = 'Abs Principal'
     #else:
         #raise RuntimeError(iresult)
-    return word
+    #return word
+
+
+def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
+                             cases: list[RealPlateArray]) -> tuple[np.ndarray, np.ndarray,
+                                                                   np.ndarray, np.ndarray]:
+    # setup the node mapping
+    centroid_elements_list = []
+    centroid_data_list = []
+
+    element_node_list = []
+    node_data_list = []
+    nlayer = 2
+    for case in cases:
+        ntime, nelement_nnode_nlayer, nresult = case.data.shape
+        nelement_nnode = nelement_nnode_nlayer // 2
+        if case.is_bilinear():
+            nnode = case.nnodes_per_element
+            nelement = len(case.element_node) // (2 * nnode)
+
+            # remvoed the centroid
+            nplies = nelement * (nnode - 1) * nlayer
+
+            element_node_4d = case.element_node.reshape(nelement, nnode, nlayer, 2)
+            element_node_3d = element_node_4d[:, 1:, :, :]
+            element_node = element_node_3d.reshape(nplies, 2)
+
+            centroid_eidsi = case.element_node[0::2*nnode, 0]
+            centroid_datai = case.data.copy().reshape(ntime, nelement, nnode, nlayer, nresult)
+            centroid_dataii = centroid_datai[:, :, 0, :, :]
+            node_dataii     = centroid_datai[:, :, 1:, :, :]
+
+            node_data_list.append(node_dataii)
+            element_node_list.append(element_node)
+        else:
+            # ctria3 - no nodal
+            centroid_eidsi = case.element_node[::2, 0]
+            centroid_datai = case.data.reshape(ntime, nelement_nnode, 1, nlayer, nresult)
+            centroid_dataii = centroid_datai[:, :, 0, :, :]
+
+            eid0 = centroid_eidsi[0]
+            nid0 = eid_to_nid_map[eid0]
+
+            ## TODO: probably wrong for fancy CQUAD8/CTRIA6
+            nnodes = len(nid0)
+            node_data_list.extend([centroid_dataii]*nnodes)
+            element_nodei = []
+            for eid in centroid_eidsi:
+                nids = eid_to_nid_map[eid]
+                for nid in nids:
+                    # two layers per node
+                    element_nodei.append((eid, nid))
+                    element_nodei.append((eid, nid))
+            element_node_list.append(element_nodei)
+        # slice off the centroid
+        centroid_elements_list.append(centroid_eidsi)
+        centroid_data_list.append(centroid_dataii)
+        del node_dataii, centroid_dataii, centroid_eidsi, element_nodei
+
+    centroid_eids = np.hstack(centroid_elements_list)
+    centroid_data = np.hstack(centroid_data_list)
+
+    element_node = np.vstack(element_node_list)
+    node_data = np.hstack(node_data_list)
+    return centroid_eids, centroid_data, element_node, node_data

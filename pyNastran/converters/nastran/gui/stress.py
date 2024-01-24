@@ -760,6 +760,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
                               icase: int,
                               form_dict, header_dict,
                               keys_map: KeysMap,
+                              eid_to_nid_map: dict[int, list[int]],
                               log: SimpleLogger,
                               is_stress: bool,
                               prefix: str='') -> int:
@@ -790,7 +791,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
     if len(plate_cases) == 0:
         return icase
 
-    plate_case_headers = plate_case.get_headers()
+    #plate_case_headers = plate_case.get_headers()
     is_von_mises = plate_case.is_von_mises
     assert isinstance(is_von_mises, bool), is_von_mises
     von_mises = 7 if is_von_mises else 'von_mises'
@@ -846,6 +847,7 @@ def get_plate_stress_strains2(node_id: np.ndarray,
         nlabels=None, labelsize=None, ncolors=None, colormap='',
         set_max_min=False,
         is_fiber_distance=plate_case.is_fiber_distance,
+        eid_to_nid_map=eid_to_nid_map,
         uname='PlateStressStrainResults2')
 
     times = plate_case._times
@@ -1245,10 +1247,10 @@ def get_composite_plate_stress_strains(eids: np.ndarray,
     #assert len(cases) == icase
     return icase
 
-def _composite_method_map(is_stress: bool) -> tuple[str, dict[str, str]]:
+def _composite_method_map(is_stress: bool,
+                          ) -> tuple[str, dict[str, str]]:
     if is_stress:
         word = 'Stress'
-        #sigma = 'σ'
         method_map = {
             #'fiber_distance' : 'FiberDist.',
             'o11' : 'σ11',
@@ -1264,7 +1266,6 @@ def _composite_method_map(is_stress: bool) -> tuple[str, dict[str, str]]:
         }
     else:
         word = 'Strain'
-        #sigma = 'ϵ'
         method_map = {
             #'fiber_distance' : 'FiberDist.',
             'e11' : 'ϵ11',
@@ -1279,11 +1280,6 @@ def _composite_method_map(is_stress: bool) -> tuple[str, dict[str, str]]:
         }
     #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
     #methods = case_headers
-
-    #if 'Mises' in methods:
-        #methods.append('Max shear')
-    #else:
-        #methods.append(f'{sigma} von Mises')
     return word, method_map
 
 def get_solid_stress_strains2(node_id: np.ndarray,
@@ -1306,10 +1302,12 @@ def get_solid_stress_strains2(node_id: np.ndarray,
         (1, 5, 1, 0, 0, '', '')
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
+
     """
     if not USE_NEW_SIDEBAR_OBJS:  # pragma: no cover
         return icase
-    solids, word, subcase_id, analysis_code = _get_solids(model, key, is_stress, prefix)
+    solids, word, subcase_id, analysis_code = _get_solids(
+        model, key, is_stress, prefix)
 
     solid_cases = []
     for solid_case in solids:
@@ -1320,7 +1318,7 @@ def get_solid_stress_strains2(node_id: np.ndarray,
     if len(solid_cases) == 0:
         return icase
 
-    solid_case_headers = solid_case.get_headers()
+    #solid_case_headers = solid_case.get_headers()
     is_von_mises = solid_case.is_von_mises
     assert isinstance(is_von_mises, bool), is_von_mises
     von_mises = 9 if is_von_mises else 'von_mises'

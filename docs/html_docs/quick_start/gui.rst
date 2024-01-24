@@ -659,3 +659,58 @@ Option #2
 
 On the ``View`` -> ``Preferences`` menu, change **Screenshot Magnify** and click **Apply**.
 Now take a screenshot.
+
+
+Frequently Asked Questions
+=======================================
+
+**The legend font is way to big!**
+Legend is tricky cause of the wide range in the number of 
+title characters preferences.  
+
+It's defined in terms of a percentage of screen size and the font size is
+defined in terms of the title character (or number size), so it's tricky to
+to get a robust system.  However, you do have some control:
+ - legend title:
+   - resize the window to be shorter
+   - use the legend (View -> Modify Legend; Control+L) and add whitespace around the etitle
+ - legend values:
+   - resize the window to be narrower
+   - use the legend (View -> Modify Legend; Control+L) and change the number format
+
+**The origin font is waaaay too big!**
+
+The origin size is dependent on zoom level and model size.  You can customize:
+ - Origin size
+ - Origin text size
+in the Preferences menu (Control+P).
+
+**I could not visualize the mesh edges within the results**
+
+Mesh edges press **e** for edge and **b** if you want to make them black.  
+There are also pull downs on the view menu and the e option is on the toolbar (the black wireframe)
+
+**How do I clear a result?**
+
+Right click on the **Case/Results** tree and go to **Clear Results**.
+
+**It's not easy to change between results (such as Sxx, Syy, Mises, etc.) using only the arrows**
+
+You can use K and L (lowercase) to "cycle" to different results.
+
+** How do I make the gif more responsive/smaller? **
+
+The GIF will be the same size as your screen (the part with the grey background), 
+so make your window smaller.  In general, 30 frame/second is going to look nice, 
+but you can even get away with 10 FPS if the picture is small.
+
+** The GUI crashes when I have a model loaded and load a different one**
+
+Yeah...it does that.  It's not really designed around loading differet models.
+There are some objects that aren't deleted and it's tricky to do it right.  If
+you mess one up, it crashes.
+
+If you're just modifying a deck, you can use the "Reload Model" option.  
+It'll reload the geometry and be quite a bit faster than going through menus.
+That fails sometimes as well, but is more robust.
+

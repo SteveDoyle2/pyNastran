@@ -322,25 +322,25 @@ class ClickTreeView(QTreeView2):
         right_click_menu = QMenu()
 
         if include_clear:
-            self.clear = right_click_menu.addAction("Clear Results...")
+            self.clear = right_click_menu.addAction('Clear Results')
             self.clear.triggered.connect(self.on_clear_results)
 
         if include_export_case:
-            self.export_case = right_click_menu.addAction("Export Case...")
+            self.export_case = right_click_menu.addAction('Export Case')
             self.export_case.triggered.connect(self.on_export_case)
 
         if include_results:
-            self.fringe = right_click_menu.addAction("Apply Results to Fringe...")
+            self.fringe = right_click_menu.addAction("Apply Results to Fringe")
             self.fringe.triggered.connect(self.on_fringe)
 
-            self.disp = right_click_menu.addAction("Apply Results to Displacement...")
-            self.vector = right_click_menu.addAction("Apply Results to Vector...")
+            self.disp = right_click_menu.addAction('Apply Results to Displacement')
+            self.vector = right_click_menu.addAction('Apply Results to Vector')
 
             self.disp.triggered.connect(self.on_disp)
             self.vector.triggered.connect(self.on_vector)
 
         if include_delete:
-            self.delete = right_click_menu.addAction("Delete...")
+            self.delete = right_click_menu.addAction('Delete')
             self.delete.triggered.connect(self.on_delete)
 
         #self.fringe.setCheckable(True)
