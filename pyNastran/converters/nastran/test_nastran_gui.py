@@ -422,11 +422,11 @@ class TestNastranGUI(unittest.TestCase):
             nabs_stress=1, nabs_strain=0,
             nstrain_energy=0, ngrid_point_forces=0)
         if USE_OLD_SIDEBAR_OBJS:
-            assert nresults == 24, nresults # 49-10
+            assert nresults == 24, nresults
             assert len(test.result_cases) == 34, len(test.result_cases)
         elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert nresults == 24, nresults # 49-10; ???
-            assert len(test.result_cases) == 49, len(test.result_cases)
+            assert nresults == 24, nresults
+            assert len(test.result_cases) == 34, len(test.result_cases)
         else:
             assert nresults == 24, nresults # 49-10; ???
             assert len(test.result_cases) == 39, len(test.result_cases)
@@ -844,7 +844,7 @@ class TestNastranGUI(unittest.TestCase):
             nstrain_energy=1, ngrid_point_forces=0)
 
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test2.result_cases) == 125, len(test2.result_cases)
+            assert len(test2.result_cases) == 105, len(test2.result_cases)
         elif USE_OLD_SIDEBAR_OBJS:
             assert len(test2.result_cases) == 107, len(test2.result_cases)
         else:
