@@ -385,7 +385,8 @@ class DispForceVectorResults(VectorResultsCommon):
         #return datai
 
     def _get_vector_result(self, itime: int, res_name: str,
-                           return_dense: bool=True) -> tuple[np.ndarray, list[int]]:
+                           return_dense: bool=True,
+                           return_vector: bool=False) -> tuple[np.ndarray, list[int]]:
         """
         gets the 'typical' result as a vector
          - DisplacementResults: vector; (n, 3) array
@@ -412,7 +413,8 @@ class DispForceVectorResults(VectorResultsCommon):
 
     def get_result(self, itime: int, res_name: str,
                    method: str='',
-                   return_dense: bool=True) -> np.ndarray:
+                   return_dense: bool=True,
+                   return_vector: bool=False) -> np.ndarray:
         """
         gets the 'typical' result which is a vector
          - GuiResult:           fringe; (n,)   array
@@ -423,6 +425,8 @@ class DispForceVectorResults(VectorResultsCommon):
             Rreturns the data array in a way that the gui can use.
             Handles the null result case (e.g; SPC forces only
             at the SPC location).
+        return_vector: bool
+            Don't compress the result into a normalized vector (for min/max calculation)
 
         """
         itime, case_flag = self.get_case_flag(itime, res_name)
@@ -440,6 +444,9 @@ class DispForceVectorResults(VectorResultsCommon):
             dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
             dxyz2[self.inode, :] = dxyz
 
+        if return_vector:
+            return dxyz2
+
         # set the min/max if they're not set
         normi = self._get_normi(dxyz2)
         mins = self.mins[case_flag]
@@ -449,7 +456,6 @@ class DispForceVectorResults(VectorResultsCommon):
         if maxs[itime] is None:
             maxs[itime] = np.nanmax(normi)
         return normi
-
 
 def _get_real_component_indices(methods_keys: list[int]) -> np.ndarray:
     """
@@ -795,7 +801,7 @@ class ForceResults2(DispForceVectorResults):
 
     def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
         """get_fringe_value"""
-        dxyz = self.get_result(itime, res_name, method, return_dense=False)
+        dxyz = self.get_result(itime, res_name, method, return_dense=False, return_vector=True)
         normi = safe_norm(dxyz, axis=col_axis)
         if self.is_dense:
             return normi
@@ -808,8 +814,10 @@ class ForceResults2(DispForceVectorResults):
         return normi2
 
     def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        dxyz = self.get_result(itime, res_name, method, return_dense=True)
+        dxyz = self.get_result(itime, res_name, method,
+                               return_dense=True, return_vector=True)
         scale = 1.
+        assert dxyz.ndim == 2, dxyz.shape
         return self.xyz, dxyz # * scale
 
     def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:

@@ -284,6 +284,16 @@ class ResultsSidebar(QWidget):
             self.hide_dev()
 
     def set_methods_table_visible(self, is_visible: bool) -> None:
+        """
+        The methods table for a PCOMP looks like:
+        - Method
+          - All Layers
+          - Layer 1
+          - Layer 2
+          - Layer 3
+        This is a multi-selection window with (typically) the first entry
+        being the default
+        """
         if USE_NEW_SIDEBAR:
             # avoid enabling/hiding if we can
             is_enabled = self.result_method_window.isEnabled()
@@ -295,6 +305,7 @@ class ResultsSidebar(QWidget):
 
     def set_coord_transform_visible(self, is_visible: bool,
                                     coords: list[str]) -> None:
+        """Simple pulldown to indicate the coordinate system"""
         if USE_NEW_SIDEBAR:
             self.transform_coords_label.setVisible(is_visible)
             self.transform_coords_pulldown.setVisible(is_visible)
@@ -303,6 +314,15 @@ class ResultsSidebar(QWidget):
 
     def set_derivation_visible(self, is_visible: bool,
                                min_max_averages_dict: dict[str, Any]) -> None:
+        """
+        Derivation sets how multi-valued results get squashed down into a
+        single result.  For example, a PSHELL stress result has 2 values per
+        node/centroid.  For nodal averaging, the results need to be squashed
+        down into nnode nodal values for each element (vs. 2*nnode).
+
+        The subsequent step is to average the values across elements
+        (see nodal_combine).
+        """
         if USE_NEW_SIDEBAR:
             label = min_max_averages_dict.get('label', 'Derivation Method:')
             if is_visible and label != self.min_max_average_label:
@@ -321,6 +341,10 @@ class ResultsSidebar(QWidget):
 
     def set_nodal_combine_visible(self, is_visible: bool,
                                   combine_methods: list[str]) -> None:
+        """
+        Now that we have 1 value for each node on each element, we
+        can merge the results across elements by averaging/min/max.
+        """
         if USE_NEW_SIDEBAR:
             self.combine_label.setVisible(is_visible)
             self.combine_pulldown.setVisible(is_visible)
@@ -331,11 +355,19 @@ class ResultsSidebar(QWidget):
                             is_enabled_fringe: bool, is_checked_fringe: bool,
                             is_enabled_disp: bool, is_checked_disp: bool,
                             is_enabled_vector: bool, is_checked_vector: bool) -> None:
+        """You can do displacement only (with no fringe) or vice-versa."""
+        is_disp_vector = is_enabled_disp or is_enabled_vector
+        is_fringe_only = not is_disp_vector
+
         if USE_NEW_SIDEBAR:
-            #if is_enabled_fringe
-            # this should always be enabled (what about normals?)
-            #self.fringe_checkbox.setEnabled(is_enabled_fringe)
-            #self.fringe_checkbox.setChecked(is_checked_fringe)
+            # disable this (and check it) when there's only the fringe
+            is_enabled = self.fringe_checkbox.isEnabled()
+            if is_fringe_only:
+                self.fringe_checkbox.setEnabled(False)
+                self.fringe_checkbox.setChecked(True)
+            elif is_enabled is not is_enabled_fringe:
+                self.fringe_checkbox.setEnabled(is_enabled_fringe)
+                self.fringe_checkbox.setChecked(is_checked_fringe)
 
             is_enabled = self.disp_checkbox.isEnabled()
             if is_enabled is not is_enabled_disp:
@@ -739,7 +771,8 @@ class ResultsSidebar(QWidget):
             min_max_method = get_combo_box_text(self.min_max_average_pulldown)
             nodal_combine = get_combo_box_text(self.combine_pulldown)
 
-            is_checked_fringe = self.fringe_checkbox.isEnabled() and self.fringe_checkbox.isChecked()
+            #fringe is always active
+            is_checked_fringe = self.fringe_checkbox.isChecked() # self.fringe_checkbox.isEnabled() and
             is_checked_disp = self.disp_checkbox.isEnabled() and self.disp_checkbox.isChecked()
             is_checked_vector = self.vector_checkbox.isEnabled() and self.vector_checkbox.isChecked()
             if not(is_checked_fringe or is_checked_disp or is_checked_vector):

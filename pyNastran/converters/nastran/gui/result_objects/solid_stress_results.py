@@ -5,19 +5,35 @@ from typing import Optional, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
-from pyNastran.bdf.utils import write_patran_syntax_dict
+from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
+#from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .displacement_results import VectorResultsCommon
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
 
-#pcomp_stress = ['o11', 'o22', 't12', 't1z', 't2z', 'oangle', 'Max Principal', 'minor', 'ovm', 'omax_shear']
-#pcomp_strain = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'eangle', 'Max Principal', 'minor', 'evm', 'emax_shear']
-col_axis = 1
 
-class PlateResults2(VectorResultsCommon):
+def abs_max_scalar(x: np.ndarray):
+    mini = np.nanmin(x)
+    maxi = np.nanmax(x)
+    if np.abs(mini) > np.abs(maxi):
+        return mini
+    return maxi
+
+def difference_scalar(x: np.ndarray):
+    out = np.nanmax(x) - np.nanmin(x)
+    return out
+
+nodal_combine_map = {
+    'Absolute Max': abs_max_scalar,
+    'Mean': np.nanmean,
+    'Max': np.nanmax,
+    'Min': np.nanmin,
+    'Difference': difference_scalar,
+    'Std. Dev.': np.nanstd,
+}
+class SolidResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
@@ -25,22 +41,19 @@ class PlateResults2(VectorResultsCommon):
                  element_id: np.ndarray,
                  cases: list[RealPlateArray],
                  result: str,
-                 is_fiber_distance: bool,
                  #dim_max: float,
                  data_format: str='%g',
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
-        assert isinstance(is_fiber_distance, bool), is_fiber_distance
         GuiResultCommon.__init__(self)
         self.layer_indices = (-1, )  # All
-        self.is_fiber_distance = is_fiber_distance
         i = -1
         name = None
 
         # slice off the methods (from the boolean) and then pull the 0th one
-        self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
+        self.min_max_method = '' # self.has_derivation_transform(i, name)[1]['derivation'][0]
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
         #assert len(element_id) >= self.case.
@@ -52,47 +65,11 @@ class PlateResults2(VectorResultsCommon):
 
         self.subcase_id = subcase_id
         self.is_stress = case.is_stress
-        if self.is_stress:
-            self.iresult_map = {
-                #0 : 'FiberCurvature',
-                0 : 'FiberDistance',
-                1 : 'XX Stress',
-                2 : 'YY Stress',
-                3 : 'XY Stress',
-                4 : 'Theta',
-                5 : 'MaxPrincipal Stress',
-                6 : 'MinPrincipal Stress',
-                7 : 'AbsPrincipal Stress',  # special
-                8 : 'von Mises Stress',     # special
-                9 : 'Max Shear Stress',     # special
-            }
-        else:
-            self.iresult_map = {
-                #0 : 'FiberCurvature',
-                0 : 'FiberDistance',
-                1 : 'XX Strain',
-                2 : 'YY Strain',
-                3 : 'XY Strain',
-                4 : 'Theta',
-                5 : 'MaxPrincipal Strain',
-                6 : 'MinPrincipal Strain',
-                7 : 'AbsPrincipal Strain', # special
-                8 : 'von Mises Strain',    # special
-                9 : 'Max Shear Strain',    # special
-            }
-        if self.is_fiber_distance:
-            self.layer_map = {
-                0: 'Both',
-                1: 'Bottom',
-                2: 'Top',
-            }
-        else:
-            self.layer_map = {
-                0: 'Both',  # wut?  This makes no sense...
-                1: 'Mean',
-                2: 'Slope',
-            }
-            self.iresult_map[0] = 'FiberCurvature'
+
+        self.layer_map = {
+            0: 'Corner',  # default
+            1: 'Centroid',
+        }
 
         #if dim_max == 0.0:
             #dim_max = 1.0
@@ -136,7 +113,7 @@ class PlateResults2(VectorResultsCommon):
         self.phases = defaultdict(fphases)
 
         self.data_formats = [self.data_format]
-        self.headers = ['PlateResult2'] * ntimes
+        self.headers = ['SolidResult2'] * ntimes
 
         self.nlabels = None
         self.labelsize = None
@@ -146,14 +123,15 @@ class PlateResults2(VectorResultsCommon):
         self.uname = uname
         #self.active_method = ''
 
-    def _get_default_tuple_indices(self):
+    def _get_default_tuple_indices(self) -> tuple[int]:
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
         return out
 
     def _get_default_layer_indicies(self):
-        default_indices = list(self.layer_map.keys())
-        default_indices.remove(0)
-        return default_indices
+        return (0, )
+        #default_indices = list(self.layer_map.keys())
+        #default_indices.remove(0)
+        #return default_indices
 
     def set_sidebar_args(self,
                          itime: str, res_name: str,
@@ -165,15 +143,15 @@ class PlateResults2(VectorResultsCommon):
                          **kwargs) -> None:
         assert len(kwargs) == 0, kwargs
         transforms = self.has_coord_transform(itime, res_name)[1]
-        min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
+        #min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
         combine_methods = self.has_nodal_combine_transform(itime, res_name)[1]
 
         transform = transform if transform else transforms[0]
-        min_max_method = min_max_method if min_max_method else min_max_methods[0]
+        #min_max_method = min_max_method if min_max_method else min_max_methods[0]
         nodal_combine = nodal_combine if nodal_combine else combine_methods[0]
 
         assert transform in transforms, transform
-        assert min_max_method in min_max_methods, min_max_method
+        #assert min_max_method in min_max_methods, min_max_method
         assert nodal_combine in combine_methods, nodal_combine
 
         #sidebar_kwargs = {
@@ -186,23 +164,21 @@ class PlateResults2(VectorResultsCommon):
         # methods = ['Both', 'Top', 'Bottom']
         default_indices = self._get_default_layer_indicies()
         if methods_keys is None or len(methods_keys) == 0:
-            # default; All
+            # default; Corner
             indices = default_indices
         elif 0 in methods_keys: # Both
-            # include all components b/c All is selected
-            indices = default_indices
+            # Corner takes precendence (it has more data)
+            indices = (0, )
         else:
-            # no 0 (Both) in methods_keys
-            # update the indices to correspond to the array
-            #methods_keys.sort()
-            indices = methods_keys
-        self.layer_indices = tuple(np.array(indices, dtype='int32') - 1)
+            # Centroid is secondary
+            indices = (1, )
+        self.layer_indices = indices
         #self.layer_indices = (1, )
 
         # doesn't matter cause it's already nodal
-        assert min_max_method in min_max_methods, min_max_method
+        #assert min_max_method in min_max_methods, min_max_method
         assert nodal_combine in combine_methods, nodal_combine
-        self.min_max_method = min_max_method
+        #self.min_max_method = min_max_method
         self.nodal_combine = nodal_combine
         self.transform = transform
 
@@ -210,29 +186,32 @@ class PlateResults2(VectorResultsCommon):
         return True
     def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         #(itime, iresult, header) = case_tuple
-        out = {
-            'tooltip': 'Method to reduce multiple layers (top/btm) into a single nodal/elemental value',
-            'derivation': ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
-                           #'Derive/Average'
-                           ],
-        }
-        return True, out
+        #out = {
+            #'tooltip': 'Method to reduce multiple nodes into a single nodal/elemental value',
+            #'derivation': ['Centroid',
+                           #'Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
+                           ##'Derive/Average'
+                           #],
+        #}
+        #return True, out
+        return False, {}
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
-        """elemental -> nodal"""
-        return True, ['Centroid'] # 'Nodal Max'
-        #return True, ['Absolute Max', 'Min', 'Max']
+        """elemental -> nodal (only applies for Corner)"""
+        return True, ['Absolute Max', 'Mean', 'Max', 'Min',
+                      'Difference', 'Std. Dev.',]
+    # 'Nodal Max'
 
     def get_annotation(self, itime: int, case_tuple: str) -> str:
         """
         A header is the thingy that goes in the lower left corner
-        title = 'Plate Stress'
+        title = 'Solid Stress'
         method = 'Absolute Max'
         header = 'Static'
         nodal_combine = 'Nodal Max'
-        returns 'Plate Stress Both (Absolute Max; Nodal Max, Static): sigma11'
+        returns 'Solid Stress Both (Absolute Max; Nodal Max, Static): sigma11'
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
@@ -240,20 +219,24 @@ class PlateResults2(VectorResultsCommon):
 
         default_indices = self._get_default_tuple_indices() # 0-based
         if self.layer_indices == default_indices:
-            layer_str = 'Both'
+            self.layer_indices = (0, )
+
+        if self.layer_indices == (0, ):
+            layer_str = self.layer_map[0]  # Corner
+        elif self.layer_indices == (1, ):
+            layer_str = self.layer_map[1]  # Centroid
         else:
-            if self.layer_indices == (0, ):
-                layer_str = self.layer_map[0]  # Bottom
-            elif self.layer_indices == (1, ):
-                layer_str = self.layer_map[1]  # Top
-            else:
-                raise RuntimeError(self.layer_indices)
-            self.layer_indices
+            raise RuntimeError(self.layer_indices)
+        self.layer_indices
 
-        result = get_plate_result(self.result, iresult, index=1)
+        result = get_solid_result(self.result, iresult, index=1)
 
-        #'Compostite Plate Stress (Absolute Max; Static): sigma11'
-        annotation_label = f'{self.title}; {layer_str} ({self.min_max_method}, {self.nodal_combine}, {header}): {result}'
+        if layer_str == 'Centroid':
+            #'Solid Stress; Centroid (Static): von Mises'
+            annotation_label = f'{self.title}; {layer_str} ({header}): {result}'
+        else:
+            #'Solid Stress; Corner (Mean; Static): von Mises'
+            annotation_label = f'{self.title}; {layer_str} ({self.nodal_combine}, {header}): {result}'
         #return self.uname
         return annotation_label
 
@@ -332,7 +315,7 @@ class PlateResults2(VectorResultsCommon):
         #self.result
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #title = f'{self.title} {method}'
-        result = get_plate_result(self.result, iresult, index=0)
+        result = get_solid_result(self.result, iresult, index=0)
         return result
 
     def _get_real_data(self, case_tuple: int) -> np.ndarray:
@@ -342,44 +325,21 @@ class PlateResults2(VectorResultsCommon):
         #self.centroid_eids = np.hstack(centroid_elements_list)
         #self.centroid_data = np.hstack(data_list)
 
-        ilayer = self.layer_indices
+        #ilayer = self.layer_indices
         if self.layer_indices == (-1, ):
-            self.layer_indices = (0, 1)
+            self.layer_indices = (0, )
 
         #self.case.get_headers()
         #[fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
-        results = list(self.result.keys())
+        #results = list(self.result.keys())
         neids = self.centroid_data.shape[1]
 
-        if self.nodal_combine == 'Centroid':
-            # [itime, ielement, ilayer, iresult]
-            #'eabs' : ('eAbs Principal', -1),
-            #'von_mises' : ('ϵ von Mises', -2),
-            #'max_shear' : ('𝛾max', -3),
-            if iresult == 'abs_principal': # abs max
-                omax = self.centroid_data[itime, :, ilayer, 5]
-                omin = self.centroid_data[itime, :, ilayer, 6]
-                abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
-                #'exx' : ('Strain XX', 1),
-                #'eyy' : ('Strain YY', 2),
-                #'exy' : ('Strain XY', 3),
-                data = abs_principal
-            elif iresult == 'von_mises': # von mises
-                oxx = self.centroid_data[itime, :, ilayer, 1]
-                oyy = self.centroid_data[itime, :, ilayer, 2]
-                txy = self.centroid_data[itime, :, ilayer, 3]
-                ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
-                data = ovm
-            elif iresult == 'max_shear':
-                # not checked for strain
-                omax = self.centroid_data[itime, :, ilayer, 5]
-                omin = self.centroid_data[itime, :, ilayer, 6]
-                max_shear = (omax - omin) / 2.
-                data = max_shear
-            #elif iresult < 0:
-                #data = self.centroid_data[itime, :, ilayer, 0] * 0. + iresult
-            else:
-                data = self.centroid_data[itime, :, ilayer, iresult].copy()
+        #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
+        if self.layer_indices == (0, ):
+            data = self._get_nodal_result(itime, iresult)
+
+        elif self.layer_indices == (1, ):
+            data = self._get_centroid_result(itime, iresult)
         #elif self.nodal_combine == 'Nodal Max':
         #elif self.nodal_combine == 'Nodal Min':
         #elif self.nodal_combine == 'Nodal Mean':
@@ -389,7 +349,8 @@ class PlateResults2(VectorResultsCommon):
         else:
             raise RuntimeError(self.nodal_combine)
 
-        assert len(data.shape) == 2, data.shape
+        assert len(data.shape) == 1, data.shape
+        return data
 
         # multiple plies
         # ['Absolute Max', 'Min', 'Max', 'Derive/Average']
@@ -419,6 +380,111 @@ class PlateResults2(VectorResultsCommon):
         assert data2.shape == (neids, )
         #data4 = eids_new.astype('float32')
         return data2
+
+    def _get_centroid_result(self, itime: int,
+                             iresult: Union[int, str]) -> np.ndarray:
+        """
+        Centroid
+        Derive and no Averaging
+        """
+        ioxx = 0
+        ioyy = 1
+        iozz = 2
+        itxy = 3
+        ityz = 4
+        itxz = 5
+        imax = 6
+        imin = 8
+        ## nodal_combine == 'Centroid':
+
+        if iresult == 'abs_principal': # abs max; should be good
+            omax = self.centroid_data[itime, :, imax]
+            omin = self.centroid_data[itime, :, imin]
+            data = get_abs_max(omin, omax, dtype=omin.dtype)
+
+        elif iresult == 'von_mises':
+            # von mises
+            #Derive
+            oxx = self.centroid_data[itime, :, ioxx]
+            oyy = self.centroid_data[itime, :, ioyy]
+            ozz = self.centroid_data[itime, :, iozz]
+            txy = self.centroid_data[itime, :, itxy]
+            txz = self.centroid_data[itime, :, itxz]
+            tyz = self.centroid_data[itime, :, ityz]
+            data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
+        elif iresult == 'max_shear': #  probably wrong
+            # not checked for strain
+            omax = self.centroid_data[itime, :, imax]
+            omin = self.centroid_data[itime, :, imin]
+            data = max_shear(omax, omin)
+        else:
+            data = self.centroid_data[itime, :, iresult].copy()
+        return data
+
+    def _get_nodal_result(self, itime: int,
+                          iresult: Union[int, str]) -> np.ndarray:
+        ioxx = 0
+        ioyy = 1
+        iozz = 2
+        itxy = 3
+        ityz = 4
+        itxz = 5
+        imax = 6
+        imin = 8
+
+        ## Corner
+        ## TODO: consider implementing Average/Derive
+        # ----------------------------------------------------------
+        # setup
+        element_node = self.element_node
+        nids = np.unique(element_node[:, 1])
+
+        nodal_combine_func = nodal_combine_map[self.nodal_combine]
+        inid = np.searchsorted(self.node_id, nids)
+        nid_to_inid_map = {nid: inidi for nid, inidi in zip(nids, inid)}
+
+        ## Derive/Average
+        if isinstance(iresult, int):
+            datai = self.node_data[itime, :, iresult]
+            data = nodal_average(
+                nodal_combine_func,
+                element_node, datai,
+                nids, inid, nid_to_inid_map)
+
+        elif iresult == 'von_mises':
+            oxx = self.node_data[itime, :, ioxx]
+            oyy = self.node_data[itime, :, ioyy]
+            ozz = self.node_data[itime, :, iozz]
+            txy = self.node_data[itime, :, itxy]
+            txz = self.node_data[itime, :, itxz]
+            tyz = self.node_data[itime, :, ityz]
+            ovm_data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
+            data = nodal_average(
+                nodal_combine_func,
+                element_node, ovm_data,
+                nids, inid, nid_to_inid_map)
+
+        elif iresult == 'max_shear':
+            omax = self.node_data[itime, :, imax]
+            omin = self.node_data[itime, :, imin]
+            max_shear_data = max_shear(omax, omin)
+            data = nodal_average(
+                nodal_combine_func,
+                element_node, max_shear_data,
+                nids, inid, nid_to_inid_map)
+
+        elif iresult == 'abs_principal':
+            data_max = self.node_data[itime, :, imax]
+            data_min = self.node_data[itime, :, imin]
+            abs_data = get_abs_max(data_min, data_max, dtype=data_min.dtype)
+            assert abs_data.shape == data_min.shape
+            data = nodal_average(
+                nodal_combine_func,
+                element_node, abs_data,
+                nids, inid, nid_to_inid_map)
+        else:
+            raise NotImplementedError(iresult)
+        return data
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)
@@ -493,7 +559,7 @@ class PlateResults2(VectorResultsCommon):
         #phases[itime] = phase
 
 
-class PlateStrainStressResults2(PlateResults2):
+class SolidStrainStressResults2(SolidResults2):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
@@ -502,16 +568,16 @@ class PlateStrainStressResults2(PlateResults2):
                  cases: list[RealPlateArray],
                  result: str,
                  title: str,
-                 is_fiber_distance: bool,
+                 #is_fiber_distance: bool,
                  #dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
-                 uname: str='PlateStressStrainResults2'):
+                 uname: str='SolidStressStrainResults2'):
         """
-        Defines a Displacement/Eigenvector result
+        Defines a SolidStressResults/SolidStrainResults result
 
         Parameters
         ----------
@@ -523,14 +589,6 @@ class PlateStrainStressResults2(PlateResults2):
             the legend title
         xyz : (nnodes, 3)
             the nominal xyz locations
-        dxyz : (nnodes, 3)
-            the delta xyz values
-        scalars : (nnodes,n) float ndarray
-            #the data to make a contour plot with
-            does nothing
-        scales : list[float]
-            the deflection scale factors
-            nominally, this starts as an empty list and is filled later
         data_formats : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         ncolors : int; default=None
@@ -543,13 +601,12 @@ class PlateStrainStressResults2(PlateResults2):
         uname : str
             some unique name for ...
         """
-        PlateResults2.__init__(
+        SolidResults2.__init__(
             self,
             subcase_id,
             model, node_id, element_id,
             cases,
             result,
-            is_fiber_distance,
             #dim_max,
             data_format=data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
@@ -564,36 +621,57 @@ class PlateStrainStressResults2(PlateResults2):
         #location = 'node'
 
         # setup the node mapping
+        centroid_data_list = []
         centroid_elements_list = []
-        #nodal_elements_list = []
-        data_list = []
-        nlayers = 2
+
+        node_data_list = []
+        element_node_list = []
         for case in cases:
-            ntimes, nelement_nnode_nlayer, nresults = case.data.shape
-            nelement_nnode = nelement_nnode_nlayer // 2
-            if case.is_bilinear():
-                nnodes = case.nnodes_per_element
-                eids = case.element_node[0::2*nnodes, 0]
-                nelements = len(eids)
-                data = case.data.copy().reshape(ntimes, nelements, nnodes, nlayers, nresults)
+            ntime, nelement_nnode, nresults = case.data.shape
+            nelements_all = len(np.unique(case.element_node[:, 0]))
+            nnode = case.nnodes_per_element
+            if case.nnodes_per_element != 1:
+                eids = case.element_node[0::nnode, 0]
+                nelement = len(case.element_node) // nnode
+                nnodal_node = nelement * (nnode - 1)
+
+                element_node_3d = case.element_node.reshape(nelement, nnode, 2)
+                element_node = element_node_3d[:, 1:, :].reshape(nnodal_node, 2)
+                eids = element_node_3d[:, 0, 0]
+                data = case.data.copy().reshape(ntime, nelement, nnode, nresults)
                 centroid_elements_list.append(eids)
                 #nodal_elements.append(case.element_node[1::nnodes_per_element, 0])
+                assert nelement == nelements_all, (nelement, nelements_all)
+                node_data = data[:, :, 1:, :]
+                node_data2 = node_data.reshape(ntime, nnodal_node, nresults)
             else:
-                centroid_elements_list.append(case.element_node[::2, 0])
-                data = case.data.reshape(ntimes, nelement_nnode, 1, nlayers, nresults)
+                eids = case.element_node[:, 0]
+                centroid_elements_list.append(case.element_node)
+                data = case.data.reshape(ntime, nelements_all, 1, nresults)
+                node_data = data
+                raise NotImplementedError('centroidal solid elements')
             # slice off the centroid
-            datai = data[:, :, 0, :, :]
-            data_list.append(datai)
+            centroid_datai = data[:, :, 0, :]
+            centroid_data_list.append(centroid_datai)
+
+            node_data_list.append(node_data2)
+            element_node_list.append(element_node)
+
         self.centroid_eids = np.hstack(centroid_elements_list)
-        self.centroid_data = np.hstack(data_list)
+        # [ntimes, nelements, nresults]
+        self.centroid_data = np.hstack(centroid_data_list)
+
+        self.element_node = np.vstack(element_node_list)
+        self.node_data = np.hstack(node_data_list)
 
         common_eids = np.intersect1d(self.centroid_eids, element_id)
         if len(common_eids) == 0:
-            raise IndexError('no plate elements found...')
+            raise IndexError('no solid elements found...')
         elif len(common_eids) != len(self.centroid_eids):
             icommon = np.searchsorted(common_eids, self.centroid_eids)
             #self.centroid_data = self.centroid_data[:, icommon, :]
             raise RuntimeError('some common elements were found...but some are missing')
+
 
         self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
 
@@ -603,11 +681,11 @@ class PlateStrainStressResults2(PlateResults2):
 
         #self.xyz = xyz
         #assert len(self.xyz.shape) == 2, self.xyz.shape
-        self.location = 'centroid'
+        #self.location = 'centroid'
         if self.is_stress:
-            self.headers = ['PlateStress2']
+            self.headers = ['SolidStress2']
         else:
-            self.headers = ['PlateStrain2']
+            self.headers = ['SolidStrain2']
         str(self)
 
     #-------------------------------------
@@ -615,7 +693,10 @@ class PlateStrainStressResults2(PlateResults2):
 
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
         """the result type"""
-        return self.location
+        if self.layer_indices == (0, ):
+            return 'node'
+        return 'centroid'
+        #return self.location
 
     #-------------------------------------
     def get_methods(self, itime: int, res_name: str) -> list[str]:
@@ -628,7 +709,6 @@ class PlateStrainStressResults2(PlateResults2):
     def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
         """get_fringe_value"""
         normi = self.get_result(itime, res_name, method, return_dense=False)
-        #normi = safe_norm(dxyz, axis=col_axis)
         if self.is_dense:
             return normi
 
@@ -688,19 +768,19 @@ class PlateStrainStressResults2(PlateResults2):
 
     def __repr__(self) -> str:
         """defines str(self)"""
-        msg = 'CompositeStrainStressResults2\n'
+        msg = 'SolidStrainStressResults2\n'
         #msg += f'    titles={self.titles!r}\n'
         msg += f'    subcase_id={self.subcase_id}\n'
         msg += f'    data_type={self.data_type!r}\n'
         msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
-        msg += f'    location={self.location!r}\n'
+        #msg += f'    location={self.location!r}\n'
         msg += f'    header={self.headers!r}\n'
         msg += f'    data_format={self.data_formats!r}\n'
         msg += f'    uname={self.uname!r}\n'
         return msg
 
 
-def get_plate_result(result: dict[str, Any],
+def get_solid_result(result: dict[str, Any],
                      iresult: Union[int, str], index: int):
     """
     values
@@ -720,4 +800,42 @@ def get_plate_result(result: dict[str, Any],
         #word = 'Abs Principal'
     #else:
         #raise RuntimeError(iresult)
-    return word
+    #return word
+
+def max_shear(omax, omin) -> np.ndarray:
+    """
+    not verified for stress/strain
+    same as Tresca?
+    """
+    max_shear = (omax - omin) / 2.
+    return max_shear
+
+def von_mises_2d(oxx, oyy, txy) -> np.ndarray:
+    """not verified for stress/strain"""
+    ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
+    return ovm
+
+def von_mises_3d(oxx, oyy, ozz, txy, tyz, txz) -> np.ndarray:
+    """not verified for stress/strain"""
+    vm = np.sqrt(
+        0.5 * ((oxx - oyy) ** 2 + (oyy - ozz) ** 2 +(oxx - ozz) ** 2) +
+        3 * (txy**2 + tyz**2 + txz**2))
+    return vm
+
+def nodal_average(nodal_combine_func: Callable[np.ndarray],
+                  element_node: np.ndarray,
+                  data: np.ndarray,
+                  nids: np.ndarray,
+                  inid: np.ndarray,
+                  nid_to_inid_map: dict[int, int]) -> np.ndarray:
+    data_dict = defaultdict(list)
+    nnode = len(nids)
+
+    data2 = np.full(nnode, np.nan, dtype=data.dtype)
+    for (eid, nid), datai in zip(element_node, data):
+        data_dict[nid].append(datai)
+    for nid, datasi in data_dict.items():
+        collapsed_value = nodal_combine_func(datasi)
+        inidi = nid_to_inid_map[nid]
+        data2[inidi] = collapsed_value
+    return data2

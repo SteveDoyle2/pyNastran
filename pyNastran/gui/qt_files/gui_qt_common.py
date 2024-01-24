@@ -416,6 +416,7 @@ class GuiQtCommon(GuiAttributes):
                            '(nodal vector) result and xyz_nominal is None')
             return is_valid, failed_data
 
+        assert vector_data.ndim == 2, vector_data.shape
         methods = obj.get_methods(i, name)
         data_format = obj.get_data_format(i, name)
         scale = obj.get_scale(i, name)
@@ -1449,7 +1450,7 @@ class GuiQtCommon(GuiAttributes):
         self.hide_labels(show_msg=False)
         self.show_labels(case_keys=[self.icase], show_msg=False)
 
-    def _update_forces(self, forces_array, set_scalars=True, scale=None):
+    def _update_forces(self, forces_array: np.ndarray, set_scalars=True, scale=None):
         """changes the glyphs"""
         grid = self.grid
         if scale is not None:

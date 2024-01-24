@@ -29,7 +29,7 @@ from .stress import (
     get_bar_stress_strains, get_beam_stress_strains,
     get_composite_plate_stress_strains, get_composite_plate_stress_strains2,
     get_plate_stress_strains, get_plate_stress_strains2,
-    get_solid_stress_strains)
+    get_solid_stress_strains, get_solid_stress_strains2)
 from .force import get_spring_force, get_bar_force, get_plate_force
 from .result_objects.displacement_results import DisplacementResults2, ForceResults2
 
@@ -764,9 +764,14 @@ class NastranGuiResults(NastranGuiAttributes):
         eids = self.element_ids
         assert isinstance(icase, int), icase
         if nastran_settings.plate_stress:
-            icase = get_plate_stress_strains2(
+            try:
+                icase = get_plate_stress_strains2(
                 nids, eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
+            except Exception as e:  # pragma: no cover
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
 
             try:
                 icase = get_plate_stress_strains(
@@ -871,7 +876,17 @@ class NastranGuiResults(NastranGuiAttributes):
             #icasei = icase
 
 
-        if 1:
+
+        if nastran_settings.solid_stress:
+            try:
+                icase = get_solid_stress_strains2(
+                nids, eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            except Exception as e:  # pragma: no cover
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
+
             icase = get_solid_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
@@ -879,6 +894,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #assert icase >= icasei
             #icasei = icase
 
+        if nastran_settings.spring_stress:
             icase = get_spring_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
@@ -974,8 +990,18 @@ class NastranGuiResults(NastranGuiAttributes):
                         raise
             del itime
 
+        nids = self.node_ids
         eids = self.element_ids
         if nastran_settings.plate_strain:
+            try:
+                icase = get_plate_stress_strains2(
+                    nids, eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, log, is_stress=False)
+            except Exception as e:  # pragma: no cover
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
+
             try:
                 icase = get_plate_stress_strains(
                     eids, cases, model, times, key, icase,
@@ -1055,12 +1081,22 @@ class NastranGuiResults(NastranGuiAttributes):
                 if stop_on_failure:
                     raise
 
-        icase = get_solid_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, log, is_stress=False)
-        icase = get_spring_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, log, is_stress=False)
+        if nastran_settings.solid_strain:
+            try:
+                icase = get_solid_stress_strains2(
+                nids, eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
+            except Exception as e:  # pragma: no cover
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
+            icase = get_solid_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
+        if nastran_settings.spring_strain:
+            icase = get_spring_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
 
         return icase
 
