@@ -10,6 +10,7 @@ from .nodal_averaging import nodal_average, nodal_combine_map
 #from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .displacement_results import VectorResultsCommon
+from .stress_reduction import von_mises_3d, max_shear
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
@@ -55,8 +56,8 @@ class SolidResults2(VectorResultsCommon):
         self.is_stress = case.is_stress
 
         self.layer_map = {
-            0: 'Corner',  # default
-            1: 'Centroid',
+            0: 'Centroid',  # default
+            1: 'Corner',
         }
 
         #if dim_max == 0.0:
@@ -152,14 +153,14 @@ class SolidResults2(VectorResultsCommon):
         # methods = ['Both', 'Top', 'Bottom']
         default_indices = self._get_default_layer_indicies()
         if methods_keys is None or len(methods_keys) == 0:
-            # default; Corner
+            # default; Centroid
             indices = default_indices
-        elif 0 in methods_keys: # Both
+        elif 1 in methods_keys: # Centroid
             # Corner takes precendence (it has more data)
-            indices = (0, )
-        else:
-            # Centroid is secondary
             indices = (1, )
+        else:
+            # Centroid is secondary (even though it's first)
+            indices = (0, )
         self.layer_indices = indices
         #self.layer_indices = (1, )
 
@@ -199,7 +200,10 @@ class SolidResults2(VectorResultsCommon):
         method = 'Absolute Max'
         header = 'Static'
         nodal_combine = 'Nodal Max'
-        returns 'Solid Stress Both (Absolute Max; Nodal Max, Static): sigma11'
+        returns 'Solid Stress (Center, Absolute Max; Max, Static): sigma11'
+
+
+        returns 'Solid Stress (Centroid, Static): sigma11'
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
@@ -210,9 +214,9 @@ class SolidResults2(VectorResultsCommon):
             self.layer_indices = (0, )
 
         if self.layer_indices == (0, ):
-            layer_str = self.layer_map[0]  # Corner
+            layer_str = self.layer_map[0]  # Centroid
         elif self.layer_indices == (1, ):
-            layer_str = self.layer_map[1]  # Centroid
+            layer_str = self.layer_map[1]  # Corner
         else:
             raise RuntimeError(self.layer_indices)
         self.layer_indices
@@ -221,10 +225,10 @@ class SolidResults2(VectorResultsCommon):
 
         if layer_str == 'Centroid':
             #'Solid Stress; Centroid (Static): von Mises'
-            annotation_label = f'{self.title}; {layer_str} ({header}): {result}'
+            annotation_label = f'{self.title} ({layer_str}, {header}): {result}'
         else:
             #'Solid Stress; Corner (Mean; Static): von Mises'
-            annotation_label = f'{self.title}; {layer_str} ({self.nodal_combine}, {header}): {result}'
+            annotation_label = f'{self.title} ({layer_str}, {self.nodal_combine}, {header}): {result}'
         #return self.uname
         return annotation_label
 
@@ -315,18 +319,17 @@ class SolidResults2(VectorResultsCommon):
 
         #self.case.get_headers()
         #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
-        if self.layer_indices == (0, ):
-            data = self._get_nodal_result(itime, iresult)
-
-        elif self.layer_indices == (1, ):
+        if self.layer_indices == (0, ):  # Centroid
             data = self._get_centroid_result(itime, iresult)
+        elif self.layer_indices == (1, ):  # Corner
+            data = self._get_nodal_result(itime, iresult)
         #elif self.nodal_combine == 'Nodal Max':
         #elif self.nodal_combine == 'Nodal Min':
         #elif self.nodal_combine == 'Nodal Mean':
         #elif self.nodal_combine == 'Nodal Abs Max':
         #elif self.nodal_combine == 'Nodal Std. Dev.':
         #elif self.nodal_combine == 'Nodal Difference':
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.nodal_combine)
 
         assert len(data.shape) == 1, data.shape
@@ -481,8 +484,8 @@ class SolidResults2(VectorResultsCommon):
         assert len(data.shape) == 1, data.shape
 
         return_sparse = not return_dense
-        if return_sparse or self.is_dense:
-            return data
+        #if return_sparse or self.is_dense:
+            #return data
 
         if self.get_location(0, 0) == 'node':
             nnode = len(self.node_id)
@@ -623,8 +626,8 @@ class SolidStrainStressResults2(SolidResults2):
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
         """the result type"""
         if self.layer_indices == (0, ):
-            return 'node'
-        return 'centroid'
+            return 'centroid'
+        return 'node'
         #return self.location
 
     #-------------------------------------
@@ -772,23 +775,3 @@ def setup_centroid_node_data(cases: list[RealSolidArray],
     element_node = np.vstack(element_node_list)
     node_data = np.hstack(node_data_list)
     return centroid_eids, centroid_data, element_node, node_data
-
-def max_shear(omax, omin) -> np.ndarray:
-    """
-    not verified for stress/strain
-    same as Tresca?
-    """
-    max_shear = (omax - omin) / 2.
-    return max_shear
-
-def von_mises_2d(oxx, oyy, txy) -> np.ndarray:
-    """not verified for stress/strain"""
-    ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
-    return ovm
-
-def von_mises_3d(oxx, oyy, ozz, txy, tyz, txz) -> np.ndarray:
-    """not verified for stress/strain"""
-    vm = np.sqrt(
-        0.5 * ((oxx - oyy) ** 2 + (oyy - ozz) ** 2 +(oxx - ozz) ** 2) +
-        3 * (txy**2 + tyz**2 + txz**2))
-    return vm

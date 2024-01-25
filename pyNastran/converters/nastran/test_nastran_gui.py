@@ -44,7 +44,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
         self.stop_on_failure = True
 
-    def write_result_cases(self):
+    def write_result_cases(self):  # pramga: no cover
         case_id0 = 0
         for case_id, (result_case, flag) in self.result_cases.items():
 

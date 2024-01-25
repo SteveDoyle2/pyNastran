@@ -188,7 +188,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.export_vtk = False
         self.create_secondary_actors = True
 
-        self.stop_on_failure = True
+        self.stop_on_failure = False
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """gets the Nastran wildcard loader used in the file load menu"""

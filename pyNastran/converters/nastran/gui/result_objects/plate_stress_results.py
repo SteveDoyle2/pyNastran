@@ -5,10 +5,13 @@ from typing import Optional, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
-from pyNastran.bdf.utils import write_patran_syntax_dict
+from pyNastran.femutils.utils import abs_nan_min_max # abs_min_max
+#from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .displacement_results import VectorResultsCommon
+from .stress_reduction import von_mises_2d, max_shear
+from .nodal_averaging import nodal_average, nodal_combine_map
+
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
@@ -150,6 +153,10 @@ class PlateResults2(VectorResultsCommon):
 
         #[ntime, nelement, nlayer, nresult]
         self.centroid_data = np.zeros((0, 0, 2, 8), dtype='float32')
+        self.node_data = np.zeros((0, 0, 2, 8), dtype='float32')
+        self.element_node = np.zeros((0, 2), dtype='int32')
+        self.inode = np.zeros(0, dtype='int32')
+        self.ielement_centroid = np.zeros(0, dtype='int32')
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -227,8 +234,7 @@ class PlateResults2(VectorResultsCommon):
         return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
-        return True, ['Centroid'] # 'Nodal Max'
-        #return True, ['Absolute Max', 'Min', 'Max']
+        return True, ['Centroid', 'Mean', 'Absolute Max', 'Min', 'Max', 'Std. Dev.', 'Difference']
 
     def get_location(self, itime: int, case_tuple: str) -> str:
         if self.nodal_combine == 'Centroid':
@@ -358,50 +364,54 @@ class PlateResults2(VectorResultsCommon):
 
         #self.case.get_headers()
         #[fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
-        results = list(self.result.keys())
+        #results = list(self.result.keys())
 
         neids = self.centroid_data.shape[1]
 
         if self.nodal_combine == 'Centroid':
             data = self._get_centroid_result(itime, iresult, ilayer)
+            assert len(data.shape) == 2, data.shape
+            data2 = self._squash_layers(data, self.min_max_method)
+            assert data2.shape == (neids, )
+        else:
+            data2 = self._get_nodal_result(itime, iresult, ilayer)
         #elif self.nodal_combine == 'Nodal Max':
         #elif self.nodal_combine == 'Nodal Min':
         #elif self.nodal_combine == 'Nodal Mean':
         #elif self.nodal_combine == 'Nodal Abs Max':
         #elif self.nodal_combine == 'Nodal Std. Dev.':
         #elif self.nodal_combine == 'Nodal Difference':
-        else:
-            raise RuntimeError(self.nodal_combine)
+        #else:
+            #raise RuntimeError(self.nodal_combine)
 
-        assert len(data.shape) == 2, data.shape
+        # TODO: hack to try and debug things...
+        #data4 = eids_new.astype('float32')
+        return data2
 
+    def _squash_layers(self, data: np.ndarray, min_max_method: str) -> np.ndarray:
         # multiple plies
         # ['Absolute Max', 'Min', 'Max', 'Derive/Average']
         ## TODO: why is this shape backwards?!!!
         ## [ilayer, ielement] ???
         axis = 0
-        if self.min_max_method == 'Absolute Max':
+        if min_max_method == 'Absolute Max':
             data2 = abs_nan_min_max(data, axis=axis)
-        elif self.min_max_method == 'Min':
+        elif min_max_method == 'Min':
             data2 = np.nanmin(data, axis=axis)
-        elif self.min_max_method == 'Max':
+        elif min_max_method == 'Max':
             data2 = np.nanmax(data, axis=axis)
-        elif self.min_max_method == 'Mean':  #   (Derive/Average)???
+        elif min_max_method == 'Mean':  #   (Derive/Average)???
             data2 = np.nanmean(data, axis=axis)
-        elif self.min_max_method == 'Std. Dev.':
+        elif min_max_method == 'Std. Dev.':
             data2 = np.nanstd(data, axis=axis)
-        elif self.min_max_method == 'Difference':
+        elif min_max_method == 'Difference':
             data2 = np.nanmax(data, axis=axis) - np.nanmin(data, axis=axis)
-        #elif self.min_max_method == 'Max Over Time':
+        #elif min_max_method == 'Max Over Time':
             #data2 = np.nanmax(data, axis=axis) - np.nanmin(data2, axis=axis)
-        #elif self.min_max_method == 'Derive/Average':
+        #elif min_max_method == 'Derive/Average':
             #data2 = np.nanmax(data, axis=1)
         else:  # pragma: no cover
-            raise NotImplementedError(self.min_max_method)
-
-        # TODO: hack to try and debug things...
-        assert data2.shape == (neids, )
-        #data4 = eids_new.astype('float32')
+            raise NotImplementedError(min_max_method)
         return data2
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
@@ -414,18 +424,67 @@ class PlateResults2(VectorResultsCommon):
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
+    def _get_nodal_result(self, itime: int,
+                          iresult: Union[int, str],
+                          ilayer: np.ndarray) -> np.ndarray:
+        #neids = len(self.centroid_eids)
+
+        node_data = self.node_data
+        element_node = self.element_node
+
+        nodal_combine_func = nodal_combine_map[self.nodal_combine]
+
+        nids = np.unique(element_node[:, 1])
+        nnode = len(nids)
+        nid_to_inid_map = {nid: i for i, nid in enumerate(nids)}
+
+        nodal_average(nodal_combine_func, element_node, node_data,
+                      nids, nid_to_inid_map)
+        #nodal_combine_map
+        #(ntime, neidsi_nnode, nlayer, nresult) = node_data.shape
+        #assert neids == neidsi_nnode
+
+        #ioxx = 1
+        #ioyy = 2
+        #itxy = 3
+        #imax = 5
+        #imin = 6
+        if isinstance(iresult, int):
+            data = node_data[itime, :, ilayer, iresult]
+        elif iresult == 'abs_principal':
+            omax = node_data[itime, :, ilayer, 5]
+            omin = node_data[itime, :, ilayer, 6]
+            abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
+            data = abs_principal
+        elif iresult == 'von_mises':
+            oxx = node_data[itime, :, ilayer, 1]
+            oyy = node_data[itime, :, ilayer, 2]
+            txy = node_data[itime, :, ilayer, 3]
+            data = von_mises_2d(oxx, oyy, txy)
+        elif iresult == 'max_shear':
+            omax = node_data[itime, :, ilayer, 5]
+            omin = node_data[itime, :, ilayer, 6]
+            data = max_shear(omax, omin)
+        else:  # pragma: no cover
+            raise RuntimeError(iresult)
+
+        # time to nodal average
+
+        data2 = nodal_average(
+            nodal_combine_func,
+            element_node, data,
+            nids, nid_to_inid_map)
+        assert len(data2) == nnode, (len(data2), nnode)
+        return data2
+
     def _get_centroid_result(self, itime: int,
                              iresult: Union[int, str],
                              ilayer: np.ndarray) -> np.ndarray:
         centroid_data = self.centroid_data
-        neids = len(self.centroid_eids)
-        (ntime, neidsi_nnode, nlayer, nresult) = centroid_data.shape
-        assert neids == neidsi_nnode
+        #(ntime, neidsi_nnode, nlayer, nresult) = centroid_data.shape
+        #assert neids == neidsi_nnode
 
         # [itime, ielement, ilayer, iresult]
-        #'eabs' : ('eAbs Principal', -1),
-        #'von_mises' : ('ϵ von Mises', -2),
-        #'max_shear' : ('𝛾max', -3),
         if iresult == 'abs_principal': # abs max
             omax = centroid_data[itime, :, ilayer, 5]
             omin = centroid_data[itime, :, ilayer, 6]
@@ -443,8 +502,7 @@ class PlateResults2(VectorResultsCommon):
             # not checked for strain
             omax = centroid_data[itime, :, ilayer, 5]
             omin = centroid_data[itime, :, ilayer, 6]
-            max_shear = (omax - omin) / 2.
-            data = max_shear
+            data = max_shear(omax, omin)
         #elif iresult < 0:
             #data = self.centroid_data[itime, :, ilayer, 0] * 0. + iresult
         else:
@@ -479,8 +537,8 @@ class PlateResults2(VectorResultsCommon):
         assert len(data.shape) == 1, data.shape
 
         return_sparse = not return_dense
-        if return_sparse or self.is_dense:
-            return data
+        #if return_sparse or self.is_dense:
+            #return data
 
         if self.get_location(0, 0) == 'node':
             nnode = len(self.node_id)
@@ -634,9 +692,9 @@ class PlateStrainStressResults2(PlateResults2):
     #-------------------------------------
     # unmodifyable getters
 
-    def get_location(self, unused_i: int, unused_res_name: str) -> str:
-        """the result type"""
-        return self.location
+    #def get_location(self, unused_i: int, unused_res_name: str) -> str:
+        #"""the result type"""
+        #return self.location
 
     #-------------------------------------
     def get_methods(self, itime: int, res_name: str) -> list[str]:
