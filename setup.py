@@ -6,7 +6,8 @@ from setuptools import setup, find_packages
 import pyNastran
 from packages import (check_python_version, get_package_requirements,
                       update_version_file, PYTHON_REQUIRES,
-                      LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS)
+                      LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS,
+                      CONSOLE_SCRIPTS)
 
 add_vtk_qt = True
 bdist = False
@@ -62,24 +63,7 @@ setup(
         #'mypkg': ['data/*.dat'],
     },
     entry_points={
-        'console_scripts': [
-            #'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
-            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_op2  = pyNastran.op2.test.test_op2:main',
-            'test_op4  = pyNastran.op4.test.test_op4:main',
-            #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
-            'test_pynastrangui = pyNastran.gui.test.test_gui:main',
-
-            'format_converter = pyNastran.converters.format_converter:cmd_line_format_converter',
-            'pyNastranGUI = pyNastran.gui.gui:cmd_line',
-            'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
-            'f06 = pyNastran.f06.utils:cmd_line',
-
-            #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
-            #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
-            #'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
-            #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
-        ]
+        'console_scripts': CONSOLE_SCRIPTS,
     },
     test_suite='pyNastran.all_tests',
 )
