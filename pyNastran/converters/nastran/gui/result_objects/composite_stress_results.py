@@ -219,7 +219,7 @@ class CompositeResults2(VectorResultsCommon):
         title = 'Compostite Plate Stress'
         method = 'Absolute Max'
         header = 'Static'
-        returns 'Compostite Plate Stress All Layers (Absolute Max; Static): sigma11'
+        returns 'Compostite Plate Stress (All Layers; Absolute Max; Static): sigma11'
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
@@ -236,8 +236,8 @@ class CompositeResults2(VectorResultsCommon):
         results = list(self.result.keys())
         result = results[iresult]
 
-        #'Compostite Plate Stress (Absolute Max; Static): sigma11'
-        annotation_label = f'{self.title}; {layer_str} ({self.min_max_method}, {header}): {result}'
+        #'Compostite Plate Stress (Layers 2:10 12, Absolute Max; Static): sigma11'
+        annotation_label = f'{self.title} ({layer_str}, {self.min_max_method}, {header}): {result}'
         #return self.uname
         return annotation_label
 

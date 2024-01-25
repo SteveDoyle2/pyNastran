@@ -46,7 +46,7 @@ class LayeredTableResults(Table):
     def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         out = {
-            'label': 'Derivation: ',
+            #'label': 'Derivation Method: ',
             'derivation': ['Absolute Max'],
             'tooltip': '',
         }

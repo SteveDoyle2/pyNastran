@@ -250,15 +250,15 @@ class ResultsSidebar(QWidget):
             self.set_max_case(self.parent.result_cases)
 
         if self._use_new_sidebar:
-            self.transform_coords_label = QLabel('2: Transform:')
+            self.transform_coords_label = QLabel('Transform:')
             self.transform_coords_pulldown = QComboBox()
             self.transform_coords_pulldown.addItem('Coord 0')
             self.transform_coords_pulldown.setEnabled(False)
-            self.min_max_average_label = QLabel('3: Derivation Method:')
+            self.min_max_average_label = QLabel('Derivation Method:')
             self.min_max_average_pulldown = QComboBox()
             self.min_max_average_pulldown.addItems(['Derive/Average', 'Max', 'Min'])
 
-            self.combine_label = QLabel('4: Nodal combine:')
+            self.combine_label = QLabel('Nodal Combine:')
             self.combine_pulldown = QComboBox(self)
             self.combine_pulldown.addItems(['Across Neighbors', 'Centroid Absolute Max'])
             self.combine_pulldown.setEnabled(False)

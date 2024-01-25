@@ -243,7 +243,7 @@ class DispForceVectorResults(VectorResultsCommon):
                                  ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         out = {
-            'label': 'Derivation',
+            #'label': 'Derivation Method:',
             'derivation': ['Magnitude', 'Value'],
             'tooltip': 'Magnitude is automatically selected if multiple cmponents are selected',
         }
