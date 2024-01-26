@@ -4,6 +4,7 @@ defines:
  - GuiResult
 
 """
+from abc import abstractmethod
 from typing import Any, Optional
 import numpy as np
 in1d = np.in1d
@@ -47,7 +48,8 @@ class GuiResultCommon:
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         raise NotImplementedError(self.class_name)
-    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
         is_enabled_fringe = False
         is_checked_fringe = True
         is_enabled_disp = False
@@ -68,28 +70,32 @@ class GuiResultCommon:
         return False
 
     def get_data_format(self, i: int, name: str):
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_data_format')
 
     def get_location(self, i: int, name: str):
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_location')
 
     def get_legend_title(self, i: int, name: str):
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_legend_title')
 
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_nlabels_labelsize_ncolors_colormap')
 
+    @abstractmethod
     def get_min_max(self, i: int, name: str):
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_min_max')
 
-    def get_scalar(self, i: int, name: str, method: str):
-        raise NotImplementedError(self.class_name)
+    #@abstractmethod
+    #def get_scalar(self, i: int, name: str):
+        #raise NotImplementedError(f'{self.class_name}.get_scalar')
 
+    @abstractmethod
     def get_methods(self, i: int, name: str) -> list[str]:
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.get_methods')
 
-    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
-        raise NotImplementedError(self.class_name)
+    @abstractmethod
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[Any, Any]:
+        raise NotImplementedError(f'{self.class_name}.get_fringe_vector_result')
 
     def get_vector_size(self, i: int, name: str) -> int:
         """vector_size=1 is the default"""
@@ -198,11 +204,11 @@ class GridPointForceResult(GuiResultCommon):
         """elemental -> nodal"""
         return False, []
 
-    def get_scalar(self, i: int, name: str, method: str) -> None:
+    def get_scalar(self, i: int, name: str) -> None:
         return None
 
-    def get_result(self, i: int, name: str, method: str) -> None:
-        return None
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
     def get_legend_title(self, i: int, name: str) -> str:
         return self.title
     def get_location(self, i: int, name: str) -> str:
@@ -318,7 +324,7 @@ class NormalResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str, method: str) -> np.ndarray:
+    def get_scalar(self, i: int, name: str) -> np.ndarray:
         return self.scalar
 
     #------------
@@ -375,8 +381,8 @@ class NormalResult(GuiResultCommon):
     def get_methods(self, i: int, name: str) -> list[str]:
         return ['centroid']
 
-    def get_result(self, i: int, name: str, method: str) -> None:
-        return None
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
 
     def is_normal_result(self, i: int, name: str) -> bool:
         """normal result is opt-in"""
@@ -661,7 +667,7 @@ class GuiResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str, method: str):
+    def get_scalar(self, i: int, name: str):
         return self.scalar
 
     #------------
@@ -744,12 +750,12 @@ class GuiResult(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return xyz, dxyz
 
-    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, None]:
         if self.is_real:
             #return self.dxyz[i, :]
-            return self.scalar
+            return self.scalar, None
         else:
-            raise NotImplementedError('title=%s is not real; fmt=%s' % (self.title, self.data_type))
+            raise NotImplementedError(f'title={self.title!r} is not real; fmt={self.data_type}')
 
     #def get_vector_result(self, i: int, name: str):
         #if self.is_real:

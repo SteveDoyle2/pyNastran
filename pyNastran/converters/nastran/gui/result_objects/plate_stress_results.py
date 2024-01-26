@@ -1,14 +1,13 @@
 from __future__ import annotations
-from collections import defaultdict
+#from collections import defaultdict
 import numpy as np
-from typing import Optional, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.femutils.utils import abs_nan_min_max # abs_min_max
-#from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .displacement_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon
 from .stress_reduction import von_mises_2d, max_shear
 from .nodal_averaging import nodal_average, nodal_combine_map
 
@@ -16,8 +15,6 @@ if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
 
-#pcomp_stress = ['o11', 'o22', 't12', 't1z', 't2z', 'oangle', 'Max Principal', 'minor', 'ovm', 'omax_shear']
-#pcomp_strain = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'eangle', 'Max Principal', 'minor', 'evm', 'emax_shear']
 col_axis = 1
 
 class PlateResults2(VectorResultsCommon):
@@ -47,7 +44,6 @@ class PlateResults2(VectorResultsCommon):
         self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
-        #assert len(element_id) >= self.case.
 
         self.is_dense = False
         self.dim = cases[0].data.ndim
@@ -127,18 +123,18 @@ class PlateResults2(VectorResultsCommon):
 
         #def fscales():
             #return [None] * nscale
-        def ftimes():
-            return [None] * ntimes
-        def fphases():
-            return np.zeros(ntimes, dtype='float64')
+        #def ftimes():
+            #return [None] * ntimes
+        #def fphases():
+            #return np.zeros(ntimes, dtype='float64')
 
         #self.default_scales = defaultdict(fscales)
         #self.scales = defaultdict(fscales)
-        self.default_mins = defaultdict(ftimes)
-        self.default_maxs = defaultdict(ftimes)
-        self.mins = defaultdict(ftimes)
-        self.maxs = defaultdict(ftimes)
-        self.phases = defaultdict(fphases)
+        #self.default_mins = defaultdict(ftimes)
+        #self.default_maxs = defaultdict(ftimes)
+        #self.mins = defaultdict(ftimes)
+        #self.maxs = defaultdict(ftimes)
+        #self.phases = defaultdict(fphases)
 
         self.data_formats = [self.data_format]
         self.headers = ['PlateResult2'] * ntimes
@@ -273,47 +269,9 @@ class PlateResults2(VectorResultsCommon):
         #return self.uname
         return annotation_label
 
-    def get_default_min_max(self, itime: int,
-                            case_tuple: str) -> tuple[float, float]:
-        #(itime, iresult, unused_header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.default_mins[case_flag]
-        maxs = self.default_maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
-
-        datai = self._get_real_data(case_tuple)
-        mins[itime] = np.nanmin(datai)
-        maxs[itime] = np.nanmax(datai)
-        return mins[itime], maxs[itime]
-
-    def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
-
-        # save the defaults if they're not None
-        mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
-        if mini2 is not None:
-            mins[itime] = mini2
-        if maxi2 is not None:
-            maxs[itime] = maxi2
-        return mins[itime], maxs[itime]
-
-    def set_min_max(self, itime, case_tuple, min_value, max_value) -> tuple[float, float]:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        mins[itime] = min_value
-        maxs[itime] = max_value
-
-    def get_case_flag(self, case_tuple: tuple[int, int, str]) -> tuple[int,
-                                                                       tuple[int, int, tuple, str, str]]:
+    def get_case_flag(self, i,
+                      case_tuple: tuple[int, int, str]) -> tuple[int,
+                                                                 tuple[int, int, tuple, str, str]]:
         """
         itime = 0
         iresult = 0 # o11
@@ -469,7 +427,6 @@ class PlateResults2(VectorResultsCommon):
             raise RuntimeError(iresult)
 
         # time to nodal average
-
         data2 = nodal_average(
             nodal_combine_func,
             element_node, data,
@@ -485,14 +442,15 @@ class PlateResults2(VectorResultsCommon):
         #assert neids == neidsi_nnode
 
         # [itime, ielement, ilayer, iresult]
-        if iresult == 'abs_principal': # abs max
+        if isinstance(itime, int):
+            data = centroid_data[itime, :, ilayer, iresult].copy()
+        elif iresult == 'abs_principal': # abs max
             omax = centroid_data[itime, :, ilayer, 5]
             omin = centroid_data[itime, :, ilayer, 6]
-            abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
+            data = get_abs_max(omin, omax, dtype=omin.dtype)
             #'exx' : ('Strain XX', 1),
             #'eyy' : ('Strain YY', 2),
             #'exy' : ('Strain XY', 3),
-            data = abs_principal
         elif iresult == 'von_mises': # von mises
             oxx = centroid_data[itime, :, ilayer, 1]
             oyy = centroid_data[itime, :, ilayer, 2]
@@ -503,27 +461,12 @@ class PlateResults2(VectorResultsCommon):
             omax = centroid_data[itime, :, ilayer, 5]
             omin = centroid_data[itime, :, ilayer, 6]
             data = max_shear(omax, omin)
-        #elif iresult < 0:
-            #data = self.centroid_data[itime, :, ilayer, 0] * 0. + iresult
         else:
-            data = centroid_data[itime, :, ilayer, iresult].copy()
+            raise RuntimeError(iresult)
         return data
 
-    def get_result(self, itime: int, case_tuple: str,
-                   method: str='',
-                   return_dense: bool=True) -> np.ndarray:
-        """
-        gets the 'typical' result which is a vector
-         - GuiResult:           fringe; (n,)   array
-         - DisplacementResults: vector; (n, 3) array
-
-        Parameters
-        ----------
-        return_dense: bool
-            Rreturns the data array in a way that the gui can use.
-            Handles the null result case (e.g; SPC forces only
-            at the SPC location).
-        """
+    def _get_fringe_data_sparse(self, itime: int, case_tuple: str) -> np.ndarray:
+        """gets the sparse fringe"""
         #method = self._update_method(itime, case_tuple, method)
         assert self.is_real
         # multiple results
@@ -535,12 +478,15 @@ class PlateResults2(VectorResultsCommon):
         #else:
         #data = self._get_complex_data(case_tuple)
         assert len(data.shape) == 1, data.shape
+        return data
 
-        return_sparse = not return_dense
-        #if return_sparse or self.is_dense:
-            #return data
+    def _get_fringe_data_dense(self, itime: int, case_tuple: str) -> np.ndarray:
+        """gets the dense fringe"""
+        data = self._get_fringe_data_sparse(itime, case_tuple)
+        if self.is_dense:
+            return data
 
-        if self.get_location(0, 0) == 'node':
+        if self.get_location(0, '') == 'node':
             nnode = len(self.node_id)
             result_out = np.full(nnode, np.nan, dtype=data.dtype)
             result_out[self.inode] = data
@@ -549,6 +495,11 @@ class PlateResults2(VectorResultsCommon):
             result_out = np.full(nelement, np.nan, dtype=data.dtype)
             result_out[self.ielement_centroid] = data
         return result_out
+
+    def get_fringe_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, None]:
+        """get_fringe_value"""
+        normi = self._get_fringe_data_dense(itime, res_name)
+        return normi, None
 
     def get_default_scale(self, itime: int, res_name: str) -> float:
         return None
@@ -678,7 +629,10 @@ class PlateStrainStressResults2(PlateResults2):
         self.inode = np.searchsorted(node_id, nids)
 
         # dense -> no missing nodes in the results set
-        self.is_dense = (len(element_id) == len(self.centroid_eids))
+        self.is_dense = (
+            (len(element_id) == len(self.centroid_eids)) and
+            (len(node_id) == len(nids))
+        )
         #self.is_dense = False
 
         #self.xyz = xyz
@@ -701,30 +655,13 @@ class PlateStrainStressResults2(PlateResults2):
         layers = list(self.layer_map.values())
         return layers
 
-    def get_scalar(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        return self.get_plot_value(itime, res_name, method)
-
-    def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        """get_fringe_value"""
-        normi = self.get_result(itime, res_name, method, return_dense=False)
-        #normi = safe_norm(dxyz, axis=col_axis)
-        if self.is_dense:
-            return normi
-
-        #case.data.shape = (11, 43, 6)
-        #nnodes = len(self.node_id) =  48
-        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
-        normi2 = np.full(len(self.element_id), np.nan, dtype=normi.dtype)
-        normi2[self.ielement_centroid] = normi
-        return normi2
-
-    #def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_force_vector_result(self, itime: int, res_name: str) -> np.ndarray:
+        #fringe, dxyz = self.get_fringe_vector_result(itime, res_name)
         #scale = 1.
         #return self.xyz, dxyz * scale
 
-    #def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, np.ndarray]:
+        #frnige, dxyz = self.get_fringe_vector_result(itime, res_name)
         #scale = self.get_scale(itime, res_name)
         #deflected_xyz = self.xyz + scale * dxyz
         #return self.xyz, deflected_xyz
@@ -933,9 +870,3 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
     element_node = np.vstack(element_node_list)
     node_data = np.hstack(node_data_list)
     return centroid_eids, centroid_data, element_node, node_data
-
-def von_mises_2d(oxx: np.ndarray,
-                 oyy: np.ndarray,
-                 txy: np.ndarray) -> np.ndarray:
-    ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy +3*(txy**2) )
-    return ovm

@@ -1341,7 +1341,7 @@ def get_nreal_nresults_from_model(
         ntimes: int=1,
         ndisplacement=0, neigenvectors=0, nspc=0, nmpc=0,
         nstress=0, nstrain=0, nforce=0):  # pragma: no cover
-    cc = model.case_control_deck
+    #cc = model.case_control_deck
     nspring = model.card_count['CELAS1'] + model.card_count['CELAS2'] + model.card_count['CELAS3'] + model.card_count['CELAS4']
     nshear = model.card_count['CSHEAR']
     ncrod = model.card_count['CROD']

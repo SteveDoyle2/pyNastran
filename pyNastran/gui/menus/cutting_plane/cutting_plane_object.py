@@ -188,7 +188,8 @@ class CuttingPlaneObject(BaseGui):
 
         #case = self.result_cases[self.icase_aero]
         (obj, (i, name)) = self.gui.result_cases[self.gui.icase_fringe]
-        res_scalars = obj.get_scalar(i, name, method='')
+        fringe, vector = obj.get_fringe_vector_result(i, name)
+        res_scalars = vector if vector is not None else fringe
         location = obj.get_location(i, name)
 
         if res_scalars is None:

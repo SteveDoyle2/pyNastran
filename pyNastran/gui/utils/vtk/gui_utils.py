@@ -46,6 +46,9 @@ def remove_actors_from_gui(gui,
 def set_vtk_fringe(grid_mapper: vtkDataSetMapper,
                    case_og: np.ndarray,
                    vector_size: int, phase: float) -> vtkTypeFloat32Array:
+    """
+    https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
+    """
     case, vtk_data_type = set_grid_mapper(
         grid_mapper, case_og,
         vector_size, phase)

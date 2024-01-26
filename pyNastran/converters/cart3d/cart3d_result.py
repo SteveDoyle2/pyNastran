@@ -110,10 +110,7 @@ class Cart3dGeometry(GuiResultCommon):
             return ['centroid']
         return ['node']
 
-    def get_scalar(self, i, name, method):
-        return self.get_result(i, name, method)
-
-    def get_result(self, i, name, method):
+    def get_fringe_vector_result(self, i, name):
         if name == 'NodeID':
             res = self.nodes
         elif name == 'ElementID':
@@ -130,7 +127,7 @@ class Cart3dGeometry(GuiResultCommon):
             res = self.centroid_normals[:, 2]
         else:
             raise NotImplementedError('i=%s' % str(i))
-        return res
+        return res, None
 
     #----------------------------------------------------
     # colormap

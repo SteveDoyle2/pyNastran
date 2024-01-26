@@ -7,10 +7,11 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .displacement_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateArray
+    CaseTuple = tuple[int, int, str]
 
 pcomp_stress = ['o11', 'o22', 't12', 't1z', 't2z', 'oangle', 'Max Principal', 'minor', 'ovm', 'omax_shear']
 pcomp_strain = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'eangle', 'Max Principal', 'minor', 'evm', 'emax_shear']
@@ -131,7 +132,6 @@ class CompositeResults2(VectorResultsCommon):
         self.colormap = colormap
 
         self.uname = uname
-        self.active_method = ''
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -149,7 +149,7 @@ class CompositeResults2(VectorResultsCommon):
                          methods_keys: Optional[list[int]]=None,
                          # unused
                          nodal_combine: str='', # Centroid
-                         **kwargs) -> None:
+                         **kwargs) -> None:  # type: ignore
         assert len(kwargs) == 0, kwargs
         transforms = self.has_coord_transform(itime, res_name)[1]
         min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
@@ -197,7 +197,7 @@ class CompositeResults2(VectorResultsCommon):
         return True
     def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, case_tuple: CaseTuple) -> tuple[bool, list[str]]:
         """min/max/avg"""
         #(itime, iresult, header) = case_tuple
         out = {
@@ -213,7 +213,7 @@ class CompositeResults2(VectorResultsCommon):
         return True, ['Centroid']
         #return True, ['Absolute Max', 'Min', 'Max']
 
-    def get_annotation(self, itime: int, case_tuple: str) -> str:
+    def get_annotation(self, itime: int, case_tuple: CaseTuple) -> str:
         """
         A header is the thingy that goes in the lower left corner
         title = 'Compostite Plate Stress'
@@ -271,7 +271,8 @@ class CompositeResults2(VectorResultsCommon):
             maxs[itime] = maxi2
         return mins[itime], maxs[itime]
 
-    def set_min_max(self, itime, case_tuple, min_value, max_value) -> tuple[float, float]:
+    def set_min_max(self, itime, case_tuple: CaseTuple,
+                    min_value, max_value) -> None:
         #(itime, iresult, header) = case_tuple
         itime, case_flag = self.get_case_flag(case_tuple)
 
@@ -280,8 +281,8 @@ class CompositeResults2(VectorResultsCommon):
         mins[itime] = min_value
         maxs[itime] = max_value
 
-    def get_case_flag(self, case_tuple: tuple[int, int, str]) -> tuple[int,
-                                                                       tuple[int, int, tuple, str]]:
+    def get_case_flag(self, case_tuple: CaseTuple) -> tuple[int,
+                                                            tuple[int, int, tuple, str]]:
         """
         itime = 0
         iresult = 0 # o11
@@ -294,7 +295,7 @@ class CompositeResults2(VectorResultsCommon):
 
         return itime, (itime, iresult, self.layer_indices, self.min_max_method)
 
-    def get_default_legend_title(self, itime: int, case_tuple: str) -> str:
+    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
@@ -307,7 +308,7 @@ class CompositeResults2(VectorResultsCommon):
     def set_legend_title(self, itime: int, res_name: str,
                          title: str) -> None:
         self.title = title
-    def get_legend_title(self, itime: int, case_tuple: str):
+    def get_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:  # type: ignore
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
@@ -318,7 +319,7 @@ class CompositeResults2(VectorResultsCommon):
         results = list(self.result.values())
         return results[iresult]
 
-    def _get_real_data(self, case_tuple: int) -> np.ndarray:
+    def _get_real_data(self, case_tuple: CaseTuple) -> np.ndarray:
         (itime, iresult, header) = case_tuple
 
         #self.case.get_headers()
@@ -406,22 +407,19 @@ class CompositeResults2(VectorResultsCommon):
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
-    def get_result(self, itime: int, case_tuple: str,
-                   method: str='',
-                   return_dense: bool=True) -> np.ndarray:
-        """
-        gets the 'typical' result which is a vector
-         - GuiResult:           fringe; (n,)   array
-         - DisplacementResults: vector; (n, 3) array
+    def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
+        """gets the dense stress/strain result"""
+        data = self._get_fringe_data_sparse(itime, case_tuple)
+        if self.is_dense:
+            return data
 
-        Parameters
-        ----------
-        return_dense: bool
-            Rreturns the data array in a way that the gui can use.
-            Handles the null result case (e.g; SPC forces only
-            at the SPC location).
-        """
-        method = self._update_method(itime, case_tuple, method)
+        nelements = len(self.element_id)
+        result_out = np.full(nelements, np.nan, dtype=data.dtype)
+        result_out[self.ielement] = data
+        return result_out
+
+    def _get_fringe_data_sparse(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
+        """gets the sparse stress/strain result"""
         assert self.is_real
         # multiple results
         # .0006 -> 0.0
@@ -432,26 +430,14 @@ class CompositeResults2(VectorResultsCommon):
         #else:
         #data = self._get_complex_data(case_tuple)
         assert len(data.shape) == 1, data.shape
-
-        return_sparse = not return_dense
-        if return_sparse or self.is_dense:
-            return data
-
-        nelements = len(self.element_id)
-        result_out = np.full(nelements, np.nan, dtype=data.dtype)
-        result_out[self.ielement] = data
-        return result_out
+        return data
 
     def _update_method(self, i: int, case_tuple: str,
                        method: str) -> str:
         if method == '':
             method = 'All Layers'
-        self.active_method = method
         assert method in self.get_methods(i, case_tuple)
         return method
-    #def _update_method(self, method: str) -> str:
-        #assert method != '', method
-        #self.active_method = method
 
     def get_default_scale(self, itime: int, res_name: str) -> float:
         return None
@@ -575,12 +561,9 @@ class CompositeStrainStressResults2(CompositeResults2):
         layers = list(self.layer_map.values())
         return layers
 
-    def get_scalar(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        return self.get_plot_value(itime, res_name, method)
-
-    def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
+    def get_plot_value(self, itime: int, res_name: str) -> np.ndarray:
         """get_fringe_value"""
-        normi = self.get_result(itime, res_name, method, return_dense=False)
+        normi = self._get_fringe_data_sparse(itime, res_name)
         #normi = safe_norm(dxyz, axis=col_axis)
         if self.is_dense:
             return normi
@@ -592,13 +575,13 @@ class CompositeStrainStressResults2(CompositeResults2):
         normi2[self.ielement] = normi
         return normi2
 
-    #def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_force_vector_result(self, itime: int, res_name: str) -> np.ndarray:
+        #dxyz = self.get_result(itime, res_name, return_dense=True)
         #scale = 1.
         #return self.xyz, dxyz * scale
 
-    #def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, np.ndarray]:
+        #dxyz = self.get_result(itime, res_name, return_dense=True)
         #scale = self.get_scale(itime, res_name)
         #deflected_xyz = self.xyz + scale * dxyz
         #return self.xyz, deflected_xyz

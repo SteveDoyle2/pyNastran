@@ -94,11 +94,12 @@ class MarkActions:
         assert isinstance(case_key, integer_types), case_key
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        method = obj.get_methods(i, res_name)[0]
-        case = obj.get_result(i, res_name, method)
-        if case is None:
+        #method = obj.get_methods(i, res_name)[0]
+
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
             return None
-        result_values = case[node_id]
+        result_values = values[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
@@ -181,15 +182,17 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        method = obj.get_methods(i, res_name)[0]
-        case = obj.get_result(i, res_name, method)
+        #method = obj.get_methods(i, res_name)[0]
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
+            return None
 
         try:
-            result_values = case[cell_id]
+            result_values = values[cell_id]
         except IndexError:
-            msg = ('case[cell_id] is out of bounds; length=%s\n'
+            msg = ('values[cell_id] is out of bounds; length=%s\n'
                    'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), res_name, cell_id, case_key))
+                       len(values), res_name, cell_id, case_key))
             raise IndexError(msg)
 
         grid = self.gui.grid_selected
@@ -266,14 +269,16 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        method = obj.get_methods(i, res_name)
-        case = obj.get_result(i, res_name, method)
+        #method = obj.get_methods(i, res_name)
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
+            return None
 
         try:
-            result_values = case[cell_ids]
+            result_values = values[cell_ids]
         except IndexError:
             msg = (
-                f'case[cell_id] is out of bounds; length={len(case)}\n'
+                f'values[cell_id] is out of bounds; length={len(values)}\n'
                 f'result_name={res_name!r} cell_id={cell_ids} case_key={case_key}\n')
             raise IndexError(msg)
 
@@ -538,3 +543,16 @@ def create_annotation(gui, text, x, y, z):
     #camera.GetClippingRange()
     #camera.GetFocalPoint()
     return text_actor
+
+def get_plottable_values(obj, i, res_name) -> tuple[bool, Optional[np.ndarray]]:
+    """returns a vector -> fringe depending on what's available"""
+    is_value = False
+    fringe, case = obj.get_fringe_vector_result(i, res_name)
+
+    if case is None:
+        if fringe is not None:
+            case = fringe
+        else:
+            return is_value, None
+    is_values = True
+    return is_values, case

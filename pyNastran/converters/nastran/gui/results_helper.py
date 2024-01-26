@@ -30,7 +30,8 @@ from .stress import (
     get_plate_stress_strains, get_plate_stress_strains2,
     get_solid_stress_strains, get_solid_stress_strains2)
 from .force import get_spring_force, get_bar_force, get_plate_force
-from .result_objects.displacement_results import DisplacementResults2, ForceResults2
+from .result_objects.displacement_results import DisplacementResults2
+from .result_objects.force_results import ForceResults2
 
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger

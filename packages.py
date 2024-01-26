@@ -8,11 +8,12 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
 ]
 
-PYTHON_REQUIRES = '>=3.10'
+PYTHON_REQUIRES = '>=3.9'
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',

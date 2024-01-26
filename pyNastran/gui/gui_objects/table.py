@@ -186,7 +186,7 @@ class Table(GuiResultCommon):
         j = ntimes * imethod + itime
         return self.data_formats_default[j]
 
-    def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
+    def get_default_min_max(self, i, name) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
@@ -199,7 +199,7 @@ class Table(GuiResultCommon):
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i, name, method: str) -> tuple[float, float]:
+    #def get_default_min_max(self, i, name) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     def get_default_scale(self, i, name):
@@ -259,7 +259,7 @@ class Table(GuiResultCommon):
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    #def get_result(self, i, name, method):
+    #def get_fringe_vector_result(self, i, name):
         #if self.is_real:
             #if self.dim == 2:
                 ## single result
@@ -278,7 +278,7 @@ class Table(GuiResultCommon):
         #assert len(dxyz.shape) == 2, dxyz.shape
         #return dxyz
 
-    def get_vector_result(self, i, name, method):
+    def get_vector_result(self, i, name):
         bbb
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         #if self.is_real:

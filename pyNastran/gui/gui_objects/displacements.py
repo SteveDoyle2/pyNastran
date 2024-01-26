@@ -167,7 +167,8 @@ class VectorTable(GuiResultCommon):
                                     resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
-    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
         is_enabled_fringe = True
         is_checked_fringe = True
         is_enabled_disp = True
@@ -282,7 +283,7 @@ class VectorTable(GuiResultCommon):
         #j = self.titles_default.index(name)
         return 3
 
-    def get_plot_value(self, i:int, resname: str, method: str) -> np.ndarray:
+    def get_plot_value(self, i:int, resname: str) -> np.ndarray:
         """plot returns the displacement..."""
         if self.is_real:
             if self.dim == 2:
@@ -310,7 +311,7 @@ class VectorTable(GuiResultCommon):
         dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         return dxyz
 
-    def get_result(self, i: int, name: str, method: str) -> np.ndarray:
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, np.ndarray]:
         """gets the 'typical' result which is a vector"""
         if self.is_real:
             if self.dim == 2:
@@ -328,13 +329,14 @@ class VectorTable(GuiResultCommon):
             dxyz = self._get_complex_displacements(i)
 
         assert len(dxyz.shape) == 2, dxyz.shape
-        return dxyz
+        normi = safe_norm(dxyz, axis=1)
+        return normi, dxyz
 
     def get_force_vector_result(self, i: int, name: str,
-                                method: str) -> tuple[np.ndarray, np.ndarray]:
-        return self.get_vector_result(i, name, method)
+                                ) -> tuple[np.ndarray, np.ndarray]:
+        return self.get_vector_result(i, name)
     def get_vector_result(self, i: int, name: str,
-                          method: str) -> tuple[np.ndarray, np.ndarray]:
+                          ) -> tuple[np.ndarray, np.ndarray]:
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             xyz, deflected_xyz = self.get_vector_result_by_scale_phase(

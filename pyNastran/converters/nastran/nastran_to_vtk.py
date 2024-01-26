@@ -154,7 +154,8 @@ def _save_simple_table_results(case: SimpleTableResults,
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
     titlei =  f'{case.uname}: {method}_{header2}_subcase={case.subcase_id}'
-    res = case.get_result(key, name, method)
+    fringe, vector = case.get_fringe_vector_result(key, name)
+    res = vector if vector is not None else fringe
 
     # form_name = case.form_names[itime, ilayer, imethod]
     check_title(titlei, used_titles)
@@ -185,7 +186,8 @@ def _save_layered_table_results(case: LayeredTableResults,
     #for method in case.methods:
     titlei =  f'{form_name}_subcase={case.subcase_id}'
     method = case.get_methods(key, name)[0]
-    res = case.get_result(key, name, method)
+    fringe, vector = case.get_fringe_vector_result(key, name)
+    res = vector if vector is not None else fringe
 
     check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)

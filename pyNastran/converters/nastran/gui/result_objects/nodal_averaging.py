@@ -3,18 +3,18 @@ from collections import defaultdict
 import numpy as np
 
 
-def abs_max_scalar(x: np.ndarray):
+def abs_max_scalar(x: np.ndarray) -> np.ndarray:
     mini = np.nanmin(x)
     maxi = np.nanmax(x)
     if np.abs(mini) > np.abs(maxi):
         return mini
     return maxi
 
-def difference_scalar(x: np.ndarray):
+def difference_scalar(x: np.ndarray) -> np.ndarray:
     out = np.nanmax(x) - np.nanmin(x)
     return out
 
-nodal_combine_map = {
+nodal_combine_map: dict[str, Callable[[np.ndarray], np.ndarray]]= {
     'Absolute Max': abs_max_scalar,
     'Mean': np.nanmean,
     'Max': np.nanmax,

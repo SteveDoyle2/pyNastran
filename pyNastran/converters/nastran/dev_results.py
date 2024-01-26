@@ -1,6 +1,6 @@
 from copy import deepcopy
 from numpy import zeros
-from numpy.linalg import norm  # type: ignore
+from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
@@ -60,7 +60,7 @@ class TransientElementResults:
             ntimes = 1
             self.default_mins = zeros(1, dtype=self.dxyz.dtype)
             self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
-            normi = norm(self.dxyz, axis=1)
+            normi = safe_norm(self.dxyz, axis=1)
             self.default_mins[0] = normi.min().real
             self.default_maxs[0] = normi.max().real
         elif self.dim == 3:
@@ -68,7 +68,7 @@ class TransientElementResults:
             self.default_mins = zeros(ntimes)
             self.default_maxs = zeros(ntimes)
             for itime in range(ntimes):
-                normi = norm(self.dxyz[itime, :, :], axis=1)
+                normi = safe_norm(self.dxyz[itime, :, :], axis=1)
                 self.default_mins[itime] = normi.min().real
                 self.default_maxs[itime] = normi.max().real
 
@@ -226,7 +226,7 @@ class TransientElementResults:
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    def get_result(self, i, unused_name, method):
+    def get_fringe_vector_result(self, i, unused_name):
         if self.is_real:
             if self.dim == 2:
                 # single result
@@ -243,17 +243,10 @@ class TransientElementResults:
             dxyz = self._get_complex_displacements(i)
 
         assert len(dxyz.shape) == 2, dxyz.shape
-        return dxyz
+        normi = safe_norm(dxyz, axis=1)
+        return normi, dxyz
 
-    #@property
-    #def scalar(self):
-        #return self.dxyz_norm
-
-    #def get_scalar(self, i, name):
-        ##print(self.dxyz_norm)
-        #return self.dxyz_norm
-
-    def get_vector_result(self, i, name, method):
+    def get_vector_result(self, i, name):
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             xyz, deflected_xyz = self.get_vector_result_by_scale_phase(

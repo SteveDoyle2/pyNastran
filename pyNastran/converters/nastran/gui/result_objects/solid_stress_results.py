@@ -1,7 +1,7 @@
 from __future__ import annotations
-from collections import defaultdict
+#from collections import defaultdict
 import numpy as np
-from typing import Optional, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 #from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
@@ -9,11 +9,12 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from .nodal_averaging import nodal_average, nodal_combine_map
 #from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .displacement_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon
 from .stress_reduction import von_mises_3d, max_shear
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
+    CaseTuple = tuple[int, int, str]
 
 
 class SolidResults2(VectorResultsCommon):
@@ -23,7 +24,7 @@ class SolidResults2(VectorResultsCommon):
                  node_id: np.ndarray,
                  element_id: np.ndarray,
                  cases: list[RealSolidArray],
-                 result: str,
+                 result: dict[Union[int, str], str],
                  #dim_max: float,
                  data_format: str='%g',
                  nlabels=None, labelsize=None, ncolors=None,
@@ -88,18 +89,18 @@ class SolidResults2(VectorResultsCommon):
 
         #def fscales():
             #return [None] * nscale
-        def ftimes():
-            return [None] * ntimes
-        def fphases():
-            return np.zeros(ntimes, dtype='float64')
+        #def ftimes():
+            #return [None] * ntimes
+        #def fphases():
+            #return np.zeros(ntimes, dtype='float64')
 
         #self.default_scales = defaultdict(fscales)
         #self.scales = defaultdict(fscales)
-        self.default_mins = defaultdict(ftimes)
-        self.default_maxs = defaultdict(ftimes)
-        self.mins = defaultdict(ftimes)
-        self.maxs = defaultdict(ftimes)
-        self.phases = defaultdict(fphases)
+        #self.default_mins = defaultdict(ftimes)
+        #self.default_maxs = defaultdict(ftimes)
+        #self.mins = defaultdict(ftimes)
+        #self.maxs = defaultdict(ftimes)
+        #self.phases = defaultdict(fphases)
 
         self.data_formats = [self.data_format]
         self.headers = ['SolidResult2'] * ntimes
@@ -112,11 +113,15 @@ class SolidResults2(VectorResultsCommon):
         self.uname = uname
         #self.active_method = ''
 
-    def _get_default_tuple_indices(self) -> tuple[int]:
+    def get_methods(self, itime: int, res_name: str) -> list[str]:
+        layers = list(self.layer_map.values())
+        return layers
+
+    def _get_default_tuple_indices(self) -> tuple[int, ...]:
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
         return out
 
-    def _get_default_layer_indicies(self):
+    def _get_default_layer_indicies(self) -> tuple[int, ...]:
         return (0, )
         #default_indices = list(self.layer_map.keys())
         #default_indices.remove(0)
@@ -175,7 +180,8 @@ class SolidResults2(VectorResultsCommon):
         return True
     def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, dict[str, Any]]:
+    def has_derivation_transform(self, i: int, case_tuple: CaseTuple,
+                                 ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         #(itime, iresult, header) = case_tuple
         #out = {
@@ -193,7 +199,7 @@ class SolidResults2(VectorResultsCommon):
                       'Difference', 'Std. Dev.',]
     # 'Nodal Max'
 
-    def get_annotation(self, itime: int, case_tuple: str) -> str:
+    def get_annotation(self, itime: int, case_tuple: CaseTuple) -> str:
         """
         A header is the thingy that goes in the lower left corner
         title = 'Solid Stress'
@@ -207,7 +213,7 @@ class SolidResults2(VectorResultsCommon):
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
-        itime, unused_case_flag = self.get_case_flag(case_tuple)
+        itime, unused_case_flag = self.get_case_flag(itime, case_tuple)
 
         default_indices = self._get_default_tuple_indices() # 0-based
         if self.layer_indices == default_indices:
@@ -232,47 +238,9 @@ class SolidResults2(VectorResultsCommon):
         #return self.uname
         return annotation_label
 
-    def get_default_min_max(self, itime: int,
-                            case_tuple: str) -> tuple[float, float]:
-        #(itime, iresult, unused_header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.default_mins[case_flag]
-        maxs = self.default_maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
-
-        datai = self._get_real_data(case_tuple)
-        mins[itime] = np.nanmin(datai)
-        maxs[itime] = np.nanmax(datai)
-        return mins[itime], maxs[itime]
-
-    def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
-
-        # save the defaults if they're not None
-        mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
-        if mini2 is not None:
-            mins[itime] = mini2
-        if maxi2 is not None:
-            maxs[itime] = maxi2
-        return mins[itime], maxs[itime]
-
-    def set_min_max(self, itime, case_tuple, min_value, max_value) -> tuple[float, float]:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        mins[itime] = min_value
-        maxs[itime] = max_value
-
-    def get_case_flag(self, case_tuple: tuple[int, int, str]) -> tuple[int,
-                                                                       tuple[int, int, tuple, str, str]]:
+    def get_case_flag(self, i: int,
+                      case_tuple: CaseTuple) -> tuple[int,
+                                                      tuple[int, int, tuple, str, str]]:
         """
         itime = 0
         iresult = 0 # o11
@@ -283,10 +251,9 @@ class SolidResults2(VectorResultsCommon):
         (itime, iresult, header) = case_tuple
         #if self.is_linked_scale_factor:
             #itime = 0
-
         return itime, (itime, iresult, self.layer_indices, self.min_max_method, self.nodal_combine)
 
-    def get_default_legend_title(self, itime: int, case_tuple: str) -> str:
+    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
@@ -299,7 +266,7 @@ class SolidResults2(VectorResultsCommon):
     def set_legend_title(self, itime: int, res_name: str,
                          title: str) -> None:
         self.title = title
-    def get_legend_title(self, itime: int, case_tuple: str):
+    def get_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
@@ -310,7 +277,7 @@ class SolidResults2(VectorResultsCommon):
         result = get_solid_result(self.result, iresult, index=0)
         return result
 
-    def _get_real_data(self, case_tuple: int) -> np.ndarray:
+    def _get_real_data(self, case_tuple: CaseTuple) -> np.ndarray:
         (itime, iresult, header) = case_tuple
 
         #ilayer = self.layer_indices
@@ -386,7 +353,6 @@ class SolidResults2(VectorResultsCommon):
         itxz = 5
         imax = 6
         imin = 8
-
         ## Corner
         ## TODO: consider implementing Average/Derive
         # ----------------------------------------------------------
@@ -406,11 +372,6 @@ class SolidResults2(VectorResultsCommon):
         node_data = self.node_data
         if isinstance(iresult, int):
             datai = node_data[itime, :, iresult]
-            data = nodal_average(
-                nodal_combine_func,
-                element_node, datai,
-                nids, nid_to_inid_map)
-
         elif iresult == 'von_mises':
             oxx = node_data[itime, :, ioxx]
             oyy = node_data[itime, :, ioyy]
@@ -418,32 +379,23 @@ class SolidResults2(VectorResultsCommon):
             txy = node_data[itime, :, itxy]
             txz = node_data[itime, :, itxz]
             tyz = node_data[itime, :, ityz]
-            ovm_data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
-            data = nodal_average(
-                nodal_combine_func,
-                element_node, ovm_data,
-                nids, nid_to_inid_map)
-
+            datai = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
         elif iresult == 'max_shear':
             omax = node_data[itime, :, imax]
             omin = node_data[itime, :, imin]
-            max_shear_data = max_shear(omax, omin)
-            data = nodal_average(
-                nodal_combine_func,
-                element_node, max_shear_data,
-                nids, nid_to_inid_map)
-
+            datai = max_shear(omax, omin)
         elif iresult == 'abs_principal':
             data_max = node_data[itime, :, imax]
             data_min = node_data[itime, :, imin]
-            abs_data = get_abs_max(data_min, data_max, dtype=data_min.dtype)
-            assert abs_data.shape == data_min.shape
-            data = nodal_average(
-                nodal_combine_func,
-                element_node, abs_data,
-                nids, nid_to_inid_map)
+            datai = get_abs_max(data_min, data_max, dtype=data_min.dtype)
+            assert datai.shape == data_min.shape
         else:
             raise NotImplementedError(iresult)
+
+        data = nodal_average(
+            nodal_combine_func,
+            element_node, datai,
+            nids, nid_to_inid_map)
         return data
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
@@ -456,21 +408,7 @@ class SolidResults2(VectorResultsCommon):
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
-    def get_result(self, itime: int, case_tuple: str,
-                   method: str='',
-                   return_dense: bool=True) -> np.ndarray:
-        """
-        gets the 'typical' result which is a vector
-         - GuiResult:           fringe; (n,)   array
-         - DisplacementResults: vector; (n, 3) array
-
-        Parameters
-        ----------
-        return_dense: bool
-            Rreturns the data array in a way that the gui can use.
-            Handles the null result case (e.g; SPC forces only
-            at the SPC location).
-        """
+    def _get_fringe_data_sparse(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
         #method = self._update_method(itime, case_tuple, method)
         assert self.is_real
         # multiple results
@@ -482,10 +420,12 @@ class SolidResults2(VectorResultsCommon):
         #else:
         #data = self._get_complex_data(case_tuple)
         assert len(data.shape) == 1, data.shape
+        return data
 
-        return_sparse = not return_dense
-        #if return_sparse or self.is_dense:
-            #return data
+    def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
+        data = self._get_fringe_data_sparse(itime, case_tuple)
+        if self.is_dense:
+            return data
 
         if self.get_location(0, 0) == 'node':
             nnode = len(self.node_id)
@@ -497,8 +437,17 @@ class SolidResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
+    def get_fringe_vector_result(self, itime: int, case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
+        """
+        gets the 'typical' result which is a vector
+         - GuiResult:           fringe; (n,)   array
+         - DisplacementResults: vector; (n, 3) array
+        """
+        fringe = self._get_fringe_data_dense(itime, case_tuple)
+        return fringe, None
+
     def get_default_scale(self, itime: int, res_name: str) -> float:
-        return None
+        return 0.0
     def get_scale(self, itime: int, res_name: str) -> float:
         return 0.0
     def set_scale(self, itime: int, res_name: str) -> None:
@@ -608,7 +557,9 @@ class SolidStrainStressResults2(SolidResults2):
 
         assert np.array_equal(element_id[self.ielement_centroid], self.centroid_eids)
         # dense -> no missing nodes in the results set
-        self.is_dense = (len(element_id) == len(self.centroid_eids))
+        self.is_dense = (
+            (len(element_id) == len(self.centroid_eids)) and
+            (len(node_id) == len(nids)))
         #self.is_dense = False
 
         #self.xyz = xyz
@@ -631,37 +582,14 @@ class SolidStrainStressResults2(SolidResults2):
         #return self.location
 
     #-------------------------------------
-    def get_methods(self, itime: int, res_name: str) -> list[str]:
-        layers = list(self.layer_map.values())
-        return layers
 
-    def get_scalar(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        return self.get_plot_value(itime, res_name, method)
-
-    def get_plot_value(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        """get_fringe_value"""
-        normi = self.get_result(itime, res_name, method, return_dense=False)
-        if self.is_dense:
-            return normi
-
-        #case.data.shape = (11, 43, 6)
-        #nnodes = len(self.node_id) =  48
-        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
-        if self.get_location(0, 0) == 'node':
-            normi2 = np.full(len(self.node_id), np.nan, dtype=normi.dtype)
-            normi2[self.inode] = normi
-        else:
-            normi2 = np.full(len(self.element_id), np.nan, dtype=normi.dtype)
-            normi2[self.ielement_centroid] = normi
-        return normi2
-
-    #def get_force_vector_result(self, itime: int, res_name: str, method: str) -> np.ndarray:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_force_vector_result(self, itime: int, res_name: str) -> np.ndarray:
+        #dxyz = self._get_fringe_data_dense(itime, res_name)
         #scale = 1.
         #return self.xyz, dxyz * scale
 
-    #def get_vector_result(self, itime: int, res_name: str, method: str) -> tuple[np.ndarray, np.ndarray]:
-        #dxyz = self.get_result(itime, res_name, method, return_dense=True)
+    #def get_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, np.ndarray]:
+        #dxyz = self._get_fringe_data_dense(itime, res_name)
         #scale = self.get_scale(itime, res_name)
         #deflected_xyz = self.xyz + scale * dxyz
         #return self.xyz, deflected_xyz
@@ -716,8 +644,8 @@ class SolidStrainStressResults2(SolidResults2):
         return msg
 
 
-def get_solid_result(result: dict[str, Any],
-                     iresult: Union[int, str], index: int):
+def get_solid_result(result: dict[Union[int, str], Any],
+                     iresult: Union[int, str], index: int) -> str:
     """
     values
     0=title, 'annotation'

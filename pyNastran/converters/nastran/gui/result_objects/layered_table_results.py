@@ -91,39 +91,36 @@ class LayeredTableResults(Table):
     def get_default_scale(self, i, name):
         return None
 
-    def get_scalar(self, i, name, method):
-        return self.get_result(i, name, method)
-
-    def get_magnitude(self, i, name, method):
-        scalar = self.get_scalar(i, name, method)  # TODO: update
+    def get_magnitude(self, i, name):
+        scalar, unused_vector = self.get_fringe_vector_result(i, name)  # TODO: update
         mag = scalar
         if scalar.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
         return mag
 
-    def get_min_max(self, i, name, method=''):
-        mag = self.get_magnitude(i, name, method)
+    def get_min_max(self, i, name):
+        mag = self.get_magnitude(i, name)
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
     def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
-        mag = self.get_magnitude(i, name, method='')
+        mag = self.get_magnitude(i, name)
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_result(self, i: int, name: str, method: str):
+    def get_fringe_vector_result(self, i: int, name: str):
         (itime, ilayer, imethod, unused_header) = name
         scalars = self.scalars[itime, :, ilayer, imethod]
 
         if len(scalars) == self.eid_max:
-            return scalars
+            return scalars, None
         data = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
         #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
         #print(self.methods)
         data[self.eids] = scalars
-        return data
+        return data, None
 
     def __repr__(self):
         """defines str(self)"""

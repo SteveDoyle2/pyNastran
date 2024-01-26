@@ -1,6 +1,7 @@
 from copy import deepcopy
 import numpy as np
 
+from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.table import Table
 
 
@@ -69,22 +70,19 @@ class SimpleTableResults(Table):
     def get_default_scale(self, i, name):
         return None
 
-    def get_scalar(self, i, name, method):
-        return self.get_result(i, name, method)
-
-    def get_magnitude(self, i, name, method):
-        scalar = self.get_scalar(i, name, method)  # TODO: update
+    def get_magnitude(self, i, name):
+        scalar, unused_vector = self.get_fringe_vector_result(i, name)  # TODO: update
         mag = scalar
-        if scalar.dtype.name in ['complex64']:
+        if mag.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
         return mag
 
-    def get_min_max(self, i, name, method=''):
-        mag = self.get_magnitude(i, name, method)
+    def get_min_max(self, i, name):
+        mag = self.get_magnitude(i, name)
         return np.nanmin(mag), np.nanmax(mag)
 
     def get_default_min_max(self, i, name) -> tuple[float, float]:
-        mag = self.get_magnitude(i, name, method='')
+        mag = self.get_magnitude(i, name)
         return np.nanmin(mag), np.nanmax(mag)
 
     def get_phase(self, i, name):
@@ -93,21 +91,21 @@ class SimpleTableResults(Table):
         j = self._get_j(i, name)
         return self.phases[j]
 
-    def get_result(self, i, name, method: str):
+    def get_fringe_vector_result(self, i, name) -> tuple[np.ndarray, None]:
         #print(i, name)
         (itime, imethod, unused_header) = name
         scalars = self.scalars[itime, :, imethod]
 
         if len(scalars) == self.eid_max:
-            return scalars
-        data = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
+            return scalars, None
+        fringe = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
         #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
         #print(self.methods)
         try:
-            data[self.eids] = scalars
+            fringe[self.eids] = scalars
         except IndexError:
             raise RuntimeError(f'{self.uname!r} eids.max()={self.eids.max()} scalars.shape={scalars.shape}')
-        return data
+        return fringe, None
 
     def _get_j(self, i, name):
         (itime, imethod, unused_header) = name

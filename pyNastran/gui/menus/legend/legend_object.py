@@ -291,7 +291,7 @@ class LegendObject(BaseGui):
             #assert isinstance(key, integer_types), key
             #(obj, (i, name)) = self.result_cases[key]
             ##subcase_id = obj.subcase_id
-            ##case = obj.get_result(i, name, method)
+            ##fringe, case = obj.get_fringe_vector_result(i, name)
             ##result_type = obj.get_legend_title(i, name)
             ##vector_size = obj.get_vector_size(i, name)
             ##location = obj.get_location(i, name)
@@ -487,8 +487,8 @@ class LegendObject(BaseGui):
 
         #if isinstance(key, integer_types):  # vector 3
              #norm_plot_value = norm(plot_value, axis=1)
-            #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
-                                               #is_low_to_high=is_low_to_high)
+            #grid_result = self.set_vtk_fringe(name, norm_plot_value, vector_size1,
+                                              #is_low_to_high=is_low_to_high)
         #else:
         if update_legend:
             self.gui.update_scalar_bar(title, min_value, max_value,
@@ -541,12 +541,12 @@ class LegendObject(BaseGui):
             key = self.gui.case_keys[icase_fringe]
             assert isinstance(key, integer_types), key
             (obj, (i, res_name)) = self.gui.result_cases[key]
-            #case = obj.get_result(i, res_name, method)
+            #fringe, case = obj.get_fringe_vector_result(i, res_name)
             result_type = obj.get_legend_title(i, res_name)
 
             scalar_bar = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
             defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
-            method = obj.get_methods(i, res_name)[0]
+            unused_method = obj.get_methods(i, res_name)[0]
 
             data_format = obj.get_data_format(i, res_name)
             default_title = obj.get_default_legend_title(i, res_name)

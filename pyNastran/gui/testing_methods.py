@@ -86,8 +86,8 @@ class MockResWidget:
     def set_derivation_visible(self, is_visible: bool, methods_dict: dict[str, Any]) -> None:
         assert isinstance(is_visible, bool), is_visible
         assert isinstance(methods_dict, dict), methods_dict
-        tooltip = methods_dict.get('tooltip', '')
-        label =  methods_dict.get('label', '')
+        unused_tooltip = methods_dict.get('tooltip', '')
+        unused_label =  methods_dict.get('label', '')
         default = []
         methods =  methods_dict.get('derivation', default)
         for method in methods:
@@ -240,9 +240,9 @@ class FakeGUIMethods(GuiVTKCommon):
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
             unused_subcase_id = obj.subcase_id
-            methods = obj.get_methods(i, name)
-            method = methods[0]
-            unused_case = obj.get_result(i, name, method)
+            unused_methods = obj.get_methods(i, name)
+            #method = methods[0]
+            unused_fringe, unused_disp = obj.get_fringe_vector_result(i, name)
             unused_result_type = obj.get_legend_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
@@ -251,22 +251,22 @@ class FakeGUIMethods(GuiVTKCommon):
             phase = obj.get_phase(i, name)
             unused_label2 = obj.get_annotation(i, name)
             unused_flag = obj.is_normal_result(i, name)
-            #scalar_result = obj.get_scalar(i, name, method)
+            #scalar_result = obj.get_scalar(i, name)
             outi = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             nlabels, labelsize, ncolors, colormap = outi
             if colormap == '':
                 colormap = 'jet'
 
             if vector_size == 3:
-                unused_plot_value = obj.get_plot_value(i, name, method) # vector
+                unused_plot_value = obj.get_plot_value(i, name) # vector
                 scale = 1.1
                 phase = 2.2
                 obj.set_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
                 assert obj.deflects(i, name) in {True, False}, obj.deflects(i, name)
-                unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name, method)
-            else:
-                unused_scalar_result = obj.get_scalar(i, name, method)
+                unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
+            #else:
+                #unused_scalar_result = obj.get_scalar(i, name)
 
             unused_default_data_format = obj.get_default_data_format(i, name)
             default_min, unused_default_max = obj.get_default_min_max(i, name)
