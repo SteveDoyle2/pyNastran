@@ -198,6 +198,14 @@ class SolidResults2(VectorResultsCommon):
         return True, ['Absolute Max', 'Mean', 'Max', 'Min',
                       'Difference', 'Std. Dev.',]
     # 'Nodal Max'
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
+        is_enabled_fringe = is_checked_fringe = True
+        is_enabled_disp = is_checked_disp = is_enabled_vector = is_checked_vector = False
+        out = (is_enabled_fringe, is_checked_fringe,
+               is_enabled_disp, is_checked_disp,
+               is_enabled_vector, is_checked_vector)
+        return out
 
     def get_annotation(self, itime: int, case_tuple: CaseTuple) -> str:
         """

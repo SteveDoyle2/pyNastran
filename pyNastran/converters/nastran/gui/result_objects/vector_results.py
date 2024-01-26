@@ -80,43 +80,43 @@ class VectorResultsCommon(GuiResultCommon):
     # --------------------------------------------------------------------------
     # abstractmethods - results access
     @abstractmethod
-    def _get_fringe_data_sparse(self, itime: int) -> np.ndarray:
-        raise NotImplementedError()
+    def _get_fringe_data_sparse(self, itime: int, res_name) -> np.ndarray:
+        raise NotImplementedError(f'{self.class_name}._get_fringe_data_sparse')
     @abstractmethod
     def _get_fringe_data_sparse(self, itime: int, res_name) -> np.ndarray:
-        raise RuntimeError()
+        raise RuntimeError(f'{self.class_name}._get_fringe_data_sparse')
 
     # --------------------------------------------------------------------------
     # abstractmethods
     @abstractmethod
     def get_case_flag(self, itime: int, res_name):
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.get_case_flag')
 
     @abstractmethod
     def set_sidebar_args(self,
                          itime: int, res_name: str, **kwargs) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.set_sidebar_args')
 
     # --------------------------------------------------------------------------
     # abstractmethods - sidebar stuff
     @abstractmethod
     def has_methods_table(self, i: int, res_name: str) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.has_methods_table')
     @abstractmethod
     def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.has_coord_transform')
     @abstractmethod
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.has_derivation_transform')
     @abstractmethod
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.has_output_checks')
     @abstractmethod
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
-        raise NotImplementedError()
+        raise NotImplementedError(f'{self.class_name}.has_output_checks')
 
     # --------------------------------------------------------------------------
     # unmodifyable getters
@@ -154,9 +154,9 @@ class VectorResultsCommon(GuiResultCommon):
 
         # save the defaults if they're not None
         mini2, maxi2 = self.get_default_min_max(itime, res_name)
-        if is_blank(mini2):
+        if is_blank(mins[itime]):
             mins[itime] = mini2
-        if is_blank(maxi2):
+        if is_blank(maxs[itime]):
             maxs[itime] = maxi2
         return mins[itime], maxs[itime]
 
@@ -169,7 +169,7 @@ class VectorResultsCommon(GuiResultCommon):
         if is_value(scales[itime]):
             return scales[itime]
 
-        fringe_data = self._get_fringe_data_sparse(itime)
+        fringe_data = self._get_fringe_data_sparse(itime, res_name)
 
         # Fringe is typically a 'Magnitude' and therefore positive.
         # if 'Value' is used, it can be negative.
@@ -541,8 +541,8 @@ class DispForceVectorResults(VectorResultsCommon):
             mini = np.nanmin(fringe_result)
             maxi = np.nanmax(fringe_result)
 
-            self.mins[case_flag][itime] = maxi
-            self.maxs[case_flag][itime] = mini
+            self.mins[case_flag][itime] = mini
+            self.maxs[case_flag][itime] = maxi
             default_mins[itime] = mini
             default_maxs[itime] = maxi
 

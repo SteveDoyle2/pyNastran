@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -52,24 +52,30 @@ class ToolActions:
         self.itext = 0
 
     #---------------------------------------------------------------------------
-    def export_case_data(self, icases: Optional[list[int]]=None) -> None:
-        """exports CSVs of the requested cases"""
+    def get_icases(self, icases: Union[int, list[int], None]=None) -> list[int]:
         gui = self.gui
         if icases is None:
             icases = gui.result_cases.keys()
         elif isinstance(icases, integer_types):
             icases = [icases]
+        return icases
+
+    def export_case_data(self, icases: Optional[list[int]]=None) -> None:
+        """exports CSVs of the requested cases"""
+        gui = self.gui
+        icases2 = self.get_icases(icases)
 
         csv_filename = 'None'
-        for icase in icases:
+        for icase in icases2:
             (obj, (i, name)) = gui.result_cases[icase]
             subcase_id = obj.subcase_id
             location = obj.get_location(i, name)
 
             #method = obj.get_methods(i, name)[0]
-            case = obj.get_fringe_vector_result(i, name)
+            fringe, vector = obj.get_fringe_vector_result(i, name)
+            case = vector if vector is not None else fringe
             if case is None:
-                continue # normals
+                continue # normals, grid point forces
             subtitle, label = gui.get_subtitle_label(subcase_id)
             label2 = obj.get_annotation(i, name)
             data_format = obj.get_data_format(i, name)

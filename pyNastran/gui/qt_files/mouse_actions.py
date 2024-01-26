@@ -695,11 +695,13 @@ class MouseActions:
             key = gui.case_keys[icase]
             location = gui.get_case_location(key)
 
+            if location is None:
+                return  # Normals
             if location == 'centroid':
                 out = self._cell_centroid_pick(cell_id, world_position)
             elif location == 'node':
                 out = self._cell_node_pick(cell_id, world_position)
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(f'probe_picker: invalid pick location={location!r}')
 
             return_flag, duplicate_key, result_value, unused_result_name, xyz = out

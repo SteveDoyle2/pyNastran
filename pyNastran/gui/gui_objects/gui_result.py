@@ -29,25 +29,25 @@ class GuiResultCommon:
         self.has_nodal_combine_transform(0, 'test')
         self.has_output_checks(0, 'test')
 
-    #def get_data_type(self, i: int, name: str):
-        #raise NotImplementedError(self.class_name)
+    #def get_data_type(self, i: int, name: str):  # pragma: no cover
+        #raise NotImplementedError(f'{self.class_name}.get_data_type')
 
-    #def get_annotation(self, i: int, name: str):
-        #raise NotImplementedError(self.class_name)
+    #def get_annotation(self, i: int, name: str):  # pragma: no cover
+        #raise NotImplementedError(f'{self.class_name}.get_annotation')
 
     def set_sidebar_args(self, i: int, name: str, **kwargs) -> None:
         pass
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return False
-    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
-        raise NotImplementedError(self.class_name)
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:  # pragma: no cover
+        raise NotImplementedError(f'{self.class_name}.has_coord_transform')
     def has_derivation_transform(self, i: int, res_name: str,
-                                 ) -> tuple[bool, dict[str, Any]]:
+                                 ) -> tuple[bool, dict[str, Any]]:  # pragma: no cover
         """min/max/avg"""
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.has_derivation_transform')
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
-        raise NotImplementedError(self.class_name)
+        raise NotImplementedError(f'{self.class_name}.has_nodal_combine_transform')
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
         is_enabled_fringe = False
@@ -69,32 +69,32 @@ class GuiResultCommon:
         """normal result is opt-in"""
         return False
 
-    def get_data_format(self, i: int, name: str):
+    def get_data_format(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_data_format')
 
-    def get_location(self, i: int, name: str):
+    def get_location(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_location')
 
-    def get_legend_title(self, i: int, name: str):
+    def get_legend_title(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_legend_title')
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_nlabels_labelsize_ncolors_colormap')
 
     @abstractmethod
-    def get_min_max(self, i: int, name: str):
+    def get_min_max(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_min_max')
 
     #@abstractmethod
-    #def get_scalar(self, i: int, name: str):
+    #def get_scalar(self, i: int, name: str):  # pragma: no cover
         #raise NotImplementedError(f'{self.class_name}.get_scalar')
 
     @abstractmethod
-    def get_methods(self, i: int, name: str) -> list[str]:
+    def get_methods(self, i: int, name: str) -> list[str]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_methods')
 
     @abstractmethod
-    def get_fringe_vector_result(self, i: int, name: str) -> tuple[Any, Any]:
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[Any, Any]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_fringe_vector_result')
 
     def get_vector_size(self, i: int, name: str) -> int:
@@ -110,17 +110,17 @@ class GuiResultCommon:
     #------------
     # setters
 
-    def set_data_format(self, i: int, name: str, data_format):
+    def set_data_format(self, i: int, name: str, data_format):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def set_min_max(self, i: int, name: str, min_value, max_value):
+    def set_min_max(self, i: int, name: str, min_value, max_value):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def set_legend_title(self, i: int, name: str, title):
+    def set_legend_title(self, i: int, name: str, title):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
-                                               ncolors, colormap):
+                                               ncolors, colormap):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
     def set_scale(self, i: int, name: str, scale):
@@ -131,16 +131,16 @@ class GuiResultCommon:
 
     #------------
     # default getters
-    def get_default_data_format(self, i: int, name: str):
+    def get_default_data_format(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
+    def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def get_default_legend_title(self, i: int, name: str):
+    def get_default_legend_title(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
     def get_default_scale(self, i: int, name: str):
@@ -157,8 +157,8 @@ class NullResult(GuiResultCommon):
     def __init__(self):
         super(NullResult, self).__init__()
 
-    def get_scalar(self, i: int, name: str) -> None:
-        return None
+    #def get_scalar(self, i: int, name: str) -> None:
+        #return None
 
     def __repr__(self) -> str:
         msg = '<NormalResult>'
@@ -204,8 +204,8 @@ class GridPointForceResult(GuiResultCommon):
         """elemental -> nodal"""
         return False, []
 
-    def get_scalar(self, i: int, name: str) -> None:
-        return None
+    #def get_scalar(self, i: int, name: str) -> None:
+        #return None
 
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
         return None, None
@@ -324,8 +324,8 @@ class NormalResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str) -> np.ndarray:
-        return self.scalar
+    #def get_scalar(self, i: int, name: str) -> np.ndarray:
+        #return self.scalar
 
     #------------
     # setters
@@ -667,8 +667,8 @@ class GuiResult(GuiResultCommon):
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i: int, name: str):
-        return self.scalar
+    #def get_scalar(self, i: int, name: str):
+        #return self.scalar
 
     #------------
     # setters

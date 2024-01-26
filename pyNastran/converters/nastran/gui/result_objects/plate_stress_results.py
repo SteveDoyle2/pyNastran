@@ -232,6 +232,15 @@ class PlateResults2(VectorResultsCommon):
         """elemental -> nodal"""
         return True, ['Centroid', 'Mean', 'Absolute Max', 'Min', 'Max', 'Std. Dev.', 'Difference']
 
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
+        is_enabled_fringe = is_checked_fringe = True
+        is_enabled_disp = is_checked_disp = is_enabled_vector = is_checked_vector = False
+        out = (is_enabled_fringe, is_checked_fringe,
+               is_enabled_disp, is_checked_disp,
+               is_enabled_vector, is_checked_vector)
+        return out
+    # --------------------------------------------------------------
     def get_location(self, itime: int, case_tuple: str) -> str:
         if self.nodal_combine == 'Centroid':
             return 'centroid'
@@ -498,8 +507,8 @@ class PlateResults2(VectorResultsCommon):
 
     def get_fringe_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, None]:
         """get_fringe_value"""
-        normi = self._get_fringe_data_dense(itime, res_name)
-        return normi, None
+        fringe = self._get_fringe_data_dense(itime, res_name)
+        return fringe, None
 
     def get_default_scale(self, itime: int, res_name: str) -> float:
         return None

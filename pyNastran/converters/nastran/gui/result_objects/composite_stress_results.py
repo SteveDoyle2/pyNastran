@@ -205,13 +205,20 @@ class CompositeResults2(VectorResultsCommon):
             'derivation': ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
                            #'Derive/Average'
                            ],
-
         }
         return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return True, ['Centroid']
         #return True, ['Absolute Max', 'Min', 'Max']
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
+        is_enabled_fringe = is_checked_fringe = True
+        is_enabled_disp = is_checked_disp = is_enabled_vector = is_checked_vector = False
+        out = (is_enabled_fringe, is_checked_fringe,
+               is_enabled_disp, is_checked_disp,
+               is_enabled_vector, is_checked_vector)
+        return out
 
     def get_annotation(self, itime: int, case_tuple: CaseTuple) -> str:
         """
@@ -407,6 +414,9 @@ class CompositeResults2(VectorResultsCommon):
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
+    def get_fringe_vector_result(self, itime: int, case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
+        fringe = self._get_fringe_data_dense(itime, case_tuple)
+        return fringe, None
     def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
         """gets the dense stress/strain result"""
         data = self._get_fringe_data_sparse(itime, case_tuple)
