@@ -31,7 +31,14 @@ class SolidResults2(VectorResultsCommon):
                  colormap: str='',
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
-        GuiResultCommon.__init__(self)
+        VectorResultsCommon.__init__(
+            self, subcase_id,
+            cases,
+            data_format=data_format,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap,
+            #set_max_min: bool=False,
+            uname=uname)
         self.centroid_data = np.zeros((0, 0, 0), dtype='float32')
         self.node_data = np.zeros((0, 0, 0), dtype='float32')
         self.element_node = np.zeros((0, 2), dtype='int32')
@@ -48,12 +55,10 @@ class SolidResults2(VectorResultsCommon):
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
         #assert len(element_id) >= self.case.
 
-        self.is_dense = False
         self.dim = cases[0].data.ndim
         for case in cases:
             assert case.data.ndim == 3, case.data.shape
 
-        self.subcase_id = subcase_id
         self.is_stress = case.is_stress
 
         self.layer_map = {
@@ -66,15 +71,13 @@ class SolidResults2(VectorResultsCommon):
         #self.dim_max = dim_max
         self.linked_scale_factor = False
 
-        self.data_format = data_format
-
         #  global ids
         self.model = model
         self.node_id = node_id
         self.element_id = element_id
 
         # local case object
-        self.cases = cases
+        #self.cases = cases
         self.result = result
 
         self.data_type = case.data.dtype.str # '<c8', '<f4'
@@ -101,17 +104,7 @@ class SolidResults2(VectorResultsCommon):
         #self.mins = defaultdict(ftimes)
         #self.maxs = defaultdict(ftimes)
         #self.phases = defaultdict(fphases)
-
-        self.data_formats = [self.data_format]
         self.headers = ['SolidResult2'] * ntimes
-
-        self.nlabels = None
-        self.labelsize = None
-        self.ncolors = None
-        self.colormap = colormap
-
-        self.uname = uname
-        #self.active_method = ''
 
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         layers = list(self.layer_map.values())

@@ -828,25 +828,29 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_text_color(%s, %s, %s)' % color)
 
-    def set_text_size(self, text_size: int,render: bool=True) -> None:
+    def set_text_size(self, text_size: int, render: bool=True) -> None:
         """
-        Set the text color
+        Set the annotation text size
 
         Parameters
         ----------
         text_size : int
             the lower left text size (typical 14)
+
         """
-        i = 0
+        # we built these actors in reverse order,
+        # so that's how we update their sizes
+        text_actors =  self.parent.text_actors
+        i = len(text_actors) - 1
         dtext_size = text_size + 1
         self.text_size = text_size
-        for text_actor in self.parent.text_actors.values():
+        for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
             position = [5, 5 + i * dtext_size]
             text_actor.SetDisplayPosition(*position)
-            i += 1
+            i -= 1
         if render:
             self.parent.vtk_interactor.Render()
         self.parent.log_command(f'settings.set_text_size({text_size})')

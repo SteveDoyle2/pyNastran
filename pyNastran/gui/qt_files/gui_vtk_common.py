@@ -251,10 +251,13 @@ class GuiVTKCommon(GuiQtCommon):
 
         text_size = self.settings.text_size # was 14
         dtext_size = text_size + 1
-        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
-        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
-        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
-        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
+
+        # we build these in reverse order
+        create_text = self.tool_actions.create_text
+        create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size=text_size)  # text actor 0
+        create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size=text_size)  # text actor 1
+        create_text([5, 5 + 1 * dtext_size], 'Word1', text_size=text_size)  # text actor 2
+        create_text([5, 5], 'Word2', text_size=text_size)  # text actor 3
 
         self.get_edges()
         if self.is_edges:
@@ -594,10 +597,14 @@ class GuiVTKCommon(GuiQtCommon):
         if label2:
             label += '; ' + label2
 
-        self.update_text_actors(subcase_id, subtitle,
-                                imin, min_value_actual,
-                                imax, max_value_actual, label, location_nodal)
-
+        self.tool_actions.update_text_actors(
+            location=location_nodal,
+            subcase_id=subcase_id,
+            subtitle=subtitle,
+            label=label,
+            imin=imin, min_value=min_value,
+            imax=imax, max_value=max_value,
+        )
         self.vtk_interactor.Render()
         self.log_command(f'map_element_centroid_to_node_fringe_result('
                          f'update_limits={update_limits}, show_msg={show_msg})')

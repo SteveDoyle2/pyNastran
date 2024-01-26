@@ -34,7 +34,14 @@ class PlateResults2(VectorResultsCommon):
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
         assert isinstance(is_fiber_distance, bool), is_fiber_distance
-        GuiResultCommon.__init__(self)
+        VectorResultsCommon.__init__(
+            self, subcase_id,
+            cases,
+            data_format=data_format,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap,
+            #set_max_min: bool=False,
+            uname=uname)
         self.layer_indices = (-1, )  # All
         self.is_fiber_distance = is_fiber_distance
         i = -1
@@ -45,12 +52,10 @@ class PlateResults2(VectorResultsCommon):
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
 
-        self.is_dense = False
         self.dim = cases[0].data.ndim
         for case in cases:
             assert case.data.ndim == 3, case.data.shape
 
-        self.subcase_id = subcase_id
         self.is_stress = case.is_stress
         self.eid_to_nid_map = eid_to_nid_map
         if self.is_stress:
@@ -108,7 +113,7 @@ class PlateResults2(VectorResultsCommon):
         self.element_id = element_id
 
         # local case object
-        self.cases = cases
+        #self.cases = cases
         self.result = result
 
         self.data_type = case.data.dtype.str # '<c8', '<f4'
@@ -117,34 +122,8 @@ class PlateResults2(VectorResultsCommon):
         self.is_complex = not self.is_real
 
         ntimes = case.data.shape[0]
-        #nscale = ntimes
-        #if self.linked_scale_factor:
-            #nscale = 1
-
-        #def fscales():
-            #return [None] * nscale
-        #def ftimes():
-            #return [None] * ntimes
-        #def fphases():
-            #return np.zeros(ntimes, dtype='float64')
-
-        #self.default_scales = defaultdict(fscales)
-        #self.scales = defaultdict(fscales)
-        #self.default_mins = defaultdict(ftimes)
-        #self.default_maxs = defaultdict(ftimes)
-        #self.mins = defaultdict(ftimes)
-        #self.maxs = defaultdict(ftimes)
-        #self.phases = defaultdict(fphases)
-
-        self.data_formats = [self.data_format]
         self.headers = ['PlateResult2'] * ntimes
 
-        self.nlabels = None
-        self.labelsize = None
-        self.ncolors = None
-        self.colormap = colormap
-
-        self.uname = uname
         self.location = 'centroid'
 
         #[ntime, nelement, nlayer, nresult]

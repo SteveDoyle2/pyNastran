@@ -668,9 +668,14 @@ class GuiQtCommon(GuiAttributes):
         else:
             raise RuntimeError(location)
 
-        self.tool_actions.update_text_actors(subcase_id, subtitle,
-                                             imin, min_value,
-                                             imax, max_value, label, location)
+        self.tool_actions.update_text_actors(
+            location=location,
+            subcase_id=subcase_id,
+            subtitle=subtitle,
+            label=label,
+            imin=imin, min_value=min_value,
+            imax=imax, max_value=max_value,
+        )
         is_valid = True
         return is_valid, data
 
@@ -1098,9 +1103,6 @@ class GuiQtCommon(GuiAttributes):
 
         #if vector_size0 >= 3:
         if is_checked_disp0 or is_checked_vector0:
-            #name_vector = None
-            #grid_result_vector = None
-        #else:
             vector_size = 3
             name_vector = (vector_size, subcase_id, result_type, label, scale)
             if self._names_storage.has_exact_name(name_vector):
@@ -1135,9 +1137,14 @@ class GuiQtCommon(GuiAttributes):
                                         imin, min_value,
                                         imax, max_value)
 
-            self.update_text_actors(subcase_id, subtitle,
-                                    imin, min_value,
-                                    imax, max_value, label, location)
+            self.tool_actions.update_text_actors(
+                location=location,
+                subcase_id=subcase_id,
+                subtitle=subtitle,
+                label=label,
+                imin=imin, min_value=min_value,
+                imax=imax, max_value=max_value,
+            )
 
         arrow_scale = 0.0
         self.legend_obj.update_legend(
@@ -1214,10 +1221,23 @@ class GuiQtCommon(GuiAttributes):
         self.hide_legend()
         self.scalar_bar.is_shown = False
         self._set_legend_fringe(False)
-        #min_value = 'Front Face'
-        #max_value = 'Back Face'
-        #self.update_text_actors(subcase_id, subtitle,
-                                #min_value, max_value, label)
+        min_value = 'Red:  Front Face'
+        max_value = 'Blue: Back Face'
+
+        label = ''
+        location = 'normal'
+        subtitle = 'case=Surface Normal'
+        imin = -1
+        imax = -1
+        subcase_id = 0
+        self.tool_actions.update_text_actors(
+            location=location,
+            subcase_id=subcase_id,
+            subtitle=subtitle,
+            label=label,
+            imin=imin, min_value=min_value,
+            imax=imax, max_value=max_value,
+        )
         self.vtk_interactor.Render()
 
     def set_vtk_fringe(self, name: str, case: np.ndarray,

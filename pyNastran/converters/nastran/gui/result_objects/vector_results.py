@@ -38,7 +38,11 @@ class VectorResultsCommon(GuiResultCommon):
         self.subcase_id = subcase_id
 
         # local case object
-        self.case = case
+        if isinstance(case, list):  # TODO: might change this later...
+            self.cases = case
+            case = case[0]
+        else:
+            self.case = case
 
         self.linked_scale_factor = False
         ntimes = case.data.shape[0]
@@ -65,7 +69,7 @@ class VectorResultsCommon(GuiResultCommon):
 
         self.data_format = data_format
         self.data_formats = [self.data_format]
-        self.headers = ['headers'] * ntimes
+        self.headers = ['VectorResultsCommon'] * ntimes
 
         self.nlabels = None
         self.labelsize = None

@@ -189,10 +189,12 @@ class ToolActions:
         self.gui.text_actors[self.itext] = text_actor
         self.itext += 1
 
-    def update_text_actors(self, subcase_id: int, subtitle: str,
+    def update_text_actors(self, location: str,
+                           subcase_id: int,
                            imin: int, min_value: float,
                            imax: int, max_value: float,
-                           label: str, location: str) -> None:
+                           subtitle: str='case=NA',
+                           label: str='NA') -> None:
         """
         Updates the text actors in the lower left
 
@@ -203,6 +205,38 @@ class ToolActions:
 
         """
         gui = self.gui
+        min_msg, max_msg = self._get_annotation_min_max_text(
+            imin, min_value,
+            imax, max_value, location)
+
+        texts = [
+            max_msg,
+            min_msg,
+            'Subcase: %s Subtitle: %s' % (subcase_id, subtitle),
+        ]
+        if label:
+            texts.append('Label: %s' % label)
+
+        ntext = len(texts)
+        text_actors = gui.text_actors
+        for itext, text in enumerate(texts):
+            text_actors[itext].SetInput(text)
+
+        if ntext == 4:  # label
+            text_actors[3].VisibilityOn()
+        else:
+            text_actors[3].VisibilityOff()
+
+    def _get_annotation_min_max_text(self,
+                                     imin: int, min_value: float,
+                                     imax: int, max_value: float,
+                                     location: str) -> tuple[str, str]:
+        if location == 'normal':
+            min_msgi = min_value
+            max_msgi = max_value
+            return min_msgi, max_msgi
+
+        gui = self.gui
         if location == 'node':
             nodes = gui.node_ids
             min_msgi = f'Node: %d' % nodes[imin]
@@ -211,7 +245,7 @@ class ToolActions:
             elements = gui.element_ids
             min_msgi = f'Element: %d' % elements[imin]
             max_msgi = f'Element: %d' % elements[imax]
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(location)
 
 
@@ -234,22 +268,9 @@ class ToolActions:
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value
 
-        texts = [
-            max_msg + '; %s' % max_msgi,
-            min_msg + '; %s' % min_msgi,
-            'Subcase: %s Subtitle: %s' % (subcase_id, subtitle),
-        ]
-        if label:
-            texts.append('Label: %s' % label)
-
-        ntext = len(texts)
-        for itext, text in enumerate(texts):
-            gui.text_actors[itext].SetInput(text)
-
-        if ntext == 4:  # label
-            gui.text_actors[3].VisibilityOn()
-        else:
-            gui.text_actors[3].VisibilityOff()
+        max_out = max_msg + '; %s' % max_msgi
+        min_out = min_msg + '; %s' % min_msgi
+        return min_out, max_out
 
     def turn_text_off(self) -> None:
         """turns all the text actors off"""
