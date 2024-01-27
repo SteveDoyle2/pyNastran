@@ -58,61 +58,62 @@ class LoadActions(BaseGui):
         if not hasattr(self, 'model_objs'):
             self.model_objs = {}
 
+        gui = self.gui
         has_results = False
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            settings: Settings = self.gui.settings
+            settings: Settings = gui.settings
             #if settings.use_startup_directory and os.path.exists(settings.startup_directory):
                 #last_dir = settings.startup_directory
             #else:
             last_dir = os.path.split(infile_name)[0]
-            self.gui.last_dir = last_dir
+            gui.last_dir = last_dir
             settings.startup_directory = last_dir
 
-            if self.gui.name == '':
+            if gui.name == '':
                 name = 'main'
             else:
                 print('name = %r' % name)
 
-            if name != self.gui.name:
+            if name != gui.name:
                 #scalar_range = self.grid_selected.GetScalarRange()
                 #self.grid_mapper.SetScalarRange(scalar_range)
-                self.gui.grid_mapper.ScalarVisibilityOff()
+                gui.grid_mapper.ScalarVisibilityOff()
                 #self.grid_mapper.SetLookupTable(self.color_function)
-            self.gui.name = name
-            self.gui._reset_model(name)
+            gui.name = name
+            gui._reset_model(name)
 
             # reset alt grids
-            names = self.gui.alt_grids.keys()
+            names = gui.alt_grids.keys()
             for name in names:
-                self.gui.alt_grids[name].Reset()
-                self.gui.alt_grids[name].Modified()
+                gui.alt_grids[name].Reset()
+                gui.alt_grids[name].Modified()
 
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
-                self.gui.log_error(msg)
-                self.gui.log_error(print_bad_path(infile_name))
+                gui.log_error(msg)
+                gui.log_error(print_bad_path(infile_name))
                 return
 
             # clear out old data
-            if self.gui.model_type is not None:
-                clear_name = 'clear_' + self.gui.model_type
+            if gui.model_type is not None:
+                clear_name = 'clear_' + gui.model_type
                 try:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
                 except Exception:
                     self.gui.log_error("method %r does not exist" % clear_name)
-            self.gui.log_info("reading %s file %r" % (geometry_format, infile_name))
+            gui.log_info("reading %s file %r" % (geometry_format, infile_name))
 
             try:
                 time0 = time_module.time()
 
-                if geometry_format2 in self.gui.format_class_map:
+                if geometry_format2 in gui.format_class_map:
                     # initialize the class
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
 
                     # TODO: was geometry_format going into this...
-                    cls = self.gui.format_class_map[geometry_format2](self.gui)
+                    cls = gui.format_class_map[geometry_format2](gui)
 
                     function_name2 = 'load_%s_geometry' % geometry_format2
                     load_function2 = getattr(cls, function_name2)
@@ -135,36 +136,42 @@ class LoadActions(BaseGui):
             except Exception as error:
                 #raise
                 msg = traceback.format_exc()
-                self.gui.log_error(msg)
-                if raise_error or self.gui.dev:
+                gui.log_error(msg)
+                if raise_error or gui.dev:
                     raise
                 #return
             #self.vtk_panel.Update()
-            self.gui.rend.ResetCamera()
+            gui.rend.ResetCamera()
 
         # the model has been loaded, so we enable load_results
         if filter_index >= 0:
-            self.gui.format = formats[filter_index].lower()
+            gui.format = formats[filter_index].lower()
             unused_enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
             return
         #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
-        self.gui.infile_name = infile_name
-        self.gui.out_filename = None
+        gui.infile_name = infile_name
+        gui.out_filename = None
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
 
         if name == 'main':
-            msg = '%s - %s' % (self.gui.format, self.gui.infile_name)
-            self.gui.window_title = msg
-            self.gui.update_menu_bar()
+            msg = '%s - %s' % (gui.format, gui.infile_name)
+            gui.window_title = msg
+            gui.update_menu_bar()
             main_str = ''
         else:
             main_str = ', name=%r' % name
 
-        self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
-            infile_name, self.gui.format, main_str))
+        arg = (infile_name, gui.format)
+        if arg in gui.settings.recent_files:
+            gui.settings.recent_files.remove(arg)
+        gui.settings.recent_files.insert(0, arg)
+
+        gui.settings.recent_files
+        gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+            infile_name, gui.format, main_str))
 
     def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
         """gets the filename and format"""

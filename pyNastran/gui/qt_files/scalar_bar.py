@@ -192,10 +192,10 @@ class ScalarBar:
             for val, (red, green, blue) in zip(vals, colormap):
                 self.color_function.AddRGBPoint(val, red, green, blue)
 
-    def update_position(self, is_horizontal=True):
+    def update_position(self, is_horizontal: bool=True) -> None:
         """updates if the scalar bar is horizontal/vertical"""
         update_position = is_horizontal is not self.is_horizontal
-        if not update_position:
+        if not update_position: # pragma: no cover
             return
         if is_horizontal:
             # put the scalar bar at the top

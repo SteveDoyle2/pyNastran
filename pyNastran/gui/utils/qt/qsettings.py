@@ -83,6 +83,8 @@ class QSettingsLike2:
         for key, value in self.data.items():
             if isinstance(value, (str, integer_types, float_types)):
                 data[key] = value
+            elif key == 'recent_files':
+                data[key] = value
             elif value.__class__.__name__ == 'QByteArray':
                 value2 = bytes(value.toBase64())
                 data[key] = value2.decode('ascii')

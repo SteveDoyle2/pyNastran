@@ -11,6 +11,7 @@ The preferences menu handles:
 """
 from __future__ import annotations
 from math import log10, ceil
+from functools import partial
 from typing import TYPE_CHECKING
 
 from qtpy import QtGui
@@ -64,7 +65,6 @@ class PreferencesWindow(PyDialog):
         self.dim_max = data['dim_max']
 
         # font size for menu
-        self._default_font_size = FONT_SIZE
         self._default_text_size = TEXT_SIZE
 
         self.use_startup_directory = data['use_startup_directory']
@@ -146,18 +146,17 @@ class PreferencesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        self.on_font(self._default_font_size)
+        self.on_font(self.font_size)
         self.on_gradient_scale()
         #self.show()
 
     def create_widgets(self):
         """creates the display window"""
-        # Text Size
+        # window text size
         self.font_size_label = QLabel('Font Size:')
         self.font_size_edit = QSpinBox(self)
-        self.font_size_edit.setValue(self._default_font_size)
+        self.font_size_edit.setValue(self.font_size)
         self.font_size_edit.setRange(7, 20)
-        self.font_size_button = QPushButton('Default')
 
         #-----------------------------------------------------------------------
         self.startup_directory_label = QLabel('Remember Last Directory:')
@@ -189,7 +188,7 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit.setRange(0.1, 1.0)
         self.highlight_opacity_edit.setDecimals(2)
         self.highlight_opacity_edit.setSingleStep(0.05)
-        self.highlight_opacity_edit.setToolTip('Sets the highlight opacity')
+        self.highlight_opacity_edit.setToolTip('Sets the highlight opacity (0=invisible, 1=solid)')
         self.highlight_opacity_button = QPushButton("Default")
 
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
@@ -204,7 +203,7 @@ class PreferencesWindow(PyDialog):
         # Text Color
         self.highlight_color_label = QLabel("Highlight Color:")
         self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
-        self.highlight_color_edit.setToolTip('Sets the highlight opacity')
+        self.highlight_color_edit.setToolTip('Sets the highlight color')
 
         #-----------------------------------------------------------------------
         # Background Color
@@ -227,14 +226,14 @@ class PreferencesWindow(PyDialog):
         self.annotation_size_edit = QSpinBox(self)
         self.annotation_size_edit.setRange(1, 500)
         self.annotation_size_edit.setValue(self._annotation_size)
-        self.annotation_size_edit.setToolTip('Sets the "probe" text size')
+        self.annotation_size_edit.setToolTip('Sets the "Probe" and Min/Max text size')
         #self.annotation_size_edit.setToolTip('Sets the hiannotation text size')
         self.annotation_size_button = QPushButton("Default")
 
         # Annotation Color - unused
         self.annotation_color_label = QLabel("Annotation Color:")
         self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
-        self.annotation_color_edit.setToolTip('The "probe" is an annotation')
+        self.annotation_color_edit.setToolTip('The "Probe" is an annotation')
         self.annotation_color_label.hide()
         self.annotation_color_edit.hide()
 
@@ -261,14 +260,14 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Clipping Min
-        self.clipping_min_label = QLabel("Clipping Min:")
+        self.clipping_min_label = QLabel('Clipping Min:')
         self.clipping_min_edit = QLineEdit(func_str(self._default_clipping_min))
-        self.clipping_min_button = QPushButton("Default")
+        self.clipping_min_button = QPushButton('Default')
 
         # Clipping Max
-        self.clipping_max_label = QLabel("Clipping Max:")
+        self.clipping_max_label = QLabel('Clipping Max:')
         self.clipping_max_edit = QLineEdit(func_str(self._default_clipping_max))
-        self.clipping_max_button = QPushButton("Default")
+        self.clipping_max_button = QPushButton('Default')
 
         #-----------------------------------------------------------------------
         self.coord_scale_label = QLabel('Coordinate System Scale:')
@@ -292,7 +291,7 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setToolTip('Increase/decrease the coordinate system text size')
 
         # Show corner coord
-        self.corner_coord_label = QLabel("Show Corner Coordinate System:")
+        self.corner_coord_label = QLabel('Show Corner Coordinate System:')
         self.corner_coord_checkbox = QCheckBox()
         self.corner_coord_checkbox.setChecked(self._show_corner_coord)
 
@@ -322,9 +321,9 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D Bar/Beam cross-sections when deformations are applied')
         self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
 
-        self.nastran_is_shell_mcid_checkbox = QCheckBox('Shell MCIDs')
-        self.nastran_is_shell_mcid_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
-        self.nastran_is_shell_mcid_checkbox.setChecked(self._nastran_is_shell_mcids)
+        self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
+        self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
+        self.nastran_is_shell_mcids_checkbox.setChecked(self._nastran_is_shell_mcids)
 
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
@@ -453,7 +452,6 @@ class PreferencesWindow(PyDialog):
         irow = 0
         grid.addWidget(self.font_size_label, irow, 0)
         grid.addWidget(self.font_size_edit, irow, 1)
-        grid.addWidget(self.font_size_button, irow, 2)
         irow += 1
 
         grid.addWidget(self.startup_directory_label, irow, 0)
@@ -546,7 +544,7 @@ class PreferencesWindow(PyDialog):
         grid_nastran = self._get_grid_nastran_layout()
         grid_nastran_results = self._get_grid_nastran_results_layout()
 
-        #bold_font = make_font(self._default_font_size, is_bold=True)
+        #bold_font = make_font(self.font_size, is_bold=True)
         vbox_nastran = QVBoxLayout()
         self.nastran_label = QLabel('Nastran:')
         vbox_nastran.addWidget(self.nastran_label)
@@ -591,7 +589,7 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
         irow += 1
 
-        grid_nastran.addWidget(self.nastran_is_shell_mcid_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_shell_mcids_checkbox, irow, 0)
         irow += 1
 
         grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
@@ -642,35 +640,34 @@ class PreferencesWindow(PyDialog):
 
     def _set_nastran_connections(self):
         # format-specific
-        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
-        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
-        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
-        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
-        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
-        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
-        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
+        self.nastran_is_element_quality_checkbox.clicked.connect(partial(on_nastran, self, 'is_element_quality'))
+        self.nastran_is_properties_checkbox.clicked.connect(partial(on_nastran, self, 'is_properties'))
+        self.nastran_is_3d_bars_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars'))
+        self.nastran_is_3d_bars_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars_update'))
+        self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
+        self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
+        self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
 
+        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
 
-        self.nastran_displacement_checkbox.clicked.connect(self.on_nastran_displacement)
-        self.nastran_velocity_checkbox.clicked.connect(self.on_nastran_velocity)
-        self.nastran_acceleration_checkbox.clicked.connect(self.on_nastran_acceleration)
-        self.nastran_eigenvector_checkbox.clicked.connect(self.on_nastran_eigenvector)
+        self.nastran_displacement_checkbox.clicked.connect(partial(on_nastran, self, 'displacement'))
+        self.nastran_velocity_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
+        self.nastran_acceleration_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
+        self.nastran_eigenvector_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector'))
 
-        self.nastran_spc_force_checkbox.clicked.connect(self.on_nastran_spc_force)
-        self.nastran_mpc_force_checkbox.clicked.connect(self.on_nastran_mpc_force)
-        self.nastran_applied_load_checkbox.clicked.connect(self.on_nastran_applied_load)
-        self.nastran_grid_point_force_checkbox.clicked.connect(self.on_nastran_grid_point_force)
+        self.nastran_spc_force_checkbox.clicked.connect(partial(on_nastran, self, 'spc_force'))
+        self.nastran_mpc_force_checkbox.clicked.connect(partial(on_nastran, self, 'mpc_force'))
+        self.nastran_applied_load_checkbox.clicked.connect(partial(on_nastran, self, 'applied_load'))
+        self.nastran_grid_point_force_checkbox.clicked.connect(partial(on_nastran, self, 'grid_point_force'))
 
-        self.nastran_force_checkbox.clicked.connect(self.on_nastran_force)
-        self.nastran_strain_checkbox.clicked.connect(self.on_nastran_strain)
-        self.nastran_stress_checkbox.clicked.connect(self.on_nastran_stress)
-
-        self.nastran_strain_energy_checkbox.clicked.connect(self.on_nastran_strain_energy)
+        self.nastran_force_checkbox.clicked.connect(partial(on_nastran, self, 'force'))
+        self.nastran_strain_checkbox.clicked.connect(partial(on_nastran, self, 'strain'))
+        self.nastran_stress_checkbox.clicked.connect(partial(on_nastran, self, 'stress'))
+        self.nastran_strain_energy_checkbox.clicked.connect(partial(on_nastran, self, 'strain_energy'))
 
     def set_connections(self):
         """creates the actions for the menu"""
-        self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_font)
 
         self.startup_directory_checkbox.clicked.connect(self.on_startup_directory_checked)
@@ -730,7 +727,7 @@ class PreferencesWindow(PyDialog):
 
     def on_reset_defaults(self):
         """reset all of the preferences to their defaults"""
-        self.on_default_font_size()
+        self.on_font(FONT_SIZE)
         self.on_default_annotation_size()
         self.on_default_clipping_max()
         self.on_default_clipping_min()
@@ -792,101 +789,6 @@ class PreferencesWindow(PyDialog):
             settings.set_background_color(self.background_color1_float, render=False)
             settings.set_background_color2(self.background_color2_float, render=True)
         self.on_apply()
-
-
-    def on_nastran_is_element_quality(self):
-        """set the nastran element quality preferences"""
-        is_checked = self.nastran_is_element_quality_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_element_quality = is_checked
-    def on_nastran_is_properties(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_properties_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_properties = is_checked
-    def on_nastran_is_3d_bars(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_3d_bars_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_3d_bars = is_checked
-    def on_nastran_is_3d_bars_update(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_3d_bars_update_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_3d_bars_update = is_checked
-    #def on_nastran_is_update_conm2(self):
-        #"""set the nastran properties preferences"""
-        #is_checked = self.nastran_is_conm2_update.isChecked()
-        #if self.win_parent is not None:
-            #self.nastran_settings.is_update_conm2 = is_checked
-
-    def on_nastran_is_bar_axes(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_bar_axes = is_checked
-    def on_nastran_create_coords(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_create_coords_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.create_coords = is_checked
-    def on_nastran_is_shell_mcids(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_shell_mcids = is_checked
-
-    def on_nastran_displacement(self):
-        is_checked = self.nastran_displacement_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.displacement = is_checked
-    def on_nastran_velocity(self):
-        is_checked = self.nastran_velocity_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.velocity = is_checked
-    def on_nastran_acceleration(self):
-        is_checked = self.nastran_acceleration_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.acceleration = is_checked
-    def on_nastran_eigenvector(self):
-        is_checked = self.nastran_eigenvector_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.eigenvector = is_checked
-
-    def on_nastran_spc_force(self):
-        is_checked = self.nastran_spc_force_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.spc_force = is_checked
-    def on_nastran_mpc_force(self):
-        is_checked = self.nastran_mpc_force_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.mpc_force = is_checked
-
-    def on_nastran_applied_load(self):
-        is_checked = self.nastran_applied_load_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.applied_load = is_checked
-    def on_nastran_grid_point_force(self):
-        is_checked = self.nastran_grid_point_force_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.grid_point_force = is_checked
-
-    def on_nastran_force(self):
-        is_checked = self.nastran_force_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.force = is_checked
-    def on_nastran_strain(self):
-        is_checked = self.nastran_strain_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.strain = is_checked
-    def on_nastran_stress(self):
-        is_checked = self.nastran_stress_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.stress = is_checked
-    def on_nastran_strain_energy(self):
-        is_checked = self.nastran_strain_energy_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.strain_energy = is_checked
 
     @property
     def settings(self) -> Settings:
@@ -1091,9 +993,6 @@ class PreferencesWindow(PyDialog):
         self.on_coord_text_scale(self._default_coord_text_scale)
 
     #---------------------------------------------------------------------------
-    def on_default_font_size(self) -> None:
-        self.font_size_edit.setValue(self._default_font_size)
-        self.on_font(self._default_font_size)
 
     def on_default_annotation_size(self) -> None:
         self.annotation_size_edit.setValue(self._default_annotation_size)
@@ -1173,6 +1072,24 @@ def check_label_float(cell) -> tuple[Optional[float], bool]:
     except ValueError:
         cell.setStyleSheet("QLineEdit{background: red;}")
         return None, False
+
+def on_nastran(self: PreferencesWindow, result_name: str) -> None:
+    """
+    Auto-checks to verify result name is correct.
+    Used for all Nastran settings, it's a lot less code.
+
+    self = PreferencesWindow
+    checkbox = self.nastran_displacement_checkbox
+    result_name = displacement
+    is_checked = True
+    """
+    #self.nastran_displacement_checkbox,
+    checkbox: QCheckBox = getattr(self, f'nastran_{result_name}_checkbox')
+    is_checked = checkbox.isChecked()
+    if self.win_parent is not None:
+        assert hasattr(self.nastran_settings, result_name), result_name
+        setattr(self.nastran_settings, result_name, is_checked)
+
 
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
