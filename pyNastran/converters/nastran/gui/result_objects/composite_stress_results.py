@@ -8,6 +8,7 @@ from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .vector_results import VectorResultsCommon
+from .nodal_averaging import nan_difference
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateArray
@@ -33,7 +34,7 @@ class CompositeResults2(VectorResultsCommon):
         GuiResultCommon.__init__(self)
         self.layer_indices = (-1, )  # All
         i = -1
-        name = None
+        name = (0, 0, '')
 
         # slice off the methods (from the boolean) and then pull the 0th one
         self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
@@ -77,10 +78,6 @@ class CompositeResults2(VectorResultsCommon):
                 11: 'fiber_distance',
                 12: 'fiber_curvature',
             }
-
-        #if dim_max == 0.0:
-            #dim_max = 1.0
-        #self.dim_max = dim_max
         self.linked_scale_factor = False
 
         self.data_format = data_format
@@ -199,12 +196,22 @@ class CompositeResults2(VectorResultsCommon):
         return True, ['Material']
     def has_derivation_transform(self, i: int, case_tuple: CaseTuple) -> tuple[bool, list[str]]:
         """min/max/avg"""
+        if not isinstance(case_tuple, tuple):
+            return True, {}
         #(itime, iresult, header) = case_tuple
+        #7: 'major',
+        #8: 'minor',
+        imin = 7
+        imax = 8
+        iresult = case_tuple[1]
+        mini = ['Max'] if iresult != imin else []
+        maxi = ['Min'] if iresult != imax else []
+        derivation = ['Absolute Max'] + mini + maxi + [
+            'Mean', 'Std. Dev.', 'Difference']
+        #'Derive/Average'
         out = {
             'tooltip': 'Method to reduce multiple layers into a single elemental value',
-            'derivation': ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
-                           #'Derive/Average'
-                           ],
+            'derivation': derivation,
         }
         return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
@@ -327,8 +334,16 @@ class CompositeResults2(VectorResultsCommon):
         return results[iresult]
 
     def _get_real_data(self, case_tuple: CaseTuple) -> np.ndarray:
-        (itime, iresult, header) = case_tuple
+        eids, data = self._get_fringe_sparse_centroidal(case_tuple)
 
+        # TODO: nodal averaging
+        #       - requires element_node
+        #       - nid_to_id_map
+        #       - node_id
+        return data
+
+    def _get_fringe_sparse_centroidal(self, case_tuple: CaseTuple) -> tuple[np.ndarray, np.ndarray]:
+        (itime, iresult, header) = case_tuple
         #self.case.get_headers()
         #['o11', 'o22', 't12', 't1z', 't2z', 'angle', 'major', 'minor', 'max_shear']
         data = self.case.data[itime, :, iresult].copy()
@@ -338,21 +353,8 @@ class CompositeResults2(VectorResultsCommon):
 
         if self.layer_indices == (-1, ):
             self.layer_indices = tuple(ulayer - 1)
-        #if self.is_stress:
-            #datai = self.dxyz.data[itime, :, :3].copy()
-            #assert datai.shape[1] == 3, datai.shape
-        #else:
-            #datai = self.dxyz.data[itime, :, 3:].copy()
-            #assert datai.shape[1] == 3, datai.shape
-        #if self.result == 'o11':
 
-            #case_res = self.case.data[0]
-
-        #if imethod == 0:
-            ## fiber distance
-            #print(self.case.get_stats())
-            #asdf
-        #else:
+        # reshape to an [nelement, nlayer_max] array so we can slice rows
         assert len(data.shape) == 1, data.shape
         data2, eids_new = pivot_table(data, rows, cols, shape=1)
         assert len(data2.shape) == 2, data2.shape
@@ -367,14 +369,15 @@ class CompositeResults2(VectorResultsCommon):
         self.ielement = ieids
         neids = len(self.ielement)
 
+        # slice out the correct layers
         data3 = data2
         if data2.shape[1] != len(self.layer_indices):
-            # slice out the correct layers
             data3 = data2[:, self.layer_indices]
 
+        #
         assert len(data3.shape) == 2, data3.shape
         if data3.shape[1] == 1 and 0:  # pragma: no cover
-            # single ply
+            # single ply; doesn't support standard deviation/difference
             data4 = data3[:, 0]
         else:
             # multiple plies
@@ -391,7 +394,7 @@ class CompositeResults2(VectorResultsCommon):
             elif self.min_max_method == 'Std. Dev.':
                 data4 = np.nanstd(data3, axis=axis)
             elif self.min_max_method == 'Difference':
-                data4 = np.nanmax(data3, axis=axis) - np.nanmin(data2, axis=axis)
+                data4 = nan_difference(data, axis)
             #elif self.min_max_method == 'Max Over Time':
                 #data4 = np.nanmax(data3, axis=axis) - np.nanmin(data2, axis=axis)
             #elif self.min_max_method == 'Derive/Average':
@@ -399,10 +402,11 @@ class CompositeResults2(VectorResultsCommon):
             else:  # pragma: no cover
                 raise NotImplementedError(self.min_max_method)
 
+
         # TODO: hack to try and debug things...
         assert data4.shape == (neids, )
         #data4 = eids_new.astype('float32')
-        return data4
+        return eids_new, data4
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)
@@ -417,15 +421,16 @@ class CompositeResults2(VectorResultsCommon):
     def get_fringe_vector_result(self, itime: int, case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
         fringe = self._get_fringe_data_dense(itime, case_tuple)
         return fringe, None
+
     def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
         """gets the dense stress/strain result"""
-        data = self._get_fringe_data_sparse(itime, case_tuple)
+        normi = self._get_fringe_data_sparse(itime, case_tuple)
         if self.is_dense:
-            return data
+            return normi
 
         nelements = len(self.element_id)
-        result_out = np.full(nelements, np.nan, dtype=data.dtype)
-        result_out[self.ielement] = data
+        result_out = np.full(nelements, np.nan, dtype=normi.dtype)
+        result_out[self.ielement] = normi
         return result_out
 
     def _get_fringe_data_sparse(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
@@ -570,20 +575,6 @@ class CompositeStrainStressResults2(CompositeResults2):
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         layers = list(self.layer_map.values())
         return layers
-
-    def get_plot_value(self, itime: int, res_name: str) -> np.ndarray:
-        """get_fringe_value"""
-        normi = self._get_fringe_data_sparse(itime, res_name)
-        #normi = safe_norm(dxyz, axis=col_axis)
-        if self.is_dense:
-            return normi
-
-        #case.data.shape = (11, 43, 6)
-        #nnodes = len(self.node_id) =  48
-        #nnodesi = len(self.inode) = len(self.dxyz.node_gridtype) = 43
-        normi2 = np.full(len(self.element_id), np.nan, dtype=normi.dtype)
-        normi2[self.ielement] = normi
-        return normi2
 
     #def get_force_vector_result(self, itime: int, res_name: str) -> np.ndarray:
         #dxyz = self.get_result(itime, res_name, return_dense=True)

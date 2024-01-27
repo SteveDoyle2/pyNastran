@@ -485,7 +485,7 @@ class DispForceVectorResults(VectorResultsCommon):
         # apply dense
         nnodes = len(self.node_id)
         dxyz = np.full((nnodes, 3), np.nan, dtype=dxyz_sparse.dtype)
-        dxyz[self.inode, :] = dxyz
+        dxyz[self.inode, :] = dxyz_sparse
         return dxyz, itime, case_flag
 
     def _get_fringe_data_sparse(self, itime: int, res_name: str) -> np.ndarray:

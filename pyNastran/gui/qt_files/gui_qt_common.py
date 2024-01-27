@@ -28,7 +28,7 @@ from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
-from pyNastran.gui.utils.vtk.gui_utils import set_vtk_fringe, show_hide_actor
+from pyNastran.gui.utils.vtk.gui_utils import set_vtk_fringe, flip_actor_visibility
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
@@ -564,15 +564,17 @@ class GuiQtCommon(GuiAttributes):
 
     def show_hide_min_actor(self, render: bool=True) -> None:
         """flips the status of the min label actor"""
+        self.settings.is_min_visible = not self.settings.is_min_visible
         actor = self.min_max_actors[0]
-        show_hide_actor(actor)
+        flip_actor_visibility(actor)
         if render:
             self.Render()
 
     def show_hide_max_actor(self, render: bool=True) -> None:
         """flips the status of the max label actor"""
+        self.settings.is_max_visible = not self.settings.is_max_visible
         actor = self.min_max_actors[1]
-        show_hide_actor(actor)
+        flip_actor_visibility(actor)
         if render:
             self.Render()
 
@@ -581,8 +583,8 @@ class GuiQtCommon(GuiAttributes):
                                imax: int, max_value: float) -> None:
         """updates the values for the min and max actors"""
         settings = self.settings
-        self.is_min_actor = True
-        self.is_max_actor = True
+        #self.is_min_actor = True
+        #self.is_max_actor = True
 
         if location == 'node':
             if hasattr(self, 'xyz_cid0') and self.xyz_cid0 is None:
@@ -606,17 +608,18 @@ class GuiQtCommon(GuiAttributes):
             raise NotImplementedError(location)
 
         min_maxs = [
-            (imin, min_value, xyzs[0]),
-            (imax, max_value, xyzs[1]),
+            (imin, min_value, xyzs[0], settings.is_min_visible),
+            (imax, max_value, xyzs[1], settings.is_max_visible),
         ]
 
-        for (imin_max, unused_value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+        for (imin_max, unused_value, xyz, is_visible), text_actor in zip(min_maxs, self.min_max_actors):
             if xyz is None:
                 self.log.error('couldnt update min/max actor')
                 continue
             self.imin = imin
             self.imax = imax
             text_actor.SetPosition(*xyz)
+            text_actor.SetVisibility(is_visible)
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(settings.annotation_size)
             text_prop.SetColor(settings.annotation_color)

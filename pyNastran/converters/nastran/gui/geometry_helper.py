@@ -78,18 +78,17 @@ class NastranGuiAttributes:
         self.save_data = True # was False
         #--------------------------------------
 
-        #: flips the nastran CAERO subpaneling
-        #:   False -> borders of CAEROs can be seen
-        #:   True  -> individual subpanels can be seen
-        self.show_caero_sub_panels = False
+        ##: flips the nastran CAERO subpaneling
+        ##:   False -> borders of CAEROs can be seen
+        ##:   True  -> individual subpanels can be seen
+        #self.show_caero_sub_panels = False
+
+        #self.show_caero_actor = True  # show the caero mesh
+        # ---------------------------------------
 
         #: coordinate systems can be messy, so this is the
         #: list of coords to show
         self.show_cids = []
-
-        self.show_caero_actor = True  # show the caero mesh
-        self.show_control_surfaces = True
-        self.show_conm = True
 
         self.element_ids = None
         self.node_ids = None

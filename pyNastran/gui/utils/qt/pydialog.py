@@ -69,7 +69,10 @@ class PyDialog(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
-            self.on_cancel()
+            if hasattr(self, 'on_cancel'):
+                self.on_cancel()
+            else:
+                self.closeEvent(event)
 
 def check_patran_syntax(cell, pound=None):
     text = str(cell.text())

@@ -5,6 +5,7 @@ try:
         vtkCamera,
         vtkDataSetMapper, vtkPolyDataMapper,
         vtkProp,
+        vtkColorTransferFunction,
     )
     from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
     from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
@@ -17,4 +18,5 @@ except ModuleNotFoundError:
         vtkProp,
         vtkGenericRenderWindowInteractor,
         vtkAxesActor,
+        vtkColorTransferFunction,
     )

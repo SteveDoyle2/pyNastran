@@ -230,9 +230,9 @@ class Table(GuiResultCommon):
         #j = self.titles_default.index(name)
         #return 3
 
-    def get_plot_value(self, i, unused_name):
-        asdf
-        return self
+    #def get_plot_value(self, i, unused_name):
+        #asdf
+        #return self
         #if self.is_real:
             #if self.dim == 2:
                 #dxyz = self.dxyz

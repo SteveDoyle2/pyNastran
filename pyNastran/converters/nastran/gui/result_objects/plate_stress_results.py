@@ -4,19 +4,18 @@ import numpy as np
 from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
-from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import abs_nan_min_max # abs_min_max
+from pyNastran.femutils.utils import abs_nan_min_max
 
 from .vector_results import VectorResultsCommon
 from .stress_reduction import von_mises_2d, max_shear
-from .nodal_averaging import nodal_average, nodal_combine_map
+from .nodal_averaging import nodal_average, nodal_combine_map, derivation_map
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
 
-col_axis = 1
 
+col_axis = 1
 class PlateResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
@@ -45,7 +44,7 @@ class PlateResults2(VectorResultsCommon):
         self.layer_indices = (-1, )  # All
         self.is_fiber_distance = is_fiber_distance
         i = -1
-        name = None
+        name = (0, 0, '')
 
         # slice off the methods (from the boolean) and then pull the 0th one
         self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
@@ -197,19 +196,28 @@ class PlateResults2(VectorResultsCommon):
         return True
     def has_coord_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, case_tuple: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, case_tuple: tuple) -> tuple[bool, list[str]]:
         """min/max/avg"""
+        if not isinstance(case_tuple, tuple):
+            return True, {}
         #(itime, iresult, header) = case_tuple
+        imax = 5
+        imin = 6
+        iresult = case_tuple[1]
+        mini = ['Max'] if iresult != imin else []
+        maxi = ['Min'] if iresult != imax else []
+        derivation = ['Absolute Max'] + mini + maxi + [
+            'Mean', 'Std. Dev.', 'Difference']
+        #'Derive/Average'
+
         out = {
             'tooltip': 'Method to reduce multiple layers (top/btm) into a single nodal/elemental value',
-            'derivation': ['Absolute Max', 'Min', 'Max', 'Mean', 'Std. Dev.', 'Difference',
-                           #'Derive/Average'
-                           ],
+            'derivation': derivation,
         }
         return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
-        return True, ['Centroid', 'Mean', 'Absolute Max', 'Min', 'Max', 'Std. Dev.', 'Difference']
+        return True, ['Centroid', 'Absolute Max', 'Mean', 'Min', 'Max', 'Std. Dev.', 'Difference']
 
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
@@ -236,7 +244,7 @@ class PlateResults2(VectorResultsCommon):
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
-        itime, unused_case_flag = self.get_case_flag(case_tuple)
+        itime, unused_case_flag = self.get_case_flag(itime, case_tuple)
 
         default_indices = self._get_default_tuple_indices() # 0-based
         if self.layer_indices == default_indices:
@@ -373,28 +381,24 @@ class PlateResults2(VectorResultsCommon):
     def _get_nodal_result(self, itime: int,
                           iresult: Union[int, str],
                           ilayer: np.ndarray) -> np.ndarray:
-        #neids = len(self.centroid_eids)
-
+        #(ntime, neidsi_nnode, nlayer, nresult) = node_data.shape
         node_data = self.node_data
         element_node = self.element_node
 
+        # make sure we never have an issue with these
         nodal_combine_func = nodal_combine_map[self.nodal_combine]
+        derivation_func = derivation_map[self.min_max_method]
 
         nids = np.unique(element_node[:, 1])
         nnode = len(nids)
         nid_to_inid_map = {nid: i for i, nid in enumerate(nids)}
-
-        nodal_average(nodal_combine_func, element_node, node_data,
-                      nids, nid_to_inid_map)
-        #nodal_combine_map
-        #(ntime, neidsi_nnode, nlayer, nresult) = node_data.shape
-        #assert neids == neidsi_nnode
 
         #ioxx = 1
         #ioyy = 2
         #itxy = 3
         #imax = 5
         #imin = 6
+        ## slice off the top/bottom layers
         if isinstance(iresult, int):
             data = node_data[itime, :, ilayer, iresult]
         elif iresult == 'abs_principal':
@@ -413,11 +417,30 @@ class PlateResults2(VectorResultsCommon):
             data = max_shear(omax, omin)
         else:  # pragma: no cover
             raise RuntimeError(iresult)
+        assert data.ndim == 2, data.shape
 
+        # ----------------------------------------------------------------------
+        ## derivation step
+        # squash the data from multiple layers into 1
+        if len(ilayer) == 1:
+            # we have one layer, so it's easy :)
+            if self.min_max_method in {'Std. Dev.', 'Difference'}:
+                # single layer -> by definition=0
+                derived_data = np.zeros(data[0, :].shape, dtype=data.dtype)
+            else:
+                # Absolute Max, Min, Max, Mean
+                derived_data = data[0, :]
+        else:
+            # 2 layers
+            derived_data = derivation_func(data, axis=0)
+        element_node2 = element_node[::2, :]
+
+        # ----------------------------------------------------------------------
+        ## nodal combine step
         # time to nodal average
         data2 = nodal_average(
             nodal_combine_func,
-            element_node, data,
+            element_node2, derived_data,
             nids, nid_to_inid_map)
         assert len(data2) == nnode, (len(data2), nnode)
         return data2

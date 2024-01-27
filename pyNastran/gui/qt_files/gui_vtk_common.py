@@ -6,6 +6,7 @@ from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, # vtkRenderWindow, vtkRenderWindowInteractor,
     #vtkActor, vtkCamera,
     #vtkDataSetMapper,
+    vtkColorTransferFunction,
     vtkPolyDataMapper)
 from vtk import (vtkLODActor,
                  vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper,
@@ -14,7 +15,7 @@ from vtk import (vtkLODActor,
                  vtkGlyph3D, vtkExtractEdges,
 )
 #from vtkmodules.vtkRenderingLOD import vtkLODActor
-#from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
+#from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper, vtkColorTransferFunction
 #from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
 #from vtkmodules.vtkFiltersSources import vtkArrowSource
 #from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
@@ -260,7 +261,7 @@ class GuiVTKCommon(GuiQtCommon):
         create_text([5, 5], 'Word2', text_size=text_size)  # text actor 3
 
         self.get_edges()
-        if self.is_edges:
+        if self.settings.is_edges_visible:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOn()
         else:
@@ -269,21 +270,15 @@ class GuiVTKCommon(GuiQtCommon):
 
     def get_edges(self):
         """Create the edge actor"""
-        edges = vtkExtractEdges()
         edge_mapper = self.edge_mapper
         edge_actor = self.edge_actor
-
-        edges.SetInputData(self.grid_selected)
-        edge_mapper.SetInputConnection(edges.GetOutputPort())
-
-        edge_actor.SetMapper(edge_mapper)
-        edge_actor.GetProperty().SetColor(0., 0., 0.)
-        edge_mapper.SetLookupTable(self.color_function)
-        edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-
-        prop = edge_actor.GetProperty()
-        prop.SetColor(0., 0., 0.)
-        edge_actor.SetVisibility(self.is_edges)
+        color_function = (
+            self.color_function_black if self.settings.is_edges_black
+            else self.color_function)
+        create_edges_from_grid(
+            self.grid_selected, edge_mapper, edge_actor,
+            color_function,
+            is_edges_visible=self.settings.is_edges_visible)
         self.rend.AddActor(edge_actor)
 
     #---------------------------------------------------------------------------
@@ -611,6 +606,26 @@ class GuiVTKCommon(GuiQtCommon):
         return is_passed
 
 
+def create_edges_from_grid(grid_selected: vtkUnstructuredGrid,
+                           edge_mapper: vtkPolyDataMapper,
+                           edge_actor: vtkLODActor,
+                           color_function: vtkColorTransferFunction,
+                           is_edges_visible: bool) -> None:
+    """helper method to create vtk edges"""
+    edges = vtkExtractEdges()
+    edges.SetInputData(grid_selected)
+    edge_mapper.SetInputConnection(edges.GetOutputPort())
+
+    #is_edges_visible
+    edge_actor.SetMapper(edge_mapper)
+    edge_actor.GetProperty().SetColor(0., 0., 0.)
+
+    edge_mapper.SetLookupTable(color_function)
+    edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+
+    prop = edge_actor.GetProperty()
+    prop.SetColor(0., 0., 0.)
+    edge_actor.SetVisibility(is_edges_visible)
 
 def build_glyph(grid):
     """builds the glyph actor"""

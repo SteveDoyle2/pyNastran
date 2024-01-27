@@ -102,6 +102,7 @@ class NastranGuiResults(NastranGuiAttributes):
         loads nodal results vector results (e.g., displacements/temperatures)
         """
         settings: Settings = self.gui.settings
+        dim_max = settings.dim_max
         nnodes = self.nnodes
         node_ids = self.node_ids
 
@@ -112,7 +113,7 @@ class NastranGuiResults(NastranGuiAttributes):
             nnodes, node_ids, log,
             settings.use_old_sidebar_objects,
             settings.use_new_sidebar_objects,
-            dim_max=settings.dim_max,
+            dim_max=dim_max,
             stop_on_failure=stop_on_failure,
         )
 
@@ -123,7 +124,7 @@ class NastranGuiResults(NastranGuiAttributes):
             nnodes, node_ids, log,
             settings.use_old_sidebar_objects,
             settings.use_new_sidebar_objects,
-            dim_max=settings.dim_max,
+            dim_max=dim_max,
             prefix='acoustic',
             stop_on_failure=stop_on_failure,
         )

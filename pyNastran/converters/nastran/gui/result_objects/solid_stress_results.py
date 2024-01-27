@@ -65,10 +65,6 @@ class SolidResults2(VectorResultsCommon):
             0: 'Centroid',  # default
             1: 'Corner',
         }
-
-        #if dim_max == 0.0:
-            #dim_max = 1.0
-        #self.dim_max = dim_max
         self.linked_scale_factor = False
 
         #  global ids
@@ -86,24 +82,6 @@ class SolidResults2(VectorResultsCommon):
         self.is_complex = not self.is_real
 
         ntimes = case.data.shape[0]
-        #nscale = ntimes
-        #if self.linked_scale_factor:
-            #nscale = 1
-
-        #def fscales():
-            #return [None] * nscale
-        #def ftimes():
-            #return [None] * ntimes
-        #def fphases():
-            #return np.zeros(ntimes, dtype='float64')
-
-        #self.default_scales = defaultdict(fscales)
-        #self.scales = defaultdict(fscales)
-        #self.default_mins = defaultdict(ftimes)
-        #self.default_maxs = defaultdict(ftimes)
-        #self.mins = defaultdict(ftimes)
-        #self.maxs = defaultdict(ftimes)
-        #self.phases = defaultdict(fphases)
         self.headers = ['SolidResult2'] * ntimes
 
     def get_methods(self, itime: int, res_name: str) -> list[str]:
@@ -224,7 +202,7 @@ class SolidResults2(VectorResultsCommon):
             layer_str = self.layer_map[0]  # Centroid
         elif self.layer_indices == (1, ):
             layer_str = self.layer_map[1]  # Corner
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.layer_indices)
         self.layer_indices
 
@@ -317,6 +295,7 @@ class SolidResults2(VectorResultsCommon):
         itxz = 5
         imax = 6
         imin = 8
+
         ## nodal_combine == 'Centroid':
 
         centroid_data = self.centroid_data
@@ -390,7 +369,7 @@ class SolidResults2(VectorResultsCommon):
             data_min = node_data[itime, :, imin]
             datai = get_abs_max(data_min, data_max, dtype=data_min.dtype)
             assert datai.shape == data_min.shape
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(iresult)
 
         data = nodal_average(
@@ -409,7 +388,8 @@ class SolidResults2(VectorResultsCommon):
             #assert datai.shape[1] == 3, datai.shape
         #return datai
 
-    def _get_fringe_data_sparse(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
+    def _get_fringe_data_sparse(self, itime: int,
+                                case_tuple: CaseTuple) -> np.ndarray:
         #method = self._update_method(itime, case_tuple, method)
         assert self.is_real
         # multiple results
@@ -423,7 +403,8 @@ class SolidResults2(VectorResultsCommon):
         assert len(data.shape) == 1, data.shape
         return data
 
-    def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:
+    def _get_fringe_data_dense(self, itime: int,
+                               case_tuple: CaseTuple) -> np.ndarray:
         data = self._get_fringe_data_sparse(itime, case_tuple)
         if self.is_dense:
             return data
@@ -438,7 +419,8 @@ class SolidResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
-    def get_fringe_vector_result(self, itime: int, case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
+    def get_fringe_vector_result(self, itime: int,
+                                 case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
         """
         gets the 'typical' result which is a vector
          - GuiResult:           fringe; (n,)   array

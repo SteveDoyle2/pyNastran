@@ -28,6 +28,7 @@ from pyNastran.gui.utils.qt.qcombobox import (
 if TYPE_CHECKING:
     from pyNastran.gui.main_window import MainWindow
 
+SHOW_NAME_MAIN = False
 SHOW_CASE_SPINNER = False
 
 SkippableSpinBox = QSpinBox
@@ -489,7 +490,10 @@ class ResultsSidebar(QWidget):
 
         vbox = QVBoxLayout()
 
-        hbox_name = create_hbox_with_widgets([self.name_label, self.name_pulldown])
+        if SHOW_NAME_MAIN:
+            hbox_name = create_hbox_with_widgets([self.name_label, self.name_pulldown])
+            vbox.addLayout(hbox_name)
+
         if self._use_new_sidebar:
             hbox_avg = create_hbox_with_widgets([self.min_max_average_label, self.min_max_average_pulldown])
             hbox_coord = create_hbox_with_widgets([self.transform_coords_label, self.transform_coords_pulldown])
@@ -500,7 +504,6 @@ class ResultsSidebar(QWidget):
         #self.case_spinner_label, self.case_spinner,
         #self.deflection_label, self.deflection_edit,
         #self.vector_label, self.vector_edit,
-        vbox.addLayout(hbox_name)
 
         if self._use_new_sidebar:
             vbox_top = QVBoxLayout(self)

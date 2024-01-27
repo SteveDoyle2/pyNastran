@@ -174,9 +174,6 @@ class GuiAttributes:
         #self._label_window = None
         #-------------
         # inputs dict
-        self.is_edges = False
-        self.is_edges_black = self.is_edges
-
         #self.format = ''
         debug = inputs['debug']
         self.debug = debug

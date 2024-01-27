@@ -3,7 +3,8 @@ defines:
  - MarkActions
 
 """
-from typing import Optional, Any
+from __future__ import annotations
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from vtkmodules.vtkCommonDataModel import vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
@@ -13,6 +14,8 @@ from pyNastran.gui.vtk_rendering_core import vtkBillboardTextActor3D
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 
 class MarkActions:
@@ -490,7 +493,9 @@ def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0):
         slot.append(create_annotation(gui, texti, xi, yi, zi))
     return slot
 
-def create_annotation(gui, text, x, y, z):
+def create_annotation(gui: MainWindow,
+                      text: str,
+                      x: float, y: float, z: float) -> vtkBillboardTextActor3D:
     """
     Creates the actual annotation and appends it to slot
 

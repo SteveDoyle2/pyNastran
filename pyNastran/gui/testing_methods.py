@@ -258,7 +258,7 @@ class FakeGUIMethods(GuiVTKCommon):
                 colormap = 'jet'
 
             if vector_size == 3:
-                unused_plot_value = obj.get_plot_value(i, name) # vector
+                #unused_plot_value = obj.get_plot_value(i, name) # vector
                 scale = 1.1
                 phase = 2.2
                 obj.set_scale(i, name, scale)

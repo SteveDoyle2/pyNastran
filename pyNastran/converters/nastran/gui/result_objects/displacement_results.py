@@ -15,6 +15,7 @@ rotation = ['Magnitude', 'Rx', 'Ry', 'Rz']
 col_axis = 1
 
 
+## TODO: better label to indicate Magnitude vs. Value
 class DisplacementResults2(DispForceVectorResults):
     def __init__(self,
                  subcase_id: int,

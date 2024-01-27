@@ -86,6 +86,12 @@ NASTRAN_BOOL_KEYS = [
     'nastran_spring_force', 'nastran_gap_force', 'nastran_cbush_force',
 
     'nastran_grid_point_force', 'nastran_strain_energy',
+
+    # --------------------------------------------------------------
+    'nastran_show_caero_sub_panels',
+    'nastran_show_caero_actor',
+    #'nastran_show_control_surfaces',
+    #'nastran_show_conm',
 ]
 
 class NastranSettings:
@@ -143,6 +149,17 @@ class NastranSettings:
         self.strain_energy = True
         self.grid_point_force = True
 
+        # ------------------------------------------------------
+
+        #: flips the nastran CAERO subpaneling
+        #:   False -> borders of CAEROs can be seen
+        #:   True  -> individual subpanels can be seen
+        self.show_caero_sub_panels = False
+
+        self.show_caero_actor = True  # show the caero mesh
+        #self.show_control_surfaces = True
+        #self.show_conm = True
+
     def __repr__(self) -> str:
         msg = '<NastranSettings>\n'
         keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
@@ -154,6 +171,7 @@ class NastranSettings:
                 value = str(value)
             msg += '  %r = %r\n' % (key, value)
         return msg
+
 
 class Settings:
     """storage class for various settings"""
@@ -174,6 +192,12 @@ class Settings:
 
         self.startup_directory = ''
         self.use_startup_directory = True
+
+        self.is_edges_visible = True
+        self.is_edges_black = True
+
+        self.is_min_visible = True
+        self.is_max_visible = True
 
         self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
         self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
@@ -222,7 +246,7 @@ class Settings:
 
         self.nastran_settings = NastranSettings()
 
-    def reset_settings(self) -> None:
+    def reset_settings(self, resize: bool=True, reset_dim_max: bool=True) -> None:
         """helper method for ``setup_gui``"""
         # rgb tuple
         self.use_gradient_background = True
@@ -254,6 +278,12 @@ class Settings:
         self.show_warning = True
         self.show_error = True
 
+        self.is_edges_visible = True
+        self.is_edges_black = True
+
+        self.is_min_visible = True
+        self.is_max_visible = True
+
         # int
         self.font_size = FONT_SIZE
         self.magnify = 5
@@ -266,10 +296,11 @@ class Settings:
         # string
         self.colormap = 'jet' # 'viridis'
 
-        self.parent.resize(1100, 700)
+        if resize:
+            self.parent.resize(1100, 700)
 
-        # not stored
-        self.dim_max = 1.0
+        if reset_dim_max: # not stored
+            self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
         self.nastran_settings = NastranSettings()
@@ -340,11 +371,11 @@ class Settings:
                           save=True, auto_type=bool)
 
         # the info/debug/gui/command preferences
-        self._set_setting(settings, setting_keys, ['show_info'],
-                          default=self.show_info,
-                          save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_debug'],
                           default=self.show_debug,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_info'],
+                          default=self.show_info,
                           save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_command'],
                           default=self.show_command,
@@ -354,6 +385,22 @@ class Settings:
                           save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_error'],
                           default=self.show_error,
+                          save=True, auto_type=bool)
+
+        # edges
+        self._set_setting(settings, setting_keys, ['is_edges_visible'],
+                          default=self.is_edges_visible,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['is_edges_black'],
+                          default=self.is_edges_black,
+                          save=True, auto_type=bool)
+
+        # min/max
+        self._set_setting(settings, setting_keys, ['is_min_visible'],
+                          default=self.is_min_visible,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['is_max_visible'],
+                          default=self.is_max_visible,
                           save=True, auto_type=bool)
 
         # the vtk panel background color
@@ -523,6 +570,14 @@ class Settings:
         settings.setValue('show_command', self.show_command)
         settings.setValue('show_warning', self.show_warning)
         settings.setValue('show_error', self.show_error)
+
+        # edges
+        settings.setValue('is_edges_visible', self.is_edges_visible)
+        settings.setValue('is_edge_black', self.is_edges_black)
+
+        # min/max
+        settings.setValue('is_min_visible', self.is_min_visible)
+        settings.setValue('is_max_visible', self.is_max_visible)
 
         # int
         settings.setValue('font_size', self.font_size)

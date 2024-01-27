@@ -12,7 +12,7 @@ from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 
 
-def show_hide_actor(actor):
+def flip_actor_visibility(actor: vtkLODActor):
     """flips the visibility for an actor"""
     is_visible = actor.GetVisibility()
     actor.SetVisibility(not is_visible)

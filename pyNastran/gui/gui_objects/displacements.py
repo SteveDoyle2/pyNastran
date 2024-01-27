@@ -283,20 +283,20 @@ class VectorTable(GuiResultCommon):
         #j = self.titles_default.index(name)
         return 3
 
-    def get_plot_value(self, i:int, resname: str) -> np.ndarray:
-        """plot returns the displacement..."""
-        if self.is_real:
-            if self.dim == 2:
-                dxyz = self.dxyz
-            elif self.dim == 3:
-                dxyz = self.dxyz[i, :]
-            else:
-                raise NotImplementedError('dim=%s' % self.dim)
-        else:
-            dxyz = self._get_complex_displacements(i)
+    #def get_plot_value(self, i:int, resname: str) -> np.ndarray:
+        #"""plot returns the displacement..."""
+        #if self.is_real:
+            #if self.dim == 2:
+                #dxyz = self.dxyz
+            #elif self.dim == 3:
+                #dxyz = self.dxyz[i, :]
+            #else:
+                #raise NotImplementedError('dim=%s' % self.dim)
+        #else:
+            #dxyz = self._get_complex_displacements(i)
 
-        assert len(dxyz.shape) == 2, dxyz.shape
-        return dxyz
+        #assert len(dxyz.shape) == 2, dxyz.shape
+        #return dxyz
 
     def _get_complex_displacements_by_phase(self, i:int, phase: float=0.) -> np.ndarray:
         """
