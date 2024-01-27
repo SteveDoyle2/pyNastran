@@ -615,7 +615,7 @@ class ResultsSidebar(QWidget):
             # pragma: no cover
            #datai = self.result_method_window.data[0]
 
-    def get_form(self):
+    def get_form(self) -> list:
         """
         TODO: At this point, we should clear out the data block and refresh it
         """

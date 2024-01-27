@@ -6491,8 +6491,7 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
         elements_array = np.vstack(elements)
     return points_array, elements_array
 
-def build_caero_paneling(model: BDF,
-                         create_secondary_actors: bool=True) -> tuple[str, list[str], Any]:
+def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
     """
     Creates the CAERO panel inputs including:
      - caero
@@ -6544,16 +6543,6 @@ def build_caero_paneling(model: BDF,
     caero_control_surface_names = []
 
     log = model.log
-    # when caeros is empty, SPLINEx/AESURF cannot be defined
-    if not create_secondary_actors or len(model.caeros) == 0:
-        caero_points = np.empty((0, 3))
-        out = (
-            has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-            ncaeros_points, ncaero_sub_points,
-            has_control_surface, box_id_to_caero_element_map, cs_box_ids,
-        )
-        return all_control_surface_name, caero_control_surface_names, out
-
     ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points = get_caero_count(model)
     caero_points, has_caero = get_caero_points(model, box_id_to_caero_element_map)
 

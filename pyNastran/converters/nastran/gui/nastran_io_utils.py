@@ -1919,492 +1919,6 @@ def map_elements1_no_quality_helper(self,
     )
     return out
 
-def map_elements3_helper(model: BDF,
-                         nid_map,
-                         nid_cp_cd,
-                         xyz_cid0,
-                         eid_map,
-                         elements: dict[int, Any],
-                         nelements: int,
-                         dtype: str):
-    """helper for ``_map_elements3``"""
-    nids_list = []
-    eids_array = np.zeros(nelements, dtype='int32')
-    pids_array = np.zeros(nelements, dtype='int32')
-    mcid_array = np.full(nelements, -1, dtype='int32')
-    material_theta_array = np.full(nelements, np.nan, dtype='float32')
-    dim_array = np.full(nelements, -1, dtype='int32')
-    nnodes_array = np.full(nelements, -1, dtype='int32')
-
-    # quality
-    min_interior_angle = np.zeros(nelements, 'float32')
-    max_interior_angle = np.zeros(nelements, 'float32')
-    dideal_theta = np.zeros(nelements, 'float32')
-    max_skew_angle = np.zeros(nelements, 'float32')
-    max_warp_angle = np.zeros(nelements, 'float32')
-    max_aspect_ratio = np.zeros(nelements, 'float32')
-    area = np.zeros(nelements, 'float32')
-    area_ratio = np.zeros(nelements, 'float32')
-    taper_ratio = np.zeros(nelements, 'float32')
-    min_edge_length = np.zeros(nelements, 'float32')
-    normals = np.full((nelements, 3), np.nan, 'float32')
-
-
-    # these normals point inwards
-    #      4
-    #    / | \
-    #   /  |  \
-    #  3-------2
-    #   \  |   /
-    #    \ | /
-    #      1
-    _ctetra_faces = (
-        (0, 1, 2), # (1, 2, 3),
-        (0, 3, 1), # (1, 4, 2),
-        (0, 3, 2), # (1, 3, 4),
-        (1, 3, 2), # (2, 4, 3),
-    )
-
-    # these normals point inwards
-    #
-    #
-    #
-    #
-    #        /4-----3
-    #       /       /
-    #      /  5    /
-    #    /    \   /
-    #   /      \ /
-    # 1---------2
-    _cpyram_faces = (
-        (0, 1, 2, 3), # (1, 2, 3, 4),
-        (1, 4, 2), # (2, 5, 3),
-        (2, 4, 3), # (3, 5, 4),
-        (0, 3, 4), # (1, 4, 5),
-        (0, 4, 1), # (1, 5, 2),
-    )
-
-    # these normals point inwards
-    #       /6
-    #     /  | \
-    #   /    |   \
-    # 3\     |     \
-    # |  \   /4-----5
-    # |    \/       /
-    # |   /  \     /
-    # |  /    \   /
-    # | /      \ /
-    # 1---------2
-    _cpenta_faces = (
-        (0, 2, 1), # (1, 3, 2),
-        (3, 4, 5), # (4, 5, 6),
-
-        (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
-        (1, 2, 5, 4), # (2, 3, 6, 5), # right
-        (0, 3, 5, 2), # (1, 4, 6, 3), # left
-    )
-
-    # these normals point inwards
-    #      8----7
-    #     /|   /|
-    #    / |  / |
-    #   /  5-/--6
-    # 4-----3   /
-    # |  /  |  /
-    # | /   | /
-    # 1-----2
-    _chexa_faces = (
-        (4, 5, 6, 7), # (5, 6, 7, 8),
-        (0, 3, 2, 1), # (1, 4, 3, 2),
-        (1, 2, 6, 5), # (2, 3, 7, 6),
-        (2, 3, 7, 6), # (3, 4, 8, 7),
-        (0, 4, 7, 3), # (1, 5, 8, 4),
-        (0, 6, 5, 4), # (1, 7, 6, 5),
-    )
-
-    ieid = 0
-    cell_offset = 0
-
-    cell_types_array = np.zeros(nelements, dtype=dtype)
-    cell_offsets_array = np.zeros(nelements, dtype=dtype)
-
-    cell_type_point = 1 # vtkVertex().GetCellType()
-    cell_type_line = 3 # vtkLine().GetCellType()
-    cell_type_tri3 = 5 # vtkTriangle().GetCellType()
-    cell_type_tri6 = 22 # vtkQuadraticTriangle().GetCellType()
-    cell_type_quad4 = 9 # vtkQuad().GetCellType()
-    #cell_type_quad8 = 23 # vtkQuadraticQuad().GetCellType()
-    cell_type_tetra4 = 10 # vtkTetra().GetCellType()
-    cell_type_tetra10 = 24 # vtkQuadraticTetra().GetCellType()
-    cell_type_pyram5 = 14 #  vtkPyramid().GetCellType()
-    #cell_type_pyram13 = 27 # vtkQuadraticPyramid().GetCellType()
-    cell_type_penta6 = 13 # vtkWedge().GetCellType()
-    cell_type_penta15 = 26 #  vtkQuadraticWedge().GetCellType()
-    cell_type_hexa8 = 12 # vtkHexahedron().GetCellType()
-    cell_type_hexa20 = 25 #  vtkQuadraticHexahedron().GetCellType()
-
-    # per gui/testing_methods.py/create_vtk_cells_of_constant_element_type
-    #1  = vtkVertex().GetCellType()
-    #3  = vtkLine().GetCellType()
-    #5  = vtkTriangle().GetCellType()
-    #9  = vtkQuad().GetCellType()
-    #10 = vtkTetra().GetCellType()
-    #vtkPenta().GetCellType()
-    #vtkHexa().GetCellType()
-    #vtkPyram().GetCellType()
-
-    skipped_etypes = set()
-    all_nids = nid_cp_cd[:, 0]
-    ieid = 0
-    for eid, elem in sorted(elements.items()):
-        if ieid % 5000 == 0 and ieid > 0:
-            print('  map_elements = %i' % ieid)
-        etype = elem.type
-        nnodes = None
-        nids = None
-        pid = None
-        cell_type = None
-        inids = None
-
-        dideal_thetai = np.nan
-        min_thetai = np.nan
-        max_thetai = np.nan
-        #max_thetai = np.nan
-        max_skew = np.nan
-        max_warp = np.nan
-        aspect_ratio = np.nan
-        areai = np.nan
-        area_ratioi = np.nan
-        taper_ratioi = np.nan
-        min_edge_lengthi = np.nan
-        normali = np.nan
-        if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3', 'CPLSTS3']:
-            nids = elem.nodes
-            pid = elem.pid
-            cell_type = cell_type_tri3 # 5
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2, p3 = xyz_cid0[inids, :]
-            out = tri_quality(p1, p2, p3)
-            (areai, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-            normali = np.cross(p1 - p2, p1 - p3)
-            if isinstance(elem.theta_mcid, float):
-                material_theta_array[ieid] = elem.theta_mcid
-            else:
-                mcid_array[ieid] = elem.theta_mcid
-            nnodes = 3
-            dim = 2
-
-        elif etype in {'CQUAD4', 'CQUADR', 'CPLSTN4', 'CPLSTS4', 'CQUADX4',
-                       'CQUAD1'}:  # nastran95
-            nids = elem.nodes
-            pid = elem.pid
-            cell_type = cell_type_quad4 #9
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2, p3, p4 = xyz_cid0[inids, :]
-            out = quad_quality(elem, p1, p2, p3, p4)
-            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
-            normali = np.cross(p1 - p3, p2 - p4)
-            if isinstance(elem.theta_mcid, float):
-                material_theta_array[ieid] = elem.theta_mcid
-            else:
-                mcid_array[ieid] = elem.theta_mcid
-            nnodes = 4
-            dim = 2
-
-        elif etype == 'CTRIA6':
-            nids = elem.nodes
-            pid = elem.pid
-            if None in nids:
-                cell_type = cell_type_tri3
-                inids = np.searchsorted(all_nids, nids[:3])
-                nids = nids[:3]
-                p1, p2, p3 = xyz_cid0[inids, :]
-                nnodes = 3
-            else:
-                cell_type = cell_type_tri6
-                inids = np.searchsorted(all_nids, nids)
-                p1, p2, p3, p4, unused_p5, unused_p6 = xyz_cid0[inids, :]
-                nnodes = 6
-            out = tri_quality(p1, p2, p3)
-            (areai, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-            normali = np.cross(p1 - p2, p1 - p3)
-            if isinstance(elem.theta_mcid, float):
-                material_theta_array[ieid] = elem.theta_mcid
-            else:
-                mcid_array[ieid] = elem.theta_mcid
-            dim = 2
-        elif etype == 'CQUAD8':
-            nids = elem.nodes
-            pid = elem.pid
-            if None in nids:
-                cell_type = cell_type_tri3
-                inids = np.searchsorted(all_nids, nids[:4])
-                nids = nids[:4]
-                p1, p2, p3, p4 = xyz_cid0[inids, :]
-                nnodes = 4
-            else:
-                cell_type = cell_type_tri6
-                inids = np.searchsorted(all_nids, nids)
-                p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
-                nnodes = 8
-            out = quad_quality(elem, p1, p2, p3, p4)
-            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
-            normali = np.cross(p1 - p3, p2 - p4)
-            if isinstance(elem.theta_mcid, float):
-                material_theta_array[ieid] = elem.theta_mcid
-            else:
-                mcid_array[ieid] = elem.theta_mcid
-            nnodes = 4
-            dim = 2
-
-        elif etype == 'CSHEAR':
-            nids = elem.nodes
-            pid = elem.pid
-            cell_type = cell_type_quad4 #9
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2, p3, p4 = xyz_cid0[inids, :]
-            out = quad_quality(elem, p1, p2, p3, p4)
-            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
-            normali = np.cross(p1 - p3, p2 - p4)
-            nnodes = 4
-            dim = 2
-
-        elif etype == 'CTETRA':
-            nids = elem.nodes
-            pid = elem.pid
-            if None in nids:
-                cell_type = cell_type_tetra4
-                nids = nids[:4]
-                nnodes = 4
-            else:
-                cell_type = cell_type_tetra10
-                nnodes = 10
-            inids = np.searchsorted(all_nids, nids)
-            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                _ctetra_faces, nids, nid_map, xyz_cid0)
-            dim = 3
-
-        elif etype == 'CHEXA':
-            nids = elem.nodes
-            pid = elem.pid
-            if None in nids:
-                cell_type = cell_type_hexa8
-                nids = nids[:8]
-                nnodes = 8
-            else:
-                cell_type = cell_type_hexa20
-                nnodes = 20
-            inids = np.searchsorted(all_nids, nids)
-            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                _chexa_faces, nids, nid_map, xyz_cid0)
-            dim = 3
-
-        elif etype == 'CPENTA':
-            nids = elem.nodes
-            pid = elem.pid
-
-            if None in nids:
-                cell_type = cell_type_penta6
-                nids = nids[:6]
-                nnodes = 6
-            else:
-                cell_type = cell_type_penta15
-                nnodes = 15
-
-            inids = np.searchsorted(all_nids, nids)
-            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                _cpenta_faces, nids, nid_map, xyz_cid0)
-            dim = 3
-        elif etype == 'CPYRAM':
-            # TODO: assuming 5
-            nids = elem.nodes
-            pid = elem.pid
-            if None in nids:
-                cell_type = cell_type_pyram5
-                nids = nids[:5]
-                nnodes = 5
-            else:
-                cell_type = cell_type_penta15
-                nnodes = 15
-            inids = np.searchsorted(all_nids, nids)
-            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                _cpyram_faces, nids, nid_map, xyz_cid0)
-            dim = 3
-        elif etype in ['CELAS2', 'CELAS4', 'CDAMP4']:
-            # these can have empty nodes and have no property
-            # CELAS1: 1/2 GRID/SPOINT and pid
-            # CELAS2: 1/2 GRID/SPOINT, k, ge, and s
-            # CELAS3: 1/2 SPOINT and pid
-            # CELAS4: 1/2 SPOINT and k
-            nids = elem.nodes
-            assert nids[0] != nids[1]
-            if None in nids:
-                assert nids[0] is not None, nids
-                assert nids[1] is None, nids
-                nids = [nids[0]]
-                cell_type = cell_type_point
-                nnodes = 1
-            else:
-                nids = elem.nodes
-                assert nids[0] != nids[1]
-                cell_type = cell_type_line
-                nnodes = 2
-            inids = np.searchsorted(all_nids, nids)
-            pid = 0
-            dim = 0
-        elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                       'CELAS1', 'CELAS3',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
-                       'CFAST', 'CGAP', 'CVISC']:
-            nids = elem.nodes
-            assert nids[0] != nids[1]
-            assert None not in nids, 'nids=%s\n%s' % (nids, elem)
-            pid = elem.pid
-            cell_type = cell_type_line
-            inids = np.searchsorted(all_nids, nids)
-            nnodes = 2
-            dim = 0
-        elif etype in ['CBAR', 'CBEAM']:
-            nids = elem.nodes
-            pid = elem.pid
-            pid_ref = model.Property(pid)
-            areai = pid_ref.Area()
-            cell_type = cell_type_line
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2 = xyz_cid0[inids, :]
-            min_edge_lengthi = norm(p2 - p1)
-            nnodes = 2
-            dim = 1
-        elif etype in ['CROD', 'CTUBE']:
-            nids = elem.nodes
-            pid = elem.pid
-            pid_ref = model.Property(pid)
-            areai = pid_ref.Area()
-            cell_type = cell_type_line
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2 = xyz_cid0[inids, :]
-            min_edge_lengthi = norm(p2 - p1)
-            nnodes = 2
-            dim = 1
-        elif etype == 'CONROD':
-            nids = elem.nodes
-            areai = elem.Area()
-            pid = 0
-            cell_type = cell_type_line
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2 = xyz_cid0[inids, :]
-            min_edge_lengthi = norm(p2 - p1)
-            nnodes = 2
-            dim = 1
-        #------------------------------
-        # rare
-        #elif etype == 'CIHEX1':
-            #nids = elem.nodes
-            #pid = elem.pid
-            #cell_type = cell_type_hexa8
-            #inids = np.searchsorted(all_nids, nids)
-            #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                #_chexa_faces, nids, nid_map, xyz_cid0)
-            #nnodes = 8
-            #dim = 3
-        elif etype == 'CHBDYE':
-            #self.eid_map[eid] = ieid
-            eid_solid = elem.eid2
-            side = elem.side
-            element_solid = model.elements[eid_solid]
-
-            mapped_inids = SIDE_MAP[element_solid.type][side]
-            side_inids = [nid - 1 for nid in mapped_inids]
-            nodes = element_solid.node_ids
-
-            pid = 0
-            nnodes = len(side_inids)
-            nids = [nodes[inid] for inid in side_inids]
-            inids = np.searchsorted(all_nids, nids)
-
-            if len(side_inids) == 4:
-                cell_type = cell_type_quad4
-            else:
-                msg = 'element_solid:\n%s' % (str(element_solid))
-                msg += 'mapped_inids = %s\n' % mapped_inids
-                msg += 'side_inids = %s\n' % side_inids
-                msg += 'nodes = %s\n' % nodes
-                #msg += 'side_nodes = %s\n' % side_nodes
-                raise NotImplementedError(msg)
-        elif etype == 'GENEL':
-            nids = []
-            if len(elem.ul_nodes):
-                nids.append(elem.ul_nodes)
-            if len(elem.ud_nodes):
-                nids.append(elem.ud_nodes)
-            nids = np.unique(np.hstack(nids))
-            #print(elem.get_stats())
-            nids = nids[:2]
-
-            areai = np.nan
-            pid = 0
-            cell_type = cell_type_line
-            inids = np.searchsorted(all_nids, nids)
-            p1, p2 = xyz_cid0[inids, :]
-            min_edge_lengthi = norm(p2 - p1)
-            nnodes = len(nids)
-            dim = 1
-        else:
-            #raise NotImplementedError(elem)
-            skipped_etypes.add(etype)
-            nelements -= 1
-            continue
-        #for nid in nids:
-            #assert isinstance(nid, integer_types), 'not an integer. nids=%s\n%s' % (nids, elem)
-            #assert nid != 0, 'not a positive integer. nids=%s\n%s' % (nids, elem)
-
-        assert inids is not None
-        if not np.array_equal(all_nids[inids], nids):
-            msg = 'all_nids[inids]=%s nids=%s\n%s' % (all_nids[inids], nids, elem)
-            raise RuntimeError(msg)
-
-        assert cell_type is not None
-        assert cell_offset is not None
-        assert eid is not None
-        assert pid is not None
-        assert dim is not None
-        assert nnodes is not None
-        nids_list.append(nnodes)
-        nids_list.extend(inids)
-        normals[ieid] = normali
-        eids_array[ieid] = eid
-        pids_array[ieid] = pid
-        dim_array[ieid] = dim
-        cell_types_array[ieid] = cell_type
-        cell_offsets_array[ieid] = cell_offset  # I assume the problem is here
-        cell_offset += nnodes + 1
-        eid_map[eid] = ieid
-
-        min_interior_angle[ieid] = min_thetai
-        max_interior_angle[ieid] = max_thetai
-        dideal_theta[ieid] = dideal_thetai
-        max_skew_angle[ieid] = max_skew
-        max_warp_angle[ieid] = max_warp
-        max_aspect_ratio[ieid] = aspect_ratio
-        area[ieid] = areai
-        area_ratio[ieid] = area_ratioi
-        taper_ratio[ieid] = taper_ratioi
-        min_edge_length[ieid] = min_edge_lengthi
-        ieid += 1
-    out = (
-        skipped_etypes,
-        nids_list, all_nids,
-        nelements, eids_array, pids_array, mcid_array, material_theta_array, dim_array, nnodes_array,
-        min_interior_angle, max_interior_angle, dideal_theta, max_skew_angle, max_warp_angle,
-        max_aspect_ratio, area, area_ratio, taper_ratio, min_edge_length, normals,
-        cell_types_array, cell_offsets_array, )
-    return out
-
 def create_monpnt(gui: MainWindow,
                   model: BDF,
                   xyz_cid0: np.ndarray,
@@ -2463,7 +1977,7 @@ def create_monpnt(gui: MainWindow,
                 create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
         elif aecomp.type == 'AECOMPL':
             log.warning(f'skipping:\n{monpnt}\nbecause AECOMPL is not supported{aecomp}')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(aecomp)
 
 
@@ -2483,14 +1997,43 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     if not nastran_settings.mpc_force:
         exclude_results.add('mpc_forces')
 
-    if not nastran_settings.force:
-        exclude_results.add('element_forces')
-
     plate_etypes = [
         'ctria3', 'ctria6', 'ctriar',
         'cquad4', 'cquad8', 'cquadr',
     ]
-    bar_types = ['crod', 'ctube', 'cbar', 'cbeam']
+    rod_types = ['crod', 'ctube', 'conrod']
+    bar_types = ['cbar']
+    beam_types = ['cbeam']
+    spring_types = ['celas1', 'celas2', 'celas3', 'celas4']
+
+    #---------------------------------------------------------------------------
+    flag = 'force'
+    if not nastran_settings.force:
+        exclude_results.add('element_forces')
+
+    if not nastran_settings.spring_force:
+        names = {f'{name}_{flag}' for name in spring_types}
+        exclude_results.add(names)
+    #if not nastran_settings.rod_force:
+        #names = {f'{name}_{flag}' for name in rod_types}
+        #exclude_results.add(names)
+    if not nastran_settings.bar_force:
+        names = {f'{name}_{flag}' for name in bar_types}
+        exclude_results.add(names)
+    if not nastran_settings.beam_force:
+        names = {f'{name}_{flag}' for name in beam_types}
+        exclude_results.add(names)
+
+    if not nastran_settings.plate_force:
+        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        exclude_results.add(names)
+
+    if not nastran_settings.gap_force:
+        exclude_results.add(['cgap_force'])
+    if not nastran_settings.cbush_force:
+        exclude_results.add(['cbush_force'])
+
+    #---------------------------------------------------------------------------
     flag = 'stress'
     if not nastran_settings.stress:
         exclude_results.add(flag)
@@ -2500,10 +2043,21 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     if not nastran_settings.plate_stress:
         names = {f'{name}_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
+
+    if not nastran_settings.spring_stress:
+        names = {f'{name}_{flag}' for name in spring_types}
+        exclude_results.add(names)
+    if not nastran_settings.rod_stress:
+        names = {f'{name}_{flag}' for name in rod_types}
+        exclude_results.add(names)
     if not nastran_settings.bar_stress:
         names = {f'{name}_{flag}' for name in bar_types}
         exclude_results.add(names)
+    if not nastran_settings.beam_stress:
+        names = {f'{name}_{flag}' for name in beam_types}
+        exclude_results.add(names)
 
+    #---------------------------------------------------------------------------
     flag = 'strain'
     if not nastran_settings.strain:
         exclude_results.add(flag)
@@ -2513,9 +2067,20 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     if not nastran_settings.plate_strain:
         names = {f'{name}_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
+
+    if not nastran_settings.spring_strain:
+        names = {f'{name}_{flag}' for name in spring_types}
+        exclude_results.add(names)
+    if not nastran_settings.rod_strain:
+        names = {f'{name}_{flag}' for name in rod_types}
+        exclude_results.add(names)
     if not nastran_settings.bar_strain:
         names = {f'{name}_{flag}' for name in bar_types}
         exclude_results.add(names)
+    if not nastran_settings.beam_strain:
+        names = {f'{name}_{flag}' for name in beam_types}
+        exclude_results.add(names)
+    #---------------------------------------------------------------------------
 
     if not nastran_settings.strain_energy:
         exclude_results.add('strain_energy*')
