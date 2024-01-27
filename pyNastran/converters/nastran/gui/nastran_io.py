@@ -548,7 +548,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.nnodes = ngui_nodes
         self.nelements = nelements  # approximate...
 
-        all_control_surface_name, caero_control_surface_names, out = self.make_caeros(model)
+        out = self.make_caeros(model)
         (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
          ncaeros_points, ncaero_sub_points,
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
@@ -954,7 +954,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 ncaeros_points, ncaero_sub_points,
                 has_control_surface, box_id_to_caero_element_map, cs_box_ids,
             )
-            return all_control_surface_name, caero_control_surface_names, out
+            return out
 
         all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
         gui: MainWindow = self.gui
