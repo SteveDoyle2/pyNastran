@@ -777,6 +777,16 @@ class PreferencesWindow(PyDialog):
 
         if self.win_parent is not None:
             settings = self.settings
+            is_min = settings.is_min_visible
+            is_max = settings.is_max_visible
+            is_edges_black = settings.is_edges_black
+            is_edges_visible = settings.is_edges_visible
+            settings.reset_settings(resize=False, reset_dim_max=False)
+
+
+            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
+            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
+
             settings.set_highlight_color(self.highlight_color_float, render=False)
             settings.set_text_color(self.text_color_float, render=False)
             settings.set_background_color(self.background_color1_float, render=False)
@@ -1038,19 +1048,19 @@ class PreferencesWindow(PyDialog):
         set_label_color(color_edit, color_int)
         return True, color_int, color_float
 
-    def on_picker_size(self):
+    def on_picker_size(self) -> None:
         self._picker_size = float_locale(self.picker_size_edit.text())
         if self.win_parent is not None:
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
 
-    def on_parallel_projection(self):
+    def on_parallel_projection(self) -> None:
         """set the nastran properties preferences"""
         is_checked = self.parallel_projection_edit.isChecked()
         if self.win_parent is not None:
             self.settings.set_parallel_projection(is_checked)
 
-    def on_magnify(self, value=None):
+    def on_magnify(self, value=None) -> None:
         if value is None:
             value = self.magnify_edit.value()
         self._magnify = value
@@ -1058,18 +1068,18 @@ class PreferencesWindow(PyDialog):
             self.settings.set_magnify(value)
 
     #---------------------------------------------------------------------------
-    def on_coord_scale(self, value=None):
+    def on_coord_scale(self, value=None) -> None:
         if value is None:
             value = self.coord_scale_edit.value()
         self._coord_scale = value
         if self.win_parent is not None:
             self.settings.set_coord_scale(value / 100.)
 
-    def on_default_coord_scale(self):
+    def on_default_coord_scale(self) -> None:
         self.coord_scale_edit.setValue(self._default_coord_scale)
         self.on_coord_scale(self._default_coord_scale)
 
-    def on_coord_text_scale(self, value=None):
+    def on_coord_text_scale(self, value=None) -> None:
         if value is None:
             value = self.coord_text_scale_edit.value()
         self._coord_text_scale = value
@@ -1081,23 +1091,23 @@ class PreferencesWindow(PyDialog):
         self.on_coord_text_scale(self._default_coord_text_scale)
 
     #---------------------------------------------------------------------------
-    def on_default_font_size(self):
+    def on_default_font_size(self) -> None:
         self.font_size_edit.setValue(self._default_font_size)
         self.on_font(self._default_font_size)
 
-    def on_default_annotation_size(self):
+    def on_default_annotation_size(self) -> None:
         self.annotation_size_edit.setValue(self._default_annotation_size)
         self.on_annotation_size(self._default_annotation_size)
 
-    def on_default_clipping_min(self):
+    def on_default_clipping_min(self) -> None:
         self.clipping_min_edit.setText(func_str(self._default_clipping_min))
         self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def on_default_clipping_max(self):
+    def on_default_clipping_max(self) -> None:
         self.clipping_max_edit.setText(func_str(self._default_clipping_max))
         self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def on_validate(self):
+    def on_validate(self) -> bool:
         font_size_value, flag0 = check_float(self.font_size_edit)
         annotation_size_value, flag1 = check_float(self.annotation_size_edit)
 
@@ -1149,12 +1159,12 @@ def set_label_color(color_edit: QPushButtonColor,
         #"border:1px solid rgb(255, 170, 255); "
         "}")
 
-def check_float(cell):
+def check_float(cell) -> tuple[str, bool]:
     text = cell.text()
     value = float_locale(text)
     return value, True
 
-def check_label_float(cell):
+def check_label_float(cell) -> tuple[Optional[float], bool]:
     text = cell.text()
     try:
         value = eval_float_from_string(text)

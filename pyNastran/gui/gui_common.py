@@ -72,7 +72,7 @@ from pyNastran.utils.numpy_utils import integer_types
 Tool = tuple[str, str, str, Optional[str], str, Callable]
 BANNED_SHORTCUTS = {}
 
-
+from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults, ElementalTableResults)
@@ -181,7 +181,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
-        settings = self.settings
+        settings: Settings = self.settings
         self.res_widget = ResultsSidebar(
             self,
             left_click_callback=self._set_methods_by_icase,
@@ -365,8 +365,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
 
 
-                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
+                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edge_visibility),
+                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_flip_edge_color),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
                 ('anti_alias_1', '1x', '', None, 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1)),
                 ('anti_alias_2', '2x', '', None, 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2)),
@@ -748,15 +748,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             print(name, msg2)
             return
 
-        if 'DEBUG' in log_type and not self.settings.show_debug:
+        settings = self.settings
+        if 'DEBUG' in log_type and not settings.show_debug:
             return
-        elif 'INFO' in log_type and not self.settings.show_info:
+        elif 'INFO' in log_type and not settings.show_info:
             return
-        elif 'COMMAND' in log_type and not self.settings.show_command:
+        elif 'COMMAND' in log_type and not settings.show_command:
             return
-        elif 'WARNING' in log_type and not self.settings.show_warning:
+        elif 'WARNING' in log_type and not settings.show_warning:
             return
-        elif 'ERROR' in log_type and not self.settings.show_error:
+        elif 'ERROR' in log_type and not settings.show_error:
             return
 
         if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
@@ -952,7 +953,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.load_nastran_geometry(None, None)
 
         #for cid, axes in self.axes.items():
-            #self.rend.AddActor(axes)
+            #rend.AddActor(axes)
         self.add_geometry()
         if nframes == 2:
             rend.AddActor(self.geom_actor)
@@ -968,11 +969,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.geometry_properties['main'] = geom_props
 
         #self.addAltGeometry()
-        self.rend.GetActiveCamera().ParallelProjectionOn()
-        self.rend.SetBackground(*self.settings.background_color)
+        rend = self.rend
+        settings: Settings = self.settings
+        if settings.use_parallel_projection:
+            rend.GetActiveCamera().ParallelProjectionOn()
+        rend.SetBackground(*settings.background_color)
         #self.rend.SetBackground2(*self.background_color2)
 
-        self.rend.ResetCamera()
+        rend.ResetCamera()
         self.mouse_actions.set_style_as_trackball()
         self._build_vtk_frame_post()
 
@@ -981,34 +985,48 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self._simulate_key_press('r')
         self.vtk_interactor.Render()
 
-    def on_flip_edges(self):
+    def on_flip_edge_visibility(self) -> None:
         """turn edges on/off"""
-        self.is_edges = not self.is_edges
-        self.edge_actor.SetVisibility(self.is_edges)
+        settings = self.settings
+        is_edges_visible = not settings.is_edges_visible
+        self.on_set_edge_visibility(is_edges_visible, render=True)
+
+    def on_flip_edge_color(self) -> None:
+        settings = self.settings
+        is_edges_black = not settings.is_edges_black
+        self.on_set_edge_color(is_edges_black, render=True)
+
+    def on_set_edge_visibility(self, is_edges_visible: bool,
+                               render: bool=True) -> None:
+        self.settings.is_edges_visible = is_edges_visible
+        self.edge_actor.SetVisibility(is_edges_visible)
         # cart3d edge color isn't black...
         #self.edge_actor.GetProperty().SetColor(0, 0, 0)
         self.edge_actor.Modified()
         #self.widget.Update()
         #self._update_camera()
-        self.Render()
+        if render:
+            self.Render()
         #self.refresh()
-        self.log_command('on_flip_edges()')
+        self.log_command(f'on_set_edge_visibility(is_edges_visible={is_edges_visible}, render={render})')
 
-    def on_set_edge_visibility(self):
-        #self.edge_actor.SetVisibility(self.is_edges_black)
-        self.is_edges_black = not self.is_edges_black
-        if self.is_edges_black:
-            prop = self.edge_actor.GetProperty()
+    def on_set_edge_color(self, is_edges_black: bool,
+                          render: bool=True) -> None:
+        self.settings.is_edges_black = is_edges_black
+
+        prop = self.edge_actor.GetProperty()
+        if is_edges_black:
             prop.EdgeVisibilityOn()
             self.edge_mapper.SetLookupTable(self.color_function_black)
         else:
-            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
             self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_actor.Modified()
         prop.Modified()
-        self.vtk_interactor.Render()
-        self.log_command('on_set_edge_visibility()')
+        if render:
+            self.vtk_interactor.Render()
+        self.log_command(f'on_set_edge_color(is_edges_black={is_edges_black}, render={render})')
+        return
 
     #---------------------------------------------------------------------
     # groups

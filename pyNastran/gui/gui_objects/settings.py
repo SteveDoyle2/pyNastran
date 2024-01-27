@@ -222,7 +222,7 @@ class Settings:
         self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
 
         self.show_info = True
-        self.show_debug = True
+        self.show_debug = False
         self.show_command = True
         self.show_warning = True
         self.show_error = True
@@ -273,7 +273,7 @@ class Settings:
 
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
-        self.show_debug = True
+        self.show_debug = False
         self.show_command = True
         self.show_warning = True
         self.show_error = True
