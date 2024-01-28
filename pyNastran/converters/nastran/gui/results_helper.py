@@ -782,16 +782,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
                 log, use_new_sidebar_objects, use_new_terms, is_stress=True)
-            assert isinstance(icase, int), icase
 
             icase = get_plate_stress_strains(
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_old_sidebar_objects, is_stress=True)
-            #assert icase >= icasei
-            #icasei = icase
-            assert isinstance(icase, int), icase
 
             icase = get_plate_stress_strains(
                 log, stop_on_failure,
@@ -800,10 +796,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 use_old_sidebar_objects, is_stress=True,
                 prefix='modal_contribution',
             )
-            assert isinstance(icase, int), icase
-            #assert icase >= icasei
-            #icasei = icase
-            #assert len(cases) == icase
 
         if nastran_settings.composite_plate_stress:
             icase = get_composite_plate_stress_strains2(
@@ -811,7 +803,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 log, use_new_sidebar_objects, is_stress=True)
-            assert isinstance(icase, int), icase
 
             icase = get_composite_plate_stress_strains(
                 log, stop_on_failure,
@@ -819,28 +810,24 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict, header_dict, keys_map,
                 self.stress[key].composite_data_dict, log,
                 use_old_sidebar_objects, is_stress=True)
-            assert isinstance(icase, int), icase
 
         if nastran_settings.rod_stress:
             icase = get_rod_stress_strains(
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
-            assert isinstance(icase, int), icase
 
         if nastran_settings.bar_stress:
             icase = get_bar_stress_strains(
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
-            assert isinstance(icase, int), icase
 
         if nastran_settings.beam_stress:
             icase = get_beam_stress_strains(
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
-            assert isinstance(icase, int), icase
 
         if nastran_settings.solid_stress:
             icase = get_solid_stress_strains2(
@@ -854,14 +841,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_old_sidebar_objects, is_stress=True)
-            assert isinstance(icase, int), icase
 
         if nastran_settings.spring_stress:
             icase = get_spring_stress_strains(
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
-            assert isinstance(icase, int), icase
+        assert isinstance(icase, int), icase
         return icase
 
     def _fill_op2_centroidal_force(self, cases: Cases, model: OP2,

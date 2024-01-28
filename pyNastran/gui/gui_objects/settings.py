@@ -439,11 +439,14 @@ class Settings:
             recent_files = settings.value("recent_files", default=self.recent_files)
         except (TypeError, AttributeError):
             pass
-        recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
-                         if os.path.exists(fname)]
+        if not isinstance(recent_files, int):
+            # yeah seriously...it just returns 0
+            recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
+                             if os.path.exists(fname)]
 
-        #  only save 10 files
-        self.recent_files = recent_files2[:NFILES_TO_SAVE]
+            #  only save 10 files
+            self.recent_files = recent_files2[:NFILES_TO_SAVE]
+
         self._load_nastran_settings(settings, setting_keys)
 
         #w = screen_shape.width()

@@ -1,8 +1,10 @@
 # coding: utf-8
 from __future__ import annotations
+import sys
+import traceback
 from copy import deepcopy
-from collections import defaultdict
 from functools import wraps
+from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -43,6 +45,7 @@ def nocrash_log(func):
             raise
         except Exception as e:
             #print('dont crash...')
+            traceback.print_exc(file=sys.stdout)
             log.error(str(e))
             if stop_on_failure:
                 raise
@@ -813,6 +816,12 @@ def get_plate_stress_strains2(cases: CasesDict,
         plate_case = result[key]
         if plate_case.is_complex:
             continue
+        eids = np.unique(plate_case.element_node[:, 0])
+        common_eids = np.intersect1d(element_id, eids)
+        if len(common_eids) == 0:
+            continue
+        #ieids = np.unique(np.searchsorted(element_id, eids))
+        #if element_id[ieids[0]] != eids[0]
         plate_cases.append(plate_case)
 
     if len(plate_cases) == 0:
@@ -1347,6 +1356,10 @@ def get_solid_stress_strains2(cases: CasesDict,
     for solid_case in solids:
         if solid_case.is_complex:
             continue
+        solid_eids = np.unique(solid_case.element_node[:, 0])
+        common_eids = np.intersect1d(element_id, solid_eids)
+        if len(common_eids) == 0:
+            continue
         solid_cases.append(solid_case)
 
     if len(solid_cases) == 0:
@@ -1534,6 +1547,11 @@ def get_solid_stress_strains(cases: CasesDict,
         #print('eids =', eids, len(eids))
         #print('eidsi =', eidsi, eids)
         #print(f'------------adding i={i} for {case.element_name}-----------')
+        solid_element_id = np.unique(case.element_node[:, 0])
+        common_eids = np.intersect1d(eids, solid_element_id)
+        if len(common_eids) == 0:
+            continue
+
         solid_cases.append(case)
         solid_ieids.append(i)
     if not solid_ieids:

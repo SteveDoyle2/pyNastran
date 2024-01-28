@@ -2580,6 +2580,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             icase += 1
 
                 if np.abs(spcd.max() - spcd.min()) > 0.0:
+                    # SPCD has displacements only
                     t123 = spcd[:, :3]
                     tnorm = norm(t123, axis=1)
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
@@ -2589,26 +2590,30 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     title = 'SPCD'
                     index_to_base_title_annotation = {
                         0: {'title': 'T_', 'corner': 'T_'},
-                        1: {'title': 'R_', 'corner': 'R_'},
+                        #3: {'title': 'R_', 'corner': 'R_'},
                     }
+                    methods_txyz_rxyz = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
                     enforced_txyz_res2 = ForceResults2(
                         subcase_id,
                         self.node_ids, self.xyz_cid0,
                         force_case, title,
+                        methods_txyz_rxyz=methods_txyz_rxyz,
                         index_to_base_title_annotation=index_to_base_title_annotation,
                         t123_offset=0, dim_max=1.0, data_format='%g',
                         is_variable_data_format=False,
                         nlabels=None, labelsize=None, ncolors=None, colormap='',
-                        set_max_min=False, uname='NastranGeometry-ForceResults2')
-                    enforced_rxyz_res2 = ForceResults2(
-                        subcase_id,
-                        self.node_ids, self.xyz_cid0,
-                        force_case, title,
-                        index_to_base_title_annotation=index_to_base_title_annotation,
-                        t123_offset=3, dim_max=1.0, data_format='%g',
-                        is_variable_data_format=False,
-                        nlabels=None, labelsize=None, ncolors=None, colormap='',
-                        set_max_min=False, uname='NastranGeometry-ForceResults2')
+                        set_max_min=False, uname='NastranGeometry-SPCD-TXYZ_ForceResults2')
+
+                    #enforced_rxyz_res2 = ForceResults2(
+                        #subcase_id,
+                        #self.node_ids, self.xyz_cid0,
+                        #force_case, title,
+                        #methods_txyz_rxyz=methods_txyz_rxyz,
+                        #index_to_base_title_annotation=index_to_base_title_annotation,
+                        #t123_offset=3, dim_max=1.0, data_format='%g',
+                        #is_variable_data_format=False,
+                        #nlabels=None, labelsize=None, ncolors=None, colormap='',
+                        #set_max_min=False, uname='NastranGeometry-SPCD-RXYZ_Results2')
 
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
                                            location='node', scalar=spcd[:, 0])
@@ -2623,24 +2628,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
                         form0.append(('SPCD Translation', icase, []))
                         icase += 1
-
-                        cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
-                        form0.append(('SPCD Rotation', icase, []))
-                        icase += 1
+                        #cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
+                        #form0.append(('SPCD Rotation', icase, []))
+                        #icase += 1
 
                     if settings.use_old_sidebar_objects:
                         cases[icase] = (spcd_x_res, (0, 'SPCDx'))
                         form0.append(('SPCDx', icase, []))
                         icase += 1
-
                         cases[icase] = (spcd_y_res, (0, 'SPCDy'))
                         form0.append(('SPCDy', icase, []))
                         icase += 1
-
                         cases[icase] = (spcd_z_res, (0, 'SPCDz'))
                         form0.append(('SPCDz', icase, []))
                         icase += 1
-
                         cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
                         form0.append(('SPCD XYZ', icase, []))
                         icase += 1

@@ -395,14 +395,19 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.stop_on_failure = True
         test.load_nastran_geometry(bdf_filename)
-        assert len(test.result_cases) == 60, len(test.result_cases)
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 60, len(test.result_cases)
+        else:
+            # we lost 3 cases for SPCD
+            assert len(test.result_cases) == 57, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
         if USE_OLD_SIDEBAR_OBJS:
             assert len(test.result_cases) == 759, len(test.result_cases)
         elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 643, len(test.result_cases)
+            assert len(test.result_cases) == 640, len(test.result_cases)
         else:
-            assert len(test.result_cases) == 687, len(test.result_cases)  # faked
+            assert len(test.result_cases) == 684, len(test.result_cases)  # faked?
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
