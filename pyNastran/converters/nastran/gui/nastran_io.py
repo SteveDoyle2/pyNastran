@@ -103,6 +103,7 @@ from pyNastran.gui.qt_files.colors import (
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult # , NormalResult
 from pyNastran.gui.gui_objects.displacements import ForceTableResults # , ElementalTableResults
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 
 
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
@@ -240,7 +241,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         gui: MainWindow = self.gui
         settings = gui.settings.nastran_settings
         names = ['caero', 'caero_subpanels']
-        geometry_properties = gui._get_geometry_properties_by_name(gui, names)
+        geometry_properties = _get_geometry_properties_by_name(gui, names)
 
         settings.show_caero_sub_panels = not settings.show_caero_sub_panels
         if settings.show_caero_actor:
@@ -2463,6 +2464,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          - Temperature(BOTH)
 
         """
+        gui: MainWindow = self.gui
+        settings: Settings = gui.settings
         #if not self.plot_applied_loads:
             #model.log.debug('self.plot_applied_loads=False')
             #return icase
@@ -2494,11 +2497,28 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     fxyz = forces[:, :3]
                     fscalar = np.linalg.norm(fxyz, axis=1)
                     if fscalar.max() > 0:
-                        titles = ['Force XYZ']
+                        title = 'Force'
+                        titles = [title + ' XYZ']
                         headers = titles
                         assert fxyz.shape[1] == 3, fxyz.shape
                         assert fxyz.shape[0] == len(fscalar)
                         scales = [1.0]
+
+                        methods_txyz_rxyz = ['Fx', 'Fy', 'Fz']
+                        index_to_base_title_annotation = {
+                            0: {'title': 'F_', 'corner': 'F_'},
+                        }
+                        force_case = Case2D(self.node_ids, fxyz)
+                        force_xyz_res2 = ForceResults2(
+                            subcase_id,
+                            self.node_ids, self.xyz_cid0,
+                            force_case, title,
+                            index_to_base_title_annotation=index_to_base_title_annotation,
+                            t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz,
+                            dim_max=1.0, data_format='%g',
+                            is_variable_data_format=False,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='',
+                            set_max_min=False, uname='NastranGeometry-ForceResults2')
 
                         force_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, fxyz, fscalar,
@@ -2507,19 +2527,41 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             set_max_min=False, uname='NastranGeometry')
                         force_xyz_res.save_defaults()
 
-                        cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
-                        form0.append(('Force XYZ', icase, []))
-                        icase += 1
+                        if settings.use_new_sidebar_objects:
+                            cases[icase] = (force_xyz_res2, (0, 'Force XYZ'))
+                            form0.append(('Force XYZ', icase, []))
+                            icase += 1
+                        if settings.use_old_sidebar_objects:
+                            cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
+                            form0.append(('Force XYZ', icase, []))
+                            icase += 1
 
                 if np.abs(moments.max() - moments.min()) > 0.0:
                     mxyz = moments[:, :3]
                     mscalar = np.linalg.norm(mxyz, axis=1)
                     if mscalar.max() > 0:
-                        titles = ['Moment XYZ']
+                        title = 'Moment'
+                        titles = [title + ' XYZ']
                         headers = titles
                         assert mxyz.shape[1] == 3, mxyz.shape
                         assert mxyz.shape[0] == len(mscalar)
                         scales = [1.0]
+
+                        index_to_base_title_annotation = {
+                            0: {'title': 'M_', 'corner': 'M_'},
+                        }
+                        methods_txyz_rxyz = ['Mx', 'My', 'Mz']
+                        moment_case = Case2D(self.node_ids, mxyz)
+                        moment_xyz_res2 = ForceResults2(
+                            subcase_id,
+                            self.node_ids, self.xyz_cid0,
+                            moment_case, title,
+                            index_to_base_title_annotation=index_to_base_title_annotation,
+                            t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz,
+                            dim_max=1.0, data_format='%g',
+                            is_variable_data_format=False,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='',
+                            set_max_min=False, uname='NastranGeometry-MomentResults2')
 
                         moment_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, mxyz, mscalar,
@@ -2528,9 +2570,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             set_max_min=False, uname='NastranGeometry')
                         moment_xyz_res.save_defaults()
 
-                        cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
-                        form0.append(('Moment XYZ', icase, []))
-                        icase += 1
+                        if settings.use_new_sidebar_objects:
+                            cases[icase] = (moment_xyz_res2, (0, 'Moment XYZ'))
+                            form0.append(('Moment XYZ', icase, []))
+                            icase += 1
+                        if settings.use_old_sidebar_objects:
+                            cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
+                            form0.append(('Moment XYZ', icase, []))
+                            icase += 1
 
                 if np.abs(spcd.max() - spcd.min()) > 0.0:
                     t123 = spcd[:, :3]
@@ -2538,30 +2585,65 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
                     assert len(tnorm) == len(self.nid_map)
 
+                    force_case = Case2D(self.node_ids, spcd)
+                    title = 'SPCD'
+                    index_to_base_title_annotation = {
+                        0: {'title': 'T_', 'corner': 'T_'},
+                        1: {'title': 'R_', 'corner': 'R_'},
+                    }
+                    enforced_txyz_res2 = ForceResults2(
+                        subcase_id,
+                        self.node_ids, self.xyz_cid0,
+                        force_case, title,
+                        index_to_base_title_annotation=index_to_base_title_annotation,
+                        t123_offset=0, dim_max=1.0, data_format='%g',
+                        is_variable_data_format=False,
+                        nlabels=None, labelsize=None, ncolors=None, colormap='',
+                        set_max_min=False, uname='NastranGeometry-ForceResults2')
+                    enforced_rxyz_res2 = ForceResults2(
+                        subcase_id,
+                        self.node_ids, self.xyz_cid0,
+                        force_case, title,
+                        index_to_base_title_annotation=index_to_base_title_annotation,
+                        t123_offset=3, dim_max=1.0, data_format='%g',
+                        is_variable_data_format=False,
+                        nlabels=None, labelsize=None, ncolors=None, colormap='',
+                        set_max_min=False, uname='NastranGeometry-ForceResults2')
+
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
-                                           location='node', scalar=forces[:, 0])
+                                           location='node', scalar=spcd[:, 0])
                     spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
-                                           location='node', scalar=forces[:, 1])
+                                           location='node', scalar=spcd[:, 1])
                     spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
-                                           location='node', scalar=forces[:, 2])
+                                           location='node', scalar=spcd[:, 2])
                     spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
                                              location='node', scalar=tnorm)
 
-                    cases[icase] = (spcd_x_res, (0, 'SPCDx'))
-                    form0.append(('SPCDx', icase, []))
-                    icase += 1
+                    if settings.use_new_sidebar_objects:
+                        cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
+                        form0.append(('SPCD Translation', icase, []))
+                        icase += 1
 
-                    cases[icase] = (spcd_y_res, (0, 'SPCDy'))
-                    form0.append(('SPCDy', icase, []))
-                    icase += 1
+                        cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
+                        form0.append(('SPCD Rotation', icase, []))
+                        icase += 1
 
-                    cases[icase] = (spcd_z_res, (0, 'SPCDz'))
-                    form0.append(('SPCDz', icase, []))
-                    icase += 1
+                    if settings.use_old_sidebar_objects:
+                        cases[icase] = (spcd_x_res, (0, 'SPCDx'))
+                        form0.append(('SPCDx', icase, []))
+                        icase += 1
 
-                    cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
-                    form0.append(('SPCD XYZ', icase, []))
-                    icase += 1
+                        cases[icase] = (spcd_y_res, (0, 'SPCDy'))
+                        form0.append(('SPCDy', icase, []))
+                        icase += 1
+
+                        cases[icase] = (spcd_z_res, (0, 'SPCDz'))
+                        form0.append(('SPCDz', icase, []))
+                        icase += 1
+
+                        cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
+                        form0.append(('SPCD XYZ', icase, []))
+                        icase += 1
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data
@@ -3576,7 +3658,7 @@ def update_mass_grid(model: BDF,
 def _get_geometry_properties_by_name(gui: MainWindow,
                                      names: list[str]) -> dict[str, Any]:
     """
-    Get a subset of the self.geometry_properties dict specified by
+    Get a subset of the gui.geometry_properties dict specified by
     names.  Any names not in the dict will be ignored.
 
     Parameters
@@ -3590,7 +3672,6 @@ def _get_geometry_properties_by_name(gui: MainWindow,
         Dictonairy from name to property object.
 
     """
-    gui: MainWindow = self.gui
     geometry_properties = {}
     for name in names:
         try:
@@ -3600,3 +3681,9 @@ def _get_geometry_properties_by_name(gui: MainWindow,
         geometry_properties[name] = prop
     return geometry_properties
 
+
+class Case2D:
+    def __init__(self, node_id: np.ndarray, data: np.ndarray):
+        nnode = len(node_id)
+        self.node_gridtype = np.zeros((nnode, 2), dtype='int32')
+        self.data = data.reshape(1, nnode, 3)

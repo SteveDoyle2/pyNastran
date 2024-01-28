@@ -123,12 +123,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.html_logging = html_logging
         self.execute_python = True
 
-        self.scalar_bar = ScalarBar(self.legend_obj.is_horizontal_scalar_bar)
+        self.scalar_bar = ScalarBar(is_horizontal=False)
 
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
-        #self.recent_files = []
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -165,6 +164,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         |                               |
         +-------------------------------+
         """
+        settings: Settings = self.settings
+
         #self.resize(1100, 700)
         self.statusBar().showMessage('Ready')
 
@@ -181,7 +182,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
-        settings: Settings = self.settings
         self.res_widget = ResultsSidebar(
             self,
             left_click_callback=self._set_methods_by_icase,
@@ -199,6 +199,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         self.run_vtk = True
         if self.run_vtk:
+            self.scalar_bar.update_position(
+                is_horizontal=settings.is_horizontal_scalar_bar)
             self._create_vtk_objects()
         self._build_menubar()
         #self._hide_menubar()

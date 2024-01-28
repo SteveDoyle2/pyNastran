@@ -310,10 +310,10 @@ class NastranGuiResults(NastranGuiAttributes):
                                         title='Percent of Total', data_format='%.3f',
                                         location='centroid', scalar=percent)
                 cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
-                cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+                cases[icase + 1] = (percent_res, (subcase_id, 'Percent of Total Strain'))
 
                 form_dict[(key, itime)].append(('Strain Energy', icase, []))
-                form_dict[(key, itime)].append(('Percent', icase + 1, []))
+                form_dict[(key, itime)].append(('Percent of Total Strain', icase + 1, []))
                 icase += 2
                 if np.any(np.isfinite(strain_energy_density)):
                     sed_res = GuiResult(subcase_id, header='Strain Energy Density: ' + header,
@@ -743,7 +743,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #assert icase_old == ncases_old
         #icasei = icase_old
         log = model.log
-        settings = self.settings
+        settings: Settings = self.settings
         nastran_settings: NastranSettings = settings.nastran_settings
         use_old_sidebar_objects = settings.use_old_sidebar_objects
         use_new_sidebar_objects = settings.use_new_sidebar_objects
@@ -775,150 +775,93 @@ class NastranGuiResults(NastranGuiAttributes):
         nids = self.node_ids
         eids = self.element_ids
         assert isinstance(icase, int), icase
+
         if nastran_settings.plate_stress:
-            try:
-                icase = get_plate_stress_strains2(
-                nids, eids, cases, model, times, key, icase,
+            icase = get_plate_stress_strains2(
+                log, stop_on_failure,
+                cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
                 log, use_new_sidebar_objects, use_new_terms, is_stress=True)
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            assert isinstance(icase, int), icase
 
-            try:
-                icase = get_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log,
-                    use_old_sidebar_objects, is_stress=True)
-                #assert icase >= icasei
-                #icasei = icase
-                assert isinstance(icase, int), icase
+            icase = get_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log,
+                use_old_sidebar_objects, is_stress=True)
+            #assert icase >= icasei
+            #icasei = icase
+            assert isinstance(icase, int), icase
 
-                icase = get_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log,
-                    use_old_sidebar_objects, is_stress=True,
-                    prefix='modal_contribution',
-                )
-                assert isinstance(icase, int), icase
-            #except NotImplementedError:  # pragma: no cover
-                #raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log,
+                use_old_sidebar_objects, is_stress=True,
+                prefix='modal_contribution',
+            )
+            assert isinstance(icase, int), icase
             #assert icase >= icasei
             #icasei = icase
             #assert len(cases) == icase
 
-        assert isinstance(icase, int), icase
         if nastran_settings.composite_plate_stress:
-            try:
-                icase = get_composite_plate_stress_strains2(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map,
-                    log, use_new_sidebar_objects, is_stress=True)
-                assert isinstance(icase, int), icase
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                #if CRASH:
-                    #raise
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
-            try:
-                icase = get_composite_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map,
-                    self.stress[key].composite_data_dict, log,
-                    use_old_sidebar_objects, is_stress=True)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                #if CRASH:
-                    #raise
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
-            #assert icase >= icasei
-            #icasei = icase
-            #assert len(cases) == icase
+            icase = get_composite_plate_stress_strains2(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                log, use_new_sidebar_objects, is_stress=True)
+            assert isinstance(icase, int), icase
+
+            icase = get_composite_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                self.stress[key].composite_data_dict, log,
+                use_old_sidebar_objects, is_stress=True)
+            assert isinstance(icase, int), icase
 
         if nastran_settings.rod_stress:
-            try:
-                icase = get_rod_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=True)
-                assert isinstance(icase, int), icase
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
-            #assert icase >= icasei
-            #icasei = icase
+            icase = get_rod_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            assert isinstance(icase, int), icase
 
         if nastran_settings.bar_stress:
-            try:
-                icase = get_bar_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=True)
-                assert isinstance(icase, int), icase
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
-            #assert icase >= icasei
-            #icasei = icase
+            icase = get_bar_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            assert isinstance(icase, int), icase
 
         if nastran_settings.beam_stress:
-            try:
-                icase = get_beam_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=True)
-                assert isinstance(icase, int), icase
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
-            #assert icase >= icasei
-            #icasei = icase
-
-
+            icase = get_beam_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=True)
+            assert isinstance(icase, int), icase
 
         if nastran_settings.solid_stress:
-            try:
-                icase = get_solid_stress_strains2(
-                nids, eids, cases, model, times, key, icase,
+            icase = get_solid_stress_strains2(
+                log, stop_on_failure,
+                cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_new_sidebar_objects, use_new_terms, is_stress=True)
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
 
             icase = get_solid_stress_strains(
-                eids, cases, model, times, key, icase,
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_old_sidebar_objects, is_stress=True)
             assert isinstance(icase, int), icase
-            #assert icase >= icasei
-            #icasei = icase
 
         if nastran_settings.spring_stress:
             icase = get_spring_stress_strains(
-                eids, cases, model, times, key, icase,
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log, is_stress=True)
             assert isinstance(icase, int), icase
-            #assert icase >= icasei
-            #icasei = icase
         return icase
 
     def _fill_op2_centroidal_force(self, cases: Cases, model: OP2,
@@ -1016,120 +959,85 @@ class NastranGuiResults(NastranGuiAttributes):
         nids = self.node_ids
         eids = self.element_ids
         if nastran_settings.plate_strain:
-            try:
-                icase = get_plate_stress_strains2(
-                    nids, eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, eid_to_nid_map,
-                    log, use_new_sidebar_objects, use_new_terms,
-                    is_stress=False)
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_plate_stress_strains2(
+                log, stop_on_failure,
+                cases, nids, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, eid_to_nid_map,
+                log, use_new_sidebar_objects, use_new_terms,
+                is_stress=False)
+            icase = get_plate_stress_strains2(
+                log, stop_on_failure,
+                cases, nids, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, eid_to_nid_map,
+                log, use_new_sidebar_objects, use_new_terms,
+                is_stress=False,
+                prefix='modal_contribution',
+            )
 
-            try:
-                icase = get_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log,
-                    use_old_sidebar_objects, is_stress=False)
-                icase = get_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log,
-                    use_old_sidebar_objects, is_stress=False,
-                    prefix='modal_contribution',
-                )
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log,
+                use_old_sidebar_objects, is_stress=False)
+            icase = get_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log,
+                use_old_sidebar_objects, is_stress=False,
+                prefix='modal_contribution',
+            )
 
         if nastran_settings.composite_plate_strain:
-            try:
-                icase = get_composite_plate_stress_strains2(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map,
-                    log, use_new_sidebar_objects, is_stress=False)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                #if CRASH:
-                    #raise
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_composite_plate_stress_strains2(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                log, use_new_sidebar_objects, is_stress=False)
 
-            try:
-                icase = get_composite_plate_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map,
-                    self.strain[key].composite_data_dict, log,
-                    use_old_sidebar_objects, is_stress=False)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_composite_plate_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                self.strain[key].composite_data_dict, log,
+                use_old_sidebar_objects, is_stress=False)
 
         if nastran_settings.rod_strain:
-            try:
-                icase = get_rod_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=False)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_rod_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
 
         if nastran_settings.bar_strain:
-            try:
-                icase = get_bar_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=False)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_bar_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
 
         if nastran_settings.beam_strain:
-            try:
-                icase = get_beam_stress_strains(
-                    eids, cases, model, times, key, icase,
-                    form_dict, header_dict, keys_map, log, is_stress=False)
-            except NotImplementedError:  # pragma: no cover
-                raise
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+            icase = get_beam_stress_strains(
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, log, is_stress=False)
 
         if nastran_settings.solid_strain:
-            try:
-                icase = get_solid_stress_strains2(
-                nids, eids, cases, model, times, key, icase,
+            icase = get_solid_stress_strains2(
+                log, stop_on_failure,
+                cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_new_sidebar_objects, use_new_terms, is_stress=False)
-            except Exception as e:  # pragma: no cover
-                log.error(str(e))
-                if stop_on_failure:
-                    raise
+
             icase = get_solid_stress_strains(
-                eids, cases, model, times, key, icase,
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_old_sidebar_objects, is_stress=False)
 
         if nastran_settings.spring_strain:
             icase = get_spring_stress_strains(
-                eids, cases, model, times, key, icase,
+                log, stop_on_failure,
+                cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 is_stress=False)
-
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases: Cases, model: OP2,
@@ -1535,12 +1443,9 @@ def _fill_nastran_ith_displacement(result, resname: str,
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
     if t123_offset == 0:
         title1 = resname + ' T_XYZ'
-        is_translation = True
     else:
         assert t123_offset == 3, t123_offset
         title1 = resname + ' R_XYZ'
-        is_translation = False
-    #title2 = name + ' R_XYZ'
 
     case = result[key]
     subcase_idi = case.isubcase
@@ -1552,54 +1457,62 @@ def _fill_nastran_ith_displacement(result, resname: str,
         log.warning('Skipping because SORT2\n' + str(case))
         return icase
 
-    t123, tnorm, ntimes = _get_t123_tnorm(case, node_ids, nnodes,
-                                          t123_offset=t123_offset)
+    if use_old_sidebar_objects:
+        t123, tnorm, ntimes = _get_t123_tnorm(case, node_ids, nnodes,
+                                              t123_offset=t123_offset)
+    else:
+        ntimes = case.ntimes
 
     titles = []
     scales = []
     headers = []
     headers2 = []
-    disp2_scalar = None
-    disp2_scales = None
+    force_index_to_base_title_annotation = {
+        0: {'title': 'F_', 'corner': 'F_'},
+        3: {'title': 'M_', 'corner': 'M_'},
+    }
     if deflects:
-        nastran_res2 = DisplacementResults2(
-            subcase_idi, node_ids, xyz_cid0, case,
-            disp2_scalar, disp2_scales,
-            title=resname,
-            is_translation=is_translation,
-            dim_max=dim_max,
-            data_format='%g', nlabels=None, labelsize=None,
-            ncolors=None, colormap='', set_max_min=False,
-            uname=resname)
-        nastran_res = DisplacementResults(subcase_idi, titles, headers,
-                                          xyz_cid0, t123, tnorm,
-                                          scales,
-                                          uname=resname)
+        if use_new_sidebar_objects:
+            nastran_res2 = DisplacementResults2(
+                subcase_idi, node_ids, xyz_cid0, case,
+                title=resname,
+                t123_offset=t123_offset,
+                dim_max=dim_max,
+                data_format='%g', nlabels=None, labelsize=None,
+                ncolors=None, colormap='', set_max_min=False,
+                uname=resname)
+        if use_old_sidebar_objects:
+            nastran_res = DisplacementResults(subcase_idi, titles, headers,
+                                              xyz_cid0, t123, tnorm,
+                                              scales,
+                                              uname=resname)
 
         for itime in range(ntimes):
-            dt = case._times[itime]
-            tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
-
             # mode = 2; freq = 75.9575 Hz
+            dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
             keys_map[key] = KeyMap(case.subtitle, case.label,
                                    case.superelement_adaptivity_index,
                                    case.pval_step)
 
-            scale = dim_max
-            if tnorm_abs_max > 0.0:
-                scale = dim_max / tnorm_abs_max * 0.10
-            scales.append(scale)
-            titles.append(title1)
-            headers.append(f'{title1}: {header}')
-            headers2.append(header)
             if use_old_sidebar_objects:
+                tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
+                scale = dim_max
+                if tnorm_abs_max > 0.0:
+                    scale = dim_max / tnorm_abs_max * 0.10
+                scales.append(scale)
+                titles.append(title1)
+                headers.append(f'{title1}: {header}')
+
+                # fill the case
                 cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
                 formii: Form = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
                 icase += 1
+
             if use_new_sidebar_objects:
+                headers2.append(header)
                 cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
                 formii: Form = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
@@ -1609,22 +1522,26 @@ def _fill_nastran_ith_displacement(result, resname: str,
             # Displacement; itime=361 time=3.61 tnorm=1.46723
             #print('dmax = ', max(dmax))
             #pass
-        nastran_res.save_defaults()
-        nastran_res2.headers = headers2
     else:
-        nastran_res2 = ForceResults2(
-            subcase_idi, node_ids, xyz_cid0, case,
-            disp2_scalar, disp2_scales,
-            title=resname,
-            is_translation=is_translation,
-            dim_max=dim_max,
-            data_format='%g', nlabels=None, labelsize=None,
-            ncolors=None, colormap='', set_max_min=False,
-            uname=resname)
-        nastran_res = ForceTableResults(subcase_idi, titles, headers,
-                                        t123, tnorm,
-                                        scales, #deflects=deflects,
-                                        uname=resname)
+        dim_max = 1.0
+        if use_old_sidebar_objects:
+            nastran_res = ForceTableResults(subcase_idi, titles, headers,
+                                            t123, tnorm,
+                                            scales, #deflects=deflects,
+                                            uname=resname)
+
+        methods_txyz_rxyz = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
+        if use_new_sidebar_objects:
+            nastran_res2 = ForceResults2(
+                subcase_idi, node_ids, xyz_cid0, case,
+                title=resname,
+                t123_offset=t123_offset,
+                methods_txyz_rxyz=methods_txyz_rxyz,
+                index_to_base_title_annotation=force_index_to_base_title_annotation,
+                dim_max=dim_max,
+                data_format='%g', nlabels=None, labelsize=None,
+                ncolors=None, colormap='', set_max_min=False,
+                uname=resname)
         for itime in range(ntimes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
@@ -1635,23 +1552,26 @@ def _fill_nastran_ith_displacement(result, resname: str,
 
             #tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
             #tnorm_abs_max = tnorm.max()
-            scale = 1.
-            scales.append(scale)
-            titles.append(title1)
-            headers.append(f'{title1}: {header}')
-            headers2.append(header)
-
             if use_old_sidebar_objects:
+                scale = 1.
+                scales.append(scale)
+                titles.append(title1)
+                headers.append(f'{title1}: {header}')
+                # fill data
                 cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
                 formii = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
                 icase += 1
+
             if use_new_sidebar_objects:
+                headers2.append(header)
                 cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
                 formii: Form = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
                 icase += 1
+    if use_old_sidebar_objects:
         nastran_res.save_defaults()
+    if use_new_sidebar_objects:
         nastran_res2.headers = headers2
     return icase
 

@@ -248,6 +248,7 @@ class FakeGUIMethods(GuiVTKCommon):
             #location = obj.get_location(i, name)
             unused_data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
+            #arrow_scale = obj.get_arrow_scale(i, name)
             phase = obj.get_phase(i, name)
             unused_label2 = obj.get_annotation(i, name)
             unused_flag = obj.is_normal_result(i, name)
@@ -262,6 +263,7 @@ class FakeGUIMethods(GuiVTKCommon):
                 scale = 1.1
                 phase = 2.2
                 obj.set_scale(i, name, scale)
+                #obj.set_arrow_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
                 assert obj.deflects(i, name) in {True, False}, obj.deflects(i, name)
                 unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
@@ -271,6 +273,7 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_default_data_format = obj.get_default_data_format(i, name)
             default_min, unused_default_max = obj.get_default_min_max(i, name)
             unused_default_scale = obj.get_default_scale(i, name)
+            #unused_default_arrow_scale = obj.get_default_arrow_scale(i, name)
             unused_default_title = obj.get_default_legend_title(i, name)
             unused_default_phase = obj.get_default_phase(i, name)
             out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)

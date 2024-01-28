@@ -22,10 +22,8 @@ class DisplacementResults2(DispForceVectorResults):
                  node_id: np.ndarray,
                  xyz: np.ndarray,
                  dxyz: Union[RealTableArray, ComplexTableArray],
-                 unused_scalar: np.ndarray,
-                 scales: np.ndarray,
                  title: str,
-                 is_translation: bool,
+                 t123_offset: int,
                  dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -66,12 +64,19 @@ class DisplacementResults2(DispForceVectorResults):
         uname : str
             some unique name for ...
         """
+        methods_txyz_rxyz = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
+        index_to_base_title_annotation = {
+            0: {'title': 'T_', 'corner': 'T_'},
+            3: {'title': 'R_', 'corner': 'R_'},
+        }
         DispForceVectorResults.__init__(
             self,
             subcase_id,
             node_id,
             dxyz,
-            is_translation,
+            t123_offset,
+            methods_txyz_rxyz,
+            index_to_base_title_annotation,
             dim_max,
             data_format=data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
@@ -91,33 +96,41 @@ class DisplacementResults2(DispForceVectorResults):
 
         self.xyz = xyz
         assert len(self.xyz.shape) == 2, self.xyz.shape
-        assert isinstance(is_translation, bool), is_translation
+        assert isinstance(t123_offset, int), t123_offset
         self.location = 'node'
         str(self)
 
+    def _calculate_scale(self, itime: int, res_name: str) -> float:
+        fringe_data = self._get_fringe_data_sparse(itime, res_name)
+
+        # Fringe is typically a 'Magnitude' and therefore positive.
+        # if 'Value' is used, it can be negative.
+        abs_maximax = np.abs(fringe_data).max()
+        if abs_maximax > 0.0:
+            scale = self.dim_max / abs_maximax * 0.10
+        else:
+            scale = 1.0
+        return scale
+
     #-------------------------------------
     # unmodifyable getters
+
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         """deflection is opt-in"""
         return True
 
-
-    def get_methods(self, itime: int, res_name: str) -> list[str]:
-        if self.is_real:
-            out = translation if self.is_translation else rotation
-            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
-                out[0] = 'Reluctant'
-        else:
-            out = [
-                # if results of different type are selected (e.g., Real/Imag)
-                # the "earliest" type is selected
-                # Resultant -> Magnitude -> Phase -> Real -> Imaginary
-                'Resultant',
-                'X Magnitude', 'Y Magnitude', 'Z Magnitude',
-                'X Phase', 'Y Phase', 'Z Phase',
-                'X Real', 'Y Real', 'Z Real',
-                'X Imaginary', 'Y Imaginary', 'Z Imaginary',
-            ]
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
+        is_enabled_fringe = True
+        is_checked_fringe = True
+        is_enabled_disp = True
+        is_checked_disp = True
+        is_enabled_vector = False
+        is_checked_vector = False
+        out = (
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
         return out
 
     def get_force_vector_result(self, itime: int, res_name: str,

@@ -1,3 +1,4 @@
+import getpass
 from abc import abstractmethod
 from collections import defaultdict
 
@@ -56,6 +57,9 @@ class VectorResultsCommon(GuiResultCommon):
             return [np.nan] * ntimes
         def fphases() -> np.ndarray:
             return np.zeros(ntimes, dtype='float64')
+
+        self.default_arrow_scales: DefaultDict[Any, list[float]] = defaultdict(fscales)
+        self.arrow_scales:         DefaultDict[Any, list[float]] = defaultdict(fscales)
 
         self.default_scales: DefaultDict[Any, list[float]] = defaultdict(fscales)
         self.scales:         DefaultDict[Any, list[float]] = defaultdict(fscales)
@@ -165,11 +169,14 @@ class VectorResultsCommon(GuiResultCommon):
         return mins[itime], maxs[itime]
 
     # --------------------------------------------------------------------------
-    def get_default_scale(self, itime: int, res_name: str) -> float:
+    def get_default_arrow_scale(self, itime: int, res_name: str) -> float:
+        if not hasattr(self, 'dim_max'):
+            return 0.
+
         if self.linked_scale_factor:
             itime = 0
         itime, case_flag = self.get_case_flag(itime, res_name)
-        scales = self.default_scales[case_flag]
+        scales = self.default_arrow_scales[case_flag]
         if is_value(scales[itime]):
             return scales[itime]
 
@@ -178,7 +185,6 @@ class VectorResultsCommon(GuiResultCommon):
         # Fringe is typically a 'Magnitude' and therefore positive.
         # if 'Value' is used, it can be negative.
         abs_maximax = np.abs(fringe_data).max()
-
         if abs_maximax > 0.0:
             scale = self.dim_max / abs_maximax * 0.10
         else:
@@ -186,20 +192,63 @@ class VectorResultsCommon(GuiResultCommon):
         scales[itime] = scale
         return scale
 
-    def get_scale(self, itime: int, res_name: str) -> float:
+    def get_default_scale(self, itime: int, res_name: str) -> float:
+        if not hasattr(self, 'dim_max'):
+            return 0.
         if self.linked_scale_factor:
             itime = 0
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        scales = self.default_scales[case_flag]
+        if is_value(scales[itime]):
+            return scales[itime]
 
-        scales = self.scales[self.component_indices]
+        scale = self._calculate_scale(itime, res_name)
+        scales[itime] = scale
+        return scale
+
+    def _calculate_scale(self, i: int, resname: str) -> float:
+        raise NotImplementedError(self.class_name)
+
+    def get_scale(self, itime: int, res_name: str) -> float:
+        if not hasattr(self, 'dim_max'):
+            return 0.
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        if self.linked_scale_factor:
+            itime = 0
+        scales = self.scales[case_flag]
         scale = scales[itime]
         if is_blank(scale):
             scale = self.get_default_scale(itime, res_name)
             scales[itime] = scale
         return scale
-    def set_scale(self, itime: int, res_name: str, scale: float) -> None:
+    def get_arrow_scale(self, itime: int, res_name: str) -> float:
+        if not hasattr(self, 'dim_max'):
+            return 0.
+        itime, case_flag = self.get_case_flag(itime, res_name)
         if self.linked_scale_factor:
             itime = 0
-        scales = self.scales[self.component_indices]
+        scales = self.arrow_scales[case_flag]
+        scale = scales[itime]
+        if is_blank(scale):
+            scale = self.get_default_arrow_scale(itime, res_name)
+            scales[itime] = scale
+        return scale
+
+    def set_scale(self, itime: int, res_name: str, scale: float) -> None:
+        if not hasattr(self, 'dim_max'):
+            return 0.
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        if self.linked_scale_factor:
+            itime = 0
+        scales = self.scales[case_flag]
+        scales[itime] = scale
+    def set_arrow_scale(self, itime: int, res_name: str, scale: float) -> None:
+        if not hasattr(self, 'dim_max'):
+            return 0.
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        if self.linked_scale_factor:
+            itime = 0
+        scales = self.arrow_scales[case_flag]
         scales[itime] = scale
 
     def get_default_phase(self, itime: int, res_name: str) -> float:
@@ -207,12 +256,14 @@ class VectorResultsCommon(GuiResultCommon):
     def get_phase(self, itime: int, res_name: str) -> float:
         if self.is_real:
             return 0.0
-        phases = self.phases[self.component_indices]
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        phases = self.phases[case_flag]
         return phases[itime]
     def set_phase(self, itime: int, res_name: str, phase: float) -> None:
         if self.is_real:
             return
-        phases = self.phases[self.component_indices]
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        phases = self.phases[case_flag]
         phases[itime] = phase
 
     def get_data_format(self, itime: int, res_name: str) -> str:
@@ -242,7 +293,9 @@ class DispForceVectorResults(VectorResultsCommon):
                  subcase_id: int,
                  node_id: np.ndarray,
                  case: Union[RealTableArray, ComplexTableArray],
-                 is_translation: bool,
+                 t123_offset: int,
+                 methods_txyz_rxyz: list[str],
+                 index_to_base_title_annotation: dict[int, dict[str, str]],
                  dim_max: float,
                  data_format: str='%g',
                  nlabels=None, labelsize=None, ncolors=None,
@@ -253,14 +306,20 @@ class DispForceVectorResults(VectorResultsCommon):
             self, subcase_id, case, data_format,
             nlabels, labelsize, ncolors,
             colormap, uname)
-
+        assert isinstance(index_to_base_title_annotation, dict), index_to_base_title_annotation
+        self.index_to_base_title_annotation = index_to_base_title_annotation
         self.component_indices: tuple[int, ...] = (0, )
         self.dim = case.data.ndim
         assert self.dim == 3, case.data.shape
-        assert case.data.shape[2] == 6, case.data.shape
+        assert case.data.shape[2] in {3, 6}, case.data.shape
 
-        self.is_translation = is_translation
-        self._title0 = 'T_' if self.is_translation else 'R_'
+        #expected 0 / 3 indices
+        #if len(index_to_base_title_annotation[i0]) != 2:
+            #x = 1
+        assert isinstance(index_to_base_title_annotation[t123_offset]['title'], str)
+        assert isinstance(index_to_base_title_annotation[t123_offset]['corner'], str)
+        self.t123_offset = t123_offset
+        self.methods_txyz_rxyz = methods_txyz_rxyz
 
         if dim_max == 0.0:
             dim_max = 1.0
@@ -329,6 +388,26 @@ class DispForceVectorResults(VectorResultsCommon):
         str(self)
 
     #--------------------------------------------------------------
+
+    def get_methods(self, itime: int, res_name: str) -> list[str]:
+        if self.is_real:
+            i0 = self.t123_offset
+            out = ['Magnitude'] + self.methods_txyz_rxyz[i0:i0+3]
+        else:
+            out = [
+                # if results of different type are selected (e.g., Real/Imag)
+                # the "earliest" type is selected
+                # Resultant -> Magnitude -> Phase -> Real -> Imaginary
+                'Resultant',
+                'X Magnitude', 'Y Magnitude', 'Z Magnitude',
+                'X Phase', 'Y Phase', 'Z Phase',
+                'X Real', 'Y Real', 'Z Real',
+                'X Imaginary', 'Y Imaginary', 'Z Imaginary',
+            ]
+        if 'chL' in getpass.getuser():
+            out[0] = 'Reluctant'
+        return out
+
     def get_location(self, unused_i: int, unused_res_name: str) -> str:
         """the result location (node/centroid)"""
         assert self.location, self.location
@@ -355,19 +434,6 @@ class DispForceVectorResults(VectorResultsCommon):
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
-    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
-                                                               bool, bool, bool]:
-        is_enabled_fringe = True
-        is_checked_fringe = True
-        is_enabled_disp = True
-        is_checked_disp = True
-        is_enabled_vector = False
-        is_checked_vector = False
-        out = (
-            is_enabled_fringe, is_checked_fringe,
-            is_enabled_disp, is_checked_disp,
-            is_enabled_vector, is_checked_vector)
-        return out
 
     def get_vector_size(self, itime: int, res_name: str) -> int:
         """vector_size=1 is the default and displacement has 3 components"""
@@ -383,7 +449,9 @@ class DispForceVectorResults(VectorResultsCommon):
         """
         #method = self.get_methods(itime, res_name)[0]
         self.component_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        #title0 = self._title0
+        title0 = self.index_to_base_title_annotation[self.t123_offset]['corner']
+        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         #annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
         annotation_label = f'{self.title} {method}: {self.headers[itime]}'
         #return self.uname
@@ -391,7 +459,8 @@ class DispForceVectorResults(VectorResultsCommon):
 
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
         self.component_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        title0 = self.index_to_base_title_annotation[self.t123_offset]['title']
+        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         title = f'{self.title} {method}'
         return title
     def set_legend_title(self, itime: int, res_name: str,
@@ -402,7 +471,8 @@ class DispForceVectorResults(VectorResultsCommon):
         #method2 = self._update_method(method)
         #return f'{self.title} {method2}'
         self.component_indices
-        method = self._title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        title0 = self.index_to_base_title_annotation[self.t123_offset]['title']
+        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         title = f'{self.title} {method}'
         return title
 
@@ -419,11 +489,14 @@ class DispForceVectorResults(VectorResultsCommon):
 
         """
         # handles translation vs. rotation
-        assert self.case.data.shape[2] == 6
-        if self.is_translation:
-            data = self.case.data[itime, :, :3].copy()
+        datai = self.case.data
+        i0 = self.t123_offset
+        if i0 == 1:
+            assert datai.shape[2] == 6, datai.shape
         else:
-            data = self.case.data[itime, :, 3:].copy()
+            assert datai.shape[2] in {3, 6}, datai.shape
+
+        data = datai[itime, :, i0:i0+3].copy()
         assert data.shape[1] == 3, data.shape
         assert len(self.component_indices) > 0, self.component_indices
 
@@ -552,7 +625,7 @@ class DispForceVectorResults(VectorResultsCommon):
 
         return fringe_result, vector_result
 
-def _get_real_component_indices(methods_keys: list[int]) -> tuple[int, ...]:
+def _get_real_component_indices(methods_keys: Optional[list[int]]) -> tuple[int, ...]:
     """
     if Magnitude is selected, only use magnitude
     methods = ['T_XYZ', 'TX', 'TY', 'TZ']

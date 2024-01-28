@@ -27,6 +27,7 @@ from qtpy import QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
+from pyNastran.gui.utils.colormaps import colormap_keys as COLORMAPS
 from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
@@ -61,7 +62,9 @@ TEXT_COLOR = BLACK
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_TEXT_SCALE = 0.5 # percent of nominal
 USE_PARALLEL_PROJECTION = True
+DEFAULT_COLORMAP = 'jet'
 MAGNIFY = 5
+NFILES_TO_SAVE = 6
 
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
@@ -99,6 +102,9 @@ class NastranSettings:
         """
         Creates the Settings object
         """
+        self.reset_settings()
+
+    def reset_settings(self):
         self.is_element_quality = True
         self.is_properties = True
         self.is_3d_bars = True
@@ -186,64 +192,11 @@ class Settings:
         """
         self.parent = parent
 
-        # booleans
-        self.use_parallel_projection = True
-        self.use_gradient_background = True
+        self.recent_files = []
 
-        self.startup_directory = ''
-        self.use_startup_directory = True
-
-        self.is_edges_visible = True
-        self.is_edges_black = True
-
-        self.is_min_visible = True
-        self.is_max_visible = True
-
-        self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
-        self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
-        self.use_new_sidebar = USE_NEW_SIDEBAR
-        self.use_new_terms = USE_NEW_TERMS
-
-        # rgb tuple
-        self.background_color = BACKGROUND_COLOR
-        self.background_color2 = BACKGROUND_COLOR2
-
-        # TODO: what is an annotation color?
-        self.annotation_color = BLACK
-
-        # text in the lower left corner
-        self.text_size = TEXT_SIZE
-        self.text_color = TEXT_COLOR
-
-        # used for highlight actors
-        self.highlight_color = HIGHLIGHT_COLOR
-        self.highlight_opacity = HIGHLIGHT_OPACITY
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
-
-        self.show_info = True
-        self.show_debug = False
-        self.show_command = True
-        self.show_warning = True
-        self.show_error = True
-
-        # int
-        self.annotation_size = ANNOTATION_SIZE
-        self.font_size = FONT_SIZE
-        self.magnify = MAGNIFY
-
-        # floats
-        self.coord_scale = COORD_SCALE
-        self.coord_text_scale = COORD_TEXT_SCALE
-        self.coord_linewidth = 2.0
-
-        # string
-        self.colormap = 'jet' # 'viridis'
-
-        # not stored
-        self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
+        self.reset_settings(resize=True, reset_dim_max=True)
         self.nastran_settings = NastranSettings()
 
     def reset_settings(self, resize: bool=True, reset_dim_max: bool=True) -> None:
@@ -253,23 +206,38 @@ class Settings:
         self.background_color = BACKGROUND_COLOR
         self.background_color2 = BACKGROUND_COLOR2
 
+        # grab bag
+        # int
+        self.font_size = FONT_SIZE
+        self.magnify = MAGNIFY
+
+        # default directory: os.getcwd()
+        # activates after the first directory selection
         self.startup_directory = ''
+        # False  os.getcwd()
+        # True:  startup directory
         self.use_startup_directory = True
 
         self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
         self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
         self.use_new_sidebar = USE_NEW_SIDEBAR
+        self.use_new_terms = USE_NEW_TERMS
 
-        self.annotation_size = ANNOTATION_SIZE
-        self.annotation_color = ANNOTATION_COLOR
+        # probe color
+        # this includes:
+        #   - min/max actors
+        #   - probes
+        self.annotation_size = ANNOTATION_SIZE    # int
+        self.annotation_color = ANNOTATION_COLOR  # rgb floats
 
-        self.text_size = TEXT_SIZE
-        self.text_color = BLACK
+        # text in the lower left corner
+        self.text_size = TEXT_SIZE    # int
+        self.text_color = TEXT_COLOR  # rgb floats
 
-        self.highlight_color = HIGHLIGHT_COLOR
-        self.highlight_opacity = HIGHLIGHT_OPACITY
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
+        self.highlight_color = HIGHLIGHT_COLOR                    # rgb floats
+        self.highlight_opacity = HIGHLIGHT_OPACITY                # float
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE          # int
+        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS  # float
 
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
@@ -281,16 +249,13 @@ class Settings:
         self.is_edges_visible = True
         self.is_edges_black = True
 
+        self.is_horizontal_scalar_bar = False
         self.is_min_visible = True
         self.is_max_visible = True
 
-        # int
-        self.font_size = FONT_SIZE
-        self.magnify = 5
-
         # float
-        self.coord_scale = COORD_SCALE
-        self.coord_text_scale = COORD_TEXT_SCALE
+        self.coord_scale = COORD_SCALE            # float
+        self.coord_text_scale = COORD_TEXT_SCALE  # float
         self.coord_linewidth = 2.0
 
         # string
@@ -395,6 +360,10 @@ class Settings:
                           default=self.is_edges_black,
                           save=True, auto_type=bool)
 
+        self._set_setting(settings, setting_keys, ['is_horizontal_scalar_bar'],
+                          default=self.is_horizontal_scalar_bar,
+                          save=True, auto_type=bool)
+
         # min/max
         self._set_setting(settings, setting_keys, ['is_min_visible'],
                           default=self.is_min_visible,
@@ -452,10 +421,9 @@ class Settings:
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
         # default colormap for legend
-        self._set_setting(settings, setting_keys, ['colormap'],
-                          default='jet', save=True)
-
-
+        self._set_setting(settings, setting_keys, ['colormap'], default=DEFAULT_COLORMAP, save=True)
+        if self.colormap not in COLORMAPS:
+            self.colormap = DEFAULT_COLORMAP
         # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
                                          default=screen_shape_default, save=False, auto_type=int)
@@ -466,11 +434,16 @@ class Settings:
             #screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
+        recent_files = self.recent_files
         try:
-            self.parent.recent_files = settings.value("recent_files", self.recent_files)
+            recent_files = settings.value("recent_files", default=self.recent_files)
         except (TypeError, AttributeError):
             pass
+        recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
+                         if os.path.exists(fname)]
 
+        #  only save 10 files
+        self.recent_files = recent_files2[:NFILES_TO_SAVE]
         self._load_nastran_settings(settings, setting_keys)
 
         #w = screen_shape.width()
@@ -550,7 +523,8 @@ class Settings:
         settings.setValue('startup_directory', self.startup_directory)
         settings.setValue('use_startup_directory', self.use_startup_directory)
 
-        #settings.setValue('use_new_sidebar', self.use_new_sidebar)
+        settings.setValue('recent_files', self.recent_files[:NFILES_TO_SAVE])
+
         settings.setValue('use_old_sidebar_objects', self.use_old_sidebar_objects)
         settings.setValue('use_new_sidebar_objects', self.use_new_sidebar_objects)
         settings.setValue('use_new_terms', self.use_new_terms)
@@ -574,6 +548,8 @@ class Settings:
         # edges
         settings.setValue('is_edges_visible', self.is_edges_visible)
         settings.setValue('is_edge_black', self.is_edges_black)
+
+        settings.setValue('is_horizontal_scalar_bar', self.is_horizontal_scalar_bar)
 
         # min/max
         settings.setValue('is_min_visible', self.is_min_visible)

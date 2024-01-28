@@ -885,7 +885,7 @@ class GuiAttributes:
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
                                is_low_to_high=self.legend_obj.is_low_to_high,
-                               is_horizontal=self.legend_obj.is_horizontal_scalar_bar,
+                               is_horizontal=self.settings.is_horizontal_scalar_bar,
                                is_shown=is_shown)
 
     def on_update_scalar_bar(self, title, min_value, max_value, data_format) -> None:
@@ -1377,7 +1377,8 @@ class GuiAttributes:
         """
         self.mark_actions.mark_nodes(nids, icase, text)
 
-    def create_annotation(self, text, x, y, z) -> None:
+    def create_annotation(self, text: str,
+                          x: float, y: float, z: float) -> None:
         """
         Creates the actual annotation
 

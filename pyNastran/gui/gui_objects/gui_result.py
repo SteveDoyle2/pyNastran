@@ -103,6 +103,8 @@ class GuiResultCommon:
 
     def get_scale(self, i: int, name: str) -> float:
         return 0.0
+    def get_arrow_scale(self, i: int, name: str) -> float:
+        return 0.0
 
     def get_phase(self, i: int, name: str) -> Optional[float]:
         return None
@@ -125,6 +127,8 @@ class GuiResultCommon:
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+    def set_arrow_scale(self, i: int, name: str, scale):
+        raise RuntimeError('This object cannot set a vector scale factor.')
 
     def set_phase(self, i: int, name: str, phase) -> None:
         pass
@@ -145,7 +149,8 @@ class GuiResultCommon:
 
     def get_default_scale(self, i: int, name: str):
         return 0.
-
+    def get_default_arrow_scale(self, i: int, name: str):
+        return 0.
     def get_default_phase(self, i: int, name: str):
         return None
 
@@ -339,6 +344,8 @@ class NormalResult(GuiResultCommon):
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+    def set_arrow_scale(self, i: int, name: str, scale):
+        raise RuntimeError('This object cannot set a vector scale factor.')
 
     def set_legend_title(self, i: int, res_name: str, title: str) -> None:
         self.title = title
@@ -363,6 +370,8 @@ class NormalResult(GuiResultCommon):
 
     def get_default_scale(self, i: int, name: str):
         return 0.
+    def get_default_arrow_scale(self, i: int, name: str):
+        return 0.
 
     def get_default_phase(self, i: int, name: str):
         return None
@@ -376,6 +385,8 @@ class NormalResult(GuiResultCommon):
     #------------
     # unmodifyable getters
     def get_scale(self, i: int, name: str) -> float:
+        return 0.
+    def get_arrow_scale(self, i: int, name: str) -> float:
         return 0.
 
     def get_methods(self, i: int, name: str) -> list[str]:
@@ -682,6 +693,8 @@ class GuiResult(GuiResultCommon):
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+    def set_arrow_scale(self, i: int, name: str, scale):
+        raise RuntimeError('This object cannot set a vector scale factor.')
 
     def set_title(self, i: int, name: str, title):
         self.title = title
@@ -706,6 +719,8 @@ class GuiResult(GuiResultCommon):
 
     def get_default_scale(self, i: int, name: str):
         return 0.
+    def get_default_arrow_scale(self, i: int, name: str):
+        return 0.
 
     def get_default_phase(self, i: int, name: str):
         return None
@@ -720,6 +735,8 @@ class GuiResult(GuiResultCommon):
     #------------
     # unmodifyable getters
     def get_scale(self, i: int, name: str) -> int:
+        return 0.
+    def get_arrow_scale(self, i: int, name: str) -> int:
         return 0.
 
     def get_methods(self, i: int, name: str) -> list[str]:

@@ -11,7 +11,8 @@ if TYPE_CHECKING:
         RealTableArray, ComplexTableArray)
 
 translation = ['Magnitude', 'Fx', 'Fy', 'Fz']
-rotation = ['Magnitude', 'Fx', 'Fy', 'Fz']
+rotation = ['Magnitude', 'Mx', 'My', 'Mz']
+
 
 class ForceResults2(DispForceVectorResults):
     def __init__(self,
@@ -19,10 +20,10 @@ class ForceResults2(DispForceVectorResults):
                  node_id: np.ndarray,
                  xyz: np.ndarray,
                  case: Union[RealTableArray, ComplexTableArray],
-                 unused_scalar: np.ndarray,
-                 scales: np.ndarray,
                  title: str,
-                 is_translation: bool,
+                 t123_offset: int,
+                 methods_txyz_rxyz: list[str],
+                 index_to_base_title_annotation:dict[int, tuple[str, str]],
                  dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -63,12 +64,15 @@ class ForceResults2(DispForceVectorResults):
         uname : str
             some unique name for ...
         """
+        self.methods_txyz_rxyz = methods_txyz_rxyz
         DispForceVectorResults.__init__(
             self,
             subcase_id,
             node_id,
             case,
-            is_translation,
+            t123_offset,
+            methods_txyz_rxyz,
+            index_to_base_title_annotation,
             dim_max,
             data_format=data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
@@ -76,7 +80,6 @@ class ForceResults2(DispForceVectorResults):
             set_max_min=set_max_min,
             uname=uname)
         self.title = title
-        self._title0 = 'F_' if self.is_translation else 'M_'
 
         self.is_variable_data_format = is_variable_data_format
 
@@ -92,18 +95,26 @@ class ForceResults2(DispForceVectorResults):
 
         self.xyz = xyz
         assert len(self.xyz.shape) == 2, self.xyz.shape
-        assert isinstance(is_translation, bool), is_translation
+        assert isinstance(t123_offset, int), t123_offset
         self.location = 'node'
         str(self)
 
     #-------------------------------------
-    def get_methods(self, itime: int, res_name: str) -> list[str]:
-        if self.is_real:
-            out = translation if self.is_translation else rotation
-            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
-                out[0] = 'Reluctant'
-        else:
-            out = ['node real', 'node imag', 'node magnitude', 'node phase']
+    def _calculate_scale(self, i: int, resname: str) -> float:
+        return 1.0
+
+    def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
+                                                               bool, bool, bool]:
+        is_enabled_fringe = True
+        is_checked_fringe = True
+        is_enabled_disp = False
+        is_checked_disp = False
+        is_enabled_vector = True
+        is_checked_vector = True
+        out = (
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
         return out
 
     def get_force_vector_result(self, itime: int, res_name: str,
@@ -118,7 +129,7 @@ class ForceResults2(DispForceVectorResults):
         dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
         assert dxyz.ndim == 2, dxyz.shape
         scale = self.get_scale(itime, res_name)
-        deflected_xyz = dxyz
+        deflected_xyz = dxyz * scale
         #deflected_xyz = self.xyz + scale * dxyz
         return self.xyz, deflected_xyz
 
@@ -150,7 +161,7 @@ class ForceResults2(DispForceVectorResults):
         assert self.dim == 3, self.dim
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
-            dxyz = self.get_vector_data_dense(i, res_name)
+            dxyz, itime, case_flag = self.get_vector_data_dense(i, res_name)
             deflected_xyz = self.xyz + scale * dxyz[i, :]
         else:
             assert isinstance(i, int), (i, phase)

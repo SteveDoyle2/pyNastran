@@ -4,7 +4,6 @@ defines:
 
 """
 import os
-from typing import Union
 
 from qtpy import QtCore
 from qtpy.QtGui import QFont

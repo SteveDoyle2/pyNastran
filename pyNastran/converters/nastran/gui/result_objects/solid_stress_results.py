@@ -380,13 +380,6 @@ class SolidResults2(VectorResultsCommon):
 
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)
-        #if self.is_translation:
-            #datai = self.dxyz.data[itime, :, :3]
-            #assert datai.shape[1] == 3, datai.shape
-        #else:
-            #datai = self.dxyz.data[itime, :, 3:]
-            #assert datai.shape[1] == 3, datai.shape
-        #return datai
 
     def _get_fringe_data_sparse(self, itime: int,
                                 case_tuple: CaseTuple) -> np.ndarray:

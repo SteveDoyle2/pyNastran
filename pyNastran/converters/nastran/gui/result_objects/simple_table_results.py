@@ -70,6 +70,11 @@ class SimpleTableResults(Table):
     def get_default_scale(self, i, name):
         return None
 
+    def get_arrow_scale(self, i, name):
+        return None
+    def get_default_arrow_scale(self, i, name):
+        return None
+
     def get_magnitude(self, i, name):
         scalar, unused_vector = self.get_fringe_vector_result(i, name)  # TODO: update
         mag = scalar

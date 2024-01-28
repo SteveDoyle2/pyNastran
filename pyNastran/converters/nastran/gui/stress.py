@@ -2,6 +2,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
+from functools import wraps
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -30,8 +31,29 @@ if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.result_objects.stress_object import CompositeDict
 
 
-def get_rod_stress_strains(eids: np.ndarray,
-                           cases: CasesDict,
+def nocrash_log(func):
+    @wraps(func)
+    def wrapper(log: SimpleLogger, stop_on_failure: bool,
+                cases, *args, **kwargs):
+        assert isinstance(cases, dict), case
+        ncases = len(cases)
+        try:
+            icase = func(cases, *args, **kwargs)
+        except NotImplementedError:  # pragma: no cover
+            raise
+        except Exception as e:
+            #print('dont crash...')
+            log.error(str(e))
+            if stop_on_failure:
+                raise
+            ncases2 = len(cases)
+            icase += ncases2 - ncases
+        return icase
+    return wrapper
+
+@nocrash_log
+def get_rod_stress_strains(cases: CasesDict,
+                           eids: np.ndarray,
                            model: OP2,
                            times: np.ndarray,
                            key: NastranKey,
@@ -153,8 +175,9 @@ def get_rod_stress_strains(eids: np.ndarray,
                                        name='Rod')
     return icase
 
-def get_bar_stress_strains(eids: np.ndarray,
-                           cases: CasesDict,
+@nocrash_log
+def get_bar_stress_strains(cases: CasesDict,
+                           eids: np.ndarray,
                            model: OP2,
                            times: np.ndarray,
                            key: NastranKey,
@@ -343,8 +366,9 @@ def get_bar_stress_strains(eids: np.ndarray,
                                        name='Bar')
     return icase
 
-def get_beam_stress_strains(eids: np.ndarray,
-                            cases: CasesDict,
+@nocrash_log
+def get_beam_stress_strains(cases: CasesDict,
+                            eids: np.ndarray,
                             model: OP2,
                             times: np.ndarray,
                             key: NastranKey,
@@ -512,8 +536,9 @@ def get_beam_stress_strains(eids: np.ndarray,
             icase += 1
     return icase
 
-def get_plate_stress_strains(eids: np.ndarray,
-                             cases: CasesDict,
+@nocrash_log
+def get_plate_stress_strains(cases: CasesDict,
+                             eids: np.ndarray,
                              model: OP2,
                              times: np.ndarray,
                              key: NastranKey,
@@ -750,9 +775,10 @@ def get_plate_stress_strains(eids: np.ndarray,
     res.form_names = np.array(form_names)
     return icase
 
-def get_plate_stress_strains2(node_id: np.ndarray,
+@nocrash_log
+def get_plate_stress_strains2(cases: CasesDict,
+                              node_id: np.ndarray,
                               element_id: np.ndarray,
-                              cases: CasesDict,
                               model: OP2,
                               times: np.ndarray,
                               key: NastranKey,
@@ -1034,8 +1060,9 @@ def get_composite_sort(element_layers: list[np.ndarray]):
     assert len(element_layer_stacked) == len(uelement_layers_stacked)
     return element_layer_stacked, iisort
 
-def get_composite_plate_stress_strains2(eids: np.ndarray,
-                                        cases: CasesDict,
+@nocrash_log
+def get_composite_plate_stress_strains2(cases: CasesDict,
+                                        eids: np.ndarray,
                                         model: OP2,
                                         times: np.ndarray,
                                         key: NastranKey,
@@ -1108,8 +1135,9 @@ def get_composite_plate_stress_strains2(eids: np.ndarray,
             icase += 1
     return icase
 
-def get_composite_plate_stress_strains(eids: np.ndarray,
-                                       cases: CasesDict,
+@nocrash_log
+def get_composite_plate_stress_strains(cases: CasesDict,
+                                       eids: np.ndarray,
                                        model: OP2,
                                        times: np.ndarray,
                                        key: NastranKey,
@@ -1285,9 +1313,10 @@ def _composite_method_map(is_stress: bool,
     #methods = case_headers
     return word, method_map
 
-def get_solid_stress_strains2(node_id: np.ndarray,
+@nocrash_log
+def get_solid_stress_strains2(cases: CasesDict,
+                              node_id: np.ndarray,
                               element_id: np.ndarray,
-                              cases: CasesDict,
                               model: OP2,
                               times: np.ndarray,
                               key: NastranKey,
@@ -1436,8 +1465,9 @@ def _get_solids(results: OP2,
         cards2.append(result[key])
     return cards2, word, subcase_id, analysis_code
 
-def get_solid_stress_strains(eids: np.ndarray,
-                             cases: CasesDict,
+@nocrash_log
+def get_solid_stress_strains(cases: CasesDict,
+                             eids: np.ndarray,
                              model: OP2,
                              times: np.ndarray,
                              key: NastranKey,
@@ -1612,8 +1642,9 @@ def get_solid_stress_strains(eids: np.ndarray,
                                        name='Solid')
     return icase
 
-def get_spring_stress_strains(eids: np.ndarray,
-                              cases: CasesDict,
+@nocrash_log
+def get_spring_stress_strains(cases: CasesDict,
+                              eids: np.ndarray,
                               model: OP2,
                               times: np.ndarray,
                               key: NastranKey,

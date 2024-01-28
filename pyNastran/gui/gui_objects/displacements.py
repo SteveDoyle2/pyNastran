@@ -76,7 +76,8 @@ class VectorTable(GuiResultCommon):
         #self.deflects = deflects
         self.titles = titles
         self.headers = headers
-        self.scales = scales
+        self.scales = deepcopy(scales)
+        self.arrow_scales = deepcopy(scales)
         self.subcase_id = subcase_id
         self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
@@ -199,6 +200,8 @@ class VectorTable(GuiResultCommon):
 
     def get_scale(self, i: int, name: str) -> float:
         return self.scales[i]
+    def get_arrow_scale(self, i: int, name: str) -> float:
+        return self.arrow_scales[i]
 
     def get_legend_title(self, i: int, name: str) -> str:
         return self.titles[i]
@@ -218,6 +221,12 @@ class VectorTable(GuiResultCommon):
             self.scales[:] = scale
         else:
             self.scales[i] = scale
+    def set_arrow_scale(self, i: int, name: str, scale: float) -> None:
+        #j = self.titles_default.index(name)
+        if self.linked_scale_factor:
+            self.arrow_scales[:] = scale
+        else:
+            self.arrow_scales[i] = scale
 
     def set_phase(self, i: int, name: str, phase: float) -> None:
         if self.is_real:
@@ -256,6 +265,8 @@ class VectorTable(GuiResultCommon):
         #return self.min_default[i], self.max_default[i]
 
     def get_default_scale(self, i: int, name: str) -> float:
+        return self.scales_default[i]
+    def get_default_arrow_scale(self, i: int, name: str) -> float:
         return self.scales_default[i]
 
     def get_default_phase(self, i: int, name: str) -> Optional[float]:
@@ -458,27 +469,9 @@ class ForceTableResults(VectorTable):
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
 
-    i_to_method_real = {
-        0: forces,
-        1: forces,
-        2: forces,
-
-        3: moments,
-        4: moments,
-        5: moments,
-    }
-    def get_methods(self, i: int, name: str) -> list[str]:
-        if self.is_real:
-            out = self.i_to_method_real.get(i, forces) # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
-            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
-                out[0] = 'Reluctant'
-        else:
-            out = ['node real', 'node imag', 'node magnitude', 'node phase']
-        return out
-
-    #def get_location(self, i:int, name):
-        #"""the result type"""
-        #return 'node'
+    def get_location(self, i:int, name):
+        """the result type"""
+        return 'node'
 
     def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
                                          unused_scale: float,
