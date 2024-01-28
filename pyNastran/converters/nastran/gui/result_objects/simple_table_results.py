@@ -1,8 +1,10 @@
 from copy import deepcopy
+from typing import Any
 import numpy as np
 
 from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.table import Table
+CaseTuple = tuple[int, int, str]
 
 
 class SimpleTableResults(Table):
@@ -75,13 +77,15 @@ class SimpleTableResults(Table):
     def get_default_arrow_scale(self, i, name):
         return None
 
-    def get_magnitude(self, i, name):
+    def get_magnitude(self, i, name) -> np.ndarray:
         scalar, unused_vector = self.get_fringe_vector_result(i, name)  # TODO: update
         mag = scalar
         if mag.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
         return mag
 
+    def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
     def get_min_max(self, i, name):
         mag = self.get_magnitude(i, name)
         return np.nanmin(mag), np.nanmax(mag)
@@ -96,20 +100,25 @@ class SimpleTableResults(Table):
         j = self._get_j(i, name)
         return self.phases[j]
 
-    def get_fringe_vector_result(self, i, name) -> tuple[np.ndarray, None]:
-        #print(i, name)
+    def get_fringe_result(self, i: int, name: CaseTuple) -> np.ndarray:
         (itime, imethod, unused_header) = name
         scalars = self.scalars[itime, :, imethod]
 
         if len(scalars) == self.eid_max:
-            return scalars, None
+            return scalars
         fringe = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
         #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
         #print(self.methods)
         try:
             fringe[self.eids] = scalars
         except IndexError:
-            raise RuntimeError(f'{self.uname!r} eids.max()={self.eids.max()} scalars.shape={scalars.shape}')
+            raise RuntimeError(f'{self.uname!r} eids.max()={self.eids.max()} '
+                               f'scalars.shape={scalars.shape}')
+        return fringe
+
+    def get_fringe_vector_result(self, i: int, name: CaseTuple) -> tuple[np.ndarray, None]:
+        #print(i, name)
+        fringe = self.get_fringe_result(i, name)
         return fringe, None
 
     def _get_j(self, i, name):
@@ -120,7 +129,7 @@ class SimpleTableResults(Table):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return True, ['Material']
-    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         out = {'derivation': ['Absolute Max'], }
         return True, out

@@ -552,12 +552,12 @@ def create_annotation(gui: MainWindow,
 def get_plottable_values(obj, i, res_name) -> tuple[bool, Optional[np.ndarray]]:
     """returns a vector -> fringe depending on what's available"""
     is_value = False
-    fringe, case = obj.get_fringe_vector_result(i, res_name)
+    fringe, vector = obj.get_fringe_vector_result(i, res_name)
 
-    if case is None:
+    if vector is None:
         if fringe is not None:
-            case = fringe
+            vector = fringe
         else:
             return is_value, None
     is_values = True
-    return is_values, case
+    return is_values, vector

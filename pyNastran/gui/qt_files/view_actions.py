@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 #import vtkmodules
 from pyNastran.gui.vtk_common_core import vtkMath
-from pyNastran.gui.vtk_rendering_core import vtkCamera
+from pyNastran.gui.vtk_rendering_core import vtkCamera, vtkRenderer
+from pyNastran.gui.gui_objects.settings import Settings
+
+from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array, flip_actor_visibility
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 if TYPE_CHECKING:  # pragma: no cover
@@ -138,6 +141,21 @@ class ViewActions:
         self.Render()
 
     #---------------------------------------------------------------------------
+
+    def on_show_hide_min_actor(self) -> None:
+        """flips the status of the min label actor"""
+        self.settings.is_min_visible = not self.settings.is_min_visible
+        actor = self.gui.min_max_actors[0]
+        flip_actor_visibility(actor)
+        self.Render()
+
+    def on_show_hide_max_actor(self) -> None:
+        """flips the status of the max label actor"""
+        self.settings.is_max_visible = not self.settings.is_max_visible
+        actor = self.gui.min_max_actors[1]
+        flip_actor_visibility(actor)
+        self.Render()
+
     def on_increase_magnification(self) -> None:
         """zoom in"""
         self.zoom(1.1)
@@ -335,3 +353,7 @@ class ViewActions:
     @property
     def vtk_interactor(self) -> Any:
         return self.gui.vtk_interactor
+
+    @property
+    def settings(self) -> Settings:
+        return self.gui.settings

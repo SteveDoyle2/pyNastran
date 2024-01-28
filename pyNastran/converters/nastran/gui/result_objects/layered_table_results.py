@@ -91,8 +91,8 @@ class LayeredTableResults(Table):
     def get_default_scale(self, i, name):
         return None
 
-    def get_magnitude(self, i, name):
-        scalar, unused_vector = self.get_fringe_vector_result(i, name)  # TODO: update
+    def get_magnitude(self, i, name) -> np.ndarray:
+        scalar, unused_vector = self.get_fringe_result(i, name)  # TODO: update
         mag = scalar
         if scalar.dtype.name in ['complex64']:
             mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
@@ -110,7 +110,7 @@ class LayeredTableResults(Table):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
 
-    def get_fringe_vector_result(self, i: int, name: str):
+    def get_fringe_result(self, i: int, name: str):
         (itime, ilayer, imethod, unused_header) = name
         scalars = self.scalars[itime, :, ilayer, imethod]
 
@@ -121,6 +121,10 @@ class LayeredTableResults(Table):
         #print(self.methods)
         data[self.eids] = scalars
         return data, None
+
+    def get_fringe_vector_result(self, i: int, name: str):
+        fringe = self.get_fringe_result(i, name)
+        return fringe, None
 
     def __repr__(self):
         """defines str(self)"""

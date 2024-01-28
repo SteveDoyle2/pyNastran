@@ -208,6 +208,8 @@ class VectorTable(GuiResultCommon):
 
     def get_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_values[i], self.max_values[i]
+    def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
 
     #-------------------------------------
     # setters

@@ -69,10 +69,10 @@ class TestGUI(UsesQApplication):
         gui.clear_application_log(force=True)
         gui.on_reset_camera()
 
-        gui.show_hide_max_actor(render=True)
-        gui.show_hide_min_actor(render=True)
-        gui.show_hide_max_actor(render=False)
-        gui.show_hide_min_actor(render=False)
+        gui.view_actions.on_show_hide_max_actor()
+        gui.view_actions.on_show_hide_min_actor()
+        gui.view_actions.on_show_hide_max_actor()
+        gui.view_actions.on_show_hide_min_actor()
 
         gui._cycle_results()
         gui.closeEvent()

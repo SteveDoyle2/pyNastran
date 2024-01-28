@@ -429,6 +429,35 @@ class LegendObject(BaseGui):
         is_normal = False
         update_legend = False
         location = 'centroid'
+
+        if gui.icase_disp is not None:
+            key = gui.case_keys[gui.icase_disp]
+            assert isinstance(key, integer_types), key
+            (objd, (i, res_name)) = gui.result_cases[key]
+            scale_old = objd.get_scale(i, res_name)
+            phase_old = objd.get_phase(i, res_name)
+            update_disp = scale != scale_old or phase != phase_old
+            if update_disp:
+                objd.set_scale(i, res_name, scale)
+                objd.set_phase(i, res_name, phase)
+                assert isinstance(scale, float), scale
+                gui.on_disp(gui.icase_disp, apply_fringe=False,
+                            update_legend_window=False, show_msg=False)
+
+        if gui.icase_vector is not None:
+            key = gui.case_keys[gui.icase_vector]
+            assert isinstance(key, integer_types), key
+            (objv, (i, res_name)) = gui.result_cases[key]
+            #arrow_scale_old = objv.get_arrow_scale(i, res_name)
+            #objv.set_arrow_scale(i, res_name, arrow_scale)
+            arrow_scale_old = objv.get_scale(i, res_name)
+            objv.set_scale(i, res_name, arrow_scale)
+            assert isinstance(arrow_scale, float), arrow_scale
+            update_vector = arrow_scale != arrow_scale_old
+            if update_vector:
+                gui.on_vector(gui.icase_vector, apply_fringe=False,
+                              update_legend_window=False, show_msg=False)
+
         if gui.icase_fringe is not None:
             key = gui.case_keys[gui.icase_fringe]
             assert isinstance(key, integer_types), key
@@ -477,34 +506,6 @@ class LegendObject(BaseGui):
 
         if is_normal:
             return
-
-        if gui.icase_disp is not None:
-            key = gui.case_keys[gui.icase_disp]
-            assert isinstance(key, integer_types), key
-            (objd, (i, res_name)) = gui.result_cases[key]
-            scale_old = objd.get_scale(i, res_name)
-            phase_old = objd.get_phase(i, res_name)
-            update_disp = scale != scale_old or phase != phase_old
-            if update_disp:
-                objd.set_scale(i, res_name, scale)
-                objd.set_phase(i, res_name, phase)
-                assert isinstance(scale, float), scale
-                gui.on_disp(gui.icase_disp, apply_fringe=False,
-                            update_legend_window=False, show_msg=False)
-
-        if gui.icase_vector is not None:
-            key = gui.case_keys[gui.icase_vector]
-            assert isinstance(key, integer_types), key
-            (objv, (i, res_name)) = gui.result_cases[key]
-            #arrow_scale_old = objv.get_arrow_scale(i, res_name)
-            #objv.set_arrow_scale(i, res_name, arrow_scale)
-            arrow_scale_old = objv.get_scale(i, res_name)
-            objv.set_scale(i, res_name, arrow_scale)
-            assert isinstance(arrow_scale, float), arrow_scale
-            update_vector = arrow_scale != arrow_scale_old
-            if update_vector:
-                gui.on_vector(gui.icase_vector, apply_fringe=False,
-                              update_legend_window=False, show_msg=False)
 
         #unused_name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         #if obj.is_normal_result(i, res_name):

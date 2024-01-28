@@ -31,7 +31,15 @@ class CompositeResults2(VectorResultsCommon):
                  colormap: str='',
                  set_max_min: bool=False,
                  uname: str='CompositeResults2'):
-        GuiResultCommon.__init__(self)
+        VectorResultsCommon.__init__(
+            self, subcase_id,
+            case,
+            #dxyz: Union[RealTableArray, ComplexTableArray],
+            data_format=data_format,
+            nlabels=nlabels, labelsize=labelsize,
+            ncolors=ncolors, colormap=colormap,
+            #set_max_min: bool=False,
+            uname=uname)
         self.layer_indices = (-1, )  # All
         i = -1
         name = (0, 0, '')
@@ -46,7 +54,7 @@ class CompositeResults2(VectorResultsCommon):
         self.dim = case.data.ndim
         assert self.dim == 3, case.data.shape
 
-        self.subcase_id = subcase_id
+        #self.subcase_id = subcase_id
         self.is_stress = case.is_stress
         if self.is_stress:
             self.iresult_map = {
@@ -78,16 +86,16 @@ class CompositeResults2(VectorResultsCommon):
                 11: 'fiber_distance',
                 12: 'fiber_curvature',
             }
-        self.linked_scale_factor = False
+        #self.linked_scale_factor = False
 
-        self.data_format = data_format
+        #self.data_format = data_format
 
         #  global ids
         self.model = model
         self.element_id = element_id
 
         # local case object
-        self.case = case
+        #self.case = case
         self.result = result
         layers = case.element_layer[:, 1]
         ulayers = np.unique(layers)
@@ -96,39 +104,39 @@ class CompositeResults2(VectorResultsCommon):
         self.layer_map.update(layers)
 
         self.data_type = self.case.data.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type in ['<f4', '<f8'] else False
-        #self.is_real = dxyz.data.dtype.name in {'float32', 'float64'}
+        #self.is_real = True if self.data_type in ['<f4', '<f8'] else False
+        self.is_real = self.case.data.dtype.name in {'float32', 'float64'}
         self.is_complex = not self.is_real
 
-        ntimes = case.data.shape[0]
+        #ntimes = case.data.shape[0]
         #nscale = ntimes
         #if self.linked_scale_factor:
             #nscale = 1
 
         #def fscales():
             #return [None] * nscale
-        def ftimes():
-            return [None] * ntimes
-        def fphases():
-            return np.zeros(ntimes, dtype='float64')
+        #def ftimes():
+            #return [None] * ntimes
+        #def fphases():
+            #return np.zeros(ntimes, dtype='float64')
 
         #self.default_scales = defaultdict(fscales)
         #self.scales = defaultdict(fscales)
-        self.default_mins = defaultdict(ftimes)
-        self.default_maxs = defaultdict(ftimes)
-        self.mins = defaultdict(ftimes)
-        self.maxs = defaultdict(ftimes)
-        self.phases = defaultdict(fphases)
+        #self.default_mins = defaultdict(ftimes)
+        #self.default_maxs = defaultdict(ftimes)
+        #self.mins = defaultdict(ftimes)
+        #self.maxs = defaultdict(ftimes)
+        #self.phases = defaultdict(fphases)
 
-        self.data_formats = [self.data_format]
-        self.headers = ['headers'] * ntimes
+        #self.data_formats = [self.data_format]
+        #self.headers = ['headers'] * ntimes
 
-        self.nlabels = None
-        self.labelsize = None
-        self.ncolors = None
-        self.colormap = colormap
+        #self.nlabels = None
+        #self.labelsize = None
+        #self.ncolors = None
+        #self.colormap = colormap
 
-        self.uname = uname
+        #self.uname = uname
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -237,7 +245,7 @@ class CompositeResults2(VectorResultsCommon):
         """
         # overwrite itime based on linked_scale factor
         (itime, iresult, header) = case_tuple
-        itime, unused_case_flag = self.get_case_flag(case_tuple)
+        itime, unused_case_flag = self.get_case_flag(itime, case_tuple)
 
         default_indices = self._get_default_tuple_indices() # 0-based
         if self.layer_indices == default_indices:
@@ -255,48 +263,62 @@ class CompositeResults2(VectorResultsCommon):
         #return self.uname
         return annotation_label
 
-    def get_default_min_max(self, itime: int,
-                            case_tuple: str) -> tuple[float, float]:
-        #(itime, iresult, unused_header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.default_mins[case_flag]
-        maxs = self.default_maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
+    #def get_default_min_max(self, itime: int,
+                            #case_tuple: str) -> tuple[float, float]:
+        ##(itime, iresult, unused_header) = case_tuple
+        #itime, case_flag = self.get_case_flag(itime, case_tuple)
+        #mins = self.default_mins[case_flag]
+        #maxs = self.default_maxs[case_flag]
+        #if mins[itime] is not None and maxs[itime] is not None:
+            #return mins[itime], maxs[itime]
 
-        datai = self._get_real_data(case_tuple)
-        mins[itime] = np.nanmin(datai)
-        maxs[itime] = np.nanmax(datai)
-        return mins[itime], maxs[itime]
+        #datai = self._get_real_data(case_tuple)
+        #mins[itime] = np.nanmin(datai)
+        #maxs[itime] = np.nanmax(datai)
 
-    def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        if mins[itime] is not None and maxs[itime] is not None:
-            return mins[itime], maxs[itime]
+        #return mins[itime], maxs[itime]
 
-        # save the defaults if they're not None
-        mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
-        if mini2 is not None:
-            mins[itime] = mini2
-        if maxi2 is not None:
-            maxs[itime] = maxi2
-        return mins[itime], maxs[itime]
+    #def get_imin_imax(self, itime, case_tuple: CaseTuple) -> tuple[None, None]:
+        #itime, case_flag = self.get_case_flag(itime, case_tuple)
+        #mins = self.imins[case_flag]
+        #maxs = self.imaxs[case_flag]
 
-    def set_min_max(self, itime, case_tuple: CaseTuple,
-                    min_value, max_value) -> None:
-        #(itime, iresult, header) = case_tuple
-        itime, case_flag = self.get_case_flag(case_tuple)
+        #if mins[itime] is None:
+            #adsf
+        #if mins[itime] is not None and maxs[itime] is not None:
+            #return mins[itime], maxs[itime]
+        #mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
+        #return mini2, maxi2
 
-        mins = self.mins[case_flag]
-        maxs = self.maxs[case_flag]
-        mins[itime] = min_value
-        maxs[itime] = max_value
+    #def get_min_max(self, itime, case_tuple) -> tuple[float, float]:
+        ##(itime, iresult, header) = case_tuple
+        #itime, case_flag = self.get_case_flag(case_tuple)
+        #mins = self.mins[case_flag]
+        #maxs = self.maxs[case_flag]
+        #if mins[itime] is not None and maxs[itime] is not None:
+            #return mins[itime], maxs[itime]
 
-    def get_case_flag(self, case_tuple: CaseTuple) -> tuple[int,
-                                                            tuple[int, int, tuple, str]]:
+        ## save the defaults if they're not None
+        #mini2, maxi2 = self.get_default_min_max(itime, case_tuple)
+        #if mini2 is not None:
+            #mins[itime] = mini2
+        #if maxi2 is not None:
+            #maxs[itime] = maxi2
+        #return mins[itime], maxs[itime]
+
+    #def set_min_max(self, itime, case_tuple: CaseTuple,
+                    #min_value, max_value) -> None:
+        ##(itime, iresult, header) = case_tuple
+        #itime, case_flag = self.get_case_flag(case_tuple)
+
+        #mins = self.mins[case_flag]
+        #maxs = self.maxs[case_flag]
+        #mins[itime] = min_value
+        #maxs[itime] = max_value
+
+    def get_case_flag(self, itime: int,
+                      case_tuple: CaseTuple) -> tuple[int,
+                                                      tuple[int, int, tuple, str]]:
         """
         itime = 0
         iresult = 0 # o11
@@ -411,8 +433,13 @@ class CompositeResults2(VectorResultsCommon):
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)
 
-    def get_fringe_vector_result(self, itime: int, case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
+    def get_fringe_result(self, itime: int,
+                          case_tuple: CaseTuple) -> np.ndarray:
         fringe = self._get_fringe_data_dense(itime, case_tuple)
+        return fringe
+    def get_fringe_vector_result(self, itime: int,
+                                 case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
+        fringe = self.get_fringe_result(itime, case_tuple)
         return fringe, None
 
     def _get_fringe_data_dense(self, itime: int, case_tuple: CaseTuple) -> np.ndarray:

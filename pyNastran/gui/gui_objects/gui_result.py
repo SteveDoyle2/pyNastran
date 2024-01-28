@@ -5,10 +5,10 @@ defines:
 
 """
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Union, Any, Optional
 import numpy as np
 in1d = np.in1d
-from pyNastran.utils.numpy_utils import integer_float_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
@@ -82,6 +82,10 @@ class GuiResultCommon:
         raise NotImplementedError(f'{self.class_name}.get_nlabels_labelsize_ncolors_colormap')
 
     @abstractmethod
+    def get_imin_imax(self, i: int, name: str) -> Union[tuple[int, int],
+                                                        tuple[None, None]]:  # pragma: no cover
+        raise NotImplementedError(f'{self.class_name}.get_min_max')
+    @abstractmethod
     def get_min_max(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_min_max')
 
@@ -92,6 +96,10 @@ class GuiResultCommon:
     @abstractmethod
     def get_methods(self, i: int, name: str) -> list[str]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_methods')
+
+    @abstractmethod
+    def get_fringe_result(self, i: int, name: str) -> Any:  # pragma: no cover
+        raise NotImplementedError(f'{self.class_name}.get_fringe_result')
 
     @abstractmethod
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[Any, Any]:  # pragma: no cover
@@ -212,6 +220,8 @@ class GridPointForceResult(GuiResultCommon):
     #def get_scalar(self, i: int, name: str) -> None:
         #return None
 
+    def get_fringe_result(self, i: int, name: str) -> None:
+        return None
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
         return None, None
     def get_legend_title(self, i: int, name: str) -> str:
@@ -237,7 +247,9 @@ class GridPointForceResult(GuiResultCommon):
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str,
                                                nlabels, labelsize, ncolors, colormap) -> None:
         return
-    def get_min_max(self, i: int, name: str) -> tuple[Any, Any]:
+    def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
+    def get_min_max(self, i: int, name: str) -> tuple[None, None]:
         return None, None
 
     #def save_vtk_result(self, used_titles: set[str]) -> None:
@@ -326,6 +338,8 @@ class NormalResult(GuiResultCommon):
         #self.ncolors = 1000
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
+    def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
+        return None, None
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
@@ -392,6 +406,8 @@ class NormalResult(GuiResultCommon):
     def get_methods(self, i: int, name: str) -> list[str]:
         return ['centroid']
 
+    def get_fringe_result(self, i: int, name: str) -> None:
+        return None
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
         return None, None
 
@@ -477,8 +493,12 @@ class GuiResult(GuiResultCommon):
         self.header_default = self.header
         self.data_format_default = self.data_format
 
-        self.min_default = np.nanmin(self.scalar)
-        self.max_default = np.nanmax(self.scalar)
+        self.imin = np.nanargmin(self.scalar)
+        self.imax = np.nanargmax(self.scalar)
+        assert isinstance(self.imin, integer_types), self.imin
+        assert isinstance(self.imax, integer_types), self.imax
+        self.min_default = self.scalar[self.imin]
+        self.max_default = self.scalar[self.imax]
         if self.data_type in INT_TYPES:
             # turns out you can't have a NaN/inf with an integer array
             # we need to recast it
@@ -499,6 +519,8 @@ class GuiResult(GuiResultCommon):
                         print('inan_remaining =', inan_remaining)
                         raise
                     self.max_default = inan_remaining.max()
+                    #self.imax = np.where(self.scalar == self.min_default)[0]
+                    #self.imin = np.where(self.scalar == self.max_default)[0]
         else:
             # handling VTK NaN oddinty
             # filtering the inf values and replacing them with NaN
@@ -675,6 +697,8 @@ class GuiResult(GuiResultCommon):
         #self.ncolors = 1000
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
+    def get_imin_imax(self, i: int, name: str) -> tuple[int, int]:
+        return self.imin, self.imax
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
@@ -767,12 +791,15 @@ class GuiResult(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return xyz, dxyz
 
-    def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, None]:
+    def get_fringe_result(self, i: int, name: str) -> np.ndarray:
         if self.is_real:
             #return self.dxyz[i, :]
-            return self.scalar, None
+            return self.scalar
         else:
             raise NotImplementedError(f'title={self.title!r} is not real; fmt={self.data_type}')
+
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, None]:
+        return self.get_fringe_result(i, name), None
 
     #def get_vector_result(self, i: int, name: str):
         #if self.is_real:

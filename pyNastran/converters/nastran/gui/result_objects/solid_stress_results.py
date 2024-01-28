@@ -412,6 +412,16 @@ class SolidResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
+    def get_fringe_result(self, itime: int,
+                          case_tuple: CaseTuple) -> np.ndarray:
+        """
+        gets the 'typical' result which is a vector
+         - GuiResult:           fringe; (n,)   array
+         - DisplacementResults: vector; (n, 3) array
+        """
+        fringe = self._get_fringe_data_dense(itime, case_tuple)
+        return fringe
+
     def get_fringe_vector_result(self, itime: int,
                                  case_tuple: CaseTuple) -> tuple[np.ndarray, None]:
         """
@@ -419,7 +429,7 @@ class SolidResults2(VectorResultsCommon):
          - GuiResult:           fringe; (n,)   array
          - DisplacementResults: vector; (n, 3) array
         """
-        fringe = self._get_fringe_data_dense(itime, case_tuple)
+        fringe = self.get_fringe_result(itime, case_tuple)
         return fringe, None
 
     def get_default_scale(self, itime: int, res_name: str) -> float:

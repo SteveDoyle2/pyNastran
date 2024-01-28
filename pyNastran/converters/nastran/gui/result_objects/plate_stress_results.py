@@ -500,9 +500,13 @@ class PlateResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
-    def get_fringe_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, None]:
+    def get_fringe_result(self, itime: int, res_name: str) -> np.ndarray:
         """get_fringe_value"""
         fringe = self._get_fringe_data_dense(itime, res_name)
+        return fringe
+    def get_fringe_vector_result(self, itime: int, res_name: str) -> tuple[np.ndarray, None]:
+        """get_fringe_value"""
+        fringe = self.get_fringe_result(itime, res_name)
         return fringe, None
 
     def get_default_scale(self, itime: int, res_name: str) -> float:

@@ -5,6 +5,7 @@ from collections import defaultdict
 import numpy as np
 from typing import DefaultDict, Union, Optional, Any # , TYPE_CHECKING
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import safe_norm
 #if TYPE_CHECKING:
 from pyNastran.op2.result_objects.table_object import (
@@ -57,7 +58,12 @@ class VectorResultsCommon(GuiResultCommon):
             return [np.nan] * ntimes
         def fphases() -> np.ndarray:
             return np.zeros(ntimes, dtype='float64')
+        def findex() -> np.ndarray:
+            # -1 -> nan
+            # -2 -> default
+            return np.zeros(ntimes, dtype='int32') * -2
 
+        # floats
         self.default_arrow_scales: DefaultDict[Any, list[float]] = defaultdict(fscales)
         self.arrow_scales:         DefaultDict[Any, list[float]] = defaultdict(fscales)
 
@@ -68,8 +74,11 @@ class VectorResultsCommon(GuiResultCommon):
         self.default_maxs: DefaultDict[Any, list[float]] = defaultdict(ftimes)
         self.mins:         DefaultDict[Any, list[float]] = defaultdict(ftimes)
         self.maxs:         DefaultDict[Any, list[float]] = defaultdict(ftimes)
-
         self.phases: DefaultDict[Any, np.ndarray] = defaultdict(fphases)
+
+        # ints
+        self.imins:        DefaultDict[Any, np.ndarray] = defaultdict(findex)
+        self.imaxs:        DefaultDict[Any, np.ndarray] = defaultdict(findex)
 
         self.data_format = data_format
         self.data_formats = [self.data_format]
@@ -148,10 +157,48 @@ class VectorResultsCommon(GuiResultCommon):
 
         fringe_data = self._get_fringe_data_sparse(itime, res_name)
 
-        # save the defaults for the next time
-        mins[itime] = np.nanmin(fringe_data)
-        maxs[itime] = np.nanmax(fringe_data)
+        #if 0:
+            ## save the defaults for the next time
+            #mins[itime] = np.nanmin(fringe_data)
+            #maxs[itime] = np.nanmax(fringe_data)
+
+            #imin = np.where(fringe_data == mins[itime])[0]
+            #imax = np.where(fringe_data == maxs[itime])[0]
+            #self.imins[case_flag][itime] = imin[0]
+            #self.imaxs[case_flag][itime] = imax[-1]
+        #else:
+        try:
+            imin = np.nanargmin(fringe_data)
+            imax = np.nanargmax(fringe_data)
+            assert isinstance(imin, integer_types), imin
+            assert isinstance(imax, integer_types), imax
+
+            mins[itime] = fringe_data[imin]
+            maxs[itime] = fringe_data[imax]
+
+            self.imins[case_flag][itime] = imin
+            self.imaxs[case_flag][itime] = imax
+        except ValueError:
+            # All NaN
+            mins[itime] = np.nan
+            maxs[itime] = np.nan
+            self.imins[case_flag][itime] = -1
+            self.imaxs[case_flag][itime] = -1
+
         return mins[itime], maxs[itime]
+
+    def get_imin_imax(self, itime: int, res_name) -> tuple[int, int]:
+        itime, case_flag = self.get_case_flag(itime, res_name)
+        imins = self.imins[case_flag]
+        imaxs = self.imaxs[case_flag]
+        imin = imins[itime]
+        imax = imaxs[itime]
+        # -1 -> nan
+        # -2 -> default
+        assert imins[itime] != -2, imins
+        assert isinstance(imin, integer_types), imin
+        assert isinstance(imax, integer_types), imax
+        return imins[itime], imaxs[itime]
 
     def get_min_max(self, itime: int, res_name) -> tuple[float, float]:
         itime, case_flag = self.get_case_flag(itime, res_name)
@@ -585,6 +632,11 @@ class DispForceVectorResults(VectorResultsCommon):
         fringe_result_dense[self.inode] = fringe_result_sparse
         return fringe_result_dense
 
+    def get_fringe_result(self, itime: int,
+                          res_name: str) -> np.ndarray:
+        fringe, vector = self.get_fringe_vector_result(itime, res_name)
+        return fringe
+
     def get_fringe_vector_result(self, itime: int,
                                  res_name: str) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -623,6 +675,10 @@ class DispForceVectorResults(VectorResultsCommon):
             default_mins[itime] = mini
             default_maxs[itime] = maxi
 
+            imini = np.where(fringe_result == mini)[0]
+            imaxi = np.where(fringe_result == maxi)[0]
+            self.imins[itime] = imini
+            self.imaxs[itime] = imaxi
         return fringe_result, vector_result
 
 def _get_real_component_indices(methods_keys: Optional[list[int]]) -> tuple[int, ...]:

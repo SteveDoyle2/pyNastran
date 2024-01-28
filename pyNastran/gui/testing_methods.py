@@ -242,6 +242,7 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_subcase_id = obj.subcase_id
             unused_methods = obj.get_methods(i, name)
             #method = methods[0]
+            unused_fringe = obj.get_fringe_result(i, name)
             unused_fringe, unused_disp = obj.get_fringe_vector_result(i, name)
             unused_result_type = obj.get_legend_title(i, name)
             vector_size = obj.get_vector_size(i, name)
@@ -286,6 +287,7 @@ class FakeGUIMethods(GuiVTKCommon):
              unused_default_ncolors, unused_default_colormap) = out_labels
 
             unused_min_value, unused_max_value = obj.get_min_max(i, name)
+            unused_imin_value, unused_imax_value = obj.get_imin_imax(i, name)
 
         self.model_data.result_cases = cases
 

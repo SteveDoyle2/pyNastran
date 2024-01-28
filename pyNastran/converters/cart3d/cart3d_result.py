@@ -173,7 +173,9 @@ class Cart3dGeometry(GuiResultCommon):
 
     #----------------------------------------------------
     # min/max
-    def get_min_max(self, i, name):
+    def get_imin_imax(self, i, name) -> tuple[None, None]:
+        return None, None
+    def get_min_max(self, i, name) -> tuple[float, float]:
         j = self.titles.index(name)
         return self.min_value[j], self.max_value[j]
 

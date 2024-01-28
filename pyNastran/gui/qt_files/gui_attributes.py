@@ -846,11 +846,13 @@ class GuiAttributes:
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors, colormap=colormap,
             is_shown=is_shown, render=render)
 
-    def update_scalar_bar(self, title, min_value, max_value,
-                          data_format,
-                          nlabels=None, labelsize=None,
-                          ncolors=None, colormap=None,
-                          is_shown=True) -> None:
+    def update_scalar_bar(self, title: str, min_value: float, max_value: float,
+                          data_format: str,
+                          nlabels: Optional[int]=None,
+                          labelsize: Optional[int]=None,
+                          ncolors: Optional[int]=None,
+                          colormap: Optional[str]=None,
+                          is_shown: bool=True) -> None:
         """
         Updates the Scalar Bar
 
@@ -888,7 +890,9 @@ class GuiAttributes:
                                is_horizontal=self.settings.is_horizontal_scalar_bar,
                                is_shown=is_shown)
 
-    def on_update_scalar_bar(self, title, min_value, max_value, data_format) -> None:
+    def on_update_scalar_bar(self, title: str,
+                             min_value: float, max_value: float,
+                             data_format: str) -> None:
         self.title = str(title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
@@ -942,9 +946,9 @@ class GuiAttributes:
         self.tool_actions.create_coordinate_system(
             cid, dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
 
-    def create_corner_axis(self) -> None:
-        """creates the axes that sits in the corner"""
-        self.tool_actions.create_corner_axis()
+    #def create_corner_axis(self) -> None:
+        #"""creates the axes that sits in the corner"""
+        #self.tool_actions.create_corner_axis()
 
     def get_corner_axis_visiblity(self) -> bool:
         """gets the visibility of the corner axis"""
@@ -953,7 +957,7 @@ class GuiAttributes:
         is_visible = axes_actor.GetVisibility()
         return is_visible
 
-    def set_corner_axis_visiblity(self, is_visible, render=True) -> None:
+    def set_corner_axis_visiblity(self, is_visible, render: bool=True) -> None:
         """sets the visibility of the corner axis"""
         corner_axis = self.corner_axis
         axes_actor = corner_axis.GetOrientationMarker()
@@ -961,7 +965,7 @@ class GuiAttributes:
         if render:
             self.Render()
 
-    def update_axes_length(self, dim_max) -> None:
+    def update_axes_length(self, dim_max: float) -> None:
         """
         sets the driving dimension for:
           - picking?
@@ -994,7 +998,7 @@ class GuiAttributes:
 
     def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False) -> None:
         """populates the formats that will be supported"""
-        fmts = []
+        fmts: list[str] = []
         self.supported_formats = []
         #assert 'h5nastran' in fmt_order
         for fmt in fmt_order:
