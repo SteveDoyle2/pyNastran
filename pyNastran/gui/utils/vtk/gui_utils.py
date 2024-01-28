@@ -43,14 +43,14 @@ def remove_actors_from_gui(gui,
     if render:
         renderer.Render()
 
-def set_vtk_fringe(grid_mapper: vtkDataSetMapper,
-                   case_og: np.ndarray,
-                   vector_size: int, phase: float) -> vtkTypeFloat32Array:
+def numpy_array_to_vtk_array(grid_mapper: vtkDataSetMapper,
+                             array: np.ndarray,
+                             vector_size: int, phase: float) -> vtkTypeFloat32Array:
     """
     https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
     """
     case, vtk_data_type = set_grid_mapper(
-        grid_mapper, case_og,
+        grid_mapper, array,
         vector_size, phase)
     #if 0: # nan testing
         #if case.dtype.name == 'float32':
@@ -58,29 +58,16 @@ def set_vtk_fringe(grid_mapper: vtkDataSetMapper,
         #else:
             #case[50] = np.int32(1) / np.int32(0)
 
-    if vector_size == 1:
-        if case.flags.contiguous:
-            case2 = case
-        else:
-            case2 = deepcopy(case)
-        grid_result = numpy_to_vtk(
-            num_array=case2,
-            deep=True,
-            array_type=vtk_data_type
-        )
-        #print('grid_result = %s' % grid_result)
-        #print('max2 =', grid_result.GetRange())
+    if case.flags.contiguous:
+        case2 = case
     else:
-        # vector_size=3
-        if case.flags.contiguous:
-            case2 = case
-        else:
-            case2 = deepcopy(case)
-        grid_result = numpy_to_vtk(
-            num_array=case2,
-            deep=True,
-            array_type=vtk_data_type
-        )
+        case2 = deepcopy(case)
+
+    grid_result = numpy_to_vtk(
+        num_array=case2,
+        deep=True,
+        array_type=vtk_data_type
+    )
     return grid_result
 
 def set_grid_mapper(grid_mapper: vtkDataSetMapper,

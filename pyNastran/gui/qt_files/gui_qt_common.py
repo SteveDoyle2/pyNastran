@@ -28,12 +28,12 @@ from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
-from pyNastran.gui.utils.vtk.gui_utils import set_vtk_fringe, flip_actor_visibility
+from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array, flip_actor_visibility
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:
-    from pyNastran.gui.menus.results_sidebar import Sidebar
+    from pyNastran.gui.menus.results_sidebar import ResultsSidebar
 
 
 WHITE = (1., 1., 1.)
@@ -76,7 +76,7 @@ class GuiQtCommon(GuiAttributes):
         #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             #print('vtk_version = %s' % (self.vtk_version))
 
-    def _cycle_results(self, icase: int=0) -> int:
+    def _cycle_results(self, icase: int=0) -> None:
         """used for testing"""
         self.icase = icase
         self.on_cycle_results(show_msg=True)
@@ -86,6 +86,7 @@ class GuiQtCommon(GuiAttributes):
             if i > 10000:   # pragma: no cover
                 raise RuntimeError(f'max cycle count; i={i}')
             i += 1
+        return None
 
     def on_rcycle_results(self, show_msg: bool=True) -> None:
         """the reverse of on_cycle_results"""
@@ -135,8 +136,8 @@ class GuiQtCommon(GuiAttributes):
 
     def update_icase(self) -> None:
         """updates the Qt sidebar"""
-        res_widget: Sidebar = self.res_widget
-        self.res_widget.update_icase(self.icase)
+        res_widget: ResultsSidebar = self.res_widget
+        res_widget.update_icase(self.icase)
 
     def cycle_results(self, case=None,
                       show_msg: bool=True,
@@ -252,9 +253,10 @@ class GuiQtCommon(GuiAttributes):
         self.clear_legend()
         self.vtk_interactor.Render()
 
-        self.res_widget.result_case_window.tree_view.fringe.setChecked(False)
-        self.res_widget.result_case_window.tree_view.disp.setChecked(False)
-        self.res_widget.result_case_window.tree_view.vector.setChecked(False)
+        tree_view = self.res_widget.result_case_window.tree_view
+        tree_view.fringe.setChecked(False)
+        tree_view.disp.setChecked(False)
+        tree_view.vector.setChecked(False)
         self.icase = -1
         self.icase_fringe = None
         self.icase_disp = None
@@ -275,17 +277,18 @@ class GuiQtCommon(GuiAttributes):
         try:
             case = self.result_cases[icase]
         except KeyError:
-            self.log_error('icase=%r is not a valid result_case' % icase)
+            self.log_error(f'icase={icase:d} is not a valid result_case')
             return is_valid, failed_data
 
         label2 = ''
-        (obj, (i, resname)) = self.result_cases[icase]
+        (obj, (i, resname)) = case
         subcase_id = obj.subcase_id
 
         #method = obj.get_methods(i, resname)[0]
         fringe, vector = obj.get_fringe_vector_result(i, resname)
         if vector is None:
             assert fringe is not None, 'fringe is none, but vector is not'
+
         if scale is None:
             scale = 1.0
         else:
@@ -342,7 +345,7 @@ class GuiQtCommon(GuiAttributes):
         name_str = self._names_storage.get_name_string(name_tuple)
         #return resname, normi, vector_size, min_value, max_value, norm_value
 
-        grid_result = self.set_vtk_fringe(name_tuple, fringe, vector_size, phase)
+        grid_result = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
         data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
@@ -455,7 +458,7 @@ class GuiQtCommon(GuiAttributes):
         name_str = self._names_storage.get_name_string(name_tuple)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
-        #grid_result = self.set_vtk_fringe(name_tuple, normi, vector_size)
+        #grid_result = self.numpy_array_to_vtk_array(name_tuple, normi, vector_size)
         grid_result = None
         min_value = None
         max_value = None
@@ -750,7 +753,7 @@ class GuiQtCommon(GuiAttributes):
 
         #print('disp=%s location=%r' % (is_disp, location))
         if is_disp: # or obj.deflects(i, res_name):
-            #grid_result1 = self.set_vtk_fringe(name, case, 1)
+            #grid_result1 = self.numpy_array_to_vtk_array(name, case, 1)
             #point_data.AddArray(grid_result1)
 
             self._is_displaced = True
@@ -845,7 +848,7 @@ class GuiQtCommon(GuiAttributes):
 
     def delete_cases(self, icases_to_delete: list[int], ask: bool=True) -> None:
         """
-        Used by the Sidebar to delete results
+        Used by the ResultsSidebar to delete results
 
         Parameters
         ----------
@@ -907,9 +910,9 @@ class GuiQtCommon(GuiAttributes):
             ???
         skip_click_check : bool; default=False
             There is no reason to update if the case didn't change on the
-            Results Sidebar
+            ResultsSidebar
             True  : Legend Menu
-            False : Results Sidebar
+            False : ResultsSidebar
         min_value : float; default=None
             the min value
             None : use the default
@@ -978,17 +981,17 @@ class GuiQtCommon(GuiAttributes):
         is_coord_visible, coords = obj.has_coord_transform(i, resname)
         is_derivation_visible, min_max_averages_dict = obj.has_derivation_transform(i, resname)
         is_nodal_combine_visible, combine_methods = obj.has_nodal_combine_transform(i, resname)
-        (is_enabled_fringe, is_checked_fringe,
-         is_enabled_disp, is_checked_disp,
-         is_enabled_vector, is_checked_vector) = obj.has_output_checks(i, resname)
+        (_is_enabled_fringe, is_checked_fringe,
+         _is_enabled_disp, is_checked_disp,
+         _is_enabled_vector, is_checked_vector) = obj.has_output_checks(i, resname)
 
         # assume the thingy is checked if it's active and you cycled
-        is_checked_fringe0 = sidebar_kwargs.get('is_checked_fringe', is_checked_fringe)
-        is_checked_disp0 = sidebar_kwargs.get('is_checked_disp', is_checked_disp)
-        is_checked_vector0 = sidebar_kwargs.get('is_checked_vector', is_checked_vector)
+        user_is_checked_fringe = sidebar_kwargs.get('is_checked_fringe', is_checked_fringe)
+        user_is_checked_disp = sidebar_kwargs.get('is_checked_disp', is_checked_disp)
+        user_is_checked_vector = sidebar_kwargs.get('is_checked_vector', is_checked_vector)
 
         # can i make so things don't clear out?
-        is_checked_disp0 = True if is_enabled_disp else is_checked_disp0
+        is_checked_disp = True if _is_enabled_disp else user_is_checked_disp
 
         # objects don't store checkbox flags
         remove_keys_from_dict(
@@ -996,25 +999,36 @@ class GuiQtCommon(GuiAttributes):
             ('is_checked_fringe', 'is_checked_disp', 'is_checked_vector'),
         )
         obj.set_sidebar_args(i, resname, **sidebar_kwargs)
-
-        self.res_widget.set_methods_table_visible(is_methods_visible)
-        self.res_widget.set_coord_transform_visible(is_coord_visible, coords)
-        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages_dict)  # min/max/avg
-        self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible, combine_methods)
-        self.res_widget.set_output_checkbox(
-            is_enabled_fringe, is_checked_fringe,
-            is_enabled_disp, is_checked_disp,
-            is_enabled_vector, is_checked_vector)
+        res_widget = self.res_widget
+        res_widget.set_methods_table_visible(is_methods_visible)
+        res_widget.set_coord_transform_visible(is_coord_visible, coords)
+        res_widget.set_derivation_visible(is_derivation_visible, min_max_averages_dict)  # min/max/avg
+        res_widget.set_nodal_combine_visible(is_nodal_combine_visible, combine_methods)
+        res_widget.set_output_checkbox(
+            _is_enabled_fringe, is_checked_fringe,
+            _is_enabled_disp, is_checked_disp,
+            _is_enabled_vector, is_checked_vector)
 
         methods = obj.get_methods(i, resname)
-        #methodi = methods[0]
+        methodi = methods[0]
         #-----------------------------------------------------------------------
         # methodi is ignored
+        #user_is_desp_vector = (user_is_checked_disp or user_is_checked_vector)
+        #if 0 and user_is_checked_fringe and user_is_desp_vector:
+            #fringe, vector = obj.get_fringe_vector_result(i, resname)
+        #elif is_checked_fringe0:
+            #fringe = self.get_fringe_result(i, resname)
+            #vector = None
+        #elif 0 and user_is_desp_vector:
+            #fringe = None
+            #vector = obj.get_vector_data_dense(i, resname)
+        #else:
+        # default
         fringe, vector = obj.get_fringe_vector_result(i, resname)
 
         subcase_id = obj.subcase_id
         result_type = obj.get_legend_title(i, resname)
-        if is_checked_fringe0:
+        if user_is_checked_fringe:
             data_format = obj.get_data_format(i, resname)
             out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
             nlabels, labelsize, ncolors, colormap = out
@@ -1041,11 +1055,18 @@ class GuiQtCommon(GuiAttributes):
             ncolors = -1
             colormap = -1
 
-        unused_vector_size0 = obj.get_vector_size(i, resname)
+        vector_size0 = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
         phase = obj.get_phase(i, resname)
         #if is_checked_disp or is_checked_vector:
-        scale = obj.get_scale(i, resname)
+        scalei = obj.get_scale(i, resname)
+        scale = 0.0
+        arrow_scale = 0.0
+        if vector_size0 == 3:
+            if obj.deflects(i, resname):
+                scale = scalei
+            else:
+                arrow_scale = scalei
 
         #obj.mins[(0, )] = [0.0]
         #obj.maxs[(0, )] = [0.01211053]
@@ -1072,7 +1093,7 @@ class GuiQtCommon(GuiAttributes):
         name_vector = None
         grid_result = None
         grid_result_vector = None
-        if is_checked_fringe:
+        if user_is_checked_fringe:
             #print(vector, len(vector))
             try:
                 imin = np.nanargmin(fringe)
@@ -1081,10 +1102,9 @@ class GuiQtCommon(GuiAttributes):
                 #print(fringe)
                 #print(obj)
                 print(case)
-                imethod = 0
                 #imethod = name[1]
                 #print(imethod)
-                print(i, methods[imethod])
+                print(i, methodi)
                 return self.icase
             #print(imin, imax, normi[imin], normi[imax])
 
@@ -1098,27 +1118,26 @@ class GuiQtCommon(GuiAttributes):
 
             vector_size = 1
             name_fringe = (vector_size, subcase_id, result_type, label, 0.)
-            if self._names_storage.has_exact_name(name_fringe):
-                grid_result = None
-            else:
-                grid_result = self.set_vtk_fringe(
+            if not self._names_storage.has_exact_name(name_fringe):
+                grid_result = self.numpy_array_to_vtk_array(
                     name_fringe, fringe, vector_size, phase)
 
         #if vector_size0 >= 3:
-        if is_checked_disp0 or is_checked_vector0:
+        if user_is_checked_disp or user_is_checked_vector:
             vector_size = 3
-            name_vector = (vector_size, subcase_id, result_type, label, scale)
+            name_vector = (vector_size, subcase_id, result_type, label, scalei)
             if self._names_storage.has_exact_name(name_vector):
                 grid_result_vector = None
             else:
-                grid_result_vector = self.set_vtk_fringe(
+                grid_result_vector = self.numpy_array_to_vtk_array(
                     name_vector, vector, vector_size, phase)
 
-        self.final_grid_update(icase,
-                               name_fringe, grid_result,
-                               name_vector, grid_result_vector,
-                               key, subtitle, label,
-                               min_value, max_value, show_msg)
+        if user_is_checked_fringe or user_is_checked_disp or user_is_checked_vector:
+            self.final_grid_update(icase,
+                                   name_fringe, grid_result,
+                                   name_vector, grid_result_vector,
+                                   key, subtitle, label,
+                                   min_value, max_value, show_msg)
         if not update:
             return self.icase
 
@@ -1126,16 +1145,16 @@ class GuiQtCommon(GuiAttributes):
         icase_fringe = icase
         icase_disp = self.icase_disp
         icase_vector = self.icase_vector
-        if is_checked_fringe0:
+        if user_is_checked_fringe:
             if is_legend_shown is None:
                 is_legend_shown = self.scalar_bar.is_shown
-            self.update_scalar_bar(result_type, min_value, max_value,
-                                   data_format,
-                                   nlabels=nlabels, labelsize=labelsize,
-                                   ncolors=ncolors, colormap=colormap,
-                                   is_shown=is_legend_shown)
+            self.update_scalar_bar(
+                result_type, min_value, max_value,
+                data_format,
+                nlabels=nlabels, labelsize=labelsize,
+                ncolors=ncolors, colormap=colormap,
+                is_shown=is_legend_shown)
 
-            #print('norm =', normi, location)
             self._update_min_max_actors(location, icase_fringe,
                                         imin, min_value,
                                         imax, max_value)
@@ -1149,7 +1168,6 @@ class GuiQtCommon(GuiAttributes):
                 imax=imax, max_value=max_value,
             )
 
-        arrow_scale = 0.0
         self.legend_obj.update_legend(
             icase_fringe, icase_disp, icase_vector,
             result_type, min_value, max_value, data_format, scale, phase,
@@ -1168,9 +1186,9 @@ class GuiQtCommon(GuiAttributes):
         #     for a displacement, the location is [node]
 
         #location = self.get_case_location(key)
-        self.res_widget.update_method(methods)
+        res_widget.update_method(methods)
         if explicit:
-            self.log_command('cycle_results(case=%r)' % self.icase)
+            self.log_command(f'cycle_results(case={self.icase:d})')
         assert self.icase is not False, self.icase
         return self.icase
 
@@ -1243,12 +1261,15 @@ class GuiQtCommon(GuiAttributes):
         )
         self.vtk_interactor.Render()
 
-    def set_vtk_fringe(self, name: str, case: np.ndarray,
-                        vector_size: int, phase: float) -> Optional[vtkTypeFloat32Array]:
+    def numpy_array_to_vtk_array(self,
+                                 name: str,
+                                 case: np.ndarray,
+                                 vector_size: int,
+                                 phase: float) -> Optional[vtkTypeFloat32Array]:
         if self._names_storage.has_exact_name(name):
             return None
         #print('name=%r case=%r' % (name, case))
-        grid_result = set_vtk_fringe(self.grid_mapper, case, vector_size, phase)
+        grid_result = numpy_array_to_vtk_array(self.grid_mapper, case, vector_size, phase)
         return grid_result
 
     def update_grid_by_icase_scale_phase(self,
@@ -1280,7 +1301,7 @@ class GuiQtCommon(GuiAttributes):
         xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
             i, res_name, scale, phase)
 
-        #grid_result1 = self.set_vtk_fringe(name, case, 1,
+        #grid_result1 = self.numpy_array_to_vtk_array(name, case, 1,
             #min_value, max_value, norm_value)
         #point_data.AddArray(grid_result1)
 
@@ -1307,7 +1328,7 @@ class GuiQtCommon(GuiAttributes):
         unused_xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
             i, res_name, arrow_scale, phase)
 
-        #grid_result1 = self.set_vtk_fringe(name, case, 1)
+        #grid_result1 = self.numpy_array_to_vtk_array(name, case, 1)
         #point_data.AddArray(grid_result1)
 
         self._is_forces = True
@@ -1315,9 +1336,9 @@ class GuiQtCommon(GuiAttributes):
         self._update_forces(vector_data, set_scalars=False, scale=arrow_scale)
         #self._update_elemental_vectors(forces_array, set_scalars=True, scale=None)
 
-    def final_grid_update(self, icase: int, name: str,
-                          grid_result,
-                          name_vector, grid_result_vector,
+    def final_grid_update(self, icase: int, name_fringe: tuple[int, int, str, str, float],
+                          grid_result: vtkTypeFloat32Array,
+                          name_vector: tuple[int, int, str, str, float], grid_result_vector: Optional[vtkTypeFloat32Array],
                           key: int, subtitle: str, label: str,
                           min_value, max_value,
                           show_msg: bool):
@@ -1331,8 +1352,8 @@ class GuiQtCommon(GuiAttributes):
         nlabels, unused_labelsize, unused_ncolors, unused_colormap = out
 
         #if vector_size == 3:
-            #print('name, grid_result, vector_size=3', name, grid_result)
-        self._final_grid_update(icase, name, grid_result, None, None, None,
+            #print('name_fringe, grid_result, vector_size=3', name_fringe, grid_result)
+        self._final_grid_update(icase, name_fringe, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
         self.update_contour_filter(nlabels, location, min_value, max_value)
@@ -1345,25 +1366,25 @@ class GuiQtCommon(GuiAttributes):
             #self._update_grid(vector_data)
 
     def _final_grid_update(self, icase: int,
-                           name: str,
-                           grid_result, obj, i, res_name,
+                           name: tuple[int, int, str, str, float],
+                           grid_result: Optional[vtkTypeFloat32Array], obj, i: int, res_name: str,
                            vector_size: int,
                            subcase_id: int,
-                           result_type,
+                           result_type: str,
                            location: str,
                            subtitle: str,
                            label: str,
                            revert_displaced: bool=True,
                            show_msg: bool=True):
-        if name is None:
+        if name is None: # pragma: no cover
             return
         assert icase >= 0
-
+        assert location in {'node', 'centroid'}, location
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
         # for a Nastran ElementID/PropertyID, this is 'element'
         self.result_location = location
-
+        #  apply the vtk_result to the node/centroid
         grid = self.grid
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):
@@ -1405,8 +1426,8 @@ class GuiQtCommon(GuiAttributes):
                     unused_method = obj.get_methods(i, res_name)[0]
                     xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                     if obj.deflects(i, res_name):
-                        #grid_result1 = self.set_vtk_fringe(name, case, 1,
-                                                           #min_value, max_value, norm_value)
+                        #grid_result1 = self.numpy_array_to_vtk_array(
+                            #name, case, 1, min_value, max_value, norm_value)
                         #point_data.AddArray(grid_result1)
 
                         self._is_displaced = True
@@ -1432,7 +1453,7 @@ class GuiQtCommon(GuiAttributes):
                     raise RuntimeError(vector_size)
             else:  # pragma: no cover
                 raise RuntimeError(location)
-
+        # clear previous results
         if location == 'centroid':
             self.icase_fringe = icase
             cell_data = grid.GetCellData()
@@ -1459,7 +1480,7 @@ class GuiQtCommon(GuiAttributes):
             else:  # pragma: no cover
                 raise RuntimeError(vector_size)
             #print('name_str=%r' % name_str)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(location)
 
         grid.Modified()
@@ -1968,9 +1989,9 @@ class GuiQtCommon(GuiAttributes):
         self.contour_lines_actor = isolines_actor
         self.contour_lines_actor.VisibilityOff()
 
-    def update_contour_filter(self, nlabels, location, min_value=None, max_value=None):
+    def update_contour_filter(self, nlabels: int, location: str, min_value=None, max_value=None) -> None:
         """update the contour lines"""
-        if not self.make_contour_filter:
+        if not self.make_contour_filter: # pragma: no cover
             return
         if nlabels is None:
             nlabels = 11
@@ -2008,7 +2029,7 @@ class GuiQtCommon(GuiAttributes):
         #self.contour_mapper.Update()
 
         number_of_contour_lines = self.contour_stripper.GetOutput().GetNumberOfLines()
-        self.log.info('There are %s contours lines.' % number_of_contour_lines)
+        self.log.info(f'There are {number_of_contour_lines} contours lines.')
 
 
 def _get_normalized_data(case):
