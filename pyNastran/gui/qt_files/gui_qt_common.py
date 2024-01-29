@@ -13,7 +13,8 @@ from typing import Union, Callable, Optional, Any, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
+from vtkmodules.vtkCommonCore import vtkTypeFloat32Array, vtkPoints
 from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 
@@ -28,7 +29,8 @@ from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
-from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array, flip_actor_visibility
+from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array
+from pyNastran.gui.utils.utils import is_blank
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
@@ -215,7 +217,7 @@ class GuiQtCommon(GuiAttributes):
             self.log_command(f'on_clear_results(show_msg={show_msg})')
 
     #def clear_grid_fringe(grid):
-        point_data = grid.GetPointData()
+        point_data: vtkPointData = grid.GetPointData()
         npoint_arrays = point_data.GetNumberOfArrays()
         for i in range(npoint_arrays):
             array_name = point_data.GetArrayName(i)
@@ -223,7 +225,7 @@ class GuiQtCommon(GuiAttributes):
                 #print("pointArray ", i, ": ", array_name)
                 point_data.RemoveArray(array_name)
 
-        cell_data = grid.GetCellData()
+        cell_data: vtkCellData = grid.GetCellData()
         ncell_arrays = cell_data.GetNumberOfArrays()
         for i in range(ncell_arrays):
             array_name = cell_data.GetArrayName(i)
@@ -262,6 +264,8 @@ class GuiQtCommon(GuiAttributes):
         self.icase_disp = None
         self.icase_vector = None
 
+    #def _get_fringe_location_imin_min_imin_max(self) -> tuple[]:
+        #location, imin, min_value, imin, max_value
     def _get_fringe_data(self, icase: int,
                          scale: Optional[float]=None) -> tuple[bool, Any]:
         """helper for ``on_fringe``"""
@@ -285,19 +289,24 @@ class GuiQtCommon(GuiAttributes):
         subcase_id = obj.subcase_id
 
         #method = obj.get_methods(i, resname)[0]
-        fringe, vector = obj.get_fringe_vector_result(i, resname)
-        if vector is None:
-            assert fringe is not None, 'fringe is none, but vector is not'
+        if 0:  # pragma: no cover
+            # works, slow
+            fringe, vector = obj.get_fringe_vector_result(i, resname)
+            if vector is None:
+                assert fringe is not None, 'fringe is none, but vector is not'
 
-        if scale is None:
-            scale = 1.0
+            if scale is None:
+                scale = 1.0
+            else:
+                # we can have ints...
+                #case *= scale
+                vector = np.multiply(vector, scale, casting="unsafe")
+            #else:
+                # phase is not None
+                #xyz_nominal, vector_data = obj.get_vector_result(i, resname, phase)
         else:
-            # we can have ints...
-            #case *= scale
-            vector = np.multiply(vector, scale, casting="unsafe")
-        #else:
-            # phase is not None
-            #xyz_nominal, vector_data = obj.get_vector_result(i, resname, phase)
+            fringe = obj.get_fringe_result(i, resname)
+            vector = None
 
         if fringe is None and vector is None:
             # normal result
@@ -312,7 +321,7 @@ class GuiQtCommon(GuiAttributes):
 
         result_type = obj.get_legend_title(i, resname)
         data_format = obj.get_data_format(i, resname)
-        vector_size = obj.get_vector_size(i, resname)
+        #vector_size = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
         methods = obj.get_methods(i, resname)
         #scale = obj.get_scale(i, resname)
@@ -323,8 +332,14 @@ class GuiQtCommon(GuiAttributes):
 
         #normi = _get_normalized_data(self.result_cases[icase])
         #normi = _get_normalized_data(case)
-        imin = np.nanargmin(fringe)
-        imax = np.nanargmax(fringe)
+
+        imin, imax = obj.get_imin_imax(i, resname)
+        if is_blank(imin) and is_blank(imax):
+            imin = np.nanargmin(fringe)
+            imax = np.nanargmax(fringe)
+        else:
+            assert isinstance(imin, integer_types), imin
+            assert isinstance(imax, integer_types), imax
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -341,11 +356,12 @@ class GuiQtCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 1
-        name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+        name_tuple = (vector_size, subcase_id, result_type, label,
+                      min_value, max_value, scale)
         name_str = self._names_storage.get_name_string(name_tuple)
         #return resname, normi, vector_size, min_value, max_value, norm_value
 
-        grid_result = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
+        vtk_fringe = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
         data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
@@ -354,7 +370,7 @@ class GuiQtCommon(GuiAttributes):
             imin, imax,
         )
         is_valid = True
-        return is_valid, (grid_result, name_tuple, name_str, data)
+        return is_valid, (vtk_fringe, name_tuple, name_str, data)
 
     def get_mapping_for_location(self, location: str) -> tuple[str, np.ndarray]:
         """helper method for ``export_case_data``"""
@@ -411,7 +427,7 @@ class GuiQtCommon(GuiAttributes):
             self.log_error(f'icase={icase} is not a displacement-like (nodal vector) result')
             return is_valid, failed_data
 
-        method = obj.get_methods(i, name)[0]
+        #method = obj.get_methods(i, name)[0]
         if is_disp:
             xyz_nominal, vector_data = obj.get_vector_result(i, name)
         else:
@@ -521,6 +537,7 @@ class GuiQtCommon(GuiAttributes):
         #is_legend_shown = True
         #if is_legend_shown is None:
         self.show_legend()
+        #scalar_bar: ScalarBar = 
         self.scalar_bar.is_shown = True
         is_legend_shown = self.scalar_bar.is_shown
 
@@ -565,22 +582,6 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid
 
-    def show_hide_min_actor(self, render: bool=True) -> None:
-        """flips the status of the min label actor"""
-        self.settings.is_min_visible = not self.settings.is_min_visible
-        actor = self.min_max_actors[0]
-        flip_actor_visibility(actor)
-        if render:
-            self.Render()
-
-    def show_hide_max_actor(self, render: bool=True) -> None:
-        """flips the status of the max label actor"""
-        self.settings.is_max_visible = not self.settings.is_max_visible
-        actor = self.min_max_actors[1]
-        flip_actor_visibility(actor)
-        if render:
-            self.Render()
-
     def _update_min_max_actors(self, location: str, icase_fringe: int,
                                imin: int, min_value: float,
                                imax: int, max_value: float) -> None:
@@ -592,7 +593,7 @@ class GuiQtCommon(GuiAttributes):
         if location == 'node':
             if hasattr(self, 'xyz_cid0') and self.xyz_cid0 is None:
                 return
-            points = self.grid.GetPoints()
+            points: vtkPoints = self.grid.GetPoints()
             xyz_min = np.array(points.GetPoint(imin), dtype='float64')
             xyz_max = np.array(points.GetPoint(imax), dtype='float64')
             xyzs = [xyz_min, xyz_max]
@@ -623,9 +624,9 @@ class GuiQtCommon(GuiAttributes):
             self.imax = imax
             text_actor.SetPosition(*xyz)
             text_actor.SetVisibility(is_visible)
-            text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(settings.annotation_size)
-            text_prop.SetColor(settings.annotation_color)
+            #text_prop = text_actor.GetTextProperty()
+            #text_prop.SetFontSize(settings.annotation_size)
+            #text_prop.SetColor(settings.annotation_color)
             text_actor.Modified()
 
     def _update_vtk_fringe(self, icase: int,
@@ -652,8 +653,8 @@ class GuiQtCommon(GuiAttributes):
         grid_result.SetName(name_str)
         self._names_storage.add(name)
 
-        cell_data = grid.GetCellData()
-        point_data = grid.GetPointData()
+        cell_data: vtkCellData = grid.GetCellData()
+        point_data: vtkPointData = grid.GetPointData()
         if location == 'centroid':
             #cell_data.RemoveArray(name_str)
             self._names_storage.remove(name)
@@ -671,7 +672,7 @@ class GuiQtCommon(GuiAttributes):
             #if location != obj_location:
             cell_data.SetActiveScalars(None)
             point_data.SetActiveScalars(name_str)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(location)
 
         self.tool_actions.update_text_actors(
@@ -692,8 +693,10 @@ class GuiQtCommon(GuiAttributes):
                 stop_on_failure: bool=False) -> None:
         """Sets the icase data to the active displacement"""
         is_disp = True
-        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
-                             stop_on_failure=stop_on_failure)
+        self._on_disp_vector(
+            icase, is_disp, apply_fringe, update_legend_window,
+            show_msg=show_msg,
+            stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.tree_view.disp.setChecked(True)
 
     def on_vector(self, icase: int,
@@ -703,8 +706,10 @@ class GuiQtCommon(GuiAttributes):
                   stop_on_failure: bool=False) -> None:
         """Sets the icase data to the active vector"""
         is_disp = False
-        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
-                             stop_on_failure=stop_on_failure)
+        self._on_disp_vector(
+            icase, is_disp, apply_fringe, update_legend_window,
+            show_msg=show_msg,
+            stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.tree_view.vector.setChecked(True)
 
     def _on_disp_vector(self, icase: int,
@@ -1010,7 +1015,7 @@ class GuiQtCommon(GuiAttributes):
             _is_enabled_vector, is_checked_vector)
 
         methods = obj.get_methods(i, resname)
-        methodi = methods[0]
+        #methodi = methods[0]
         #-----------------------------------------------------------------------
         # methodi is ignored
         #user_is_desp_vector = (user_is_checked_disp or user_is_checked_vector)
@@ -1060,6 +1065,7 @@ class GuiQtCommon(GuiAttributes):
         phase = obj.get_phase(i, resname)
         #if is_checked_disp or is_checked_vector:
         scalei = obj.get_scale(i, resname)
+        imin, imax = obj.get_imin_imax(i, resname)
         scale = 0.0
         arrow_scale = 0.0
         if vector_size0 == 3:
@@ -1091,21 +1097,28 @@ class GuiQtCommon(GuiAttributes):
 
         name_fringe = None
         name_vector = None
-        grid_result = None
-        grid_result_vector = None
+        vtk_fringe = None
+        vtk_vector = None
         if user_is_checked_fringe:
             #print(vector, len(vector))
-            try:
-                imin = np.nanargmin(fringe)
-                imax = np.nanargmax(fringe)
-            except ValueError:
-                #print(fringe)
-                #print(obj)
-                print(case)
-                #imethod = name[1]
-                #print(imethod)
-                print(i, methodi)
-                return self.icase
+            if is_blank(imin) or is_blank(imax):
+                try:
+                    imin = np.nanargmin(fringe)
+                    imax = np.nanargmax(fringe)
+                except ValueError:
+                    #print(fringe)
+                    #print(obj)
+                    print(case)
+                    #imethod = name[1]
+                    #print(imethod)
+                    #print(i, methodi)
+                    return self.icase
+            else:
+                imini = np.nanargmin(fringe)
+                imaxi = np.nanargmax(fringe)
+                #assert imin == imini
+                #assert imax == imaxi
+                x = 1
             #print(imin, imax, normi[imin], normi[imax])
 
             #if min_value is None and max_value is None:
@@ -1119,23 +1132,21 @@ class GuiQtCommon(GuiAttributes):
             vector_size = 1
             name_fringe = (vector_size, subcase_id, result_type, label, 0.)
             if not self._names_storage.has_exact_name(name_fringe):
-                grid_result = self.numpy_array_to_vtk_array(
+                vtk_fringe = self.numpy_array_to_vtk_array(
                     name_fringe, fringe, vector_size, phase)
 
         #if vector_size0 >= 3:
         if user_is_checked_disp or user_is_checked_vector:
             vector_size = 3
             name_vector = (vector_size, subcase_id, result_type, label, scalei)
-            if self._names_storage.has_exact_name(name_vector):
-                grid_result_vector = None
-            else:
-                grid_result_vector = self.numpy_array_to_vtk_array(
+            if not self._names_storage.has_exact_name(name_vector):
+                vtk_vector = self.numpy_array_to_vtk_array(
                     name_vector, vector, vector_size, phase)
 
         if user_is_checked_fringe or user_is_checked_disp or user_is_checked_vector:
             self.final_grid_update(icase,
-                                   name_fringe, grid_result,
-                                   name_vector, grid_result_vector,
+                                   name_fringe, vtk_fringe,
+                                   name_vector, vtk_vector,
                                    key, subtitle, label,
                                    min_value, max_value, show_msg)
         if not update:
@@ -1215,10 +1226,10 @@ class GuiQtCommon(GuiAttributes):
             self.arrow_actor.SetVisibility(False)
             self.icase_vector = None
 
-        cell_data = grid.GetCellData()
+        cell_data: vtkCellData = grid.GetCellData()
         cell_data.SetActiveScalars(None)
 
-        point_data = grid.GetPointData()
+        point_data: vtkPointData = grid.GetPointData()
         point_data.SetActiveScalars(None)
         self.icase_fringe = icase
 
@@ -1399,7 +1410,7 @@ class GuiQtCommon(GuiAttributes):
                 self.arrow_actor.SetVisibility(False)
 
             if location == 'centroid':
-                cell_data = grid.GetCellData()
+                cell_data: vtkCellData = grid.GetCellData()
                 if self._names_storage.has_close_name(name):
                     cell_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -1410,7 +1421,7 @@ class GuiQtCommon(GuiAttributes):
                                   'result_type=%s subtitle=%s label=%s'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
-                point_data = grid.GetPointData()
+                point_data: vtkPointData = grid.GetPointData()
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -1456,10 +1467,10 @@ class GuiQtCommon(GuiAttributes):
         # clear previous results
         if location == 'centroid':
             self.icase_fringe = icase
-            cell_data = grid.GetCellData()
+            cell_data: vtkCellData = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
 
-            point_data = grid.GetPointData()
+            point_data: vtkPointData = grid.GetPointData()
             point_data.SetActiveScalars(None)
             if vector_size == 1:
                 #point_data.SetActiveVectors(None)   # I don't think I need this
@@ -1467,10 +1478,10 @@ class GuiQtCommon(GuiAttributes):
             else:  # pragma: no cover
                 raise RuntimeError(vector_size)
         elif location == 'node':
-            cell_data = grid.GetCellData()
+            cell_data: vtkCellData = grid.GetCellData()
             cell_data.SetActiveScalars(None)
 
-            point_data = grid.GetPointData()
+            point_data: vtkPointData = grid.GetPointData()
             if vector_size == 1:
                 self.icase_fringe = icase
                 point_data.SetActiveScalars(name_str)  # TODO: None???
@@ -1504,11 +1515,13 @@ class GuiQtCommon(GuiAttributes):
         new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        grid.GetPointData().SetVectors(vtk_vectors)
+        point_data: vtkPointData = grid.GetPointData()
+        point_data.SetVectors(vtk_vectors)
         if set_scalars:
+            cell_data: vtkCellData = grid.GetCellData()
             vtk_mag = numpy_to_vtk(mag, deep=1)
-            grid.GetPointData().SetScalars(vtk_mag)
-            grid.GetCellData().SetScalars(None)
+            point_data.SetScalars(vtk_mag)
+            cell_data.SetScalars(None)
         self.arrow_actor.SetVisibility(True)
         grid.Modified()
         self.grid_selected.Modified()
@@ -1522,13 +1535,17 @@ class GuiQtCommon(GuiAttributes):
         new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        grid.GetPointData().SetVectors(None)
+
         #print('_update_elemental_vectors; shape=%s' % (str(new_forces.shape)))
-        grid.GetCellData().SetVectors(vtk_vectors)
+        point_data: vtkPointData = grid.GetPointData()
+        cell_data: vtkCellData = grid.GetCellData()
+
+        point_data.SetVectors(None)
+        cell_data.SetVectors(vtk_vectors)
         if set_scalars:
             vtk_mag = numpy_to_vtk(mag, deep=1)
-            grid.GetPointData().SetScalars(None)
-            grid.GetCellData().SetScalars(vtk_mag)
+            point_data.SetScalars(None)
+            cell_data.SetScalars(vtk_mag)
         self.arrow_actor_centroid.SetVisibility(True)
         grid.Modified()
         self.grid_selected.Modified()
@@ -1955,7 +1972,8 @@ class GuiQtCommon(GuiAttributes):
             label_scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
 
             label_poly_data.SetPoints(label_points)
-            label_poly_data.GetPointData().SetScalars(label_scalars)
+            point_data: vtkPointData = label_poly_data.GetPointData()
+            point_data.SetScalars(label_scalars)
 
             # The labeled data mapper will place labels at the points
             label_mapper = vtkLabeledDataMapper()
@@ -1999,11 +2017,13 @@ class GuiQtCommon(GuiAttributes):
         if location == 'centroid': # node/centroid
             self.contour_lines_actor.VisibilityOff()
             #self.contour_mapper.SetScalarModeToUseCellData()
-            #res_data = self.grid.GetCellData().GetScalars()
+            #cell_data: vtkCellData = self.grid.GetCellData()
+            #res_data = cell_data.GetScalars()
             return
         elif location == 'node':
+            point_data: vtkPointData = self.grid.GetPointData()
             #self.contour_mapper.SetScalarModeToUsePointData()
-            res_data = self.grid.GetPointData().GetScalars()
+            res_data = point_data.GetScalars()
         else:
             raise RuntimeError('location=%r' % location)
 
