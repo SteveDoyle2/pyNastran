@@ -9,6 +9,7 @@ from cpylog import SimpleLogger
 
 from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
@@ -410,8 +411,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
                 ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
-                ('min', 'Min', '', None, 'Show/Hide Min Label', self.show_hide_min_actor),
-                ('max', 'Max', '', None, 'Show/Hide Max Label', self.show_hide_max_actor),
+                ('min', 'Min', '', None, 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor),
+                ('max', 'Max', '', None, 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor),
             ]
         self.tools: list[Tool] = tools
         self.checkables: dict[str, bool] = checkables
@@ -1462,7 +1463,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.init_cell_picker()
 
         #unused_main_window_state = qsettings.value('main_window_state', default='')
-        self.create_corner_axis()
+        self.tool_actions.create_corner_axis()
         self.settings.finish_startup()
         #-------------
         # loading
@@ -1556,7 +1557,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
 
-    def make_gif(self, gif_filename, scale, istep=None,
+    def make_gif(self, gif_filename: str, scale: float,
+                 istep=None,
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase_fringe=None, icase_disp=None, icase_vector=None,
@@ -1564,10 +1566,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                  icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
                  icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                  icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
-                 time=2.0, animation_profile='0 to scale',
-                 nrepeat=0, fps=30, magnify=1,
-                 make_images=True, delete_images=False, make_gif=True, stop_animation=False,
-                 animate_in_gui=True):
+                 time: float=2.0,
+                 animation_profile: str='0 to scale',
+                 nrepeat: int=0, fps: int=30, magnify: int=1,
+                 make_images: bool=True,
+                 delete_images: bool=False,
+                 make_gif: bool=True,
+                 stop_animation: bool=False,
+                 animate_in_gui: bool=True) -> bool:
         """
         Makes an animated gif
 
@@ -1820,7 +1826,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                          icase_fringe: int, icase_disp: int, icase_vector: int,
                          scale: float, phase: float,
                          animate_fringe: bool, unused_animate_vector: bool,
-                         normalized_frings_scale,
+                         normalized_fringe_scale: Optional[float],
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
@@ -1835,24 +1841,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self.cycle_results_explicit(icase_disp, explicit=True,
                                         min_value=min_value, max_value=max_value)
 
-        if icase_fringe is not None and icase_fringe != icase_fringe0:
-            is_valid = self.on_fringe(icase_fringe,
-                                      update_legend_window=False, show_msg=False)
-            if is_legend_shown:
-                # TODO: sort of a hack for the animation
-                # the fringe always shows the legend, but we may not want that
-                # just use whatever is active
-                self.show_legend()
-
-            if not is_valid:
-                self.log_error(f'Invalid Fringe Case {icase_fringe:d}')
-                return False
-
-        is_valid = self.animation_update_fringe(
-            icase_fringe, animate_fringe, normalized_frings_scale)
-        if not is_valid:
-            return is_valid
-
+        #-----------------------------------------------------------------------
         if icase_disp is not None:
             try:
                 # apply the deflection
@@ -1868,30 +1857,59 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             except(AttributeError, KeyError) as error:
                 self.log_error(f'Invalid Vector Case {icase_vector:d}{str(error)}')
                 return False
+
+        #-----------------------------------------------------------------------
+        if icase_fringe is not None and icase_fringe != icase_fringe0:
+            is_valid = self.on_fringe(icase_fringe,
+                                      update_legend_window=False, show_msg=False)
+            if is_legend_shown:
+                # TODO: sort of a hack for the animation
+                # the fringe always shows the legend, but we may not want that
+                # just use whatever is active
+                self.show_legend()
+
+            if not is_valid:
+                self.log_error(f'Invalid Fringe Case {icase_fringe:d}')
+                return False
+
+        is_valid = self.animation_update_fringe(
+            icase_fringe, animate_fringe, normalized_fringe_scale)
+        if not is_valid:
+            return is_valid
+
         is_valid = True
         return is_valid
 
-    def animation_update_fringe(self, icase_fringe, animate_fringe, normalized_frings_scale):
-        """helper method for ``animation_update``"""
+    def animation_update_fringe(self, icase_fringe: int,
+                                animate_fringe: bool,
+                                normalized_fringe_scale: Optional[float]) -> bool:
+        """
+        Updates the:
+         - vtk fringe
+         - scalar bar
+         - min/max actor location
+
+        """
         if animate_fringe:
             # e^(i*(theta + phase)) = sin(theta + phase) + i*cos(theta + phase)
-            is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_frings_scale)
+            is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_fringe_scale)
             if not is_valid:
                 return is_valid
 
             #icase = data.icase
             result_type = data.result_type
-            #location = data.location
+            location = data.location
             min_value = data.min_value
             max_value = data.max_value
             #norm_value = data.norm_value
-            #imin = data.imin
-            #imax = data.imax
+            imin = data.imin
+            imax = data.imax
             data_format = data.data_format
             nlabels = data.nlabels
             labelsize = data.labelsize
             ncolors = data.ncolors
             colormap = data.colormap
+            location = data.location
             #subcase_id = data.subcase_id
             #subtitle = data.subtitle
             #label = data.label
@@ -1902,7 +1920,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,
                                    is_shown=is_legend_shown)
+
             #obj.get_vector_array_by_phase(i, name, )
+            self._update_min_max_actors(location, icase_fringe,
+                                        imin, min_value,
+                                        imax, max_value)
         is_valid = True
         return is_valid
 
@@ -2008,13 +2030,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             for istep, icase_fringe, icase_disp, icase_vector, scale, phase in zip(
                     isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
-                normalized_frings_scale = scale / scale_max
+                normalized_fringe_scale = scale / scale_max
                 is_valid = self.animation_update(
                     icase_fringe0, icase_disp0, icase_vector0,
                     icase_fringe, icase_disp, icase_vector,
                     scale, phase,
                     animate_fringe, animate_vector,
-                    normalized_frings_scale,
+                    normalized_fringe_scale,
                     min_value, max_value)
                 if not is_valid:
                     return is_failed

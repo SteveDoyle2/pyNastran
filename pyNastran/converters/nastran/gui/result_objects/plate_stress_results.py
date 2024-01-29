@@ -500,6 +500,15 @@ class PlateResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
+    def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        if self.nodal_combine == 'Centroid':
+            all_ids = self.element_id
+            ids = np.unique(self.element_node[:, 0])
+        else:  # Corner
+            all_ids = self.node_id
+            ids = np.unique(self.element_node[:, 1])
+        return all_ids, ids
+
     def get_fringe_result(self, itime: int, res_name: str) -> np.ndarray:
         """get_fringe_value"""
         fringe = self._get_fringe_data_dense(itime, res_name)

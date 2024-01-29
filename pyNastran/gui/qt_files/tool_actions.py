@@ -14,6 +14,7 @@ from vtk import (
     vtkOrientationMarkerWidget,
     vtkXMLUnstructuredGridWriter,
 )
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 #from vtkmodules.vtkCommonTransforms import vtkTransform
 #from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
 #from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
@@ -639,8 +640,8 @@ class ToolActions:
         else:
             used_titles: set[str] = set()
             vtk_ugrid = vtkUnstructuredGrid()
-            point_data = vtk_ugrid.GetPointData()
-            cell_data = vtk_ugrid.GetCellData()
+            point_data: vtkPointData = vtk_ugrid.GetPointData()
+            cell_data: vtkCellData = vtk_ugrid.GetCellData()
             for case in gui.result_cases:
                 if case.is_complex:
                     log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is complex')

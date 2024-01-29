@@ -5,6 +5,7 @@ defines:
 """
 from typing import Any
 from copy import deepcopy
+import numpy as np
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
@@ -110,7 +111,11 @@ class Cart3dGeometry(GuiResultCommon):
             return ['centroid']
         return ['node']
 
-    def get_fringe_vector_result(self, i, name):
+    def get_fringe_vector_result(self, i, name) -> tuple[np.ndarray, None]:
+        fringe = self.get_fringe_result(i, name)
+        return fringe, None
+
+    def get_fringe_result(self, i, name) -> np.ndarray:
         if name == 'NodeID':
             res = self.nodes
         elif name == 'ElementID':
@@ -125,9 +130,9 @@ class Cart3dGeometry(GuiResultCommon):
             res = self.centroid_normals[:, 1]
         elif name == 'NormalZ':
             res = self.centroid_normals[:, 2]
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('i=%s' % str(i))
-        return res, None
+        return res
 
     #----------------------------------------------------
     # colormap

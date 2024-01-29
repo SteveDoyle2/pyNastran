@@ -128,8 +128,8 @@ class GuiVTKCommon(GuiQtCommon):
         #(N,3) for warp vectors/glyphs
         grid_result = vtkFloatArray()
 
-        point_data = self.grid.GetPointData()
-        cell_data = self.grid.GetCellData()
+        point_data: vtkPointData  = self.grid.GetPointData()
+        cell_data: vtkCellData = self.grid.GetCellData()
 
         self.grid.GetCellData().SetScalars(grid_result)
         self.grid.GetPointData().SetScalars(grid_result)
@@ -537,7 +537,8 @@ class GuiVTKCommon(GuiQtCommon):
         self.log_command('create_group_with_name(%r, %r)' % (name, eids))
         self.groups[name] = group
 
-    def map_element_centroid_to_node_fringe_result(self, update_limits=True, show_msg=True):
+    def map_element_centroid_to_node_fringe_result(self, update_limits: bool=True,
+                                                   show_msg: bool=True):
         """
         Maps elemental fringe results to nodal fringe results.
 

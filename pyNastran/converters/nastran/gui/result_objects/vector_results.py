@@ -11,6 +11,7 @@ from pyNastran.femutils.utils import safe_norm
 from pyNastran.op2.result_objects.table_object import (
     RealTableArray, ComplexTableArray)
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
+from pyNastran.gui.utils.utils import is_blank, is_value
 
 
 translation = ['Magnitude', 'Tx', 'Ty', 'Tz']
@@ -61,7 +62,7 @@ class VectorResultsCommon(GuiResultCommon):
         def findex() -> np.ndarray:
             # -1 -> nan
             # -2 -> default
-            return np.zeros(ntimes, dtype='int32') * -2
+            return np.ones(ntimes, dtype='int32') * -2
 
         # floats
         self.default_arrow_scales: DefaultDict[Any, list[float]] = defaultdict(fscales)
@@ -155,37 +156,11 @@ class VectorResultsCommon(GuiResultCommon):
         if is_value(mins[itime]) and is_value(maxs[itime]):
             return mins[itime], maxs[itime]
 
-        fringe_data = self._get_fringe_data_sparse(itime, res_name)
+        fringe_result = self._get_fringe_data_sparse(itime, res_name)
+        mini, maxi = self._set_default_from_fringe(
+            itime, case_flag, fringe_result, is_sparse=True)
 
-        #if 0:
-            ## save the defaults for the next time
-            #mins[itime] = np.nanmin(fringe_data)
-            #maxs[itime] = np.nanmax(fringe_data)
-
-            #imin = np.where(fringe_data == mins[itime])[0]
-            #imax = np.where(fringe_data == maxs[itime])[0]
-            #self.imins[case_flag][itime] = imin[0]
-            #self.imaxs[case_flag][itime] = imax[-1]
-        #else:
-        try:
-            imin = np.nanargmin(fringe_data)
-            imax = np.nanargmax(fringe_data)
-            assert isinstance(imin, integer_types), imin
-            assert isinstance(imax, integer_types), imax
-
-            mins[itime] = fringe_data[imin]
-            maxs[itime] = fringe_data[imax]
-
-            self.imins[case_flag][itime] = imin
-            self.imaxs[case_flag][itime] = imax
-        except ValueError:
-            # All NaN
-            mins[itime] = np.nan
-            maxs[itime] = np.nan
-            self.imins[case_flag][itime] = -1
-            self.imaxs[case_flag][itime] = -1
-
-        return mins[itime], maxs[itime]
+        return mini, maxi
 
     def get_imin_imax(self, itime: int, res_name) -> tuple[int, int]:
         itime, case_flag = self.get_case_flag(itime, res_name)
@@ -193,6 +168,9 @@ class VectorResultsCommon(GuiResultCommon):
         imaxs = self.imaxs[case_flag]
         imin = imins[itime]
         imax = imaxs[itime]
+        if imin == -2:
+            self.get_default_min_max(itime, res_name)
+            x = 1
         # -1 -> nan
         # -2 -> default
         assert imins[itime] != -2, imins
@@ -632,8 +610,10 @@ class DispForceVectorResults(VectorResultsCommon):
         fringe_result_dense[self.inode] = fringe_result_sparse
         return fringe_result_dense
 
-    def get_fringe_result(self, itime: int,
-                          res_name: str) -> np.ndarray:
+    def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        return self.node_id, self.case.node_gridtype[:, 0]
+
+    def get_fringe_result(self, itime: int, res_name: str) -> np.ndarray:
         fringe, vector = self.get_fringe_vector_result(itime, res_name)
         return fringe
 
@@ -662,24 +642,88 @@ class DispForceVectorResults(VectorResultsCommon):
         else:
             fringe_result = safe_norm(vector_result, axis=1)
 
+        self._set_default_from_fringe(itime, case_flag, fringe_result,
+                                      is_sparse=False)
+        return fringe_result, vector_result
+
+    def _set_default_from_fringe(self, itime: int, case_flag,
+                                 fringe_result: np.ndarray,
+                                 is_sparse: bool) -> tuple[float, float]:
         # set the min/max if they're not set
         default_mins = self.default_mins[case_flag]
         default_maxs = self.default_maxs[case_flag]
 
         if is_blank(default_mins[itime]) and is_blank(default_maxs[itime]):
-            mini = np.nanmin(fringe_result)
-            maxi = np.nanmax(fringe_result)
+            # save the defaults for the next time
 
-            self.mins[case_flag][itime] = mini
-            self.maxs[case_flag][itime] = maxi
-            default_mins[itime] = mini
-            default_maxs[itime] = maxi
+            if 0:
+                mini = np.nanmin(fringe_result)
+                maxi = np.nanmax(fringe_result)
 
-            imini = np.where(fringe_result == mini)[0]
-            imaxi = np.where(fringe_result == maxi)[0]
-            self.imins[itime] = imini
-            self.imaxs[itime] = imaxi
-        return fringe_result, vector_result
+                self.mins[case_flag][itime] = mini
+                self.maxs[case_flag][itime] = maxi
+                default_mins[itime] = mini
+                default_maxs[itime] = maxi
+
+                imini = np.where(fringe_result == mini)[0]
+                imaxi = np.where(fringe_result == maxi)[0]
+                self.imins[itime] = imini
+                self.imaxs[itime] = imaxi
+            elif 0:
+                mins[itime] = np.nanmin(fringe_data)
+                maxs[itime] = np.nanmax(fringe_data)
+
+                imin = np.where(fringe_data == mins[itime])[0]
+                imax = np.where(fringe_data == maxs[itime])[0]
+                self.imins[case_flag][itime] = imin[0]
+                self.imaxs[case_flag][itime] = imax[-1]
+            else:
+                imins = self.imins[case_flag]
+                imaxs = self.imaxs[case_flag]
+
+                mins = self.mins[case_flag]
+                maxs = self.maxs[case_flag]
+                try:
+                    # gold standard
+                    mini1 = np.nanmin(fringe_result)
+                    maxi1 = np.nanmax(fringe_result)
+
+                    # solid_shell_bar -> node=13
+                    imin = np.nanargmin(fringe_result)
+                    imax = np.nanargmax(fringe_result)
+                    assert isinstance(imin, integer_types), imin
+                    assert isinstance(imax, integer_types), imax
+
+                    mini2 = fringe_result[imin]
+                    maxi2 = fringe_result[imax]
+                    assert np.allclose(mini1, mini2)
+                    assert np.allclose(maxi1, maxi2)
+
+                    default_mins[itime] = mini2
+                    default_maxs[itime] = maxi2
+                    mins[itime] = mini2
+                    maxs[itime] = maxi2
+
+                    if is_sparse:
+                        # we found the id as sparse
+                        # map it to dense
+                        node_id, nids = self.get_location_arrays()
+                        iimin, iimax = np.searchsorted(node_id, nids[[imin, imax]])
+                        imins[itime] = iimin
+                        imaxs[itime] = iimax
+                    else:
+                        imins[itime] = imin
+                        imaxs[itime] = imax
+                    x = 1
+                except ValueError:
+                    # All NaN
+                    default_mins[itime] = np.nan
+                    default_maxs[itime] = np.nan
+                    mins[itime] = np.nan
+                    maxs[itime] = np.nan
+                    imins[itime] = 0
+                    imaxs[itime] = 0
+        return default_mins[itime], default_maxs[itime]
 
 def _get_real_component_indices(methods_keys: Optional[list[int]]) -> tuple[int, ...]:
     """
@@ -702,7 +746,7 @@ def _get_real_component_indices(methods_keys: Optional[list[int]]) -> tuple[int,
     component_indices = tuple(np.array(indices, dtype='int32') - 1)
     return component_indices
 
-def _get_complex_component_indices(methods_keys: list[str]) -> tuple[int, ...]:
+def _get_complex_component_indices(methods_keys: list[int]) -> tuple[int, ...]:
     """
     if Magnitude is selected, only use magnitude
     methods = [
@@ -748,11 +792,3 @@ def _to_dense_vector(dxyz: np.ndarray,
         dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
         dxyz2[inode, :] = dxyz
     return dxyz2
-
-def is_value(value: Optional[float]) -> bool:
-    return not is_blank(value)
-
-def is_blank(value: Optional[float]) -> bool:
-    if value is None or not np.isfinite(value):
-        return True
-    return False

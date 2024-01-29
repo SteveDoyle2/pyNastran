@@ -3,6 +3,8 @@
 import vtk
 import random
 import numpy
+from vtk import vtkPoints
+
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkPolyData
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor,
@@ -21,7 +23,7 @@ for i in range(size):
 # Define points, triangles and colors
 colors = vtk.vtkUnsignedCharArray()
 colors.SetNumberOfComponents(3)
-points = vtk.vtkPoints()
+points = vtkPoints()
 triangles = vtk.vtkCellArray()
 
 # Build the meshgrid manually
@@ -122,7 +124,7 @@ tolerance = 0.001
 
 # Make a list of points. Each point is the intersection of a vertical line
 # defined by p1 and p2 and the surface.
-points = vtk.vtkPoints()
+points = vtkPoints()
 for i in range(maxloop):
 
     p1 = [2+i*dist, 16, -1]

@@ -607,7 +607,8 @@ class Settings:
 
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
-    def set_annotation_size_color(self, size=None, color=None) -> None:
+    def set_annotation_size_color(self, size: Optional[float]=None,
+                                  color: Optional[tuple[float, float, float]]=None) -> None:
         """
         Parameters
         ----------
@@ -615,6 +616,7 @@ class Settings:
             annotation size
         color : (float, float, float)
             RGB values
+
         """
         if size is not None:
             assert isinstance(size, int), 'size=%r' % size
@@ -716,7 +718,8 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def set_annotation_color(self, color, render: bool=True) -> None:
+    def set_annotation_color(self, color: tuple[float, float, float],
+                             render: bool=True) -> None:
         """
         Set the annotation color
 
@@ -747,7 +750,7 @@ class Settings:
                 continue
             elif isinstance(obj, AltGeometry):
                 pass
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(obj)
 
             follower_actors = obj.label_actors

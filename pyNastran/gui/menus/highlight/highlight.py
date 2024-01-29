@@ -19,6 +19,7 @@ from vtk import (
     vtkUnstructuredGridGeometryFilter,
     vtkVertexGlyphFilter,
 )
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 #from vtkmodules.vtkRenderingLOD import vtkLODActor
 #from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 #from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
@@ -509,7 +510,8 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
 
     if nnodes:
         point_ids = np.searchsorted(all_nodes, nodes)
-        output_data = grid.GetPoints().GetData()
+        point_data = grid.GetPoints()
+        output_data = point_data.GetData()
         points_array = vtk_to_numpy(output_data)  # yeah!
 
         point_array2 = points_array[point_ids, :]
@@ -518,7 +520,8 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         ugrid = create_unstructured_point_grid(points2, nnodes)
         if set_node_scalars:
             point_ids_array = numpy_to_vtk(nodes)
-            ugrid.GetPointData().SetScalars(point_ids_array)
+            point_data: vtkPointData = ugrid.GetPointData()
+            point_data.SetScalars(point_ids_array)
         actor = create_highlighted_actor(
             gui, ugrid, representation='points',
             add_actor=add_actors)
@@ -531,8 +534,10 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
         if set_element_scalars:
             element_ids_array = numpy_to_vtk(elements)
-            ugrid.GetPointData().SetScalars(None)
-            ugrid.GetCellData().SetScalars(element_ids_array)
+            point_data: vtkPointData = ugrid.GetPointData()
+            cell_data: vtkCellData = ugrid.GetCellData()
+            point_data.SetScalars(None)
+            cell_data.SetScalars(element_ids_array)
         actor = create_highlighted_actor(gui, ugrid, representation='wire',
                                          add_actor=add_actors)
         actors.append(actor)

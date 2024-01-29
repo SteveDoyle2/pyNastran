@@ -814,7 +814,7 @@ class PreferencesWindow(PyDialog):
         bold_font = make_font(value, is_bold=True)
         self.nastran_label.setFont(bold_font)
 
-    def on_annotation_size(self, value=None):
+    def on_annotation_size(self, value=None) -> None:
         """update the annotation size"""
         if value is None:
             value = int(self.annotation_size_edit.text())
@@ -824,9 +824,11 @@ class PreferencesWindow(PyDialog):
         #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
         self.update_annotation_size_color()
 
-    def update_annotation_size_color(self):
+    def update_annotation_size_color(self) -> None:
         if self.win_parent is not None:
-            self.settings.set_annotation_size_color(size=self._annotation_size)
+            self.settings.set_annotation_size_color(
+                size=self._annotation_size,
+                color=self.annotation_color_float)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()

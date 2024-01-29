@@ -25,6 +25,7 @@ from vtk import (
     vtkExtractSelection,
     vtkRenderedAreaPicker,
 )
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 #from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
 #from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode, vtkPlanes
 #from vtkmodules.vtkFiltersCore import vtkIdFilter
@@ -198,7 +199,7 @@ def get_actors_by_area_picker(gui, area_picker,
                               representation: str='points',
                               add_actors: bool=False) -> tuple[list[vtkActor], list[int], list[int]]:
     """doesn't handle multiple actors yet..."""
-    frustum = area_picker.GetFrustum() # vtkPlanes
+    frustum: vtkPlanes = area_picker.GetFrustum()
 
     ugrid, eids, nids = get_depth_ids(
         gui, frustum, model_name=model_name,
@@ -227,8 +228,10 @@ def get_actors_by_area_picker(gui, area_picker,
     return actors, eids, nids
 
 
-def get_depth_ids(gui, frustum: vtkPlanes, model_name: str='main',
-                  is_nids: bool=True, is_eids: bool=True,
+def get_depth_ids(gui, frustum: vtkPlanes,
+                  model_name: str='main',
+                  is_nids: bool=True,
+                  is_eids: bool=True,
                   representation: str='points') -> tuple[list[vtkActor], list[int], list[int]]:
     """
     Picks the nodes and/or elements.  Only one grid (e.g., the elements)
@@ -247,7 +250,7 @@ def get_depth_ids(gui, frustum: vtkPlanes, model_name: str='main',
 
     eids = None
     if is_eids:
-        cells = ugrid.GetCellData()
+        cells: vtkCellData = ugrid.GetCellData()
         if cells is not None:
             ids = cells.GetArray('Ids')
             if ids is not None:
@@ -296,7 +299,7 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
 
     """
     nids = None
-    points = ugrid.GetPointData()
+    points: vtkPointData = ugrid.GetPointData()
     if points is None:
         return ugrid, nids
 
@@ -310,7 +313,7 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
     nids = gui.get_node_ids(model_name, point_ids)
 
     # these are the points outside the box/frustum (and also include the bad point)
-    points_flipped = ugrid_flipped.GetPointData()
+    points_flipped: vtkPointData = ugrid_flipped.GetPointData()
     ids_flipped = points_flipped.GetArray('Ids')
     point_ids_flipped = vtk_to_numpy(ids_flipped)
     nids_flipped = gui.get_node_ids(model_name, point_ids_flipped)
@@ -348,8 +351,10 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         ids.SetInputData(grid)
     elif isinstance(grid, vtkPolyData):  # pragma: no cover
         # this doesn't work...
-        ids.SetCellIds(grid.GetCellData())
-        ids.SetPointIds(grid.GetPointData())
+        cell_data: vtkCellData = grid.GetCellData()
+        point_data: vtkPointData = grid.GetPointData()
+        ids.SetCellIds(cell_data)
+        ids.SetPointIds(point_data)
     else:
         raise NotImplementedError(ids)
 
@@ -370,7 +375,9 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         set_vtk_id_filter_name(ids, idsname, point_cell_type=1)
     return ids
 
-def grid_ids_frustum_to_ugrid_ugrid_flipped(grid, ids, frustum):
+def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
+                                            ids,
+                                            frustum: vtkPlanes):
     if 1:
         selected_frustum = vtkExtractSelectedFrustum()
         #selected_frustum.ShowBoundsOn()
@@ -420,7 +427,8 @@ def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
 
     """
     #unused_pointsu = ugrid.GetPoints()
-    output_data = ugrid.GetPoints().GetData()
+    point_data: vtkPointData = ugrid.GetPoints()
+    output_data = point_data.GetData()
     points_array = vtk_to_numpy(output_data)  # yeah!
 
     isort_nids = np.argsort(nids)

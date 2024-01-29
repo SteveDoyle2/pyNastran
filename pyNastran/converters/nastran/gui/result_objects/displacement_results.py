@@ -1,18 +1,12 @@
 from __future__ import annotations
-import getpass
 import numpy as np
 from typing import Union, TYPE_CHECKING
 
-from pyNastran.femutils.utils import safe_norm
-from .vector_results import DispForceVectorResults, _to_dense_vector
+from .vector_results import DispForceVectorResults
 
 if TYPE_CHECKING:
     from pyNastran.op2.result_objects.table_object import (
         RealTableArray, ComplexTableArray)
-
-translation = ['Magnitude', 'Tx', 'Ty', 'Tz']
-rotation = ['Magnitude', 'Rx', 'Ry', 'Rz']
-col_axis = 1
 
 
 ## TODO: better label to indicate Magnitude vs. Value

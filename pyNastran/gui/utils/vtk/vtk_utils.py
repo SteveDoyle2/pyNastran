@@ -432,8 +432,8 @@ def map_element_centroid_to_node_fringe_result(
     # points = ugrid.GetPoints()
 
 
-    cell_data = ugrid.GetCellData()
-    point_data = ugrid.GetPointData()
+    cell_data: vtkCellData = ugrid.GetCellData()
+    point_data: vtkPointData = ugrid.GetPointData()
     # nnodes = point_data.GetNumberOfPoints()  # bad
     nnodes = ugrid.GetNumberOfPoints()
 

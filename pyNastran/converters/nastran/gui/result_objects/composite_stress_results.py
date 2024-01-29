@@ -433,6 +433,15 @@ class CompositeResults2(VectorResultsCommon):
     #def _get_complex_data(self, itime: int) -> np.ndarray:
         #return self._get_real_data(itime)
 
+    def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        #if self.nodal_combine == 'Centroid':
+        all_ids = self.element_id
+        ids = np.unique(self.element_layer[:, 0])
+        #else:  # Corner
+            #all_ids = self.node_id
+            #ids = np.unique(self.element_node[:, 1])
+        return all_ids, ids
+
     def get_fringe_result(self, itime: int,
                           case_tuple: CaseTuple) -> np.ndarray:
         fringe = self._get_fringe_data_dense(itime, case_tuple)

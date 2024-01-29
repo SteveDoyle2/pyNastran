@@ -412,6 +412,15 @@ class SolidResults2(VectorResultsCommon):
             result_out[self.ielement_centroid] = data
         return result_out
 
+    def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        if self.layer_indices == (0, ):  # Centroid
+            all_ids = self.element_id
+            ids = np.unique(self.element_node[:, 0])
+        elif self.layer_indices == (1, ):  # Corner
+            all_ids = self.node_id
+            ids = np.unique(self.element_node[:, 1])
+        return all_ids, ids
+
     def get_fringe_result(self, itime: int,
                           case_tuple: CaseTuple) -> np.ndarray:
         """
