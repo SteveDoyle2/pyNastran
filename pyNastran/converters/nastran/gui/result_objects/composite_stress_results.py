@@ -436,7 +436,7 @@ class CompositeResults2(VectorResultsCommon):
     def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
         #if self.nodal_combine == 'Centroid':
         all_ids = self.element_id
-        ids = np.unique(self.element_layer[:, 0])
+        ids = np.unique(self.case.element_layer[:, 0])
         #else:  # Corner
             #all_ids = self.node_id
             #ids = np.unique(self.element_node[:, 1])

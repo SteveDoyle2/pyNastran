@@ -63,6 +63,7 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self.dim_max = data['dim_max']
+        self._default_font_size = data['font_size']
 
         # font size for menu
         self._default_text_size = TEXT_SIZE
@@ -155,7 +156,7 @@ class PreferencesWindow(PyDialog):
         # window text size
         self.font_size_label = QLabel('Font Size:')
         self.font_size_edit = QSpinBox(self)
-        self.font_size_edit.setValue(self.font_size)
+        self.font_size_edit.setValue(self._default_font_size)
         self.font_size_edit.setRange(7, 20)
 
         #-----------------------------------------------------------------------
@@ -828,7 +829,7 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.settings.set_annotation_size_color(
                 size=self._annotation_size,
-                color=self.annotation_color_float)
+                                                    color=self.annotation_color_float)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()

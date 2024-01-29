@@ -46,7 +46,9 @@ class PyDialog(QDialog):
         super(PyDialog, self).__init__(win_parent)
         self.out_data = data
         self.win_parent = win_parent
-        self.font_size = data['font_size']
+
+        # we set this to 0 to indicate we haven't called on_font yet
+        self.font_size = 0 # data['font_size']
 
     def set_font_size(self, font_size):
         """
