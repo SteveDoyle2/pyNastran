@@ -17,8 +17,10 @@ from qtpy.compat import getexistingdirectory
 from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_int, check_float, check_name_str, check_path)
+    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -811,14 +813,14 @@ class AnimationWindow(PyDialog):
         icase = self.icase_disp_start_edit.value()
         min_value = self.get_min_max(icase)[0]
         self.min_value_edit.setText(str(min_value))
-        self.min_value_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.min_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_max_value_default(self):
         """When max default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
         self.max_value_edit.setText(func_str_or_none(max_value))
-        self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.max_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_browse_folder(self):
         """opens a folder dialog"""
@@ -853,7 +855,7 @@ class AnimationWindow(PyDialog):
         else:
             default_scale = self._default_scale
         self.scale_edit.setText(func_str_or_none(default_scale))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_arrow_scale(self):
         """sets the default arrow scale factor"""
@@ -864,7 +866,7 @@ class AnimationWindow(PyDialog):
         else:
             default_arrow_scale = self._default_arrow_scale
         self.arrow_scale_edit.setText(func_str(default_arrow_scale))
-        self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.arrow_scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_time(self):
         """sets the default gif time"""
@@ -1296,7 +1298,7 @@ class AnimationWindow(PyDialog):
         else:
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
             if scale == 0.0:
-                self.scale_edit.setStyleSheet("QLineEdit{background: red;}")
+                self.scale_edit.setStyleSheet(QLINEEDIT_ERROR)
                 flag1 = False
 
         if animate_in_gui or wipe:

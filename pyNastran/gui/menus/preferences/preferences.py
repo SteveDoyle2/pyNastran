@@ -22,6 +22,8 @@ from qtpy.QtWidgets import (
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
     FONT_SIZE, MAGNIFY,
@@ -824,7 +826,7 @@ class PreferencesWindow(PyDialog):
         self._annotation_size = value
         #self.on_apply(force=True)
         #self.min_edit.setText(func_str(self._default_min))
-        #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        #self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.update_annotation_size_color()
 
     def update_annotation_size_color(self) -> None:
@@ -1009,11 +1011,11 @@ class PreferencesWindow(PyDialog):
 
     def on_default_clipping_min(self) -> None:
         self.clipping_min_edit.setText(func_str(self._default_clipping_min))
-        self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.clipping_min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_clipping_max(self) -> None:
         self.clipping_max_edit.setText(func_str(self._default_clipping_max))
-        self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.clipping_max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_validate(self) -> bool:
         font_size_value, flag0 = check_float(self.font_size_edit)
@@ -1076,10 +1078,10 @@ def check_label_float(cell) -> tuple[Optional[float], bool]:
     text = cell.text()
     try:
         value = eval_float_from_string(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return value, True
     except ValueError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         return None, False
 
 def on_nastran(self: PreferencesWindow, result_name: str) -> None:

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
 from qtpy.QtWidgets import QDialog, QLineEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -80,10 +81,10 @@ def check_patran_syntax(cell, pound=None):
     text = str(cell.text())
     try:
         values = parse_patran_syntax(text, pound=pound)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return values, True
     except ValueError as error:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
         return None, False
 
@@ -91,11 +92,11 @@ def check_patran_syntax_dict(cell, pound=None):
     text = str(cell.text())
     try:
         value = parse_patran_syntax_dict(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         cell.setToolTip('')
         return value, True
     except (ValueError, SyntaxError, KeyError) as error:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
         return None, False
 

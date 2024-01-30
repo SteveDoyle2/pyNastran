@@ -390,6 +390,9 @@ class VectorResultsCommon(GuiResultCommon):
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, res_name: str,
                                                nlabels, labelsize,
                                                ncolors, colormap: str) -> None:
+        nlabels = -1 if nlabels is None else nlabels
+        labelsize = -1 if labelsize is None else labelsize
+        ncolors = -1 if ncolors is None else ncolors
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors
@@ -556,6 +559,7 @@ class DispForceVectorResults(VectorResultsCommon):
         """
         A header is the thingy that goes in the lower left corner
         header = 'Static'
+        header = 'mode = 10; freq = 2.85697 Hz'
         title = 'Displacement'
         method = 'T_XYZ'
         min_max_method = 'Value'
@@ -563,11 +567,16 @@ class DispForceVectorResults(VectorResultsCommon):
 
         Magnitude vs. Value
         """
-        title0 = self.index_to_base_title_annotation[self.t123_offset]['corner']
-        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        #title0 = self.index_to_base_title_annotation[self.t123_offset]['corner']
+        #method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         header = self.headers[itime]
         #annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
-        annotation_label = f'{self.title} ({self.min_max_method}, {header}): {method}'
+
+
+        # v1
+        #title = f'{self._title} {method}'
+        title = self.get_legend_title(itime, res_name)
+        annotation_label = f'{title} ({self.min_max_method}, {header})'
         return annotation_label
 
     def get_legend_tuple(self, itime: int, res_name: str) -> int:

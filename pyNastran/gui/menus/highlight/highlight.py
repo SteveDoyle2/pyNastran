@@ -33,6 +33,7 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
 from pyNastran.gui.styles.area_pick_style import get_ids_filter
@@ -589,10 +590,10 @@ def _pop_color_dialog(parent,
     #text = cell.text()
     #try:
         #value = eval_float_from_string(text)
-        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #cell.setStyleSheet(QLINEEDIT_GOOD)
         #return value, True
     #except ValueError:
-        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
 def main():  # pragma: no cover

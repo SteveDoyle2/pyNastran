@@ -16,7 +16,7 @@ from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINE_EDIT_BASIC
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
@@ -208,7 +208,7 @@ class GroupsModify(PyDialog):
         self.remove_highlight_actor()
         name = str(self.name_edit.text()).strip()
         if name not in self.keys:
-            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.name_edit.setStyleSheet(QLINEEDIT_GOOD)
             group = self.out_data[self.active_key]
             group.name = name
             self.keys[self.active_key] = name
@@ -397,7 +397,7 @@ class GroupsModify(PyDialog):
         """highlights the elements to add"""
         eids, is_valid = check_patran_syntax(self.add_edit, pound=self.elements_pound)
         if not is_valid:
-            #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
+            #self.add_edit.setStyleSheet(QLINEEDIT_ERROR)
             return
         self.on_highlight(eids=eids)
 
@@ -405,7 +405,7 @@ class GroupsModify(PyDialog):
         """highlights the elements to remove"""
         eids, is_valid = check_patran_syntax(self.remove_edit)
         if not is_valid:
-            #self.remove_edit.setStyleSheet("QLineEdit{background: red;}")
+            #self.remove_edit.setStyleSheet(QLINEEDIT_ERROR)
             return
         self.on_highlight(eids=eids)
 
@@ -414,7 +414,7 @@ class GroupsModify(PyDialog):
         eids, is_valid = check_patran_syntax(self.add_edit, pound=self.elements_pound)
         #adict, is_valid = check_patran_syntax_dict(self.add_edit)
         if not is_valid:
-            #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
+            #self.add_edit.setStyleSheet(QLINEEDIT_ERROR)
             return
 
         self.eids = unique(hstack([self.eids, eids]))
@@ -423,7 +423,7 @@ class GroupsModify(PyDialog):
         self._apply_cids_eids()
 
         self.add_edit.clear()
-        self.add_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.add_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.on_update_main()
 
     def _apply_cids_eids(self):
@@ -439,7 +439,7 @@ class GroupsModify(PyDialog):
         eids, is_valid = check_patran_syntax(self.remove_edit)
         #adict, is_valid = check_patran_syntax_dict(self.remove_edit)
         if not is_valid:
-            #self.remove_edit.setStyleSheet("QLineEdit{background: red;}")
+            #self.remove_edit.setStyleSheet(QLINEEDIT_ERROR)
             return
 
         #self.eids = _remove(adict, ['e', 'elem', 'element'], self.eids)
@@ -448,20 +448,20 @@ class GroupsModify(PyDialog):
         self._apply_cids_eids()
 
         self.remove_edit.clear()
-        self.remove_edit.setStyleSheet(QLINE_EDIT_BASIC)
+        self.remove_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.on_update_main()
 
     def on_default_name(self):
         self.remove_highlight_actor()
         name = str(self._default_name)
         self.name_edit.setText(name)
-        self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.name_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_elements(self):
         self.remove_highlight_actor()
         element_str = str(self._default_elements)
         self.elements_edit.setText(element_str)
-        self.elements_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.elements_edit.setStyleSheet(QLINEEDIT_GOOD)
         group = self.out_data[self.active_key]
         group.element_str = element_str
 
@@ -470,22 +470,22 @@ class GroupsModify(PyDialog):
         try:
             text = str(cell_value).strip()
         except UnicodeEncodeError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
+            cell.setStyleSheet(QLINEEDIT_ERROR)
             return None, False
 
         if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
+            cell.setStyleSheet(QLINEEDIT_GOOD)
             return text, True
         else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
+            cell.setStyleSheet(QLINEEDIT_ERROR)
             return None, False
 
         if self._default_name != text:
             if self._default_name in self.out_data:
-                cell.setStyleSheet("QLineEdit{background: white;}")
+                cell.setStyleSheet(QLINEEDIT_GOOD)
                 return text, True
             else:
-                cell.setStyleSheet("QLineEdit{background: red;}")
+                cell.setStyleSheet(QLINEEDIT_ERROR)
                 return None, False
 
     def on_validate(self):

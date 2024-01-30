@@ -312,7 +312,7 @@ class CalculatorWindow(PyDialog):
         else:
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
             if scale == 0.0:
-                self.scale_edit.setStyleSheet("QLineEdit{background: red;}")
+                self.scale_edit.setStyleSheet(QLINEEDIT_ERROR)
                 flag1 = False
 
         if animate_in_gui or wipe:

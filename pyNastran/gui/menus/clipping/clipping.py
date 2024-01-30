@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import check_float
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float, QLINEEDIT_GOOD
 
 
 class ClippingPropertiesWindow(PyDialog):
@@ -84,11 +84,11 @@ class ClippingPropertiesWindow(PyDialog):
 
     def on_default_min(self):
         self.min_edit.setText(func_str(self._default_min))
-        self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_max(self):
         self.max_edit.setText(func_str(self._default_max))
-        self.max_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_validate(self):
         min_value, flag0 = check_float(self.min_edit)

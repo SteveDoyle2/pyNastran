@@ -720,7 +720,7 @@ class GuiResult(GuiResultCommon):
     def set_arrow_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a vector scale factor.')
 
-    def set_title(self, i: int, name: str, title):
+    def set_legend_title(self, i: int, name: str, title: str):
         self.title = title
 
     #def set_phase(self, i: int, name: str, phase):
