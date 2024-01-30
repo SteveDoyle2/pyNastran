@@ -68,6 +68,7 @@ class ForceResults2(DispForceVectorResults):
         DispForceVectorResults.__init__(
             self,
             subcase_id,
+            title,
             node_id,
             case,
             t123_offset,
@@ -75,13 +76,11 @@ class ForceResults2(DispForceVectorResults):
             index_to_base_title_annotation,
             dim_max,
             data_format=data_format,
+            is_variable_data_format=is_variable_data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
             colormap=colormap,
             set_max_min=set_max_min,
             uname=uname)
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
 
         #linked_scale_factor = False
         #location = 'node'

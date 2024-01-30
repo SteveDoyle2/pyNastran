@@ -768,6 +768,103 @@ class TestModalBar(unittest.TestCase):
 
 class TestStaticBar(unittest.TestCase):
     """tests the CBARs"""
+    def test_cbar_rbe3_ex(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar.bdf'
+        model.add_grid(100, [3., 3., 0.])
+        model.add_grid(101, [3., 3., 4.])
+        L = 1.0
+
+        nids = [100, 101]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 8.0e6
+        G = 3.2e6
+        nu = None
+        model.add_mat1(mid, E, G, nu, rho=0.0, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+
+        x = [0., 1., 0.]
+        g0 = None
+        model.add_cbar(eid, pid, nids, x, g0,
+                       offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
+
+        A = 1.
+        k_axial = A * E / L
+        model.add_pbar(pid, mid,
+                       A=A, i1=1., i2=1., i12=1., j=1.,
+                       nsm=0.,
+                       c1=0., c2=0., d1=0., d2=0.,
+                       e1=0., e2=0., f1=0., f2=0.,
+                       k1=1.e8, k2=1.e8, comment='')
+        load_id = 2
+        nid = 101
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        spc_id = 3
+        components = 123456
+        nodes = 100
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+        A = np.array([
+            [ 15,   0,  0,  0, -30, 0],
+            [  0,  15,  0, 30,   0, 0],
+            [  0,   0, 20,  0,   0, 0],
+            [  0,  30,  0, 80,   0, 0],
+            [-30,   0,  0,  0,  80, 0],
+            [  0,   0,  0,  0,   0, 8],
+        ])
+
+        B = np.array([
+            [-15,   0,   0,   0,-30,  0],
+            [  0, -15,   0, -30,  0,  0],
+            [  0,   0, -20,   0,  0,  0],
+            [  0, -30,   0,  40,  0,  0],
+            [ 30,   0,   0,   0, 40,  0],
+            [  0,   0,   0,   0,  0, -8],
+        ])
+
+        C = np.array([
+            [-15,   0,   0,   0, 30,  0],
+            [  0, -15,   0, -30,  0,  0],
+            [  0,   0, -20,   0,  0,  0],
+            [  0,  30,   0,  40,  0,  0],
+            [-30,   0,   0,   0, 40,  0],
+            [  0,   0,   0,   0,  0, -8],
+        ])
+
+        D = np.array([
+            [ 15,   0,  0,  0,  30, 0],
+            [  0,  15,  0,-30,   0, 0],
+            [  0,   0, 20,  0,   0, 0],
+            [  0, -30,  0, 80,   0, 0],
+            [ 30,   0,  0,  0,  80, 0],
+            [  0,   0,  0,  0,   0, 8],
+        ])
+        Kgg_expected = np.vstack([
+            np.hstack([A, B,]),
+            np.hstack([C, D]),
+        ])
+        Kgg = solver.Kgg / 1e5
+        np.set_printoptions(linewidth=100)
+        A_actual = Kgg[:6, :6] ###
+        B_actual = Kgg[:6, 6:]
+        C_actual = Kgg[6:, :6] ###
+        D_actual = Kgg[6:, 6:]
+
+        # F = kx
+        fmag = 1.0
+        dx = fmag / k_axial
+        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
         log = SimpleLogger(level='debug', encoding='utf-8')

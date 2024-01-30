@@ -630,45 +630,79 @@ def _beami_stiffness(A: float, E: float, G: float, L: float,
     K[3, 3] = K[9, 9] = ktorsion
     K[9, 3] = K[3, 9] = -ktorsion
 
-    #Fx - 0, 6
-    #Fy - 1, 7**
-    #Fz - 2, 8
-    #Mx - 3, 9
-    #My - 4, 10
-    #Mz - 5, 11**
-    # bending z (Fy/1/7, Mz/5/11)
-    #      1     5       7   11
-    # 1  [12  & 6L   & -12 & 6L
-    # 5  [6L  & 4L^2 & -6L & 2L^2
-    # 7  [-12 &-6L   &  12 & -6L
-    # 11 [6L  & 2L^2 & -6L & 4L^2
-    K[1, 1] = K[7, 7] = 12. * kz
-    K[1, 7] = K[1, 7] = -12. * kz
-    K[1, 5] = K[5, 1] = K[11, 1] = K[1, 11] = 6. * L * kz
+    if 1:
+        #https://www.youtube.com/watch?v=FBxnWOGB0Gc&ab_channel=TM%27sChannel
+        #Coefficients of the stiffness matrix - Derivation - Beam element
+        k_bending = np.array([
+            [12,    6*L,  -12,  6*L],
+            [6*L,  4*L2, -6*L, 2*L2],
+            [-12,  -6*L,   12, -6*L],
+            [6*L,  2*L2, -6*L, 4*L2],
+        ]) / L ** 3
+        ## DOFs
+        # 0,6  - axial
+        # 1,7  - shear 1y
+        # 2,8  - shear 2z
+        # 3,9  - torsion
+        # 4,10 - bending y (shear 2)  --> 2,4,8,10
+        # 5,11 - bending z (shear 1)  --> 1,5,7,11
+        # shear 1y (y=1), length x (0) -> moment z (6=5)
+        # shear 1y (y=7), length x (0) -> moment z (12=11)
+        ibending1 = np.array([1, 5,
+                              7, 11])
+        # shear 2z (z=2), length x (0) -> moment y (5=4)
+        ibending2 = np.array([2, 4,
+                              8, 10])
 
-    K[5, 7] = K[7, 5] = K[7, 11] = K[11, 7] = -6. * L * kz
-    K[5, 11] = K[11, 5] = 2. * L2 * kz * (2 - phiz)
-    K[5, 5] = K[11, 11] = 4. * L2 * kz * (4 + phiz)
+        k1 = k_bending * E * Iz
+        k2 = k_bending * E * Iy
+        for i0, i1, i2 in zip(count(), ibending1, ibending2):
+            for j0, j1, j2 in zip(count(), ibending1, ibending2):
+                K[i1, j1] = k1[i0, j0]
+                K[i2, j2] = k2[i0, j0]
+        #K /= 1e5
+        #np.set_printoptions(linewidth=100)
+        x = 1
+    else:
+        #Fx - 0, 6
+        #Fy - 1, 7**
+        #Fz - 2, 8
+        #Mx - 3, 9
+        #My - 4, 10
+        #Mz - 5, 11**
+        # bending z (Fy/1/7, Mz/5/11)
+        #      1     5       7   11
+        # 1  [12  & 6L   & -12 & 6L
+        # 5  [6L  & 4L^2 & -6L & 2L^2
+        # 7  [-12 &-6L   &  12 & -6L
+        # 11 [6L  & 2L^2 & -6L & 4L^2
+        K[1, 1] = K[7, 7] = 12. * kz
+        K[1, 7] = K[1, 7] = -12. * kz
+        K[1, 5] = K[5, 1] = K[11, 1] = K[1, 11] = 6. * L * kz
 
-    #Fx - 0, 6
-    #Fy - 1, 7
-    #Fz - 2, 8**
-    #Mx - 3, 9
-    #My - 4, 10**
-    #Mz - 5, 11
-    # bending y (Fz/2/8, My/4/10)
-    #      2     4       8   10
-    # 2  [12  & 6L   & -12 & 6L
-    # 4  [6L  & 4L^2 & -6L & 2L^2
-    # 8  [-12 &-6L   &  12 & -6L
-    # 10 [6L  & 2L^2 & -6L & 4L^2
-    K[2, 2] = K[8, 8] = 12. * ky
-    K[2, 8] = K[2, 8] = -12. * ky
-    K[2, 4] = K[4, 2] = K[10, 2] = K[2, 10] = 6. * L * ky
+        K[5, 7] = K[7, 5] = K[7, 11] = K[11, 7] = -6. * L * kz
+        K[5, 11] = K[11, 5] = 2. * L2 * kz * (2 - phiz)
+        K[5, 5] = K[11, 11] = 4. * L2 * kz * (4 + phiz)
 
-    K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6. * L * ky
-    K[4, 10] = K[10, 4] = 2. * L * L * ky * (2. - phiy)
-    K[4, 4] = K[10, 10] = 4. * L * L * ky * (4. + phiy)
+        #Fx - 0, 6
+        #Fy - 1, 7
+        #Fz - 2, 8**
+        #Mx - 3, 9
+        #My - 4, 10**
+        #Mz - 5, 11
+        # bending y (Fz/2/8, My/4/10)
+        #      2     4       8   10
+        # 2  [12  & 6L   & -12 & 6L
+        # 4  [6L  & 4L^2 & -6L & 2L^2
+        # 8  [-12 &-6L   &  12 & -6L
+        # 10 [6L  & 2L^2 & -6L & 4L^2
+        K[2, 2] = K[8, 8] = 12. * ky
+        K[2, 8] = K[2, 8] = -12. * ky
+        K[2, 4] = K[4, 2] = K[10, 2] = K[2, 10] = 6. * L * ky
+
+        K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6. * L * ky
+        K[4, 10] = K[10, 4] = 2. * L * L * ky * (2. - phiy)
+        K[4, 4] = K[10, 10] = 4. * L * L * ky * (4. + phiy)
 
     if pa != 0:
         assert pa > 0

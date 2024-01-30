@@ -566,7 +566,7 @@ class GuiVTKCommon(GuiQtCommon):
             return is_passed
         imin, imax, min_value_actual, max_value_actual = out_data
 
-        title = obj.get_legend_title(i, name)
+        legend_title = obj.get_legend_title(i, name)
         min_value, max_value = obj.get_min_max(i, name)
         if update_limits:
             min_value = min_value_actual
@@ -576,7 +576,7 @@ class GuiVTKCommon(GuiQtCommon):
         nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         is_legend_shown = self.scalar_bar.is_shown
 
-        self.update_scalar_bar(title, min_value, max_value,
+        self.update_scalar_bar(legend_title, min_value, max_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,

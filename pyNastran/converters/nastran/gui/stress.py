@@ -1119,7 +1119,7 @@ def get_composite_plate_stress_strains2(cases: CasesDict,
         data_format='%g',
         is_variable_data_format=False,
         nlabels=None, labelsize=None, ncolors=None, colormap='',
-        set_max_min=False, uname='CompositeStressResults2')
+        set_max_min=False, uname=titleii) # 'CompositeStressResults2')
 
     #form_layers = {'temp': [],}
     form_names = []

@@ -68,10 +68,14 @@ class PlateStrainStressResults2(VectorResultsCommon):
             some unique name for ...
         """
         assert isinstance(is_fiber_distance, bool), is_fiber_distance
+        title = ''
+        ntitles = 8
         VectorResultsCommon.__init__(
-            self, subcase_id,
+            self, subcase_id, title,
             cases,
+            ntitles,
             data_format=data_format,
+            is_variable_data_format=is_variable_data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
             colormap=colormap,
             #set_max_min: bool=False,
@@ -162,12 +166,8 @@ class PlateStrainStressResults2(VectorResultsCommon):
         self.inode = np.zeros(0, dtype='int32')
         self.ielement_centroid = np.zeros(0, dtype='int32')
         #---------------------------------------------------------------------
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
 
         #linked_scale_factor = False
-        #location = 'node'
 
         out = setup_centroid_node_data(eid_to_nid_map, cases)
         centroid_eids, centroid_data, element_node, node_data = out
@@ -373,9 +373,10 @@ class PlateStrainStressResults2(VectorResultsCommon):
         #title = f'{self.title} {method}'
         title = results[iresult][0]  # sidebar label=legend
         return title
-    def set_legend_title(self, itime: int, res_name: str,
-                         title: str) -> None:
-        self.title = title
+    def get_legend_tuple(self, itime: int, case_tuple: str) -> int:
+        (itime, iresult, header) = case_tuple
+        return iresult
+
     def get_legend_title(self, itime: int, case_tuple: str):
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, iresult, header) = case_tuple

@@ -449,7 +449,8 @@ class LoadActions(BaseGui):
                                 out_filename_short, update=True, is_scalar=False,
                                 is_deflection=is_deflection, is_force=is_force)
 
-    def _on_load_nodal_elemental_results(self, result_type, out_filename=None, stop_on_failure=False):
+    def _on_load_nodal_elemental_results(self, result_type, out_filename=None,
+                                         stop_on_failure=False):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 

@@ -17,6 +17,7 @@ from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonCore import vtkTypeFloat32Array, vtkPoints
 from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
+from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
 #import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
@@ -44,7 +45,7 @@ RED = (1., 0., 0.)
 
 FringeData = namedtuple(
     'FringeData',
-    'icase, result_type, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location, min_value, max_value, norm_value,'
     'data_format, scale, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -52,7 +53,7 @@ FringeData = namedtuple(
 
 DispData = namedtuple(
     'DispData',
-    'icase, result_type, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location, min_value, max_value, norm_value,'
     'data_format, scale, phase, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -319,7 +320,7 @@ class GuiQtCommon(GuiAttributes):
             # this is valid, but we want to skip out
             return is_valid, failed_data
 
-        result_type = obj.get_legend_title(i, resname)
+        legend_title = obj.get_legend_title(i, resname)
         data_format = obj.get_data_format(i, resname)
         #vector_size = obj.get_vector_size(i, resname)
         location = obj.get_location(i, resname)
@@ -356,14 +357,14 @@ class GuiQtCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 1
-        name_tuple = (vector_size, subcase_id, result_type, label,
+        name_tuple = (vector_size, subcase_id, legend_title, label,
                       min_value, max_value, scale)
         name_str = self._names_storage.get_name_string(name_tuple)
         #return resname, normi, vector_size, min_value, max_value, norm_value
 
         vtk_fringe = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
         data = FringeData(
-            icase, result_type, location, min_value, max_value, norm_value,
+            icase, legend_title, location, min_value, max_value, norm_value,
             data_format, scale, methods,
             subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
@@ -414,7 +415,7 @@ class GuiQtCommon(GuiAttributes):
             #self.log_error('icase=%r is not a displacement/force' % icase)
             #return is_valid, failed_data
 
-        result_type = obj.get_legend_title(i, name)
+        legend_title = obj.get_legend_title(i, name)
         vector_size = obj.get_vector_size(i, name)
         if vector_size == 1:
             msg = f'icase={icase} is not a displacement/force'
@@ -470,7 +471,7 @@ class GuiQtCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 3
-        name_tuple = (vector_size, subcase_id, result_type, label, scale)
+        name_tuple = (vector_size, subcase_id, legend_title, label, scale)
         name_str = self._names_storage.get_name_string(name_tuple)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
@@ -485,7 +486,7 @@ class GuiQtCommon(GuiAttributes):
         imax = None
         subtitle = None
         data = DispData(
-            icase, result_type, location, min_value, max_value, norm_value,
+            icase, legend_title, location, min_value, max_value, norm_value,
             data_format, scale, phase, methods,
             subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
@@ -516,7 +517,7 @@ class GuiQtCommon(GuiAttributes):
             return is_valid
 
         icase = data.icase
-        result_type = data.result_type
+        legend_title = data.legend_title
         location = data.location
         min_value = data.min_value
         max_value = data.max_value
@@ -549,7 +550,7 @@ class GuiQtCommon(GuiAttributes):
 
         self.update_contour_filter(nlabels, location, min_value, max_value)
 
-        self.update_scalar_bar(result_type, min_value, max_value,
+        self.update_scalar_bar(legend_title, min_value, max_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
@@ -564,7 +565,7 @@ class GuiQtCommon(GuiAttributes):
         if update_legend_window:
             self.legend_obj.update_legend(
                 icase_fringe, icase_disp, icase_vector,
-                result_type, min_value, max_value, data_format, scale, phase,
+                legend_title, min_value, max_value, data_format, scale, phase,
                 arrow_scale,
                 nlabels, labelsize, ncolors, colormap,
                 use_disp_internal=True, use_vector_internal=True)
@@ -788,7 +789,7 @@ class GuiQtCommon(GuiAttributes):
         icase_disp = self.icase_disp
         icase_vector = self.icase_vector
 
-        result_type = None
+        legend_title = None
         max_value = None
         min_value = None
         data_format = None
@@ -803,7 +804,7 @@ class GuiQtCommon(GuiAttributes):
         if update_legend_window:
             self.legend_obj.update_legend(
                 icase_fringe, icase_disp, icase_vector,
-                result_type, min_value, max_value, data_format, scale, phase,
+                legend_title, min_value, max_value, data_format, scale, phase,
                 arrow_scale,
                 nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
                 use_disp_internal=True, use_vector_internal=True,
@@ -1033,7 +1034,7 @@ class GuiQtCommon(GuiAttributes):
         fringe, vector = obj.get_fringe_vector_result(i, resname)
 
         subcase_id = obj.subcase_id
-        result_type = obj.get_legend_title(i, resname)
+        legend_title = obj.get_legend_title(i, resname)
         if user_is_checked_fringe:
             data_format = obj.get_data_format(i, resname)
             out = obj.get_nlabels_labelsize_ncolors_colormap(i, resname)
@@ -1080,8 +1081,8 @@ class GuiQtCommon(GuiAttributes):
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
-        #print("subcase_id=%s result_type=%r subtitle=%r label=%r"
-              #% (subcase_id, result_type, subtitle, label))
+        #print("subcase_id=%s legend_title=%r subtitle=%r label=%r"
+              #% (subcase_id, legend_title, subtitle, label))
 
         #================================================
         if fringe is None:
@@ -1132,7 +1133,7 @@ class GuiQtCommon(GuiAttributes):
             #norm_value = float(max_value - min_value)
 
             vector_size = 1
-            name_fringe = (vector_size, subcase_id, result_type, label, 0.)
+            name_fringe = (vector_size, subcase_id, legend_title, label, 0.)
             if not self._names_storage.has_exact_name(name_fringe):
                 vtk_fringe = self.numpy_array_to_vtk_array(
                     name_fringe, fringe, vector_size, phase)
@@ -1140,7 +1141,7 @@ class GuiQtCommon(GuiAttributes):
         #if vector_size0 >= 3:
         if user_is_checked_disp or user_is_checked_vector:
             vector_size = 3
-            name_vector = (vector_size, subcase_id, result_type, label, scalei)
+            name_vector = (vector_size, subcase_id, legend_title, label, scalei)
             if not self._names_storage.has_exact_name(name_vector):
                 vtk_vector = self.numpy_array_to_vtk_array(
                     name_vector, vector, vector_size, phase)
@@ -1162,7 +1163,7 @@ class GuiQtCommon(GuiAttributes):
             if is_legend_shown is None:
                 is_legend_shown = self.scalar_bar.is_shown
             self.update_scalar_bar(
-                result_type, min_value, max_value,
+                legend_title, min_value, max_value,
                 data_format,
                 nlabels=nlabels, labelsize=labelsize,
                 ncolors=ncolors, colormap=colormap,
@@ -1183,7 +1184,7 @@ class GuiQtCommon(GuiAttributes):
 
         self.legend_obj.update_legend(
             icase_fringe, icase_disp, icase_vector,
-            result_type, min_value, max_value, data_format, scale, phase,
+            legend_title, min_value, max_value, data_format, scale, phase,
             arrow_scale,
             nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
             external_call=False)
@@ -1237,7 +1238,7 @@ class GuiQtCommon(GuiAttributes):
 
         #if is_legend_shown is None:
             #is_legend_shown = self.scalar_bar.is_shown
-        #self.update_scalar_bar(result_type, min_value, max_value,
+        #self.update_scalar_bar(legend_title, min_value, max_value,
                                #data_format,
                                #nlabels=nlabels, labelsize=labelsize,
                                #ncolors=ncolors, colormap=colormap,
@@ -1250,7 +1251,7 @@ class GuiQtCommon(GuiAttributes):
         #icase_fringe = icase
         #self.legend_obj.update_legend(
             #icase_fringe, icase_disp, icase_vector,
-            #result_type, min_value, max_value, data_format, scale, phase,
+            #legend_title, min_value, max_value, data_format, scale, phase,
             #nlabels, labelsize, ncolors, colormap, external_call=False)
         self.hide_legend()
         self.scalar_bar.is_shown = False
@@ -1359,7 +1360,7 @@ class GuiQtCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
-        result_type = obj.get_legend_title(i, res_name)
+        legend_title = obj.get_legend_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         location = obj.get_location(i, res_name)
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
@@ -1368,13 +1369,13 @@ class GuiQtCommon(GuiAttributes):
         #if vector_size == 3:
             #print('name_fringe, grid_result, vector_size=3', name_fringe, grid_result)
         self._final_grid_update(icase, name_fringe, grid_result, None, None, None,
-                                1, subcase_id, result_type, location, subtitle, label,
+                                1, subcase_id, legend_title, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
         self.update_contour_filter(nlabels, location, min_value, max_value)
 
         if vector_size == 3:
             self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
-                                    vector_size, subcase_id, result_type, location, subtitle, label,
+                                    vector_size, subcase_id, legend_title, location, subtitle, label,
                                     revert_displaced=False, show_msg=show_msg)
             #xyz_nominal, vector_data = obj.get_vector_result(i, res_name method)
             #self._update_grid(vector_data)
@@ -1385,7 +1386,7 @@ class GuiQtCommon(GuiAttributes):
                            obj, i: int, res_name: str,
                            vector_size: int,
                            subcase_id: int,
-                           result_type: str,
+                           legend_title: str,
                            location: str,
                            subtitle: str,
                            label: str,
@@ -1426,8 +1427,8 @@ class GuiQtCommon(GuiAttributes):
                 cell_data.AddArray(vtk_array)
                 if show_msg:
                     self.log_info('centroidal plotting vector=%s - subcase_id=%s '
-                                  'result_type=%s subtitle=%s label=%s'
-                                  % (vector_size, subcase_id, result_type, subtitle, label))
+                                  'legend_title=%s subtitle=%s label=%s'
+                                  % (vector_size, subcase_id, legend_title, subtitle, label))
             elif location == 'node':
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
@@ -1436,8 +1437,8 @@ class GuiQtCommon(GuiAttributes):
                 if vector_size == 1:
                     if show_msg:
                         self.log_info('node plotting vector=%s - subcase_id=%s '
-                                      'result_type=%s subtitle=%s label=%s"'
-                                      % (vector_size, subcase_id, result_type, subtitle, label))
+                                      'legend_title=%s subtitle=%s label=%s"'
+                                      % (vector_size, subcase_id, legend_title, subtitle, label))
                     point_data.AddArray(vtk_array)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
@@ -1463,8 +1464,8 @@ class GuiQtCommon(GuiAttributes):
 
                     if show_msg:
                         self.log_info('node plotting vector=%s - subcase_id=%s '
-                                      'result_type=%s subtitle=%s label=%s'
-                                      % (vector_size, subcase_id, result_type, subtitle, label))
+                                      'legend_title=%s subtitle=%s label=%s'
+                                      % (vector_size, subcase_id, legend_title, subtitle, label))
                     #point_data.AddVector(grid_result) # old
                     #point_data.AddArray(grid_result)
                 else:  # pragma: no cover

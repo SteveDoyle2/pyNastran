@@ -9,7 +9,7 @@ if TYPE_CHECKING:
         RealTableArray, ComplexTableArray)
 
 
-## TODO: better label to indicate Magnitude vs. Value
+## default legend button (on Legend menu) should go back to OG legend
 class DisplacementResults2(DispForceVectorResults):
     def __init__(self,
                  subcase_id: int,
@@ -66,6 +66,7 @@ class DisplacementResults2(DispForceVectorResults):
         DispForceVectorResults.__init__(
             self,
             subcase_id,
+            title,
             node_id,
             dxyz,
             t123_offset,
@@ -73,13 +74,11 @@ class DisplacementResults2(DispForceVectorResults):
             index_to_base_title_annotation,
             dim_max,
             data_format=data_format,
+            is_variable_data_format=is_variable_data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
             colormap=colormap,
             set_max_min=set_max_min,
             uname=uname)
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
 
         # setup the node mapping
         disp_nodes = dxyz.node_gridtype[:, 0]  #  local node id

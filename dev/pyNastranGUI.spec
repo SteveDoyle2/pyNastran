@@ -16,7 +16,7 @@ INCLUDE_BDFV = False
 INCLUDE_PANDAS = False
 INCLUDE_MATPLOTLIB = False
 
-DEBUG = True
+DEBUG = False
 IS_RELEASE = False
 USE_TODAY = True
 IS_ONEDIR = False # True=onedir; False=onefile

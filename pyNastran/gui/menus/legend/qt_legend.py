@@ -3,7 +3,9 @@ defines:
  - LegendPropertiesWindow
 
 """
+from __future__ import annotations
 import os
+from typing import TYPE_CHECKING
 
 from qtpy import QtCore
 from qtpy.QtGui import QFont
@@ -18,8 +20,11 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, QIntEdit, QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_float, check_format, check_name_str,
     check_positive_int_or_blank)
-
 from pyNastran.gui.qt_version import qt_int as qt_version
+
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.legend.legend_object import LegendObject
+
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
 ANIMATE_TOOLTIP_ON = 'Creates an scale/phase/time animation'
@@ -140,18 +145,23 @@ class LegendPropertiesWindow(PyDialog):
         if self._nlabels is None:
             self._nlabels = ''
 
-    def update_legend(self, icase_fringe, icase_disp, icase_vector, title,
-                      min_value, max_value, data_format,
-                      nlabels, labelsize, ncolors, colormap, is_fringe,
+    def update_legend(self, icase_fringe, icase_disp, icase_vector,
+                      title: str,
+                      min_value, max_value, data_format: str,
+                      nlabels: int, labelsize: int,
+                      ncolors: int, colormap: str,
+                      is_fringe: bool,
                       scale, phase,
                       arrow_scale,
 
-                      default_title, default_min_value, default_max_value,
-                      default_data_format, default_nlabels, default_labelsize,
-                      default_ncolors, default_colormap,
-                      default_scale, default_phase,
-                      default_arrow_scale,
-                      font_size=8, external_call=False):
+                      default_title: str,
+                      default_min_value, default_max_value,
+                      default_data_format: str,
+                      default_nlabels: int, default_labelsize: int,
+                      default_ncolors: int, default_colormap: str,
+                      default_scale: float, default_phase: float,
+                      default_arrow_scale: float,
+                      font_size: int=8, external_call=False):
         """
         We need to update the legend if there's been a result change request
         """
@@ -859,7 +869,8 @@ class LegendPropertiesWindow(PyDialog):
         """applies the current values"""
         passed = self.on_validate()
         if passed and self.external_call:
-            self.win_parent.legend_obj._apply_legend(self.out_data)
+            legend_obj: LegendObject = self.win_parent.legend_obj
+            legend_obj.apply_legend(self.out_data)
         self.external_call = True
         return passed
 

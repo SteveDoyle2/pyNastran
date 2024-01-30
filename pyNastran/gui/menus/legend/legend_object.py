@@ -1,6 +1,7 @@
 """
 defines:
  - LegendObject
+
 """
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
@@ -72,7 +73,7 @@ class LegendObject(BaseGui):
             return
 
         default_format = None
-        (result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
+        (legend_title, scalar_bar, defaults_scalar_bar, data_format, default_format,
          default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
              gui.icase_fringe)
 
@@ -94,7 +95,7 @@ class LegendObject(BaseGui):
             'icase_fringe' : gui.icase_fringe,  # int for normals
             'icase_disp' : gui.icase_disp,
             'icase_vector' : gui.icase_vector,
-            'title' : result_type,
+            'title' : legend_title,
             'min_value' : min_value,
             'max_value' : max_value,
 
@@ -142,7 +143,7 @@ class LegendObject(BaseGui):
 
         if data['close']:
             if not self._legend_window._updated_legend:
-                self._apply_legend(data)
+                self.apply_legend(data)
             self._legend_window_shown = False
             del self._legend_window
         else:
@@ -155,7 +156,7 @@ class LegendObject(BaseGui):
             return
 
         default_format = None
-        (result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
+        (legend_title, scalar_bar, defaults_scalar_bar, data_format, default_format,
          default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
              gui.icase_fringe)
 
@@ -172,7 +173,7 @@ class LegendObject(BaseGui):
             'icase_fringe' : gui.icase_fringe,
             'icase_disp' : gui.icase_disp,
             'icase_vector' : gui.icase_vector,
-            'title' : result_type,
+            'title' : legend_title,
             'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
@@ -291,7 +292,7 @@ class LegendObject(BaseGui):
 
         out = self.get_legend_fringe(icase_fringe)
         (
-            _result_type, scalar_bar, defaults_scalar_bar, data_format,
+            _legend_title, scalar_bar, defaults_scalar_bar, data_format,
             default_format, default_title, _min_value, _max_value,
             default_min, default_max) = out
 
@@ -300,7 +301,7 @@ class LegendObject(BaseGui):
         if use_fringe_internal:
             min_value = _min_value
             max_value = _max_value
-            unused_result_type = _result_type
+            unused_legend_title = _legend_title
             labelsize = _labelsize
             ncolors = _ncolors
             colormap = _colormap
@@ -311,7 +312,7 @@ class LegendObject(BaseGui):
             #(obj, (i, name)) = self.result_cases[key]
             ##subcase_id = obj.subcase_id
             ##fringe, case = obj.get_fringe_vector_result(i, name)
-            ##result_type = obj.get_legend_title(i, name)
+            ##legend_title = obj.get_legend_title(i, name)
             ##vector_size = obj.get_vector_size(i, name)
             ##location = obj.get_location(i, name)
             ##data_format = obj.get_data_format(i, name)
@@ -359,7 +360,7 @@ class LegendObject(BaseGui):
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
-    def _apply_legend(self, data):
+    def apply_legend(self, data):
         title = data['title']
         min_value = data['min_value']
         max_value = data['max_value']
@@ -469,6 +470,7 @@ class LegendObject(BaseGui):
             data_format_old = obj.get_data_format(i, res_name)
             colors_old = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
             nlabels_old, labelsize_old, ncolors_old, colormap_old = colors_old
+            title_old = obj.get_legend_title(i, res_name)
 
             update_fringe = (
                 min_value != min_value_old or
@@ -478,6 +480,7 @@ class LegendObject(BaseGui):
                 (
                     (nlabels, labelsize, ncolors, colormap) !=
                     (nlabels_old, labelsize_old, ncolors_old, colormap_old) or
+                    title != title_old or
                     data_format != data_format_old or
                     is_shown != is_shown_old or
                     is_horizontal != is_horizontal_old or
@@ -489,6 +492,8 @@ class LegendObject(BaseGui):
                 obj.set_min_max(i, res_name, min_value, max_value)
             except TypeError:
                 gui.log_error(f'Error setting min/max; i={i} res_name={res_name} min_value={min_value} max_value={max_value}\nobj={str(obj)}')
+
+            obj.set_legend_title(i, res_name, title)
             obj.set_data_format(i, res_name, data_format)
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, res_name, nlabels, labelsize, ncolors, colormap)
@@ -507,7 +512,8 @@ class LegendObject(BaseGui):
         if is_normal:
             return
 
-        #unused_name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
+        #unused_name = (vector_size1, subcase_id, legend_title, label,
+                       #min_value, max_value, scale1)
         #if obj.is_normal_result(i, res_name):
             #return
 
@@ -551,7 +557,7 @@ class LegendObject(BaseGui):
         #labelsize = None
         #ncolors = None
         #colormap = None
-        result_type = None
+        legend_title = None
         min_value = None
         max_value = None
         data_format = None
@@ -575,7 +581,7 @@ class LegendObject(BaseGui):
             assert isinstance(key, integer_types), key
             (obj, (i, res_name)) = gui.result_cases[key]
             #fringe, case = obj.get_fringe_vector_result(i, res_name)
-            result_type = obj.get_legend_title(i, res_name)
+            legend_title = obj.get_legend_title(i, res_name)
 
             scalar_bar = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
             defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
@@ -588,7 +594,7 @@ class LegendObject(BaseGui):
             default_format = obj.get_default_data_format(i, res_name)
 
         out = (
-            result_type,
+            legend_title,
             scalar_bar, defaults_scalar_bar,
             data_format, default_format,
             default_title, min_value, max_value,

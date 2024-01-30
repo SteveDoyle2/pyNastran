@@ -67,15 +67,50 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         uname : str
             some unique name for ...
         """
+        title = ''
+        ntitles = 9
+        if case.is_stress:
+            iresult_map = {
+                0: 'o11',
+                1: 'o22',
+                3: 't12',
+                4: 't1z',
+                5: 't2z',
+                6: 'angle',
+                7: 'major',
+                8: 'minor',
+                9: 'von_mises',
+
+                10: 'max_shear',
+                11: 'fiber_distance',
+                12: 'fiber_curvature',
+            }
+        else:
+            iresult_map = {
+                0: 'e11',
+                1: 'e22',
+                3: 'e12',
+                4: 'e1z',
+                5: 'e2z',
+                6: 'angle',
+                7: 'major',
+                8: 'minor',
+                9: 'von_mises',
+                10: 'max_shear',
+                11: 'fiber_distance',
+                12: 'fiber_curvature',
+            }
+
         VectorResultsCommon.__init__(
-            self, subcase_id,
+            self, subcase_id, title,
             case,
-            #dxyz: Union[RealTableArray, ComplexTableArray],
+            ntitles,
             data_format=data_format,
-            nlabels=nlabels, labelsize=labelsize,
-            ncolors=ncolors, colormap=colormap,
+            is_variable_data_format=is_variable_data_format,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, uname=uname)
             #set_max_min: bool=False,
-            uname=uname)
+
         self.layer_indices = (-1, )  # All
         i = -1
         name = (0, 0, '')
@@ -92,36 +127,7 @@ class CompositeStrainStressResults2(VectorResultsCommon):
 
         #self.subcase_id = subcase_id
         self.is_stress = case.is_stress
-        if self.is_stress:
-            self.iresult_map = {
-                0: 'o11',
-                1: 'o22',
-                3: 't12',
-                4: 't1z',
-                5: 't2z',
-                6: 'angle',
-                7: 'major',
-                8: 'minor',
-                9: 'von_mises',
-                10: 'max_shear',
-                11: 'fiber_distance',
-                12: 'fiber_curvature',
-            }
-        else:
-            self.iresult_map = {
-                0: 'e11',
-                1: 'e22',
-                3: 'e12',
-                4: 'e1z',
-                5: 'e2z',
-                6: 'angle',
-                7: 'major',
-                8: 'minor',
-                9: 'von_mises',
-                10: 'max_shear',
-                11: 'fiber_distance',
-                12: 'fiber_curvature',
-            }
+        self.iresult_map = iresult_map
         #self.linked_scale_factor = False
 
         #self.data_format = data_format
@@ -174,9 +180,6 @@ class CompositeStrainStressResults2(VectorResultsCommon):
 
         #self.uname = uname
         # -----------------------------------------------------
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
 
         #linked_scale_factor = False
         #location = 'node'
@@ -391,20 +394,23 @@ class CompositeStrainStressResults2(VectorResultsCommon):
 
         return itime, (itime, iresult, self.layer_indices, self.min_max_method)
 
-    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
-        (itime, iresult, header) = case_tuple
+    #def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
+        #(itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
-        results = list(self.result.values())
+        #results = list(self.result.values())
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #method = method.strip()
         #title = f'{self.title} {method}'
-        title = results[itime]
-        return title
-    def set_legend_title(self, itime: int, res_name: str,
-                         title: str) -> None:
-        self.title = title
-    def get_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:  # type: ignore
+        #title = results[itime]
+        #return title
+    #def set_legend_title(self, itime: int, res_name: str,
+                         #title: str) -> None:
+        #self.title = title
+    def get_legend_tuple(self, itime: int, case_tuple: CaseTuple) -> int:
+        (itime, iresult, header) = case_tuple
+        return iresult
+    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:  # type: ignore
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'

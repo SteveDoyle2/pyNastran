@@ -244,7 +244,7 @@ class FakeGUIMethods(GuiVTKCommon):
             #method = methods[0]
             unused_fringe = obj.get_fringe_result(i, name)
             unused_fringe, unused_disp = obj.get_fringe_vector_result(i, name)
-            unused_result_type = obj.get_legend_title(i, name)
+            unused_legend_title = obj.get_legend_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
             unused_data_format = obj.get_data_format(i, name)

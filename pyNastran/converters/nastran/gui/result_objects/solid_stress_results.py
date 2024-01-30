@@ -58,10 +58,13 @@ class SolidStrainStressResults2(VectorResultsCommon):
         uname : str
             some unique name for ...
         """
+        title = ''
+        ntitles = 10
         VectorResultsCommon.__init__(
-            self, subcase_id,
-            cases,
+            self, subcase_id, title,
+            cases, ntitles,
             data_format=data_format,
+            is_variable_data_format=is_variable_data_format,
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
             colormap=colormap,
             #set_max_min: bool=False,
@@ -108,11 +111,6 @@ class SolidStrainStressResults2(VectorResultsCommon):
         self.is_complex = not self.is_real
 
         #ntimes = case.data.shape[0]
-
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
-
         # ------------------------------------------------------------------
         #linked_scale_factor = False
         #location = 'node'
@@ -304,20 +302,20 @@ class SolidStrainStressResults2(VectorResultsCommon):
             #itime = 0
         return itime, (itime, iresult, self.layer_indices, self.min_max_method, self.nodal_combine)
 
-    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
+    #def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
+        #(itime, iresult, header) = case_tuple
+        ##method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
+        ##self.layer_indices
+        #results = list(self.result.values())
+        ##method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
+        ##method = method.strip()
+        ##title = f'{self.title} {method}'
+        #title = results[iresult][0]  # sidebar label=legend
+        #return title
+    def get_legend_tuple(self, itime: int, case_tuple: str) -> int:
         (itime, iresult, header) = case_tuple
-        #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
-        #self.layer_indices
-        results = list(self.result.values())
-        #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
-        #method = method.strip()
-        #title = f'{self.title} {method}'
-        title = results[iresult][0]  # sidebar label=legend
-        return title
-    def set_legend_title(self, itime: int, res_name: str,
-                         title: str) -> None:
-        self.title = title
-    def get_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
+        return iresult
+    def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
         """Composite Stress Layers: 1, 2, 3, 4"""
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'

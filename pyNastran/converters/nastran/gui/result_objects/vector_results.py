@@ -27,9 +27,12 @@ col_axis = 1
 class VectorResultsCommon(GuiResultCommon):
     def __init__(self,
                  subcase_id: int,
+                 title: str,
                  case,
                  #dxyz: Union[RealTableArray, ComplexTableArray],
+                 ntitles: int,
                  data_format: str='%g',
+                 is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  #set_max_min: bool=False,
@@ -37,6 +40,7 @@ class VectorResultsCommon(GuiResultCommon):
         GuiResultCommon.__init__(self)
         self.is_dense = False
         self.subcase_id = subcase_id
+        self._title = title
 
         # local case object
         if isinstance(case, list):  # TODO: might change this later...
@@ -78,9 +82,11 @@ class VectorResultsCommon(GuiResultCommon):
         # ints
         self.imins:        DefaultDict[Any, np.ndarray] = defaultdict(findex)
         self.imaxs:        DefaultDict[Any, np.ndarray] = defaultdict(findex)
+        self.title = [''] * ntitles
 
         self.data_format = data_format
         self.data_formats = [self.data_format]
+        self.is_variable_data_format = is_variable_data_format
         self.headers = ['VectorResultsCommon'] * ntimes
 
         self.nlabels = None
@@ -351,6 +357,22 @@ class VectorResultsCommon(GuiResultCommon):
         itime, case_flag = self.get_case_flag(itime, res_name)
         phases = self.phases[case_flag]
         phases[itime] = phase
+    def set_legend_title(self, i: int, name: str, title: str) -> None:
+        legend_tuple = self.get_legend_tuple(i, name)
+        self.title[legend_tuple] = title
+
+    def get_legend_title(self, itime: int, res_name: str):
+        """
+        Uses self.title if it's set.
+        Otherwise, use the default title.
+        """
+        legend_tuple = self.get_legend_tuple(itime, res_name)
+        titlei = self.title[legend_tuple]
+        #method2 = self._update_method(method)
+        #return f'{self.title} {method2}'
+        #self.component_indices (0, 1, 2)
+        title = titlei if titlei else self.get_default_legend_title(itime, res_name)
+        return title
 
     def get_data_format(self, itime: int, res_name: str) -> str:
         """TODO: currently single value for all results"""
@@ -377,6 +399,7 @@ class VectorResultsCommon(GuiResultCommon):
 class DispForceVectorResults(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
+                 title: str,
                  node_id: np.ndarray,
                  case: Union[RealTableArray, ComplexTableArray],
                  t123_offset: int,
@@ -384,14 +407,18 @@ class DispForceVectorResults(VectorResultsCommon):
                  index_to_base_title_annotation: dict[int, dict[str, str]],
                  dim_max: float,
                  data_format: str='%g',
+                 is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
                  uname: str='VectorResults2'):
+        ntitles = 1
         VectorResultsCommon.__init__(
-            self, subcase_id, case, data_format,
-            nlabels, labelsize, ncolors,
-            colormap, uname)
+            self, subcase_id, title, case, ntitles,
+            data_format=data_format,
+            is_variable_data_format=is_variable_data_format,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, uname=uname)
         assert isinstance(index_to_base_title_annotation, dict), index_to_base_title_annotation
         self.index_to_base_title_annotation = index_to_base_title_annotation
         self.component_indices: tuple[int, ...] = (0, )
@@ -536,35 +563,24 @@ class DispForceVectorResults(VectorResultsCommon):
 
         Magnitude vs. Value
         """
-        #method = self.get_methods(itime, res_name)[0]
-        self.component_indices
-        #title0 = self._title0
         title0 = self.index_to_base_title_annotation[self.t123_offset]['corner']
         method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
         header = self.headers[itime]
         #annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
         annotation_label = f'{self.title} ({self.min_max_method}, {header}): {method}'
-        #return self.uname
         return annotation_label
 
+    def get_legend_tuple(self, itime: int, res_name: str) -> int:
+        return 0
     def get_default_legend_title(self, itime: int, res_name: str) -> str:
-        self.component_indices
+        #self.component_indices (0, 1, 2)
+        # T_
         title0 = self.index_to_base_title_annotation[self.t123_offset]['title']
+
+        # T_XYZ
         method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
-        title = f'{self.title} {method}'
-        return title
-    def set_legend_title(self, itime: int, res_name: str,
-                         title: str) -> None:
-        self.title = title
-    def get_legend_title(self, itime: int, res_name: str):
-        """displacement T_XYZ"""
-        #method2 = self._update_method(method)
-        #return f'{self.title} {method2}'
-        self.component_indices
-        title0 = self.index_to_base_title_annotation[self.t123_offset]['title']
-        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
-        title = f'{self.title} {method}'
-        return title
+        title_out = f'{self._title} {method}'
+        return title_out
 
     def _get_data(self, itime: int) -> tuple[np.ndarray, list[int]]:
         """
