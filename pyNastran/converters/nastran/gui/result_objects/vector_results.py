@@ -531,15 +531,19 @@ class DispForceVectorResults(VectorResultsCommon):
         header = 'Static'
         title = 'Displacement'
         method = 'T_XYZ'
-        returns 'Displacement T_XYZ: Static'
+        min_max_method = 'Value'
+        returns 'Displacement (Static) T_XYZ'
+
+        Magnitude vs. Value
         """
         #method = self.get_methods(itime, res_name)[0]
         self.component_indices
         #title0 = self._title0
         title0 = self.index_to_base_title_annotation[self.t123_offset]['corner']
         method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        header = self.headers[itime]
         #annotation_label = f'{self.title} {method} ({self.min_max_method}): {self.headers[itime]}'
-        annotation_label = f'{self.title} {method}: {self.headers[itime]}'
+        annotation_label = f'{self.title} ({self.min_max_method}, {header}): {method}'
         #return self.uname
         return annotation_label
 

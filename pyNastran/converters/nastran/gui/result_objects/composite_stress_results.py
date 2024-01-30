@@ -18,19 +18,55 @@ pcomp_stress = ['o11', 'o22', 't12', 't1z', 't2z', 'oangle', 'Max Principal', 'm
 pcomp_strain = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'eangle', 'Max Principal', 'minor', 'evm', 'emax_shear']
 col_axis = 1
 
-class CompositeResults2(VectorResultsCommon):
+
+class CompositeStrainStressResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
                  element_id: np.ndarray,
                  case: RealCompositePlateArray,
                  result: str,
-                 #dim_max: float,
+                 title: str,
+                 #dim_max: float=1.0,
                  data_format: str='%g',
+                 is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
-                 uname: str='CompositeResults2'):
+                 uname: str='CompositeStressResults2'):
+        """
+        Defines a Displacement/Eigenvector result
+
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : list[str]
+            the sidebar word
+        titles : list[str]
+            the legend title
+        xyz : (nnodes, 3)
+            the nominal xyz locations
+        dxyz : (nnodes, 3)
+            the delta xyz values
+        scalars : (nnodes,n) float ndarray
+            #the data to make a contour plot with
+            does nothing
+        scales : list[float]
+            the deflection scale factors
+            nominally, this starts as an empty list and is filled later
+        data_formats : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        uname : str
+            some unique name for ...
+        """
         VectorResultsCommon.__init__(
             self, subcase_id,
             case,
@@ -137,6 +173,30 @@ class CompositeResults2(VectorResultsCommon):
         #self.colormap = colormap
 
         #self.uname = uname
+        # -----------------------------------------------------
+        self.title = title
+
+        self.is_variable_data_format = is_variable_data_format
+
+        #linked_scale_factor = False
+        #location = 'node'
+
+        # setup the node mapping
+        elements = np.unique(case.element_layer[:, 0])  #  local element id
+        #_ielement = np.searchsorted(element_id, elements)
+
+        # dense -> no missing nodes in the results set
+        self.is_dense = (len(element_id) == len(elements))
+
+        #self.xyz = xyz
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        ntimes = self.case.data.shape[0]
+        self.location = 'centroid'
+        if self.is_stress:
+            self.headers = ['CompositeStress2'] * ntimes
+        else:
+            self.headers = ['CompositeStrain2'] * ntimes
+        str(self)
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -508,90 +568,6 @@ class CompositeResults2(VectorResultsCommon):
             #return
         #phases = self.phases[self.layer_indices]
         #phases[itime] = phase
-
-
-class CompositeStrainStressResults2(CompositeResults2):
-    def __init__(self,
-                 subcase_id: int,
-                 model: BDF,
-                 element_id: np.ndarray,
-                 case: RealCompositePlateArray,
-                 result: str,
-                 title: str,
-                 #dim_max: float=1.0,
-                 data_format: str='%g',
-                 is_variable_data_format: bool=False,
-                 nlabels=None, labelsize=None, ncolors=None,
-                 colormap: str='',
-                 set_max_min: bool=False,
-                 uname: str='CompositeStressResults2'):
-        """
-        Defines a Displacement/Eigenvector result
-
-        Parameters
-        ----------
-        subcase_id : int
-            the flag that points to self.subcases for a message
-        headers : list[str]
-            the sidebar word
-        titles : list[str]
-            the legend title
-        xyz : (nnodes, 3)
-            the nominal xyz locations
-        dxyz : (nnodes, 3)
-            the delta xyz values
-        scalars : (nnodes,n) float ndarray
-            #the data to make a contour plot with
-            does nothing
-        scales : list[float]
-            the deflection scale factors
-            nominally, this starts as an empty list and is filled later
-        data_formats : str
-            the type of data result (e.g. '%i', '%.2f', '%.3f')
-        ncolors : int; default=None
-            sets the default for reverting the legend ncolors
-        set_max_min : bool; default=False
-            set default_mins and default_maxs
-
-        Unused
-        ------
-        uname : str
-            some unique name for ...
-        """
-        CompositeResults2.__init__(
-            self,
-            subcase_id,
-            model, element_id,
-            case,
-            result,
-            #dim_max,
-            data_format=data_format,
-            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
-            colormap=colormap,
-            set_max_min=set_max_min,
-            uname=uname)
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
-
-        #linked_scale_factor = False
-        #location = 'node'
-
-        # setup the node mapping
-        elements = np.unique(case.element_layer[:, 0])  #  local element id
-        #_ielement = np.searchsorted(element_id, elements)
-
-        # dense -> no missing nodes in the results set
-        self.is_dense = (len(element_id) == len(elements))
-
-        #self.xyz = xyz
-        #assert len(self.xyz.shape) == 2, self.xyz.shape
-        self.location = 'centroid'
-        if self.is_stress:
-            self.headers = ['CompositeStress2']
-        else:
-            self.headers = ['CompositeStrain2']
-        str(self)
 
     #-------------------------------------
     # unmodifyable getters

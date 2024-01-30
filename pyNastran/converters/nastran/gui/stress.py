@@ -123,24 +123,24 @@ def get_rod_stress_strains(cases: CasesDict,
     if is_stress:
         #sigma = 'σ'
         method_map = {
-            'axial' : 'σxx',
-            'torsion' : 'τxy',
+            'axial' : 'Stress XX',
+            'torsion' : 'Stress XY',
             'SMa' : 'MS_axial',
             'SMt' : 'MS_torsion',
-            #'omax' : 'σmax',
-            #'omin' : 'σmin',
+            #'omax' : 'Max Principal',
+            #'omin' : 'Min Principal',
             #'von_mises' : 'σ von Mises',
         }
         data_format = '%.3f'
     else:
         #sigma = 'ϵ'
         method_map = {
-            'axial' : 'ϵxx',
-            'torsion' : 'ϵxy',
+            'axial' : 'Strain XX',
+            'torsion' : 'Strain XY',
             'SMa' : 'MS_axial',
             'SMt' : 'MS_torsion',
-            #'emax' : 'ϵmax',
-            #'emin' : 'ϵmin',
+            #'emax' : 'Max Principal',
+            #'emin' : 'Min Principal',
             #'von_mises' : 'ϵ von Mises',
         }
         data_format = '%.3e'
@@ -1293,30 +1293,31 @@ def _composite_method_map(is_stress: bool,
         word = 'Stress'
         method_map = {
             #'fiber_distance' : 'FiberDist.',
-            'o11' : 'σ11',
-            'o22' : 'σ22',
-            't12' : 't12',
-            't1z' : 'τ1z',
-            't2z' : 'τ2z',
-            'angle' : 'θ',
-            'major' : 'σ major',
-            'minor' : 'σ minor',
-            'max_shear' : 'MaxShear',
-            #'von_mises' : 'σ von Mises',
+            'o11' : 'Stress 11',
+            'o22' : 'Stress 22',
+            't12' : 'Stress 12',
+            't1z' : 'Stress 1z',
+            't2z' : 'Stress 2z',
+            'angle' : 'Theta',
+            'major' : 'Max Principal',
+            'minor' : 'Min Principal',
+            'max_shear' : 'Max Shear',
+            #'von_mises' : 'von Mises',
         }
     else:
         word = 'Strain'
         method_map = {
             #'fiber_distance' : 'FiberDist.',
-            'e11' : 'ϵ11',
-            'e22' : 'ϵ22',
-            'e12' : 'ϵ12',
-            'e1z' : 'ϵ1z',
-            'e2z' : 'ϵ2z',
-            'angle' : 'θ',
-            'major' : 'ϵ major',
-            'minor' : 'ϵ minor',
-            'max_shear' : 'MaxShear',
+            'e11' : 'Strain 11',
+            'e22' : 'Strain 22',
+            'e12' : 'Strain 12',
+            'e1z' : 'Strain 1z',
+            'e2z' : 'Strain 2z',
+            'angle' : 'Theta',
+            'major' : 'Max Principal',
+            'minor' : 'Min Principal',
+            'max_shear' : 'Max Shear',
+            #'von_mises' : 'von Mises',
         }
     #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
     #methods = case_headers
@@ -1566,35 +1567,35 @@ def get_solid_stress_strains(cases: CasesDict,
     if is_stress:
         #sigma = 'σ'
         method_map = {
-            'oxx' : 'σxx',
-            'oyy' : 'σyy',
-            'ozz' : 'σzz',
-            'txy' : 'τxy',
-            'tyz' : 'τyz',
-            'txz' : 'τxz',
+            'oxx' : 'Stress XX',
+            'oyy' : 'Stress YY',
+            'ozz' : 'Stress ZZ',
+            'txy' : 'Stress XY',
+            'tyz' : 'Stress YZ',
+            'txz' : 'Stress XZ',
 
-            'omax' : 'σmax',
-            'omin' : 'σmin',
-            'omid' : 'σmid',
-            'von_mises' : 'σ von Mises',
-            'max_shear' : 'σ max Shear',
+            'omax' : 'Max Principal',
+            'omin' : 'Min Principal',
+            'omid' : 'Mid Principal',
+            'von_mises' : 'von Mises',
+            'max_shear' : 'max Shear',
         }
         data_format = '%.3f'
     else:
         #sigma = 'ϵ'
         method_map = {
-            'exx' : 'ϵxx',
-            'eyy' : 'ϵyy',
-            'ezz' : 'ϵzz',
-            'exy' : 'ϵxy',
-            'eyz' : 'ϵyz',
-            'exz' : 'ϵxz',
+            'exx' : 'Strain XX',
+            'eyy' : 'Strain YY',
+            'ezz' : 'Strain ZZ',
+            'exy' : 'Strain XY',
+            'eyz' : 'Strain YZ',
+            'exz' : 'Strain XZ',
 
-            'emax' : 'ϵmax',
-            'emin' : 'ϵmin',
-            'emid' : 'ϵmid',
-            'von_mises' : 'ϵ von Mises',
-            'max_shear' : 'ϵ max Shear',
+            'emax' : 'Max Principal',
+            'emin' : 'Min Principal',
+            'emid' : 'Mid Principal',
+            'von_mises' : 'von Mises',
+            'max_shear' : 'max Shear',
         }
         data_format = '%.3e'
     methods = [method_map[headeri] for headeri in case_headers]
@@ -1723,12 +1724,12 @@ def get_spring_stress_strains(cases: CasesDict,
     case_headers = case.get_headers()
     if is_stress:
         method_map = {
-            'spring_stress' : 'σxx',
+            'spring_stress' : 'Stress XX',
         }
         data_format = '%.3f'
     else:
         method_map = {
-            'spring_strain' : 'ϵxx',
+            'spring_strain' : 'Strain XX',
         }
         data_format = '%.3e'
     methods = [method_map[headeri] for headeri in case_headers]

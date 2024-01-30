@@ -149,10 +149,11 @@ class SolidStrainStressResults2(VectorResultsCommon):
         #self.xyz = xyz
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         #self.location = 'centroid'
+        ntimes = self.centroid_data.shape[0]
         if self.is_stress:
-            self.headers = ['SolidStress2']
+            self.headers = ['SolidStress2'] * ntimes
         else:
-            self.headers = ['SolidStrain2']
+            self.headers = ['SolidStrain2'] * ntimes
         str(self)
 
     def get_methods(self, itime: int, res_name: str) -> list[str]:

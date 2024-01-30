@@ -206,10 +206,11 @@ class PlateStrainStressResults2(VectorResultsCommon):
 
         #self.xyz = xyz
         #assert len(self.xyz.shape) == 2, self.xyz.shape
+        ntimes = self.centroid_data.shape[0]
         if self.is_stress:
-            self.headers = ['PlateStress2']
+            self.headers = ['PlateStress2'] * ntimes
         else:
-            self.headers = ['PlateStrain2']
+            self.headers = ['PlateStrain2'] * ntimes
         str(self)
 
 
