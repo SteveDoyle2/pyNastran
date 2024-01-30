@@ -595,10 +595,14 @@ class Settings:
             #print(f'*key={key!r} key2={key2!r} value={value!r}')
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
-        python_dock_visible = self.parent.python_dock_widget.isVisible()
-        log_dock_widget = self.parent.log_dock_widget.isVisible()
-        settings.setValue('python_dock_visible', python_dock_visible)
-        settings.setValue('log_dock_visible', log_dock_widget)
+
+        # checks because tests don't have these
+        if hasattr(self.parent, 'python_dock_widget'):
+            python_dock_visible = self.parent.python_dock_widget.isVisible()
+            settings.setValue('python_dock_visible', python_dock_visible)
+        if hasattr(self.parent, 'log_dock_widget'):
+            log_dock_widget = self.parent.log_dock_widget.isVisible()
+            settings.setValue('log_dock_visible', log_dock_widget)
 
         if not is_testing:
             main_window = self.parent.window()

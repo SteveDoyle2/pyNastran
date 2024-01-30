@@ -593,7 +593,7 @@ class GuiVTKCommon(GuiQtCommon):
         if label2:
             label += '; ' + label2
 
-        self.tool_actions.update_text_corner_actors(
+        self.tool_actions.update_corner_text_actors(
             location=location_nodal,
             subcase_id=subcase_id,
             subtitle=subtitle,
