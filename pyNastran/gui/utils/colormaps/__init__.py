@@ -1119,14 +1119,14 @@ _VIRIDIS_DATA = [[0.267004, 0.004874, 0.329415],
 
 
 colormap_dict = {
-    'jet2' : _JET2_DATA,
-    'blend' : _BLEND_DATA,
-    'magma' : _MAGMA_DATA,
-    'inferno' : _INFERNO_DATA,
-    'plasma' : _PLASMA_DATA,
-    'viridis' : _VIRIDIS_DATA,
-    'patran_jet' : PATRAN_JET,
-    'patran_pink' : PATRAN_PINK,
+    'jet2' : np.array(_JET2_DATA),
+    'blend' : np.array(_BLEND_DATA),
+    'magma' : np.array(_MAGMA_DATA),
+    'inferno' : np.array(_INFERNO_DATA),
+    'plasma' : np.array(_PLASMA_DATA),
+    'viridis' : np.array(_VIRIDIS_DATA),
+    'patran_jet' : np.array(PATRAN_JET),
+    'patran_pink' : np.array(PATRAN_PINK),
 }
 colormap_keys = ['jet', #'jet2', 'blend',
                  'magma', 'inferno', 'plasma', 'viridis',

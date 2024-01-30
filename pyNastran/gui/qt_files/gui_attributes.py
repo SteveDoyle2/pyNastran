@@ -853,6 +853,7 @@ class GuiAttributes:
                           labelsize: Optional[int]=None,
                           ncolors: Optional[int]=None,
                           colormap: Optional[str]=None,
+                          is_horizontal: Optional[bool]=None,
                           is_shown: bool=True) -> None:
         """
         Updates the Scalar Bar
@@ -886,30 +887,16 @@ class GuiAttributes:
         #print("update_scalar_bar min=%s max=%s" % (min_value, max_value))
         scalar_bar: ScalarBar = self.scalar_bar
 
+        if is_horizontal is None:
+            is_horizontal = self.settings.is_horizontal_scalar_bar
+        assert isinstance(is_horizontal, bool), is_horizontal
+
         scalar_bar.update(title, min_value, max_value, data_format,
                           nlabels=nlabels, labelsize=labelsize,
                           ncolors=ncolors, colormap=colormap,
                           is_low_to_high=self.legend_obj.is_low_to_high,
-                          is_horizontal=not self.settings.is_horizontal_scalar_bar,
+                          is_horizontal=is_horizontal,
                           is_shown=is_shown)
-
-    def on_update_scalar_bar(self, title: str,
-                             min_value: float, max_value: float,
-                             data_format: str) -> None:
-        self.title = str(title)
-        self.min_value = float(min_value)
-        self.max_value = float(max_value)
-
-        try:
-            data_format % 1
-        except Exception:
-            msg = ("failed applying the data formatter format=%r and "
-                   "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
-            self.log_error(msg)
-            return
-        #self.data_format = data_format
-        self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (
-            title, min_value, max_value, data_format))
 
     #---------------------------------------------------------------------------
     def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',

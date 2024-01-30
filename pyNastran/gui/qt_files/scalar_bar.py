@@ -11,6 +11,7 @@ from pyNastran.gui import bi_font_file
 if TYPE_CHECKING:
     from pyNastran.gui.gui_objects.settings import Settings
 
+NCOLORS_DEFAULT = 11
 
 class ScalarBar:
     """defines the ScalarBar at the side of the vtk panel"""
@@ -91,7 +92,6 @@ class ScalarBar:
 
         # put the scalar bar at the right side
         self.scalar_bar.SetOrientationToVertical()
-
         width = 0.2
         height = 0.9
         x = 1 - 0.01 - width
@@ -129,6 +129,7 @@ class ScalarBar:
 
     def update_color_function(self,
                               min_value, max_value,
+                              ncolors: int,
                               colormap: str='jet',
                               colormap_space: str='',
                               is_low_to_high: bool=True):
@@ -144,6 +145,7 @@ class ScalarBar:
         # plasma  - RGB
         # magma   - not HSV, RGB
         # inferno - not HSV, RGB
+        ncolors = NCOLORS_DEFAULT if ncolors is None else ncolors
         colormap_space, colormap = get_colormap_space(colormap_space, colormap)
 
         update_color_function = (
@@ -155,6 +157,7 @@ class ScalarBar:
         )
         if not update_color_function:
             return
+
         self.colormap = colormap
         self.colormap_space = colormap_space
         self.is_low_to_high = is_low_to_high
@@ -176,18 +179,25 @@ class ScalarBar:
                 self.color_function.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
                 self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         else:
+            #nvalues = ncolors + 1
             if isinstance(colormap, str):
                 colormap_array = colormap_dict[colormap]
+                ntotal = len(colormap_array)
+
+                i = np.round(np.linspace(0., ntotal-1, num=ncolors)).astype('int32')
+                colormap_array2 = colormap_array[i, :]
             else:
                 assert isinstance(colormap[0][0], float), colormap
 
-            vals = np.linspace(min_value, max_value, num=len(colormap))
+            vals = np.linspace(min_value, max_value, num=ncolors)
             if is_low_to_high:
                 vals = vals[::-1]
 
             # AddHSVPoint
-            #self.color_function.AddRGBPoints(vals, colormap)
-            for val, (red, green, blue) in zip(vals, colormap_array):
+            ## TODO: requires a vtk object
+            #self.color_function.AddRGBPoints(vals, colormap_array)\
+            assert len(vals) == len(colormap_array2)
+            for val, (red, green, blue) in zip(vals, colormap_array2):
                 self.color_function.AddRGBPoint(val, red, green, blue)
 
     def update_position(self, is_horizontal: bool=True) -> None:
@@ -233,7 +243,7 @@ class ScalarBar:
         """updates the data format and number of values/colors"""
         data_format_display = data_format
         if nlabels is None: # and labelsize is None:
-            nvalues = 11
+            nvalues = NCOLORS_DEFAULT
             if data_format == '%i':
                 data_format_display = '%.0f'
                 nvalues = int(max_value - min_value) + 1
@@ -314,9 +324,9 @@ class ScalarBar:
         nlabels = None if nlabels == -1 else nlabels
         labelsize = None if labelsize == -1 else labelsize
         ncolors = None if ncolors == -1 else ncolors
-        colormap = settings.colormap if nlabels == -1 else nlabels
+        colormap = settings.colormap if colormap == '' else colormap
 
-        self.update_color_function(min_value, max_value,
+        self.update_color_function(min_value, max_value, ncolors,
                                    colormap=colormap, colormap_space=colormap_space,
                                    is_low_to_high=is_low_to_high)
 

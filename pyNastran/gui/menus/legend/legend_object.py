@@ -548,6 +548,7 @@ class LegendObject(BaseGui):
                                   data_format,
                                   nlabels=nlabels, labelsize=labelsize,
                                   ncolors=ncolors, colormap=colormap,
+                                  is_horizontal=is_horizontal,
                                   is_shown=is_shown)
             gui.update_contour_filter(nlabels, location, min_value, max_value)
         if render:
