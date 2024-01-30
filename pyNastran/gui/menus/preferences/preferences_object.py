@@ -42,8 +42,8 @@ class PreferencesObject(BaseGui):
             'background_color' : settings.background_color,
             'background_color2' : settings.background_color2,
 
-            'text_size' : settings.text_size,
-            'text_color' : settings.text_color,
+            'corner_text_size' : settings.corner_text_size,
+            'corner_text_color' : settings.corner_text_color,
 
             'highlight_color' : settings.highlight_color,
             'highlight_opacity' : settings.highlight_opacity,

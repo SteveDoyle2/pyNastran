@@ -12,6 +12,7 @@ from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
 
+from vtk import vtkAxesActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkDataSetMapper, vtkCamera, vtkTextActor)
@@ -108,7 +109,7 @@ class MainWindow2(QMainWindow):
         self.eid_maps = {}
 
         # the info in the lower left part of the screen
-        self.text_actors: dict[int, vtkTextActor] = {}
+        self.corner_text_actors: dict[int, vtkTextActor] = {}
 
         # the various coordinate systems (e.g., cid=0, 1)
         self.axes: dict[int, vtkAxesActor]= {}
@@ -354,8 +355,8 @@ class MainWindow2(QMainWindow):
     def get_camera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
-    def turn_text_off(self) -> None:
-        self.log.warning('turn_text_off')
+    def turn_corner_text_off(self) -> None:
+        self.log.warning('turn_corner_text_off')
 
     #-----------------------------------------------------------------------
     # geometry

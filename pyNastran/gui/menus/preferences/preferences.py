@@ -12,12 +12,12 @@ The preferences menu handles:
 from __future__ import annotations
 from math import log10, ceil
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QFileDialog)
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
@@ -28,7 +28,7 @@ from pyNastran.gui.gui_objects.settings import (
     COORD_SCALE, COORD_TEXT_SCALE,
     BACKGROUND_COLOR, BACKGROUND_COLOR2,
     ANNOTATION_COLOR, ANNOTATION_SIZE,
-    TEXT_COLOR, TEXT_SIZE,
+    CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
     HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, # HIGHLIGHT_LINE_THICKNESS,
     USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
@@ -63,10 +63,12 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self.dim_max = data['dim_max']
-        self._default_font_size = data['font_size']
 
         # font size for menu
-        self._default_text_size = TEXT_SIZE
+        self._default_font_size = data['font_size']
+
+        # corner text
+        self._default_corner_text_size = CORNER_TEXT_SIZE
 
         self.use_startup_directory = data['use_startup_directory']
 
@@ -93,7 +95,7 @@ class PreferencesWindow(PyDialog):
         self._coord_text_scale = data['coord_text_scale'] * 100.
 
         self._magnify = data['magnify']
-        self._text_size = data['text_size']
+        self._corner_text_size = data['corner_text_size']
         self._highlight_opacity = data['highlight_opacity']
         self._highlight_point_size = data['highlight_point_size']
 
@@ -103,8 +105,8 @@ class PreferencesWindow(PyDialog):
             data['background_color'])
         self.background_color2_float, self.background_color2_int = check_color(
             data['background_color2'])
-        self.text_color_float, self.text_color_int = check_color(
-            data['text_color'])
+        self.corner_text_color_float, self.corner_text_color_int = check_color(
+            data['corner_text_color'])
         self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
 
@@ -168,18 +170,18 @@ class PreferencesWindow(PyDialog):
         #self.startup_directory_button = QPushButton('...')
 
         #-----------------------------------------------------------------------
-        # Text Color
-        self.text_size_label = QLabel("Text Size:")
-        self.text_size_edit = QSpinBox(self)
-        self.text_size_edit.setValue(self._default_text_size)
-        self.text_size_edit.setRange(7, 30)
-        self.text_size_edit.setToolTip('Sets the lower left corner text size')
-        self.text_size_button = QPushButton("Default")
+        # Corner Text Color
+        self.corner_text_size_label = QLabel('Corner Text Size:')
+        self.corner_text_size_edit = QSpinBox(self)
+        self.corner_text_size_edit.setValue(self._default_corner_text_size)
+        self.corner_text_size_edit.setRange(7, 30)
+        self.corner_text_size_edit.setToolTip('Sets the lower left corner text size')
+        self.corner_text_size_button = QPushButton("Default")
 
         # Text Color
-        self.text_color_label = QLabel("Text Color:")
-        self.text_color_edit = QPushButtonColor(self.text_color_int)
-        self.text_color_edit.setToolTip('Sets the lower left corner text color')
+        self.corner_text_color_label = QLabel("Corner Text Color:")
+        self.corner_text_color_edit = QPushButtonColor(self.corner_text_color_int)
+        self.corner_text_color_edit.setToolTip('Sets the lower left corner text color')
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -235,11 +237,11 @@ class PreferencesWindow(PyDialog):
         self.annotation_color_label = QLabel("Annotation Color:")
         self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
         self.annotation_color_edit.setToolTip('The "Probe" is an annotation')
-        self.annotation_color_label.hide()
-        self.annotation_color_edit.hide()
+        #self.annotation_color_label.hide()
+        #self.annotation_color_edit.hide()
 
         #-----------------------------------------------------------------------
-        # Picker Size
+        # Picker Sizef
         self.picker_size_label = QLabel("Picker Size (% of Screen):")
         self.picker_size_edit = QDoubleSpinBox(self)
         self.picker_size_edit.setRange(0., 10.)
@@ -485,13 +487,13 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.highlight_point_size_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.text_color_label, irow, 0)
-        grid.addWidget(self.text_color_edit, irow, 1)
+        grid.addWidget(self.corner_text_color_label, irow, 0)
+        grid.addWidget(self.corner_text_color_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.text_size_label, irow, 0)
-        grid.addWidget(self.text_size_edit, irow, 1)
-        grid.addWidget(self.text_size_button, irow, 2)
+        grid.addWidget(self.corner_text_size_label, irow, 0)
+        grid.addWidget(self.corner_text_size_edit, irow, 1)
+        grid.addWidget(self.corner_text_size_button, irow, 2)
         irow += 1
 
         grid.addWidget(self.annotation_color_label, irow, 0)
@@ -685,9 +687,9 @@ class PreferencesWindow(PyDialog):
         self.highlight_color_edit.clicked.connect(self.on_highlight_color)
         self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
 
-        self.text_color_edit.clicked.connect(self.on_text_color)
-        self.text_size_edit.valueChanged.connect(self.on_text_size)
-        self.text_size_button.clicked.connect(self.on_default_text_size)
+        self.corner_text_color_edit.clicked.connect(self.on_corner_text_color)
+        self.corner_text_size_edit.valueChanged.connect(self.on_corner_text_size)
+        self.corner_text_size_button.clicked.connect(self.on_default_corner_text_size)
 
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
@@ -748,7 +750,7 @@ class PreferencesWindow(PyDialog):
         self.background_color1_float = BACKGROUND_COLOR
         self.background_color2_float = BACKGROUND_COLOR2
         self.highlight_color_float = HIGHLIGHT_COLOR
-        self.text_color_float = TEXT_COLOR
+        self.corner_text_color_float = CORNER_TEXT_COLOR
         self.annotation_color_float = ANNOTATION_COLOR
 
         self.gradient_scale_checkbox.setChecked(True)
@@ -758,10 +760,10 @@ class PreferencesWindow(PyDialog):
         self.background_color1_int = tuple([round(val * 255) for val in BACKGROUND_COLOR])
         self.background_color2_int = tuple([round(val * 255) for val in BACKGROUND_COLOR2])
         self.highlight_color_int = tuple([round(val * 255) for val in HIGHLIGHT_COLOR])
-        self.text_color_int = tuple([round(val * 255) for val in TEXT_COLOR])
+        self.corner_text_color_int = tuple([round(val * 255) for val in CORNER_TEXT_COLOR])
         self.annotation_color_int = tuple([round(val * 255) for val in ANNOTATION_COLOR])
 
-        set_label_color(self.text_color_edit, self.text_color_int)
+        set_label_color(self.corner_text_color_edit, self.corner_text_color_int)
         set_label_color(self.highlight_color_edit, self.highlight_color_int)
         set_label_color(self.background_color_edit, self.background_color1_int)
         set_label_color(self.background_color2_edit, self.background_color2_int)
@@ -774,7 +776,7 @@ class PreferencesWindow(PyDialog):
                 checkbox.setChecked(True)
 
         if self.win_parent is not None:
-            settings = self.settings
+            settings: Settings = self.settings
             is_min = settings.is_min_visible
             is_max = settings.is_max_visible
             is_edges_black = settings.is_edges_black
@@ -786,7 +788,7 @@ class PreferencesWindow(PyDialog):
             self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
 
             settings.set_highlight_color(self.highlight_color_float, render=False)
-            settings.set_text_color(self.text_color_float, render=False)
+            settings.set_corner_text_color(self.corner_text_color_float, render=False)
             settings.set_background_color(self.background_color1_float, render=False)
             settings.set_background_color2(self.background_color2_float, render=True)
         self.on_apply()
@@ -903,7 +905,9 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.settings.set_highlight_point_size(value)
 
-    def _background_color(self, title, color_edit, rgb_color_ints, func_name: str):
+    def _background_color(self, title: str, color_edit: QPushButtonColor,
+                          rgb_color_ints: tuple[int, int, int],
+                          func_name: str):
         """helper method for ``on_background_color`` and ``on_background_color2``"""
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
             color_edit, rgb_color_ints, title)
@@ -914,38 +918,40 @@ class PreferencesWindow(PyDialog):
                 func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
 
-    def on_text_color(self):
-        """Choose a text color"""
-        rgb_color_ints = self.text_color_int
-        title = "Choose a text color"
+    def on_corner_text_color(self) -> None:
+        """Choose a corner text color"""
+        rgb_color_ints = self.corner_text_color_int
+        title = "Choose a corner text color"
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            self.text_color_edit, rgb_color_ints, title)
+            self.corner_text_color_edit, rgb_color_ints, title)
         if passed:
-            self.text_color_int = rgb_color_ints
-            self.text_color_float = rgb_color_floats
+            self.corner_text_color_int = rgb_color_ints
+            self.corner_text_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.settings.set_text_color(rgb_color_floats)
+                self.settings.set_corner_text_color(rgb_color_floats)
 
-    def on_default_text_size(self):
-        self.text_size_edit.setValue(self._default_text_size)
-        self.on_text_size(self._default_text_size)
+    def on_default_corner_text_size(self):
+        self.corner_text_size_edit.setValue(self._default_corner_text_size)
+        self.on_corner_text_size(self._default_corner_text_size)
 
-    def on_text_size(self, value=None):
+    def on_corner_text_size(self, value=None):
         if value is None:
-            value = self.text_size_edit.value()
-        self._text_size = value
+            value = self.corner_text_size_edit.value()
+        self._corner_text_size = value
         if self.win_parent is not None:
-            self.settings.set_text_size(value)
+            self.settings.set_corner_text_size(value)
 
-    def on_color(self, color_edit, rgb_color_ints, title):
+    def on_color(self, color_edit: QPushButtonColor,
+                 rgb_color_ints: tuple[int, int, int],
+                 title: str) -> tuple[bool, tuple[int, int, int], Any]:
         """pops a color dialog"""
         col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self,
                                     title)
         if not col.isValid():
             return False, rgb_color_ints, None
 
-        color_float = col.getRgbF()[:3]  # floats
-        color_int = [int(colori * 255) for colori in color_float]
+        color_float: list[float] = col.getRgbF()[:3]
+        color_int = tuple([int(colori * 255) for colori in color_float])
 
         assert isinstance(color_float[0], float), color_float
         assert isinstance(color_int[0], int), color_int
@@ -1061,7 +1067,7 @@ def set_label_color(color_edit: QPushButtonColor,
         #"border:1px solid rgb(255, 170, 255); "
         "}")
 
-def check_float(cell) -> tuple[str, bool]:
+def check_float(cell: QDoubleSpinBox) -> tuple[str, bool]:
     text = cell.text()
     value = float_locale(text)
     return value, True
@@ -1117,8 +1123,8 @@ def main():  # pragma: no cover
         'show_corner_coord' : False,
         'magnify' : 5,
 
-        'text_size' : 12,
-        'text_color' : (0., 1., 0.), # green
+        'corner_text_size' : 12,
+        'corner_text_color' : (0., 1., 0.), # green
 
         'highlight_color' : (1., 1., 0.), # yellow
         'highlight_opacity' : 0.8,

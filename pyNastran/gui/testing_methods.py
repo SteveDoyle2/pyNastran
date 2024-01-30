@@ -165,10 +165,10 @@ class FakeGUIMethods(GuiVTKCommon):
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
 
-        self.text_actors[0] = vtkTextActor()
-        self.text_actors[1] = vtkTextActor()
-        self.text_actors[2] = vtkTextActor()
-        self.text_actors[3] = vtkTextActor()
+        self.corner_text_actors[0] = vtkTextActor()
+        self.corner_text_actors[1] = vtkTextActor()
+        self.corner_text_actors[2] = vtkTextActor()
+        self.corner_text_actors[3] = vtkTextActor()
         self.format_class_map = CLASS_MAP
 
     def cell_centroid(self, cell_id, dtype='float32'):
@@ -356,8 +356,8 @@ class FakeGUIMethods(GuiVTKCommon):
     #test.log_info = print
     #test.log_info = log_info
     #test.cycle_results = cycle_results
-    #test.turn_text_on =  turn_text_on
-    #test.turn_text_off = turn_text_off
+    #test.turn_corner_text_on =  turn_corner_text_on
+    #test.turn_corner_text_off = turn_corner_text_off
     #test.cycle_results_explicit = passer
 
     def setWindowTitle(self, msg):

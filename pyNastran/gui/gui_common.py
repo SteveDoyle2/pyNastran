@@ -226,6 +226,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if self.html_logging is True:
             self.log_dock_widget = ApplicationLogWidget(self)
             self.log_widget = self.log_dock_widget.log_widget
+            self.log_dock_widget.setVisible(self.settings.log_dock_visible)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
         else:
             self.log_widget = self.log
@@ -233,6 +234,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
             self.python_dock_widget.setObjectName('python_console')
+            self.python_dock_widget.setVisible(self.settings.python_dock_visible)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.python_dock_widget)
 
     def _on_execute_python_button(self, clear=False):
@@ -2145,7 +2147,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         for obj, (i, resname) in cases.items():
             assert resname != 'main', obj
-        self.turn_text_on()
+        self.turn_corner_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
         # self.case_keys = cases.keys()

@@ -246,19 +246,19 @@ class GuiVTKCommon(GuiQtCommon):
         self.glyph_mapper_centroid = glyph_mapper_centroid
         self.arrow_actor_centroid = arrow_actor_centroid
 
-    def _build_vtk_frame_post(self, build_lookup_table=True):
+    def _build_vtk_frame_post(self, build_lookup_table: bool=True):
         if build_lookup_table:
             self.build_lookup_table()
 
-        text_size = self.settings.text_size # was 14
-        dtext_size = text_size + 1
+        corner_text_size = self.settings.corner_text_size # was 14
+        dtext_size = corner_text_size + 1
 
         # we build these in reverse order
         create_text = self.tool_actions.create_text
-        create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size=text_size)  # text actor 0
-        create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size=text_size)  # text actor 1
-        create_text([5, 5 + 1 * dtext_size], 'Word1', text_size=text_size)  # text actor 2
-        create_text([5, 5], 'Word2', text_size=text_size)  # text actor 3
+        create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size=corner_text_size)  # text actor 0
+        create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size=corner_text_size)  # text actor 1
+        create_text([5, 5 + 1 * dtext_size], 'Word1', text_size=corner_text_size)  # text actor 2
+        create_text([5, 5], 'Word2', text_size=corner_text_size)  # text actor 3
 
         self.get_edges()
         if self.settings.is_edges_visible:
@@ -593,7 +593,7 @@ class GuiVTKCommon(GuiQtCommon):
         if label2:
             label += '; ' + label2
 
-        self.tool_actions.update_text_actors(
+        self.tool_actions.update_text_corner_actors(
             location=location_nodal,
             subcase_id=subcase_id,
             subtitle=subtitle,

@@ -54,7 +54,7 @@ class NastranIO(NastranIO_xref):
         if bdf_filename is None or bdf_filename == '':
             return
         else:
-            self.turn_text_off()
+            self.turn_corner_text_off()
             self.grid.Reset()
 
             self.result_cases = {}

@@ -57,8 +57,8 @@ HIGHLIGHT_LINE_THICKNESS = 5.
 ANNOTATION_COLOR = BLACK
 ANNOTATION_SIZE = 18
 FONT_SIZE = 8
-TEXT_SIZE = 14
-TEXT_COLOR = BLACK
+CORNER_TEXT_SIZE = 14
+CORNER_TEXT_COLOR = BLACK
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_TEXT_SCALE = 0.5 # percent of nominal
 USE_PARALLEL_PROJECTION = True
@@ -231,8 +231,8 @@ class Settings:
         self.annotation_color = ANNOTATION_COLOR  # rgb floats
 
         # text in the lower left corner
-        self.text_size = TEXT_SIZE    # int
-        self.text_color = TEXT_COLOR  # rgb floats
+        self.corner_text_size = CORNER_TEXT_SIZE    # int
+        self.corner_text_color = CORNER_TEXT_COLOR  # rgb floats
 
         self.highlight_color = HIGHLIGHT_COLOR                    # rgb floats
         self.highlight_opacity = HIGHLIGHT_OPACITY                # float
@@ -271,9 +271,9 @@ class Settings:
         self.nastran_settings = NastranSettings()
 
     def finish_startup(self):
-        self.set_background_color(self.background_color, render=False)
-        self.set_background_color2(self.background_color2, render=False)
-        self.set_gradient_background(self.use_gradient_background, render=True)
+        self.set_background_color(self.background_color, render=False, quiet=True)
+        self.set_background_color2(self.background_color2, render=False, quiet=True)
+        self.set_gradient_background(self.use_gradient_background, render=True, quiet=True)
 
     def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
@@ -290,9 +290,9 @@ class Settings:
 
         # sets the window size/position
         main_window_geometry = get_setting(
-            settings, setting_keys, ['main_window_geometry', 'mainWindowGeometry'], None)
+            settings, setting_keys, ['main_window_geometry'], None)
         main_window_state = get_setting(
-            settings, setting_keys, ['main_window_state', 'mainWindowState'], None)
+            settings, setting_keys, ['main_window_state'], None)
         if main_window_geometry is not None:
             self.parent.restoreGeometry(main_window_geometry)
         if main_window_state is not None:
@@ -375,7 +375,7 @@ class Settings:
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
                           default=False, save=True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'],
+        self._set_setting(settings, setting_keys, ['background_color'],
                           default=GREY, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['background_color2'],
                           default=GREY, save=True, auto_type=float)
@@ -387,7 +387,7 @@ class Settings:
                           default=COORD_TEXT_SCALE, save=True, auto_type=float)
 
         # this is for the 3d annotation
-        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
+        self._set_setting(settings, setting_keys, ['annotation_color'],
                           default=BLACK, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['annotation_size'],
                           default=ANNOTATION_SIZE, save=True, auto_type=int) # int
@@ -403,10 +403,10 @@ class Settings:
                           default=self.magnify, save=True, auto_type=int)
 
         # this is the text in the lower left corner
-        self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
+        self._set_setting(settings, setting_keys, ['corner_text_color'],
                           default=BLACK, save=True, auto_type=float)
-        self._set_setting(settings, setting_keys, ['text_size'],
-                          default=TEXT_SIZE, save=True, auto_type=int)
+        self._set_setting(settings, setting_keys, ['corner_text_size'],
+                          default=CORNER_TEXT_SIZE, save=True, auto_type=int)
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
@@ -455,6 +455,20 @@ class Settings:
         if screen_shape:
             self.parent.resize(screen_shape[0], screen_shape[1])
             #width, height = screen_shape
+
+        pos = self._set_setting(settings, setting_keys, ['screen_position'],
+                          default=None, save=False)
+        #if pos is not None:
+            #x = 1
+            #qpos = parent.pos()
+            #pos = qpos.x(), qpos.y()
+
+        self.python_dock_visible = self._set_setting(
+            settings, setting_keys, ['python_dock_visible'],
+            default=False, save=False)
+        self.log_dock_visible = self._set_setting(
+            settings, setting_keys, ['log_dock_visible'],
+            default=True, save=False)
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
@@ -536,7 +550,7 @@ class Settings:
         settings.setValue('background_color', self.background_color)
         settings.setValue('background_color2', self.background_color2)
         settings.setValue('annotation_color', self.annotation_color)
-        settings.setValue('text_color', self.text_color)
+        settings.setValue('corner_text_color', self.corner_text_color)
 
         settings.setValue('highlight_color', self.highlight_color)
         settings.setValue('highlight_opacity', self.highlight_opacity)
@@ -564,7 +578,7 @@ class Settings:
         settings.setValue('magnify', self.magnify)
 
         # float
-        settings.setValue('text_size', self.text_size)
+        settings.setValue('corner_text_size', self.corner_text_size)
         settings.setValue('coord_scale', self.coord_scale)
         settings.setValue('coord_text_scale', self.coord_text_scale)
 
@@ -581,6 +595,11 @@ class Settings:
             #print(f'*key={key!r} key2={key2!r} value={value!r}')
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+        python_dock_visible = self.parent.python_dock_widget.isVisible()
+        log_dock_widget = self.parent.log_dock_widget.isVisible()
+        settings.setValue('python_dock_visible', python_dock_visible)
+        settings.setValue('log_dock_visible', log_dock_widget)
+
         if not is_testing:
             main_window = self.parent.window()
             width = main_window.frameGeometry().width()
@@ -589,7 +608,7 @@ class Settings:
 
             qpos = parent.pos()
             pos = qpos.x(), qpos.y()
-            settings.setValue('pos', pos)
+            settings.setValue('screen_position', pos)
 
     #---------------------------------------------------------------------------
     # FONT SIZE
@@ -735,13 +754,13 @@ class Settings:
         # min/max
         for min_max_actor in self.parent.min_max_actors:
             #print(dir(min_max_actor))
-            prop = min_max_actor.GetProperty()
+            prop = min_max_actor.GetTextProperty()  # was GetProperty
             prop.SetColor(*color)
 
         # case attached annotations (typical)
         for follower_actors in self.parent.label_actors.values():
             for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
+                prop = follower_actor.GetTextProperty()
                 prop.SetColor(*color)
 
         # geometry property attached annotations (e.g., flaps)
@@ -755,7 +774,7 @@ class Settings:
 
             follower_actors = obj.label_actors
             for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
+                prop = follower_actor.GetTextProperty()
                 prop.SetColor(*color)
 
         if render:
@@ -770,14 +789,16 @@ class Settings:
 
     def set_gradient_background(self,
                                 use_gradient_background: bool=False,
-                                render: bool=True) -> None:
+                                render: bool=True,
+                                quiet: bool=False) -> None:
         """enables/disables the gradient background"""
         self.use_gradient_background = use_gradient_background
         self.parent.rend.SetGradientBackground(self.use_gradient_background)
         if render:
             self.parent.vtk_interactor.Render()
 
-    def set_background_color(self, color, render=True):
+    def set_background_color(self, color: tuple[float, float, float],
+                             render: bool=True, quiet: bool=False) -> None:
         """
         Set the background color
 
@@ -790,9 +811,11 @@ class Settings:
         self.parent.rend.SetBackground(*color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
+        if not quiet:
+            self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
 
-    def set_background_color2(self, color, render=True):
+    def set_background_color2(self, color: tuple[float, float, float],
+                              render: bool=True, quiet: bool=False):
         """
         Set the background color
 
@@ -805,7 +828,8 @@ class Settings:
         self.parent.rend.SetBackground2(*color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
+        if not quiet:
+            self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
     def set_highlight_color(self, color: list[float], render: bool=True) -> None:
         """
@@ -849,9 +873,10 @@ class Settings:
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color: list[float], render: bool=True) -> None:
+    def set_corner_text_color(self, color: list[float],
+                              render: bool=True) -> None:
         """
-        Set the text color
+        Set the corner_text color
 
         Parameters
         ----------
@@ -859,43 +884,45 @@ class Settings:
             RGB values as floats
         """
         self.text_color = color
-        for text_actor in self.parent.text_actors.values():
+        text_actors =  self.parent.corner_text_actors
+        for text_actor in text_actors.values():
             text_actor.GetTextProperty().SetColor(color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_text_color(%s, %s, %s)' % color)
+        self.parent.log_command('settings.set_corner_text_color(%s, %s, %s)' % color)
 
-    def set_text_size(self, text_size: int, render: bool=True) -> None:
+    def set_corner_text_size(self, corner_text_size: int, render: bool=True) -> None:
         """
-        Set the annotation text size
+        Set the corner text size
 
         Parameters
         ----------
-        text_size : int
+        corner_text_size : int
             the lower left text size (typical 14)
 
         """
         # we built these actors in reverse order,
         # so that's how we update their sizes
-        text_actors =  self.parent.text_actors
+        text_actors =  self.parent.corner_text_actors
         i = len(text_actors) - 1
-        dtext_size = text_size + 1
-        self.text_size = text_size
+        dtext_size = corner_text_size + 1
+        self.text_size = corner_text_size
         for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(text_size)
+            text_prop.SetFontSize(corner_text_size)
 
             position = [5, 5 + i * dtext_size]
             text_actor.SetDisplayPosition(*position)
             i -= 1
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command(f'settings.set_text_size({text_size})')
+        self.parent.log_command(f'settings.set_corner_text_size({corner_text_size})')
 
-    def update_text_size(self, magnify: float=1.0) -> None:
+    def update_corner_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
-        for text_actor in self.parent.text_actors.values():
+        text_actors =  self.parent.corner_text_actors
+        for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
@@ -903,7 +930,8 @@ class Settings:
         """sets the screenshot magnification factor"""
         self.magnify = magnify
 
-    def set_parallel_projection(self, parallel_projection: bool, render: bool=True) -> None:
+    def set_parallel_projection(self, parallel_projection: bool,
+                                render: bool=True) -> None:
         """sets the parallel_projection flag"""
         self.use_parallel_projection = parallel_projection
         camera = self.parent.rend.GetActiveCamera()

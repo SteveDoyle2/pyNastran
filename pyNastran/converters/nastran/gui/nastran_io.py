@@ -333,7 +333,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return skip_reading
         else:
             gui: MainWindow = self.gui
-            gui.turn_text_off()
+            gui.turn_corner_text_off()
             gui.grid.Reset()
 
             #self.gui.eid_map = {}

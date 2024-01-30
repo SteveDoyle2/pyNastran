@@ -17,20 +17,47 @@ if TYPE_CHECKING:
     CaseTuple = tuple[int, int, str]
 
 
-class SolidResults2(VectorResultsCommon):
+class SolidStrainStressResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
                  node_id: np.ndarray,
                  element_id: np.ndarray,
                  cases: list[RealSolidArray],
-                 result: dict[Union[int, str], str],
-                 #dim_max: float,
+                 result: str,
+                 title: str,
+                 #dim_max: float=1.0,
                  data_format: str='%g',
+                 is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
-                 uname: str='CompositeResults2'):
+                 uname: str='SolidStressStrainResults2'):
+        """
+        Defines a SolidStressResults/SolidStrainResults result
+
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : list[str]
+            the sidebar word
+        titles : list[str]
+            the legend title
+        xyz : (nnodes, 3)
+            the nominal xyz locations
+        data_formats : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        uname : str
+            some unique name for ...
+        """
         VectorResultsCommon.__init__(
             self, subcase_id,
             cases,
@@ -39,6 +66,7 @@ class SolidResults2(VectorResultsCommon):
             colormap=colormap,
             #set_max_min: bool=False,
             uname=uname)
+
         self.centroid_data = np.zeros((0, 0, 0), dtype='float32')
         self.node_data = np.zeros((0, 0, 0), dtype='float32')
         self.element_node = np.zeros((0, 2), dtype='int32')
@@ -47,13 +75,12 @@ class SolidResults2(VectorResultsCommon):
 
         self.layer_indices = (-1, )  # All
         i = -1
-        name = None
+        name = ''
 
         # slice off the methods (from the boolean) and then pull the 0th one
         self.min_max_method = '' # self.has_derivation_transform(i, name)[1]['derivation'][0]
         self.transform = self.has_coord_transform(i, name)[1][0]
         self.nodal_combine = self.has_nodal_combine_transform(i, name)[1][0]
-        #assert len(element_id) >= self.case.
 
         self.dim = cases[0].data.ndim
         for case in cases:
@@ -65,7 +92,6 @@ class SolidResults2(VectorResultsCommon):
             0: 'Centroid',  # default
             1: 'Corner',
         }
-        self.linked_scale_factor = False
 
         #  global ids
         self.model = model
@@ -81,8 +107,53 @@ class SolidResults2(VectorResultsCommon):
         #self.is_real = dxyz.data.dtype.name in {'float32', 'float64'}
         self.is_complex = not self.is_real
 
-        ntimes = case.data.shape[0]
-        self.headers = ['SolidResult2'] * ntimes
+        #ntimes = case.data.shape[0]
+
+        self.title = title
+
+        self.is_variable_data_format = is_variable_data_format
+
+        # ------------------------------------------------------------------
+        #linked_scale_factor = False
+        #location = 'node'
+
+        out = setup_centroid_node_data(cases)
+        centroid_eids, centroid_data, element_node, node_data = out
+
+        self.centroid_eids = centroid_eids
+        # [ntimes, nelements, nresults]
+        self.centroid_data = centroid_data
+
+        self.element_node = element_node
+        self.node_data = node_data
+
+        common_eids = np.intersect1d(self.centroid_eids, element_id)
+        if len(common_eids) == 0:
+            raise IndexError('no solid elements found...')
+        elif len(common_eids) != len(self.centroid_eids):
+            icommon = np.searchsorted(common_eids, self.centroid_eids)
+            #self.centroid_data = self.centroid_data[:, icommon, :]
+            raise RuntimeError('some common elements were found...but some are missing')
+
+        nids = np.unique(self.element_node[:, 1])
+        self.inode = np.searchsorted(node_id, nids)
+        self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
+
+        assert np.array_equal(element_id[self.ielement_centroid], self.centroid_eids)
+        # dense -> no missing nodes in the results set
+        self.is_dense = (
+            (len(element_id) == len(self.centroid_eids)) and
+            (len(node_id) == len(nids)))
+        #self.is_dense = False
+
+        #self.xyz = xyz
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        #self.location = 'centroid'
+        if self.is_stress:
+            self.headers = ['SolidStress2']
+        else:
+            self.headers = ['SolidStrain2']
+        str(self)
 
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         layers = list(self.layer_map.values())
@@ -466,105 +537,6 @@ class SolidResults2(VectorResultsCommon):
             #return
         #phases = self.phases[self.layer_indices]
         #phases[itime] = phase
-
-
-class SolidStrainStressResults2(SolidResults2):
-    def __init__(self,
-                 subcase_id: int,
-                 model: BDF,
-                 node_id: np.ndarray,
-                 element_id: np.ndarray,
-                 cases: list[RealSolidArray],
-                 result: str,
-                 title: str,
-                 #dim_max: float=1.0,
-                 data_format: str='%g',
-                 is_variable_data_format: bool=False,
-                 nlabels=None, labelsize=None, ncolors=None,
-                 colormap: str='',
-                 set_max_min: bool=False,
-                 uname: str='SolidStressStrainResults2'):
-        """
-        Defines a SolidStressResults/SolidStrainResults result
-
-        Parameters
-        ----------
-        subcase_id : int
-            the flag that points to self.subcases for a message
-        headers : list[str]
-            the sidebar word
-        titles : list[str]
-            the legend title
-        xyz : (nnodes, 3)
-            the nominal xyz locations
-        data_formats : str
-            the type of data result (e.g. '%i', '%.2f', '%.3f')
-        ncolors : int; default=None
-            sets the default for reverting the legend ncolors
-        set_max_min : bool; default=False
-            set default_mins and default_maxs
-
-        Unused
-        ------
-        uname : str
-            some unique name for ...
-        """
-        SolidResults2.__init__(
-            self,
-            subcase_id,
-            model, node_id, element_id,
-            cases,
-            result,
-            #dim_max,
-            data_format=data_format,
-            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
-            colormap=colormap,
-            set_max_min=set_max_min,
-            uname=uname)
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
-
-        #linked_scale_factor = False
-        #location = 'node'
-
-        out = setup_centroid_node_data(cases)
-        centroid_eids, centroid_data, element_node, node_data = out
-
-        self.centroid_eids = centroid_eids
-        # [ntimes, nelements, nresults]
-        self.centroid_data = centroid_data
-
-        self.element_node = element_node
-        self.node_data = node_data
-
-        common_eids = np.intersect1d(self.centroid_eids, element_id)
-        if len(common_eids) == 0:
-            raise IndexError('no solid elements found...')
-        elif len(common_eids) != len(self.centroid_eids):
-            icommon = np.searchsorted(common_eids, self.centroid_eids)
-            #self.centroid_data = self.centroid_data[:, icommon, :]
-            raise RuntimeError('some common elements were found...but some are missing')
-
-        nids = np.unique(self.element_node[:, 1])
-        self.inode = np.searchsorted(node_id, nids)
-        self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
-
-        assert np.array_equal(element_id[self.ielement_centroid], self.centroid_eids)
-        # dense -> no missing nodes in the results set
-        self.is_dense = (
-            (len(element_id) == len(self.centroid_eids)) and
-            (len(node_id) == len(nids)))
-        #self.is_dense = False
-
-        #self.xyz = xyz
-        #assert len(self.xyz.shape) == 2, self.xyz.shape
-        #self.location = 'centroid'
-        if self.is_stress:
-            self.headers = ['SolidStress2']
-        else:
-            self.headers = ['SolidStrain2']
-        str(self)
 
     #-------------------------------------
     # unmodifyable getters

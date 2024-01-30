@@ -214,7 +214,7 @@ class GuiAttributes:
         self.modules = {}
 
         # actor_slots
-        self.text_actors = {}
+        self.corner_text_actors = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
@@ -625,7 +625,7 @@ class GuiAttributes:
             skip_reading = True
             return skip_reading
         else:
-            self.turn_text_off()
+            self.turn_corner_text_off()
             self.grid.Reset()
 
             self.model_data.result_cases = {}
@@ -1440,13 +1440,13 @@ class GuiAttributes:
 
     #---------------------------------------------------------------------------
 
-    def turn_text_off(self) -> None:
+    def turn_corner_text_off(self) -> None:
         """turns all the text actors off"""
-        self.tool_actions.turn_text_off()
+        self.tool_actions.turn_corner_text_off()
 
-    def turn_text_on(self) -> None:
+    def turn_corner_text_on(self) -> None:
         """turns all the text actors on"""
-        self.tool_actions.turn_text_on()
+        self.tool_actions.turn_corner_text_on()
 
     @start_stop_performance_mode
     def export_case_data(self, icases=None) -> None:

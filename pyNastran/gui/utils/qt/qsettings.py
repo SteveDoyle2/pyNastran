@@ -13,8 +13,8 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 class QSettingsLike2:
     _tuples = {
         'background_color', 'background_color2',
-        'highlight_color', 'text_color', 'annotation_color',
-        'screen_shape', 'pos',
+        'highlight_color', 'corner_text_color', 'annotation_color',
+        'screen_shape', 'screen_position',
     }
     def __init__(self):
         """

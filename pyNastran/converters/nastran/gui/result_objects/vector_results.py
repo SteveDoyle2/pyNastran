@@ -14,8 +14,6 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.gui.utils.utils import is_blank, is_value
 
 
-translation = ['Magnitude', 'Tx', 'Ty', 'Tz']
-rotation = ['Magnitude', 'Rx', 'Ry', 'Rz']
 col_axis = 1
 
 #if TYPE_CHECKING:
@@ -193,83 +191,67 @@ class VectorResultsCommon(GuiResultCommon):
             maxs[itime] = maxi2
         return mins[itime], maxs[itime]
 
+    def get_location_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        """used for _set_default_from_fringe"""
+        raise NotImplementedError(f'{self.class_name}.get_location_arrays')
+
     def _set_default_from_fringe(self, itime: int, case_flag,
                                  fringe_result: np.ndarray,
                                  is_sparse: bool) -> tuple[float, float]:
-        # set the min/max if they're not set
+        """
+        set the min/max if they're not set
+        also sets node_id imin/imax flags
+        """
         default_mins = self.default_mins[case_flag]
         default_maxs = self.default_maxs[case_flag]
 
         if is_blank(default_mins[itime]) and is_blank(default_maxs[itime]):
             # save the defaults for the next time
 
-            if 0:
-                mini = np.nanmin(fringe_result)
-                maxi = np.nanmax(fringe_result)
+            imins = self.imins[case_flag]
+            imaxs = self.imaxs[case_flag]
 
-                self.mins[case_flag][itime] = mini
-                self.maxs[case_flag][itime] = maxi
-                default_mins[itime] = mini
-                default_maxs[itime] = maxi
+            mins = self.mins[case_flag]
+            maxs = self.maxs[case_flag]
+            try:
+                # gold standard
+                mini1 = np.nanmin(fringe_result)
+                maxi1 = np.nanmax(fringe_result)
 
-                imini = np.where(fringe_result == mini)[0]
-                imaxi = np.where(fringe_result == maxi)[0]
-                self.imins[itime] = imini
-                self.imaxs[itime] = imaxi
-            elif 0:
-                mins[itime] = np.nanmin(fringe_data)
-                maxs[itime] = np.nanmax(fringe_data)
+                # solid_shell_bar -> node=13
+                imin = np.nanargmin(fringe_result)
+                imax = np.nanargmax(fringe_result)
+                assert isinstance(imin, integer_types), imin
+                assert isinstance(imax, integer_types), imax
 
-                imin = np.where(fringe_data == mins[itime])[0]
-                imax = np.where(fringe_data == maxs[itime])[0]
-                self.imins[case_flag][itime] = imin[0]
-                self.imaxs[case_flag][itime] = imax[-1]
-            else:
-                imins = self.imins[case_flag]
-                imaxs = self.imaxs[case_flag]
+                mini2 = fringe_result[imin]
+                maxi2 = fringe_result[imax]
+                assert np.allclose(mini1, mini2)
+                assert np.allclose(maxi1, maxi2)
 
-                mins = self.mins[case_flag]
-                maxs = self.maxs[case_flag]
-                try:
-                    # gold standard
-                    mini1 = np.nanmin(fringe_result)
-                    maxi1 = np.nanmax(fringe_result)
+                default_mins[itime] = mini2
+                default_maxs[itime] = maxi2
+                mins[itime] = mini2
+                maxs[itime] = maxi2
 
-                    # solid_shell_bar -> node=13
-                    imin = np.nanargmin(fringe_result)
-                    imax = np.nanargmax(fringe_result)
-                    assert isinstance(imin, integer_types), imin
-                    assert isinstance(imax, integer_types), imax
-
-                    mini2 = fringe_result[imin]
-                    maxi2 = fringe_result[imax]
-                    assert np.allclose(mini1, mini2)
-                    assert np.allclose(maxi1, maxi2)
-
-                    default_mins[itime] = mini2
-                    default_maxs[itime] = maxi2
-                    mins[itime] = mini2
-                    maxs[itime] = maxi2
-
-                    if is_sparse:
-                        # we found the id as sparse
-                        # map it to dense
-                        node_id, nids = self.get_location_arrays()
-                        iimin, iimax = np.searchsorted(node_id, nids[[imin, imax]])
-                        imins[itime] = iimin
-                        imaxs[itime] = iimax
-                    else:
-                        imins[itime] = imin
-                        imaxs[itime] = imax
-                    x = 1
-                except ValueError:
-                    # All NaN
-                    default_mins[itime] = np.nan
-                    default_maxs[itime] = np.nan
-                    mins[itime] = np.nan
-                    maxs[itime] = np.nan
-                    imins[itime] = 0
-                    imaxs[itime] = 0
+                if is_sparse:
+                    # we found the id as sparse
+                    # map it to dense
+                    node_id, nids = self.get_location_arrays()
+                    iimin, iimax = np.searchsorted(node_id, nids[[imin, imax]])
+                    imins[itime] = iimin
+                    imaxs[itime] = iimax
+                else:
+                    imins[itime] = imin
+                    imaxs[itime] = imax
+            except ValueError:
+                # All NaN
+                default_mins[itime] = np.nan
+                default_maxs[itime] = np.nan
+                mins[itime] = np.nan
+                maxs[itime] = np.nan
+                imins[itime] = 0
+                imaxs[itime] = 0
         return default_mins[itime], default_maxs[itime]
 
     # --------------------------------------------------------------------------
@@ -592,7 +574,6 @@ class DispForceVectorResults(VectorResultsCommon):
             the indicies that were used
 
         """
-        # handles translation vs. rotation
         datai = self.case.data
         i0 = self.t123_offset
         if i0 == 1:

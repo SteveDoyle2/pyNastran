@@ -537,7 +537,7 @@ class GuiQtCommon(GuiAttributes):
         #is_legend_shown = True
         #if is_legend_shown is None:
         self.show_legend()
-        #scalar_bar: ScalarBar = 
+        #scalar_bar: ScalarBar =
         self.scalar_bar.is_shown = True
         is_legend_shown = self.scalar_bar.is_shown
 
@@ -624,9 +624,10 @@ class GuiQtCommon(GuiAttributes):
             self.imax = imax
             text_actor.SetPosition(*xyz)
             text_actor.SetVisibility(is_visible)
-            #text_prop = text_actor.GetTextProperty()
-            #text_prop.SetFontSize(settings.annotation_size)
-            #text_prop.SetColor(settings.annotation_color)
+
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(settings.annotation_size)
+            text_prop.SetColor(settings.annotation_color)
             text_actor.Modified()
 
     def _update_vtk_fringe(self, icase: int,
@@ -675,7 +676,7 @@ class GuiQtCommon(GuiAttributes):
         else:  # pragma: no cover
             raise RuntimeError(location)
 
-        self.tool_actions.update_text_actors(
+        self.tool_actions.update_corner_text_actors(
             location=location,
             subcase_id=subcase_id,
             subtitle=subtitle,
@@ -1102,6 +1103,7 @@ class GuiQtCommon(GuiAttributes):
         if user_is_checked_fringe:
             #print(vector, len(vector))
             if is_blank(imin) or is_blank(imax):
+                # we need to calculate imin/imax
                 try:
                     imin = np.nanargmin(fringe)
                     imax = np.nanargmax(fringe)
@@ -1170,7 +1172,7 @@ class GuiQtCommon(GuiAttributes):
                                         imin, min_value,
                                         imax, max_value)
 
-            self.tool_actions.update_text_actors(
+            self.tool_actions.update_corner_text_actors(
                 location=location,
                 subcase_id=subcase_id,
                 subtitle=subtitle,
@@ -1262,7 +1264,7 @@ class GuiQtCommon(GuiAttributes):
         imin = -1
         imax = -1
         subcase_id = 0
-        self.tool_actions.update_text_actors(
+        self.tool_actions.update_corner_text_actors(
             location=location,
             subcase_id=subcase_id,
             subtitle=subtitle,
@@ -1349,7 +1351,8 @@ class GuiQtCommon(GuiAttributes):
 
     def final_grid_update(self, icase: int, name_fringe: tuple[int, int, str, str, float],
                           grid_result: vtkTypeFloat32Array,
-                          name_vector: tuple[int, int, str, str, float], grid_result_vector: Optional[vtkTypeFloat32Array],
+                          name_vector: tuple[int, int, str, str, float],
+                          grid_result_vector: Optional[vtkTypeFloat32Array],
                           key: int, subtitle: str, label: str,
                           min_value, max_value,
                           show_msg: bool):
@@ -1378,7 +1381,8 @@ class GuiQtCommon(GuiAttributes):
 
     def _final_grid_update(self, icase: int,
                            name: tuple[int, int, str, str, float],
-                           grid_result: Optional[vtkTypeFloat32Array], obj, i: int, res_name: str,
+                           vtk_array: Optional[vtkTypeFloat32Array],
+                           obj, i: int, res_name: str,
                            vector_size: int,
                            subcase_id: int,
                            result_type: str,
@@ -1389,6 +1393,9 @@ class GuiQtCommon(GuiAttributes):
                            show_msg: bool=True):
         if name is None: # pragma: no cover
             return
+        if vtk_array is None:
+            raise TypeError(vtk_array)
+
         assert icase >= 0
         assert location in {'node', 'centroid'}, location
         # the result type being currently shown
@@ -1396,10 +1403,10 @@ class GuiQtCommon(GuiAttributes):
         # for a Nastran ElementID/PropertyID, this is 'element'
         self.result_location = location
         #  apply the vtk_result to the node/centroid
-        grid = self.grid
+        grid: vtkUnstructuredGrid = self.grid
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):
-            grid_result.SetName(name_str)
+            vtk_array.SetName(name_str)
             self._names_storage.add(name)
 
             if self._is_displaced and revert_displaced:
@@ -1409,19 +1416,19 @@ class GuiQtCommon(GuiAttributes):
             if self._is_forces:
                 self.arrow_actor.SetVisibility(False)
 
+            cell_data: vtkCellData = grid.GetCellData()
+            point_data: vtkPointData = grid.GetPointData()
             if location == 'centroid':
-                cell_data: vtkCellData = grid.GetCellData()
                 if self._names_storage.has_close_name(name):
                     cell_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
 
-                cell_data.AddArray(grid_result)
+                cell_data.AddArray(vtk_array)
                 if show_msg:
                     self.log_info('centroidal plotting vector=%s - subcase_id=%s '
                                   'result_type=%s subtitle=%s label=%s'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
-                point_data: vtkPointData = grid.GetPointData()
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -1431,7 +1438,7 @@ class GuiQtCommon(GuiAttributes):
                         self.log_info('node plotting vector=%s - subcase_id=%s '
                                       'result_type=%s subtitle=%s label=%s"'
                                       % (vector_size, subcase_id, result_type, subtitle, label))
-                    point_data.AddArray(grid_result)
+                    point_data.AddArray(vtk_array)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
                     unused_method = obj.get_methods(i, res_name)[0]
@@ -1467,10 +1474,7 @@ class GuiQtCommon(GuiAttributes):
         # clear previous results
         if location == 'centroid':
             self.icase_fringe = icase
-            cell_data: vtkCellData = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
-
-            point_data: vtkPointData = grid.GetPointData()
             point_data.SetActiveScalars(None)
             if vector_size == 1:
                 #point_data.SetActiveVectors(None)   # I don't think I need this
@@ -1478,10 +1482,9 @@ class GuiQtCommon(GuiAttributes):
             else:  # pragma: no cover
                 raise RuntimeError(vector_size)
         elif location == 'node':
-            cell_data: vtkCellData = grid.GetCellData()
             cell_data.SetActiveScalars(None)
 
-            point_data: vtkPointData = grid.GetPointData()
+            #point_data: vtkPointData = grid.GetPointData()
             if vector_size == 1:
                 self.icase_fringe = icase
                 point_data.SetActiveScalars(name_str)  # TODO: None???
@@ -1507,9 +1510,10 @@ class GuiQtCommon(GuiAttributes):
         self.hide_labels(show_msg=False)
         self.show_labels(case_keys=[self.icase], show_msg=False)
 
-    def _update_forces(self, forces_array: np.ndarray, set_scalars=True, scale=None):
+    def _update_forces(self, forces_array: np.ndarray,
+                       set_scalars: bool=True, scale=None) -> None:
         """changes the glyphs"""
-        grid = self.grid
+        grid: vtkUnstructuredGrid = self.grid
         if scale is not None:
             self.glyphs.SetScaleFactor(self.glyph_scale_factor * scale)
         new_forces, mag = normalize_forces(forces_array)
@@ -1526,9 +1530,10 @@ class GuiQtCommon(GuiAttributes):
         grid.Modified()
         self.grid_selected.Modified()
 
-    def _update_elemental_vectors(self, forces_array, set_scalars=True, scale=None):
+    def _update_elemental_vectors(self, forces_array: np.ndarray,
+                                  set_scalars: bool=True, scale=None) -> None:
         """changes the glyphs"""
-        grid = self.grid
+        grid: vtkUnstructuredGrid = self.grid
         if scale is not None:
             # TODO: glyhs_centroid?
             self.glyphs_centroid.SetScaleFactor(self.glyph_scale_factor * scale)
@@ -1550,7 +1555,7 @@ class GuiQtCommon(GuiAttributes):
         grid.Modified()
         self.grid_selected.Modified()
 
-    def _update_grid(self, nodes):
+    def _update_grid(self, nodes: np.ndarray) -> None:
         """deflects the geometry"""
         grid = self.grid
         points = grid.GetPoints()
@@ -1563,25 +1568,25 @@ class GuiQtCommon(GuiAttributes):
         self._update_follower_grids(nodes)
         self._update_follower_grids_complex(nodes)
 
-    def _update_follower_grids(self, nodes):
+    def _update_follower_grids(self, nodes: np.ndarray) -> None:
         """updates grids that use the same ids as the parent model"""
         for name, nids in self.follower_nodes.items():
-            grid = self.alt_grids[name]
-            points = grid.GetPoints()
+            grid: vtkUnstructuredGrid = self.alt_grids[name]
+            points: vtkPoints = grid.GetPoints()
             for j, nid in enumerate(nids):
                 i = self.nid_map[nid]
                 points.SetPoint(j, *nodes[i, :])
             grid.Modified()
 
-    def _update_follower_grids_complex(self, nodes):
+    def _update_follower_grids_complex(self, nodes: np.ndarray) -> None:
         """updates grids that use a complicated update method"""
         for name, follower_function in self.follower_functions.items():
-            grid = self.alt_grids[name]
-            points = grid.GetPoints()
+            grid: vtkUnstructuredGrid = self.alt_grids[name]
+            points: vtkPoints = grid.GetPoints()
             follower_function(self.nid_map, grid, points, nodes)
             grid.Modified()
 
-    def _get_icase(self, result_name):
+    def _get_icase(self, result_name) -> int:
         if not self.result_cases:
             raise IndexError('result_name=%r not in self.result_cases' % result_name)
 
@@ -2052,7 +2057,7 @@ class GuiQtCommon(GuiAttributes):
         self.log.info(f'There are {number_of_contour_lines} contours lines.')
 
 
-def _get_normalized_data(case):
+def _get_normalized_data(case: np.ndarray) -> np.ndarray:
     """helper method for ``_get_fringe_data``"""
 #def _get_normalized_data(result_case):
     #(obj, (i, name)) = result_case
@@ -2067,7 +2072,7 @@ def _get_normalized_data(case):
         normi = norm(case, axis=1)
     return normi
 
-def normalize_forces(forces_array):
+def normalize_forces(forces_array: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """normalizes the forces"""
     mag = np.linalg.norm(forces_array, axis=1)
     #assert len(forces_array) == len(mag)

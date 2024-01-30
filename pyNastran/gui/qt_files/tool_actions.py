@@ -180,24 +180,24 @@ class ToolActions:
         set_vtk_property_to_unicode(text_prop, font_file)
         #text_prop.SetFontFamilyToArial()
         text_prop.SetFontSize(int(text_size))
-        text_prop.SetColor(self.settings.text_color)
+        text_prop.SetColor(self.settings.corner_text_color)
         text_actor.SetDisplayPosition(*position)
 
         text_actor.VisibilityOff()
 
         # assign actor to the renderer
         self.rend.AddActor(text_actor)
-        self.gui.text_actors[self.itext] = text_actor
+        self.gui.corner_text_actors[self.itext] = text_actor
         self.itext += 1
 
-    def update_text_actors(self, location: str,
-                           subcase_id: int,
-                           imin: int, min_value: float,
-                           imax: int, max_value: float,
-                           subtitle: str='case=NA',
-                           label: str='NA') -> None:
+    def update_corner_text_actors(self, location: str,
+                                  subcase_id: int,
+                                  imin: int, min_value: float,
+                                  imax: int, max_value: float,
+                                  subtitle: str='case=NA',
+                                  label: str='NA') -> None:
         """
-        Updates the text actors in the lower left
+        Updates the corner text actors in the lower left
 
         Max:  1242.3
         Min:  0.
@@ -206,7 +206,7 @@ class ToolActions:
 
         """
         gui = self.gui
-        min_msg, max_msg = self._get_annotation_min_max_text(
+        min_msg, max_msg = self._get_corner_min_max_text(
             imin, min_value,
             imax, max_value, location)
 
@@ -219,7 +219,7 @@ class ToolActions:
             texts.append('Label: %s' % label)
 
         ntext = len(texts)
-        text_actors = gui.text_actors
+        text_actors = gui.corner_text_actors
         for itext, text in enumerate(texts):
             text_actors[itext].SetInput(text)
 
@@ -228,10 +228,10 @@ class ToolActions:
         else:
             text_actors[3].VisibilityOff()
 
-    def _get_annotation_min_max_text(self,
-                                     imin: int, min_value: float,
-                                     imax: int, max_value: float,
-                                     location: str) -> tuple[str, str]:
+    def _get_corner_min_max_text(self,
+                                 imin: int, min_value: float,
+                                 imax: int, max_value: float,
+                                 location: str) -> tuple[str, str]:
         if location == 'normal':
             min_msgi = min_value
             max_msgi = max_value
@@ -273,14 +273,14 @@ class ToolActions:
         min_out = min_msg + '; %s' % min_msgi
         return min_out, max_out
 
-    def turn_text_off(self) -> None:
+    def turn_corner_text_off(self) -> None:
         """turns all the text actors off"""
-        for text in self.gui.text_actors.values():
+        for text in self.gui.corner_text_actors.values():
             text.VisibilityOff()
 
-    def turn_text_on(self) -> None:
+    def turn_corner_text_on(self) -> None:
         """turns all the text actors on"""
-        for text in self.gui.text_actors.values():
+        for text in self.gui.corner_text_actors.values():
             text.VisibilityOn()
 
     #---------------------------------------------------------------------------
@@ -394,7 +394,7 @@ class ToolActions:
         if not isinstance(magnify, integer_types):
             msg = 'magnify=%r type=%s' % (magnify, type(magnify))
             raise TypeError(msg)
-        self.settings.update_text_size(magnify=magnify)
+        self.settings.update_corner_text_size(magnify=magnify)
 
         coord_scale0 = self.settings.coord_scale
         coord_text_scale0 = self.settings.coord_text_scale
@@ -445,7 +445,7 @@ class ToolActions:
                              linewidth0: int,
                              axes_actor: vtkAxesActor):
         """helper method for ``on_take_screenshot``"""
-        self.settings.update_text_size(magnify=1.0)
+        self.settings.update_corner_text_size(magnify=1.0)
         # show corner axes
         axes_actor.SetVisibility(True)
 

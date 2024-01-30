@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 col_axis = 1
-class PlateResults2(VectorResultsCommon):
+class PlateStrainStressResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
                  model: BDF,
@@ -24,14 +24,49 @@ class PlateResults2(VectorResultsCommon):
                  element_id: np.ndarray,
                  cases: list[RealPlateArray],
                  result: str,
+                 title: str,
                  is_fiber_distance: bool,
                  eid_to_nid_map: dict[int, list[int]],
-                 #dim_max: float,
+                 #dim_max: float=1.0,
                  data_format: str='%g',
+                 is_variable_data_format: bool=False,
                  nlabels=None, labelsize=None, ncolors=None,
                  colormap: str='',
                  set_max_min: bool=False,
-                 uname: str='CompositeResults2'):
+                 uname: str='PlateStressStrainResults2'):
+        """
+        Defines a Displacement/Eigenvector result
+
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : list[str]
+            the sidebar word
+        titles : list[str]
+            the legend title
+        xyz : (nnodes, 3)
+            the nominal xyz locations
+        dxyz : (nnodes, 3)
+            the delta xyz values
+        scalars : (nnodes,n) float ndarray
+            #the data to make a contour plot with
+            does nothing
+        scales : list[float]
+            the deflection scale factors
+            nominally, this starts as an empty list and is filled later
+        data_formats : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        uname : str
+            some unique name for ...
+        """
         assert isinstance(is_fiber_distance, bool), is_fiber_distance
         VectorResultsCommon.__init__(
             self, subcase_id,
@@ -99,11 +134,6 @@ class PlateResults2(VectorResultsCommon):
             }
             self.iresult_map[0] = 'FiberCurvature'
 
-        #if dim_max == 0.0:
-            #dim_max = 1.0
-        #self.dim_max = dim_max
-        self.linked_scale_factor = False
-
         self.data_format = data_format
 
         #  global ids
@@ -120,8 +150,8 @@ class PlateResults2(VectorResultsCommon):
         #self.is_real = dxyz.data.dtype.name in {'float32', 'float64'}
         self.is_complex = not self.is_real
 
-        ntimes = case.data.shape[0]
-        self.headers = ['PlateResult2'] * ntimes
+        #ntimes = case.data.shape[0]
+        #self.headers = ['PlateResult2'] * ntimes
 
         self.location = 'centroid'
 
@@ -131,6 +161,57 @@ class PlateResults2(VectorResultsCommon):
         self.element_node = np.zeros((0, 2), dtype='int32')
         self.inode = np.zeros(0, dtype='int32')
         self.ielement_centroid = np.zeros(0, dtype='int32')
+        #---------------------------------------------------------------------
+        self.title = title
+
+        self.is_variable_data_format = is_variable_data_format
+
+        #linked_scale_factor = False
+        #location = 'node'
+
+        out = setup_centroid_node_data(eid_to_nid_map, cases)
+        centroid_eids, centroid_data, element_node, node_data = out
+        assert centroid_data.ndim == 4, centroid_data.shape
+        assert node_data.ndim == 4, node_data.shape
+
+        self.centroid_eids = centroid_eids
+        # [ntime, nelement_nnode, nlayer, nresult]
+        self.centroid_data = centroid_data
+
+        # [ntime, nelement_nnode, nlayer, nresult]
+        self.element_node = element_node
+        self.node_data = node_data
+
+        assert len(np.unique(self.centroid_eids)) == len(self.centroid_eids)
+
+        common_eids = np.intersect1d(self.centroid_eids, element_id)
+        if len(common_eids) == 0:
+            raise IndexError('no plate elements found...')
+        elif len(common_eids) != len(self.centroid_eids):
+            icommon = np.searchsorted(common_eids, self.centroid_eids)
+            #self.centroid_data = self.centroid_data[:, icommon, :]
+            raise RuntimeError('some common elements were found...but some are missing')
+
+        self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
+
+        nids = np.unique(self.element_node[:, 1])
+        self.inode = np.searchsorted(node_id, nids)
+
+        # dense -> no missing nodes in the results set
+        self.is_dense = (
+            (len(element_id) == len(self.centroid_eids)) and
+            (len(node_id) == len(nids))
+        )
+        #self.is_dense = False
+
+        #self.xyz = xyz
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_stress:
+            self.headers = ['PlateStress2']
+        else:
+            self.headers = ['PlateStrain2']
+        str(self)
+
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -543,122 +624,6 @@ class PlateResults2(VectorResultsCommon):
             #return
         #phases = self.phases[self.layer_indices]
         #phases[itime] = phase
-
-
-class PlateStrainStressResults2(PlateResults2):
-    def __init__(self,
-                 subcase_id: int,
-                 model: BDF,
-                 node_id: np.ndarray,
-                 element_id: np.ndarray,
-                 cases: list[RealPlateArray],
-                 result: str,
-                 title: str,
-                 is_fiber_distance: bool,
-                 eid_to_nid_map: dict[int, list[int]],
-                 #dim_max: float=1.0,
-                 data_format: str='%g',
-                 is_variable_data_format: bool=False,
-                 nlabels=None, labelsize=None, ncolors=None,
-                 colormap: str='',
-                 set_max_min: bool=False,
-                 uname: str='PlateStressStrainResults2'):
-        """
-        Defines a Displacement/Eigenvector result
-
-        Parameters
-        ----------
-        subcase_id : int
-            the flag that points to self.subcases for a message
-        headers : list[str]
-            the sidebar word
-        titles : list[str]
-            the legend title
-        xyz : (nnodes, 3)
-            the nominal xyz locations
-        dxyz : (nnodes, 3)
-            the delta xyz values
-        scalars : (nnodes,n) float ndarray
-            #the data to make a contour plot with
-            does nothing
-        scales : list[float]
-            the deflection scale factors
-            nominally, this starts as an empty list and is filled later
-        data_formats : str
-            the type of data result (e.g. '%i', '%.2f', '%.3f')
-        ncolors : int; default=None
-            sets the default for reverting the legend ncolors
-        set_max_min : bool; default=False
-            set default_mins and default_maxs
-
-        Unused
-        ------
-        uname : str
-            some unique name for ...
-        """
-        PlateResults2.__init__(
-            self,
-            subcase_id,
-            model, node_id, element_id,
-            cases,
-            result,
-            is_fiber_distance,
-            eid_to_nid_map,
-            #dim_max,
-            data_format=data_format,
-            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors,
-            colormap=colormap,
-            set_max_min=set_max_min,
-            uname=uname)
-        self.title = title
-
-        self.is_variable_data_format = is_variable_data_format
-
-        #linked_scale_factor = False
-        #location = 'node'
-
-        out = setup_centroid_node_data(eid_to_nid_map, cases)
-        centroid_eids, centroid_data, element_node, node_data = out
-        assert centroid_data.ndim == 4, centroid_data.shape
-        assert node_data.ndim == 4, node_data.shape
-
-        self.centroid_eids = centroid_eids
-        # [ntime, nelement_nnode, nlayer, nresult]
-        self.centroid_data = centroid_data
-
-        # [ntime, nelement_nnode, nlayer, nresult]
-        self.element_node = element_node
-        self.node_data = node_data
-
-        assert len(np.unique(self.centroid_eids)) == len(self.centroid_eids)
-
-        common_eids = np.intersect1d(self.centroid_eids, element_id)
-        if len(common_eids) == 0:
-            raise IndexError('no plate elements found...')
-        elif len(common_eids) != len(self.centroid_eids):
-            icommon = np.searchsorted(common_eids, self.centroid_eids)
-            #self.centroid_data = self.centroid_data[:, icommon, :]
-            raise RuntimeError('some common elements were found...but some are missing')
-
-        self.ielement_centroid = np.searchsorted(element_id, self.centroid_eids)
-
-        nids = np.unique(self.element_node[:, 1])
-        self.inode = np.searchsorted(node_id, nids)
-
-        # dense -> no missing nodes in the results set
-        self.is_dense = (
-            (len(element_id) == len(self.centroid_eids)) and
-            (len(node_id) == len(nids))
-        )
-        #self.is_dense = False
-
-        #self.xyz = xyz
-        #assert len(self.xyz.shape) == 2, self.xyz.shape
-        if self.is_stress:
-            self.headers = ['PlateStress2']
-        else:
-            self.headers = ['PlateStrain2']
-        str(self)
 
     #-------------------------------------
     # unmodifyable getters
