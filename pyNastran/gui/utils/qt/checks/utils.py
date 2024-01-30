@@ -1,8 +1,7 @@
 from functools import wraps
-from typing import Optional
+import numpy as np
 
-
-def check_locale_float(text: str) -> tuple[Optional[str], bool]:
+def check_locale_float(text: str) -> tuple[float, bool]:
     """
     This is intended as a locale safe way to parse a float.
     It supports various types of floats.
@@ -14,7 +13,7 @@ def check_locale_float(text: str) -> tuple[Optional[str], bool]:
     >>> _check_float('2,557')
     2,557, True
     """
-    value = None
+    value = np.nan
     is_valid = False
     try:
         value = float(text)
@@ -35,8 +34,11 @@ def check_locale_float(text: str) -> tuple[Optional[str], bool]:
     return value, is_valid
 
 
-def is_ranged_value(value, min_value=None, max_value=None,
-                    min_inclusive: bool=True, max_inclusive: bool=True) -> bool:
+def is_ranged_value(value: float,
+                    min_value=None,
+                    max_value=None,
+                    min_inclusive: bool=True,
+                    max_inclusive: bool=True) -> bool:
     """
     Parameters
     ----------

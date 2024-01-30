@@ -1,5 +1,6 @@
 """interface to the ScalarBar"""
-from typing import Optional
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkTextProperty
 from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
@@ -7,11 +8,13 @@ from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
 from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
 from pyNastran.gui import bi_font_file
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 class ScalarBar:
     """defines the ScalarBar at the side of the vtk panel"""
-    def set_visibility(self, is_visible):
+    def set_visibility(self, is_visible: bool) -> None:
         """show/hide the scalar bar"""
         #print('is_visible=%s; is_shown=%s' % (is_visible, self.is_shown))
         if is_visible:
@@ -33,8 +36,11 @@ class ScalarBar:
             self.scalar_bar.Modified()
             self.is_shown = False
 
-    def __init__(self, is_horizontal=False):
+    def __init__(self, settings: Settings):
         """creates the scalar bar"""
+        self.settings = settings
+        self.is_horizontal = False
+
         self.scalar_bar = vtkScalarBarActor()
         prop = self.scalar_bar.GetTitleTextProperty()
         set_vtk_property_to_unicode(prop, bi_font_file)
@@ -48,9 +54,8 @@ class ScalarBar:
         self.color_function.SetNanColor(1., 1., 1.)
 
         self.is_shown = True
-        self.is_horizontal = False
         self.colormap = 'jet'
-        self.colormap_order = None
+        self.colormap_space = ''  # hsv, rgb
         self.is_low_to_high = True
         self.min_value = 10.
         self.max_value = 20.
@@ -73,7 +78,7 @@ class ScalarBar:
         self.color_function.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
         self.color_function.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
-        self.scalar_bar.SetTitle("Title1")
+        self.scalar_bar.SetTitle('Title1')
 
         self.scalar_bar.SetLookupTable(self.color_function)
         #self.scalar_bar.SetNanColor(0., 0., 0.) # RGB color - black
@@ -83,22 +88,15 @@ class ScalarBar:
         #self.scalar_bar.SetHeight(0.9)
         #self.scalar_bar.SetWidth(0.20)  # the width is set first
         #self.scalar_bar.SetPosition(0.77, 0.1)
-        if is_horizontal:
-            # put the scalar bar at the top
-            self.scalar_bar.SetOrientationToHorizontal()
-            width = 0.95
-            height = 0.15
-            x = (1 - width) / 2.
-            y = 1 - 0.02 - height
-        else:
-            # put the scalar bar at the right side
-            self.scalar_bar.SetOrientationToVertical()
 
-            width = 0.2
-            height = 0.9
-            x = 1 - 0.01 - width
-            y = (1 - height) / 2.
-            self.scalar_bar.SetPosition(x, y)
+        # put the scalar bar at the right side
+        self.scalar_bar.SetOrientationToVertical()
+
+        width = 0.2
+        height = 0.9
+        x = 1 - 0.01 - width
+        y = (1 - height) / 2.
+        self.scalar_bar.SetPosition(x, y)
 
         # the width is set first
         # after the width is set, this is adjusted
@@ -118,7 +116,7 @@ class ScalarBar:
 
         #self.scalar_bar.SetTitleTextProperty(prop_title)
         #self.scalar_bar.SetLabelTextProperty(prop_label)
-        self.scalar_bar.SetLabelFormat("%i")
+        self.scalar_bar.SetLabelFormat('%i')
 
         # allows 0-1 to be nice number when ranging values (gotta pick something)
         self.scalar_bar.SetNumberOfLabels(11)
@@ -132,7 +130,7 @@ class ScalarBar:
     def update_color_function(self,
                               min_value, max_value,
                               colormap: str='jet',
-                              colormap_order=None,
+                              colormap_space: str='',
                               is_low_to_high: bool=True):
         """updates the color_function"""
         # jet - HSV :)
@@ -146,10 +144,10 @@ class ScalarBar:
         # plasma  - RGB
         # magma   - not HSV, RGB
         # inferno - not HSV, RGB
-        colormap_order, colormap = get_colormap_order(colormap_order, colormap)
+        colormap_space, colormap = get_colormap_space(colormap_space, colormap)
 
         update_color_function = (
-            colormap_order != self.colormap_order or
+            colormap_space != self.colormap_space or
             is_low_to_high != self.is_low_to_high or
             min_value != self.min_value or
             max_value != self.max_value or
@@ -158,17 +156,17 @@ class ScalarBar:
         if not update_color_function:
             return
         self.colormap = colormap
-        self.colormap_order = colormap_order
+        self.colormap_space = colormap_space
         self.is_low_to_high = is_low_to_high
 
         self.color_function.RemoveAllPoints()
 
-        if colormap_order == 'rgb':
+        if colormap_space == 'rgb':
             self.color_function.SetColorSpaceToRGB()
-        elif colormap_order == 'hsv':
+        elif colormap_space == 'hsv':
             self.color_function.SetColorSpaceToHSV()
         else:  # pragma: no cover
-            raise NotImplementedError(colormap_order)
+            raise NotImplementedError(colormap_space)
 
         if colormap == 'jet':
             if is_low_to_high:
@@ -179,7 +177,7 @@ class ScalarBar:
                 self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         else:
             if isinstance(colormap, str):
-                colormap = colormap_dict[colormap]
+                colormap_array = colormap_dict[colormap]
             else:
                 assert isinstance(colormap[0][0], float), colormap
 
@@ -189,7 +187,7 @@ class ScalarBar:
 
             # AddHSVPoint
             #self.color_function.AddRGBPoints(vals, colormap)
-            for val, (red, green, blue) in zip(vals, colormap):
+            for val, (red, green, blue) in zip(vals, colormap_array):
                 self.color_function.AddRGBPoint(val, red, green, blue)
 
     def update_position(self, is_horizontal: bool=True) -> None:
@@ -199,7 +197,6 @@ class ScalarBar:
             return
         if is_horizontal:
             # put the scalar bar at the top
-            self.is_horizontal = True
             self.scalar_bar.SetOrientationToHorizontal()
             width = 0.95
             height = 0.15
@@ -207,12 +204,14 @@ class ScalarBar:
             y = 1 - 0.02 - height
         else:
             # put the scalar bar at the right side
-            self.is_horizontal = False
             self.scalar_bar.SetOrientationToVertical()
             width = 0.2
             height = 0.9
             x = 1 - 0.01 - width
             y = (1 - height) / 2.
+
+        self.is_horizontal = is_horizontal
+        self.settings.is_horizontal_scalar_bar = is_horizontal
         self.scalar_bar.SetHeight(height)
         self.scalar_bar.SetWidth(width)
         self.scalar_bar.SetPosition(x, y)
@@ -227,7 +226,10 @@ class ScalarBar:
             padding = nspaces * ' '
         self.scalar_bar.SetTitle('%s%s%s' % (padding, title, padding))
 
-    def update_data_format(self, min_value, max_value, data_format, nlabels=None, ncolors=None):
+    def update_data_format(self,
+                           min_value: float, max_value: float,
+                           data_format: str,
+                           nlabels=None, ncolors=None):
         """updates the data format and number of values/colors"""
         data_format_display = data_format
         if nlabels is None: # and labelsize is None:
@@ -293,15 +295,29 @@ class ScalarBar:
         self.scalar_bar.SetNumberOfLabels(nvalues)
         self.scalar_bar.SetMaximumNumberOfColors(ncolors)
 
-    def update(self, title, min_value, max_value,
-               data_format,
-               nlabels=None, labelsize=None, ncolors=None, colormap='jet', colormap_order=None,
-               is_low_to_high=True, is_horizontal=True,
-               is_shown=True):
+    def update(self, title: str,
+               min_value: float,
+               max_value: float,
+               data_format: str,
+               nlabels=None,
+               labelsize=None,
+               ncolors=None,
+               colormap: str='jet',
+               colormap_space: str='',  # hsv, rgb
+               is_low_to_high: bool=True,
+               is_horizontal: bool=True,
+               is_shown: bool=True):
         """updates the scalar bar"""
         #self.set_visibility(is_shown)
+        settings: Settings = self.settings
+
+        nlabels = None if nlabels == -1 else nlabels
+        labelsize = None if labelsize == -1 else labelsize
+        ncolors = None if ncolors == -1 else ncolors
+        colormap = settings.colormap if nlabels == -1 else nlabels
+
         self.update_color_function(min_value, max_value,
-                                   colormap=colormap, colormap_order=colormap_order,
+                                   colormap=colormap, colormap_space=colormap_space,
                                    is_low_to_high=is_low_to_high)
 
         self.update_position(is_horizontal=is_horizontal)
@@ -333,15 +349,14 @@ class ScalarBar:
         #return True
     #return False
 
-def get_colormap_order(colormap_order: Optional[str],
+def get_colormap_space(colormap_space: str,
                        colormap: str) -> tuple[str, str]:
-    if colormap_order is None:
+    if colormap_space == '':
         if colormap in ['jet', 'jet2', 'blend', '', None] or colormap in HSV_MAPS:
-            colormap_order = 'hsv'
+            colormap_space = 'hsv'
             colormap = 'jet'
         elif colormap in RGB_MAPS:
-            colormap_order = 'rgb'
+            colormap_space = 'rgb'
         else:  # pragma: no cover
             raise NotImplementedError(colormap)
-    return colormap_order, colormap
-
+    return colormap_space, colormap

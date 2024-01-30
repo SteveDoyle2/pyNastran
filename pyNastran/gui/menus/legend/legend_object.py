@@ -283,6 +283,7 @@ class LegendObject(BaseGui):
             True : allow the legend ``on_apply`` method to be called
             False : the scalar bar/displacement updating will be handled
                     manually to prevent recursion (and a crash)
+
         """
         if not self._legend_window_shown:  # pragma: no cover
             return
@@ -360,7 +361,7 @@ class LegendObject(BaseGui):
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
-    def apply_legend(self, data):
+    def apply_legend(self, data: dict[str, Any]) -> None:
         title = data['title']
         min_value = data['min_value']
         max_value = data['max_value']
@@ -395,7 +396,8 @@ class LegendObject(BaseGui):
                          title: str='Title',
                          min_value: float=0.,
                          max_value: float=1.,
-                         scale: float=0.0, phase: float=0.0,
+                         scale: float=0.0,
+                         phase: float=0.0,
                          arrow_scale: float=1.,
                          data_format: str='%.0f',
                          is_low_to_high: bool=True,
@@ -415,6 +417,10 @@ class LegendObject(BaseGui):
 
         TODO: speed up by using existing values to skip update steps
         """
+        nlabels = None if nlabels == -1 else nlabels
+        labelsize = None if labelsize == -1 else labelsize
+        ncolors = None if ncolors == -1 else ncolors
+        #colormap
         gui: MainWindow = self.gui
         if colormap is None:
             colormap = self.settings.colormap
@@ -491,9 +497,18 @@ class LegendObject(BaseGui):
             try:
                 obj.set_min_max(i, res_name, min_value, max_value)
             except TypeError:
-                gui.log_error(f'Error setting min/max; i={i} res_name={res_name} min_value={min_value} max_value={max_value}\nobj={str(obj)}')
+                gui.log_error(f'Error setting min/max; i={i} res_name={res_name} '
+                              f'min_value={min_value} max_value={max_value}\nobj={str(obj)}')
 
+            ## TODO: Allows you to break the NodeID / GuiResult
+            ##       but lets the fancy tables to use the default.
+            #if title == '':
             obj.set_legend_title(i, res_name, title)
+
+            # That legend_title is not what is shown.
+            # It's setting the default flag, so overwrite it :)
+            title = obj.get_legend_title(i, res_name)
+
             obj.set_data_format(i, res_name, data_format)
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, res_name, nlabels, labelsize, ncolors, colormap)

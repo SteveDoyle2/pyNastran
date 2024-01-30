@@ -124,7 +124,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.html_logging = html_logging
         self.execute_python = True
 
-        self.scalar_bar = ScalarBar(is_horizontal=False)
+        self.scalar_bar = ScalarBar(self.settings)
 
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set

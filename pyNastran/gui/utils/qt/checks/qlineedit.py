@@ -1,32 +1,32 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import os
+import numpy as np
 from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
                                                  check_format_str)
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QLineEdit
 
-
-QLINE_EDIT_BASIC = 'QLineEdit{background: white;}'
-QLINE_EDIT_ERROR = 'QLineEdit{background: red;}'
+QLINEEDIT_ERROR = "QLineEdit{background: red;}"
+QLINEEDIT_GOOD = "QLineEdit{background: white;}"
 
 def check_path(cell: QLineEdit) -> tuple[str, bool]:
     """verifies that the path exists"""
     path, passed = check_name_str(cell)
     if not passed:
-        return None, False
+        return '', False
 
     if not os.path.exists(path):
-        cell.setStyleSheet(QLINE_EDIT_ERROR)
-        return None, False
-    cell.setStyleSheet(QLINE_EDIT_BASIC)
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return '', False
+    cell.setStyleSheet(QLINEEDIT_GOOD)
     return path, True
 
 def check_save_path(cell: QLineEdit) -> tuple[str, bool]:
     """verifies that the path is saveable..."""
     text, passed = check_name_str(cell)
     if not passed:
-        return None, False
+        return '', False
     return text, passed
 
 #-------------------------------------------------------------------------------
@@ -46,41 +46,42 @@ def check_int(cell: QLineEdit) -> tuple[int, bool]:
         None : is_passed=False
     is_passed : bool
         is this a valid integer
+
     """
     text = cell.text()
     try:
         value = int(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return value, True
     except ValueError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return 0, False
 
 def check_positive_int_or_blank(cell: QLineEdit) -> tuple[int, bool]:
     text = str(cell.text()).strip()
     if len(text) == 0:
-        return None, True
+        return -1, True
     try:
         value = int(text)
     except ValueError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return -1, False
 
     if value < 1:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return -1, False
 
-    cell.setStyleSheet("QLineEdit{background: white;}")
+    cell.setStyleSheet(QLINEEDIT_GOOD)
     return value, True
 
 #def check_float(cell):
     #text = cell.text()
     #try:
         #value = eval_float_from_string(text)
-        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #cell.setStyleSheet(QLINEEDIT_GOOD)
         #return value, True
     #except ValueError:
-        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
 def check_float(cell: QLineEdit) -> tuple[float, bool]:
@@ -107,22 +108,23 @@ def check_float(cell: QLineEdit) -> tuple[float, bool]:
 
     >>> cell = QLineEdit('cat')
     >>> value, is_passed = check_float(cell)
-    # value=None, is_passed=False
+    # value=0.0, is_passed=False
 
 
     """
     text = cell.text()
     value, is_valid = check_locale_float(text)
     if is_valid:
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return value, True
     else:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return np.nan, False
 
 def check_float_ranged(cell: QLineEdit,
                        min_value=None, max_value=None,
-                       min_inclusive=True, max_inclusive=True) -> tuple[str, bool]:
+                       min_inclusive: bool=True,
+                       max_inclusive: bool=True) -> tuple[float, bool]:
     """
     Colors the cell red if the float is invalid or the value is outside
     the range [min_value, max_value].
@@ -142,9 +144,9 @@ def check_float_ranged(cell: QLineEdit,
 
     Returns
     -------
-    value : float / None
+    value : float
         float : the value as a float
-        None : is_passed=False
+        nan : is_passed=False
     is_passed : bool
         is this a valid float that meets the range requirements
     """
@@ -157,11 +159,11 @@ def check_float_ranged(cell: QLineEdit,
         value, min_value=min_value, max_value=max_value,
         min_inclusive=min_inclusive, max_inclusive=max_inclusive)
 
-    color = 'white'
+    style = QLINEEDIT_GOOD
     if not is_ranged:
-        value = None
-        color = 'red'
-    cell.setStyleSheet("QLineEdit{background: %s;}" % color)
+        value = np.nan
+        style = QLINEEDIT_ERROR
+    cell.setStyleSheet(style)
 
     return value, is_ranged
 
@@ -180,15 +182,15 @@ def check_name_str(cell: QLineEdit) -> tuple[str, bool]:
     try:
         text = str(cell_value).strip()
     except UnicodeEncodeError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return '', False
 
     if len(text):
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return text, True
     else:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return '', False
 
 def check_name_length(cell: QLineEdit) -> tuple[str, bool]:
     """
@@ -198,16 +200,17 @@ def check_name_length(cell: QLineEdit) -> tuple[str, bool]:
     ----------
     cell : QLineEdit
         a QLineEdit containing a string.
+
     """
     cell_value = cell.text()
     text = cell_value.strip()
 
     if len(text):
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return text, True
     else:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return '', False
 
 def check_format(cell: QLineEdit) -> tuple[str, bool]:
     """
@@ -231,7 +234,7 @@ def check_format(cell: QLineEdit) -> tuple[str, bool]:
     text2, is_valid = check_format_str(text)
 
     if is_valid:
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return text2, True
-    cell.setStyleSheet("QLineEdit{background: red;}")
-    return None, False
+    cell.setStyleSheet(QLINEEDIT_ERROR)
+    return '', False

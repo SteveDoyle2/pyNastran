@@ -57,6 +57,7 @@ IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 
 class GeometryObject(BaseGui):
@@ -883,12 +884,14 @@ class GuiAttributes:
         if colormap is None:
             colormap = self.settings.colormap
         #print("update_scalar_bar min=%s max=%s" % (min_value, max_value))
-        self.scalar_bar.update(title, min_value, max_value, data_format,
-                               nlabels=nlabels, labelsize=labelsize,
-                               ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=self.legend_obj.is_low_to_high,
-                               is_horizontal=self.settings.is_horizontal_scalar_bar,
-                               is_shown=is_shown)
+        scalar_bar: ScalarBar = self.scalar_bar
+
+        scalar_bar.update(title, min_value, max_value, data_format,
+                          nlabels=nlabels, labelsize=labelsize,
+                          ncolors=ncolors, colormap=colormap,
+                          is_low_to_high=self.legend_obj.is_low_to_high,
+                          is_horizontal=not self.settings.is_horizontal_scalar_bar,
+                          is_shown=is_shown)
 
     def on_update_scalar_bar(self, title: str,
                              min_value: float, max_value: float,

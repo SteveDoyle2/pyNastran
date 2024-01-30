@@ -19,7 +19,7 @@ from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QIntEdit, QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_float, check_format, check_name_str,
-    check_positive_int_or_blank)
+    check_positive_int_or_blank, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.gui.qt_version import qt_int as qt_version
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
 ANIMATE_TOOLTIP_ON = 'Creates an scale/phase/time animation'
+DEFAULT_COLORMAP = 'jet'
 
 class LegendPropertiesWindow(PyDialog):
     """
@@ -109,6 +110,7 @@ class LegendPropertiesWindow(PyDialog):
 
         self._default_colormap = data['default_colormap']
         self._colormap = data['colormap']
+        #self._default_colormap_settings = data['settings_colormap']
 
         self._default_is_low_to_high = data['is_low_to_high']
 
@@ -127,22 +129,22 @@ class LegendPropertiesWindow(PyDialog):
 
     def _update_defaults_to_blank(self):
         """Changes the default (None) to a blank string"""
-        if self._default_colormap is None:
-            self._default_colormap = 'jet'
-        if self._default_labelsize is None:
+        if self._default_colormap in {None, ''}:
+            self._default_colormap = DEFAULT_COLORMAP
+        if self._default_labelsize in {None, -1}:
             self._default_labelsize = ''
-        if self._default_ncolors is None:
+        if self._default_ncolors in {None, -1}:
             self._default_ncolors = ''
-        if self._default_nlabels is None:
+        if self._default_nlabels in {None, -1}:
             self._default_nlabels = ''
 
-        if self._colormap is None:
-            self._colormap = 'jet'
-        if self._labelsize is None:
+        if self._colormap in {None, ''}:
+            self._colormap = DEFAULT_COLORMAP
+        if self._labelsize in {None, -1}:
             self._labelsize = ''
-        if self._ncolors is None:
+        if self._ncolors in {None, -1}:
             self._ncolors = ''
-        if self._nlabels is None:
+        if self._nlabels in {None, -1}:
             self._nlabels = ''
 
     def update_legend(self, icase_fringe, icase_disp, icase_vector,
@@ -225,13 +227,13 @@ class LegendPropertiesWindow(PyDialog):
             self._default_colormap = default_colormap
             self._is_fringe = is_fringe
 
-            if colormap is None:
-                colormap = 'jet'
-            if labelsize is None:
+            if colormap in {None, ''}:
+                colormap = DEFAULT_COLORMAP  ## TODO: support changing the default
+            if labelsize in {None, -1}:
                 labelsize = ''
-            if ncolors is None:
+            if ncolors in {None, -1}:
                 ncolors = ''
-            if nlabels is None:
+            if nlabels in {None, -1}:
                 nlabels = ''
 
         self._update_defaults_to_blank()
@@ -281,28 +283,30 @@ class LegendPropertiesWindow(PyDialog):
             #self.on_default_scale()
             # reset defaults
             self.title_edit.setText(title)
-            self.title_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.title_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.min_edit.setText(func_str_or_none(min_value))
-            self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.max_edit.setText(func_str_or_none(max_value))
-            self.max_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.format_edit.setText(str(data_format))
-            self.format_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.format_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.nlabels_edit.setText(str(nlabels))
-            self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.nlabels_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.labelsize_edit.setText(str(labelsize))
-            self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.labelsize_edit.setStyleSheet(QLINEEDIT_GOOD)
 
             self.ncolors_edit.setText(str(ncolors))
-            self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.ncolors_edit.setStyleSheet(QLINEEDIT_GOOD)
 
+            colormap_index = 0
             if colormap != '':
-                self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
+                colormap_index = colormap_keys.index(str(colormap))
+            self.colormap_edit.setCurrentIndex(colormap_index)
             self._set_legend_fringe(self._is_fringe)
 
         if update:
@@ -337,7 +341,7 @@ class LegendPropertiesWindow(PyDialog):
         self.clear_disp()
         self.clear_vector()
 
-    def _set_legend_fringe(self, is_fringe):
+    def _set_legend_fringe(self, is_fringe: bool) -> None:
         """
         Show/hide buttons if we dont have a result.  This is used for normals.
         A result can still exist (i.e., icase_fringe is not None).
@@ -387,7 +391,7 @@ class LegendPropertiesWindow(PyDialog):
         self.colormap_edit.setVisible(enable)
         self.colormap_button.setVisible(enable)
 
-    def create_widgets(self, show_animation_button=True):
+    def create_widgets(self, show_animation_button: bool=True) -> None:
         """creates the menu objects"""
         # title
         self.title_label = QLabel("Title:")
@@ -412,17 +416,17 @@ class LegendPropertiesWindow(PyDialog):
 
         #---------------------------------------
         # Scale
-        self.scale_label = QLabel("True Scale:")
+        self.scale_label = QLabel('True Scale:')
         self.scale_edit = QFloatEdit(func_str_or_none(self._scale))
-        self.scale_button = QPushButton("Default")
+        self.scale_button = QPushButton('Default')
         if self._icase_disp is None:
             self.scale_label.setVisible(False)
             self.scale_edit.setVisible(False)
             self.scale_button.setVisible(False)
         # Phase
-        self.phase_label = QLabel("Phase (deg):")
+        self.phase_label = QLabel('Phase (deg):')
         self.phase_edit = QFloatEdit(func_str_or_none(self._phase))
-        self.phase_button = QPushButton("Default")
+        self.phase_button = QPushButton('Default')
         if self._icase_disp is None or self._default_phase is None:
             self.phase_label.setVisible(False)
             self.phase_edit.setVisible(False)
@@ -430,9 +434,9 @@ class LegendPropertiesWindow(PyDialog):
             self.phase_edit.setText('0.0')
 
         #---------------------------------------
-        self.arrow_scale_label = QLabel("Arrow Scale:")
+        self.arrow_scale_label = QLabel('Arrow Scale:')
         self.arrow_scale_edit = QFloatEdit(func_str_or_none(self._arrow_scale))
-        self.arrow_scale_button = QPushButton("Default")
+        self.arrow_scale_button = QPushButton('Default')
         if self._icase_vector is None:
             self.arrow_scale_label.setVisible(False)
             self.arrow_scale_edit.setVisible(False)
@@ -444,19 +448,19 @@ class LegendPropertiesWindow(PyDialog):
 
         #---------------------------------------
         # nlabels
-        self.nlabels_label = QLabel("Number of Labels:")
+        self.nlabels_label = QLabel('Number of Labels:')
         self.nlabels_edit = QIntEdit(func_str_or_none(self._nlabels))
-        self.nlabels_button = QPushButton("Default")
+        self.nlabels_button = QPushButton('Default')
 
-        self.labelsize_label = QLabel("Label Size:")
+        self.labelsize_label = QLabel('Label Size:')
         self.labelsize_edit = QIntEdit(func_str_or_none(self._labelsize))
-        self.labelsize_button = QPushButton("Default")
+        self.labelsize_button = QPushButton('Default')
 
-        self.ncolors_label = QLabel("Number of Colors:")
+        self.ncolors_label = QLabel('Number of Colors:')
         self.ncolors_edit = QIntEdit(func_str_or_none(self._ncolors))
         self.ncolors_button = QPushButton("Default")
 
-        self.colormap_label = QLabel("Color Map:")
+        self.colormap_label = QLabel('Color Map:')
         self.colormap_edit = QComboBox(self)
         self.colormap_button = QPushButton("Default")
         for key in colormap_keys:
@@ -467,7 +471,7 @@ class LegendPropertiesWindow(PyDialog):
 
         # --------------------------------------------------------------
         # the header
-        self.grid2_title = QLabel("Color Scale:")
+        self.grid2_title = QLabel('Color Scale:')
 
         # red/blue or blue/red
         self.low_to_high_radio = QRadioButton('Low -> High')
@@ -480,8 +484,8 @@ class LegendPropertiesWindow(PyDialog):
         self.high_to_low_radio.setChecked(not self._default_is_low_to_high)
 
         # horizontal / vertical
-        self.horizontal_radio = QRadioButton("Horizontal")
-        self.vertical_radio = QRadioButton("Vertical")
+        self.horizontal_radio = QRadioButton('Horizontal')
+        self.vertical_radio = QRadioButton('Vertical')
         widget = QWidget(self)
         horizontal_vertical_group = QButtonGroup(widget)
         horizontal_vertical_group.addButton(self.horizontal_radio)
@@ -490,8 +494,8 @@ class LegendPropertiesWindow(PyDialog):
         self.vertical_radio.setChecked(not self._default_is_horizontal)
 
         # on / off
-        self.show_radio = QRadioButton("Show")
-        self.hide_radio = QRadioButton("Hide")
+        self.show_radio = QRadioButton('Show')
+        self.hide_radio = QRadioButton('Hide')
         widget = QWidget(self)
         show_hide_group = QButtonGroup(widget)
         show_hide_group.addButton(self.show_radio)
@@ -550,11 +554,11 @@ class LegendPropertiesWindow(PyDialog):
             self.animate_button.setToolTip(ANIMATE_TOOLTIP_ON)
 
         # closing
-        self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("OK")
-        self.cancel_button = QPushButton("Cancel")
+        self.apply_button = QPushButton('Apply')
+        self.ok_button = QPushButton('OK')
+        self.cancel_button = QPushButton('Cancel')
 
-    def create_layout(self):
+    def create_layout(self) -> None:
         """displays the menu objects"""
         grid = QGridLayout()
         grid.addWidget(self.title_label, 0, 0)
@@ -632,7 +636,7 @@ class LegendPropertiesWindow(PyDialog):
 
         self.setLayout(vbox)
 
-    def set_connections(self):
+    def set_connections(self) -> None:
         """creates the actions for the menu"""
         self.title_button.clicked.connect(self.on_default_title)
         self.min_button.clicked.connect(self.on_default_min)
@@ -656,7 +660,7 @@ class LegendPropertiesWindow(PyDialog):
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """
         Updates the font size of the objects
 
@@ -681,7 +685,7 @@ class LegendPropertiesWindow(PyDialog):
         self.labelsize_edit.setFont(font)
         self.ncolors_edit.setFont(font)
 
-    def on_animate(self):
+    def on_animate(self) -> None:
         """opens the animation window"""
         title, flag0 = check_name_str(self.title_edit)
         if not flag0:
@@ -720,42 +724,42 @@ class LegendPropertiesWindow(PyDialog):
         """action when user clicks 'Default' for title"""
         title = str(self._default_title)
         self.title_edit.setText(title)
-        self.title_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.title_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_min(self):
         """action when user clicks 'Default' for min value"""
         self.min_edit.setText(func_str_or_none(self._default_min))
-        self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_max(self):
         """action when user clicks 'Default' for max value"""
         self.max_edit.setText(func_str_or_none(self._default_max))
-        self.max_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_format(self):
         """action when user clicks 'Default' for the number format"""
         self.format_edit.setText(func_str_or_none(self._default_format))
-        self.format_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.format_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_scale(self):
         """action when user clicks 'Default' for scale factor"""
         self.scale_edit.setText(func_str_or_none(self._default_scale))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_arrow_scale(self):
         """action when user clicks 'Default' for arrow_scale factor"""
         self.arrow_scale_edit.setText(func_str_or_none(self._default_arrow_scale))
-        self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.arrow_scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_phase(self):
         """action when user clicks 'Default' for phase angle"""
         self.phase_edit.setText(func_str_or_none(self._default_phase))
-        self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.phase_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_ncolors(self):
         """action when user clicks 'Default' for number of colors"""
         self.ncolors_edit.setText(func_str_or_none(self._default_ncolors))
-        self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.ncolors_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_colormap(self):
         """action when user clicks 'Default' for the color map"""
@@ -763,13 +767,13 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_default_nlabels(self):
         """action when user clicks 'Default' for number of labels"""
-        self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.nlabels_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.nlabels_edit.setText(func_str_or_none(self._default_nlabels))
 
     def on_default_labelsize(self):
         """action when user clicks 'Default' for number of labelsize"""
         self.labelsize_edit.setText(func_str_or_none(self._default_labelsize))
-        self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.labelsize_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_show_hide(self):
         """action when user clicks the 'Show/Hide' radio button"""
@@ -807,7 +811,8 @@ class LegendPropertiesWindow(PyDialog):
         flag_title = True
         title_value = ''
         if show_title:
-            title_value, flag_title = check_name_str(self.title_edit)
+            title_value = str(self.title_edit.text()).strip()
+            #title_value, flag_title = check_name_str(self.title_edit)
 
         flag_fringe = True
         min_value = max_value = format_value = nlabels = ncolors = labelsize = colormap = None
@@ -891,16 +896,16 @@ def set_cell_to_blank_if_value_is_none(cell_edit, value):
         cell_edit.setText('0.0')
     else:
         cell_edit.setText(func_str(value))
-    cell_edit.setStyleSheet("QLineEdit{background: white;}")
+    cell_edit.setStyleSheet(QLINEEDIT_GOOD)
     return value
 
 #def check_colormap(cell):
     #text = str(cell.text()).strip()
     #if text in colormap_keys:
-        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #cell.setStyleSheet(QLINEEDIT_GOOD)
         #return text, True
     #else:
-        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
 
