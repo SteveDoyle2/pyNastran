@@ -12,7 +12,7 @@ defines:
    - set_annotation_color(self, color, render=True)
    - set_background_color_to_white(self)
    - set_background_color(self, color)
-   - set_text_color(self, color)
+   - set_corner_text_color(self, color)
    - update_text_size(self, magnify=1.0)
 
  - repr_settings(settings)

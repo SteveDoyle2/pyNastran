@@ -1173,13 +1173,15 @@ class NastranGuiResults(NastranGuiAttributes):
         if is_stress:
             word = 'Stress'
             fmt = '%.3f'
-            sigma = 'σ'
-            tau = '𝜏'
+            #sigma = 'σ'
+            #tau = '𝜏'
         else:
             word = 'Strain'
             fmt = '%.4e'
-            sigma = 'ϵ'
-            tau = 'ϵ'
+            #sigma = 'ϵ'
+            #tau = 'ϵ'
+        sigma = word + ' '
+        tau = word + ' '
 
         # a form is the table of output...
         # Subcase 1         <--- formi  - form_isubcase
@@ -2052,7 +2054,7 @@ def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
         tmax[i2] = case.data[itime, i2, 6]
         ovm[i2] = case.data[itime, i2, 7]
 
-        headers = ['nx', 'ny', 'txy', 'majorP', 'minorP', 'tmax', 'ovm']
+        headers = ['nx', 'ny', 'txy', 'Max Principal', 'Min Principal', 'Max Shear', 'von Mises']
         form: list[Form] = [('Surface Stresses', None, [])]
         formi = form[0][2]
         form_dict[(key, itime)] = form
@@ -2119,7 +2121,7 @@ def _fill_op2_grid_point_stresses_volume_direct(nids: np.ndarray,
         txz[i] = case.data[itime, :, 5]
         ovm[i] = case.data[itime, :, 7]
 
-        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
+        headers = ['Stress XX', 'Stress YY', 'Stress ZZ', 'Shear XY', 'Shear YZ', 'Shear XZ', 'von Mises']
         form: list[Form] = [('Volume Direct', None, [])]
         formi = form[0][2]
         form_dict[(key, itime)] = form

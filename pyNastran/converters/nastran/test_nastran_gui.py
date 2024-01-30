@@ -99,8 +99,8 @@ class TestNastranGUI(unittest.TestCase):
         test.settings.set_background_color2(color, render=True)
         test.settings.set_highlight_color(color)
         test.settings.set_highlight_opacity(opacity)
-        test.settings.set_text_color(color, render=True)
-        test.settings.set_text_size(10)
+        test.settings.set_corner_text_color(color, render=True)
+        test.settings.set_corner_text_size(10)
         test.settings.set_magnify(magnify=4)
         #self.settings.s
 
