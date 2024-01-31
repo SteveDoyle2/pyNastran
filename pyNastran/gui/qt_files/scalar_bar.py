@@ -179,17 +179,19 @@ class ScalarBar:
                 self.color_function.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
                 self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         else:
+            nvalues = ncolors
             #nvalues = ncolors + 1
+            #nvalues = ncolors * 2
             if isinstance(colormap, str):
                 colormap_array = colormap_dict[colormap]
                 ntotal = len(colormap_array)
 
-                i = np.round(np.linspace(0., ntotal-1, num=ncolors)).astype('int32')
+                i = np.round(np.linspace(0., ntotal-1, num=nvalues)).astype('int32')
                 colormap_array2 = colormap_array[i, :]
             else:
                 assert isinstance(colormap[0][0], float), colormap
 
-            vals = np.linspace(min_value, max_value, num=ncolors)
+            vals = np.linspace(min_value, max_value, num=nvalues)
             if is_low_to_high:
                 vals = vals[::-1]
 

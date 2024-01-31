@@ -163,12 +163,17 @@ class LegendPropertiesWindow(PyDialog):
                       default_ncolors: int, default_colormap: str,
                       default_scale: float, default_phase: float,
                       default_arrow_scale: float,
-                      font_size: int=8, external_call=False):
+                      font_size: int=8,
+                      is_method_array: bool=False,
+                      external_call=False):
         """
         We need to update the legend if there's been a result change request
         """
         self.external_call = external_call
         self.set_font_size(font_size)
+
+        if is_method_array and title == default_title:
+            title = ''
 
         update_fringe = False
         update_disp = False

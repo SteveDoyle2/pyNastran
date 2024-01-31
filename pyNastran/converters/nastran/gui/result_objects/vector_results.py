@@ -98,6 +98,7 @@ class VectorResultsCommon(GuiResultCommon):
         self.location = ''
         self.min_max_method = ''
         self.nodal_combine = ''
+        self.is_method_array = True
 
     # --------------------------------------------------------------------------
     # abstractmethods - results access
@@ -358,7 +359,11 @@ class VectorResultsCommon(GuiResultCommon):
         phases = self.phases[case_flag]
         phases[itime] = phase
     def set_legend_title(self, i: int, name: str, title: str) -> None:
+        """if legend is default or blank, use the default legend"""
         legend_tuple = self.get_legend_tuple(i, name)
+        legend_default = self.get_default_legend_title(i, name)
+        if title == legend_default:
+            title = ''
         self.title[legend_tuple] = title
 
     def get_legend_title(self, itime: int, res_name: str):

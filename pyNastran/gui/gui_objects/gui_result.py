@@ -28,6 +28,7 @@ class GuiResultCommon:
         self.has_derivation_transform(0, 'test')
         self.has_nodal_combine_transform(0, 'test')
         self.has_output_checks(0, 'test')
+        self.is_method_array = False
 
     #def get_data_type(self, i: int, name: str):  # pragma: no cover
         #raise NotImplementedError(f'{self.class_name}.get_data_type')

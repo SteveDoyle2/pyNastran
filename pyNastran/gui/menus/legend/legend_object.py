@@ -73,9 +73,11 @@ class LegendObject(BaseGui):
             return
 
         default_format = None
-        (legend_title, scalar_bar, defaults_scalar_bar, data_format, default_format,
-         default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
-             gui.icase_fringe)
+        (is_method_array,
+         legend_title, scalar_bar, defaults_scalar_bar,
+         data_format, default_format,
+         default_title, min_value, max_value,
+         default_min, default_max) = self.get_legend_fringe(gui.icase_fringe)
 
         nlabels, labelsize, ncolors, colormap = scalar_bar
         default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
@@ -156,9 +158,15 @@ class LegendObject(BaseGui):
             return
 
         default_format = None
-        (legend_title, scalar_bar, defaults_scalar_bar, data_format, default_format,
-         default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
-             gui.icase_fringe)
+        (is_method_array,
+         legend_title, scalar_bar, defaults_scalar_bar,
+         data_format, default_format,
+         default_title, min_value, max_value,
+         default_min, default_max) = self.get_legend_fringe(gui.icase_fringe)
+
+        # set the title as the default
+        if is_method_array and legend_title == default_title:
+            legend_title = ''
 
         #nlabels, labelsize, ncolors, colormap = scalar_bar
         #default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
@@ -219,7 +227,7 @@ class LegendObject(BaseGui):
                       icase_fringe: Optional[int],
                       icase_disp: Optional[int],
                       icase_vector: Optional[int],
-                      name,
+                      title: str,
                       min_value: Optional[float],
                       max_value: Optional[float],
                       data_format: str,
@@ -293,9 +301,13 @@ class LegendObject(BaseGui):
 
         out = self.get_legend_fringe(icase_fringe)
         (
-            _legend_title, scalar_bar, defaults_scalar_bar, data_format,
-            default_format, default_title, _min_value, _max_value,
+            is_method_array,
+            _legend_title, scalar_bar, defaults_scalar_bar,
+            data_format, default_format, default_title,
+            _min_value, _max_value,
             default_min, default_max) = out
+        if is_method_array and title == default_title:
+            title = ''
 
         unused_nlabels, _labelsize, _ncolors, _colormap = scalar_bar
         default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
@@ -347,7 +359,7 @@ class LegendObject(BaseGui):
         #assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
             icase_fringe, icase_disp, icase_vector,
-            name, min_value, max_value, data_format,
+            title, min_value, max_value, data_format,
             nlabels, labelsize, ncolors, colormap, is_fringe,
             scale, phase,
             arrow_scale,
@@ -357,6 +369,7 @@ class LegendObject(BaseGui):
             default_ncolors, default_colormap,
             default_scale, default_phase,
             default_arrow_scale,
+            is_method_array=is_method_array,
             font_size=self.settings.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
@@ -567,12 +580,13 @@ class LegendObject(BaseGui):
         #if is_shown:
             #pass
 
-    def get_legend_fringe(self, icase_fringe: Optional[int]) -> Any:
+    def get_legend_fringe(self, icase_fringe: Optional[int]) -> tuple:
         """helper method for ``set_legend_menu``"""
         #nlabels = None
         #labelsize = None
         #ncolors = None
         #colormap = None
+        is_method_array = False
         legend_title = None
         min_value = None
         max_value = None
@@ -596,6 +610,7 @@ class LegendObject(BaseGui):
             key = gui.case_keys[icase_fringe]
             assert isinstance(key, integer_types), key
             (obj, (i, res_name)) = gui.result_cases[key]
+            is_method_array = obj.is_method_array
             #fringe, case = obj.get_fringe_vector_result(i, res_name)
             legend_title = obj.get_legend_title(i, res_name)
 
@@ -610,6 +625,7 @@ class LegendObject(BaseGui):
             default_format = obj.get_default_data_format(i, res_name)
 
         out = (
+            is_method_array,
             legend_title,
             scalar_bar, defaults_scalar_bar,
             data_format, default_format,

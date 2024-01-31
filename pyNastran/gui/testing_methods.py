@@ -254,6 +254,7 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_label2 = obj.get_annotation(i, name)
             unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name)
+            is_method_array = obj.is_method_array()
             outi = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             nlabels, labelsize, ncolors, colormap = outi
             if colormap == '':

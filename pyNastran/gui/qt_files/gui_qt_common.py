@@ -1186,7 +1186,8 @@ class GuiQtCommon(GuiAttributes):
             icase_fringe, icase_disp, icase_vector,
             legend_title, min_value, max_value, data_format, scale, phase,
             arrow_scale,
-            nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+            nlabels, labelsize, ncolors, colormap,
+            use_fringe_internal=True,
             external_call=False)
 
         # updates the type of the result that is displayed
