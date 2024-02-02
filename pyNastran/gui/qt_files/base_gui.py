@@ -1,5 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
+
+
 class BaseGui:
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui = gui
 
     @property

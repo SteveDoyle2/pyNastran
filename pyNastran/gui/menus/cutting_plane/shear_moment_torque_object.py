@@ -16,11 +16,12 @@ from pyNastran.op2.tables.ogf_gridPointForces.smt import (
     get_nid_cd_xyz_cid0, plot_smt, setup_coord_from_plane)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+    from pyNastran.gui.main_window import MainWindow
 
 
 class ShearMomentTorqueObject(BaseGui):
     """wrapper around ShearMomentTorqueWindow"""
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         #self.gui = gui
         super().__init__(gui)
         self._smt_shown = False
@@ -228,7 +229,7 @@ class ShearMomentTorqueObject(BaseGui):
         beta = coord.beta().T
 
         cid = ''
-        self.gui.create_coordinate_system(
+        self.gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type='xyz')
 

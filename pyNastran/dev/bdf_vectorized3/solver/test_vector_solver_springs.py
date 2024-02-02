@@ -803,7 +803,7 @@ class TestStaticBar(unittest.TestCase):
         load_id = 2
         nid = 101
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = [0., 0., 1.]
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         spc_id = 3
@@ -863,7 +863,10 @@ class TestStaticBar(unittest.TestCase):
         # F = kx
         fmag = 1.0
         dx = fmag / k_axial
-        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+        nnodes_6 = len(solver.xg)
+        nnodes = nnodes_6 // 6
+        xg = solver.xg.reshape(nnodes, 6)
+        assert dx == solver.xg[1, 2], f'dx={dx} xg={xg}'
 
     def test_cbar(self):
         """Tests a CBAR/PBAR"""

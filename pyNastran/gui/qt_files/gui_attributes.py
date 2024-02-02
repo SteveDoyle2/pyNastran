@@ -9,7 +9,8 @@ import traceback
 from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkDataSetMapper
+from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 from qtpy import QtGui
 from qtpy.QtWidgets import QMainWindow
@@ -710,7 +711,7 @@ class GuiAttributes:
         return is_passed
 
     #---------------------------------------------------------------------------
-    def reset_labels(self, reset_minus1: bool=True) -> bool:
+    def reset_labels(self, reset_minus1: bool=True) -> None:
         """
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
@@ -775,7 +776,7 @@ class GuiAttributes:
         self.label_actors[icase] = []
         self.label_ids[icase] = set()
 
-    def resize_labels(self, case_keys=None, show_msg=True):
+    def resize_labels(self, case_keys=None, show_msg: bool=True) -> None:
         """
         This resizes labels for all result cases.
         TODO: not done...
@@ -797,7 +798,7 @@ class GuiAttributes:
             self.log_command('resize_labels(%s)' % names)
 
     #---------------------------------------------------------------------------
-    def on_update_clipping(self, min_clip=None, max_clip=None):
+    def on_update_clipping(self, min_clip=None, max_clip=None) -> None:
         self.clipping_obj.on_update_clipping(min_clip=min_clip, max_clip=max_clip)
 
         #---------------------------------------------------------------------------
@@ -1705,15 +1706,15 @@ class GuiAttributes:
 
 class ModelData:
     def __init__(self, parent: GuiAttributes):
-        self.geometry_properties = {}
+        self.geometry_properties: dict[str, Any] = {}
 
-        self.groups = {}
+        self.groups: dict[str, Any] = {}
         self.group_active = 'main'
 
         self.follower_nodes = {}
         self.follower_functions: dict[str, Callable] = {}
 
-        self.label_actors = {-1 : []}
+        self.label_actors: dict[int, list[int]] = {-1 : []}
         self.label_ids = {}
         self.label_scale = 1.0 # in percent
 

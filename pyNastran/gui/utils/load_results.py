@@ -62,6 +62,7 @@ def create_res_obj(islot: int,
         required for forces/displacements
     xyz_cid0 : (nnodes, 3)
         the points
+
     """
     #print('create_res_object, header=%r' % header)
     datai = A[header]
@@ -313,7 +314,7 @@ def _load_format_header(file_obj, ext, force_float=False):
     }
     return names, fmt_dict, dtype, delimiter
 
-def load_user_geom(fname, log=None, encoding='latin1'):
+def load_user_geom(fname: str, log=None, encoding: str='latin1'):
     """
     Loads a file of the form:
 
