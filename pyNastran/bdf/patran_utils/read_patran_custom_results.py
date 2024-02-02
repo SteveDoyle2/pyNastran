@@ -127,7 +127,7 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
 
 def load_patran_nod(nod_filename: str,
                     node_ids: np.ndarray) -> tuple[dict[str, np.ndarray],
-                                                   dict[str, np.ndarray],
+                                                   dict[str, str],
                                                    list[str]]:
     """
     Reads a Patran formatted *.nod file

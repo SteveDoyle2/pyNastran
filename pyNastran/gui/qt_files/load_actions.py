@@ -11,8 +11,6 @@ from qtpy.compat import getopenfilename
 from pyNastran.utils import check_path, print_bad_path
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.utils.paths import get_delimiter_from_filename
-from pyNastran.gui.vtk_common_core import vtkPoints
-from pyNastran.gui.vtk_interface import vtkVertex
 
 from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
 
@@ -22,9 +20,11 @@ from pyNastran.gui.utils.load_results import (
     load_user_geom,
 )
 from pyNastran.gui.qt_files.user_geometry import add_user_geometry
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 if TYPE_CHECKING:
-    #from pyNastran.gui.menus.results_sidebar import Sidebar
+    #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.gui_objects.settings import Settings
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -177,7 +177,6 @@ class LoadActions(BaseGui):
             main_str = ', name=%r' % name
         self._add_recent_file(infile_name, geometry_format)
 
-        gui.settings.recent_files
         gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, geometry_format_out, main_str))
 
@@ -199,6 +198,7 @@ class LoadActions(BaseGui):
         if arg in gui.settings.recent_files:
             gui.settings.recent_files.remove(arg)
         gui.settings.recent_files.insert(0, arg)
+        #gui.settings.recent_files
 
     def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
         """gets the filename and format"""
@@ -366,7 +366,8 @@ class LoadActions(BaseGui):
             self.gui.log_command("on_load_results(%r)" % out_filenamei)
 
     #---------------------------------------------------------------------------
-    def on_load_custom_results(self, out_filename=None, restype=None,
+    def on_load_custom_results(self, out_filename=None,
+                               restype=None,
                                stop_on_failure: bool=False) -> bool:
         """will be a more generalized results reader"""
         is_failed, out_filename, iwildcard = self._on_load_custom_results_load_filename(
@@ -420,13 +421,14 @@ class LoadActions(BaseGui):
         is_failed = False
         return is_failed
 
-    def _on_load_custom_results_load_filename(self, out_filename=None, restype=None):
+    def _on_load_custom_results_load_filename(self, out_filename=None,
+                                              restype=None) -> tuple[bool, str, int]:
         is_failed = True
         #unused_geometry_format = self.format
         if self.gui.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.gui.log_error(msg)
-            return is_failed, None, None
+            return is_failed, '', -1
 
         if out_filename in [None, False]:
             title = 'Select a Custom Results File for %s' % (self.gui.format)
@@ -443,7 +445,7 @@ class LoadActions(BaseGui):
             fmt = ';;'.join(fmts)
             wildcard_level, out_filename = self.create_load_file_dialog(fmt, title)
             if not out_filename:
-                return is_failed, None, None # user clicked cancel
+                return is_failed, '', -1 # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
         else:
             fmts = [
@@ -462,6 +464,7 @@ class LoadActions(BaseGui):
         self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
 
     def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
+        """loads a force/deflection file"""
         out_filename_short = os.path.basename(out_filename)
         A, nids_index, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
@@ -485,7 +488,7 @@ class LoadActions(BaseGui):
 
     def _on_load_nodal_elemental_results(self, result_type: str,
                                          out_filename=None,
-                                         stop_on_failure: bool=False):
+                                         stop_on_failure: bool=False) -> None:
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
@@ -630,8 +633,7 @@ class LoadActions(BaseGui):
         add_user_geometry(
             alt_grid, geom_grid,
             xyz, nid_map, nnodes,
-            bars, tris, quads,
-            nelements, nbars, ntris, nquads)
+            bars, tris, quads)
 
         # create actor/mapper
         tool_actions.add_alt_geometry(alt_grid, point_name)
@@ -780,17 +782,16 @@ class LoadActions(BaseGui):
 
         # allocate grid
         alt_grid = gui.alt_grids[name]
-        alt_grid.Allocate(npoints, 1000)
+        #alt_grid.Allocate(npoints, 1000)
 
         # set points
-        points = vtkPoints()
-        points.SetNumberOfPoints(npoints)
+        points = numpy_to_vtk_points(user_points)
 
-        for i, point in enumerate(user_points):
-            points.InsertPoint(i, *point)
-            elem = vtkVertex()
-            elem.GetPointIds().SetId(0, i)
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        # set elements
+        vertex_cell_type = 1
+        elements = np.ones((npoints, 1), dtype='int32')
+        elements[:, 0] = np.arange(npoints)
+        create_vtk_cells_of_constant_element_type(alt_grid, elements, vertex_cell_type)
         alt_grid.SetPoints(points)
 
         # create actor/mapper
@@ -833,6 +834,7 @@ class LoadActions(BaseGui):
             the CSV filename to load
 
         """
+        gui: MainWindow = self.gui
         out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
@@ -841,20 +843,22 @@ class LoadActions(BaseGui):
         nrows = result0.size
 
         if result_type == 'Nodal':
-            nnodes = self.gui.nnodes
+            nnodes = gui.nnodes
             if nrows != nnodes:
-                self.log.warning('The fringe CSV has %i rows, but there are %i nodes in the '
-                                 'model.  Verify that the result is for the correct model and '
-                                 "that it's not an elemental result." % (nrows, nnodes))
-                A = _resize_array(A, A['index'], self.gui.node_ids, nrows, nnodes)
+                gui.log.warning(f'The fringe CSV has {nrows!r} rows, but '
+                                f'there are {nnodes} nodes in the model.  '
+                                'Verify that the result is for the correct model and '
+                                "that it's not an elemental result.")
+                A = _resize_array(A, A['index'], gui.node_ids, nrows, nnodes)
             result_type2 = 'node'
         elif result_type == 'Elemental':
-            nelements = self.gui.nelements
+            nelements = gui.nelements
             if nrows != nelements:
-                self.log.warning('The fringe CSV has %i rows, but there are %i elements in the '
-                                 'model.  Verify that the result is for the correct model and '
-                                 "that it's not a nodal result." % (nrows, nelements))
-                A = _resize_array(A, A['index'], self.gui.element_ids, nrows, nelements)
+                gui.log.warning(f'The fringe CSV has {nrows!r} rows, but '
+                                f'there are {nelements} elements in the model.  '
+                                'Verify that the result is for the correct model and '
+                                "that it's not a nodal result.")
+                A = _resize_array(A, A['index'], gui.element_ids, nrows, nelements)
             result_type2 = 'centroid'
         else:  # pragma: no cover
             raise NotImplementedError(f'result_type={result_type!r}')
@@ -873,7 +877,7 @@ class LoadActions(BaseGui):
                                 out_filename_short, update=True, is_scalar=True)
 
     def _add_cases_to_form(self, A: dict[str, np.ndarray],
-                           fmt_dict,
+                           fmt_dict: dict[str, str],
                            headers: list[str],
                            result_type: str,
                            out_filename_short: str,

@@ -16,9 +16,9 @@
 #    id  x    y    z
 GRID, 1, 0.2, 0.3, 0.3
 GRID, 2, 1.2, 0.3, 0.3
-GRID, 3, 2.2, 0.3, 0.3
-GRID, 4, 5.2, 0.3, 0.3
-grid, 5, 5.2, 1.3, 2.3  # case insensitive
+GRID, 3, 1.2, 1.3, 0.3
+GRID, 4, 0.2, 1.3, 0.3
+grid, 5, 5.2, 4.3, 2.3  # case insensitive
 
 #    ID, nodes
 BAR,  1, 1, 2

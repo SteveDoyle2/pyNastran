@@ -10,6 +10,7 @@ from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 #from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
+from vtk import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkFiltersCore import vtkIdFilter
@@ -123,7 +124,7 @@ ETYPES_EXPECTED_DICT = {
     27: 13, # cpyram13
 }
 
-def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
+def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> vtkPoints:
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:

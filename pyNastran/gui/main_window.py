@@ -325,7 +325,7 @@ class MainWindow(GuiCommon, NastranIO):
         if hasattr(self, on_reload_name):
             getattr(self, on_reload_name)()  # on_reload_nastran
         else:
-            self.on_load_geometry(self.infile_name, self.format, raise_error=False)
+            self.on_load_geometry(self.infile_name, self.format, stop_on_failure=False)
 
         if self.out_filename is None:
             msg = '%s - %s' % (self.format, self.infile_name)

@@ -5,7 +5,7 @@ from qtpy import QtGui
 
 
 from pyNastran.gui.menus.test.test_gui_menu import UsesQApplication
-from pyNastran.gui.gui import MainWindow
+from pyNastran.gui.main_window import MainWindow
 
 import pyNastran
 PKG_PATH = pyNastran.__path__[0]
@@ -62,7 +62,40 @@ class TestGUI(UsesQApplication):
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
         #op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2')
         gui.on_load_geometry_button(
-            infile_name=bdf_filename, geometry_format='nastran', name='main', raise_error=False)
+            infile_name=bdf_filename, geometry_format='nastran', name='main',
+            stop_on_failure=True)
+
+        geom_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
+        gui.on_load_user_geom(geom_filename, name='custom')
+
+        points_csv_filename = os.path.join(MODEL_PATH, 'points.csv')
+        csv_filename = os.path.join(MODEL_PATH, 'deflection.csv')
+        with open(points_csv_filename, 'w') as points_csv_file:
+            points_csv_file.write(
+                '#x, y, z\n'
+                '0.1, 0.2, 0.3\n'
+                '0.3, 0.3, 0.1\n'
+                '0.3, 0.2, 0.1\n'
+                '0.1, 0.4, 0.3\n'
+            )
+        with open(csv_filename, 'w') as csv_file:
+            csv_file.write(
+                '#nid, x, y, z\n'
+                '1, 0.1, 0.2, 0.3\n'
+                '2, 0.3, 0.3, 0.1\n'
+                '3, 0.3, 0.2, 0.1\n'
+                '4, 0.1, 0.4, 0.3\n'
+            )
+        #res_type = 'node', 'element', 'deflection', 'force', 'patran_nod',
+        gui.on_load_csv_points(points_csv_filename, name='points')
+        gui.on_load_custom_results(out_filename=csv_filename,
+                                   restype='node', stop_on_failure=True)
+        gui.on_load_custom_results(out_filename=csv_filename,
+                                   restype='element', stop_on_failure=True)
+        #gui.on_load_custom_results(out_filename=csv_filename,
+                                   #restype='deflection', stop_on_failure=True)
+        #gui.on_load_custom_results(out_filename=csv_filename,
+                                   #restype='force', stop_on_failure=True)
 
         # TODO: fix this...
         #with self.assertRaises(AttributeError):

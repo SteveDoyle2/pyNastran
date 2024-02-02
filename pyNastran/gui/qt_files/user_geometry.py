@@ -15,12 +15,14 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
                       nnodes: int,
                       bars: np.ndarray,
                       tris: np.ndarray,
-                      quads: np.ndarray,
-                      nelements: int, nbars: int,
-                      ntris: int, nquads: int) -> vtkPoints:
+                      quads: np.ndarray) -> vtkPoints:
     """helper method for ``_add_user_geometry``"""
     # set points
     points = numpy_to_vtk_points(xyz, dtype='<f')
+    nbars = len(bars)
+    ntris = len(tris)
+    nquads = len(quads)
+    nelements = nbars + ntris + nquads
 
     if nelements > 0:
         for i in range(nnodes):
@@ -39,8 +41,9 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
             g1 = nid_map[bar[0]]
             g2 = nid_map[bar[1]]
             elem = vtkLine()
-            elem.GetPointIds().SetId(0, g1)
-            elem.GetPointIds().SetId(1, g2)
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, g1)
+            point_ids.SetId(1, g2)
             geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
     if ntris:
@@ -49,9 +52,10 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
             g2 = nid_map[tri[1]]
             g3 = nid_map[tri[2]]
             elem = vtkTriangle()
-            elem.GetPointIds().SetId(0, g1)
-            elem.GetPointIds().SetId(1, g2)
-            elem.GetPointIds().SetId(2, g3)
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, g1)
+            point_ids.SetId(1, g2)
+            point_ids.SetId(2, g3)
             geom_grid.InsertNextCell(5, elem.GetPointIds())
 
     if nquads:

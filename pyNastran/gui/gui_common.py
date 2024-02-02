@@ -1383,11 +1383,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             )
         self.log = log
 
-    def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
-                                raise_error=False):
+    def on_load_geometry_button(self, infile_name=None, geometry_format=None,
+                                name: str='main',
+                                stop_on_failure: bool=False):
         """action version of ``on_load_geometry``"""
         self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
-                              name=name, plot=True, raise_error=raise_error)
+                              name=name, plot=True, stop_on_failure=stop_on_failure)
 
     def _update_menu_bar_to_format(self, fmt, method):
         """customizes the gui to be nastran/cart3d-focused"""
@@ -1429,7 +1430,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #"""loads a deflection file"""
         #self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
-    def setup_gui(self, is_gui=True):
+    def setup_gui(self, is_gui: bool=True) -> None:
         """
         Setup the gui
 
