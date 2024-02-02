@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import annotations
 import os
-import traceback
+#import traceback
 from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
@@ -22,8 +22,7 @@ from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 #from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 #from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
-from pyNastran.gui.vtk_interface import vtkVertex
+from pyNastran.gui.vtk_common_core import VTK_FONT_FILE
 from pyNastran.gui.vtk_rendering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
     vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
@@ -31,16 +30,15 @@ from pyNastran.gui.vtk_rendering_core import (
 from qtpy.compat import getsavefilename
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
+from pyNastran.gui.utils.paths import remove_invalid_filename_characters
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import update_axis_text_size
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-from pyNastran.femutils.io import loadtxt_nice
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
     from pyNastran.gui.gui_objects.settings import Settings
@@ -526,162 +524,6 @@ class ToolActions:
                 add_vtk_array(case.location, point_data, cell_data, vtk_array)
         return vtk_ugrid
 
-    def on_load_csv_points(self, csv_filename: Optional[str]=None,
-                           name: Optional[str]=None,
-                           color: Optional[list[float]]=None) -> bool:
-        """
-        Loads a User Points CSV File of the form:
-
-        1.0, 2.0, 3.0
-        1.5, 2.5, 3.5
-
-        Parameters
-        -----------
-        csv_filename : str (default=None -> load a dialog)
-            the path to the user points CSV file
-        name : str (default=None -> extract from fname)
-            the name for the user points
-        color : (float, float, float)
-            RGB values as 0.0 <= rgb <= 1.0
-
-        .. note:: no header line is required
-        .. note:: nodes are in the global frame
-
-        .. todo:: support changing the name
-        .. todo:: support changing the color
-        .. todo:: support overwriting points
-
-        """
-        is_failed = True
-        gui = self.gui
-        if csv_filename in {None, False}:
-            title = 'Load User Points'
-            csv_filename = gui.load_actions.create_load_file_dialog(
-                gui.wildcard_delimited, title)[1]
-            if not csv_filename:
-                return is_failed
-        assert isinstance(csv_filename, str), csv_filename
-
-        if color is None:
-            # we mod the num_user_points so we don't go outside the range
-            icolor = gui.num_user_points % len(gui.color_order)
-            color = gui.color_order[icolor]
-        if name is None:
-            sline = os.path.basename(csv_filename).rsplit('.', 1)
-            name = sline[0]
-        name = _get_unique_name(gui.geometry_actors, name)
-
-        is_failed = self._add_user_points_from_csv(csv_filename, name, color)
-        if not is_failed:
-            gui.num_user_points += 1
-            gui.log_command(f'on_load_csv_points({csv_filename!r}, {name!r}, {str(color)})')
-        return is_failed
-
-    def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
-                                  color: list[float], point_size: int=4) -> bool:
-        """
-        Helper method for adding csv nodes to the gui
-
-        Parameters
-        ----------
-        csv_points_filename : str
-            CSV filename that defines one xyz point per line
-        name : str
-            name of the geometry actor
-        color : list[float, float, float]
-            RGB values; [0. to 1.]
-        point_size : int; default=4
-            the nominal point size
-
-        """
-        is_failed = True
-        try:
-            check_path(csv_points_filename, 'csv_points_filename')
-            # read input file
-            delimiter = get_delimiter_from_filename(csv_points_filename)
-            try:
-                user_points = np.loadtxt(csv_points_filename, comments='#', delimiter=delimiter)
-            except ValueError:
-                user_points = loadtxt_nice(csv_points_filename, comments='#', delimiter=delimiter)
-                # can't handle leading spaces?
-                #raise
-        except ValueError as error:
-            #self.log_error(traceback.print_stack(f))
-            self.gui.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.gui.log_error(str(error))
-            return is_failed
-
-        self._add_user_points(user_points, name, color, csv_points_filename,
-                              point_size=point_size)
-        is_failed = False
-        return False
-
-    def _add_user_points(self, user_points: np.ndarray,
-                         name: str, color: list[float],
-                         csv_points_filename: str='',
-                         point_size: int=4) -> None:
-        """
-        Helper method for adding csv nodes to the gui
-
-        Parameters
-        ----------
-        user_points : (n, 3) float ndarray
-            the points to add
-        name : str
-            name of the geometry actor
-        color : list[float, float, float]
-            RGB values; [0. to 1.]
-        point_size : int; default=4
-            the nominal point size
-
-        """
-        if name in self.gui.geometry_actors:
-            msg = f'Name: {name} is already in geometry_actors\nChoose a different name.'
-            raise ValueError(msg)
-        if len(name) == 0:
-            msg = f'Invalid Name: name={name!r}'
-            raise ValueError(msg)
-
-        # create grid
-        self.gui.create_alternate_vtk_grid(
-            name, color=color, line_width=5, opacity=1.0,
-            point_size=point_size, representation='point')
-
-        npoints = user_points.shape[0]
-        if npoints == 0:
-            raise RuntimeError('npoints=0 in %r' % csv_points_filename)
-        if len(user_points.shape) == 1:
-            user_points = user_points.reshape(1, npoints)
-
-        # allocate grid
-        alt_grid = self.gui.alt_grids[name]
-        alt_grid.Allocate(npoints, 1000)
-
-        # set points
-        points = vtkPoints()
-        points.SetNumberOfPoints(npoints)
-
-        for i, point in enumerate(user_points):
-            points.InsertPoint(i, *point)
-            elem = vtkVertex()
-            elem.GetPointIds().SetId(0, i)
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        alt_grid.SetPoints(points)
-
-        # create actor/mapper
-        self.add_alt_geometry(alt_grid, name)
-
-        # set representation to points
-        self.gui.model_data.geometry_properties[name].representation = 'point'
-        actor = self.gui.geometry_actors[name]
-        prop = actor.GetProperty()
-        prop.SetRepresentationToPoints()
-        prop.RenderPointsAsSpheresOn()
-        prop.SetLighting(False)
-        #prop.SetInterpolationToFlat()
-        prop.SetPointSize(point_size)
-
     #---------------------------------------------------------------------------
     def add_alt_geometry(self, grid: vtkUnstructuredGrid,
                          name: str,
@@ -909,7 +751,7 @@ def _export_case(name: str,
     if 'i' in data_format and isinstance(case.dtype, np.floating):
         header = '%s(%%i),%s' % (word, label2)
 
-    fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
+    fname = '%s_%s.csv' % (icase, remove_invalid_filename_characters(name))
     out_data = np.column_stack([eids_nids, case])
     try:
         np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
@@ -920,63 +762,3 @@ def _export_case(name: str,
             header = 'word,unicode_strikes_again'
             np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
     return fname
-
-def _remove_invalid_filename_characters(basename: str) -> str:
-    r"""
-    Helper method for exporting cases of 12*I/t^3.csv,
-    which have invalid characters.
-
-    Invalid for Windows
-     < (less than)
-     > (greater than)
-     : (colon - sometimes works, but is actually NTFS Alternate Data Streams)
-     " (double quote)
-     / (forward slash)
-     \ (backslash)
-     | (vertical bar or pipe)
-     ? (question mark)
-     * (asterisk)
-
-    Invalid for Linux
-     / (forward slash)
-
-    .. todo:: do a check for linux
-
-    """
-    if not isinstance(basename, str):
-        basename = str(basename)
-
-    invalid_chars = ':*?<>|/\\'
-    for char in invalid_chars:
-        basename = basename.replace(char, '')
-    return basename
-
-def get_delimiter_from_filename(csv_filename: str) -> Optional[str]:
-    """determines the file delimier from the extension
-
-    File Type   Delimeter
-    =========   ============
-    .csv        comma
-    .dat/.txt   space or tab
-
-    """
-    if csv_filename.lower().endswith('.csv'):
-        delimiter = ','
-    else:
-        delimiter = None
-    return delimiter
-
-def _get_unique_name(geometry_actors: dict[str, Any],
-                     name: str) -> str:
-    """
-    Duplicate names in a dictionary are not allowed,
-    so append a number to the name if it's invalid
-    """
-    if name in geometry_actors:
-        i = 1
-        name2 = f'{name}_{i}'
-        while name2 in geometry_actors:
-            i += 1
-            name2 = f'{name}_{i}'
-        name = name2
-    return name

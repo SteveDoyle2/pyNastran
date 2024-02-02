@@ -1462,7 +1462,7 @@ class GuiAttributes:
             RGB values as 0.0 <= rgb <= 1.0
 
         """
-        is_failed = self.tool_actions.on_load_csv_points(
+        is_failed = self.load_actions.on_load_csv_points(
             csv_filename=csv_filename, name=name, color=color)
         return is_failed
 
