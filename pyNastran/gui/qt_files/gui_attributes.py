@@ -653,36 +653,10 @@ class GuiAttributes:
         return skip_reading
 
     #---------------------------------------------------------------------------
-
     @start_stop_performance_mode
     def on_run_script(self, python_file=False) -> bool:
         """pulldown for running a python script"""
-        is_passed = False
-        if python_file in [None, False]:
-            title = 'Choose a Python Script to Run'
-            wildcard = 'Python (*.py)'
-            infile_name = self.load_actions.create_load_file_dialog(
-                wildcard, title, self._default_python_file)[1]
-            if not infile_name:
-                return is_passed # user clicked cancel
-
-            #python_file = os.path.join(script_path, infile_name)
-            python_file = os.path.join(infile_name)
-
-        if not os.path.exists(python_file):
-            msg = 'python_file = %r does not exist' % python_file
-            self.log_error(msg)
-            return is_passed
-
-        with open(python_file, 'r') as python_file_obj:
-            txt = python_file_obj.read()
-        is_passed = self._execute_python_code(txt, show_msg=False)
-        if not is_passed:
-            return is_passed
-        self._default_python_file = python_file
-        self.log_command('self.on_run_script(%r)' % python_file)
-        print('self.on_run_script(%r)' % python_file)
-        return is_passed
+        self.load_actions.on_run_script(python_file)
 
     def _execute_python_code(self, txt: str, show_msg: bool=True) -> bool:
         """executes python code"""

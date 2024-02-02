@@ -23,7 +23,7 @@ from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 #from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
-from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
+from pyNastran.gui.vtk_interface import vtkVertex
 from pyNastran.gui.vtk_rendering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
     vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
@@ -38,8 +38,7 @@ from pyNastran.gui import font_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
-from pyNastran.gui.utils.load_results import load_user_geom
+from pyNastran.gui.utils.vtk.vtk_utils import update_axis_text_size
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
 if TYPE_CHECKING:  # pragma: no cover
@@ -136,14 +135,16 @@ class ToolActions:
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
 
         """
-        self.settings.dim_max = dim_max
-        coord_scale = self.settings.coord_scale * dim_max
-        coord_text_scale = self.settings.coord_text_scale
-        linewidth = self.settings.coord_linewidth
+        gui: MainWindow = self.gui
+        settings: Settings = gui.settings
+        settings.dim_max = dim_max
+        coord_scale = settings.coord_scale * dim_max
+        coord_text_scale = settings.coord_text_scale
+        linewidth = settings.coord_linewidth
 
         create_actor = True
-        if coord_id in self.gui.axes:
-            axes = self.gui.axes[coord_id]
+        if coord_id in gui.axes:
+            axes = gui.axes[coord_id]
             create_actor = False
         else:
             axes = vtkAxesActor()
@@ -154,17 +155,18 @@ class ToolActions:
         _set_base_axes(axes, transform, coord_type, label,
                        coord_scale, coord_text_scale, linewidth)
 
-        self.gui.transform[coord_id] = transform
-        self.gui.axes[coord_id] = axes
+        gui.transform[coord_id] = transform
+        gui.axes[coord_id] = axes
 
         is_visible = False
         if label == '':
             label = 'Global XYZ'
             is_visible = True
         else:
-            label = 'Coord %s' % label
-        self.gui.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, coord_scale)
-        self.gui.geometry_actors[label] = axes
+            label = f'Coord {label}'
+        gui.geometry_properties[label] = CoordProperties(
+            label, coord_type, is_visible, coord_scale)
+        gui.geometry_actors[label] = axes
         if create_actor:
             self.rend.AddActor(axes)
 
@@ -233,17 +235,17 @@ class ToolActions:
                                  imax: int, max_value: float,
                                  location: str) -> tuple[str, str]:
         if location == 'normal':
-            min_msgi = min_value
-            max_msgi = max_value
+            min_msgi = str(min_value)
+            max_msgi = str(max_value)
             return min_msgi, max_msgi
 
         gui = self.gui
         if location == 'node':
-            nodes = gui.node_ids
+            nodes: np.ndarray = gui.node_ids
             min_msgi = f'Node: %d' % nodes[imin]
             max_msgi = f'Node: %d' % nodes[imax]
         elif location == 'centroid':
-            elements = gui.element_ids
+            elements: np.ndarray = gui.element_ids
             min_msgi = f'Element: %d' % elements[imin]
             max_msgi = f'Element: %d' % elements[imax]
         else:  # pragma: no cover
@@ -387,22 +389,23 @@ class ToolActions:
             dict[str, int],
             vtkAxesActor, int]:
         """helper method for ``on_take_screenshot``"""
+        settings: Settings = self.settings
         if magnify is None:
             magnify_min = 1
-            magnify = self.settings.magnify if self.settings.magnify > magnify_min else magnify_min
+            magnify = settings.magnify if settings.magnify > magnify_min else magnify_min
 
         if not isinstance(magnify, integer_types):
             msg = 'magnify=%r type=%s' % (magnify, type(magnify))
             raise TypeError(msg)
         self.settings.update_corner_text_size(magnify=magnify)
 
-        coord_scale0 = self.settings.coord_scale
-        coord_text_scale0 = self.settings.coord_text_scale
-        linewidth0 = self.settings.coord_linewidth
-        self.settings.scale_coord(magnify, render=False)
-        self.settings.update_coord_text_scale(coord_text_scale0*magnify, render=False)
-        #self.settings.scale_coord_text(magnify, render=False)
-        #self.settings.update_coord_scale(
+        coord_scale0 = settings.coord_scale
+        coord_text_scale0 = settings.coord_text_scale
+        linewidth0 = settings.coord_linewidth
+        settings.scale_coord(magnify, render=False)
+        settings.update_coord_text_scale(coord_text_scale0*magnify, render=False)
+        #settings.scale_coord_text(magnify, render=False)
+        #settings.update_coord_scale(
             #coord_scale=coord_scale0*magnify,
             #coord_text_scale=coord_text_scale0*magnify,
             #linewidth=linewidth0*magnify,
@@ -443,7 +446,7 @@ class ToolActions:
                              coord_scale0: dict[str, float],
                              coord_text_scale0: float,
                              linewidth0: int,
-                             axes_actor: vtkAxesActor):
+                             axes_actor: vtkAxesActor) -> None:
         """helper method for ``on_take_screenshot``"""
         self.settings.update_corner_text_size(magnify=1.0)
         # show corner axes
@@ -467,136 +470,6 @@ class ToolActions:
                                          #coord_text_scale=coord_text_scale0,
                                          #linewidth=linewidth0,
                                          #render=True)
-
-    #---------------------------------------------------------------------------
-    def on_load_user_geom(self, csv_filename: Optional[str]=None,
-                          name: Optional[str]=None,
-                          color: Optional[list[float]]=None) -> None:
-        """
-        Loads a User Geometry CSV File of the form:
-
-        #    id  x    y    z
-        GRID, 1, 0.2, 0.3, 0.3
-        GRID, 2, 1.2, 0.3, 0.3
-        GRID, 3, 2.2, 0.3, 0.3
-        GRID, 4, 5.2, 0.3, 0.3
-        grid, 5, 5.2, 1.3, 2.3  # case insensitive
-
-        #    ID, nodes
-        BAR,  1, 1, 2
-        TRI,  2, 1, 2, 3
-        # this is a comment
-
-        QUAD, 3, 1, 5, 3, 4
-        QUAD, 4, 1, 2, 3, 4  # this is after a blank line
-
-        #RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
-        # in element id sorted order: value1, value2
-        #1.0, 2.0 # bar
-        #1.0, 2.0 # tri
-        #1.0, 2.0 # quad
-        #1.0, 2.0 # quad
-
-        #RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
-        # same difference
-
-        #RESULT,VECTOR3,GEOM,DXYZ
-        # 3xN
-
-        Parameters
-        ----------
-        csv_filename : str (default=None -> load a dialog)
-            the path to the user geometry CSV file
-        name : str (default=None -> extract from fname)
-            the name for the user points
-        color : (float, float, float)
-            RGB values as 0.0 <= rgb <= 1.0
-
-        """
-        gui = self.gui
-        if csv_filename in [None, False]:
-            title = 'Load User Geometry'
-            csv_filename = gui._create_load_file_dialog(
-                gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
-            if not csv_filename:
-                return
-        assert isinstance(csv_filename, str), csv_filename
-
-        if color is None:
-            # we mod the num_user_points so we don't go outside the range
-            icolor = gui.num_user_points % len(gui.color_order)
-            color = gui.color_order[icolor]
-        if name is None:
-            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
-
-        self._add_user_geometry(csv_filename, name, color)
-        gui.log_command('on_load_user_geom(%r, %r, %s)' % (
-            csv_filename, name, str(color)))
-
-    def _add_user_geometry(self, csv_filename: str,
-                           name: str,
-                           color: list[float]) -> None:
-        """
-        helper method for ``on_load_user_geom``
-
-        A custom geometry can be the pyNastran custom form or an STL
-
-        """
-        if name in self.gui.geometry_actors:
-            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
-            raise ValueError(msg)
-        if len(name) == 0:
-            msg = 'Invalid Name: name=%r' % name
-            raise ValueError(msg)
-
-        point_name = name + '_point'
-        geom_name = name + '_geom'
-
-        grid_ids, xyz, bars, tris, quads = load_user_geom(
-            csv_filename, self.gui.log, encoding='latin1')
-        nbars = len(bars)
-        ntris = len(tris)
-        nquads = len(quads)
-        nelements = nbars + ntris + nquads
-        self.gui.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
-                                           point_size=5, representation='point')
-
-        if nelements > 0:
-            nid_map = {}
-            i = 0
-            for nid in grid_ids:
-                nid_map[nid] = i
-                i += 1
-            self.gui.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
-                                               line_width=5, representation='toggle')
-
-        # allocate
-        nnodes = len(grid_ids)
-        #self.alt_grids[point_name].Allocate(npoints, 1000)
-        #if nelements > 0:
-            #self.alt_grids[geom_name].Allocate(npoints, 1000)
-
-        alt_grid = self.gui.alt_grids[point_name]
-        geom_grid = self.gui.alt_grids[geom_name]
-
-        add_user_geometry(
-            alt_grid, geom_grid,
-            xyz, nid_map, nnodes,
-            bars, tris, quads,
-            nelements, nbars, ntris, nquads)
-
-        # create actor/mapper
-        self._add_alt_geometry(alt_grid, point_name)
-        if nelements > 0:
-            self._add_alt_geometry(geom_grid, geom_name)
-
-        # set representation to points
-        #self.geometry_properties[point_name].representation = 'point'
-        #self.geometry_properties[geom_name].representation = 'toggle'
-        #actor = self.geometry_actors[name]
-        #prop = actor.GetProperty()
-        #prop.SetRepresentationToPoints()
-        #prop.SetPointSize(4)
 
     #---------------------------------------------------------------------------
     def on_save_vtk(self, vtk_filename: Optional[str]=None) -> bool:
@@ -683,7 +556,7 @@ class ToolActions:
         gui = self.gui
         if csv_filename in {None, False}:
             title = 'Load User Points'
-            csv_filename = gui._create_load_file_dialog(
+            csv_filename = gui.load_actions.create_load_file_dialog(
                 gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
@@ -797,7 +670,7 @@ class ToolActions:
         alt_grid.SetPoints(points)
 
         # create actor/mapper
-        self._add_alt_geometry(alt_grid, name)
+        self.add_alt_geometry(alt_grid, name)
 
         # set representation to points
         self.gui.model_data.geometry_properties[name].representation = 'point'
@@ -810,20 +683,21 @@ class ToolActions:
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
-    def _add_alt_geometry(self, grid: vtkUnstructuredGrid,
-                          name: str,
-                          color: Optional[list[float]]=None,
-                          line_width: Optional[int]=None,
-                          opacity: Optional[float]=None,
-                          representation: Optional[str]=None) -> None:
+    def add_alt_geometry(self, grid: vtkUnstructuredGrid,
+                         name: str,
+                         color: Optional[list[float]]=None,
+                         line_width: Optional[int]=None,
+                         opacity: Optional[float]=None,
+                         representation: Optional[str]=None) -> None:
         """NOTE: color, line_width, opacity are ignored if name already exists"""
-        has_geometry_actor = name in self.gui.geometry_actors
+        gui = self.gui
+        has_geometry_actor = name in gui.geometry_actors
 
-        is_pickable = self.gui.geometry_properties[name].is_pickable
+        is_pickable = gui.geometry_properties[name].is_pickable
         quad_mapper = vtkDataSetMapper()
 
         if has_geometry_actor:
-            alt_geometry_actor = self.gui.geometry_actors[name]
+            alt_geometry_actor = gui.geometry_actors[name]
             alt_geometry_actor.GetMapper().SetInputData(grid)
         else:
             quad_mapper.SetInputData(grid)
@@ -833,15 +707,15 @@ class ToolActions:
                 alt_geometry_actor.DragableOff()
 
             alt_geometry_actor.SetMapper(quad_mapper)
-            self.gui.geometry_actors[name] = alt_geometry_actor
+            gui.geometry_actors[name] = alt_geometry_actor
 
         #geometryActor.AddPosition(2, 0, 2)
-        if name in self.gui.geometry_properties:
-            geom = self.gui.geometry_properties[name]
+        if name in gui.geometry_properties:
+            geom = gui.geometry_properties[name]
         else:
             geom = AltGeometry(self, name, color=color, line_width=line_width,
                                opacity=opacity, representation=representation)
-            self.gui.geometry_properties[name] = geom
+            gui.geometry_properties[name] = geom
 
         color_float: tuple[float, float, float] = geom.color_float
         opacity = geom.opacity
@@ -902,72 +776,6 @@ class ToolActions:
     @property
     def vtk_interactor(self):
         return self.gui.vtk_interactor
-
-
-def add_user_geometry(alt_grid: vtkUnstructuredGrid,
-                      geom_grid: vtkUnstructuredGrid,
-                      xyz: np.ndarray,
-                      nid_map: dict[int, int],
-                      nnodes: int,
-                      bars: np.ndarray,
-                      tris: np.ndarray,
-                      quads: np.ndarray,
-                      nelements: int, nbars: int,
-                      ntris: int, nquads: int) -> vtkPoints:
-    """helper method for ``_add_user_geometry``"""
-    # set points
-    points = numpy_to_vtk_points(xyz, dtype='<f')
-
-    if nelements > 0:
-        for i in range(nnodes):
-            elem = vtkVertex()
-            elem.GetPointIds().SetId(0, i)
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-    else:
-        for i in range(nnodes):
-            elem = vtkVertex()
-            elem.GetPointIds().SetId(0, i)
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-    if nbars:
-        for i, bar in enumerate(bars[:, 1:]):
-            g1 = nid_map[bar[0]]
-            g2 = nid_map[bar[1]]
-            elem = vtkLine()
-            elem.GetPointIds().SetId(0, g1)
-            elem.GetPointIds().SetId(1, g2)
-            geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-    if ntris:
-        for i, tri in enumerate(tris[:, 1:]):
-            g1 = nid_map[tri[0]]
-            g2 = nid_map[tri[1]]
-            g3 = nid_map[tri[2]]
-            elem = vtkTriangle()
-            elem.GetPointIds().SetId(0, g1)
-            elem.GetPointIds().SetId(1, g2)
-            elem.GetPointIds().SetId(2, g3)
-            geom_grid.InsertNextCell(5, elem.GetPointIds())
-
-    if nquads:
-        for i, quad in enumerate(quads[:, 1:]):
-            g1 = nid_map[quad[0]]
-            g2 = nid_map[quad[1]]
-            g3 = nid_map[quad[2]]
-            g4 = nid_map[quad[3]]
-            elem = vtkQuad()
-            point_ids = elem.GetPointIds()
-            point_ids.SetId(0, g1)
-            point_ids.SetId(1, g2)
-            point_ids.SetId(2, g3)
-            point_ids.SetId(3, g4)
-            geom_grid.InsertNextCell(9, elem.GetPointIds())
-
-    alt_grid.SetPoints(points)
-    if nelements > 0:
-        geom_grid.SetPoints(points)
-    return points
 
 
 def set_vtk_property_to_unicode(prop: vtkProp, font_filei: str) -> None:
