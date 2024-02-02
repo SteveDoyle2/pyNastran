@@ -686,7 +686,7 @@ class MainWindow2(QMainWindow):
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(
+            infile_name = self.load_actions.create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
                 return is_passed # user clicked cancel

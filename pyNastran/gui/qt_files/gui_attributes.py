@@ -539,7 +539,14 @@ class GuiAttributes:
             #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
-    def _add_alt_actors(self, grids_dict, names_to_ignore=None):
+    def _add_alt_actors(self, grids_dict: dict[str, vtkUnstructuredGrid],
+                        names_to_ignore=None):
+        """
+        Parameters
+        ----------
+        ignore_names : list[str]; default=None -> [main]
+            add the actors to
+        """
         if names_to_ignore is None:
             names_to_ignore = ['main']
 
@@ -566,7 +573,7 @@ class GuiAttributes:
             del actor
 
     @property
-    def displacement_scale_factor(self):
+    def displacement_scale_factor(self) -> float:
         """
         # dim_max = max_val * scale
         # scale = dim_max / max_val
@@ -645,10 +652,6 @@ class GuiAttributes:
         return skip_reading
 
     #---------------------------------------------------------------------------
-    def _create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
-        wildcard_level, fname = self.load_actions.create_load_file_dialog(
-            qt_wildcard, title, default_filename=default_filename)
-        return wildcard_level, fname
 
     @start_stop_performance_mode
     def on_run_script(self, python_file=False) -> bool:
@@ -656,8 +659,8 @@ class GuiAttributes:
         is_passed = False
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
-            wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(
+            wildcard = 'Python (*.py)'
+            infile_name = self.load_actions.create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
                 return is_passed # user clicked cancel
@@ -899,37 +902,6 @@ class GuiAttributes:
                           is_shown=is_shown)
 
     #---------------------------------------------------------------------------
-    def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',
-                                 origin=None, matrix_3x3=None,
-                                 coord_type: str='xyz') -> None:
-        """
-        Creates a coordinate system
-
-        Parameters
-        ----------
-        coord_id : int
-            the coordinate system id
-        dim_max : float
-            the max model dimension; 10% of the max will be used for the coord length
-        label : str
-            the coord id or other unique label (default is empty to indicate the global frame)
-        origin : (3, ) ndarray/list/tuple
-            the origin
-        matrix_3x3 : (3, 3) ndarray
-            a standard Nastran-style coordinate system
-        coord_type : str
-            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
-            that changes the axis names
-
-        .. todo::  coord_type is not supported ('xyz' ONLY)
-        .. todo::  Can only set one coordinate system
-
-        """
-        self.tool_actions.create_coordinate_system(
-            coord_id, dim_max, label=label,
-            origin=origin, matrix_3x3=matrix_3x3,
-            coord_type=coord_type)
-
     def create_global_axes(self, dim_max: float) -> None:
         """creates the global axis"""
         cid = 0
