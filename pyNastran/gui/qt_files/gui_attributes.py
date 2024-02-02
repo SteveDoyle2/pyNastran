@@ -1127,11 +1127,11 @@ class GuiAttributes:
             #if is_geom_results:
             #    is_failed = self.on_load_geometry_and_results(
             #        infile_name=input_filename, name=name, geometry_format=form,
-            #        plot=plot, raise_error=True)
+            #        plot=plot, stop_on_failure=True)
             #else:
             is_failed = self.on_load_geometry(
                 infile_name=input_filename, name=name, geometry_format=form,
-                plot=plot, raise_error=True)
+                plot=plot, stop_on_failure=True)
         self.name = 'main'
         #print('keys =', self.nid_maps.keys())
 

@@ -28,7 +28,7 @@ class TestShabpGUI(unittest.TestCase):
         shabp_outfilename = os.path.join(MODEL_PATH, 'flap', 'SHABP.OUT')
 
         #test.model.load_shabp_geometry(shabp_infilename)
-        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', stop_on_failure=True)
         unused_model = read_shabp(shabp_infilename, log=None, debug=None)
         #model.get_area_by_patch()
         #model.get_area_by_component()
@@ -38,17 +38,17 @@ class TestShabpGUI(unittest.TestCase):
     def _test_shabp_geometry_1(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(MODEL_PATH, 'orbiter.mk5')
-        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', stop_on_failure=True)
 
     def _test_shabp_geometry_2(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(MODEL_PATH, 'shuttle.mk5')
-        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', stop_on_failure=True)
 
     def test_shabp_geometry_3(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(MODEL_PATH, 'nose', 'noseX_working.mk5')
-        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

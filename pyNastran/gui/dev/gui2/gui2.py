@@ -185,12 +185,12 @@ class MainWindow2(QMainWindow):
         #self.on_load_geometry()
         self.load_actions.on_load_geometry(
             infile_name=cart3d_filename, geometry_format='cart3d',
-            name='cart3d', plot=True, raise_error=False)
+            name='cart3d', plot=True, stop_on_failure=False)
 
         stl_filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\stl\sphere.stl'
         self.load_actions.on_load_geometry(
             infile_name=stl_filename, geometry_format='stl',
-            name='stl', plot=True, raise_error=False)
+            name='stl', plot=True, stop_on_failure=False)
 
         # Render again to set the correct view
         self.render()
@@ -544,7 +544,7 @@ class MainWindow2(QMainWindow):
     def on_load_geometry(self):
         self.load_actions.on_load_geometry(
             infile_name=None, geometry_format=None,
-            name='main', plot=True, raise_error=False)
+            name='main', plot=True, stop_on_failure=False)
 
     #def _reset_model(self, name: str) -> None:
         #self.log.info('_reset_model')

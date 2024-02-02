@@ -32,7 +32,7 @@ class TestAvlGUI(unittest.TestCase):
 
         test = AvlGUI()
         test.log = log
-        test.on_load_geometry(geometry_filename, geometry_format='avl', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='avl', stop_on_failure=True)
 
     def test_avl_geometry_02(self):
         """tests the bd model"""
@@ -44,7 +44,7 @@ class TestAvlGUI(unittest.TestCase):
 
         test = AvlGUI()
         test.log = log
-        test.on_load_geometry(geometry_filename, geometry_format='avl', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='avl', stop_on_failure=True)
 
     def test_avl_geometry_03(self):
         """tests the greff model"""
@@ -56,7 +56,7 @@ class TestAvlGUI(unittest.TestCase):
 
         test = AvlGUI()
         test.log = log
-        test.on_load_geometry(geometry_filename, geometry_format='avl', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='avl', stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

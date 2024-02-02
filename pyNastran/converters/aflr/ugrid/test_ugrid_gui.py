@@ -48,8 +48,8 @@ class TestUgridGui(unittest.TestCase):
         assert os.path.exists(ugrid_filename), ugrid_filename
         test = UGRID_GUI()
         test.log = log
-        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
-        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', stop_on_failure=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', stop_on_failure=True)
         #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
         #test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 
@@ -86,7 +86,7 @@ class TestUgridGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = UGRID_GUI()
         test.log = log
-        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', stop_on_failure=True)
         #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
         os.remove(ugrid_filename)
 
@@ -97,8 +97,8 @@ class TestUgridGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = UGRID_GUI()
         test.log = log
-        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
-        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', stop_on_failure=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', stop_on_failure=True)
         #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
         #test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 

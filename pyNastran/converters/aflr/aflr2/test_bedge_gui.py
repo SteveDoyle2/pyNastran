@@ -31,7 +31,7 @@ class TestBEdgeGUI(unittest.TestCase):
 
         test = BEdge_GUI()
         test.log = SimpleLogger(level='warning', encoding='utf-8')
-        test.on_load_geometry(bedge_filename, geometry_format='bedge', raise_error=True)
+        test.on_load_geometry(bedge_filename, geometry_format='bedge', stop_on_failure=True)
         #test.load_bedge_geometry(bedge_filename)
 
 if __name__ == '__main__':  # pragma: no cover

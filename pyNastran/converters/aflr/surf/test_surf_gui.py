@@ -36,7 +36,7 @@ class TestSurfGui(unittest.TestCase):
         log = SimpleLogger(level='warning')
         test = SurfGui()
         test.log = log
-        test.on_load_geometry(ugrid_filename, geometry_format='surf', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='surf', stop_on_failure=True)
         #test.load_surf_geometry(ugrid_filename)
 
     def test_surf_01(self):
