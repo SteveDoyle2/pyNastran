@@ -33,8 +33,10 @@ class LoadActions(BaseGui):
         #"""links the the GUI's log"""
         #return self.gui.log
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=False):
+    def on_load_geometry(self, infile_name=None, geometry_format=None,
+                         name: str='main',
+                         plot: bool=True,
+                         stop_on_failure: bool=False):
         """
         Loads a baseline geometry
 
@@ -49,7 +51,7 @@ class LoadActions(BaseGui):
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
-        raise_error : bool; default=True
+        stop_on_failure : bool; default=True
             stop the code if True
 
         """
@@ -93,7 +95,7 @@ class LoadActions(BaseGui):
                 gui.alt_grids[name].Modified()
 
             if not os.path.exists(infile_name) and geometry_format:
-                msg = 'input file=%r does not exist' % infile_name
+                msg = f'input file={infile_name!r} does not exist'
                 gui.log_error(msg)
                 gui.log_error(print_bad_path(infile_name))
                 return
@@ -106,7 +108,7 @@ class LoadActions(BaseGui):
                     dy_method()
                 except Exception:
                     self.gui.log_error("method %r does not exist" % clear_name)
-            gui.log_info("reading %s file %r" % (geometry_format, infile_name))
+            gui.log_info(f'reading {geometry_format} file {infile_name!r}')
 
             try:
                 time0 = time_module.time()
@@ -118,7 +120,7 @@ class LoadActions(BaseGui):
                     # TODO: was geometry_format going into this...
                     cls = gui.format_class_map[geometry_format2](gui)
 
-                    function_name2 = 'load_%s_geometry' % geometry_format2
+                    function_name2 = f'load_{geometry_format2}_geometry'
                     load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
                     self.model_objs[name] = cls
@@ -140,7 +142,7 @@ class LoadActions(BaseGui):
                 #raise
                 msg = traceback.format_exc()
                 gui.log_error(msg)
-                if raise_error or gui.dev:
+                if stop_on_failure or gui.dev:
                     raise
                 #return
             #self.vtk_panel.Update()
@@ -174,6 +176,11 @@ class LoadActions(BaseGui):
             infile_name, geometry_format_out, main_str))
 
     def _set_last_dir(self, infile_name: str) -> None:
+        """
+        Update the directory after finding a file not after completing
+        sucessfully.  If the user explicitly loaded a file as part of
+        the script, that doesn't count.
+        """
         gui: MainWindow = self.gui
         last_dir = os.path.split(infile_name)[0]
         gui.last_dir = last_dir
@@ -294,12 +301,12 @@ class LoadActions(BaseGui):
                     load_function = _resfunc
                     break
             else:
-                msg = 'format=%r is not supported' % geometry_format
+                msg = f'format={geometry_format!r} is not supported'
                 self.gui.log_error(msg)
                 raise RuntimeError(msg)
 
             if wildcard is None:
-                msg = 'format=%r has no method to load results' % geometry_format
+                msg = f'format={geometry_format!r} has no method to load results'
                 self.gui.log_error(msg)
                 return
             out_filename = self.create_load_file_dialog(wildcard, title)[1]
@@ -348,7 +355,7 @@ class LoadActions(BaseGui):
             self.gui.out_filename = out_filenamei
             msg = '%s - %s - %s' % (self.gui.format, self.gui.infile_name, out_filenamei)
             self.gui.window_title = msg
-            print("on_load_results(%r)" % out_filenamei)
+            print("self.load_actions.on_load_results(%r)" % out_filenamei)
             self.gui.out_filename = out_filenamei
             self.gui.log_command("on_load_results(%r)" % out_filenamei)
 
@@ -361,7 +368,7 @@ class LoadActions(BaseGui):
 
         if is_failed:
             if stop_on_failure:  # pragma: no cover
-                raise RuntimeError('failed getting filename')
+                raise RuntimeError(f'failed getting filename={out_filename!r}')
             return is_failed
         if out_filename == '':
             is_failed = True
@@ -375,12 +382,15 @@ class LoadActions(BaseGui):
                 raise RuntimeError(msg)
             return is_failed
 
+        self._set_last_dir(out_filename)
         try:
             if iwildcard == 0:
-                self._on_load_nodal_elemental_results('Nodal', out_filename, stop_on_failure=stop_on_failure)
+                self._on_load_nodal_elemental_results(
+                    'Nodal', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Node'
             elif iwildcard == 1:
-                self._on_load_nodal_elemental_results('Elemental', out_filename, stop_on_failure=stop_on_failure)
+                self._on_load_nodal_elemental_results(
+                    'Elemental', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Element'
             elif iwildcard == 2:
                 self._load_deflection(out_filename)
@@ -391,7 +401,7 @@ class LoadActions(BaseGui):
             elif iwildcard == 4:
                 self.load_patran_nod(out_filename)
                 restype = 'Patran_nod'
-            else:
+            else:  # pramga: no cover
                 raise NotImplementedError('iwildcard = %s' % iwildcard)
         except Exception:
             msg = traceback.format_exc()
@@ -399,7 +409,8 @@ class LoadActions(BaseGui):
             if stop_on_failure:  # pragma: no cover
                 raise RuntimeError(msg)
             return is_failed
-        self.gui.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
+        self.gui.log_command('self.load_actions.on_load_custom_results('
+                             f'{out_filename!r}, restype={restype!r})')
         is_failed = False
         return is_failed
 
@@ -455,9 +466,10 @@ class LoadActions(BaseGui):
         nnodes = self.gui.nnodes
         if nrows != nnodes:
             #'nrows=%s nnodes=%s' % (nrows, self.gui.nnodes)
-            self.log.warning('The deflection CSV has %i rows, but there are %i nodes in the model.'
-                             "  Verify that the result is for the correct model and that it's "
-                             'not an elemental result.' % (nrows, nnodes))
+            self.log.warning(f'The deflection CSV has {nrows:d} rows, but '
+                             f'there are {nnodes:d} nodes in the model.  '
+                             'Verify that the result is for the correct '
+                             "model and that it's not an elemental result.")
             A = _resize_array(A, nids_index, self.gui.node_ids, nrows, nnodes)
 
         result_type = 'node'
@@ -465,8 +477,9 @@ class LoadActions(BaseGui):
                                 out_filename_short, update=True, is_scalar=False,
                                 is_deflection=is_deflection, is_force=is_force)
 
-    def _on_load_nodal_elemental_results(self, result_type, out_filename=None,
-                                         stop_on_failure=False):
+    def _on_load_nodal_elemental_results(self, result_type: str,
+                                         out_filename=None,
+                                         stop_on_failure: bool=False):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
@@ -543,9 +556,11 @@ class LoadActions(BaseGui):
         if csv_filename in [None, False]:
             title = 'Load User Geometry'
             csv_filename = gui.load_actions.create_load_file_dialog(
-                gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
+                #gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
+                gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return
+            self._set_last_dir(csv_filename)
         assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
@@ -556,8 +571,7 @@ class LoadActions(BaseGui):
             name = os.path.basename(csv_filename).rsplit('.', 1)[0]
 
         self._add_user_geometry(csv_filename, name, color)
-        gui.log_command('on_load_user_geom(%r, %r, %s)' % (
-            csv_filename, name, str(color)))
+        gui.log_command(f'self.on_load_user_geom({csv_filename}, name={name!r}, color={str(color)})')
 
     def _add_user_geometry(self, csv_filename: str,
                            name: str,
@@ -568,11 +582,13 @@ class LoadActions(BaseGui):
         A custom geometry can be the pyNastran custom form or an STL
 
         """
-        if name in self.gui.geometry_actors:
-            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
+        gui: MainWindow = self.gui
+        tool_actions: ToolActions = gui.tool_actions
+        if name in gui.geometry_actors:
+            msg = f'Name: {name!r} is already in geometry_actors\nChoose a different name.'
             raise ValueError(msg)
         if len(name) == 0:
-            msg = 'Invalid Name: name=%r' % name
+            msg = f'Invalid Name: name={name!r}'
             raise ValueError(msg)
 
         point_name = name + '_point'
@@ -584,8 +600,8 @@ class LoadActions(BaseGui):
         ntris = len(tris)
         nquads = len(quads)
         nelements = nbars + ntris + nquads
-        self.gui.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
-                                           point_size=5, representation='point')
+        gui.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
+                                      point_size=5, representation='point')
 
         if nelements > 0:
             nid_map = {}
@@ -593,8 +609,8 @@ class LoadActions(BaseGui):
             for nid in grid_ids:
                 nid_map[nid] = i
                 i += 1
-            self.gui.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
-                                               line_width=5, representation='toggle')
+            gui.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
+                                          line_width=5, representation='toggle')
 
         # allocate
         nnodes = len(grid_ids)
@@ -602,8 +618,8 @@ class LoadActions(BaseGui):
         #if nelements > 0:
             #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
-        alt_grid = self.gui.alt_grids[point_name]
-        geom_grid = self.gui.alt_grids[geom_name]
+        alt_grid = gui.alt_grids[point_name]
+        geom_grid = gui.alt_grids[geom_name]
 
         add_user_geometry(
             alt_grid, geom_grid,
@@ -612,8 +628,6 @@ class LoadActions(BaseGui):
             nelements, nbars, ntris, nquads)
 
         # create actor/mapper
-        gui: MainWindow = self.gui
-        tool_actions: ToolActions = gui.tool_actions
         tool_actions.add_alt_geometry(alt_grid, point_name)
         if nelements > 0:
             tool_actions.add_alt_geometry(geom_grid, geom_name)
@@ -676,8 +690,8 @@ class LoadActions(BaseGui):
                                  "that it's not a nodal result." % (nrows, nelements))
                 A = _resize_array(A, A['index'], self.gui.element_ids, nrows, nelements)
             result_type2 = 'centroid'
-        else:
-            raise NotImplementedError('result_type=%r' % result_type)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'result_type={result_type!r}')
 
         #num_ids = len(ids)
         #if num_ids != nrows:
@@ -692,7 +706,7 @@ class LoadActions(BaseGui):
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True, is_scalar=True)
 
-    def _add_cases_to_form(self, A: np.ndarray,
+    def _add_cases_to_form(self, A: dict[str, np.ndarray],
                            fmt_dict,
                            headers: list[str],
                            result_type: str,
@@ -843,6 +857,7 @@ class LoadActions(BaseGui):
 
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
+            self._set_last_dir(python_file)
 
         if not os.path.exists(python_file):
             msg = 'python_file = %r does not exist' % python_file
@@ -860,7 +875,10 @@ class LoadActions(BaseGui):
         return is_passed
 
 
-def _resize_array(A, nids_index, node_ids, nrows, nnodes):
+def _resize_array(A: dict[str, np.ndarray],
+                  nids_index: np.ndarray,
+                  node_ids: np.ndarray,
+                  nrows: int, nnodes: int) -> dict[str, np.ndarray]:
     """
     Resizes an array to be the right size.
 

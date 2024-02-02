@@ -562,7 +562,7 @@ class GuiAttributes:
         #print('names =', names)
         for name in names:
             grid = grids_dict[name]
-            self.tool_actions._add_alt_geometry(grid, name)
+            self.tool_actions.add_alt_geometry(grid, name)
 
     def _remove_alt_actors(self, names=None) -> None:
         if names is None:
@@ -1019,8 +1019,10 @@ class GuiAttributes:
 
     #---------------------------------------------------------------------------
     @start_stop_performance_mode
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=False) -> None:
+    def on_load_geometry(self, infile_name=None, geometry_format=None,
+                         name: str='main',
+                         plot: bool=True,
+                         stop_on_failure: bool=False) -> None:
         """
         Loads a baseline geometry
 
@@ -1035,12 +1037,13 @@ class GuiAttributes:
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
-        raise_error : bool; default=True
-            stop the code if True
+        stop_on_failure : bool; default=True
+            stop the code if there's an error
+
         """
         self.load_actions.on_load_geometry(
             infile_name=infile_name, geometry_format=geometry_format,
-            name=name, plot=plot, raise_error=raise_error)
+            name=name, plot=plot, stop_on_failure=stop_on_failure)
 
     @start_stop_performance_mode
     def on_load_results(self, out_filename=None) -> None:
@@ -1433,7 +1436,7 @@ class GuiAttributes:
             RGB values as 0.0 <= rgb <= 1.0
 
         """
-        self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
+        self.load_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
     @start_stop_performance_mode
     def on_save_vtk(self, vtk_filename=None) -> bool:
