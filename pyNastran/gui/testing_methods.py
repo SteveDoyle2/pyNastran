@@ -13,6 +13,7 @@ from vtk import (
     vtkPolyDataMapper,
 )
 
+from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.test.mock_vtk import (
     #GeometryProperty,
@@ -136,12 +137,13 @@ class FakeGUIMethods(GuiVTKCommon):
         #self.geometry_actors = {
             #'main' : vtkActor(),
         #}
-        self.scalar_bar = ScalarBar()
+        settings = Settings(self)
+        self.scalar_bar = ScalarBar(settings)
         self.grid = vtkUnstructuredGrid()
         self.main_grid_mappers = {'main' : GridMapper()}
         if 1:  # pragma: no cover
             #self.scalar_bar_actor = ScalarBar()
-            self.alt_geometry_actor = ScalarBar()
+            self.alt_geometry_actor = ScalarBar(self)
             self.alt_grids = {
                 'main' : self.grid,
             }
@@ -254,7 +256,7 @@ class FakeGUIMethods(GuiVTKCommon):
             unused_label2 = obj.get_annotation(i, name)
             unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name)
-            is_method_array = obj.is_method_array()
+            is_method_array = obj.is_method_array
             outi = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             nlabels, labelsize, ncolors, colormap = outi
             if colormap == '':

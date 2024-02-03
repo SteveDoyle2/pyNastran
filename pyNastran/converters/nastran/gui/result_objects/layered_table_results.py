@@ -103,6 +103,8 @@ class LayeredTableResults(Table):
         if np.any(np.isfinite(mag)):
             return np.nanmin(mag), np.nanmax(mag)
         return np.nan, np.nan
+    def get_imin_imax(self, i, name):
+        return None, None
 
     def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         mag = self.get_magnitude(i, name)

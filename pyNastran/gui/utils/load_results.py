@@ -157,6 +157,8 @@ def load_deflection_csv(out_filename: str,
                 ext, len(names), delimiter, dtype)
             raise RuntimeError(msg)
 
+    # names_without_index = [x, y, z]
+    # fmt_dict_without_index = {'x': '%.3f', 'y': '%.3f', 'z': '%.3f'}
     names_without_index = names[1:]
     fmt_dict_without_index = {key:fmt_dict[key] for key in names_without_index}
 

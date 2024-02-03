@@ -85,7 +85,7 @@ class GuiResultCommon:
     @abstractmethod
     def get_imin_imax(self, i: int, name: str) -> Union[tuple[int, int],
                                                         tuple[None, None]]:  # pragma: no cover
-        raise NotImplementedError(f'{self.class_name}.get_min_max')
+        raise NotImplementedError(f'{self.class_name}.get_imin_imax')
     @abstractmethod
     def get_min_max(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_min_max')

@@ -288,7 +288,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         beta = coord.beta().T
         ## TODO: support FEMAP syntax which is????
         gui: MainWindow = self.gui
-        gui.create_coordinate_system(
+        gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
 

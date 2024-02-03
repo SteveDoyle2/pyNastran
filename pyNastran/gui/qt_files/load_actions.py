@@ -423,6 +423,12 @@ class LoadActions(BaseGui):
 
     def _on_load_custom_results_load_filename(self, out_filename=None,
                                               restype=None) -> tuple[bool, str, int]:
+        """
+        Parameters
+        ----------
+        restype: str
+            'node', 'element', 'deflection', 'force', 'patran_nod'
+        """
         is_failed = True
         #unused_geometry_format = self.format
         if self.gui.format is None:
@@ -430,7 +436,7 @@ class LoadActions(BaseGui):
             self.gui.log_error(msg)
             return is_failed, '', -1
 
-        if out_filename in [None, False]:
+        if out_filename in (None, False):
             title = 'Select a Custom Results File for %s' % (self.gui.format)
 
             #print('wildcard_level =', wildcard_level)
@@ -455,15 +461,17 @@ class LoadActions(BaseGui):
         is_failed = False
         return is_failed, out_filename, iwildcard
 
-    def _load_deflection(self, out_filename):
+    def _load_deflection(self, out_filename: str) -> None:
         """loads a deflection file"""
         self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
-    def _load_force(self, out_filename):
+    def _load_force(self, out_filename: str) -> None:
         """loads a force file"""
         self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
 
-    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
+    def _load_deflection_force(self, out_filename: str,
+                               is_deflection: bool=False,
+                               is_force: bool=False) -> None:
         """loads a force/deflection file"""
         out_filename_short = os.path.basename(out_filename)
         A, nids_index, fmt_dict, headers = load_deflection_csv(out_filename)

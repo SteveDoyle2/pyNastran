@@ -76,8 +76,8 @@ class VectorTable(GuiResultCommon):
         #self.deflects = deflects
         self.titles = titles
         self.headers = headers
-        self.scales = deepcopy(scales)
-        self.arrow_scales = deepcopy(scales)
+        self.scales = scales
+        self.arrow_scales = scales
         self.subcase_id = subcase_id
         self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
@@ -478,6 +478,9 @@ class ForceTableResults(VectorTable):
     def get_location(self, i:int, name):
         """the result type"""
         return 'node'
+    def get_methods(self, i:int, name) -> list[str]:
+        return ['Magnitude']
+
 
     def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
                                          unused_scale: float,
@@ -609,22 +612,8 @@ class DisplacementResults(VectorTable):
 
     #-------------------------------------
 
-    i_to_method_real = {
-        0: translation,
-        1: translation,
-        2: translation,
-        3: rotation,
-        4: rotation,
-        5: rotation,
-    }
     def get_methods(self, i: int, name: str) -> list[str]:
-        if self.is_real:
-            out = self.i_to_method_real.get(i, translation) # ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
-            if out[0] == 'Magnitude' and 'chL' in getpass.getuser():
-                out[0] = 'Reluctant'
-        else:
-            out = ['node real', 'node imag', 'node magnitude', 'node phase']
-        return out
+        return ['Magnitude']
 
     #@property
     #def scalar(self):
