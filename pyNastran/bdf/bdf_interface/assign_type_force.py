@@ -228,3 +228,81 @@ def lax_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         value = float(value)
     return value
 
+def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, str), type(fieldname)
+    svalue = card.field(ifield)
+    if svalue is None or '.' in svalue:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+
+    svalue = svalue.replace(' ', '')
+    try:
+        value = int(svalue)
+    except ValueError:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+    if value > 0 and isinstance(svalue, str):
+        if '0' in svalue:
+            value2 = str(svalue).replace('0', '')
+            msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
+                   'card=%s' % (fieldname, svalue, ifield, value2, card))
+            raise SyntaxError(msg)
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i, component in enumerate(svalue3):
+        if component not in '0123456':
+            msg = ('%s = %r (field #%s) on card contains an invalid component %r.\n'
+                   'card=%s' % (fieldname, svalue, ifield, component, card))
+            raise SyntaxError(msg)
+        if component in svalue3[i + 1:]:
+            msg = ('%s = %r (field #%s) on card must not contain duplicate entries.\n'
+                   'card=%s' % (fieldname, svalue, ifield, card))
+            raise SyntaxError(msg)
+    return svalue3
+
+def parse_components_or_blank(card: BDFCard, ifield: int, fieldname: str, default: str='0') -> str:
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, str), type(fieldname)
+    svalue = card.field(ifield)
+    #if isinstance(svalue, integer_types):
+        #pass
+    if svalue is None:
+        return default
+    elif '.' in svalue:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+
+    svalue = svalue.replace(' ', '')
+    try:
+        value = int(svalue)
+    except ValueError:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+    if value > 0 and isinstance(svalue, str):
+        if '0' in svalue:
+            value2 = str(svalue).replace('0', '')
+            msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
+                   'card=%s' % (fieldname, svalue, ifield, value2, card))
+            raise SyntaxError(msg)
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i, component in enumerate(svalue3):
+        if component not in '0123456':
+            msg = ('%s = %r (field #%s) on card contains an invalid component %r.\n'
+                   'card=%s' % (fieldname, svalue, ifield, component, card))
+            raise SyntaxError(msg)
+        if component in svalue3[i + 1:]:
+            msg = ('%s = %r (field #%s) on card must not contain duplicate entries.\n'
+                   'card=%s' % (fieldname, svalue, ifield, card))
+            raise SyntaxError(msg)
+    return svalue3

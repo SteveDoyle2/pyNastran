@@ -784,10 +784,10 @@ class EIGR(Method):
             raise ValueError(msg)
 
         if method == 'SINV':
-            nd = integer_or_blank(card, 6, 'nd', 600)
+            nd = integer_or_blank(card, 6, 'nd', default=600)
         elif method == 'INV':
-            ne = integer(card, 5, 'ne')
-            nd = integer_or_blank(card, 6, 'nd', 3 * ne)
+            ne = integer_or_blank(card, 5, 'ne', default=0)
+            nd = integer_or_blank(card, 6, 'nd', default=3 * ne)
         elif method in {'GIV', 'MGIV', 'AGIV',
                         'HOU', 'MHOU', 'AHOU'}:
             # AHOU = automatic selection of HOU or MHOU

@@ -95,7 +95,9 @@ def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
             raise SyntaxError(msg)
     return svalue3
 
-def parse_components_or_blank(card: BDFCard, ifield: int, fieldname: str) -> str:
+def parse_components_or_blank(card: BDFCard,
+                              ifield: int, fieldname: str,
+                              default: str='0') -> str:
     """
     Parameters
     ----------
@@ -119,7 +121,7 @@ def parse_components_or_blank(card: BDFCard, ifield: int, fieldname: str) -> str
     if isinstance(svalue, integer_types):
         pass
     elif svalue is None:
-        return '0'
+        return default
     elif '.' in svalue:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'

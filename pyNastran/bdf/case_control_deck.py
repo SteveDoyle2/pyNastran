@@ -1013,7 +1013,10 @@ def parse_entry(lines: list[str],
         param_type = 'SUBCASE-type'
         assert key.upper() == key, key
 
-    elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
+    elif line_upper.startswith(('LABE', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
+        if line_upper.startswith('LABE') and not line_upper.startswith('LABEL'):
+            line_upper = line_upper.replace('LABE', 'LABEL')
+
         if '=' in line_upper:
             eindex = line.index('=')
             base = line[:eindex].strip()

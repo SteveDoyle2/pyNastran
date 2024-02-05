@@ -229,7 +229,8 @@ class CSVWriter:
             if not quiet:
                 print(" grid_point_weight")
             for key, weight in model.grid_point_weight.items():
-                weight.write_csv(csv)
+                log.warning('skipping grid_point_weight')
+                #weight.write_csv(csv)
 
             if repr_check:
                 str(model.grid_point_weight)

@@ -1281,7 +1281,7 @@ class PARAM_MYSTRAN(BaseCard):
                 #IntMKL: Intel Math Kernel Library (matrices stored in sparse form)
                 #LAPACK (matrices stored in band form)
                 #YaleSMP: (matrices stored in sparse form) – not fully implemented in MYSTRAN
-            assert values[0] in ['INTMKL', 'LAPACK', 'YALESMP'], values
+            assert values[0] in ['INTMKL', 'LAPACK', 'YALESMP', 'BANDED', 'SPARSE'], values
         elif key == 'SPARSTOR':
             values = [
                 string_or_blank(card, 2, 'storage', 'SYM'),
@@ -1457,6 +1457,17 @@ class PARAM_MYSTRAN(BaseCard):
             ]
             for i, value in enumerate(values):
                 assert value in [1, 3], f'i={i} values={values}'
+        elif key == 'MXITERI':
+            values = [integer_or_blank(card, 2, 'MAXITERI-2', default=50),]
+        elif key == 'LANCMETH':
+            values = [string(card, 2, 'LANCMETH-2'),]
+            assert values[0] in {'ARPACK'}, values
+            #ARPACK or TRLan
+        elif key == 'GRIDSEQ':
+            values = [string_or_blank(card, 2, 'GRIDSEQ-2', default='BANDIT'),]
+            assert values[0] in {'BANDIT', 'GRID', 'INPUT'}, values
+        elif key == 'SORT_MAX':
+            values = [integer_or_blank(card, 2, 'SORT_MAX-2', default=5),]
         else:
             raise NotImplementedError(card)
 

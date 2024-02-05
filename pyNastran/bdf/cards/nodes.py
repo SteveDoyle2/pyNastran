@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double, components_or_blank)
+    integer_or_double, components_or_blank, parse_components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -651,7 +651,7 @@ class GRDSET(BaseCard):
         blank(card, 5, 'blank')
         cd = integer_or_blank(card, 6, 'cd', 0)
 
-        ps = str(integer_or_blank(card, 7, 'ps', ''))
+        ps = str(parse_components_or_blank(card, 7, 'ps', default=''))
         seid = integer_or_blank(card, 8, 'seid', 0)
         assert len(card) <= 9, f'len(GRDSET card) = {len(card):d}\ncard={card}'
         return GRDSET(cp, cd, ps, seid, comment=comment)

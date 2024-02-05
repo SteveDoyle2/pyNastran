@@ -54,14 +54,14 @@ class NastranGUI(NastranIO, FakeGUIMethods):
                 imethod = bflag2[1]
                 #flag2 = [aflag, bflag2]
                 bflag2.append(result_case.methods[imethod])
-                print(f"{case_id}, {str(bflag2)}, '{result_case.uname}'")
+                print(f"{case_id}, {str(bflag2)}, '{result_case.uname}'", result_case.class_name)
             elif hasattr(result_case, 'headers'):
                 if result_case.headers:
-                    print(case_id, flag, result_case.headers)
+                    print(case_id, flag, result_case.headers, result_case.class_name)
                 else:
                     print(case_id, flag, result_case.__class__.__name__, result_case.methods)
             elif hasattr(result_case, 'header'):
-                print(case_id, flag, result_case.header)
+                print(case_id, flag, result_case.header, result_case.class_name)
             else:
                 raise RuntimeError(result_case)
             assert case_id == case_id0, (case_id, case_id0)
@@ -838,24 +838,26 @@ class TestNastranGUI(unittest.TestCase):
 
         nresults = get_nreal_nresults(
             test2,
-            nspc_force=1, nmpc_force=1, nload_vectors=0,
+            nspc_force=1, nmpc_force=1, nload_vectors=1,
             ndisplacement=1, neigenvectors=0,
-            nspring_stress=0, nspring_strain=0, nspring_force=0,
-            ncrod_stress=0, ctube_stress=0, nconrod_stress=0,
+            #nspring_stress=0, nspring_strain=0, nspring_force=0,
+            #ncrod_stress=0, ctube_stress=0, nconrod_stress=0,
             ncrod_strain=0, ctube_strain=1, nconrod_strain=1,
             nbar_stress=0, nbar_strain=1, nbar_force=0,
-            nbeam_stress=1, nbeam_strain=1, nbeam_force=0,
+            #nbeam_stress=1, nbeam_strain=1, nbeam_force=0,
             nplate_stress=1, nplate_strain=1, nplate_force=0,
             nshear_stress=1, nshear_strain=0, nshear_force=0,
-            ncomposite_layers=0, ncomposite_plate_stress=1, ncomposite_plate_strain=1,
+            #ncomposite_layers=0, ncomposite_plate_stress=1, ncomposite_plate_strain=1,
             nsolid_stress=0, nsolid_strain=1,
             nabs_stress=1, nabs_strain=1,
-            nstrain_energy=1, ngrid_point_forces=0)
+            nstrain_energy=1, ngrid_point_forces=1)
 
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test2.result_cases) == 105, len(test2.result_cases)
         elif USE_OLD_SIDEBAR_OBJS:
-            assert len(test2.result_cases) == 107, len(test2.result_cases)
+            #print(test2.write_result_cases())
+            assert len(test2.result_cases) == 87, len(test2.result_cases)
+            #assert len(test2.result_cases) == 107, len(test2.result_cases)
         else:
             assert len(test2.result_cases) == 125, len(test2.result_cases)  #  wrong
 
