@@ -74,6 +74,7 @@ from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 """
 ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
 
@@ -562,7 +563,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         self.result_names = set()
 
-        self.grid_point_weight = {}
+        self.grid_point_weight: dict[str, GridPointWeight] = {}
         self.words = []
         self.debug = debug
         self._last_comment = None
