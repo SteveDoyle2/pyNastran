@@ -1442,7 +1442,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     msg = f'{key!r} is an invalid type; only dictionaries are supported'
                     raise TypeError(msg)
                 for value in values:
-                    del dict_values[value]
+                    try:
+                        del dict_values[value]
+                    except KeyError:
+                        pass
             # TODO: redo get_card_ids_by_card_types & card_count
 
     def _read_bdf_helper(self, bdf_filename: Optional[PathLike], encoding: str,

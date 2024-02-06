@@ -91,14 +91,42 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
 
 def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]:
     """
+    A pivot table is a useful tool to make "square" and slicable data from
+    data that is not square.  A PCOMP may have 10 layers for all elements
+    but one, so a pivot table is a great choice here to find the max layer
+    thickness.
+
     PCOMP: rows=element_ids, cols=layer
 
     Parameters
     ----------
-    data : (nx,), (nx,ny), (nx,ny,nz) array
-
+    data : (nx*ny,), (nx,ny), (nx,ny,nz) float array
+       the data to pivot
     shape: int; default=0 -> guess
-       adds a check on the shape
+       adds a check on the shape of the input data
+
+    Returns
+    -------
+    pivot_data : float array
+        adds one dimension to the output; sticks nan in the
+        blank areas.
+        (nx*ny, )       -> (nx, ny)
+        (nx*ny, nz)     -> (nx, ny, nz)
+        (nw, nx*ny, nz) -> (nw, nx, ny, nz)
+        Some examples:
+        (ntimes, nelements*nlayers, nheaders) -> (ntimes, nelements, nlayers, nheaders)
+
+    Example
+    -------
+    data = [1, 2, 3, 4, 5, 6, 7]
+    rows = [1, 1, 1, 2, 2, 3, 4]
+    cols = [1, 2, 3, 1, 2, 1, 1]
+    pivot_data = [
+        [1,   2,   3],
+        [4,   5, nan],
+        [6, nan, nan],
+        [7, nan, nan]
+    ]
     """
     ncount = len(rows)
     icount = np.arange(ncount)

@@ -808,3 +808,16 @@ def _to_dense_vector(dxyz: np.ndarray,
         dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)
         dxyz2[inode, :] = dxyz
     return dxyz2
+
+
+def filter_ids(all_element_id: np.ndarray,
+               eids: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                          int, bool]:
+    """filters a set of elements"""
+    neids = len(eids)
+    intersect_eids = np.intersect1d(all_element_id, eids)
+    if neids == len(intersect_eids):
+        return intersect_eids, np.array([], dtype='int32'), neids, False
+    ieid_filter = np.searchsorted(eids, intersect_eids)
+    nelement_filtered = len(intersect_eids)
+    return intersect_eids, ieid_filter, nelement_filtered, True

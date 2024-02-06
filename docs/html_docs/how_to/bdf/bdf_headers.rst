@@ -1,6 +1,9 @@
 BDF Headers
 ===========
 
+Headers are flagged with the ``$pyNastran:`` tag and must be at the top of the file.
+Even a blank line or comment line will stop the parsing.
+
 Version
 -------
 You've probably seen the following in your BDF:
@@ -70,3 +73,5 @@ $ pyNastran: skip materials=1:10 15 16
 ...
 ```
 work too.
+
+Sorry, dictionaries only, so no deleting individual lodas/spcs.

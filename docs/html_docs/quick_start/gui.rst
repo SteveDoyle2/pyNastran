@@ -61,7 +61,6 @@ Advantages of Patran/FEMAP
  - much better picking support
  - much better groups
  - better use of memory
- - grid point forces
  - many more...
 
 
@@ -404,6 +403,11 @@ when you load model again.  The menu looks like:
 
 Hover over the cells for more information.
 
+Windows preferences are stored in:
+ - C:\Users\<me>\pyNastranGUI.json
+
+Or Linux/Mac;
+ - ~/pyNastranGUI.json
 
 Picking Results
 ===============
@@ -714,3 +718,8 @@ If you're just modifying a deck, you can use the "Reload Model" option.
 It'll reload the geometry and be quite a bit faster than going through menus.
 That fails sometimes as well, but is more robust.
 
+** The GUI crashes when loading an OP2? **
+
+The code is trying to match the IDs in the geometry to the IDs in the results and they don't always match.  There is some handling of this, but it's not great.
+
+Also, make sure you load the correct model too :)
