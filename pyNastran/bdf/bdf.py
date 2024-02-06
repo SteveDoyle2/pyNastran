@@ -32,7 +32,7 @@ in1d = np.in1d
 #in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
 from cpylog import get_logger2
 
-from pyNastran.utils import object_attributes, check_path, deprecated as _deprecated
+from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
 from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
@@ -1382,7 +1382,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise
 
             self.clear_attributes()
-            self.log.error('Attempting to use is_superelements=True.')
+            self.log.error('Attempting to use is_superelements=True')
             self.is_superelements = True
             self.read_bdf(bdf_filename=bdf_filename, validate=validate, xref=xref, punch=punch,
                           read_includes=read_includes, save_file_structure=save_file_structure,
