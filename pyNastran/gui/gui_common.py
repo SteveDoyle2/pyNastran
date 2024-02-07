@@ -2,6 +2,7 @@
 # pylint: disable=W0201,C0301
 import os.path
 from math import ceil
+from functools import partial
 from typing import Callable, Optional, Union, Any, cast
 
 import numpy as np
@@ -73,7 +74,7 @@ from pyNastran.utils.numpy_utils import integer_types
 Tool = tuple[str, str, str, Optional[str], str, Callable]
 BANNED_SHORTCUTS = {}
 
-from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.gui_objects.settings import Settings, NFILES_TO_SAVE
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults, ElementalTableResults)
@@ -112,14 +113,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #-----------------------------------------------------------------------
         self._active_background_image = None
         self.reset_settings = False
-        self.fmts = fmt_order
+        self.fmt_order = fmt_order
         self.base_window_title = f'pyNastran v{pyNastran.__version__}'
 
         #defaults
         self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
 
         # initializes tools/checkables
-        self.set_tools()
+        #self.set_tools()
 
         self.html_logging = html_logging
         self.execute_python = True
@@ -280,7 +281,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             }
 
         if tools is None:
+            recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
+
             file_tools = [
+                # flag,  label,   picture,     shortcut, tooltip             func
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
 
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
@@ -292,7 +296,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                 ('save_vtk', 'Export VTK...', '', None, 'Export a VTK file', self.on_save_vtk),
                 ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ]
+            ] + recent_file_tools
 
             tools = file_tools + [
                 # labels
@@ -408,7 +412,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if hasattr(self, 'cutting_plane_obj'):
             tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu))
 
-        if 'nastran' in self.fmts:
+        if 'nastran' in self.fmt_order:
             tools += [
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
@@ -418,6 +422,33 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             ]
         self.tools: list[Tool] = tools
         self.checkables: dict[str, bool] = checkables
+
+    def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
+                              ) -> list[tuple[str, str, str, str, str, Callable]]:
+        recent_file_tools = []
+        # assuming already filtered
+        #recent_files = filter_recent_files(self.settings.recent_files)
+
+        is_visible = True
+        for ifile, (fname, geometry_format) in enumerate(recent_files):
+            label = fname
+            tooltip = f'Load {fname}'
+            image = ''
+            shortcut = ''
+            func = partial(self.on_load_geometry, fname, geometry_format)
+            file_tool = (f'file{ifile:d}', label, image, shortcut, tooltip, func, is_visible)
+            recent_file_tools.append(file_tool)
+        if len(recent_file_tools) < NFILES_TO_SAVE:
+            is_visible = False
+            for jfile in range(ifile+1, NFILES_TO_SAVE):
+                label = f'N/A file {jfile:d}'
+                tooltip = f'Load NA'
+                image = ''
+                shortcut = ''
+                func = None # partial(self.on_load_geometry, fname, geometry_format)
+                file_tool = (f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
+                recent_file_tools.append(file_tool)
+        return recent_file_tools
 
     def keyPressEvent(self, qkey_event):
         #print('qkey_event =', qkey_event.key())
@@ -505,8 +536,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '',
-            'screenshot', '',
-            'exit']
+            'screenshot', '']
+        if NFILES_TO_SAVE:
+            filei = [f'file{ifile:d}' for ifile in range(NFILES_TO_SAVE)]
+            menu_file.extend(filei)
+            menu_file.append('')
+        menu_file.append('exit')
+
         toolbar_tools = [
             'reload', 'load_geometry', 'load_results',
             'front_view', 'back_view', 'top_view', 'bottom_view',
@@ -689,7 +725,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         used_shortcuts = {}
         for tool in tools:
-            (name, txt, icon, shortcut, tip, func) = tool
+            if len(tool) == 6:
+                is_visible = True
+                (name, txt, icon, shortcut, tip, func) = tool
+            else:
+                (name, txt, icon, shortcut, tip, func, is_visible) = tool
+
             #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
             if name in actions:
                 self.log_error('trying to create a duplicate action %r' % name)
@@ -705,30 +746,23 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
             if name in checkables:
                 is_checked = checkables[name]
-                actions[name] = QAction(ico, txt, self, checkable=True)
-                actions[name].setChecked(is_checked)
+                action = QAction(ico, txt, self, checkable=True)
+                action.setChecked(is_checked)
             else:
-                actions[name] = QAction(ico, txt, self)
+                action = QAction(ico, txt, self)
+            update_shortcut_tip_func_visible(action, shortcut, tip, func, is_visible,
+                                             used_shortcuts)
+            actions[name] = action
 
-            if shortcut:
-                #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
-                if shortcut in BANNED_SHORTCUTS:
-                    raise RuntimeError(f'tool name={name!r} has a shortcut='
-                                       f'{shortcut!r} that is banned.  '
-                                       'Pick a different letter')
-                if shortcut in used_shortcuts:
-                    raise RuntimeError(f'tool name={name!r} has a shortcut='
-                                       f'{shortcut!r} that is already used.  '
-                                       'Pick a different letter.  '
-                                       f'Used={used_shortcuts[shortcut]}')
-                used_shortcuts[shortcut] = shortcut
-                actions[name].setShortcut(shortcut)
-                #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
-
-            if tip:
-                actions[name].setStatusTip(tip)
-            if func:
-                actions[name].triggered.connect(func)
+    def update_recent_files(self) -> None:
+        recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
+        #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
+        used_shortcuts = {}
+        for (name, label, image, shortcut, tooltip, func, is_visible) in recent_file_tools:
+            action = self.actions[name]
+            update_shortcut_tip_func_visible(action, shortcut, tooltip, func, is_visible,
+                                             used_shortcuts)
+        del image
 
     def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
         """
@@ -1460,6 +1494,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #else:
         self.settings.load(qsettings)
 
+        self.set_tools()
         self.init_ui()
         if self.reset_settings:
             self.res_dock.toggleViewAction()
@@ -2411,3 +2446,31 @@ def get_image_reader(image_filename: str):
         raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
     return image_reader
 
+def update_shortcut_tip_func_visible(action: QAction,
+                                     shortcut: str,
+                                     tip: str,
+                                     func: Callable,
+                                     is_visible: bool,
+                                     used_shortcuts: dict[str, str]) -> None:
+
+    if shortcut:
+        #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
+        if shortcut in BANNED_SHORTCUTS:
+            raise RuntimeError(f'tool name={name!r} has a shortcut='
+                               f'{shortcut!r} that is banned.  '
+                               'Pick a different letter')
+        #if shortcut in used_shortcuts:
+            #raise RuntimeError(f'tool name={name!r} has a shortcut='
+                               #f'{shortcut!r} that is already used.  '
+                               #'Pick a different letter.  '
+                               #f'Used={used_shortcuts[shortcut]}')
+        used_shortcuts[shortcut] = shortcut
+        action.setShortcut(shortcut)
+        #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
+
+    if tip:
+        action.setStatusTip(tip)
+    if func:
+        action.triggered.connect(func)
+    if not is_visible:
+        action.setVisible(is_visible)

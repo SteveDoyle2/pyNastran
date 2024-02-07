@@ -405,7 +405,13 @@ class MainWindow2(QMainWindow):
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '',
-            'screenshot', '', 'exit', ]
+            'screenshot', '']
+        nfiles = len(self.gui.settings.recent_files)
+        fnames = [f'file{ifile}' for ifile in range(nfiles)]
+        if fnames:
+            file_actions_list.extend(fnames)
+            file_actions_list.append('')
+        file_actions_list.append('exit')
 
         help = HelpActions(self)
         toolbar_tools = [

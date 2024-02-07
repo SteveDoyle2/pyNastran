@@ -280,10 +280,10 @@ class SolidStrainStressResults2(VectorResultsCommon):
         title = self.get_legend_title(itime, case_tuple)
         if layer_str == 'Centroid':
             #'Solid Stress; Centroid (Static): von Mises'
-            annotation_label = f'Solid {self.title} ({layer_str}, {header}): {result}'
+            annotation_label = f'Solid {title} ({layer_str}, {header}): {result}'
         else:
             #'Solid Stress; Corner (Mean; Static): von Mises'
-            annotation_label = f'Solid {self.title} ({layer_str}, {self.nodal_combine}, {header}): {result}'
+            annotation_label = f'Solid {title} ({layer_str}, {self.nodal_combine}, {header}): {result}'
         #return self.uname
         return annotation_label
 

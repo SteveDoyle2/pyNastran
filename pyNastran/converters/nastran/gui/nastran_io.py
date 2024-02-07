@@ -183,11 +183,32 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     """helper class that doesn't have any pyqt requirements"""
     def __init__(self):
         super().__init__()
-        self.nid_release_map = {}
+        self.clear_nastran()
         self.make_spc_mpc_supports = True
         self.create_secondary_actors = True
+        self.stop_on_failure = True
 
-        self.stop_on_failure = False
+    def clear_nastran(self):
+        """cleans up variables specific to Nastran"""
+        self.eid_map = {}
+        self.nid_map = {}
+        self.eid_to_nid_map = {}
+        self.element_ids = None
+        self.node_ids = None
+        self.model = None
+        self.nid_release_map = {}
+        self.normals = None
+        self.icd_transform = {}
+
+        self.dependents_nodes: set[int] = set([])
+        unused_node_ids = np.zeros((0, 2), dtype='int32')
+        self.nid_release_map = {}
+        self.xyz_cid0 = np.zeros((0, 3), dtype='float64')
+        self.nnodes = 0
+        self.nelements = 0
+        self.bar_eids = {}
+        self.bar_lines = {}
+        self.gui.isubcase_name_map = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """gets the Nastran wildcard loader used in the file load menu"""
@@ -438,7 +459,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         gui: MainWindow = self.gui
         gui.eid_maps[name] = {}
         gui.nid_maps[name] = {}
-        self.icd_transform = {}
+
+        self.clear_nastran()
         #self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.case_keys[self.icase]
@@ -2967,15 +2989,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             strain_energy_dict, gpstress_dict,
             log)
         return form
-
-    def clear_nastran(self):
-        """cleans up variables specific to Nastran"""
-        self.eid_map = {}
-        self.nid_map = {}
-        self.eid_to_nid_map = {}
-        self.element_ids = None
-        self.node_ids = None
-        self.model = None
 
 
 class NastranIO(NastranIO_):

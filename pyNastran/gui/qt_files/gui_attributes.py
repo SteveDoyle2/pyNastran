@@ -186,7 +186,7 @@ class GuiAttributes:
         self.format = None
         self.format_class_map = {}
         self.supported_formats = []
-        self.fmts = []
+        self.fmt_order = []
 
         self.infile_name = None
         self.out_filename = None

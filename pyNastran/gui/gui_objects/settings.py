@@ -43,6 +43,7 @@ if USE_NEW_SIDEBAR_OBJECTS:
     USE_NEW_SIDEBAR = False
 
 
+IS_WINDOWS = 'nt' in os.name
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
@@ -447,6 +448,7 @@ class Settings:
             #  only save 10 files
             self.recent_files = recent_files2[:NFILES_TO_SAVE]
 
+        self.recent_files = filter_recent_files(self.recent_files)
         self._load_nastran_settings(settings, setting_keys)
 
         #w = screen_shape.width()
@@ -990,3 +992,25 @@ def repr_settings(settings: QSettings) -> str:
         value = settings.value(key)
         msg += '    %r : %r\n' % (key, value)
     return msg
+
+def filter_recent_files(recent_files: list[tuple[str, str]]):
+    if IS_WINDOWS:
+        #recent_files_lower = [fname.lower() for (fname, fmt) in recent_files]]
+        recent_files_out = []
+        stored_files_lower = set([])
+        for i, (fname, geometry_format) in enumerate(recent_files):
+            if not os.path.exists(fname):
+                continue
+            fname_abs = os.path.abspath(fname)
+            fname_lower = fname.lower()
+            if fname_lower in stored_files_lower:
+                continue
+            stored_files_lower.add(fname_lower)
+            recent_files_out.append((fname_lower, geometry_format))
+    else:
+        recent_files_out = [(fname, fmt) for (fname, fmt) in recent_files
+                            if os.path.exists(fname)]
+    return recent_files_out
+
+
+
