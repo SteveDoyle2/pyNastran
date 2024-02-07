@@ -844,14 +844,31 @@ class GuiQtCommon(GuiAttributes):
             icase = None
         return icase
 
-    def get_name_result_data(self, icase: int) -> tuple[str, Any]:
+    def get_name_result_data(self, icase: int,
+                             restype: str='either') -> tuple[str, np.ndarray]:
+        """
+        Parameters
+        ----------
+        restype: str; default='either'
+            fringe: return the fringe
+            vector: return the vector
+            either: return vector if it's not None; otherwise return the fringe
+        """
         key = self.case_keys[icase]
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
         #subcase_id = obj.subcase_id
         #method = obj.get_methods(i, name)[0]
-        fringe, case = obj.get_fringe_vector_result(i, name)  ## TODO: buggy?
-        return name, case
+        fringe, vector = obj.get_fringe_vector_result(i, name)  ## TODO: buggy?
+        if restype == 'fringe':
+            return name, fringe
+        elif restype == 'vector':
+            return name, vector
+        elif restype == 'either':
+            if vector is not None:
+                return name, vector
+            return name, fringe
+        raise RuntimeError(restype)
 
     def delete_cases(self, icases_to_delete: list[int], ask: bool=True) -> None:
         """

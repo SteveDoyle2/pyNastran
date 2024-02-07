@@ -413,7 +413,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.model_type = 'nastran'
         return model, xref_nodes
 
-    def load_nastran_geometry(self, bdf_filename, name='main', plot=True, **kwargs):
+    def load_nastran_geometry(self, bdf_filename, name='main',
+                              plot=True, **kwargs):
         """
         The entry point for Nastran geometry loading.
 

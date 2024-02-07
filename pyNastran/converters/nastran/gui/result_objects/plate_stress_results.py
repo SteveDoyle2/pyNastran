@@ -6,7 +6,7 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.femutils.utils import abs_nan_min_max
 
-from .vector_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_2d, max_shear
 from .nodal_averaging import nodal_average, nodal_combine_map, derivation_map
 
@@ -169,8 +169,10 @@ class PlateStrainStressResults2(VectorResultsCommon):
 
         #linked_scale_factor = False
 
-        out = setup_centroid_node_data(eid_to_nid_map, cases)
+        out = setup_centroid_node_data(eid_to_nid_map, cases, element_id)
         centroid_eids, centroid_data, element_node, node_data = out
+
+        # [ntime, nelement_nnode, nlayer, nresult]
         assert centroid_data.ndim == 4, centroid_data.shape
         assert node_data.ndim == 4, node_data.shape
 
@@ -343,7 +345,11 @@ class PlateStrainStressResults2(VectorResultsCommon):
         result = get_plate_result(self.result, iresult, index=1)
 
         #'Compostite Plate Stress (Absolute Max; Static): sigma11'
-        annotation_label = f'{self.title}; {layer_str} ({self.min_max_method}, {self.nodal_combine}, {header}): {result}'
+        #annotation_label = f'{self.title}; {layer_str} ({self.min_max_method}, {self.nodal_combine}, {header}): {result}'
+
+        title = self.get_legend_title(itime, case_tuple)
+        annotation_label = f'Plate {title}; {layer_str} ({self.min_max_method}, {self.nodal_combine}, {header})'
+
         #return self.uname
         return annotation_label
 
@@ -724,8 +730,27 @@ def get_plate_result(result: dict[str, Any],
 
 
 def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
-                             cases: list[RealPlateArray]) -> tuple[np.ndarray, np.ndarray,
-                                                                   np.ndarray, np.ndarray]:
+                             cases: list[RealPlateArray],
+                             all_element_id: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                                  np.ndarray, np.ndarray]:
+    """
+    Parameters
+    ----------
+    all_element_id : (nelement_all,) int array
+        all the element ids
+
+    Returns
+    -------
+    centroid_eids : (nelement, ) int array
+        the element ids
+    node_data : (ntime, nelement, nlayer, nresult) float array
+        nlayers = 2
+    element_node : (nelement, 2) int array
+        centroids have been removed
+    centroid_data : (ntime, nelement, nlayer, nresult) float array
+        nlayers = 2
+
+    """
     # setup the node mapping
     centroid_elements_list = []
     centroid_data_list = []
@@ -735,19 +760,26 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
     nlayer = 2
     for case in cases:
         ntime, nelement_nnode_nlayer, nresult = case.data.shape
-        nelement_nnode = nelement_nnode_nlayer // 2
+        nelement_nnode_og = nelement_nnode_nlayer // 2
         if case.is_bilinear():
             nnode = case.nnodes_per_element
             nelement = len(case.element_node) // (2 * nnode)
 
-            # remvoed the centroid
+            # removed the centroid
             nplies = nelement * (nnode - 1) * nlayer
 
+            centroid_eidsi_og = case.element_node[0::2*nnode, 0]
+            centroid_eidsi, ieid_filter, nelement_filtered, is_filter = filter_ids(
+                all_element_id, centroid_eidsi_og)
+            if nelement_filtered == 0:
+                continue
+
             element_node_4d = case.element_node.reshape(nelement, nnode, nlayer, 2)
+            if is_filter:
+                element_node_4d = element_node_4d[ieid_filter, :, :, :]
             element_node_3d = element_node_4d[:, 1:, :, :]
             element_nodei = element_node_3d.reshape(nplies, 2)
 
-            centroid_eidsi = case.element_node[0::2*nnode, 0]
             centroid_datai_5d = case.data.copy().reshape(ntime, nelement, nnode, nlayer, nresult)  # reshape to be easier to slice
 
             # pull off the centroid
@@ -757,39 +789,57 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
             # pull off the nodes
             #[ntime, nelement, nnode, nlayer, nresult]
             node_datai     = centroid_datai_5d[:, :, 1:, :, :]
+            if is_filter:
+                node_datai = node_datai[:, ieid_filter, :, :, :]
 
-            node_datai2 = node_datai.reshape(ntime, nelement*(nnode-1), nlayer, nresult)
+            node_datai2 = node_datai.reshape(ntime, nelement_filtered*(nnode-1), nlayer, nresult)
             node_data_list.append(node_datai2)
             element_node_list.append(element_nodei)
             del node_datai, node_datai2, element_node_3d, element_node_4d, element_nodei, centroid_datai_5d
         else:
             # ctria3 - no nodal
-            centroid_eidsi = case.element_node[::2, 0]
+            centroid_eidsi_og = case.element_node[::2, 0]
+            #nelement = len(centroid_eidsi)
+
+            # filter out unused ids
+            centroid_eidsi, ieid_filter, nelement_filtered, is_filter = filter_ids(
+                all_element_id, centroid_eidsi_og)
+            if nelement_filtered == 0:
+                continue
+
+            #-------------------
+            # this is long, but not that bad...
 
             # slice off for output
-            centroid_datai = case.data.reshape(ntime, nelement_nnode, nlayer, nresult).copy()
+            centroid_datai = case.data.reshape(
+                ntime, nelement_nnode_og, nlayer, nresult).copy()
 
             # setup for nodes
-            node_data_5d = case.data.reshape(ntime, nelement_nnode, 1, nlayer, nresult).copy()
+            node_data_5d = case.data.reshape(
+                ntime, nelement_nnode_og, 1, nlayer, nresult).copy()
 
-            nelement = len(centroid_eidsi)
+            if is_filter:
+            # we reshape the data so we can slice off the desired rows
+                centroid_datai = centroid_datai[:, ieid_filter, :, :]
+                node_data_5d = node_data_5d[:, ieid_filter, :, :, :]
+
             eid0 = centroid_eidsi[0]
-            nid0 = eid_to_nid_map[eid0]
+            nids0 = eid_to_nid_map[eid0]
 
             # ----------------------------------------------
             # Spoof the values for the tri
             # TODO: probably wrong for fancy CQUAD8/CTRIA6
-            nnode = len(nid0)
+            nnode = len(nids0)
 
             ##centroid_dataii (1, 278, 2, 8)
 
             # prove out stacking...
             #node_data_5d[0, 0, 0, 0, 0] = 1.
             #node_data_5d[0, 0, 0, 1, 0] = 2.
-            node_data_3d = node_data_5d.reshape(ntime, nelement*nlayer, nresult)
+            node_data_3d = node_data_5d.reshape(ntime, nelement_filtered*nlayer, nresult)
             # ------------------------------------------------------------------------
             # good
-            node_data_shape = (ntime, nelement*nnode*nlayer, nresult)
+            node_data_shape = (ntime, nelement_filtered*nnode*nlayer, nresult)
             node_datai = np.full(node_data_shape, np.nan, dtype=node_data_3d.dtype)
 
             ## gross...interleaving the centroid data to fake nodal data
@@ -819,7 +869,7 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
             # [9, 10, 11] 11
 
             # every 3rd layer; should be reasonbly fast
-            ilayer0 =  np.arange(nelement*nlayer)
+            ilayer0 =  np.arange(nelement_filtered*nlayer)
             ilayer0a = ilayer0[::nlayer]
             ilayer0b = ilayer0a + 1
             ilayer1 = nnode * ilayer0a
@@ -828,9 +878,9 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
             for inode in range(nnode):
                 node_datai2[:, nlayer*inode+ilayer1, :] = node_data_3d[:, ilayer0a, :]
                 node_datai2[:, nlayer*inode+ilayer2, :] = node_data_3d[:, ilayer0b, :]
-            node_datai = node_datai2.reshape(ntime, nelement*nnode, nlayer, nresult)
+            node_datai = node_datai2.reshape(ntime, nelement_filtered*nnode, nlayer, nresult)
+
             # not nearly as critical as the previous, but could be sped up
-            # using the same method...with only be 3 lines of code
             element_nodei = []
             for eid in centroid_eidsi:
                 nids = eid_to_nid_map[eid]

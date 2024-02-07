@@ -490,14 +490,15 @@ class GuiVTKCommon(GuiQtCommon):
     # fake functions
     #---------------
     # real functions
-    def find_result_by_name(self, desired_name):
+    def find_result_by_name(self, desired_name: str,
+                            restype: str='either') -> np.ndarray:
         for icase in range(self.ncases):
-            name, result = self.get_name_result_data(icase)
+            name, result = self.get_name_result_data(icase, restype=restype)
             if name == desired_name:
                 return result
         raise RuntimeError('cannot find name=%r' % desired_name)
 
-    def post_group_by_name(self, name):
+    def post_group_by_name(self, name: str) -> None:
         """posts a group with a specific name"""
         assert isinstance(name, str), name
         group = self.groups[name]

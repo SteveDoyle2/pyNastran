@@ -815,9 +815,12 @@ def filter_ids(all_element_id: np.ndarray,
                                           int, bool]:
     """filters a set of elements"""
     neids = len(eids)
+    is_filter = False
     intersect_eids = np.intersect1d(all_element_id, eids)
     if neids == len(intersect_eids):
-        return intersect_eids, np.array([], dtype='int32'), neids, False
+        return intersect_eids, np.array([], dtype='int32'), neids, is_filter
+
+    is_filter = True
     ieid_filter = np.searchsorted(eids, intersect_eids)
     nelement_filtered = len(intersect_eids)
-    return intersect_eids, ieid_filter, nelement_filtered, True
+    return intersect_eids, ieid_filter, nelement_filtered, is_filter

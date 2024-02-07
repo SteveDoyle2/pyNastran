@@ -108,18 +108,22 @@ def get_bar_force(eids: np.ndarray, cases,
     """
     #print("***stress eids=", eids)
     subcase_id = key[0]
-    bars = [model.cbar_force]
+    result = model.cbar_force
 
     #titles = []
     bar_cases = []
     bar_ieids = []
-    for result in bars:
-        if key not in result:
-            continue
-        case = result[key]
+    if key not in result:
+        return icase
+    case = result[key]
 
-        eidsi = case.element
-        i = np.searchsorted(eids, eidsi)
+    eidsi = case.element
+    common_eids = np.intersect1d(eids, eidsi)
+    if len(common_eids) == 0:
+        return icase
+    i = np.searchsorted(eids, common_eids)
+    j = np.searchsorted(eidsi, common_eids)
+    if 0:  # pragma: no cover
         if len(i) != len(np.unique(i)):
             #print(case.element_node)
             #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
@@ -130,16 +134,17 @@ def get_bar_force(eids: np.ndarray, cases,
             msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
             log.warning(msg)
-            continue
+            return icase
         if i.max() == len(eids):
             log.error('skipping because lookup is out of range...')
-            continue
-        #print('i =', i, i.max())
-        #print('eids =', eids, len(eids))
-        #print('eidsi =', eidsi, eids)
-        #print(f'------------adding i={i} for {case.element_name}-----------')
-        bar_cases.append(case)
-        bar_ieids.append(i)
+            return icase
+    #print('i =', i, i.max())
+    #print('eids =', eids, len(eids))
+    #print('eidsi =', eidsi, eids)
+    #print(f'------------adding i={i} for {case.element_name}-----------')
+    bar_cases.append(case)
+    bar_ieids.append(i)
+
     if not bar_ieids:
         return icase
 
@@ -191,7 +196,7 @@ def get_bar_force(eids: np.ndarray, cases,
         #nelements_nnodes = nnodes_nlayers // 2
         #nelements = nelements_nnodes // nnodes_per_element
         #nlayers = 2
-        scalars = case.data
+        scalars = case.data[:, j, :]
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:
@@ -259,24 +264,29 @@ def get_plate_force(eids: np.ndarray, cases,
         #print(case)
         #print(eids)
         #print(eidsi)
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            #print(case.element_node)
-            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-            #print('iplate = %s' % i)
-            #print('  eids = %s' % eids)
-            #print('  eidsiA = %s' % case.element_node[:, 0])
-            #print('  eidsiB = %s' % eidsi)
-            msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
-            #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+        common_eids = np.intersect1d(eids, eidsi)
+        if len(common_eids) == 0:
             continue
-        if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
-            continue
+        i = np.searchsorted(eids, common_eids)
+        j = np.searchsorted(eidsi, common_eids)
+        if 0:  # pragma: no cover
+            if len(i) != len(np.unique(i)):
+                #print(case.element_node)
+                #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+                #print('iplate = %s' % i)
+                #print('  eids = %s' % eids)
+                #print('  eidsiA = %s' % case.element_node[:, 0])
+                #print('  eidsiB = %s' % eidsi)
+                msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
+                #msg = 'iplate=%s is not unique' % str(i)
+                model.log.warning(msg)
+                continue
+            if i.max() == len(eids):
+                model.log.error('skipping because lookup is out of range...')
+                continue
         #model.log.info('saving i%s (plate)' % (case.element_name))
         #print(f'------------adding i={i} for {case.element_name}-----------')
-        plate_cases.append(case)
+        plate_cases.append((case, j))
         plate_ieids.append(i)
     if not plate_ieids:
         return icase
@@ -285,7 +295,7 @@ def get_plate_force(eids: np.ndarray, cases,
     ieid_max = len(eids)
     #print('ieid_max =', ieid_max)
 
-    case = plate_cases[0]
+    case, j = plate_cases[0]
     case_headers = case.get_headers()
     #print(case_headers)
 
@@ -317,16 +327,16 @@ def get_plate_force(eids: np.ndarray, cases,
     methods = [method_map[headeri] for headeri in case_headers]
 
     scalars_array = []
-    for case in plate_cases:
+    for case, j in plate_cases:
         keys_map[key] = KeyMap(case.subtitle, case.label,
                                case.superelement_adaptivity_index,
                                case.pval_step)
 
         nnodes = case.nnodes_per_element
-        if nnodes == 1:
-            scalars = case.data
-        else:
-            scalars = case.data[:, ::nnodes, :]
+        #if nnodes == 1:
+            #scalars = case.data[:, j, :]
+        #else:
+        scalars = case.data[:, j*nnodes, :]
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:

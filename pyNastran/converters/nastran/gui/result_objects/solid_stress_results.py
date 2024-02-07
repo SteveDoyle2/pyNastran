@@ -5,11 +5,10 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 #from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
-from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from .nodal_averaging import nodal_average, nodal_combine_map
 #from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .vector_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_3d, max_shear
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
@@ -115,7 +114,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         #linked_scale_factor = False
         #location = 'node'
 
-        out = setup_centroid_node_data(cases)
+        out = setup_centroid_node_data(cases, element_id)
         centroid_eids, centroid_data, element_node, node_data = out
 
         self.centroid_eids = centroid_eids
@@ -125,13 +124,13 @@ class SolidStrainStressResults2(VectorResultsCommon):
         self.element_node = element_node
         self.node_data = node_data
 
-        common_eids = np.intersect1d(self.centroid_eids, element_id)
-        if len(common_eids) == 0:
-            raise IndexError('no solid elements found...')
-        elif len(common_eids) != len(self.centroid_eids):
-            icommon = np.searchsorted(common_eids, self.centroid_eids)
-            #self.centroid_data = self.centroid_data[:, icommon, :]
-            raise RuntimeError('some common elements were found...but some are missing')
+        #common_eids = np.intersect1d(self.centroid_eids, element_id)
+        #if len(common_eids) == 0:
+            #raise IndexError('no solid elements found...')
+        #elif len(common_eids) != len(self.centroid_eids):
+            #icommon = np.searchsorted(common_eids, self.centroid_eids)
+            ##self.centroid_data = self.centroid_data[:, icommon, :]
+            #raise RuntimeError('some common elements were found...but some are missing')
 
         nids = np.unique(self.element_node[:, 1])
         self.inode = np.searchsorted(node_id, nids)
@@ -278,12 +277,13 @@ class SolidStrainStressResults2(VectorResultsCommon):
 
         result = get_solid_result(self.result, iresult, index=1)
 
+        title = self.get_legend_title(itime, case_tuple)
         if layer_str == 'Centroid':
             #'Solid Stress; Centroid (Static): von Mises'
-            annotation_label = f'{self.title} ({layer_str}, {header}): {result}'
+            annotation_label = f'Solid {self.title} ({layer_str}, {header}): {result}'
         else:
             #'Solid Stress; Corner (Mean; Static): von Mises'
-            annotation_label = f'{self.title} ({layer_str}, {self.nodal_combine}, {header}): {result}'
+            annotation_label = f'Solid {self.title} ({layer_str}, {self.nodal_combine}, {header}): {result}'
         #return self.uname
         return annotation_label
 
@@ -312,7 +312,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         ##title = f'{self.title} {method}'
         #title = results[iresult][0]  # sidebar label=legend
         #return title
-    def get_legend_tuple(self, itime: int, case_tuple: str) -> int:
+    def get_legend_tuple(self, itime: int, case_tuple: CaseTuple) -> int:
         (itime, iresult, header) = case_tuple
         return iresult
     def get_default_legend_title(self, itime: int, case_tuple: CaseTuple) -> str:
@@ -622,8 +622,8 @@ def get_solid_result(result: dict[Union[int, str], Any],
     return results[index]
 
 def setup_centroid_node_data(cases: list[RealSolidArray],
-                             ) -> tuple[np.ndarray, np.ndarray,
-                                        np.ndarray, np.ndarray]:
+                             element_id: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                              np.ndarray, np.ndarray]:
 
     # setup the node mapping
     centroid_data_list = []
@@ -633,26 +633,38 @@ def setup_centroid_node_data(cases: list[RealSolidArray],
     element_node_list = []
     for case in cases:
         ntime, nelement_nnode, nresults = case.data.shape
-        nelements_all = len(np.unique(case.element_node[:, 0]))
+        ueids = np.unique(case.element_node[:, 0])
+        nelementi = len(ueids)
         nnode = case.nnodes_per_element
-        if case.nnodes_per_element != 1:
-            eids = case.element_node[0::nnode, 0]
+        if case.nnodes_per_element > 1:
+            eids_og = case.element_node[0::nnode, 0]
             nelement = len(case.element_node) // nnode
             nnodal_node = nelement * (nnode - 1)
 
+            eids, ifilter, nelement_filtered, is_filter = filter_ids(element_id, eids_og)
+            if nelement_filtered == 0:
+                continue
+            nnodal_node_filtered = nelement_filtered * (nnode - 1)
             element_node_3d = case.element_node.reshape(nelement, nnode, 2)
-            element_node = element_node_3d[:, 1:, :].reshape(nnodal_node, 2)
-            eids = element_node_3d[:, 0, 0]
             data = case.data.copy().reshape(ntime, nelement, nnode, nresults)
+            if is_filter:
+                element_node_3d = element_node_3d[ifilter, :, :]
+                data = data[:, ifilter, :, :]
+            element_node = element_node_3d[:, 1:, :].reshape(nnodal_node_filtered, 2)
+            eids = element_node_3d[:, 0, 0]
+
             centroid_elements_list.append(eids)
             #nodal_elements.append(case.element_node[1::nnodes_per_element, 0])
-            assert nelement == nelements_all, (nelement, nelements_all)
+            assert nelement == nelementi, (nelement, nelementi)
             node_data = data[:, :, 1:, :]
-            node_data2 = node_data.reshape(ntime, nnodal_node, nresults)
+            node_data2 = node_data.reshape(ntime, nnodal_node_filtered, nresults)
         else:
-            eids = case.element_node[:, 0]
+            eids_og = case.element_node[:, 0]
+            eids, ifilter, nelement_filtered, is_filter = filter_ids(element_id, eids_og)
+            if nelement_filtered == 0:
+                continue
             centroid_elements_list.append(case.element_node)
-            data = case.data.reshape(ntime, nelements_all, 1, nresults)
+            data = case.data.reshape(ntime, nelementi, 1, nresults)
             node_data = data
             raise NotImplementedError('centroidal solid elements')
         # slice off the centroid
@@ -668,4 +680,6 @@ def setup_centroid_node_data(cases: list[RealSolidArray],
 
     element_node = np.vstack(element_node_list)
     node_data = np.hstack(node_data_list)
+
+    #intersect_eids, ieid_filter, nelement_filtered, is_filter = filter_ids(element_id, centroid_eids)
     return centroid_eids, centroid_data, element_node, node_data

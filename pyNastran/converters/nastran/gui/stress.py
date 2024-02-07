@@ -195,62 +195,8 @@ def get_bar_stress_strains(cases: CasesDict,
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
-        bars = [model.cbar_stress]
+        result = model.cbar_stress
         word = 'Stress'
-    else:
-        bars = [model.cbar_strain]
-        word = 'Strain'
-
-    #titles = []
-    bar_cases = []
-    bar_ieids = []
-    for result in bars:
-        if key not in result:
-            continue
-        case = result[key]
-        if case.is_complex:
-            log.warning(f'skipping {case.class_name}')
-            continue
-
-        eidsi = case.element
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            #print(case.element_node)
-            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-            #print('iplate = %s' % i)
-            #print('  eids = %s' % eids)
-            #print('  eidsiA = %s' % case.element_node[:, 0])
-            #print('  eidsiB = %s' % eidsi)
-            msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
-            #msg = 'iplate=%s is not unique' % str(i)
-            log.warning(msg)
-            continue
-        if i.max() == len(eids):
-            log.error('skipping because lookup is out of range...')
-            continue
-        #print('i =', i, i.max())
-        #print('eids =', eids, len(eids))
-        #print('eidsi =', eidsi, eids)
-        #print(f'------------adding i={i} for {case.element_name}-----------')
-        bar_cases.append(case)
-        bar_ieids.append(i)
-    if not bar_ieids:
-        return icase
-
-    bar_ieids = np.hstack(bar_ieids)
-    ieid_max = len(eids)
-    #print('ieid_max =', ieid_max)
-
-    case: RealBarStressArray = bar_cases[0]
-    #assert isinstance(case, (ComplexBarStressArray, RealBarStressArray)), case
-    case_headers = case.get_headers()
-    #print(case_headers)
-
-    # real
-    #complex:
-    # [s1a, s1b, s1c, s1d, axial,
-    #  s2a, s2b, s2c, s2d, ]
-    if is_stress:
         method_map = {
              's1a' : 'Stress 1A',
              's2a' : 'Stress 2A',
@@ -273,6 +219,8 @@ def get_bar_stress_strains(cases: CasesDict,
         }
         data_format = '%.3f'
     else:
+        result = model.cbar_strain
+        word = 'Strain'
         method_map = {
             'e1a' : 'Strain 1A',
             'e2a' : 'Strain 2A',
@@ -301,6 +249,62 @@ def get_bar_stress_strains(cases: CasesDict,
             #'von_mises' : 'ϵ von Mises',
         }
         data_format = '%.3e'
+
+    #titles = []
+    bar_cases = []
+    bar_ieids = []
+    if key not in result:
+        return icase
+    case = result[key]
+    if case.is_complex:
+        log.warning(f'skipping {case.class_name}')
+        return icase
+
+    eidsi = case.element
+    common_eids = np.intersect1d(eids, eidsi)
+    if len(common_eids) == 0:
+        return icase
+
+    i = np.searchsorted(eids, common_eids)
+    j = np.searchsorted(eidsi, common_eids)
+    if 0:
+        if len(i) != len(np.unique(i)):
+            #print(case.element_node)
+            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            #print('iplate = %s' % i)
+            #print('  eids = %s' % eids)
+            #print('  eidsiA = %s' % case.element_node[:, 0])
+            #print('  eidsiB = %s' % eidsi)
+            msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            log.warning(msg)
+            return icase
+        if i.max() == len(eids):
+            log.error('skipping because lookup is out of range...')
+            return icase
+    #print('i =', i, i.max())
+    #print('eids =', eids, len(eids))
+    #print('eidsi =', eidsi, eids)
+    #print(f'------------adding i={i} for {case.element_name}-----------')
+    bar_cases.append(case)
+    bar_ieids.append(i)
+
+    if not bar_ieids:
+        return icase
+
+    bar_ieids = np.hstack(bar_ieids)
+    ieid_max = len(eids)
+    #print('ieid_max =', ieid_max)
+
+    case: RealBarStressArray = bar_cases[0]
+    #assert isinstance(case, (ComplexBarStressArray, RealBarStressArray)), case
+    case_headers = case.get_headers()
+    #print(case_headers)
+
+    # real
+    #complex:
+    # [s1a, s1b, s1c, s1d, axial,
+    #  s2a, s2b, s2c, s2d, ]
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:
         #methods.append('Max shear')
@@ -321,7 +325,6 @@ def get_bar_stress_strains(cases: CasesDict,
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
-
         keys_map[key] = KeyMap(case.subtitle, case.label,
                                case.superelement_adaptivity_index,
                                case.pval_step)
@@ -330,7 +333,7 @@ def get_bar_stress_strains(cases: CasesDict,
         #nelements_nnodes = nnodes_nlayers // 2
         #nelements = nelements_nnodes // nnodes_per_element
         #nlayers = 2
-        scalars = case.data
+        scalars = case.data[:, j, :]
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:
@@ -364,9 +367,10 @@ def get_bar_stress_strains(cases: CasesDict,
         data_format=data_format,
         colormap='jet', uname='Bar ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Bar')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Bar')
     return icase
 
 @nocrash_log

@@ -19,7 +19,7 @@ from vtk import vtkRenderLargeImage, vtkAxesActor, vtkOrientationMarkerWidget
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
@@ -476,6 +476,29 @@ class TestNastranGUI(unittest.TestCase):
         # missing nodes
         test.on_load_custom_results(out_filename=deflection_filename2, restype='Deflection')
 
+    def test_solid_bending_missing_eids(self):
+        """
+        same as the nominal version, but:
+         - remove a solid element
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        model = read_bdf(bdf_filename)
+
+        # make the problem a little harder
+        del model.elements[1]
+
+        test = NastranGUI()
+        test.load_nastran_geometry(model)
+        assert len(test.result_cases) == 10, len(test.result_cases)
+
+        test.load_nastran_results(op2_filename)
+        if USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 34, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 34, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 39, len(test.result_cases)
 
     def test_beam_modes_01(self):
         """CBAR/CBEAM - PARAM,POST,-1"""
@@ -494,6 +517,27 @@ class TestNastranGUI(unittest.TestCase):
             nbar_force=nmodes,
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
+        #test.write_result_cases()
+        assert len(test.result_cases) == 238, len(test.result_cases)
+
+    def test_beam_modes_01_missing_eids(self):
+        """
+        same as test_beam_modes_01 except:
+         - missing CBAR eid=1
+         - missing GRID nid=1
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m1.op2')
+        model = read_bdf(bdf_filename)
+        del model.elements[1]
+        del model.nodes[1]
+        model._type_to_id_map['CBAR'].remove(1)
+
+        test = NastranGUI()
+        test.load_nastran_geometry(model)
+        assert len(test.result_cases) == 7, len(test.result_cases)
+        test.load_nastran_results(op2_filename)
+        #test.write_result_cases()
         assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_02(self):
@@ -604,7 +648,17 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.op2')
         test = NastranGUI()
         #test.log = get_logger2()
-        test.load_nastran_geometry(bdf_filename)
+
+        model = read_bdf(bdf_filename, debug=None)
+        #CTRIA3      8043  901512    7571    7569    7572
+        #CQUAD4      8044  901512    7569    7570    7573    7572
+        if 8043 in model.elements:
+            del model.elements[8043]
+            del model.elements[8044]
+        #model._type_to_id_map['CTRIA3'].remove(8043)
+        #model._type_to_id_map['CQUAD4'].remove(8044)
+
+        test.load_nastran_geometry(model)
         assert len(test.result_cases) == 95, len(test.result_cases)
         if os.path.exists(op2_filename) and 0:  # pragma: no cover
             nresults = get_nreal_nresults(test,
@@ -813,7 +867,24 @@ class TestNastranGUI(unittest.TestCase):
         nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
         assert os.path.exists(vtk_filename), vtk_filename
 
-    def test_gui_elements_01b(self):
+    def test_gui_elements_01_missing_eids(self):
+        """
+        same as test_gui_elements_01 except missing a single:
+         -
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        model = read_bdf(bdf_filename)
+        test = NastranGUI()
+        test.load_nastran_geometry(model)
+        assert len(test.result_cases) == 63, len(test.result_cases)
+        test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 204, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 202, len(test.result_cases)
+
+    def _test_gui_elements_01b(self):  # pragma: no cover
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         #model = read_bdf(bdf_filename)

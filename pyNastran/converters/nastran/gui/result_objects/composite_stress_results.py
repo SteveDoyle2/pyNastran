@@ -7,7 +7,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .vector_results import VectorResultsCommon
+from .vector_results import VectorResultsCommon, filter_ids
 from .nodal_averaging import nan_difference
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
@@ -114,6 +114,20 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         self.layer_indices = (-1, )  # All
         i = -1
         name = (0, 0, '')
+
+        # [:, :, iresult] -> shape=3
+        datai = self.case.data
+        rows = self.case.element_layer[:, 0]
+        cols = self.case.element_layer[:, 1]
+
+        pivot_data, rows_new = pivot_table(datai, rows, cols, shape=3)
+        intersect_eids, ieid_filter, nelement_filtered, is_filter = filter_ids(element_id, rows_new)
+        #intersect_eids = np.intersect1d(element_id, rows_new)
+        #ieid_filter = np.searchsorted(rows_new, intersect_eids)
+        if is_filter:
+            pivot_data = pivot_data[:, ieid_filter, :, :]
+        self.pivot_data = pivot_data
+        self.pivot_element_id = intersect_eids
 
         # slice off the methods (from the boolean) and then pull the 0th one
         self.min_max_method = self.has_derivation_transform(i, name)[1]['derivation'][0]
@@ -318,11 +332,15 @@ class CompositeStrainStressResults2(VectorResultsCommon):
             dict_sets = {'': [(idx+1) for idx in self.layer_indices],}
             layer_str = 'Layers ' + write_patran_syntax_dict(dict_sets)
 
-        results = list(self.result.keys())
-        result = results[iresult]
+        #results = list(self.result.keys())
+        #result = results[iresult]
 
         #'Compostite Plate Stress (Layers 2:10 12, Absolute Max; Static): sigma11'
-        annotation_label = f'{self.title} ({layer_str}, {self.min_max_method}, {header}): {result}'
+        #annotation_label = f'{title} ({layer_str}, {self.min_max_method}, {header}): {result}'
+
+        #'Compostite Plate Stress 11 (Layers 2:10 12, Absolute Max; Static)'
+        title = self.get_legend_title(itime, case_tuple)
+        annotation_label = f'Composite Plate {title} ({layer_str}, {self.min_max_method}, {header})'
         #return self.uname
         return annotation_label
 
@@ -434,17 +452,21 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         (itime, iresult, header) = case_tuple
         #self.case.get_headers()
         #['o11', 'o22', 't12', 't1z', 't2z', 'angle', 'major', 'minor', 'max_shear']
-        data = self.case.data[itime, :, iresult].copy()
-        rows = self.case.element_layer[:, 0]
-        cols = self.case.element_layer[:, 1]
-        ulayer = np.unique(cols)
+        if 0:  # pragma: no cover
+            data = self.case.data[itime, :, iresult].copy()
+            rows = self.case.element_layer[:, 0]
+            cols = self.case.element_layer[:, 1]
+            ulayer = np.unique(cols)
 
-        if self.layer_indices == (-1, ):
-            self.layer_indices = tuple(ulayer - 1)
+            if self.layer_indices == (-1, ):
+                self.layer_indices = tuple(ulayer - 1)
 
-        # reshape to an [nelement, nlayer_max] array so we can slice rows
-        assert len(data.shape) == 1, data.shape
-        data2, eids_new = pivot_table(data, rows, cols, shape=1)
+            # reshape to an [nelement, nlayer_max] array so we can slice rows
+            assert len(data.shape) == 1, data.shape
+            data2, eids_new = pivot_table(data, rows, cols, shape=1)
+        else:
+            data2 = self.pivot_data[itime, :, :, iresult].copy()
+            eids_new = self.pivot_element_id
         assert len(data2.shape) == 2, data2.shape
 
         # element_id is unique & sorted

@@ -488,7 +488,6 @@ def map_element_centroid_to_node_fringe_result(
     #out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
     #nlabels, labelsize, ncolors, colormap = out
 
-
     cell_data.SetActiveScalars(None)
     point_data.SetActiveScalars('name')
     is_passed = True
