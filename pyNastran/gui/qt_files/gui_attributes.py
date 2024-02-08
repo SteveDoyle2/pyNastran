@@ -13,7 +13,7 @@ from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkDataSetMapp
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 from qtpy import QtGui
-from qtpy.QtWidgets import QMainWindow
+from qtpy.QtWidgets import QMainWindow, QAction
 
 try:
     import matplotlib
@@ -59,6 +59,7 @@ IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
+    from vtk import vtkAxes
 
 
 class GeometryObject(BaseGui):
@@ -216,7 +217,7 @@ class GuiAttributes:
         self.modules = {}
 
         # actor_slots
-        self.corner_text_actors = {}
+        self.corner_text_actors: dict[int, Any] = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
@@ -239,8 +240,8 @@ class GuiAttributes:
         self._xyz_nominal = None
 
         self.nvalues = 9
-        self.nid_maps = {}
-        self.eid_maps = {}
+        self.nid_maps: dict[str, dict[int, int]] = {}
+        self.eid_maps: dict[str, dict[int, int]] = {}
         self.name = 'main'
         self.models = {}
 

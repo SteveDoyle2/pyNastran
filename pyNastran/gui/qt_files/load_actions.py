@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import time as time_module
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, cast, Callable, TYPE_CHECKING
 
 import numpy as np
 from qtpy.compat import getopenfilename
@@ -175,7 +175,7 @@ class LoadActions(BaseGui):
             main_str = ''
         else:
             main_str = ', name=%r' % name
-        self._add_recent_file(infile_name, geometry_format)
+        self._add_recent_file(infile_name, geometry_format_out)
 
         gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, geometry_format_out, main_str))
@@ -194,7 +194,8 @@ class LoadActions(BaseGui):
     def _add_recent_file(self, infile_name: str,
                          geometry_format: str) -> None:
         gui: MainWindow = self.gui
-        arg = (infile_name, geometry_format)
+        abs_filename = os.path.abspath(infile_name)
+        arg = (abs_filename, geometry_format)
         recent_files = gui.settings.recent_files
         if arg in recent_files:
             recent_files.remove(arg)
@@ -251,6 +252,9 @@ class LoadActions(BaseGui):
             # setup the selectable formats
             for fmt in self.gui.fmts:
                 fmt_name, _major_name, geom_wildcard, geom_func, res_wildcard, _res_func = fmt
+                _major_name = cast(str, _major_name)
+                geom_wildcard = cast(str, geom_wildcard)
+                geom_func = cast(Callable, geom_func)
                 formats.append(_major_name)
                 wildcard_list.append(geom_wildcard)
                 load_functions.append(geom_func)

@@ -1,6 +1,7 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
 import os.path
+import contextlib
 from math import ceil
 from functools import partial
 from typing import Callable, Optional, Union, Any, cast
@@ -10,13 +11,14 @@ from cpylog import SimpleLogger
 
 from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar,
     QMenu, QToolButton)
+#QKeySequence = QtGui.QKeySequence
+MenuTuple = tuple[QMenu, tuple[str, ...]]
 
 from vtk import (vtkExtractSelection,
                  vtkSelection, vtkSelectionNode,
@@ -72,7 +74,7 @@ from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.utils.numpy_utils import integer_types
 
 Tool = tuple[str, str, str, Optional[str], str, Callable]
-BANNED_SHORTCUTS = {}
+BANNED_SHORTCUTS: set[str] = set([])
 
 from pyNastran.gui.gui_objects.settings import Settings, NFILES_TO_SAVE
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
@@ -252,7 +254,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             enter_data.clear()
 
     def set_tools(self,
-                  tools: list[tuple[str, str, str, Optional[str], str, Callable]]=None,
+                  tools: Optional[list[tuple[str, str, str, Optional[str], str, Callable]]]=None,
                   checkables: Optional[dict[str, bool]]=None):
         """Creates the GUI tools"""
         if checkables is None:
@@ -426,8 +428,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
     def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
                               ) -> list[tuple[str, str, str, str, str, Callable]]:
         """
-        file0, file1 are 0-based
-        shortcuts are 1-based Control+1...these names may change later...
+        file1, file2 are 1-based
+        shortcuts are 1-based Control+1
         """
         recent_file_tools = []
         # assuming already filtered
@@ -435,12 +437,15 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         is_visible = True
         for ifile, (fname, geometry_format) in enumerate(recent_files):
+            if ifile == NFILES_TO_SAVE:
+                break
             label = fname
             tooltip = f'Load {fname}'
             image = ''
             shortcut = f'Ctrl+{ifile+1}'
             func = partial(self.on_load_geometry, fname, geometry_format)
-            file_tool = (f'file{ifile:d}', label, image, shortcut, tooltip, func, is_visible)
+            #print(f'ifile={ifile} shortcut={shortcut}')
+            file_tool = (f'file{ifile+1:d}', label, image, shortcut, tooltip, func, is_visible)
             recent_file_tools.append(file_tool)
         if len(recent_file_tools) < NFILES_TO_SAVE:
             is_visible = False
@@ -448,9 +453,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 label = f'<blank> file {jfile:d}'
                 tooltip = f'Load <blank>'
                 image = ''
-                shortcut = f'Ctrl+{ifile+1}'
+                shortcut = f'Ctrl+{jfile+1}'
+                #print(f'jfile={jfile} shortcut={shortcut}')
                 func = None # partial(self.on_load_geometry, fname, geometry_format)
-                file_tool = (f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
+                file_tool = (f'file{jfile+1:d}', label, image, shortcut, tooltip, func, is_visible)
                 recent_file_tools.append(file_tool)
         return recent_file_tools
 
@@ -489,7 +495,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _create_menu_items(self, actions=None,
                            create_menu_bar: bool=True,
-                           menu_bar_order=None) -> dict[str, tuple[QMenu, tuple[str, ...]]]:
+                           menu_bar_order=None) -> dict[str, MenuTuple]:
         if actions is None:
             actions = self.actions
 
@@ -547,7 +553,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'load_csv_user_points', 'load_csv_user_geom', 'script', '',
             'screenshot', '']
         if NFILES_TO_SAVE:
-            filei = [f'file{ifile:d}' for ifile in range(NFILES_TO_SAVE)]
+            filei = [f'file{ifile+1:d}' for ifile in range(NFILES_TO_SAVE)]
+            #print(f'filei={filei}')
             menu_file.extend(filei)
             menu_file.append('')
         menu_file.append('exit')
@@ -572,7 +579,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                         'font_size_increase', 'font_size_decrease', 'highlight',
                         'quick_probe_result_all')
 
-        menu_items = {}
+        menu_items: dict[str, MenuTuple] = {}
         if create_menu_bar:
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
@@ -608,11 +615,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         menu_items = self._create_menu_items(actions)
         self._populate_menu(menu_items)
 
-        self.actions['show_info'].setChecked(self.settings.show_info)
-        self.actions['show_debug'].setChecked(self.settings.show_debug)
-        self.actions['show_command'].setChecked(self.settings.show_command)
-        self.actions['show_warning'].setChecked(self.settings.show_warning)
-        self.actions['show_error'].setChecked(self.settings.show_error)
+        settings: Settings = self.settings
+        self.actions['show_info'].setChecked(settings.show_info)
+        self.actions['show_debug'].setChecked(settings.show_debug)
+        self.actions['show_command'].setChecked(settings.show_command)
+        self.actions['show_warning'].setChecked(settings.show_warning)
+        self.actions['show_error'].setChecked(settings.show_error)
 
 
     def _populate_menu(self, menu_items: dict[str, tuple[Any, Any]],
@@ -759,28 +767,31 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 action.setChecked(is_checked)
             else:
                 action = QAction(ico, txt, self)
-            update_shortcut_tip_func_visible(used_shortcuts, action,
+            update_shortcut_tip_func_visible(used_shortcuts, action, name,
                                              shortcut, tip, func, is_visible)
             actions[name] = action
 
     def update_recent_files_menu(self) -> None:
+        """updates the File Menu with the updated input files""" 
         recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
         #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
         used_shortcuts = {}
         for (name, label, image, shortcut, tooltip, func, is_visible) in recent_file_tools:
-            print(f'updating name={name}')
-            action = self.actions[name]
+            #print(f'updating name={name} -> {label}')
+            action: QAction = self.actions[name]
             shortcut = ''
-            is_visible = True
-            update_shortcut_tip_func_visible(used_shortcuts, action,
+
+            # the action is file0 which changes, so we have to disconnect
+            # the function
+            with contextlib.suppress(RuntimeError):
+                action.triggered.disconnect()
+            #if not is_visible:
+                # i don't think removing the shortcut is neccessary
+                # since we disconnect the function
+                #action.setShortcut(QKeySequence())  # remove shortcut
+            update_shortcut_tip_func_visible(used_shortcuts, action, name,
                                              shortcut, tooltip, func, is_visible,
                                              text=label)
-        nrecent_files = len(recent_file_tools)
-        for ifile in range(nrecent_files, NFILES_TO_SAVE):
-            name2 = f'file{ifile+1}'
-            print(f'updating name2={name2}')
-            action = self.actions[name2]
-            action.triggered.connect(func)
         del image
 
     def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
@@ -2266,14 +2277,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
 
-    def _set_methods_by_icase(self, icase: Optional[int]) -> None:
+    def _set_methods_by_icase(self, icase: Optional[int]) -> bool:
         """
         fills up the Methods in the Sidebar
 
         This is a callback function from the Sidebar
         """
         if icase is None:
-            return
+            return False
         obj, (i, resname) = self.result_cases[icase]
 
         obj = cast(Union[GuiResult, DisplacementResults], obj)
@@ -2467,6 +2478,7 @@ def get_image_reader(image_filename: str):
 
 def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
                                      action: QAction,
+                                     name: str,
                                      shortcut: str,
                                      tip: str,
                                      func: Callable,
@@ -2494,5 +2506,4 @@ def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
         action.setStatusTip(tip)
     if func:
         action.triggered.connect(func)
-    if not is_visible:
-        action.setVisible(is_visible)
+    action.setVisible(is_visible)

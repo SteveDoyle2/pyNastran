@@ -999,8 +999,9 @@ def filter_recent_files(recent_files: list[tuple[str, str]]):
         recent_files_out = []
         stored_files_lower = set([])
         for i, (fname, geometry_format) in enumerate(recent_files):
-            if not os.path.exists(fname):
+            if geometry_format is None or not os.path.exists(fname):
                 continue
+
             fname_abs = os.path.abspath(fname)
             fname_lower = fname.lower()
             if fname_lower in stored_files_lower:
@@ -1009,7 +1010,7 @@ def filter_recent_files(recent_files: list[tuple[str, str]]):
             recent_files_out.append((fname_lower, geometry_format))
     else:
         recent_files_out = [(fname, fmt) for (fname, fmt) in recent_files
-                            if os.path.exists(fname)]
+                            if os.path.exists(fname) and fmt is not None]
     return recent_files_out
 
 
