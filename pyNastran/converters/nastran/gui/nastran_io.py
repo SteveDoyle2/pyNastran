@@ -3070,13 +3070,12 @@ class NastranIO(NastranIO_):
         ]
         items = (
             'shear_moment_torque',
-            'create_coord',
+            #'create_coord',  # not done
         )
-
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
+        gui.menu_tools.setEnabled(True)
+        #gui.menu_tools.setVisible(True)
         menu_items = {
-            'nastran_tools' : (nastran_tools_menu, items),
+            'nastran_tools' : (self.menu_tools, items),
         }
         icon_path = ''
         gui._prepare_actions_helper(icon_path, tools, gui.actions, checkables=None)

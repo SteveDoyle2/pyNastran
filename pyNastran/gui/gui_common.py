@@ -425,6 +425,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
                               ) -> list[tuple[str, str, str, str, str, Callable]]:
+        """
+        file0, file1 are 0-based
+        shortcuts are 1-based Control+1...these names may change later...
+        """
         recent_file_tools = []
         # assuming already filtered
         #recent_files = filter_recent_files(self.settings.recent_files)
@@ -434,17 +438,17 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             label = fname
             tooltip = f'Load {fname}'
             image = ''
-            shortcut = ''
+            shortcut = f'Ctrl+{ifile+1}'
             func = partial(self.on_load_geometry, fname, geometry_format)
             file_tool = (f'file{ifile:d}', label, image, shortcut, tooltip, func, is_visible)
             recent_file_tools.append(file_tool)
         if len(recent_file_tools) < NFILES_TO_SAVE:
             is_visible = False
             for jfile in range(ifile+1, NFILES_TO_SAVE):
-                label = f'N/A file {jfile:d}'
-                tooltip = f'Load NA'
+                label = f'<blank> file {jfile:d}'
+                tooltip = f'Load <blank>'
                 image = ''
-                shortcut = ''
+                shortcut = f'Ctrl+{ifile+1}'
                 func = None # partial(self.on_load_geometry, fname, geometry_format)
                 file_tool = (f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
                 recent_file_tools.append(file_tool)
@@ -455,27 +459,32 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
     def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None) -> None:
-        self.menu_bar_oder = menu_bar_order
+        self.menu_bar_order = menu_bar_order
         if menu_bar_order is None:
-            menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
+            menu_bar_order = ['menu_file', 'menu_view', 'menu_tools', 'menu_window', 'menu_help']
 
+        menubar: QMenu = self.menubar
         for key in menu_bar_order:
             if key == 'menu_file':
-                self.menu_file = self.menubar.addMenu('&File')
+                self.menu_file = menubar.addMenu('&File')
             elif key == 'menu_view':
-                self.menu_view = self.menubar.addMenu('&View')
+                self.menu_view = menubar.addMenu('&View')
+            elif key == 'menu_tools':
+                self.menu_tools = menubar.addMenu('Tools')
+                self.menu_tools.setEnabled(False)
+                #self.menu_tools.setVisible(False)
             elif key == 'menu_window':
-                self.menu_window = self.menubar.addMenu('&Window')
+                self.menu_window = menubar.addMenu('&Window')
             elif key == 'menu_help':
-                self.menu_help = self.menubar.addMenu('&Help')
+                self.menu_help = menubar.addMenu('&Help')
             elif isinstance(key, tuple):
                 attr_name, name = key
-                submenu = self.menubar.addMenu(name)
+                submenu = menubar.addMenu(name)
                 setattr(self, attr_name, submenu)
             else:
                 raise NotImplementedError(key)
         # always last
-        self.menu_hidden = self.menubar.addMenu('&Hidden')
+        self.menu_hidden = menubar.addMenu('&Hidden')
         self.menu_hidden.menuAction().setVisible(False)
 
     def _create_menu_items(self, actions=None,
@@ -714,7 +723,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _prepare_actions_helper(self, icon_path: str,
                                 tools: list[Tool],
-                                actions,
+                                actions: dict[str, QAction],
                                 checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
@@ -750,18 +759,28 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 action.setChecked(is_checked)
             else:
                 action = QAction(ico, txt, self)
-            update_shortcut_tip_func_visible(action, shortcut, tip, func, is_visible,
-                                             used_shortcuts)
+            update_shortcut_tip_func_visible(used_shortcuts, action,
+                                             shortcut, tip, func, is_visible)
             actions[name] = action
 
-    def update_recent_files(self) -> None:
+    def update_recent_files_menu(self) -> None:
         recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
         #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
         used_shortcuts = {}
         for (name, label, image, shortcut, tooltip, func, is_visible) in recent_file_tools:
+            print(f'updating name={name}')
             action = self.actions[name]
-            update_shortcut_tip_func_visible(action, shortcut, tooltip, func, is_visible,
-                                             used_shortcuts)
+            shortcut = ''
+            is_visible = True
+            update_shortcut_tip_func_visible(used_shortcuts, action,
+                                             shortcut, tooltip, func, is_visible,
+                                             text=label)
+        nrecent_files = len(recent_file_tools)
+        for ifile in range(nrecent_files, NFILES_TO_SAVE):
+            name2 = f'file{ifile+1}'
+            print(f'updating name2={name2}')
+            action = self.actions[name2]
+            action.triggered.connect(func)
         del image
 
     def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
@@ -2446,12 +2465,13 @@ def get_image_reader(image_filename: str):
         raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
     return image_reader
 
-def update_shortcut_tip_func_visible(action: QAction,
+def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
+                                     action: QAction,
                                      shortcut: str,
                                      tip: str,
                                      func: Callable,
                                      is_visible: bool,
-                                     used_shortcuts: dict[str, str]) -> None:
+                                     text: str='') -> None:
 
     if shortcut:
         #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
@@ -2468,6 +2488,8 @@ def update_shortcut_tip_func_visible(action: QAction,
         action.setShortcut(shortcut)
         #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
 
+    if text:
+        action.setText(text)
     if tip:
         action.setStatusTip(tip)
     if func:

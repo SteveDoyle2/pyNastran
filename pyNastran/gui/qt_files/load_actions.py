@@ -23,9 +23,9 @@ from pyNastran.gui.qt_files.user_geometry import add_user_geometry
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
+from pyNastran.gui.gui_objects.settings import Settings, filter_recent_files
 if TYPE_CHECKING:
     #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
-    from pyNastran.gui.gui_objects.settings import Settings
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.qt_files.tool_actions import ToolActions
 IS_TESTING = 'test' in sys.argv[0]
@@ -195,9 +195,12 @@ class LoadActions(BaseGui):
                          geometry_format: str) -> None:
         gui: MainWindow = self.gui
         arg = (infile_name, geometry_format)
-        if arg in gui.settings.recent_files:
-            gui.settings.recent_files.remove(arg)
-        gui.settings.recent_files.insert(0, arg)
+        recent_files = gui.settings.recent_files
+        if arg in recent_files:
+            recent_files.remove(arg)
+        recent_files.insert(0, arg)
+        gui.settings.recent_files = filter_recent_files(recent_files)
+        gui.update_recent_files_menu()
         #gui.settings.recent_files
 
     def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:

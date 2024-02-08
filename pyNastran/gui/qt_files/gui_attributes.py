@@ -212,7 +212,7 @@ class GuiAttributes:
 
         self.tools = []
         self.checkables = []
-        self.actions = {}
+        self.actions: dict[str, QAction] = {}
         self.modules = {}
 
         # actor_slots
