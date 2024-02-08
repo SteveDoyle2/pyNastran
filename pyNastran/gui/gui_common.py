@@ -395,7 +395,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
 
                 #Probe all the results at the given location (slow!)
-                ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
+                ('probe_result_all', 'Probe All', 'tprobe_all.png', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
                 ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
 
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
@@ -772,7 +772,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             actions[name] = action
 
     def update_recent_files_menu(self) -> None:
-        """updates the File Menu with the updated input files""" 
+        """updates the File Menu with the updated input files"""
         recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
         #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
         used_shortcuts = {}

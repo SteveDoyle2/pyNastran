@@ -3,9 +3,9 @@ defines:
  - ClippingPropertiesWindow
 """
 from pyNastran.gui.qt_version import qt_int as qt_version
-from qtpy import QtCore
+#from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QVBoxLayout)
+    QLabel, QPushButton, QGridLayout, QApplication, QVBoxLayout)
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
@@ -110,6 +110,7 @@ class ClippingPropertiesWindow(PyDialog):
     def on_ok(self):
         passed = self.on_apply()
         if passed:
+            self._updated_clipping = True
             self.close()
             #self.destroy()
 

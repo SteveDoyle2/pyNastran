@@ -72,5 +72,4 @@ class ClippingObject(BaseGui):
         if max_clip is None:
             max_clip = _max_clip
         camera.SetClippingRange(min_clip, max_clip)
-        self.gui.log_command('on_update_clipping(min_clip=%s, max_clip=%s)'
-                             % (min_clip, max_clip))
+        self.gui.log_command(f'self.clipping_obj.on_update_clipping(min_clip={min_clip}, max_clip={max_clip})')
