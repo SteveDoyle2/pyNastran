@@ -16,9 +16,10 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar,
-    QMenu, QToolButton)
+    QMenu, QToolButton, QMenuBar)
 #QKeySequence = QtGui.QKeySequence
 MenuTuple = tuple[QMenu, tuple[str, ...]]
+ToolTuple = tuple[str, str, str, str, str, Callable[..., Any], bool]
 
 from vtk import (vtkExtractSelection,
                  vtkSelection, vtkSelectionNode,
@@ -282,160 +283,160 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 'zoom' : False,
             }
 
+        is_visible = True
         if tools is None:
             recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
 
-            file_tools = [
+            file_tools: list[ToolTuple] = [
                 # flag,  label,   picture,     shortcut, tooltip             func
-                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
+                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent, is_visible),
 
-                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
-                ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
-                ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
-                ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
-                ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
-                ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
+                ('reload',               'Reload Model...',           'treload.png',       '',       'Remove the model and reload the same geometry file', self.on_reload, is_visible),
+                ('load_geometry',        'Load &Geometry...',         'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry, is_visible),
+                ('load_results',         'Load &Results...',          'load_results.png',  'Ctrl+R', 'Loads a results file', self.on_load_results, is_visible),
+                ('load_csv_user_geom',   'Load CSV User Geometry...', '',                  '',       'Loads custom geometry file', self.on_load_user_geom, is_visible),
+                ('load_csv_user_points', 'Load CSV User Points...',   'user_points.png',   '',       'Loads CSV points', self.on_load_csv_points, is_visible),
+                ('load_custom_result',   'Load Custom Results...',    '',                  '',       'Loads a custom results file', self.on_load_custom_results, is_visible),
 
-                ('save_vtk', 'Export VTK...', '', None, 'Export a VTK file', self.on_save_vtk),
-                ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+                ('save_vtk', 'Export VTK...',        '',             '', 'Export a VTK file', self.on_save_vtk, is_visible),
+                ('script',   'Run Python Script...', 'python48.png', '', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
             ] + recent_file_tools
 
-            tools = file_tools + [
+            tools: list[ToolTuple] = file_tools + [
                 # labels
-                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels),
-                ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
+                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels, is_visible),
+                ('label_reset', 'Clear All Labels',     '', '',       'Clear all labels',     self.reset_labels, is_visible),
 
                 # view
-                ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-                ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+                ('wireframe',  'Wireframe Model',      'twireframe.png', 'w',      'Show Model as a Wireframe Model', self.on_wireframe, is_visible),
+                ('surface',    'Surface Model',        'tsolid.png',     's',      'Show Model as a Surface Model', self.on_surface, is_visible),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png',    'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot, is_visible),
 
                 # geometry
                 # Geometry:
                 #  - Create
                 #  - Modify
-                ('geometry', 'Geometry', 'geometry.png', None, 'Geometry', self.geometry_obj.show),
+                ('geometry', 'Geometry', 'geometry.png', '', 'Geometry', self.geometry_obj.show, is_visible),
                 #
                 # core menus
-                ('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
-                ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
-                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
-                ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
-                ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
-                ('map_element_fringe', 'Map Element Fringe', '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result),
+                ('legend',    'Modify Legend...',    'legend.png',    'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu, is_visible),
+                ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu, is_visible),
+                ('clipping',  'Set Clipping...',     '',              '',        'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
+                ('set_preferences',    'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
+                ('geo_properties',     'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
+                ('map_element_fringe', 'Map Element Fringe',          '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
 
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 # groups
-                ('modify_groups', 'Modify Groups...', '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups),
-                ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
-                ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
-                ('create_groups_by_model_group', 'Create Groups By Model Group', '', None, 'Create Groups', self.create_groups_by_model_group),
+                ('modify_groups',                     'Modify Groups...',                '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups, is_visible),
+                ('create_groups_by_visible_result',   'Create Groups By Visible Result', '', '',       'Create Groups', self.create_groups_by_visible_result, is_visible),
+                ('create_groups_by_property_id',      'Create Groups By Property ID',    '', '',       'Create Groups', self.create_groups_by_property_id, is_visible),
+                ('create_groups_by_model_group',      'Create Groups By Model Group',    '', '',       'Create Groups', self.create_groups_by_model_group, is_visible),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 # logging
-                ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
-                ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
-                ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
-                ('show_warning', 'Show WARNING', 'show_warning.png', None, 'Show "COMMAND" messages', self.on_show_warning),
-                ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
+                ('show_info',    'Show INFO',    'show_info.png',    '', 'Show "INFO" messages', self.on_show_info, is_visible),
+                ('show_debug',   'Show DEBUG',   'show_debug.png',   '', 'Show "DEBUG" messages', self.on_show_debug, is_visible),
+                ('show_command', 'Show COMMAND', 'show_command.png', '', 'Show "COMMAND" messages', self.on_show_command, is_visible),
+                ('show_warning', 'Show WARNING', 'show_warning.png', '', 'Show "COMMAND" messages', self.on_show_warning, is_visible),
+                ('show_error',   'Show ERROR',   'show_error.png',   '', 'Show "COMMAND" messages', self.on_show_error, is_visible),
 
                 # zoom
-                ('magnify', 'Zoom In', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
-                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Zoom In', 'plus_zoom.png',  'm',       'Increase Magnfication', self.on_increase_magnification, is_visible),
+                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification, is_visible),
 
                 # rotation
-                ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+                ('rotate_clockwise',  'Rotate Clockwise',         'tclock.png',  'o',       'Rotate Clockwise', self.on_rotate_clockwise, is_visible),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise, is_visible),
 
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 # help
-                ('website', 'Open pyNastran Website...', '', None, 'Open the pyNastran website', self.open_website),
-                ('docs', 'Open pyNastran Docs Website...', '', None, 'Open the pyNastran documentation website', self.open_docs),
-                ('report_issue', 'Report a Bug/Feature Request...', '', None, 'Open the pyNastran issue tracker', self.open_issue),
-                ('discussion_forum', 'Discussion Forum Website...', '', None, 'Open the discussion forum to ask questions', self.open_discussion_forum),
-                ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+                ('website',          'Open pyNastran Website...',       '',           '',       'Open the pyNastran website', self.open_website, is_visible),
+                ('docs',             'Open pyNastran Docs Website...',  '',           '',       'Open the pyNastran documentation website', self.open_docs, is_visible),
+                ('report_issue',     'Report a Bug/Feature Request...', '',           '',       'Open the pyNastran issue tracker', self.open_issue, is_visible),
+                ('discussion_forum', 'Discussion Forum Website...',     '',           '',       'Open the discussion forum to ask questions', self.open_discussion_forum, is_visible),
+                ('about',            'About pyNastran GUI...',          'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog, is_visible),
 
                 # camera
-                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
-                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('view',         'Camera View',       'view.png',     '',  'Load the camera menu', self.camera_obj.set_camera_menu, is_visible),
+                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera, is_visible),
 
                 # results
-                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'L', 'Changes the result case', self.on_cycle_results),
-                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results),
+                ('cycle_results',  'Cycle Results', 'cycle_results.png',  'L', 'Changes the result case', self.on_cycle_results, is_visible),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results, is_visible),
 
                 # view actions
-                ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
-                ('right_view',  'Right View',  'right.png',  'y',       'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
-                ('top_view',    'Top View',    'top.png',    'z',       'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
-                ('front_view',  'Front View',  'front.png',  'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
-                ('left_view',   'Left View',   'left.png',   'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
+                ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x'), is_visible),
+                ('right_view',  'Right View',  'right.png',  'y',       'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y'), is_visible),
+                ('top_view',    'Top View',    'top.png',    'z',       'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z'), is_visible),
+                ('front_view',  'Front View',  'front.png',  'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x'), is_visible),
+                ('left_view',   'Left View',   'left.png',   'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y'), is_visible),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z'), is_visible),
 
 
-                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edge_visibility),
-                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_flip_edge_color),
-                ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
-                ('anti_alias_1', '1x', '', None, 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1)),
-                ('anti_alias_2', '2x', '', None, 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2)),
-                ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
-                ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
+                ('edges',       'Show/Hide Edges',   'tedges.png',       'e', 'Show/Hide Model Edges', self.on_flip_edge_visibility, is_visible),
+                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_flip_edge_color, is_visible),
+                ('anti_alias_0', 'Off',              '',                 '',  'Disable Anti-Aliasing',   lambda: self.on_set_anti_aliasing(0), is_visible),
+                ('anti_alias_1', '1x',               '',                 '',  'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1), is_visible),
+                ('anti_alias_2', '2x',               '',                 '',  'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2), is_visible),
+                ('anti_alias_4', '4x',               '',                 '',  'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4), is_visible),
+                ('anti_alias_8', '8x',               '',                 '',  'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8), is_visible),
 
                 # mouse buttons
-                ('rotation_center', 'Set the Rotation Center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
-                ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
-                ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
-                ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
+                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
+                ('measure_distance', 'Measure Distance',        'measure_distance.png', '',  'Measure the distance between two nodes', self.mouse_actions.on_measure_distance, is_visible),
+                ('highlight_cell',   'Highlight Cell',          '',                     '',  'Highlight a single cell', self.mouse_actions.on_highlight_cell, is_visible),
+                ('highlight_node',   'Highlight Node',          '',                     '',  'Highlight a single node', self.mouse_actions.on_highlight_node, is_visible),
 
                 # name, gui_name, png, shortcut, desc, func
-                ('probe_result', 'Probe the model and mark it with the value of a node/element', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
-                ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
+                ('probe_result',       'Probe the model and mark it with the value of a node/element', 'tprobe.png', '',  'Probe the displayed result', self.mouse_actions.on_probe_result, is_visible),
+                ('quick_probe_result', 'Quick Probe',                                                  '',           'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result, is_visible),
 
                 #Probe all the results at the given location (slow!)
-                ('probe_result_all', 'Probe All', 'tprobe_all.png', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
-                ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
+                ('probe_result_all',       'Probe All Results', 'tprobe_all.png', '',  'Probe results for all cases', self.mouse_actions.on_probe_result_all, is_visible),
+                ('quick_probe_result_all', 'Quick Probe All',   '',               'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all, is_visible),
 
-                ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
+                ('zoom', 'Zoom', 'zoom.png', '', 'Zoom In', self.mouse_actions.on_zoom, is_visible),
 
                 # font size
-                ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
-                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
+                ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size, is_visible),
+                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size, is_visible),
 
                 # picking
-                ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
-                ('highlight', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight),
-                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_menu),
-                ('mark_nodes_elements', 'Mark', 'tmark.png', None, 'Mark a list of nodes/elements', self.mark_obj.set_menu),
+                ('area_pick', 'Area Pick', 'tarea_pick.png', '', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
+                ('highlight', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
+                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.highlight_obj.set_menu, is_visible),
+                ('mark_nodes_elements', 'Mark', 'tmark.png', '', 'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
             ]
 
         if hasattr(self, 'cutting_plane_obj'):
-            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu))
+            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', '', 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu, is_visible))
 
         if 'nastran' in self.fmt_order:
             tools += [
-                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
-                ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
-                ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
-                ('min', 'Min', '', None, 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor),
-                ('max', 'Max', '', None, 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor),
+                ('caero', 'Show/Hide CAERO Panels', '', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero_subpanels', 'Toggle CAERO Subpanels', '', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
+                ('conm2', 'Toggle CONM2s', '', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
+                ('min', 'Min', '', '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
+                ('max', 'Max', '', '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
             ]
         self.tools: list[Tool] = tools
         self.checkables: dict[str, bool] = checkables
 
     def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
-                              ) -> list[tuple[str, str, str, str, str, Callable]]:
+                              ) -> list[ToolTuple]:
         """
         file1, file2 are 1-based
         shortcuts are 1-based Control+1
-        """
-        recent_file_tools = []
-        # assuming already filtered
-        #recent_files = filter_recent_files(self.settings.recent_files)
 
+        It's assumed that the files are already filtered
+        """
         is_visible = True
+        recent_file_tools = []
         for ifile, (fname, geometry_format) in enumerate(recent_files):
             if ifile == NFILES_TO_SAVE:
                 break
@@ -455,7 +456,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 image = ''
                 shortcut = f'Ctrl+{jfile+1}'
                 #print(f'jfile={jfile} shortcut={shortcut}')
-                func = None # partial(self.on_load_geometry, fname, geometry_format)
+                func = None
                 file_tool = (f'file{jfile+1:d}', label, image, shortcut, tooltip, func, is_visible)
                 recent_file_tools.append(file_tool)
         return recent_file_tools
@@ -469,25 +470,25 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if menu_bar_order is None:
             menu_bar_order = ['menu_file', 'menu_view', 'menu_tools', 'menu_window', 'menu_help']
 
-        menubar: QMenu = self.menubar
+        menubar: QMenuBar = self.menubar
         for key in menu_bar_order:
             if key == 'menu_file':
-                self.menu_file = menubar.addMenu('&File')
+                self.menu_file: QMenu = menubar.addMenu('&File')
             elif key == 'menu_view':
-                self.menu_view = menubar.addMenu('&View')
+                self.menu_view: QMenu = menubar.addMenu('&View')
             elif key == 'menu_tools':
-                self.menu_tools = menubar.addMenu('Tools')
+                self.menu_tools: QMenu = menubar.addMenu('Tools')
                 self.menu_tools.setEnabled(False)
                 #self.menu_tools.setVisible(False)
             elif key == 'menu_window':
-                self.menu_window = menubar.addMenu('&Window')
+                self.menu_window: QMenu = menubar.addMenu('&Window')
             elif key == 'menu_help':
-                self.menu_help = menubar.addMenu('&Help')
+                self.menu_help: QMenu = menubar.addMenu('&Help')
             elif isinstance(key, tuple):
                 attr_name, name = key
                 submenu = menubar.addMenu(name)
                 setattr(self, attr_name, submenu)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(key)
         # always last
         self.menu_hidden = menubar.addMenu('&Hidden')
@@ -603,7 +604,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # in other words, it can set shortcuts
         #self._dummy_toolbar = self.addToolBar('Dummy toolbar')
         #self._dummy_toolbar.setObjectName('dummy_toolbar')
-        self.menubar = self.menuBar()
+        self.menubar: QMenuBar = self.menuBar()
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
         action_names = list(self.actions.keys())
@@ -645,7 +646,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                             populate_sub_qtoolbar(menu, item, actions)
                         elif isinstance(menu, QMenu):
                             populate_sub_qmenu(menu, item, actions)
-                        else:
+                        else:  # pragma: no cover
                             raise TypeError(menu)
                         continue
                     elif not isinstance(item, str):
@@ -653,7 +654,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                     try:
                         action = self.actions[item] #if isinstance(item, str) else item()
-                    except Exception:
+                    except Exception:  # pragma: no cover
                         keysi = list(self.actions.keys())
                         self.log.error(str(keysi))
                         raise
@@ -740,13 +741,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if checkables is None:
             checkables = {}
 
-        used_shortcuts = {}
+        used_shortcuts: dict[str, str] = {}
         for tool in tools:
-            if len(tool) == 6:
-                is_visible = True
-                (name, txt, icon, shortcut, tip, func) = tool
-            else:
-                (name, txt, icon, shortcut, tip, func, is_visible) = tool
+            (name, txt, icon, shortcut, tip, func, is_visible) = tool
 
             #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
             if name in actions:
@@ -775,7 +772,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """updates the File Menu with the updated input files"""
         recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
         #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
-        used_shortcuts = {}
+        used_shortcuts: dict[str, str] = {}
         for (name, label, image, shortcut, tooltip, func, is_visible) in recent_file_tools:
             #print(f'updating name={name} -> {label}')
             action: QAction = self.actions[name]
@@ -2491,11 +2488,11 @@ def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
             raise RuntimeError(f'tool name={name!r} has a shortcut='
                                f'{shortcut!r} that is banned.  '
                                'Pick a different letter')
-        #if shortcut in used_shortcuts:
-            #raise RuntimeError(f'tool name={name!r} has a shortcut='
-                               #f'{shortcut!r} that is already used.  '
-                               #'Pick a different letter.  '
-                               #f'Used={used_shortcuts[shortcut]}')
+        if shortcut in used_shortcuts:
+            raise RuntimeError(f'tool name={name!r} has a shortcut='
+                               f'{shortcut!r} that is already used.  '
+                               'Pick a different letter.  '
+                               f'Used={used_shortcuts[shortcut]}')
         used_shortcuts[shortcut] = shortcut
         action.setShortcut(shortcut)
         #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)

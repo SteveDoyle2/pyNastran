@@ -272,7 +272,7 @@ class LoadActions(BaseGui):
             if infile_name is not None and geometry_format is not None:
                 filter_index = formats.index(geometry_format)
             else:
-                title = 'set_legend_title File to Load'
+                title = 'Choose a Geometry File to Load'
                 wildcard_index, infile_name = self.create_load_file_dialog(wildcard, title)
                 if not infile_name:
                     # user clicked cancel

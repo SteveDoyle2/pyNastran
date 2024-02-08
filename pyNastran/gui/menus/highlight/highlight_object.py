@@ -38,6 +38,13 @@ class HighlightObject(BaseGui):
             'clicked_ok' : False,
             'close' : False,
         }
+        gui = self.gui
+        nodes = gui.get_node_ids(model_name=model_name)
+        elements = gui.get_element_ids(model_name=model_name)
+        if nodes is None or elements is None:
+            gui.log.error('No model was found')
+            return
+
         if not self._highlight_window_shown:
             self._highlight_window = HighlightWindow(data, win_parent=self.gui, menu_type='highlight')
             self._highlight_window.show()
@@ -91,6 +98,13 @@ class MarkObject(BaseGui):
             'clicked_ok' : False,
             'close' : False,
         }
+        gui = self.gui
+        nodes = gui.get_node_ids(model_name=model_name)
+        elements = gui.get_element_ids(model_name=model_name)
+        if nodes is None or elements is None:
+            gui.log.error('No model was found')
+            return
+
         if not self._mark_window_shown:
             self._mark_window = HighlightWindow(data, win_parent=self.gui, menu_type='mark')
             self._mark_window.show()

@@ -126,7 +126,7 @@ class HighlightWindow(PyDialog):
             self.setWindowTitle('Highlight')
         elif self.menu_type == 'mark':
             self.setWindowTitle('Mark')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.menu_type)
 
         self.create_widgets()
@@ -229,7 +229,7 @@ class HighlightWindow(PyDialog):
             #self.label_size_edit.setEnabled(False)
             irow += 1
             #self.mark_button.setEnabled(False)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.menu_type)
 
         #self.create_legend_widgets()
@@ -377,6 +377,8 @@ class HighlightWindow(PyDialog):
     def on_remove_actors(self):
         """removes multiple vtk actors"""
         gui = self.parent()
+        if len(self.actors) == 0:
+            return
         if gui is not None:
             if self.nodes_edit.style is not None:
                 self.nodes_edit.style.remove_actors()
