@@ -770,7 +770,7 @@ class GuiAttributes:
                 actor.VisibilityOff()
                 count += 1
         if count and show_msg:
-            self.log_command('resize_labels(%s)' % names)
+            self.log_command('self.resize_labels(%s)' % names)
 
     #---------------------------------------------------------------------------
     def on_update_clipping(self, min_clip=None, max_clip=None) -> None:

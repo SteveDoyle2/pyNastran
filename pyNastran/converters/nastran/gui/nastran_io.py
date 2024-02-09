@@ -3061,12 +3061,12 @@ class NastranIO(NastranIO_):
             #return
         if not hasattr(self, 'shear_moment_torque_obj'):
             return
-
+        is_visible = True
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
-             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
-            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
+            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', '',
+             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu, is_visible),
+            ('create_coord', 'Create Coordinate System...', 'coord.png', '', 'Creates a Coordinate System', self.on_create_coord, is_visible),
         ]
         items = (
             'shear_moment_torque',

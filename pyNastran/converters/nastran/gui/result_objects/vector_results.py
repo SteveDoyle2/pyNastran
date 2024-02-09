@@ -15,6 +15,9 @@ from pyNastran.gui.utils.utils import is_blank, is_value
 
 
 col_axis = 1
+IDX_REAL = (7, 8, 9)
+IDX_IMAG = (10, 11, 12)
+COMPLEX_DEFAULT_INDICES = tuple(list(IDX_REAL) + list(IDX_IMAG))
 
 #if TYPE_CHECKING:
     #from typing import TypedDict
@@ -590,9 +593,28 @@ class DispForceVectorResults(VectorResultsCommon):
         #self.component_indices (0, 1, 2)
         # T_
         title0 = self.index_to_base_title_annotation[self.t123_offset]['title']
-
-        # T_XYZ
-        method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        if self.is_real:
+            # T_XYZ
+            method = title0 + ''.join(self.index_map[idx] for idx in self.component_indices)
+        else:
+            method = ''
+            idxs = IDX_REAL
+            if any(idi in self.component_indices for idi in idxs):
+                # real
+                method ='r'
+                for idx in self.component_indices:
+                    if idx in idxs:
+                        mapped_index = self.index_map[idx].split()[0]
+                        method += mapped_index
+            idxs = IDX_IMAG
+            if any(idi in self.component_indices for idi in idxs):
+                # imag
+                method += '_i'
+                for idx in self.component_indices:
+                    if idx in idxs:
+                        mapped_index = self.index_map[idx].split()[0]
+                        method += mapped_index
+            method = method.replace('__', '_')
         title_out = f'{self._title} {method}'
         return title_out
 
@@ -629,14 +651,16 @@ class DispForceVectorResults(VectorResultsCommon):
             real = data.real
             imag = data.imag
             # real
-            for idx in [7, 8, 9]:
+            for idx in IDX_REAL:
                 if idx not in self.component_indices:
-                    real[:, idx] = 0.0
+                    idxi = idx - IDX_REAL[0]
+                    real[:, idxi] = 0.0
                     idxs.append(idx)
             # complex
-            for idx in [10, 11, 12]:
+            for idx in IDX_IMAG:
                 if idx not in self.component_indices:
-                    imag[:, idx] = 0.0
+                    idxi = idx - IDX_IMAG[0]
+                    imag[:, idxi] = 0.0
                     idxs.append(idx)
         return data, idxs
 
@@ -775,13 +799,15 @@ def _get_complex_component_indices(methods_keys: list[int]) -> tuple[int, ...]:
     """
     # the data is real/imag, so we use that...
     #default_indices = [1, 2, 3, 4, 5, 6]    # mag/phase
-    default_indices = [7, 8, 9, 10, 11, 12]  # real/imag
+    default_indices = COMPLEX_DEFAULT_INDICES  # real/imag
     if methods_keys is None or len(methods_keys) == 0:
         # default
-        indices = default_indices
+        #indices = default_indices
+        return default_indices
     elif 0 in methods_keys:
         # include all components b/c Magnitude is selected
-        indices = default_indices
+        #indices = default_indices
+        return default_indices
     else:
         # no 0 (magnitude) in methods_keys
         # update the indices to correspond to the array

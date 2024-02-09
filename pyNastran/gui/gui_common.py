@@ -1091,7 +1091,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         prop.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.log_command(f'on_set_edge_color(is_edges_black={is_edges_black}, render={render})')
+        self.log_command(f'self.on_set_edge_color(is_edges_black={is_edges_black}, render={render})')
         return
 
     #---------------------------------------------------------------------
@@ -1356,7 +1356,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             render_window = self.vtk_interactor.GetRenderWindow()
             render_window.Render()
 
-    def update_all(self, render=True):
+    def update_all(self, render: bool=True):
         self.grid_selected.Modified()
 
         #selection_node.Update()
@@ -1392,7 +1392,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             render_window.Render()
 
 
-    def _setup_element_mask(self, create_grid_selected=True):
+    def _setup_element_mask(self, create_grid_selected: bool=True) -> None:
         """
         starts the masking
 
@@ -1451,7 +1451,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
                               name=name, plot=True, stop_on_failure=stop_on_failure)
 
-    def _update_menu_bar_to_format(self, fmt, method):
+    def _update_menu_bar_to_format(self, fmt: str, method: str) -> None:
         """customizes the gui to be nastran/cart3d-focused"""
         self.menu_bar_format = fmt
         tools, menu_items = getattr(self, method)()
@@ -2317,7 +2317,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         return True
 
 
-    def clear_application_log(self, force=False):
+    def clear_application_log(self, force: bool=False) -> None:
         """
         Clears the application log
 
@@ -2338,7 +2338,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
-                self.log_command(f'clear_application_log(force={force})')
+                self.log_command(f'self.clear_application_log(force={force})')
 
     #---------------------------------------------------------------------------------------
     # PICKER

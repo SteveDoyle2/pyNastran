@@ -711,8 +711,8 @@ class MainWindow2(QMainWindow):
         if not is_passed:
             return is_passed
         self._default_python_file = python_file
-        self.log_command('self.on_run_script(%r)' % python_file)
-        print('self.on_run_script(%r)' % python_file)
+        self.log_command(f'self.on_run_script({python_file!r})')
+        print(f'self.on_run_script({python_file!r})')
         return is_passed
 
     # file
