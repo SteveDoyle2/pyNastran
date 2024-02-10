@@ -311,7 +311,8 @@ class VectorTable(GuiResultCommon):
         #assert len(dxyz.shape) == 2, dxyz.shape
         #return dxyz
 
-    def _get_complex_displacements_by_phase(self, i:int, phase: float=0.) -> np.ndarray:
+    def _get_complex_displacements_by_phase(self, i: int, name: str,
+                                            phase: float=0.) -> np.ndarray:
         """
         Get displacements for a complex eigenvector result.
         """
@@ -319,9 +320,9 @@ class VectorTable(GuiResultCommon):
         dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
         return dxyz
 
-    def _get_complex_displacements(self, i: int) -> np.ndarray:
+    def _get_complex_displacements(self, i: int, name: str) -> np.ndarray:
         """see ``_get_complex_displacements_by_phase``"""
-        dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
+        dxyz = self._get_complex_displacements_by_phase(i, name, self.phases[i])
         return dxyz
 
     def get_fringe_result(self, i: int, name: str) -> np.ndarray:

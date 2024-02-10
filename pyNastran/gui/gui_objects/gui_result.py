@@ -163,7 +163,7 @@ class GuiResultCommon:
     def get_default_phase(self, i: int, name: str):
         return None
 
-    def _get_complex_displacements_by_phase(self, i: int, phase):
+    def _get_complex_displacements_by_phase(self, i: int, name: str, phase: float):
         raise NotImplementedError(self.class_name)
 
 

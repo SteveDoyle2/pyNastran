@@ -15,8 +15,13 @@ from pyNastran.gui.utils.utils import is_blank, is_value
 
 
 col_axis = 1
-IDX_REAL = (7, 8, 9)
-IDX_IMAG = (10, 11, 12)
+#IDX_REAL = (0, 1, 2)
+#IDX_IMAG = (3, 4, 5)
+
+IDX_REAL = (0, 1, 2)
+IDX_IMAG = (3, 4, 5)
+#IDX_REAL = (7, 8, 9)
+#IDX_IMAG = (10, 11, 12)
 COMPLEX_DEFAULT_INDICES = tuple(list(IDX_REAL) + list(IDX_IMAG))
 
 #if TYPE_CHECKING:
@@ -108,9 +113,6 @@ class VectorResultsCommon(GuiResultCommon):
     @abstractmethod
     def _get_fringe_data_sparse(self, itime: int, res_name) -> np.ndarray:
         raise NotImplementedError(f'{self.class_name}._get_fringe_data_sparse')
-    @abstractmethod
-    def _get_fringe_data_sparse(self, itime: int, res_name) -> np.ndarray:
-        raise RuntimeError(f'{self.class_name}._get_fringe_data_sparse')
 
     # --------------------------------------------------------------------------
     # abstractmethods
@@ -143,6 +145,10 @@ class VectorResultsCommon(GuiResultCommon):
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
         raise NotImplementedError(f'{self.class_name}.has_output_checks')
+
+    @abstractmethod
+    def get_legend_tuple(self, i: int, resname: str) -> Any:
+        raise NotImplementedError(f'{self.class_name}.get_legend_tuple')
 
     # --------------------------------------------------------------------------
     # unmodifyable getters
@@ -178,7 +184,6 @@ class VectorResultsCommon(GuiResultCommon):
         imax = imaxs[itime]
         if imin == -2:
             self.get_default_min_max(itime, res_name)
-            x = 1
         # -1 -> nan
         # -2 -> default
         assert imins[itime] != -2, imins
@@ -332,7 +337,7 @@ class VectorResultsCommon(GuiResultCommon):
 
     def set_scale(self, itime: int, res_name: str, scale: float) -> None:
         if not hasattr(self, 'dim_max'):
-            return 0.
+            return
         itime, case_flag = self.get_case_flag(itime, res_name)
         if self.linked_scale_factor:
             itime = 0
@@ -340,7 +345,7 @@ class VectorResultsCommon(GuiResultCommon):
         scales[itime] = scale
     def set_arrow_scale(self, itime: int, res_name: str, scale: float) -> None:
         if not hasattr(self, 'dim_max'):
-            return 0.
+            return
         itime, case_flag = self.get_case_flag(itime, res_name)
         if self.linked_scale_factor:
             itime = 0
@@ -461,13 +466,16 @@ class DispForceVectorResults(VectorResultsCommon):
             self.component_indices = (0, 1, 2)
             self.index_map = {0: 'X', 1: 'Y', 2: 'Z',}
         else:
-            self.component_indices = (7, 8, 9, 10, 11, 12)
+            #self.component_indices = (7, 8, 9, 10, 11, 12)
+            self.component_indices = COMPLEX_DEFAULT_INDICES # (1, 2, 3, 4, 5, 6)
             self.index_map = {
-                0: 'Magnitude',
-                1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
-                4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
-                7: 'X Real', 8: 'Y Real', 9: 'Z Real',
-                10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
+                #0: 'Magnitude',
+                #1: 'X Mag', 2: 'Y Mag', 3: 'Z Mag',
+                #4: 'X Phase', 5: 'Y Phase', 6: 'Z Phase',
+                #7: 'X Real', 8: 'Y Real', 9: 'Z Real',
+                #10: 'X Imaginary', 11: 'Y Imaginary', 12: 'Z Imaginary',
+                0: 'X Real', 1: 'Y Real', 2: 'Z Real',
+                3: 'X Imaginary', 4: 'Y Imaginary', 5: 'Z Imaginary',
             }
         self.min_max_method = 'Magnitude'
         self.inode = np.array([], dtype='int32')
@@ -522,9 +530,9 @@ class DispForceVectorResults(VectorResultsCommon):
                 # if results of different type are selected (e.g., Real/Imag)
                 # the "earliest" type is selected
                 # Resultant -> Magnitude -> Phase -> Real -> Imaginary
-                'Resultant',
-                'X Magnitude', 'Y Magnitude', 'Z Magnitude',
-                'X Phase', 'Y Phase', 'Z Phase',
+                'Magnitude',
+                #'X Magnitude', 'Y Magnitude', 'Z Magnitude',
+                #'X Phase', 'Y Phase', 'Z Phase',
                 'X Real', 'Y Real', 'Z Real',
                 'X Imaginary', 'Y Imaginary', 'Z Imaginary',
             ]
@@ -633,8 +641,10 @@ class DispForceVectorResults(VectorResultsCommon):
         datai = self.case.data
         i0 = self.t123_offset
         if i0 == 1:
+            # rotations
             assert datai.shape[2] == 6, datai.shape
         else:
+            # translations; i0=0
             assert datai.shape[2] in {3, 6}, datai.shape
 
         data = datai[itime, :, i0:i0+3].copy()
@@ -655,12 +665,14 @@ class DispForceVectorResults(VectorResultsCommon):
                 if idx not in self.component_indices:
                     idxi = idx - IDX_REAL[0]
                     real[:, idxi] = 0.0
+                    #real[:, idx] = 0.0
                     idxs.append(idx)
             # complex
             for idx in IDX_IMAG:
                 if idx not in self.component_indices:
                     idxi = idx - IDX_IMAG[0]
                     imag[:, idxi] = 0.0
+                    #imag[:, idx] = 0.0
                     idxs.append(idx)
         return data, idxs
 
@@ -708,8 +720,9 @@ class DispForceVectorResults(VectorResultsCommon):
         unused_ntimes, nnodes = self.case.data.shape[:2]
         vector_result_sparse, *unused_junk = self._get_vector_data_sparse(itime, res_name)
         if self.min_max_method == 'Value':
-            assert len(self.component_indices) == 1, self.component_indices
-            fringe_result_sparse = vector_result_sparse[:, self.component_indices[0]]
+            fringe_result_sparse = get_fringe_value_array(
+                self.component_indices, vector_result_sparse,
+                self.is_real, self.is_complex)
         else:
             fringe_result_sparse = safe_norm(vector_result_sparse, axis=1)
         assert len(fringe_result_sparse) == nnodes
@@ -755,8 +768,9 @@ class DispForceVectorResults(VectorResultsCommon):
         vector_result, itime, case_flag = self.get_vector_data_dense(itime, res_name)
 
         if self.min_max_method == 'Value':
-            assert len(self.component_indices) == 1, self.component_indices
-            fringe_result = vector_result[:, self.component_indices[0]]
+            fringe_result = get_fringe_value_array(
+                self.component_indices, vector_result,
+                self.is_real, self.is_complex)
         else:
             fringe_result = safe_norm(vector_result, axis=1)
 
@@ -764,6 +778,20 @@ class DispForceVectorResults(VectorResultsCommon):
                                       is_sparse=False)
         return fringe_result, vector_result
 
+
+def get_fringe_value_array(component_indices: tuple[int, ...],
+                           vector_result: np.ndarray,
+                           is_real: bool, is_complex: bool, ) -> np.ndarray:
+    """doesn't support magnitude/phase"""
+    assert len(component_indices) == 1, component_indices
+    component = component_indices[0]
+    if is_real or is_complex and component <= 2:
+        # real
+        fringe_result = vector_result[:, component].real
+    else:
+        # imaginary
+        fringe_result = vector_result[:, component-3].imag
+    return fringe_result
 
 def _get_real_component_indices(methods_keys: Optional[list[int]]) -> tuple[int, ...]:
     """
@@ -791,8 +819,8 @@ def _get_complex_component_indices(methods_keys: list[int]) -> tuple[int, ...]:
     if Magnitude is selected, only use magnitude
     methods = [
         'Resultant',
-        'X Magnitude', 'Y Magnitude', 'Z Magnitude',
-        'X Phase', 'Y Phase', 'Z Phase',
+        #'X Magnitude', 'Y Magnitude', 'Z Magnitude',
+        #'X Phase', 'Y Phase', 'Z Phase',
         'X Real', 'Y Real', 'Z Real',
         'X Imaginary', 'Y Imaginary', 'Z Imaginary',
     ]
@@ -814,7 +842,6 @@ def _get_complex_component_indices(methods_keys: list[int]) -> tuple[int, ...]:
         #
         # first split names by type
         for key in methods_keys:
-            assert isinstance(key, str), key
             assert isinstance(key, int), key
         indices = methods_keys
     component_indices = tuple(np.array(indices, dtype='int32') - 1)

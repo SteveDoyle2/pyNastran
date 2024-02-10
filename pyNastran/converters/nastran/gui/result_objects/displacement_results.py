@@ -174,10 +174,22 @@ class DisplacementResults2(DispForceVectorResults):
         else:
             assert isinstance(itime, int), (itime, phase)
             assert isinstance(phase, float), (itime, phase)
-            dxyz = self._get_complex_displacements_by_phase(itime, phase)
+            dxyz = self._get_complex_displacements_by_phase(itime, res_name, phase)
             deflected_xyz = self.xyz + scale * dxyz
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz
+
+    def _get_complex_displacements_by_phase(self, itime: int, res_name: str,
+                                            phase: float=0.) -> np.ndarray:
+        """
+        Get displacements for a complex eigenvector result.
+        """
+        dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
+        assert dxyz.ndim == 2, dxyz
+
+        theta = np.radians(phase)
+        dxyz = dxyz.real * np.cos(theta) + dxyz.imag * np.sin(theta)
+        return dxyz
 
     def __repr__(self) -> str:
         """defines str(self)"""
