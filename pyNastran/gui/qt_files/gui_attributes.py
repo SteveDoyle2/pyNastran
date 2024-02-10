@@ -9,7 +9,8 @@ import traceback
 from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkDataSetMapper
+from vtkmodules.vtkRenderingCore import (
+    vtkColorTransferFunction, vtkDataSetMapper, vtkTextActor)
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 from qtpy import QtGui
@@ -217,7 +218,7 @@ class GuiAttributes:
         self.modules = {}
 
         # actor_slots
-        self.corner_text_actors: dict[int, Any] = {}
+        self.corner_text_actors: dict[int, vtkTextActor] = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
@@ -1042,6 +1043,9 @@ class GuiAttributes:
             stop the code if there's an error
 
         """
+        if name is False:
+            # fixing weird pyqt5, python 3.12 issue
+            name = 'main'
         self.load_actions.on_load_geometry(
             infile_name=infile_name, geometry_format=geometry_format,
             name=name, plot=plot, stop_on_failure=stop_on_failure)
@@ -1204,7 +1208,7 @@ class GuiAttributes:
         self.edit_geometry_properties_obj.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.log_command('settings.on_set_font_size(%s)' % font_size)
+        self.log_command('self.settings.on_set_font_size(%s)' % font_size)
         return False
 
     def make_cutting_plane(self, data) -> None:
@@ -1246,7 +1250,7 @@ class GuiAttributes:
         self.mark_elements_by_different_case(
             eids, icase_result, icase_to_apply,
             stop_on_failure=stop_on_failure, show_command=False)
-        self.log_command(f'mark_elements(eids={eids})')
+        self.log_command(f'self.mark_elements(eids={eids})')
 
     def mark_elements_by_case(self, eids: list[int],
                               stop_on_failure: bool=False,
@@ -1257,7 +1261,7 @@ class GuiAttributes:
         self.mark_elements_by_different_case(
             eids, icase_result, icase_to_apply,
             stop_on_failure=stop_on_failure, show_command=False)
-        self.log_command(f'mark_elements_by_case(eids={eids})')
+        self.log_command(f'self.mark_elements_by_case(eids={eids})')
 
     def mark_elements_by_different_case(self, eids: list[int],
                                         icase_result: int,

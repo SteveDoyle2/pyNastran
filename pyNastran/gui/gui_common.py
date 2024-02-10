@@ -1047,7 +1047,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self._build_vtk_frame_post()
 
     def on_reset_camera(self):
-        self.log_command('on_reset_camera()')
+        self.log_command('self.on_reset_camera()')
         self._simulate_key_press('r')
         self.vtk_interactor.Render()
 
@@ -1074,7 +1074,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if render:
             self.Render()
         #self.refresh()
-        self.log_command(f'on_set_edge_visibility(is_edges_visible={is_edges_visible}, render={render})')
+        self.log_command(f'self.on_set_edge_visibility(is_edges_visible={is_edges_visible}, render={render})')
 
     def on_set_edge_color(self, is_edges_black: bool,
                           render: bool=True) -> None:
@@ -1592,7 +1592,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.log_info("select_point = %s" % str(select_point))
 
     #def on_cell_picker(self):
-        #self.log_command("on_cell_picker()")
+        #self.log_command("self.on_cell_picker()")
         #picker = self.cell_picker
         #world_position = picker.GetPickPosition()
         #cell_id = picker.GetCellId()
@@ -1795,16 +1795,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             pass
         elif animate_in_gui:
             msg = (
-                f'make_gif({gif_filename!r}, {scale}, istep={istep},\n'
-                f'         min_value={min_value}, max_value={max_value},\n'
-                f'         animate_scale={animate_scale}, animate_phase={animate_phase},\n'
-                f'         animate_time={animate_time},\n{icase_msg}'
-                #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
-                f'         time={time}, animation_profile={animation_profile!r},\n'
-                f'         nrepeat={nrepeat}, magnify={magnify},\n'
-                f'         make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
-                f'         fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui})\n'
+                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'    min_value={min_value}, max_value={max_value},\n'
+                f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'    animate_time={animate_time},\n{icase_msg}'
+                #'    icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                #'    icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                f'    time={time}, animation_profile={animation_profile!r},\n'
+                f'    nrepeat={nrepeat}, magnify={magnify},\n'
+                f'    make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
+                f'    fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
             # onesided has no advantages for in-gui animations and creates confusion
@@ -1838,16 +1838,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if not is_failed:
             msg = (
-                f'make_gif({gif_filename!r}, {scale}, istep={istep},\n'
-                f'         min_value={min_value}, max_value={max_value},\n'
-                f'         animate_scale={animate_scale}, animate_phase={animate_phase},\n'
-                f'         animate_time={animate_time},\n{icase_msg}\n'
-                f"         time={time}, animation_profile={animation_profile!r},\n"
-                f'         nrepeat={nrepeat}, fps={fps}, magnify={magnify},\n'
-                f'         make_images={make_images}, delete_images={delete_images},\n'
-                f'         make_gif={make_gif},\n'
-                f'         stop_animation={stop_animation},\n'
-                f'         animate_in_gui={animate_in_gui})\n'
+                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'    min_value={min_value}, max_value={max_value},\n'
+                f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'    animate_time={animate_time},\n{icase_msg}\n'
+                f"    time={time}, animation_profile={animation_profile!r},\n"
+                f'    nrepeat={nrepeat}, fps={fps}, magnify={magnify},\n'
+                f'    make_images={make_images}, delete_images={delete_images},\n'
+                f'    make_gif={make_gif},\n'
+                f'    stop_animation={stop_animation},\n'
+                f'    animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
 
@@ -2329,7 +2329,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # popup menu
         if force:
             self.log_widget.clear()
-            self.log_command('clear_application_log(force=%s)' % force)
+            self.log_command(f'self.clear_application_log(force={force})')
         else:
             widget = QWidget()
             title = 'Clear Application Log'
@@ -2373,7 +2373,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         renwin.PointSmoothingOn()
         renwin.SetMultiSamples(scale)
         self.vtk_interactor.Render()
-        self.log_command(f'on_set_anti_aliasing({scale!r})')
+        self.log_command(f'self.on_set_anti_aliasing({scale!r})')
 
     #---------------------------------------------------------------------------------------
 

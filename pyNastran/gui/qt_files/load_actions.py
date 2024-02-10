@@ -61,7 +61,7 @@ class LoadActions(BaseGui):
             stop the code if True
 
         """
-        assert isinstance(name, str), 'name=%r type=%s' % (name, type(name))
+        assert isinstance(name, str), f'name={name!r} type={type(name)}; infile_name={infile_name} geometry_format={geometry_format!r}; plot={plot}; stop_on_failure={stop_on_failure}'
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)

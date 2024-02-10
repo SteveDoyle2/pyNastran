@@ -173,6 +173,12 @@ class FakeGUIMethods(GuiVTKCommon):
         self.corner_text_actors[3] = vtkTextActor()
         self.format_class_map = CLASS_MAP
 
+    #def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
+                              #) -> list[Any]:
+        #return []
+    def update_recent_files_menu(self) -> None:
+        pass
+
     def cell_centroid(self, cell_id, dtype='float32'):
         return np.zeros(3, dtype=dtype)
 

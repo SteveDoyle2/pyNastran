@@ -65,7 +65,7 @@ COORD_TEXT_SCALE = 0.5 # percent of nominal
 USE_PARALLEL_PROJECTION = True
 DEFAULT_COLORMAP = 'jet'
 MAGNIFY = 5
-NFILES_TO_SAVE = 6
+NFILES_TO_SAVE = 9
 
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',

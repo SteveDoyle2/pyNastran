@@ -167,7 +167,7 @@ class GuiQtCommon(GuiAttributes):
         assert case is not False, case
         ncases = len(self.case_keys)
         if ncases <= 1:
-            self.log_warning('cycle_results(result_name=%r); ncases=%i' % (
+            self.log_warning('self.cycle_results(result_name=%r); ncases=%i' % (
                 case, ncases))
             if self.ncases == 0:
                 self.scalar_bar_actor.SetVisibility(False)
@@ -176,7 +176,7 @@ class GuiQtCommon(GuiAttributes):
                                            show_msg=show_msg, update=update)
         assert case is not False, case
         if show_msg:
-            self.log_command('cycle_results(case=%r)' % self.icase)
+            self.log_command('self.cycle_results(case=%r)' % self.icase)
 
     def get_new_icase(self) -> int:
         if len(self.result_cases):
@@ -215,7 +215,7 @@ class GuiQtCommon(GuiAttributes):
             self._is_displaced = False
             self._update_grid(self._xyz_nominal)
         if show_msg:
-            self.log_command(f'on_clear_results(show_msg={show_msg})')
+            self.log_command(f'self.on_clear_results(show_msg={show_msg})')
 
     #def clear_grid_fringe(grid):
         point_data: vtkPointData = grid.GetPointData()
@@ -833,7 +833,7 @@ class GuiQtCommon(GuiAttributes):
         """
         assert case is not False, case
         #if explicit:
-            #self.log_command('cycle_results(case=%r)' % case)
+            #self.log_command('self.cycle_results(case=%r)' % case)
         found_cases = self.increment_cycle(case)
         if found_cases:
             icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
@@ -891,7 +891,7 @@ class GuiQtCommon(GuiAttributes):
             # we leave this, so we can still cycle the results without renumbering the cases
             #self.ncases -= 1
         self.res_widget.set_case_keys(self.case_keys)
-        self.log_command(f'delete_cases(icases_to_delete={icases_to_delete}, ask={ask})')
+        self.log_command(f'self.delete_cases(icases_to_delete={icases_to_delete}, ask={ask})')
 
     def _get_sidebar_data(self, unused_name: str) -> list[Any]:
         """
@@ -1220,7 +1220,7 @@ class GuiQtCommon(GuiAttributes):
         #location = self.get_case_location(key)
         res_widget.update_method(methods)
         if explicit:
-            self.log_command(f'cycle_results(case={self.icase:d})')
+            self.log_command(f'self.cycle_results(case={self.icase:d})')
         assert self.icase is not False, self.icase
         return self.icase
 
@@ -1688,7 +1688,7 @@ class GuiQtCommon(GuiAttributes):
                 #prop = actor.GetProperty()
                 count += 1
         if count and show_msg:
-            self.log_command('hide_labels(%s)' % names)
+            self.log_command('self.hide_labels(%s)' % names)
 
     def show_labels(self, case_keys: Optional[list[int]]=None,
                     show_msg: bool=True) -> None:
@@ -1715,7 +1715,7 @@ class GuiQtCommon(GuiAttributes):
                 count += 1
         if count and show_msg:
             # yes the ) is intentionally left off because it's already been added
-            self.log_command('show_labels(%s)' % names)
+            self.log_command('self.show_labels(%s)' % names)
 
     def remove_alt_grid(self, name: str,
                         remove_geometry_property: bool=False) -> None:

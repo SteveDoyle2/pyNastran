@@ -738,7 +738,7 @@ class PreferencesWindow(PyDialog):
         self.on_default_clipping_min()
         self.on_default_coord_scale()
         self.on_default_coord_text_scale()
-        self.on_default_text_size()
+        self.on_default_corner_text_size()
         self.startup_directory_checkbox.setChecked(True)
 
         self.magnify_edit.setValue(MAGNIFY)
