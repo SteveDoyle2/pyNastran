@@ -8,17 +8,17 @@ from pyNastran.gui.vtk_rendering_core import (
     #vtkDataSetMapper,
     vtkColorTransferFunction,
     vtkPolyDataMapper)
-from vtk import (vtkLODActor,
-                 vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper,
-                 vtkInteractorStyleRubberBandPick,
-                 vtkArrowSource,
-                 vtkGlyph3D, vtkExtractEdges,
-)
-#from vtkmodules.vtkRenderingLOD import vtkLODActor
-#from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper, vtkColorTransferFunction
-#from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
-#from vtkmodules.vtkFiltersSources import vtkArrowSource
-#from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
+#from vtk import (vtkLODActor,
+                 #vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper,
+                 #vtkInteractorStyleRubberBandPick,
+                 #vtkArrowSource,
+                 #vtkGlyph3D, vtkExtractEdges,
+#)
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper, vtkColorTransferFunction
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
+from vtkmodules.vtkFiltersSources import vtkArrowSource
+from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
@@ -535,7 +535,7 @@ class GuiVTKCommon(GuiQtCommon):
 
         # TODO: make sure all the eids exist
         group.element_ids = eids
-        self.log_command('create_group_with_name(%r, %r)' % (name, eids))
+        self.log_command('self.create_group_with_name(%r, %r)' % (name, eids))
         self.groups[name] = group
 
     def map_element_centroid_to_node_fringe_result(self, update_limits: bool=True,
@@ -603,7 +603,7 @@ class GuiVTKCommon(GuiQtCommon):
             imax=imax, max_value=max_value,
         )
         self.vtk_interactor.Render()
-        self.log_command(f'map_element_centroid_to_node_fringe_result('
+        self.log_command(f'self.map_element_centroid_to_node_fringe_result('
                          f'update_limits={update_limits}, show_msg={show_msg})')
         return is_passed
 

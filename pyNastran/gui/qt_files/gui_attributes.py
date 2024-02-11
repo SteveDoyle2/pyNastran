@@ -60,7 +60,7 @@ IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-    from vtk import vtkAxes
+    from vtkmodules.vtkFiltersGeneral import vtkAxes
 
 
 class GeometryObject(BaseGui):

@@ -26,6 +26,10 @@ from qtpy.QtWidgets import QMessageBox, QApplication
 # 3rd party
 import vtkmodules  # if this crashes, make sure you ran setup.py
 
+# hack to not break the gui
+#import vtk
+from vtkmodules import vtkRenderingOpenGL2
+
 # pyNastran
 import pyNastran
 from pyNastran import is_pynastrangui_exe
@@ -332,7 +336,7 @@ class MainWindow(GuiCommon, NastranIO):
         else:
             msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         self.window_title = msg
-        self.log_command('on_reload()')
+        self.log_command('self.on_reload()')
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 

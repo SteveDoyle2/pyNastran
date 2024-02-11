@@ -7,12 +7,12 @@ import numpy as np
 #VTK_TRIANGLE = 5
 #from pyNastran.gui.vtk_interface import vtkVertex
 #from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
-#from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
 
-from vtk import (
+#from vtk import (
     #vtkUnstructuredGridReader,
-    vtkXMLUnstructuredGridReader,
-)
+    #vtkXMLUnstructuredGridReader,
+#)
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 
 from pyNastran.gui.vtk_common_core import vtkPoints, vtkTypeFloat32Array, VTK_ID_TYPE

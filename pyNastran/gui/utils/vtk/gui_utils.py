@@ -5,8 +5,10 @@ from copy import deepcopy
 import numpy as np
 from numpy import issubdtype
 
-from vtk import vtkLODActor, vtkDataSetMapper, vtkTypeFloat32Array
-#from vtkmodules.vtkRenderingLOD import vtkLODActor
+#from vtk import vtkLODActor, vtkDataSetMapper, vtkTypeFloat32Array
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkRenderingCore import vtkDataSetMapper
+from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
 
 from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk

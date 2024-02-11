@@ -16,23 +16,23 @@ from typing import Union, Callable, Optional
 import numpy as np
 
 #from pyNastran.gui.vtk_interface import
-from vtk import (
-    vtkInteractorStyleRubberBandZoom,
-    vtkSelection, vtkSelectionNode, vtkPlanes,
-    vtkIdFilter,
-    vtkExtractPoints,
-    vtkExtractSelectedFrustum,
-    vtkExtractSelection,
-    vtkRenderedAreaPicker,
-)
+#from vtk import (
+    #vtkInteractorStyleRubberBandZoom,
+    #vtkSelection, vtkSelectionNode, vtkPlanes,
+    #vtkIdFilter,
+    #vtkExtractPoints,
+    #vtkExtractSelectedFrustum,
+    #vtkExtractSelection,
+    #vtkRenderedAreaPicker,
+#)
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
-#from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
-#from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode, vtkPlanes
-#from vtkmodules.vtkFiltersCore import vtkIdFilter
-#from vtkmodules.vtkFiltersPoints import vtkExtractPoints
-#from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
-#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-#from vtkmodules.vtkRenderingCore import vtkActor, vtkRenderedAreaPicker
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
+from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode, vtkPlanes
+from vtkmodules.vtkFiltersCore import vtkIdFilter
+from vtkmodules.vtkFiltersPoints import vtkExtractPoints
+from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkRenderingCore import vtkActor, vtkRenderedAreaPicker
 
 from pyNastran.gui.vtk_rendering_core import vtkActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkPolyData

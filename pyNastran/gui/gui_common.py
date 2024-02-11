@@ -19,16 +19,15 @@ from qtpy.QtWidgets import (
     QMenu, QToolButton, QMenuBar)
 #QKeySequence = QtGui.QKeySequence
 MenuTuple = tuple[QMenu, tuple[str, ...]]
-ToolTuple = tuple[str, str, str, str, str, Callable[..., Any], bool]
 
-from vtk import (vtkExtractSelection,
-                 vtkSelection, vtkSelectionNode,
-                 vtkImageActor,
-                 vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
-#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-#from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
-#from vtkmodules.vtkRenderingCore import vtkImageActor
-#from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
+#from vtk import (vtkExtractSelection,
+                 #vtkSelection, vtkSelectionNode,
+                 #vtkImageActor,
+                 #vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
+from vtkmodules.vtkRenderingCore import vtkImageActor
+from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
@@ -38,9 +37,8 @@ import pyNastran
 
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
-#from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
-from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
+from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
@@ -74,13 +72,20 @@ except ImportError:
 from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.utils.numpy_utils import integer_types
 
-Tool = tuple[str, str, str, Optional[str], str, Callable]
+Tool = tuple[str, str, str, str, str, Callable[..., Any], bool]
 BANNED_SHORTCUTS: set[str] = set([])
 
 from pyNastran.gui.gui_objects.settings import Settings, NFILES_TO_SAVE
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults, ElementalTableResults)
+
+#if qt_version == 'pyqt6':
+    #def _update_shortcut(shortcut: str):
+        #return QKeySequence(shortcut)
+#else:
+    #def _update_shortcut(shortcut: str):
+        #return shortcut
 
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
@@ -287,7 +292,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if tools is None:
             recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
 
-            file_tools: list[ToolTuple] = [
+            file_tools: list[Tool] = [
                 # flag,  label,   picture,     shortcut, tooltip             func
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent, is_visible),
 
@@ -302,7 +307,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('script',   'Run Python Script...', 'python48.png', '', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
             ] + recent_file_tools
 
-            tools: list[ToolTuple] = file_tools + [
+            tools: list[Tool] = file_tools + [
                 # labels
                 ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels, is_visible),
                 ('label_reset', 'Clear All Labels',     '', '',       'Clear all labels',     self.reset_labels, is_visible),
@@ -319,12 +324,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('geometry', 'Geometry', 'geometry.png', '', 'Geometry', self.geometry_obj.show, is_visible),
                 #
                 # core menus
-                ('legend',    'Modify Legend...',    'legend.png',    'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu, is_visible),
-                ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu, is_visible),
-                ('clipping',  'Set Clipping...',     '',              '',        'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
-                ('set_preferences',    'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
-                ('geo_properties',     'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
-                ('map_element_fringe', 'Map Element Fringe',          '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
+                ('legend',             'Modify Legend...',           'legend.png',      'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu, is_visible),
+                ('animation',          'Create Animation...',        'animation.png',   'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu, is_visible),
+                ('clipping',           'Set Clipping...',            '',                '',       'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
+                ('set_preferences',    'Preferences...',             'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
+                ('geo_properties',     'Edit Geometry Properties...', '',               'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
+                ('map_element_fringe', 'Map Element Fringe',          '',               'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
 
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
@@ -367,7 +372,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                 # results
                 ('cycle_results',  'Cycle Results', 'cycle_results.png',  'L', 'Changes the result case', self.on_cycle_results, is_visible),
-                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results, is_visible),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'k', 'Changes the result case', self.on_rcycle_results, is_visible),
 
                 # view actions
                 ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x'), is_visible),
@@ -403,14 +408,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('zoom', 'Zoom', 'zoom.png', '', 'Zoom In', self.mouse_actions.on_zoom, is_visible),
 
                 # font size
-                ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size, is_visible),
+                ('font_size_increase', 'Increase Font Size', 'text_up.png',   'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size, is_visible),
                 ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size, is_visible),
 
                 # picking
-                ('area_pick', 'Area Pick', 'tarea_pick.png', '', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
-                ('highlight', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
+                ('area_pick',                'Area Pick', 'tarea_pick.png', '', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
+                ('highlight',                'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
                 ('highlight_nodes_elements', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.highlight_obj.set_menu, is_visible),
-                ('mark_nodes_elements', 'Mark', 'tmark.png', '', 'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
+                ('mark_nodes_elements',      'Mark',      'tmark.png',      '', 'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
             ]
 
         if hasattr(self, 'cutting_plane_obj'):
@@ -418,17 +423,17 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if 'nastran' in self.fmt_order:
             tools += [
-                ('caero', 'Show/Hide CAERO Panels', '', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero',           'Show/Hide CAERO Panels', '', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
                 ('caero_subpanels', 'Toggle CAERO Subpanels', '', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
                 ('conm2', 'Toggle CONM2s', '', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
-                ('min', 'Min', '', '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
-                ('max', 'Max', '', '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
+                ('min',   'Min',           '', '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
+                ('max',   'Max',           '', '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
             ]
         self.tools: list[Tool] = tools
         self.checkables: dict[str, bool] = checkables
 
     def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
-                              ) -> list[ToolTuple]:
+                              ) -> list[Tool]:
         """
         file1, file2 are 1-based
         shortcuts are 1-based Control+1
@@ -2494,6 +2499,8 @@ def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
                                'Pick a different letter.  '
                                f'Used={used_shortcuts[shortcut]}')
         used_shortcuts[shortcut] = shortcut
+
+        #shortcut = _update_shortcut(shortcut)
         action.setShortcut(shortcut)
         #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
 

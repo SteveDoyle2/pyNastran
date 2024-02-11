@@ -6,21 +6,21 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
-from vtk import (
-    vtkTransform,
-    vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
-    vtkRenderLargeImage,
-    vtkAxesActor,
-    vtkOrientationMarkerWidget,
-    vtkXMLUnstructuredGridWriter,
-)
+#from vtk import (
+    #vtkTransform,
+    #vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
+    #vtkRenderLargeImage,
+    #vtkAxesActor,
+    #vtkOrientationMarkerWidget,
+    #vtkXMLUnstructuredGridWriter,
+#)
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
-#from vtkmodules.vtkCommonTransforms import vtkTransform
-#from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
-#from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
-#from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
-#from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
-#from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkIOImage import vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter
+from vtkmodules.vtkFiltersHybrid import vtkRenderLargeImage
+from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
+from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from pyNastran.gui.vtk_common_core import VTK_FONT_FILE
 from pyNastran.gui.vtk_rendering_core import (

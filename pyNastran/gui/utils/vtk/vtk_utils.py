@@ -10,8 +10,8 @@ from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 #from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
-from vtk import vtkCellData, vtkPointData
-from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
+#from vtk import vtkCellData, vtkPointData
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData, vtkSelectionNode, vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkFiltersCore import vtkIdFilter
 from vtkmodules.util.vtkConstants import VTK_ID_TYPE

@@ -2,16 +2,16 @@ from __future__ import annotations
 from typing import Optional, Callable, TYPE_CHECKING
 import numpy as np
 
-from vtk import (
-    vtkInteractorStyleDrawPolygon,
-    vtkLODActor,
-    vtkSelection,
-    vtkExtractSelection,
-)
-#from vtkmodules.vtkInteractionStyle import vtkInteractorStyleDrawPolygon
-#from vtkmodules.vtkRenderingLOD import vtkLODActor
-#from vtkmodules.vtkCommonDataModel import vtkSelection
-#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+#from vtk import (
+    #vtkInteractorStyleDrawPolygon,
+    #vtkLODActor,
+    #vtkSelection,
+    #vtkExtractSelection,
+#)
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleDrawPolygon
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkCommonDataModel import vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkDataSetMapper, vtkRenderer

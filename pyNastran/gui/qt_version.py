@@ -3,11 +3,25 @@ Figures out the "optimal" Qt version to use in a way that:
 
  - uses the qt version specified by the QT_API environment variable
  - picks up the already imported version
- - selects PySide2, PyQt5 (in that order)
+ - selects PySide2 or PyQt5 (in that order)
 
 """
 import os
 import sys
+
+# there's a bug with the keyboard shortcuts K and L
+ALLOW_PYSIDE6 = False
+ALLOW_PYQT6 = False
+
+#if ALLOW_PYQT6 and ALLOW_PYSIDE6:  # pragma: no cover
+    #_msg = f'PyQt5/6 or PySide2/6 is required'
+#elif ALLOW_PYSIDE6:
+    #_msg = f'PyQt5 or PySide2/6 is required'
+#if ALLOW_PYQT6:
+    #_msg = f'PyQt5/6 or PySide2 is required'
+#else:
+_msg = f'PyQt5 or PySide2 is required'
+
 
 API = os.environ.get('QT_API', '').lower()
 if API:
@@ -16,9 +30,9 @@ elif 'PySide2' in sys.modules:
     qt_version = 'pyside2'
 elif 'PyQt5' in sys.modules:
     qt_version = 'pyqt5'
-elif 'PySide6' in sys.modules:
+elif 'PySide6' in sys.modules and ALLOW_PYSIDE6:  # pragma: no cover
     qt_version = 'pyside6'
-elif 'PyQt6' in sys.modules:
+elif 'PyQt6' in sys.modules and ALLOW_PYQT6:  # pragma: no cover
     qt_version = 'pyqt6'
 else:
     found_gui = False
@@ -27,7 +41,7 @@ else:
         qt_int = 5
         qt_version = 'pyside2'
         found_gui = True
-    except ImportError:
+    except ImportError:  # pragma: no cover
         pass
 
     if not found_gui:
@@ -36,19 +50,19 @@ else:
             qt_int = 5
             qt_version = 'pyqt5'
             found_gui = True
-        except ImportError:
+        except ImportError:  # pragma: no cover
             pass
 
-    if not found_gui:
+    if not found_gui and ALLOW_PYSIDE6:  # pragma: no cover
         try:
             import PySide6  # pylint: disable=unused-import
             qt_int = 6
             qt_version = 'pyside6'
             found_gui = True
-        except ImportError:
+        except ImportError:  # pragma: no cover
             pass
 
-    if not found_gui:
+    if not found_gui and ALLOW_PYQT6:  # pragma: no cover
         try:
             import PyQt6  # pylint: disable=unused-import
             qt_int = 6
@@ -57,15 +71,9 @@ else:
         except ImportError:
             pass
 
-    if not found_gui:
-        raise ImportError('PyQt5/6 or PySide2/6 is required')
+    if not found_gui:  # pragma: no cover
+        raise ImportError(_msg)
 
-#if qt_version == 'pyside2':
-    #from qtpy import PYSIDE_VERSION as PYQT_VERSION
-#elif qt_version == 'pyqt5':
-    #from qtpy import PYQT_VERSION
-#else:
-    #raise NotImplementedError(qt_version)
 
 from qtpy import API as qt_version
 
@@ -77,19 +85,16 @@ elif qt_version == 'pyside2':
     qt_int = 5
     qt_name = 'PySide2'
     from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
-elif qt_version == 'pyside6':
+elif ALLOW_PYSIDE6 and qt_version == 'pyside6':  # pragma: no cover
     qt_int = 6
     qt_name = 'PySide6'
     from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
-elif qt_version == 'pyqt6':
+elif ALLOW_PYQT6 and qt_version == 'pyqt6':  # pragma: no cover
     qt_int = 6
     qt_name = 'PyQt6'
     from qtpy import PYQT_VERSION  # pylint: disable=unused-import
-else:
-    raise ImportError('PyQt5/6 or PySide2/6 is required; API=%r' % qt_version)
-
-if qt_version not in ['pyqt5', 'pyside2', 'pyqt6', 'pyside6', ]:
-    raise ImportError('PyQt5/6 or PySide2/6 is required; API=%r' % qt_version)
+else:  # pragma: no cover
+    raise ImportError(f'{_msg}; API={qt_version!r}')
 
 # required to make a pretty console
 try:
