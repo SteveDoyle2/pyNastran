@@ -31,19 +31,18 @@ CONSOLE_SCRIPTS = [
     'test_bdf  = pyNastran.bdf.test.test_bdf:main',
     'test_op2  = pyNastran.op2.test.test_op2:main',
     'test_op4  = pyNastran.op4.test.test_op4:main',
-    #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
-    'abaqus_to_nastran = pyNastran.converters.abaqus.abaqus_to_nastran:cmd_abaqus_to_nastran',
-    'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
-    'format_converter = pyNastran.converters.format_converter:cmd_line_format_converter',
     'pyNastranGUI = pyNastran.gui.gui:cmd_line',
     'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
     'f06 = pyNastran.f06.utils:cmd_line',
+    'format_converter = pyNastran.converters.format_converter:cmd_line_format_converter',
+    'abaqus_to_nastran = pyNastran.converters.abaqus.abaqus_to_nastran:cmd_abaqus_to_nastran',
+    'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
     'test_bdfv = pyNastran.dev.bdf_vectorized3.test.test_bdf:main',
     #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
-    #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
-    #'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
+    #'test_bdfv2 = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
+    #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
     #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
 ]
 
@@ -252,7 +251,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     return all_reqs, install_requires
 
 def _add_docopt(all_reqs, install_requires):
-    required_version_str = '0.8.1'
+    required_version_str = '0.9.0'
     try:
         import docopt
         iver = int_version('docopt', docopt.__version__)
