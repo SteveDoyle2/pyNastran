@@ -344,7 +344,7 @@ class VectorTable(GuiResultCommon):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            dxyz = self._get_complex_displacements(i)
+            dxyz = self._get_complex_displacements(i, name)
 
         assert len(dxyz.shape) == 2, dxyz.shape
         normi = safe_norm(dxyz, axis=1)

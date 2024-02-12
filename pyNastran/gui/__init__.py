@@ -8,11 +8,23 @@ IS_WINDOWS = 'nt' in os.name
 IS_LINUX = 'posix' in os.name
 IS_MAC = 'darwin' in os.name
 
-USE_NEW_SIDEBAR_OBJS_ = False  # DisplacementResults2
-USE_OLD_SIDEBAR_OBJS_ = True   # DisplacementResults
+IS_DEV = (
+    'TRAVIS' in os.environ or
+    'TRAVIS_PYTHON_VERSION' in os.environ or
+    'APPVEYOR' in os.environ or
+    'READTHEDOCS' in os.environ or
+    'GITHUB_ACTOR' in os.environ
+)
+
+USE_NEW_SIDEBAR_OBJS_ = True   # DisplacementResults2
+USE_OLD_SIDEBAR_OBJS_ = False  # DisplacementResults
 
 # False for ease of testing (it's the same length as the OG plate)
 USE_NEW_TERMS_ = False    #  only for USE_NEW_SIDEBAR_OBJS=True
+if IS_DEV:  # pragma: no cover
+    USE_NEW_SIDEBAR_OBJS_ = True
+    USE_OLD_SIDEBAR_OBJS_ = True
+    USE_NEW_TERMS_ = False
 
 
 def _get_fonts() -> tuple[str, str]:
@@ -74,15 +86,6 @@ def _get_fonts() -> tuple[str, str]:
     del font_dirname # , IS_WINDOWS, IS_LINUX, IS_MAC
     return font_file, bi_font_file
 
-IS_DEV = (
-    'TRAVIS' in os.environ or
-    'TRAVIS_PYTHON_VERSION' in os.environ or
-    'APPVEYOR' in os.environ or
-    'READTHEDOCS' in os.environ or
-    'GITHUB_ACTOR' in os.environ
-)
-#IS_TRAVIS = 'TRAVIS' in os.environ
-#IS_RTD = 'READTHEDOCS' in os.environ
 
 if is_pynastrangui_exe:  # pragma: no cover
     PKG_PATH = sys._MEIPASS #@UndefinedVariable

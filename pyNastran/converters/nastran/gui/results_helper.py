@@ -1412,6 +1412,11 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                     name, t123_offset, result[key].__class__.__name__))
                 if stop_on_failure:
                     raise
+            except Exception as e:  # pragma: no cover
+                log.error(str(e))
+                if stop_on_failure:
+                    raise
+
     return icase
 
 def _fill_nastran_ith_displacement(result, resname: str,

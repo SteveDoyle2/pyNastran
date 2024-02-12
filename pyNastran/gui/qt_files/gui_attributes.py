@@ -60,7 +60,11 @@ IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-    from vtkmodules.vtkFiltersGeneral import vtkAxes
+    #from vtkmodules.vtkFiltersGeneral import vtkAxes
+    from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid
+    from vtkmodules.vtkCommonDataModel import vtkPointData
+    FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
+                                 vtkPointData, np.ndarray], None]
 
 
 class GeometryObject(BaseGui):
@@ -292,24 +296,24 @@ class GuiAttributes:
         self.model_data.group_active = group_active
 
     @property
-    def follower_nodes(self):
+    def follower_nodes(self) -> dict[str, list[int]]:
         return self.model_data.follower_nodes
     @follower_nodes.setter
-    def follower_nodes(self, follower_nodes):
+    def follower_nodes(self, follower_nodes: dict[str, list[int]]) -> None:
         self.model_data.follower_nodes = follower_nodes
 
     @property
-    def follower_functions(self):
+    def follower_functions(self) -> dict[str, FollowerFunction]:
         return self.model_data.follower_functions
     @follower_functions.setter
-    def follower_functions(self, follower_functions):
+    def follower_functions(self, follower_functions: dict[str, FollowerFunction]):
         self.model_data.follower_functions = follower_functions
 
     @property
     def label_actors(self):
         return self.model_data.label_actors
     @label_actors.setter
-    def label_ids(self, label_actors: list[Any]):
+    def label_actors(self, label_actors: list[Any]):
         self.model_data.label_actors = label_actors
 
     @property
@@ -658,7 +662,7 @@ class GuiAttributes:
     @start_stop_performance_mode
     def on_run_script(self, python_file=False) -> bool:
         """pulldown for running a python script"""
-        self.load_actions.on_run_script(python_file)
+        return self.load_actions.on_run_script(python_file)
 
     def _execute_python_code(self, txt: str, show_msg: bool=True) -> bool:
         """executes python code"""
@@ -1693,7 +1697,7 @@ class ModelData:
         self.groups: dict[str, Any] = {}
         self.group_active = 'main'
 
-        self.follower_nodes = {}
+        self.follower_nodes: dict[str, list[int]] = {}
         self.follower_functions: dict[str, Callable] = {}
 
         self.label_actors: dict[int, list[int]] = {-1 : []}
