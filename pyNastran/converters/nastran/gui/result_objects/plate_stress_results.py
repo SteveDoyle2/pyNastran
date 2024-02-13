@@ -4,7 +4,7 @@ import numpy as np
 from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
-from pyNastran.femutils.utils import abs_nan_min_max
+from pyNastran.femutils.utils import abs_nan_min_max, safe_nanstd
 
 from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_2d, max_shear
@@ -234,17 +234,9 @@ class PlateStrainStressResults2(VectorResultsCommon):
                          nodal_combine: str='', # Centroid
                          **kwargs) -> None:
         assert len(kwargs) == 0, kwargs
-        transforms = self.has_coord_transform(itime, res_name)[1]
-        min_max_methods = self.has_derivation_transform(itime, res_name)[1]['derivation']
-        combine_methods = self.has_nodal_combine_transform(itime, res_name)[1]
-
-        transform = transform if transform else transforms[0]
-        min_max_method = min_max_method if min_max_method else min_max_methods[0]
-        nodal_combine = nodal_combine if nodal_combine else combine_methods[0]
-
-        assert transform in transforms, transform
-        assert min_max_method in min_max_methods, min_max_method
-        assert nodal_combine in combine_methods, nodal_combine
+        transform, min_max_method, nodal_combine = _check_sidebar_args(
+            self, itime, res_name,
+            transform, min_max_method, nodal_combine)
 
         #sidebar_kwargs = {
             #'min_max_method': min_max_method,
@@ -270,8 +262,6 @@ class PlateStrainStressResults2(VectorResultsCommon):
         #self.layer_indices = (1, )
 
         # doesn't matter cause it's already nodal
-        assert min_max_method in min_max_methods, min_max_method
-        assert nodal_combine in combine_methods, nodal_combine
         self.min_max_method = min_max_method
         self.nodal_combine = nodal_combine
         self.transform = transform
@@ -446,7 +436,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         elif min_max_method == 'Mean':  #   (Derive/Average)???
             data2 = np.nanmean(data, axis=axis)
         elif min_max_method == 'Std. Dev.':
-            data2 = np.nanstd(data, axis=axis)
+            data2 = safe_nanstd(data, axis=axis)
         elif min_max_method == 'Difference':
             data2 = np.nanmax(data, axis=axis) - np.nanmin(data, axis=axis)
         #elif min_max_method == 'Max Over Time':
@@ -904,3 +894,21 @@ def setup_centroid_node_data(eid_to_nid_map: dict[int, list[int]],
     element_node = np.vstack(element_node_list)
     node_data = np.hstack(node_data_list)
     return centroid_eids, centroid_data, element_node, node_data
+
+def _check_sidebar_args(plate: PlateStrainStressResults2,
+                        itime: int, res_name: tuple,
+                        transform: str, # Material
+                        min_max_method: str, # Absolute Max
+                        nodal_combine: str): # Centroid
+    transforms = plate.has_coord_transform(itime, res_name)[1]
+    min_max_methods = plate.has_derivation_transform(itime, res_name)[1]['derivation']
+    combine_methods = plate.has_nodal_combine_transform(itime, res_name)[1]
+
+    transform = transform if transform else transforms[0]
+    min_max_method = min_max_method if min_max_method else min_max_methods[0]
+    nodal_combine = nodal_combine if nodal_combine else combine_methods[0]
+
+    assert transform in transforms, transform
+    assert min_max_method in min_max_methods, min_max_method
+    assert nodal_combine in combine_methods, nodal_combine
+    return transform, min_max_method, nodal_combine

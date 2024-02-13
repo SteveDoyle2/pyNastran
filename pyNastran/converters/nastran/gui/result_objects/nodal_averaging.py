@@ -2,7 +2,7 @@ from typing import Callable
 from collections import defaultdict
 import numpy as np
 
-from pyNastran.femutils.utils import abs_nan_min_max
+from pyNastran.femutils.utils import abs_nan_min_max, safe_nanstd
 
 
 def nan_difference(x: np.ndarray, axis: int) -> np.ndarray:
@@ -16,7 +16,7 @@ derivation_map: dict[str, Callable[[np.ndarray, int], np.ndarray]]= {
     'Max': np.nanmax,
     'Min': np.nanmin,
     'Difference': nan_difference,
-    'Std. Dev.': np.nanstd,
+    'Std. Dev.': safe_nanstd,
 }
 
 def abs_max_scalar(x: np.ndarray) -> np.ndarray:
@@ -29,6 +29,8 @@ def abs_max_scalar(x: np.ndarray) -> np.ndarray:
 def difference_scalar(x: np.ndarray) -> np.ndarray:
     out = np.nanmax(x) - np.nanmin(x)
     return out
+def safe_nanstdi(x: np.ndarray) -> np.ndarray:
+    return safe_nanstd(x, axis=None)
 
 nodal_combine_map: dict[str, Callable[[np.ndarray], np.ndarray]]= {
     'Absolute Max': abs_max_scalar,
@@ -36,7 +38,7 @@ nodal_combine_map: dict[str, Callable[[np.ndarray], np.ndarray]]= {
     'Max': np.nanmax,
     'Min': np.nanmin,
     'Difference': difference_scalar,  # nan-subtract
-    'Std. Dev.': np.nanstd,
+    'Std. Dev.': safe_nanstdi,
 }
 
 def nodal_average(nodal_combine_func: Callable[[np.ndarray], np.ndarray],

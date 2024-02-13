@@ -165,7 +165,7 @@ class ForceResults2(DispForceVectorResults):
         else:
             assert isinstance(i, int), (i, phase)
             assert isinstance(phase, float), (i, phase)
-            dxyz, unused_idxs = self._get_complex_displacements_by_phase(i, phase)
+            dxyz, unused_idxs = self._get_complex_displacements_by_phase(i, res_name, phase)
             deflected_xyz = self.xyz + scale * dxyz
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz

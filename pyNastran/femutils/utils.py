@@ -399,7 +399,10 @@ def safe_norm(t123: np.ndarray,
     try:
         tnorm = np.linalg.norm(t123, axis=axis)
     except FloatingPointError:
-        dtype = _dtype_map[t123.dtype.name]
+        dtype_str = t123.dtype.name
+        if dtype_str not in _dtype_map:  # pragma: no cover
+            raise
+        dtype = _dtype_map[dtype_str]
         t123 = t123.astype(dtype=dtype)
         tnorm = np.linalg.norm(t123, axis=axis)
     return tnorm
@@ -431,3 +434,16 @@ def abs_nan_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     min_values = np.nanmin(x, axis=axis)
     y = get_abs_max(min_values, max_values, dtype=x.dtype)
     return y
+
+def safe_nanstd(x: np.ndarray, axis: int) -> np.ndarray:
+    try:
+        out = np.nanstd(x, axis=axis)
+    except FloatingPointError:
+        # underflow
+        dtype_str = x.dtype.name
+        if dtype_str not in _dtype_map:  # pragma: no cover
+            raise
+        dtype = _dtype_map[dtype_str]
+        x2 = x.astype(dtype=dtype)
+        out = np.nanstd(x2, axis=axis)
+    return out

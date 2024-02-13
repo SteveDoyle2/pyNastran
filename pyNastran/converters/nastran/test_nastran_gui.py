@@ -3,7 +3,9 @@
 import os
 import sys
 from copy import deepcopy
+from collections import defaultdict
 import unittest
+from typing import Union
 
 import numpy as np
 try:
@@ -20,6 +22,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
@@ -34,6 +37,17 @@ from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
 from pyNastran.converters.nastran.gui.stress import get_composite_sort
+
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult, GridPointForceResult
+from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults, ElementalTableResults
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
+
 RED = (1., 0., 0.)
 
 
@@ -43,6 +57,19 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         NastranIO.__init__(self)
         self.build_fmts(['nastran'], stop_on_failure=True)
         self.stop_on_failure = True
+
+    def load_nastran_geometry(self, bdf_filename: Union[str, BDF],
+                         name: str='main',
+                         plot: bool=True,
+                         stop_on_failure: bool=False):
+        super().load_nastran_geometry(
+            bdf_filename, name=name,
+            plot=plot, stop_on_failure=stop_on_failure)
+        self.validate_result_object_methods()
+
+    def load_nastran_results(self, op2_filename: Union[str, OP2]):
+        super().load_nastran_results(op2_filename)
+        self.validate_result_object_methods()
 
     def write_result_cases(self):  # pramga: no cover
         case_id0 = 0
@@ -66,6 +93,191 @@ class NastranGUI(NastranIO, FakeGUIMethods):
                 raise RuntimeError(result_case)
             assert case_id == case_id0, (case_id, case_id0)
             case_id0 += 1
+
+    def validate_result_object_methods(self):
+        scale = 10.
+        checks = defaultdict(bool)
+            #'GuiResult': True,
+            #'NormalResult': True,
+            #'GridPointForceResult': True,
+            #'CompositeStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+            #'CompositeStrainStressResults2': False,
+            #'SolidStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+        #}
+        for icase, (res, (itime, res_name)) in self.result_cases.items():
+            # make one check per result type.
+            # We check each term (e.g., for SolidStress, check oxx, oyy, von Mises, ...)
+            is_complex = res.is_complex
+            legend_title = res.get_legend_title(itime, res_name)
+            key = (res.class_name, is_complex, legend_title)
+
+            is_analyzed = checks[key]
+            if is_analyzed:  # don't analyze the same object type twice
+                continue
+
+            res.get_data_format(itime, res_name)
+            is_min = 'Min' in legend_title
+            is_max = 'Max' in legend_title
+            if isinstance(res, (GuiResult, SimpleTableResults, LayeredTableResults)):
+                res.get_fringe_result(itime, res_name)
+                res.get_fringe_vector_result(itime, res_name)
+                res.get_annotation(itime, res_name)
+                res.get_default_min_max(itime, res_name)
+                res.get_imin_imax(itime, res_name)
+            elif isinstance(res, NormalResult):
+                res.get_annotation(itime, res_name)
+            elif isinstance(res, GridPointForceResult):
+                pass
+            elif isinstance(res, (DisplacementResults, ForceTableResults)): # ElementalTableResults
+                res.get_annotation(itime, res_name)
+                res.get_arrow_scale(itime, res_name)
+                #res.get_case_flag(itime, res_name)
+
+                #res.get_data_type(itime, res_name)
+                res.get_fringe_result(itime, res_name)
+                res.get_fringe_vector_result(itime, res_name)
+                res.get_vector_result(itime, res_name)
+                deflects = res.deflects(itime, res_name)
+                if is_complex and deflects:
+                    res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                res.get_default_arrow_scale(itime, res_name)
+                res.get_default_min_max(itime, res_name)
+                res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, (ForceResults2, DisplacementResults2)):
+                force_disp_flags = [
+                    # transform, method_keys, nodal_combine
+                    ('Global', None, ''),
+                    ('Global', [0], ''),
+                    ('Global', [0, 1], ''),
+                    ('Global', [1, 2], ''),
+                    ('Global', [0, 1, 2], ''),
+                ]
+                res.get_annotation(itime, res_name)
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+
+                for transform, method_keys, nodal_combine in force_disp_flags:
+                    res.set_sidebar_args(itime, res_name,
+                                         #min_max_method=min_max_method,
+                                         transform=transform,
+                                         #methods_keys=method_keys,
+                                         nodal_combine='')
+                    #res.get_data_type(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    res.get_vector_result(itime, res_name)
+                    deflects = res.deflects(itime, res_name)
+                    if is_complex and deflects:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, CompositeStrainStressResults2):
+                composite_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, ''),
+                    ('Mean', 'Material', None, ''),
+                    ('Std. Dev.', 'Material', None, ''),
+                    ('Difference', 'Material', None, ''),
+                    ('Max', 'Material', [1, 2], ''),
+                    ('Min', 'Material', [1, 2], ''),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in composite_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, PlateStrainStressResults2):
+                plate_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, 'Absolute Max'),
+                    ('Mean', 'Material', None, 'Mean'),
+                    ('Min', 'Material', None, 'Min'),
+                    ('Max', 'Material', None, 'Max'),
+                    ('Std. Dev.', 'Material', None, 'Std. Dev.'),
+                    ('Difference', 'Material', None, 'Difference'),
+                    ('Max', 'Material', [0], 'Max'),
+                    ('Max', 'Material', [1], 'Max'),
+                    ('Max', 'Material', [2], 'Max'),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in plate_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, SolidStrainStressResults2):
+                solid_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, 'Absolute Max'),
+                    ('Mean', 'Material', None, 'Mean'),
+                    ('Min', 'Material', None, 'Min'),
+                    ('Max', 'Material', None, 'Max'),
+                    ('Std. Dev.', 'Material', None, 'Std. Dev.'),
+                    ('Difference', 'Material', None, 'Difference'),
+                    ('Max', 'Material', [0], 'Max'),
+                    ('Max', 'Material', [1], 'Max'),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in solid_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+            else:
+                raise NotImplementedError(res)
+            checks[key] = True
+        return
 
 PKG_PATH = pyNastran.__path__[0]
 STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')

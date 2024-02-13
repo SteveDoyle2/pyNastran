@@ -4,7 +4,7 @@ import numpy as np
 from typing import Optional, TYPE_CHECKING
 
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import pivot_table, abs_nan_min_max # abs_min_max
+from pyNastran.femutils.utils import pivot_table, abs_nan_min_max, safe_nanstd # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .vector_results import VectorResultsCommon, filter_ids
@@ -502,9 +502,9 @@ class CompositeStrainStressResults2(VectorResultsCommon):
             elif self.min_max_method == 'Mean':  #   (Derive/Average)???
                 data4 = np.nanmean(data3, axis=axis)
             elif self.min_max_method == 'Std. Dev.':
-                data4 = np.nanstd(data3, axis=axis)
+                data4 = safe_nanstd(data3, axis=axis)
             elif self.min_max_method == 'Difference':
-                data4 = nan_difference(data, axis)
+                data4 = nan_difference(data3, axis)
             #elif self.min_max_method == 'Max Over Time':
                 #data4 = np.nanmax(data3, axis=axis) - np.nanmin(data2, axis=axis)
             #elif self.min_max_method == 'Derive/Average':
