@@ -61,7 +61,7 @@ setup(
         #'mypkg': ['data/*.dat'],
     },
     entry_points={
-        'console_scripts': console_scripts,
+        'console_scripts': CONSOLE_SCRIPTS,
     },
     test_suite='pyNastran.all_tests',
 )
