@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 from setuptools import setup, find_packages
 
 import pyNastran
@@ -8,11 +9,18 @@ from packages import (check_python_version, get_package_requirements,
                       LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS,
                       CONSOLE_SCRIPTS)
 
+add_vtk_qt = True
+bdist = False
+if 'bdist_wheel' in sys.argv:
+    add_vtk_qt = False
+    bdist = True
+    assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
 
 check_python_version()
-all_reqs, install_requires = get_package_requirements(is_gui=True)
+install_requires = get_package_requirements(is_gui=True, add_vtk_qt=add_vtk_qt, bdist=bdist)
 
 packages = find_packages() + ['gui/icons/*.*']
+#print("packages = %s" % packages)
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -26,12 +34,6 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + EXCLUDE_WOR
 for exclude_word in EXCLUDE_WORDS:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
-
-#revision = get_git_revision_short_hash()
-#__version__ = '1.3.0+%s' % revision
-#__releaseDate__ = '2019/6/xx'
-#__releaseDate2__ = 'JUNE xx, 2019'
-
 update_version_file()
 
 setup(
@@ -50,6 +52,7 @@ setup(
     packages=packages,
     include_package_data=True,
     zip_safe=False,
+    install_requires=install_requires,
     #{'': ['license.txt']}
     #package_data={'': ['*.png']},
     #data_files=[(icon_path, icon_files2)],
@@ -64,6 +67,3 @@ setup(
     },
     test_suite='pyNastran.all_tests',
 )
-print()
-for package in install_requires:
-    print('did not install %s' % package)

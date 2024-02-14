@@ -154,7 +154,7 @@ jobs:
       - name: Install dependencies - ${{ matrix.mode }}
         run: |
          python -m pip install --upgrade pip
-         pip install flake8
+         pip install flake8 coverage
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          pip list
 
@@ -246,7 +246,8 @@ jobs:
          #python setup.py bdist_wheel
         #if: ${{  (matrix.python-version == '3.9') || (matrix.python-version == '3.10') }}
         run: |
-          python setup.py develop
+          pip install -e .
+          #python setup.py develop
 
       - name: List dependencies
         run: |
