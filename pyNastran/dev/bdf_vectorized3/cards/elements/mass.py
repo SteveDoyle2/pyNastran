@@ -573,7 +573,16 @@ class CONM2(Element):
         nid = self.model.grid.node_id
         xyz = self.model.grid.xyz_cid0()
         inode = np.searchsorted(nid, self.node_id)
-        assert np.array_equal(nid[inode], self.node_id)
+        try:
+            assert np.array_equal(nid[inode], self.node_id)
+        except IndexError: # pragma: no cover
+            msg = (
+                'Invalid index in nid[inode]:\n'
+                f'nid={nid} '
+                f'self.node_id={self.node_id} '
+                f'inode={inode}'
+            )
+            raise IndexError(msg)
         centroid = xyz[inode, :] + self.xyz_offset
 
         # handle cid=-1
