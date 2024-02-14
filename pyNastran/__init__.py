@@ -3,6 +3,14 @@ is_pynastrangui_exe = False
 is_installed = False
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
+
+    #from importlib.metadata import version, PackageNotFoundError
+    #__version__ = version('pyNastran')
+    #try:
+        #__version__ = version('pyNastran')
+    #except PackageNotFoundError:
+        ## package is not installed
+        #pass
     from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
     import os
@@ -31,10 +39,15 @@ else:
         except Exception:
             # git isn't installed
             ghash = 'no.checksum.error'
+        # 1.5.0+dev.0eccfa918
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
     __version_release__ = '1.4.0'
+
+    # only for release; 1.4.0
+    __version__ = __version_release__
+    # 1.4.0+dev.0eccfa918
     __version__ = f'{__version_release__}+{revision}'
     __releaseDate__ = '2024/8/xx'
     __releaseDate2__ = 'AUGUST xx, 2024'
@@ -48,7 +61,7 @@ __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 
-DEV = 'dev' in  __version__
+DEV = 'dev' in __version__
 if DEV:
     __docs__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
 else:
