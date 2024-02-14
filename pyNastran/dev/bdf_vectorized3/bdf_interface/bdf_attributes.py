@@ -202,7 +202,7 @@ class BDFAttributes:
         self.run_testing_checks = False
         # ---------------------------------------------------------------------
         self.fdtype = 'float64'
-        self.idtype = 'int32'
+        self.idtype = 'int64'
         self.punch = None
         self._encoding = None
         self.save_file_structure = False
