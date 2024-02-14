@@ -4,6 +4,7 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse as sci_sparse
+from scipy.sparse import csc_matrix
 
 from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
 from .utils import lambda1d, DOF_MAP
@@ -495,8 +496,8 @@ def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
 def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
                ngrid: int, ndof_per_grid: int, inplace=True) -> NDArrayNNfloat:
     """does an in-place transformation"""
-    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
-    #assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
+    assert isinstance(Kbb, (np.ndarray, csc_matrix)), type(Kbb)
+    #assert isinstance(Kbb, (np.ndarray, csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
     if not isinstance(Kbb, np.ndarray):
         Kbb = Kbb.tolil()
 
