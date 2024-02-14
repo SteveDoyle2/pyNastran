@@ -203,7 +203,7 @@ jobs:
         if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-          pip install vtk
+          pip install vtk qtpy
 
       - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.13' }}
         name: Install PySide2
