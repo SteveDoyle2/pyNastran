@@ -1191,6 +1191,7 @@ class PCOMP(CompositeProperty):
     def _save(self, property_id,
               nlayer, material_id, thickness, sout, theta,
               z0, nsm, shear_bonding, failure_theory, tref, ge, lam):
+        assert isinstance(lam, np.ndarray), lam
         if len(self.property_id):
             property_id = np.hstack([self.property_id, property_id])
 
