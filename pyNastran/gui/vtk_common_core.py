@@ -1,4 +1,5 @@
 try:
+    import vtkmodules.vtkCommonCore as vtk_core
     from vtkmodules.vtkCommonCore import (
         vtkPoints, vtkArray, vtkDataArray, vtkFloatArray,
         vtkIdList, vtkIdTypeArray,
@@ -7,8 +8,9 @@ try:
         vtkUnsignedCharArray,
         VTK_ID_TYPE, VTK_ID_TYPE,
         VTK_INT, VTK_FLOAT,
-        VTK_FONT_FILE, VTK_VERSION, VTK_VERSION_FULL)
+        VTK_FONT_FILE, VTK_VERSION)
 except ModuleNotFoundError:
+    import vtk as vtk_core
     from vtk import (
         vtkPoints, vtkArray, vtkDataArray, vtkFloatArray,
         vtkIdList, vtkIdTypeArray,
@@ -17,4 +19,9 @@ except ModuleNotFoundError:
         vtkUnsignedCharArray,
         VTK_ID_TYPE, VTK_ID_TYPE,
         VTK_INT, VTK_FLOAT,
-        VTK_FONT_FILE, VTK_VERSION, VTK_VERSION_FULL)
+        VTK_FONT_FILE, VTK_VERSION)
+
+if not hasattr(vtk_core, 'VTK_VERSION_FULL'):  # 9.0
+    VTK_VERSION_FULL = vtk_core.VTK_VERSION
+else:
+    VTK_VERSION_FULL = vtk_core.VTK_VERSION_FULL

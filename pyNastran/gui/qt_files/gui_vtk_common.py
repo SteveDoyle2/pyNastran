@@ -18,7 +18,13 @@ from vtkmodules.vtkRenderingLOD import vtkLODActor
 from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper, vtkColorTransferFunction
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
 from vtkmodules.vtkFiltersSources import vtkArrowSource
-from vtkmodules.vtkFiltersCore import vtkGlyph3D, vtkExtractEdges
+
+from vtkmodules.vtkFiltersCore import vtkGlyph3D
+import vtkmodules.vtkFiltersCore
+if hasattr(vtkmodules.vtkFiltersCore, 'vtkExtractEdges'):
+    from vtkmodules.vtkFiltersCore import vtkExtractEdges # 9.3.0+
+else:
+    from vtkmodules.vtkFiltersExtraction import vtkExtractEdges # 9.0.3 - 9.2.6
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
