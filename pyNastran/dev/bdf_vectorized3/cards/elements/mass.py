@@ -578,9 +578,9 @@ class CONM2(Element):
         except IndexError: # pragma: no cover
             msg = (
                 'Invalid index in nid[inode]:\n'
-                f'nid={nid} '
-                f'self.node_id={self.node_id} '
-                f'inode={inode}'
+                f'nid={nid}; dtype={nid.dtype.name}\n'
+                f'self.node_id={self.node_id}; dtype={self.node_id.dtype.name}\n'
+                f'inode={inode}; dtype={inode.dtype.name}'
             )
             raise IndexError(msg)
         centroid = xyz[inode, :] + self.xyz_offset
