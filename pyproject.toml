@@ -223,7 +223,9 @@ requires = [
 # Conclusion:
 # - "pip wheel ." pulls the version from setup.py
 # - invents a version if setup.py doesn't exist
-# - version_file fixes the version somehow
+# - version_file doesn't seem to do a whole lot
+# - the version comes from the __init__.py regardless of
+#   setup.py being directly called or not 
 [tool.setuptools_scm]
 version_file = "pyNastran/_version.py"
 local_scheme = 'no-local-version'
