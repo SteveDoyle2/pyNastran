@@ -724,6 +724,7 @@ class CompositeProperty(Property):
     @property
     def symmetry_scale_factor(self):
         scale = np.ones(len(self.property_id), dtype='float64')
+        assert self.lam.size > 0, str(self)
         isym = np.where(self.lam == 'SYM')
         scale[isym] = 2.
         return scale

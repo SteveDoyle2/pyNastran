@@ -6905,6 +6905,10 @@ class CSSCHD(VectorizedBaseCard):
             #raise TypeError('lalpha=%r must be an int or None' % self.lalpha)
         #if not(self.lmach is None or isinstance(self.lmach, integer_types)):
             #raise TypeError('lmach=%r must be an int or None' % self.lmach)
+        nalpha = self.lalpha.size
+        nmach = self.lmach.size
+        if (nalpha == 0) or (nalpha != nmach):
+            raise RuntimeError(f'CSSCHD csschd_id=%s; nalpha={nalpha} nmach={nmach}')
 
         ibad = (self.lalpha == 0) and (self.lmach == 0)
         if np.any(ibad):

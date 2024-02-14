@@ -9,6 +9,7 @@ from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 import scipy as sp
 import scipy.sparse as sci_sparse
+from scipy.sparse import csc_matrix, lil_matrix
 
 import pyNastran
 from pyNastran.nptyping_interface import (
@@ -1204,11 +1205,11 @@ def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype='int32') -> NDArr
     #izero = np.where((col_kgg == 0.) & (row_kgg == 0))[0]
     if isinstance(Kgg, np.ndarray):
         ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
-    elif isinstance(Kgg, (sci_sparse.csc.csc_matrix, sci_sparse.lil.lil_matrix)):
+    elif isinstance(Kgg, (csc_matrix, lil_matrix)):
         ipositive1 = col_kgg.todense().nonzero()[1]
         ipositive2 = row_kgg.todense().T.nonzero()[1]
         ipositive = np.union1d(ipositive1, ipositive2)
-        if isinstance(Kgg, sci_sparse.lil.lil_matrix):
+        if isinstance(Kgg, lil_matrix):
             Kgg = Kgg.tocsc()
     else:
         raise NotImplementedError(type(Kgg))

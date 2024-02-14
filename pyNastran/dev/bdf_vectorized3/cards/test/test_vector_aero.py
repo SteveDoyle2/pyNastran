@@ -3036,6 +3036,7 @@ class TestAero(unittest.TestCase):
         bdf_card = BDFCard(card, has_none=True)
         csschd.clear()
         csschd.add_card(bdf_card, comment='csschd card')
+        csschd.parse_cards()
         csschd.validate()
         csschd.write()
 

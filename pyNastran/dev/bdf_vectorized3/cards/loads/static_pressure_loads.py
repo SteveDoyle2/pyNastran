@@ -1611,7 +1611,8 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
             areai, centroidi, normali = _solid_quad_area(nids, xyz_cid0, face, g1, g34)
         #n1 = enodes[ig1i]
         #n1 = nodes[]
-        area[i] = areai
+        assert len(areai) == 1, areai
+        area[i] = areai[0]
         centroid[i, :] = centroidi
         normal[i, :] = normali
 
