@@ -18,6 +18,11 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult
 from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults # , ElementalTableResults
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -36,6 +41,7 @@ def save_nastran_results(gui: NastranGUI,
 
     used_titles = set()
     for key, case_data in gui.result_cases.items():
+        icase = key
         case, index_name = case_data
         if case.is_complex:
             log.warning(f'skipping case {str(case)} because it is complex')
@@ -63,16 +69,34 @@ def save_nastran_results(gui: NastranGUI,
             vtk_array = _save_layered_table_results(case,
                                                     key, index_name, used_titles,
                                                     point_data, cell_data, log)
+            location = case.location
+
+        elif isinstance(case, (DisplacementResults2, ForceResults2)):
+            #vector = case.get_force_vector_result(*index_name)
+            vector, *unused_junk = case.get_vector_data_dense(*index_name)
+            titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
+            check_title(titlei, used_titles)
+            vtk_array = numpy_to_vtk(vector, deep=0, array_type=None)
+            vtk_array.SetName(titlei)
+            location = case.location
+        elif isinstance(case, (CompositeStrainStressResults2, PlateStrainStressResults2, SolidStrainStressResults2)):
+            fringe = case.get_fringe_result(*index_name)
+            titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
+            check_title(titlei, used_titles)
+            vtk_array = numpy_to_vtk(fringe, deep=0, array_type=None)
+            vtk_array.SetName(titlei)
+            location = case.get_location(*index_name)
         else:
             if case.title == 'Normals' and case.scalar is None:
                 continue
-            if not isinstance(case, GuiResult):
+            if not isinstance(case, GuiResult):  # pragma: no cover
                 log.warning(f'skipping case {str(case)} because it is unhandled')
                 log.warning(str(case))
                 return
             assert isinstance(case, GuiResult), case
+            location = case.location
             vtk_array = case.save_vtk_result(used_titles)
-        add_vtk_array(case.location, point_data, cell_data, vtk_array)
+        add_vtk_array(location, point_data, cell_data, vtk_array)
 
 def _save_force_table_results(case: ForceTableResults,
                               key: int,
