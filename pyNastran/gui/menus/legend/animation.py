@@ -10,15 +10,17 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QRadioButton,
-    #QWidget, QButtonGroup,
     QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
 from pyNastran.utils.locale import func_str, func_str_or_none
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, set_combo_box_text
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
+from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_int, check_float, check_name_str, check_path)
+    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -119,11 +121,11 @@ class AnimationWindow(PyDialog):
         self.set_connections()
 
         self.is_gui = False
-        self.gui = None  # type: MainWindow
+        self.gui = None
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
-            self.gui = self.win_parent.win_parent
+            self.gui: MainWindow = self.win_parent.win_parent
 
         icase_max = 1000
         if is_gui_parent:
@@ -146,16 +148,12 @@ class AnimationWindow(PyDialog):
         self.icase_vector_start_edit.setRange(0, icase_max)
         self.icase_vector_end_edit.setRange(0, icase_max)
         self.icase_vector_delta_edit.setRange(1, icase_max)
-
         self.on_update_min_max_defaults()
-
 
     def create_widgets(self):
         """creates the menu objects"""
         self.box_scale = QGroupBox('Animate Scale')
         self.box_time = QGroupBox('Animate Time')
-
-        #icase_max = 1000
 
         self.checkbox_fringe = QCheckBox('Animate')
         self.checkbox_fringe.setToolTip('Animate the fringe')
@@ -305,7 +303,6 @@ class AnimationWindow(PyDialog):
         self.time_checkbox_fringe.setEnabled(False)
         self.time_checkbox_disp.setEnabled(False)
         self.time_checkbox_vector.setEnabled(False)
-
 
         self.min_value_enable = QCheckBox()
         self.min_value_label = QLabel('Min Fringe:')
@@ -482,7 +479,7 @@ class AnimationWindow(PyDialog):
         self.repeat_checkbox.setToolTip('Repeating creates an infinitely looping gif')
 
         # endless loop
-        self.make_gif_checkbox = QCheckBox("Make Gif?")
+        self.make_gif_checkbox = QCheckBox('Make Gif?')
         if IS_IMAGEIO:
             self.make_gif_checkbox.setChecked(True)
         else:
@@ -506,8 +503,7 @@ class AnimationWindow(PyDialog):
         self.wipe_button.setEnabled(False)
         #self.wipe_button.hide()
         self.stop_button.setEnabled(False)
-
-        self.cancel_button = QPushButton("Close")
+        self.cancel_button = QPushButton('Close')
 
         #self.set_grid_time(enabled=False)
         #self.set_grid_scale(enabled=self._default_is_scale)
@@ -817,14 +813,14 @@ class AnimationWindow(PyDialog):
         icase = self.icase_disp_start_edit.value()
         min_value = self.get_min_max(icase)[0]
         self.min_value_edit.setText(str(min_value))
-        self.min_value_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.min_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_max_value_default(self):
         """When max default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
         self.max_value_edit.setText(func_str_or_none(max_value))
-        self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.max_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_browse_folder(self):
         """opens a folder dialog"""
@@ -839,10 +835,11 @@ class AnimationWindow(PyDialog):
         """opens a file dialog"""
         default_filename = ''
         file_types = 'Delimited Text (*.txt; *.dat; *.csv)'
-        dirname = open_file_dialog(self, 'Select a CSV File', default_filename, file_types)
-        if not dirname:
+        #filt       = 'Delimited Text (*.txt; *.dat; *.csv)'
+        fname, filt = open_file_dialog(self, 'Select a CSV File', default_filename, file_types)
+        if not fname:
             return
-        self.csv_profile_browse_button.setText(dirname)
+        self.csv_profile_browse_button.setText(fname)
 
     def on_default_title(self):
         """sets the default gif name"""
@@ -858,7 +855,7 @@ class AnimationWindow(PyDialog):
         else:
             default_scale = self._default_scale
         self.scale_edit.setText(func_str_or_none(default_scale))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_arrow_scale(self):
         """sets the default arrow scale factor"""
@@ -869,7 +866,7 @@ class AnimationWindow(PyDialog):
         else:
             default_arrow_scale = self._default_arrow_scale
         self.arrow_scale_edit.setText(func_str(default_arrow_scale))
-        self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.arrow_scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_time(self):
         """sets the default gif time"""
@@ -1001,13 +998,14 @@ class AnimationWindow(PyDialog):
         grid_scale.addWidget(self.animation_profile_label, 0, 0)
         grid_scale.addWidget(self.animation_profile_edit, 0, 1)
 
-        #grid_scale.addWidget(self.csv_profile, 1, 0)
-        #grid_scale.addWidget(self.csv_profile_edit, 1, 1)
-        #grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
-
         self.csv_profile = QLabel("CSV profile:")
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_button = QPushButton('Browse')
+
+        if 0:
+            grid_scale.addWidget(self.csv_profile, 1, 0)
+            grid_scale.addWidget(self.csv_profile_edit, 1, 1)
+            grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
 
         #box_time = QVBoxLayout()
         # TODO: It's super annoying that the animate time box doesn't
@@ -1082,8 +1080,16 @@ class AnimationWindow(PyDialog):
             name = 'main'
             data = self.fringe_cases
             choices = cases
-            results_widget = ResultsWindow(parent, name, data, choices,
-                                           include_clear=False, include_delete=False)
+            results_widget = ResultsWindow(
+                parent, name, data, choices,
+                is_single_select=True,
+                left_click_callback=None,
+                right_click_actions=None,
+                include_export_case=False,
+                include_clear=False,
+                include_delete=False,
+                include_results=True,
+            )
             vbox_results = QVBoxLayout()
             results_widget_label = QLabel('Results:')
             vbox_results.addWidget(results_widget_label)
@@ -1155,7 +1161,8 @@ class AnimationWindow(PyDialog):
             self._make_gif(validate_out, istep=None)
         return passed
 
-    def _make_gif(self, validate_out, istep=None, stop_animation=False):
+    def _make_gif(self, validate_out, istep=None,
+                  stop_animation: bool=False):
         """interface for making the gif"""
         (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
          magnify, output_dir, gifbase,
@@ -1203,7 +1210,7 @@ class AnimationWindow(PyDialog):
         make_images = self.make_images_checkbox.isChecked()
         delete_images = self.delete_images_checkbox.isChecked()
         make_gif = self.make_gif_checkbox.isChecked()
-        animation_profile = str(self.animation_profile_edit.currentText())
+        animation_profile = get_combo_box_text(self.animation_profile_edit)
 
         icase_fringe_start = icase_fringe_end = icase_fringe_delta = None
         if animate_time and animate_fringe:
@@ -1257,8 +1264,8 @@ class AnimationWindow(PyDialog):
 
     def get_min_max(self, icase):
         if self.is_gui:
-            (obj, (i, name)) = self.gui.result_cases[icase]
-            min_value, max_value = obj.get_min_max(i, name)
+            (obj, (i, resname)) = self.gui.result_cases[icase]
+            min_value, max_value = obj.get_min_max(i, resname)
         else:
             return 0., 1.0
         return min_value, max_value
@@ -1291,7 +1298,7 @@ class AnimationWindow(PyDialog):
         else:
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
             if scale == 0.0:
-                self.scale_edit.setStyleSheet("QLineEdit{background: red;}")
+                self.scale_edit.setStyleSheet(QLINEEDIT_ERROR)
                 flag1 = False
 
         if animate_in_gui or wipe:

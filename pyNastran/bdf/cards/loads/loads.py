@@ -336,7 +336,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         sid = data[0]
         excite_id = data[1]
         lid = data[2]
+        if lid == 0:
+            lid = None
         tid = data[3]
+        if tid == 0:
+            tid = None
         return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -981,7 +985,7 @@ class DEFORM(Load):
     def __init__(self, sid, eid, deformation, comment=''):
         """
         Creates an DEFORM card, which defines applied deformation on
-        a 1D elemment.  Links to the DEFORM card in the case control
+        a 1D element.  Links to the DEFORM card in the case control
         deck.
 
         Parameters
@@ -1300,6 +1304,7 @@ class RFORCE(Load):
             IDRF entry.
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment

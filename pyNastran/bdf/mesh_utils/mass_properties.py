@@ -968,7 +968,8 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         if is_failed:
             model.log.error(out)
             raise RuntimeError(out)
-        wa, wb, _ihat, jhat, khat = out
+
+        _v, _ihat, jhat, khat, wa, wb = out
         p1 = xyz1 + wa
         p2 = xyz2 + wb
         if prop.type == 'PBEAM':
@@ -1063,7 +1064,9 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
             raise RuntimeError(msg)
     return mass
 
-def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
+def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
+                           mass: float, cg: np.ndarray, inertia: np.ndarray,
+                           reference_point: np.ndarray) -> float:
     """helper method for mass_properties"""
     prop = elem.pid_ref
     xyz1, xyz2 = elem.get_node_positions()
@@ -1075,7 +1078,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
         model.log.error(str(out))
         raise RuntimeError(out)
 
-    wa, wb, _ihat, jhat, khat = out
+    _v, _ihat, jhat, khat, wa, wb = out
     p1 = xyz1 + wa
     p2 = xyz2 + wb
     if prop.type == 'PBEAM':
@@ -1273,7 +1276,8 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
             #mass_per_area = model.nsm + rho * model.t
 
             #areas_prop[pid] += area
-            mpa = prop.nsm + prop.Rho() * t
+            rho = prop.Rho()
+            mpa = prop.nsm + rho * t
             #mpa = elem.pid_ref.MassPerArea()
             #m = mpa * area
         elif prop.type in ['PCOMP', 'PCOMPG']:
@@ -2487,22 +2491,22 @@ def mass_properties_breakdown(model: BDF, element_ids=None, mass_ids=None, nsm_i
             centroid, mass, nsm = _breakdown_ctetra(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
-                pids_dict, mass_per_volume_dict)
+                pids_dict, pids_per_volume_dict, mass_per_volume_dict)
         elif etype == 'CHEXA':
             centroid, mass, nsm = _breakdown_chexa(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
-                pids_dict, mass_per_volume_dict)
+                pids_dict, pids_per_volume_dict, mass_per_volume_dict)
         elif etype == 'CPENTA':
             centroid, mass, nsm = _breakdown_cpenta(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
-                pids_dict, mass_per_volume_dict)
+                pids_dict, pids_per_volume_dict, mass_per_volume_dict)
         elif etype == 'CPYRAM':
             centroid, mass, nsm = _breakdown_cpyram(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
-                pids_dict, mass_per_volume_dict)
+                pids_dict, pids_per_volume_dict, mass_per_volume_dict)
         else:
             model.log.warning('skipping mass_properties_breakdown for %s' % etype)
             return None, None, None
@@ -2783,14 +2787,17 @@ def _breakdown_cshear(xyz_cid0, nids, nelementsi, etype,
     #Az = tw * norm(cross(zaxis, normal), axis=1)
     return centroid, mass, nsm
 
-def _breakdown_ctetra(xyz_cid0, nids, nelementsi, etype,
-                      all_nids,
-                      pids_dict, mass_per_volume_dict):
+def _breakdown_ctetra(xyz_cid0: np.ndarray, nids: np.ndarray,
+                      nelementsi: int, etype: str,
+                      all_nids: np.ndarray,
+                      pids_dict: dict[str, list[float]],
+                      pids_per_volume_dict: dict[str, list[float]],
+                      mass_per_volume_dict: dict[str, list[float]]):
     nids2 = nids[:, :4]
-    pids = np.array(pids_dict[etype], dtype='int32')
-    assert len(pids) > 0, pids
-    rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-    assert  len(rho) > 0., rho
+
+    rho = _solid_density(pids_dict[etype],
+                         pids_per_volume_dict,
+                         mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -2809,14 +2816,41 @@ def _breakdown_ctetra(xyz_cid0, nids, nelementsi, etype,
     #e2 = None
     return centroid, mass, nsm
 
-def _breakdown_chexa(xyz_cid0, nids, nelementsi, etype,
-                     all_nids,
-                     pids_dict, mass_per_volume_dict):
+def _solid_density(pids_list: list[int],
+                   pids_per_volume_dict: [dict, list[int]],
+                   mass_per_volume_dict: dict[str, list[float]]) -> np.ndarray:
+    card_types = ['PSOLID', 'PIHEX']
+    pids_list_ = []
+    rho_list_ = []
+    for card_type in card_types:
+        if card_type not in mass_per_volume_dict:
+            continue
+        pids_list_.append(pids_per_volume_dict[card_type]) # pid
+        rho_list_.append(mass_per_volume_dict[card_type]) # rho
+
+    pids_array = np.hstack(pids_list_)
+    rhos_array = np.hstack(rho_list_)
+    assert len(pids_array) > 0, pids_array
+
+    isort = np.argsort(pids_array)
+    pids_sorted = pids_array[isort]
+    rho_sorted = rhos_array[isort]
+    ipids = np.searchsorted(pids_sorted, pids_list)
+    rho = rho_sorted[ipids]
+    assert  len(rho) > 0, rho
+    return rho
+
+def _breakdown_chexa(xyz_cid0: np.ndarray, nids: np.ndarray,
+                     nelementsi: int, etype: str,
+                     all_nids: np.ndarray,
+                     pids_dict: dict[str, list[float]],
+                     pids_per_volume_dict: dict[str, list[float]],
+                     mass_per_volume_dict: dict[str, list[float]]):
     nids2 = nids[:, :8]
-    pids = np.array(pids_dict[etype], dtype='int32')
-    assert len(pids) > 0, pids
-    rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-    assert  len(rho) > 0., rho
+
+    rho = _solid_density(pids_dict[etype],
+                         pids_per_volume_dict,
+                         mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 8)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -2852,14 +2886,17 @@ def _breakdown_chexa(xyz_cid0, nids, nelementsi, etype,
     #e2 = None
     return centroid, mass, nsm
 
-def _breakdown_cpenta(xyz_cid0, nids, nelementsi, etype,
-                      all_nids,
-                      pids_dict, mass_per_volume_dict):
+def _breakdown_cpenta(xyz_cid0: np.ndarray, nids: np.ndarray,
+                      nelementsi: int, etype: str,
+                      all_nids: np.ndarray,
+                      pids_dict: dict[str, list[float]],
+                      pids_per_volume_dict: dict[str, list[float]],
+                      mass_per_volume_dict: dict[str, list[float]]):
     nids2 = nids[:, :6]
-    pids = np.array(pids_dict[etype], dtype='int32')
-    assert len(pids) > 0, pids
-    rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-    assert  len(rho) > 0., rho
+
+    rho = _solid_density(pids_dict[etype],
+                         pids_per_volume_dict,
+                         mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 6)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -2884,14 +2921,18 @@ def _breakdown_cpenta(xyz_cid0, nids, nelementsi, etype,
     #e2 = None
     return centroid, mass, nsm
 
-def _breakdown_cpyram(xyz_cid0, nids, nelementsi, etype,
-                      all_nids,
-                      pids_dict, mass_per_volume_dict):
+def _breakdown_cpyram(xyz_cid0: np.ndarray, nids: np.ndarray,
+                      nelementsi: int, etype: str,
+                      all_nids: np.ndarray,
+                      pids_dict: dict[str, list[float]],
+                      pids_per_volume_dict: dict[str, list[float]],
+                      mass_per_volume_dict: dict[str, list[float]]):
     nids2 = nids[:, :5]
-    pids = np.array(pids_dict[etype], dtype='int32')
-    assert len(pids) > 0, pids
-    rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-    assert  len(rho) > 0., rho
+
+
+    rho = _solid_density(pids_dict[etype],
+                         pids_per_volume_dict,
+                         mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 5)
     p1 = xyz_cid0[inids[:, 0], :]

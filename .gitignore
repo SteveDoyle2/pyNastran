@@ -27,6 +27,13 @@ htmlcov
 *.gz
 *.json
 
+# pyInstaller building
+#*.qm
+*.pkg
+_internal/
+*.toc
+*.res
+
 # C extensions
 *.so
 # Packages
@@ -121,3 +128,4 @@ plane_face2_*.bdf
 */tcl/*
 */Include/*
 */Scripts/*
+env/*

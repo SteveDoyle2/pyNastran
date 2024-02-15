@@ -25,7 +25,7 @@ class TestLawgsGUI(unittest.TestCase):
         geometry_filename = os.path.join(MODEL_PATH, 'tmx1242.wgs')
         test = LaWGS_GUI()
         test.model.load_lawgs_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='lawgs', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='lawgs', stop_on_failure=True)
 
     def test_tmd_geometry(self):
         """tests tnd6480.wgs"""

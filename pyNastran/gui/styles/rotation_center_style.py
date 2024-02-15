@@ -1,9 +1,11 @@
 """
 defines the RotationCenterStyle class
 """
-import vtk
+#from vtk import vtkInteractorStyleTrackballCamera
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 
-class RotationCenterStyle(vtk.vtkInteractorStyleTrackballCamera):
+
+class RotationCenterStyle(vtkInteractorStyleTrackballCamera):
     """Custom TrackballCamera"""
 
     def __init__(self, parent=None):

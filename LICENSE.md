@@ -1,4 +1,4 @@
-Copyright (c) 2011-2022 Steven Doyle & pyNastran developers.
+Copyright (c) 2011-2024 Steven Doyle.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -29,7 +29,7 @@ class TestObjGUI(unittest.TestCase):
         test = ObjGUI()
         test.log = log
         #test.load_obj_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='obj', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='obj', stop_on_failure=True)
 
     def test_obj_geometry_02(self):
         """tests the ascii shuttle model"""

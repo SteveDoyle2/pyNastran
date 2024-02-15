@@ -29,7 +29,7 @@ def write_foam_file(version, obj, location=None):
     msg += '\n'
     return msg
 
-def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
+def cart3d_to_openfoam(cart3d_filename: str, inpt_filename: str, basepath: str):
     """
     https://openfoamwiki.net/images/f/f0/Final-AndrewJacksonSlidesOFW7.pdf
     """

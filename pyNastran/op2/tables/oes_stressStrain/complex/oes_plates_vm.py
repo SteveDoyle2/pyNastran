@@ -673,7 +673,7 @@ class ComplexPlateVMStressArray(ComplexPlateVMArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def _get_headers(self):
-        headers = ['oxx', 'oyy', 'txy', 'ovm']
+        headers = ['oxx', 'oyy', 'txy', 'von_mises']
         return headers
 
     def get_headers(self) -> list[str]:
@@ -687,7 +687,7 @@ class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
-        headers = ['exx', 'eyy', 'exy', 'evm']
+        headers = ['exx', 'eyy', 'exy', 'von_mises']
         return headers
 
     def get_headers(self) -> list[str]:

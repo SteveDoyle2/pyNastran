@@ -29,8 +29,16 @@ class UnXrefMesh(SafeXrefMesh):
         self._uncross_reference_contact()
         self._uncross_reference_superelements()
 
-        for super_id, superelement in sorted(self.superelement_models.items()):
-            superelement.uncross_reference(word=' (Superelement %i)' % super_id)
+        for super_tuple, superelement in sorted(self.superelement_models.items()):
+            if isinstance(super_tuple, int):
+                word = f' (Superelement {super_tuple:d})'
+            else:
+                wordi, value, label = super_tuple
+                if label:
+                    word = f'BEGIN {wordi}={value:d} LABEL={label}\n'
+                else:
+                    word = f'BEGIN {wordi}={value:d}\n'
+            superelement.uncross_reference(word=word)
 
     def _uncross_reference_nodes(self) -> None:
         """uncross references the GRID objects"""

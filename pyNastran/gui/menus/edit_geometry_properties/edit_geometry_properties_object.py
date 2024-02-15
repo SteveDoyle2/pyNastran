@@ -7,9 +7,8 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import numpy as np
-import vtk
 
-from pyNastran.gui.vtk_rendering_core import vtkActor
+from pyNastran.gui.vtk_rendering_core import vtkActor, vtkAxesActor
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -169,7 +168,7 @@ class EditGeometryPropertiesObject(BaseGui):
             alt_prop = self.gui.geometry_properties[namei]
             label_actors = alt_prop.label_actors
             lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
-        elif isinstance(actor, vtk.vtkAxesActor):
+        elif isinstance(actor, vtkAxesActor):
             changed = False
             is_visible1 = bool(actor.GetVisibility())
             is_visible2 = group.is_visible

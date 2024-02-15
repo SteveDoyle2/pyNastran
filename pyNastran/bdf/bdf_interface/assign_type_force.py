@@ -4,6 +4,7 @@ from .assign_type import double, _get_dtype
 from .bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types)
+from .assign_type import integer_double_or_blank
 
 def force_integer(card: BDFCard, ifield: int, fieldname: str) -> int:
     """see ``integer``"""
@@ -59,10 +60,10 @@ def force_double(card: BDFCard, ifield: int, fieldname: str) -> float:
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-    if svalue.isdigit():  # 1, not +1, or -1
-        # if only int
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not an integer).\n'
-                          'card=%s' % (fieldname, svalue, ifield, card))
+    #if svalue.isdigit():  # 1, not +1, or -1
+        ## if only int
+        #raise SyntaxError('%s = %r (field #%s) on card must be a float (not an integer).\n'
+                          #'card=%s' % (fieldname, svalue, ifield, card))
 
     try:
         # 1.0, 1.0E+3, 1.0E-3
@@ -131,7 +132,8 @@ def force_integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[float]=None):
+def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                          default: Optional[float]=None):
     """see ``double_or_blank``"""
     svalue = card.field(ifield)
 
@@ -152,14 +154,155 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: O
         except Exception:
             svalue = svalue.strip().upper()
             if not svalue:
-                return default
+                out = default
             try:
-                return double(card, ifield, fieldname)
+                out = double(card, ifield, fieldname)
             except Exception:
                 if svalue == '.':
                     return 0.
                 dtype = _get_dtype(svalue)
                 raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                                   'card=%s' % (fieldname, svalue, ifield, dtype, card))
+            return out
     return default
 
+def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
+    """see ``double_or_string``"""
+    svalue = card.field(ifield)
+
+    if isinstance(svalue, float_types):
+        return svalue
+    elif isinstance(svalue, integer_types):
+        fvalue = float(svalue)
+        warnings.warn('%s = %r (field #%s) on card must be a float or string (not an integer) -> %s.\n'
+                      'card=%s' % (fieldname, svalue, ifield, card))
+        return fvalue
+
+    elif isinstance(svalue, str):
+        if len(svalue) == 0:
+            warnings.warn('%s = %r (field #%s) on card must be a float or string (not an blank) -> %s.\n'
+                          'card=%s' % (fieldname, svalue, ifield, card))
+            raise RuntimeError('no blanks allowed')
+
+        try:
+            # float
+            fvalue = force_double(card, ifield, fieldname)
+            return fvalue
+        except SyntaxError:
+            pass
+
+        #print(svalue)
+        raise NotImplementedError(svalue)
+        #try:
+            #ivalue = int(svalue)
+            #fvalue = float(ivalue)
+            #warnings.warn('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
+                          #'card=%s' % (fieldname, svalue, ifield, fvalue, card))
+            #return fvalue
+        #except Exception:
+            #svalue = svalue.strip().upper()
+            #if not svalue:
+                #return default
+            #try:
+                #return double(card, ifield, fieldname)
+            #except Exception:
+                #if svalue == '.':
+                    #return 0.
+                #dtype = _get_dtype(svalue)
+                #raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
+                                  #'card=%s' % (fieldname, svalue, ifield, dtype, card))
+    else:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a float or string (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    raise SyntaxError('%s = %r (field #%s) on card must be a float or string -> %s.\n'
+                      'card=%s' % (fieldname, svalue, ifield, dtype, card))
+    #return default
+
+def lax_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                        default: Optional[float]=None,
+                        end: str='') -> float:
+    value = integer_double_or_blank(card, ifield, fieldname, default=default)
+    if isinstance(value, int):
+        value = float(value)
+    return value
+
+def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, str), type(fieldname)
+    svalue = card.field(ifield)
+    if svalue is None or '.' in svalue:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+
+    svalue = svalue.replace(' ', '')
+    try:
+        value = int(svalue)
+    except ValueError:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+    if value > 0 and isinstance(svalue, str):
+        if '0' in svalue:
+            value2 = str(svalue).replace('0', '')
+            msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
+                   'card=%s' % (fieldname, svalue, ifield, value2, card))
+            raise SyntaxError(msg)
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i, component in enumerate(svalue3):
+        if component not in '0123456':
+            msg = ('%s = %r (field #%s) on card contains an invalid component %r.\n'
+                   'card=%s' % (fieldname, svalue, ifield, component, card))
+            raise SyntaxError(msg)
+        if component in svalue3[i + 1:]:
+            msg = ('%s = %r (field #%s) on card must not contain duplicate entries.\n'
+                   'card=%s' % (fieldname, svalue, ifield, card))
+            raise SyntaxError(msg)
+    return svalue3
+
+def parse_components_or_blank(card: BDFCard, ifield: int, fieldname: str, default: str='0') -> str:
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, str), type(fieldname)
+    svalue = card.field(ifield)
+    #if isinstance(svalue, integer_types):
+        #pass
+    if svalue is None:
+        return default
+    elif '.' in svalue:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+
+    svalue = svalue.replace(' ', '')
+    try:
+        value = int(svalue)
+    except ValueError:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+    if value > 0 and isinstance(svalue, str):
+        if '0' in svalue:
+            value2 = str(svalue).replace('0', '')
+            msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
+                   'card=%s' % (fieldname, svalue, ifield, value2, card))
+            raise SyntaxError(msg)
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i, component in enumerate(svalue3):
+        if component not in '0123456':
+            msg = ('%s = %r (field #%s) on card contains an invalid component %r.\n'
+                   'card=%s' % (fieldname, svalue, ifield, component, card))
+            raise SyntaxError(msg)
+        if component in svalue3[i + 1:]:
+            msg = ('%s = %r (field #%s) on card must not contain duplicate entries.\n'
+                   'card=%s' % (fieldname, svalue, ifield, card))
+            raise SyntaxError(msg)
+    return svalue3

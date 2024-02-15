@@ -1,0 +1,371 @@
+# Installation
+# ------------
+# In general, you will install pyNastran with a wheel from PyPI, so:
+#  - pip install pyNastran -U
+# 
+# Installation From Source
+# ------------------------
+# Base Dependencies
+#   old:
+#    - python setup.py develop
+#    - python setup.py install
+#   new:
+#    - pip install -e .
+#    - pip install .
+#
+# The following options did not exist in older release versions of pyNastran
+#
+#   1. No GUI:
+#      - Add pandas to op2
+#      - Add hdf5 support to bdf/op2
+#      - old:
+#        - python setup_no_gui.py develop
+#        - python setup_no_gui.py install
+#      - new:
+#        - pip install -e .[nogui]
+#        - pip install .
+#        - pip install .[nogui]
+#
+#   2. With the GUI:
+#      - add gui (two options: pyside2, pyqt5)
+#      - old (N/A):
+#      - new:
+#        - pip install .[gui_pyside2]
+#        - pip install .[gui_pyqt5]
+#
+#   3. Just pyNastran:
+#      - old:
+#        - python setup_no_reqs.py
+#      - new:
+#        - pip install . --no-dependencies
+#        - pip install . --no-deps
+#   4. Install everything:
+#      - pip install .[gui_pyside2,gui_pyqt5]
+#
+#   5. Create wheel (for distribution):
+#      - pip wheel . --no-deps
+#
+#-------------------------------------------------------------------------------------------
+[project]
+name = "pyNastran"
+
+# Consult your build backend’s documentation to learn how it does it.
+# -> requires setuptools_scm
+dynamic = ["version"]
+#version = "1.4.0-dev"
+
+description = "Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer"
+
+authors = [
+    {name = "Steve Doyle"},
+    #{name = "Steve Doyle", email="asdf@gmail.com"},
+    #{email = "info@example.com"}
+]
+license = {file = "LICENSE.md"}
+#readme = {file = "README.md"}  # doesn't work
+#readme = "pyNastran project"   # it's looking for a file
+#readme = "README.md"           # doesn't work
+
+#readme = {file="README.md", content-type="text/markdown"}
+readme = {file="README.rst", content-type="text/x-rst"}
+
+requires-python = '>=3.9'
+
+#keywords = ["packaging", "dependency", "infer", "pyproject.toml"]
+keywords = ["nastran"]
+
+classifiers = [
+    'Topic :: Software Development',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Visualization',
+    'Intended Audience :: Science/Research',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: BSD-3',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+]
+
+# Requirements: This is done differently by poetry!
+#colorama          0.4.6
+#docopt-ng         0.9.0
+#imageio           2.31.1
+#matplotlib        3.8.2
+#numpy             1.26.2
+#pandas            2.1.4
+#Pillow            10.0.0
+#PyQt5             5.15.6
+#PyQt5-Qt5         5.15.2
+#PyQt5-sip         12.11.0
+#QtPy              2.1.0
+#PySide2           5.15.1
+#scipy             1.11.4
+#vtk               9.2.6
+dependencies = [
+    #"numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
+    #"numpy>=1.26.0,<1.27; python_version=='3.12'",
+    'numpy<2',
+    'scipy',
+    'matplotlib',
+    'cpylog>=1.4.0',
+    'docopt-ng>=0.9.0',
+    'colorama',
+]
+#-------------------------------------------------------------------------------------------
+[project.optional-dependencies]
+#dev = [
+#    #"black>=23",
+#]
+
+nogui = [
+    'pandas>=1.0,<3.0',
+    'h5py',     # hdf5
+]
+gui_pyqt5 = [
+    'pandas>=1.0,<3.0',
+    'h5py',     # hdf5
+    'PyQt5',    # gui library
+    'vtk>=9.0', # rendering library
+    'qtpy',
+    'imageio < 3.0',
+    'pillow >= 5.2.0, !=7.1.0',
+]
+gui_pyside2 = [
+    'pandas>=1.0,<3.0',
+    'h5py',     # hdf5
+    'PySide2',  # gui library
+    'vtk>=9.0', # rendering library
+    'qtpy',
+    'imageio < 3.0',
+    'pillow >= 5.2.0, !=7.1.0',
+]
+#gui = gui_pyside2
+
+#buggy
+#gui_pyqt6_buggy = [
+#    # PyQt6 buggy
+#    'PyQt6',    # gui library
+#    'vtk>=9.0', # rendering library
+#    "pyNastran[nogui]",
+#]
+#gui_pyside6 = [
+#    'PySide6',  # gui library
+#    'vtk>=9.0', # rendering library
+#    "pyNastran[nogui]",
+#]
+#----
+
+# pip install -e .[gui_pyside2,dev]
+dev = [
+    'tables',   # hdf5
+    #"tox",
+    #"pre-commit",
+    #"bump2version",
+    #"setuptools>=66.0",
+    "wheel",
+    'codecov',
+]
+none = []
+#-------------------------------------------------------------------------------------------
+[project.scripts]
+
+test_bdf  = 'pyNastran.bdf.test.test_bdf:main'
+test_op2  = 'pyNastran.op2.test.test_op2:main'
+test_op4  = 'pyNastran.op4.test.test_op4:main'
+
+pyNastranGUI = 'pyNastran.gui.gui:cmd_line'
+bdf = 'pyNastran.bdf.mesh_utils.utils:cmd_line'
+f06 = 'pyNastran.f06.utils:cmd_line'
+format_converter = 'pyNastran.converters.format_converter:cmd_line_format_converter'
+abaqus_to_nastran = 'pyNastran.converters.abaqus.abaqus_to_nastran:cmd_abaqus_to_nastran'
+test_pynastrangui = 'pyNastran.gui.test.test_gui:main'
+
+# dev scripts
+#run_nastran_double_precision = 'pyNastran.bdf.test.run_nastran_double_precision:cmd_line'
+#test_abaqus = 'pyNastran.converters.abaqus.test_abaqus:main'
+#test_bdfv = 'pyNastran.dev.bdf_vectorized3.test.test_bdf:main'
+#pyNastranv = 'pyNastran.dev.bdf_vectorized.solver.solver:main'
+#test_bdfv2 = 'pyNastran.dev.bdf_vectorized2.test.test_bdf:main'
+#nastran_to_code_aster = 'pyNastran.converters.dev.code_aster.nastran_to_code_aster:main'
+
+#-------------------------------------------------------------------------------------------
+[project.urls]
+
+homepage        = "https://github.com/SteveDoyle2/pyNastran/"
+issue_tracker   = "https://github.com/SteveDoyle2/pyNastran/issues"
+documentation   = "https://pynastran-git.readthedocs.io/en/latest/"
+repository      = "https://github.com/SteveDoyle2/pyNastran.git"
+
+#-------------------------------------------------------------------------------------------
+[build-system]
+requires = [
+    "setuptools >= 66.0.0",
+    "setuptools_scm[toml]>=6.2",
+    "wheel",
+]
+#build-backend = "setuptools.build_meta"
+#requires = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2"]
+
+
+# setuptools_scm gets the git version
+# - Old: pyNastran-0.0.0-py3-none-any.whl
+# - New: pyNastran-1.4.0+dev.<git>-py3-none-any.whl
+# the block, version_file, or local_scheme does this...
+# - Block Only:   pyNastran-1.1.0.post2275+<git>-py3-none-any.whl
+# - Local_scheme: same...
+# 
+# Conclusion:
+# - "pip wheel ." pulls the version from setup.py
+# - invents a version if setup.py doesn't exist
+# - version_file doesn't seem to do a whole lot
+# - the version comes from the __init__.py regardless of
+#   setup.py being directly called or not 
+[tool.setuptools_scm]
+version_file = "pyNastran/_version.py"
+local_scheme = 'no-local-version'
+# doesn's seem to have any effect
+version_scheme = 'post-release'  # 1.4.0
+#version_scheme = 'only-version'  # 1.4.0
+
+#"calver-by-date" = "setuptools_scm.version:calver_by_date"
+#"guess-next-dev" = "setuptools_scm.version:guess_next_dev_version"
+#"no-guess-dev"
+#"only-version"
+#"post-release"
+#"python-simplified-semver"
+#"release-branch-semver"
+
+
+# alternate way to get the git version?
+#["setuptools-git-versioning"]
+#build-backend = "setuptools.build_meta"
+
+#[tool.setuptools-git-versioning]
+#enabled = true
+
+#-------------------------------------------------------------------------------------------
+# makes "pip wheel ." work
+# lets us create a wheel for distribution
+#
+[tool.distutils.bdist_wheel]
+universal = false
+
+#-------------------------------------------------------------------------------------------
+# https://github.com/sphinx-toolbox/sphinx-pyproject/blob/master/pyproject.toml
+[tool.setuptools]
+include-package-data = false
+#packages = ["pyNastran"]
+
+# https://stackoverflow.com/questions/75387904/how-to-exclude-tests-folder-from-the-wheel-of-a-pyproject-toml-managed-lib
+# exclude dev files
+[tool.setuptools.packages.find]
+# don't include pdfs/dat files in the wheel
+#find = {}
+#where
+include = ["pyNastran*"]
+
+# https://flit.pypa.io/en/latest/pyproject_toml.html
+#'pyNastran/dev/*',
+exclude = [
+    'env*',
+    'env/*',
+    "env/Lib/site-packages/*",
+    './pyNastran/dev/*',
+    'models/*',
+    'pyNastran/latex*',
+    'pyNastran/dev/*',
+    'pyNastran/f06/dev/*',
+    'pyNastran/f06/csv_writer.py',
+    'pyNastran/op2/dev/*',
+    'pyNastran/op2/_transform_solids.py',
+    'pyNastran/op2/plot_op2_memory.py',
+    'pyNastran/converters/dev*',
+    'pyNastran/gui/dev*',
+    #'pyNastran/bdf/*.bdf'
+]
+
+#-------------------------------------------------------------------------------------------
+# mypy pyproject.toml per:
+# - https://github.com/matplotlib/matplotlib/blob/main/pyproject.toml
+#
+[tool.mypy]
+ignore_missing_imports = true
+
+#--------------------------------------------------------------------
+# ruff pyproject.toml per:
+# - https://github.com/matplotlib/matplotlib/blob/main/pyproject.toml
+#
+[tool.ruff]
+exclude = [
+    ".git",
+    "build",
+    "doc/gallery",
+    "doc/tutorials",
+    "tools/gh_api.py",
+    ".tox",
+    ".eggs",
+]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D200",
+    "D202",
+    "D204",
+    "D205",
+    "D301",
+    "D400",
+    "D401",
+    "D403",
+    "D404",
+    "E741",
+    "F841",
+]
+line-length = 88
+select = [
+    "D",
+    "E",
+    "F",
+    "W",
+]
+
+# The following error codes are not supported by ruff v0.0.240
+# They are planned and should be selected once implemented
+# even if they are deselected by default.
+# These are primarily whitespace/corrected by autoformatters (which we don't use).
+# See https://github.com/charliermarsh/ruff/issues/2402 for status on implementation
+external = [
+  "E122",
+  "E201",
+  "E202",
+  "E203",
+  "E221",
+  "E251",
+  "E261",
+  "E272",
+  "E302",
+  "E703",
+]
+
+target-version = "py39"
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+#--------------------------------------------------------------------------------
+# References for development of this file
+#--------------------------------------------------------------------------------
+# https://packaging.python.org/en/latest/specifications/pyproject-toml/#pyproject-toml-spec
+# https://peps.python.org/pep-0621/
+# https://stackoverflow.com/questions/75490231/pip-pyproject-toml-can-optional-dependency-groups-require-other-optional-depend
+# pip wheel . --no-build-isolation -vvv

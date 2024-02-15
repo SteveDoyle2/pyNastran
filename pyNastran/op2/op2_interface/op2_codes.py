@@ -44,6 +44,9 @@ SORT2_TABLES_BYTES = [
     b'OSTR2', b'OSTR2C', b'OSTRVM2',
     b'OEF2', b'OEFNO2',
 
+    # shock
+    b'DOES1',
+
     # random
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2',
     b'OESATO2', b'OESCRM2', b'OESPSD2C', b'OESPSD2',
@@ -320,7 +323,8 @@ class Op2Codes:
         #if self.analysis_code in [1]:
             #fmts = ('int32', 'int64')
         if self.analysis_code in [1, 2, 5, 6, 8, 9, 10]:
-            # 3 - modes
+            # 1 - statics
+            # 2 - modes
             # 5 - freq
             # 6 - transient
             # 8 - post-buckling

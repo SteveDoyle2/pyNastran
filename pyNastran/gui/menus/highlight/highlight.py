@@ -12,17 +12,20 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
 
-from vtk import (
-    #vtkmodules.vtkRenderingLOD
-    vtkLODActor,
-    #vtkmodules.vtkRenderingLabel
-    vtkLabeledDataMapper,
-    #vtkmodules.vtkFiltersCore
-    vtkCellCenters, vtkIdFilter,
-    #vtkmodules.vtkFiltersGeometry
-    vtkUnstructuredGridGeometryFilter,
-    #vtkmodules.vtkFiltersGeneral
-    vtkVertexGlyphFilter)
+#from vtk import (
+    #vtkLODActor,
+    #vtkLabeledDataMapper,
+    #vtkCellCenters, vtkIdFilter,
+    #vtkUnstructuredGridGeometryFilter,
+    #vtkVertexGlyphFilter,
+#)
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
+from vtkmodules.vtkRenderingLOD import vtkLODActor
+from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
+from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
+from vtkmodules.vtkFiltersGeometry import vtkUnstructuredGridGeometryFilter
+from vtkmodules.vtkFiltersGeneral import vtkVertexGlyphFilter
+
 from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
 from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
@@ -30,6 +33,7 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
 from pyNastran.gui.styles.area_pick_style import get_ids_filter
@@ -122,7 +126,7 @@ class HighlightWindow(PyDialog):
             self.setWindowTitle('Highlight')
         elif self.menu_type == 'mark':
             self.setWindowTitle('Mark')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.menu_type)
 
         self.create_widgets()
@@ -151,8 +155,8 @@ class HighlightWindow(PyDialog):
             self.highlight_opacity_edit = QDoubleSpinBox(self)
             self.highlight_opacity_edit.setValue(self._highlight_opacity)
             self.highlight_opacity_edit.setRange(0.1, 1.0)
-            self.highlight_opacity_edit.setDecimals(1)
-            self.highlight_opacity_edit.setSingleStep(0.1)
+            self.highlight_opacity_edit.setDecimals(2)
+            self.highlight_opacity_edit.setSingleStep(0.05)
             self.highlight_opacity_button = QPushButton('Default')
 
             # Text Color
@@ -225,7 +229,7 @@ class HighlightWindow(PyDialog):
             #self.label_size_edit.setEnabled(False)
             irow += 1
             #self.mark_button.setEnabled(False)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.menu_type)
 
         #self.create_legend_widgets()
@@ -373,6 +377,8 @@ class HighlightWindow(PyDialog):
     def on_remove_actors(self):
         """removes multiple vtk actors"""
         gui = self.parent()
+        if len(self.actors) == 0:
+            return
         if gui is not None:
             if self.nodes_edit.style is not None:
                 self.nodes_edit.style.remove_actors()
@@ -507,7 +513,8 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
 
     if nnodes:
         point_ids = np.searchsorted(all_nodes, nodes)
-        output_data = grid.GetPoints().GetData()
+        point_data = grid.GetPoints()
+        output_data = point_data.GetData()
         points_array = vtk_to_numpy(output_data)  # yeah!
 
         point_array2 = points_array[point_ids, :]
@@ -516,7 +523,8 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         ugrid = create_unstructured_point_grid(points2, nnodes)
         if set_node_scalars:
             point_ids_array = numpy_to_vtk(nodes)
-            ugrid.GetPointData().SetScalars(point_ids_array)
+            point_data: vtkPointData = ugrid.GetPointData()
+            point_data.SetScalars(point_ids_array)
         actor = create_highlighted_actor(
             gui, ugrid, representation='points',
             add_actor=add_actors)
@@ -529,8 +537,10 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
         if set_element_scalars:
             element_ids_array = numpy_to_vtk(elements)
-            ugrid.GetPointData().SetScalars(None)
-            ugrid.GetCellData().SetScalars(element_ids_array)
+            point_data: vtkPointData = ugrid.GetPointData()
+            cell_data: vtkCellData = ugrid.GetCellData()
+            point_data.SetScalars(None)
+            cell_data.SetScalars(element_ids_array)
         actor = create_highlighted_actor(gui, ugrid, representation='wire',
                                          add_actor=add_actors)
         actors.append(actor)
@@ -582,10 +592,10 @@ def _pop_color_dialog(parent,
     #text = cell.text()
     #try:
         #value = eval_float_from_string(text)
-        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #cell.setStyleSheet(QLINEEDIT_GOOD)
         #return value, True
     #except ValueError:
-        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
 def main():  # pragma: no cover

@@ -100,13 +100,38 @@ class TestUgrid(unittest.TestCase):
         os.remove(tecplot_filename2)
         os.remove(tecplot_filename3)
 
-    def test_ugrid3d_convert(self):
-        argv = ['format_converter', 'afrl', 'junk.b8.ugrid', 'stl', 'cart3d.stl']
+    def test_ugrid3d_convert_cart3d(self):
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'cart3d', 'model.tri']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        #os.remove('model.tri')
+
+    def test_ugrid3d_convert_nastran(self):
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'nastran', 'model.bdf']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        os.remove('model.bdf')
+
+    def test_ugrid3d_convert_stl(self):
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'stl', 'model.stl']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        os.remove('model.stl')
+
+    def test_ugrid3d_convert_tecplot(self):
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'tecplot', 'model.plt']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        os.remove('model.plt')
+
+    def test_ugrid3d_convert_other(self):
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'afrl', ugrid_filename, 'stl', 'cart3d.stl']
         with self.assertRaises(NotImplementedError):
             cmd_line_format_converter(argv=argv, quiet=True)
 
-        argv = ['format_converter', 'ugrid', 'junk.b8.ugrid', 'abaqus', 'cart3d.stl']
-        with self.assertRaises(AssertionError):
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'abaqus', 'model.dat']
+        with self.assertRaises(NotImplementedError):
             cmd_line_format_converter(argv=argv, quiet=True)
 
 

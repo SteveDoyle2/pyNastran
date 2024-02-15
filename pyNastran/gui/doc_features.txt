@@ -16,10 +16,6 @@ GUI formats
    - bedge
    - surf
    - ugrid
- - Openfoam
-   - blockmesh
-   - shell
-   - face
  - usm3d
    - input
       - bc/front
@@ -76,7 +72,7 @@ Menus
    - complex results (phase)
    - time domain results
    - Optionally independently fringe result (that is applied to the displacment shape)
-   - TODO: Optionally independently vector result (that is applied to the displacment shape)
+   - Optionally independently vector result (that is applied to the displacment shape)
 
  - secondary actors menu
    - actor selection
@@ -92,7 +88,7 @@ Menus
  - focal point picking (e.g. clipping)
    - "f" key & button
    - zoom out far, press f to disable clipping
-   - zoom in to desired view distance and press f  to 
+   - zoom in to desired view distance and press f to set clip plane
      - cart3d can clip through bounding box to pick nodes/elements
        that are obscured
 
@@ -145,3 +141,159 @@ Menus
      - TODO: allow selection of more than one group
      - TODO: show/hide elements based on picking
      - TODO: improved picking
+
+
+Future Nastran Features
+======================================
+ - geometry
+    - create coordinate system (could come from BDF)
+ - results
+    - displacement transform
+      - plot radial deformation as a fringe (requies coords)
+    - "displacement" options
+      - plot X/Y/Z (or R, theta, phi) as a fringe
+      - select displacement components to consider to create fringe
+        - X, Y, Z, XY, XZ, YZ, XYZ (current)
+      - select displacement components to consider to create deformatio
+        - X, Y, Z, XY, XZ, YZ, XYZ (current)
+
+Nastran Stress
+--------------
+- stress transforms
+  - requies coords
+  - requires treating stress as a matrix & not a scalar
+    - xform is unique to each element type
+- "stress" options (element force is basically the same)
+  - core results
+    - plate:    oxx, oyy, txy, omax, omin, ovm
+    - pshell:   oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm, tmax (for top/bottom)
+    - pcomp:    oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm, tmax (for each layer)
+    - spring:   oxx
+    - bar:      oxx, ozz, txz, A/B/C/D
+        - combined: oxx, oyy, txy, omax, omin
+
+
+Nastran Centroidal Stress
+-------------------------
+- use the absolute max for a given element and plot is as the value
+  - same as we do now
+- have options:
+  - across the same element (see core results):
+    - select core result group:
+      - pshell: (top/bottom/both);              default=both
+      - pcomp:  (layer1-10; layer1/3/4/5; all); default=all
+    - select core result type (e.g., oxx, ovm)
+
+- Step 1:
+  - select core result
+
+- Step 2: (optional)
+  - coordinate transform
+
+- Step 3:
+  - Operate centroidally and reduces the stress to a single value
+    - pshell: top/bottom reduction
+    - pcomp:  across N layers
+    - spring, rod, solid:  nothing!
+    - bar/beam: A/B/C/D stress
+
+Nastran Nodal Stress
+--------------------
+
+- high level: map multiple nodal/centroidal values to a single nodal quantity
+
+Option 1:
++--------------------------+
+| - Core Result            |
+|   - Displacement         | Step 1: Single selection window
+|   - Stress               |
+|     - oxx                |
+|     - oyy                |
+|     - ovm                |
++--------------------------+
+| - "Layer"                |
+|   - Top, Bottom (PSHELL) | Step 3: Multi-selection window (contents depends on Step 1)
+|   - Layer 1, 2 (PCOMP)   |
+|   - A, B, C, D (bars)    |
+|   - X, Y, Z (disp)       |
++--------------------------+
+| - Transform              |
+|  - coord ID              | Step 2: pulldown; (optional/skip)
++--------------------------+
+| - Derivation Method      |
+|  - min, max, average     | Step 4: pulldown
++--------------------------+
+| - "Combine Method"       |
+|  - across all elements   | Step 5: greyed checkbox
++--------------------------+
+
+Option 2:
++--------------------------+
+| - Core Result            |
+|   - Displacement         | Step 1: Single selection window
+|   - Stress               |
++--------------------------+
+| - "Layer"                |
+|   - Oxx, oyy, ozz, ...   | Step 1.5: Multi-selection window (contents depends on Step 1); default=All
+|   - Layer 1, 2           |
+|   - A, B, C, D           |
++--------------------------+
+| - "Layer"                |
+|   - Top, Bottom          | Step 3: Multi-selection window (contents depends on Step 1.5)
+|   - Layer 1, 2           |
++--------------------------+
+| - Transform              |
+|  - coord ID              | Step 2: pulldown; (optional/skip)
++--------------------------+
+| - Derivation Method      |
+|  - min, max, average     | Step 4: pulldown
++--------------------------+
+| - "Combine Method"       |
+|  - across all elements   | Step 5: greyed checkbox
++--------------------------+
+
+
+- Step 1: (results window)
+  - select core result
+
+- Step 2: (optional)
+  - coordinate transform
+
+- Step 3:  (results window)
+  - Operate nodally and reduces the stress to a single value
+    - pshell: top/bottom reduction
+    - pcomp:  across N layers
+    - spring, rod, solid:  nothing!
+    - bar/beam: A/B/C/D stress
+
+- Step 4: (derivation method; pulldown)
+  - Operate "across" the boundary
+  - max, min, derive/average (default)
+    - TODO: average/derive
+    - max doesn't exist for max principal stress
+    - min doesn't exist for min principal stress, von mises, or max shear
+
+- Step 5: Nodal Combine (merge results from different elements; pulldown)
+  - just stick it at the centroid
+    - for example, nodal average at the nodes and then take
+      that worst value and stick it at the centroid
+    - just stick it at the centroid abs?
+  - across all elements
+    - for example, nodal average at the nodes
+  - across similar element family (shells average with shells)
+    - ***requires multiple actors; hard stop***
+    - A CTRIA3 and CQUAD4 with the same PSHELL are the same family.
+    - Are a PBAR  and PBARL  in the same family?
+    - Are a PBEAM and PBEAML in the same family?
+      - I'm going with no
+    - Are a PCOMP and PSHELL in the same family?
+      - I'm going with no
+  - across the same property_id (and element family)
+    - ***requires multiple actors; hard stop***
+  - across the same material_id (and property_id and element family)
+    - ***requires multiple actors; hard stop***
+
+Step 5 is "cut"
+  - use "across all elements"
+  - use "just stick it at the centroid"
+

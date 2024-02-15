@@ -67,7 +67,7 @@ def partition_dense_matrix(a, b, c=None):
 
 
 class Resultant:
-    def __init__(table_name, total_load, subcase_id):
+    def __init__(self, table_name: str, total_load, subcase_id: int):
         pass
         #Resultant('OLOAD', total_load, self.subcase_id)
 

@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double, components_or_blank)
+    integer_or_double, components_or_blank, parse_components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -651,7 +651,7 @@ class GRDSET(BaseCard):
         blank(card, 5, 'blank')
         cd = integer_or_blank(card, 6, 'cd', 0)
 
-        ps = str(integer_or_blank(card, 7, 'ps', ''))
+        ps = str(parse_components_or_blank(card, 7, 'ps', default=''))
         seid = integer_or_blank(card, 8, 'seid', 0)
         assert len(card) <= 9, f'len(GRDSET card) = {len(card):d}\ncard={card}'
         return GRDSET(cp, cd, ps, seid, comment=comment)
@@ -1182,24 +1182,24 @@ class GRID(BaseCard):
         nid = integer(card, 1, 'nid')
 
         #: Grid point coordinate system
-        cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', default=0)
 
         #: node location in local frame
         xyz = [
-            double_or_blank(card, 3, 'x1', 0.),
-            double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)]
+            double_or_blank(card, 3, 'x1', default=0.),
+            double_or_blank(card, 4, 'x2', default=0.),
+            double_or_blank(card, 5, 'x3', default=0.)]
 
         if nfields > 6:
             #: Analysis coordinate system
-            cd = integer_or_blank(card, 6, 'cd', 0)
+            cd = integer_or_blank(card, 6, 'cd', default=0)
 
             #: SPC constraint
-            ps = components_or_blank(card, 7, 'ps', '')
+            ps = components_or_blank(card, 7, 'ps', default='')
             #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
-            seid = integer_or_blank(card, 8, 'seid', 0)
+            seid = integer_or_blank(card, 8, 'seid', default=0)
             assert len(card) <= 9, f'len(GRID card) = {len(card):d}\ncard={card}'
         else:
             cd = 0

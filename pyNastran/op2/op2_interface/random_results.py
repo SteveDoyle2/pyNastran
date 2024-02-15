@@ -1,5 +1,10 @@
 from typing import Any
 import numpy as np
+import scipy  # prevents confusing import error
+try:
+    from scipy.integrate import trapezoid
+except ImportError:  # pragma: no cover
+    from scipy.integrate import trapz as trapezoid
 
 class RandomObjects:
     prefix = ''
@@ -227,7 +232,7 @@ class PSDObjects():
 
         import matplotlib.pyplot as plt
         for subtitle, psds in psds_subtitle.items():
-            fig = plt.figure(1)
+            unused_fig = plt.figure(1)
             for (res_type, nid, dof), psd in psds.items():
                 freqs, psd = psd[:, 0], psd[:, 1]
                 plt.plot(freqs, psd, name=f'(restype,nid,dof)=({res_type}, {nid}, {dof})')
@@ -249,7 +254,6 @@ class PSDObjects():
             'stress' : 'EL STR',
             'strain' : 'STRAIN',
         }
-        from scipy.integrate import trapz
         for subtitle, psds in psds_subtitle.items():
             f06.write(subtitle + '\n')
             f06.write('0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )\n')
@@ -281,13 +285,13 @@ class PSDObjects():
                 # If you want the RMS value, this is computed as RMS = SQRT(SUM(PSD*DF)) and,
                 # where DF is the spectral resolution, where you integarate from Fmin to Fmax,
                 # i.e. your lowest and highest analysis frequency of interest, respectively.
-                psd_f = trapz(psd, freqs)
+                psd_f = trapezoid(psd, freqs)
                 rms = psd_f ** 0.5
                 if psd_f == 0.0:
                     # really this is nan, but that's Nastran for you
                     no_crossings = 0.0
                 else:
-                    f2_psd_f = trapz(freqs**2 * psd, freqs)
+                    f2_psd_f = trapezoid(freqs**2 * psd, freqs)
                     no_crossings = (f2_psd_f / psd_f) ** 0.5  # Hz
 
                 #print('ymin=%s ymax=%s xmin=%s xmax=%s fmin=%s fmax=%s' % (ymin, ymax, xmin, xmax, fmin, fmax))

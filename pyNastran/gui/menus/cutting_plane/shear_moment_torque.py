@@ -18,7 +18,8 @@ from qtpy.QtWidgets import (
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
 
 from pyNastran.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_combo_box, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
+from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
@@ -211,8 +212,8 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_opacity_label = QLabel("Plane Opacity:")
         self.plane_opacity_edit = QDoubleSpinBox()
         self.plane_opacity_edit.setRange(0.1, 1.0)
-        self.plane_opacity_edit.setDecimals(1)
-        self.plane_opacity_edit.setSingleStep(0.1)
+        self.plane_opacity_edit.setDecimals(2)
+        self.plane_opacity_edit.setSingleStep(0.05)
         self.plane_opacity_edit.setValue(self.plane_opacity)
 
         self.flip_coord_label = QLabel("Flip Coordinate System:")

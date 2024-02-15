@@ -15,7 +15,9 @@ from typing import TYPE_CHECKING
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank,)
+    integer, integer_or_blank,
+    integer_double_or_blank, double, double_or_blank,
+    integer_types)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -46,7 +48,9 @@ class RANDPS(RandomLoad):
         k = 3
         return RANDPS(sid, j, k, x=0., y=0., tid=0, comment='')
 
-    def __init__(self, sid, j, k, x=0., y=0., tid=0, comment=''):
+    def __init__(self, sid: int,
+                 j: int, k: int, x: float=0., y: float=0.,
+                 tid: Union[int, float]=0, comment: str=''):
         """
         Creates a RANDPS card
 
@@ -110,9 +114,9 @@ class RANDPS(RandomLoad):
         sid = integer(card, 1, 'sid')
         j = integer(card, 2, 'j')
         k = integer(card, 3, 'k')
-        x = double_or_blank(card, 4, 'x', 0.0)
-        y = double_or_blank(card, 5, 'y', 0.0)
-        tid = integer_or_blank(card, 6, 'tid', 0)
+        x = double_or_blank(card, 4, 'x', default=0.0)
+        y = double_or_blank(card, 5, 'y', default=0.0)
+        tid = integer_double_or_blank(card, 6, 'tid', default=0)
         assert len(card) <= 7, f'len(RANDPS card) = {len(card):d}\ncard={card}'
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
@@ -126,7 +130,7 @@ class RANDPS(RandomLoad):
             the BDF object
 
         """
-        if self.tid:
+        if self.tid and isinstance(self.tid, integer_types):
             msg = ', which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)

@@ -181,7 +181,13 @@ class XrefMesh(BDFAttributes):
         #self.case_control_deck.cross_reference(self)
         self.pop_xref_errors()
 
-        for super_id, superelement in sorted(self.superelement_models.items()):
+        for super_key, superelement in sorted(self.superelement_models.items()):
+            word = ''
+            if isinstance(super_key, int):
+                word = f' (Superelement {super_key})'
+            else:
+                word = f'{super_key[0]}={super_key[1]}'
+
             superelement.cross_reference(
                 xref=xref, xref_nodes=xref_nodes, xref_elements=xref_elements,
                 xref_nodes_with_elements=xref_nodes_with_elements,
@@ -189,7 +195,7 @@ class XrefMesh(BDFAttributes):
                 xref_materials=xref_materials, xref_loads=xref_loads,
                 xref_constraints=xref_constraints, xref_aero=xref_aero,
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
-                word=' (Superelement %i)' % super_id)
+                word=word)
 
     def _cross_reference_constraints(self) -> None:
         """
@@ -633,8 +639,9 @@ class XrefMesh(BDFAttributes):
         xref_errors = {}
         seloc_missing = []
         for seid, seloc in self.seloc.items():
-            if seid in self.superelement_models:
-                superelement = self.superelement_models[seid]
+            super_key = ('SUPER', seid, '')
+            if super_key in self.superelement_models:
+                superelement = self.superelement_models[super_key]
                 seloc.safe_cross_reference(self, xref_errors)
                 #seloc.transform(self)
             else:
@@ -653,7 +660,8 @@ class XrefMesh(BDFAttributes):
                 import os
                 # we have to create the superelement in order to transform it...
                 for seid, sebulk in self.sebulk.items():
-                    super_filename = 'super_%i.bdf' % seid
+                    super_key = ('SUPER', seid, '')
+                    super_filename = f'super_{seid:d}.bdf'
                     if os.path.exists(super_filename):
                         os.remove(super_filename)
                     #print(sebulk)
@@ -662,8 +670,8 @@ class XrefMesh(BDFAttributes):
                     mirror_model = self._create_superelement_from_sebulk(sebulk, seid, rseid)
                     if mirror_model is None:
                         continue
-                    self.log.debug('made superelement %i' % seid)
-                    self.superelement_models[seid] = mirror_model
+                    self.log.debug(f'made superelement {seid:d}')
+                    self.superelement_models[super_key] = mirror_model
                     mirror_model.write_bdf(super_filename)
             for unused_seid, sebndry in self.sebndry.items():
                 sebndry.safe_cross_reference(self, xref_errors)
@@ -692,7 +700,7 @@ class XrefMesh(BDFAttributes):
     def _create_superelement_from_sebulk(self, sebulk, seid: int, rseid: int) -> None:
         """helper for sebulk"""
         #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\see103q4.dat
-        ref_model = self.superelement_models[rseid]
+        ref_model = self.superelement_models[('SUPER', rseid, '')]
         if sebulk.superelement_type == 'MIRROR':
             from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror_plane
             #print('creating superelement %s from %s' % (seid, rseid))
@@ -773,7 +781,7 @@ class XrefMesh(BDFAttributes):
         if seid == 0:
             return self.Nodes(nodes, msg=msg)
         try:
-            superelement = self.superelement_models[seid]
+            superelement = self.superelement_models[('SUPER', seid, '')]
         except KeyError:
             keys = list(self.superelement_models.keys())
             raise KeyError('cant find superelement=%i%s; seids=%s' % (seid, msg, keys))

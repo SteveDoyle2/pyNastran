@@ -355,6 +355,8 @@ class PACBAR(Property):
 class PAABSF(Property):
     """
     +--------+-----+--------+--------+---+---+---+---+------+
+    |    1   |  2  |    3   |    4   | 5 | 6 | 7 | 8 |   9  |
+    +========+=====+========+========+===+===+===+===+=======
     | PAABSF | PID | TZREID | TZIMID | S | A | B | K | RHOC |
     +--------+-----+--------+--------+---+---+---+---+------+
     """
@@ -367,9 +369,11 @@ class PAABSF(Property):
                       s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0,
                       comment='')
 
-    def __init__(self, pid, tzreid=None, tzimid=None,
-                 s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0,
-                 comment=''):
+    def __init__(self, pid: int,
+                 tzreid: int=0, tzimid: int=0,
+                 s: float=1.0, a: float=1.0, b: float=0.0,
+                 k: float=0.0, rhoc: float=1.0,
+                 comment: str=''):
         """
         Creates a PAABSF card
 
@@ -416,7 +420,7 @@ class PAABSF(Property):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a PACABS card from ``BDF.add_card(...)``
+        Adds a PAABSF card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -424,15 +428,16 @@ class PAABSF(Property):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
-        tzreid = integer_or_blank(card, 2, 'tzreid')
-        tzimid = integer_or_blank(card, 3, 'tzimid')
-        s = double_or_blank(card, 4, 's', 1.0)
-        a = double_or_blank(card, 5, 'a', 1.0)
-        b = double_or_blank(card, 6, 'b', 0.0)
-        k = double_or_blank(card, 7, 'k', 0.0)
-        rhoc = double_or_blank(card, 8, 'rhoc', 1.0)
+        tzreid = integer_or_blank(card, 2, 'tzreid', default=0)
+        tzimid = integer_or_blank(card, 3, 'tzimid', default=0)
+        s = double_or_blank(card, 4, 's', default=1.0)
+        a = double_or_blank(card, 5, 'a', default=1.0)
+        b = double_or_blank(card, 6, 'b', default=0.0)
+        k = double_or_blank(card, 7, 'k', default=0.0)
+        rhoc = double_or_blank(card, 8, 'rhoc', default=1.0)
         assert len(card) <= 9, f'len(PAABSF card) = {len(card):d}\ncard={card}'
         return PAABSF(pid, tzreid, tzimid, s, a, b, k, rhoc, comment=comment)
 
@@ -452,6 +457,7 @@ class PAABSF(Property):
     def write_card(self, size=8, is_double=False):
         fields = self.raw_fields()
         return print_card_8(fields)
+
 
 class PACABS(Element):
     """

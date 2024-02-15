@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TextIO, Optional, Any, Union # , TYPE_CHECKING
 
 import numpy as np
+in1d = np.in1d
 from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3float,
 
 #if TYPE_CHECKING:  # pragma: no cover
@@ -283,8 +284,22 @@ class Zone:
             raise RuntimeError(zonetype)
         return zone_type_int
 
+    def quads_to_tris(self) -> None:
+        zonetype = self.headers_dict['ZONETYPE']
+        if zonetype == 'FEQUADRILATERAL':
+            n3 = self.quad_elements[:, 2]
+            n4 = self.quad_elements[:, 3]
+            if np.all(n3 == n4):
+                self.tri_elements = self.quad_elements[:, :3]
+                assert self.tri_elements.shape[1] == 3, self.tri_elements.shape
+                self.quad_elements = np.zeros((0, 4), self.quad_elements.dtype)
+                self.headers_dict['ZONETYPE'] = 'FETRIANGLE'
+
+        #if zonetype == 'FETRIANGLE',  'FETETRAHEDRON', 'FEBRICK'
+
+
     def split_elements(self, ntri_nodes: int=1) -> None:
-        """
+        r"""
         Splits elements and linearly interpolates the data.
 
         Supports:
@@ -751,7 +766,7 @@ class Zone:
         if nhexas:
             #boolean_hexa = self.hexa_elements.ravel() == inodes
             #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
-            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
+            boolean_hexa = in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
             #print(boolean_hexa)
             # assert len(boolean_hexa) == self.hexa_elements.shape[0]
             assert True in boolean_hexa

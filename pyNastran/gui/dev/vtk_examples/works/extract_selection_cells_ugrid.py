@@ -4,6 +4,7 @@ based on:
 """
 
 import vtk
+from vtk import vtkPoints
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor, vtkCamera, vtkDataSetMapper)
@@ -63,7 +64,7 @@ def main():
         6, 7, 8, 9, 10, 11, 12]
 
     nnodes = len(xyzs)
-    points = vtk.vtkPoints()
+    points = vtkPoints()
     points.SetNumberOfPoints(nnodes)
 
     nid = 0

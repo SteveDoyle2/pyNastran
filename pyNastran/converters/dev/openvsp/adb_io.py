@@ -26,7 +26,7 @@ class ADB_IO:  # pragma: no cover
             self.gui.scalar_bar_actor.VisibilityOff()
             skip_reading = True
         else:
-            self.gui.turn_text_off()
+            self.gui.turn_corner_text_off()
             self.gui.grid.Reset()
 
             self.gui.result_cases = {}

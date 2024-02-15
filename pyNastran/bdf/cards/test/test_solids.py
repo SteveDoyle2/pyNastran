@@ -303,7 +303,7 @@ class TestSolids(unittest.TestCase):
         model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        save_load_deck(model)
+        save_load_deck(model, run_mass_properties=False)  # no PCOMPS support
 
     def test_solids_ctetra4_mat9(self):
         """tests a CTETRA4"""
@@ -515,7 +515,7 @@ class TestSolids(unittest.TestCase):
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         eid = 10
         pid = 20
         mid = 30
@@ -576,6 +576,27 @@ class TestSolids(unittest.TestCase):
         elem2.write_card(size=8)
         elem2.write_card(size=16)
         elem2.write_card_16(is_double=False)
+        model.pop_parse_errors()
+
+        eid10 = 20
+        pid10 = 10
+        mid10 = 10
+        bulk = 1.
+        c = 1.
+        rho = None
+        model.add_mat10(mid10, bulk, rho, c, ge=0.0, gamma=None,
+                        table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
+                        comment='')
+        model.add_psolid(pid10, mid10, fctn='PFLUID')
+        model.pop_parse_errors()
+        elem3 = model.add_chexa(eid10, pid10, nids, comment='chexa')
+        model.pop_parse_errors()
+
+        elem3.write_card(size=8)
+        elem3.write_card(size=16)
+        elem3.write_card_16(is_double=False)
+        model.cross_reference()
+        assert elem3.Mass() >= 0., elem3.Mass()
 
         end_checks(model)
         elem = model.elements[eid]

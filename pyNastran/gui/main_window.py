@@ -9,30 +9,43 @@ import importlib
 #import traceback
 import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
+import urllib
 from typing import Optional
 
 from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, QApplication
-import urllib
+
+#from qtpy.QtCore import QEvent
+
+#QtCore.Qt.WindowMinimized
+#QtCore.Qt.WindowMaximized
+#QtCore.Qt.WindowNoState
 
 # 3rd party
-import vtk  # if this crashes, make sure you ran setup.py
+import vtkmodules  # if this crashes, make sure you ran setup.py
+
+# hack to not break the gui
+#import vtk
+from vtkmodules import vtkRenderingOpenGL2
 
 # pyNastran
 import pyNastran
+from pyNastran import is_pynastrangui_exe
 from pyNastran.gui import SCRIPT_PATH, ICON_PATH
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
-try:
-    import pyNastran2
-    ISPY2 = True
-except ImportError:
-    ISPY2 = False
+#try:
+    #import pyNastran2
+    #ISPY2 = True
+#except ModuleNotFoundError:
+ISPY2 = False
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
@@ -41,7 +54,7 @@ except ImportError:
 try:
     import qdarkstyle
     IS_DARK = True
-except ImportError:
+except ModuleNotFoundError:
     IS_DARK = False
 
 def get_stylesheet():
@@ -105,7 +118,8 @@ class MainWindow(GuiCommon, NastranIO):
             'nastran',  # results
         ]
         if ISPY2:
-            fmt_order += ['h5nastran', 'nastran2',]
+            fmt_order += ['h5nastran', 'nastran2']
+        fmt_order.append('nastran3')
 
         fmt_order += [
             'abaqus',
@@ -116,7 +130,6 @@ class MainWindow(GuiCommon, NastranIO):
             'fast',
             'lawgs',
             'obj',
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
             'panair',  # results
             'shabp',  # results
             'stl',
@@ -155,7 +168,31 @@ class MainWindow(GuiCommon, NastranIO):
         self._load_plugins()
         self.setup_gui(is_gui)
         self.setup_post(inputs)
+
+        if is_pynastrangui_exe and '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
+            import pyi_splash
+            # Update the text on the splash screen
+            pyi_splash.update_text("PyInstaller is a great software!")
+            #pyi_splash.update_text("Second time's a charm!")
+
+            # Close the splash screen. It does not matter when the call
+            # to this function is made, the splash screen remains open until
+            # this function is called or the Python program is terminated.
+            pyi_splash.close()
+
         self._check_for_latest_version()
+
+    #def changeEvent(self, event):
+        # trying to fix the maximize bug by updating the window...doesn't work
+        #if event.type() == QEvent.WindowStateChange:
+            #if event.oldState() and QtCore.Qt.WindowMinimized:
+                #super().changeEvent(event)
+                #print("WindowMinimized")
+            #elif event.oldState() == QtCore.Qt.WindowNoState or self.windowState() == QtCore.Qt.WindowMaximized:
+                #super().changeEvent(event)
+                #self.repaint()
+                #self.update()
+                #print("WindowMaximized")
 
     def _load_plugins(self, plugin_name_to_path: Optional[list[tuple[str, str, str]]]=None):
         """loads the plugins from pyNastran/gui/plugins.py
@@ -251,7 +288,7 @@ class MainWindow(GuiCommon, NastranIO):
         try:
             urllib.request.urlopen(url)
         except (urllib.error.HTTPError, urllib.error.URLError):
-            url = pyNastran.__docs_rtd__
+            return
         self._openbrowswer(url)
 
     def open_issue(self):
@@ -292,14 +329,14 @@ class MainWindow(GuiCommon, NastranIO):
         if hasattr(self, on_reload_name):
             getattr(self, on_reload_name)()  # on_reload_nastran
         else:
-            self.on_load_geometry(self.infile_name, self.format, raise_error=False)
+            self.on_load_geometry(self.infile_name, self.format, stop_on_failure=False)
 
         if self.out_filename is None:
             msg = '%s - %s' % (self.format, self.infile_name)
         else:
             msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         self.window_title = msg
-        self.log_command('on_reload()')
+        self.log_command('self.on_reload()')
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
@@ -308,9 +345,11 @@ class MainWindow(GuiCommon, NastranIO):
         Handling saving state before application when application is
         being closed.
         """
-        settings = QtCore.QSettings()
-        settings.clear()
-        self.settings.save(settings)
+        qsettings = QSettingsLike2()
+        qsettings.clear()
+        self.settings.save(qsettings)
+        if hasattr(qsettings, 'save_json'):
+            qsettings.save_json()
 
         q_app = QApplication.instance()
         if q_app is None:

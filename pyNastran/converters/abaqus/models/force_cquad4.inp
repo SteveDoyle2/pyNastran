@@ -1,0 +1,117 @@
+**
+** Heading +++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Heading
+**Hash: oJYGCgnY, Date: 01/10/2024, Unit system: MM_TON_S_C
+**
+** Nodes +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Node
+1, -5.00000000E+000, -5.00000000E+000, 0.00000000E+000
+2, -5.00000000E+000, 5.00000000E+000, 0.00000000E+000
+3, 5.00000000E+000, 5.00000000E+000, 0.00000000E+000
+4, 5.00000000E+000, -5.00000000E+000, 0.00000000E+000
+**
+** Elements ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Element, Type=S4, Elset=Shell_part-1
+1, 4, 3, 2, 1
+**
+** Node sets +++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Nset, Nset=Internal_Selection-1_Fixed-1
+1, 4
+*Nset, Nset=Internal_Selection-1_Concentrated_Force-1
+2, 3
+**
+** Element sets ++++++++++++++++++++++++++++++++++++++++++++
+**
+*Elset, Elset=Internal_Selection-1_Shell_Section-1
+1
+**
+** Surfaces ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Physical constants ++++++++++++++++++++++++++++++++++++++
+**
+**
+** Materials +++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Material, Name=S185
+*Density
+7.8E-09
+*Elastic
+210000, 0.28
+*Expansion, Zero=20
+1.1E-05
+*Conductivity
+14
+*Specific heat
+440000000
+**
+** Sections ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Shell section, Elset=Internal_Selection-1_Shell_Section-1, Material=S185, Offset=0
+1
+**
+** Pre-tension sections ++++++++++++++++++++++++++++++++++++
+**
+**
+** Constraints +++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Surface interactions ++++++++++++++++++++++++++++++++++++
+**
+**
+** Contact pairs +++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Amplitudes ++++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Initial conditions ++++++++++++++++++++++++++++++++++++++
+**
+**
+** Steps +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Step-1 ++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Step
+*Static, Solver=Pardiso
+**
+** Output frequency ++++++++++++++++++++++++++++++++++++++++
+**
+*Output, Frequency=1
+**
+** Boundary conditions +++++++++++++++++++++++++++++++++++++
+**
+*Boundary, op=New
+** Name: Fixed-1
+*Boundary
+Internal_Selection-1_Fixed-1, 1, 6, 0
+**
+** Loads +++++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*Cload, op=New
+*Dload, op=New
+** Name: Concentrated_Force-1
+*Cload
+Internal_Selection-1_Concentrated_Force-1, 3, 1
+**
+** Defined fields ++++++++++++++++++++++++++++++++++++++++++
+**
+**
+** History outputs +++++++++++++++++++++++++++++++++++++++++
+**
+**
+** Field outputs +++++++++++++++++++++++++++++++++++++++++++
+**
+*Node file
+RF, U
+*El file
+S, E, NOE
+**
+** End step ++++++++++++++++++++++++++++++++++++++++++++++++
+**
+*End step

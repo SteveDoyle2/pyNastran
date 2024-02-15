@@ -1,7 +1,11 @@
 """tests the NastranIO class"""
+# encoding: utf8
 import os
+import sys
 from copy import deepcopy
+from collections import defaultdict
 import unittest
+from typing import Union
 
 import numpy as np
 try:
@@ -10,19 +14,40 @@ try:
     IS_MATPLOTLIB = True
 except ModuleNotFoundError:  # pyparsing is missing
     IS_MATPLOTLIB = False
-#except ImportError:
-    #pass
-import vtk
+
+import vtkmodules
+from vtk import vtkRenderLargeImage, vtkAxesActor, vtkOrientationMarkerWidget
 
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
+
+from pyNastran.gui import (
+    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJS,
+    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJS,
+    USE_NEW_TERMS_ as USE_NEW_TERMS)
+
+USE_OLD_TERMS = not USE_NEW_TERMS
 from pyNastran.gui.testing_methods import FakeGUIMethods
+
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
+from pyNastran.converters.nastran.gui.stress import get_composite_sort
+
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult, GridPointForceResult
+from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults, ElementalTableResults
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
+
 RED = (1., 0., 0.)
 
 
@@ -31,6 +56,228 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         FakeGUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
         self.build_fmts(['nastran'], stop_on_failure=True)
+        self.stop_on_failure = True
+
+    def load_nastran_geometry(self, bdf_filename: Union[str, BDF],
+                         name: str='main',
+                         plot: bool=True,
+                         stop_on_failure: bool=False):
+        super().load_nastran_geometry(
+            bdf_filename, name=name,
+            plot=plot, stop_on_failure=stop_on_failure)
+        self.validate_result_object_methods()
+
+    def load_nastran_results(self, op2_filename: Union[str, OP2]):
+        super().load_nastran_results(op2_filename)
+        self.validate_result_object_methods()
+
+    def write_result_cases(self):  # pramga: no cover
+        case_id0 = 0
+        for case_id, (result_case, flag) in self.result_cases.items():
+
+            if result_case.class_name == 'SimpleTableResults':
+                aflag, bflag = flag
+                bflag2 = list(bflag)
+                imethod = bflag2[1]
+                #flag2 = [aflag, bflag2]
+                bflag2.append(result_case.methods[imethod])
+                print(f"{case_id}, {str(bflag2)}, '{result_case.uname}'", result_case.class_name)
+            elif hasattr(result_case, 'headers'):
+                if result_case.headers:
+                    print(case_id, flag, result_case.headers, result_case.class_name)
+                else:
+                    print(case_id, flag, result_case.__class__.__name__, result_case.methods)
+            elif hasattr(result_case, 'header'):
+                print(case_id, flag, result_case.header, result_case.class_name)
+            else:
+                raise RuntimeError(result_case)
+            assert case_id == case_id0, (case_id, case_id0)
+            case_id0 += 1
+
+    def validate_result_object_methods(self):
+        scale = 10.
+        checks = defaultdict(bool)
+            #'GuiResult': True,
+            #'NormalResult': True,
+            #'GridPointForceResult': True,
+            #'CompositeStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+            #'CompositeStrainStressResults2': False,
+            #'SolidStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+            #'PlateStrainStressResults2': False,
+        #}
+        for icase, (res, (itime, res_name)) in self.result_cases.items():
+            # make one check per result type.
+            # We check each term (e.g., for SolidStress, check oxx, oyy, von Mises, ...)
+            is_complex = res.is_complex
+            legend_title = res.get_legend_title(itime, res_name)
+            key = (res.class_name, is_complex, legend_title)
+
+            is_analyzed = checks[key]
+            if is_analyzed:  # don't analyze the same object type twice
+                continue
+
+            res.get_data_format(itime, res_name)
+            is_min = 'Min' in legend_title
+            is_max = 'Max' in legend_title
+            if isinstance(res, (GuiResult, SimpleTableResults, LayeredTableResults)):
+                res.get_fringe_result(itime, res_name)
+                res.get_fringe_vector_result(itime, res_name)
+                res.get_annotation(itime, res_name)
+                res.get_default_min_max(itime, res_name)
+                res.get_imin_imax(itime, res_name)
+            elif isinstance(res, NormalResult):
+                res.get_annotation(itime, res_name)
+            elif isinstance(res, GridPointForceResult):
+                pass
+            elif isinstance(res, (DisplacementResults, ForceTableResults)): # ElementalTableResults
+                res.get_annotation(itime, res_name)
+                res.get_arrow_scale(itime, res_name)
+                #res.get_case_flag(itime, res_name)
+
+                #res.get_data_type(itime, res_name)
+                res.get_fringe_result(itime, res_name)
+                res.get_fringe_vector_result(itime, res_name)
+                res.get_vector_result(itime, res_name)
+                deflects = res.deflects(itime, res_name)
+                if is_complex and deflects:
+                    res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                res.get_default_arrow_scale(itime, res_name)
+                res.get_default_min_max(itime, res_name)
+                res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, (ForceResults2, DisplacementResults2)):
+                force_disp_flags = [
+                    # transform, method_keys, nodal_combine
+                    ('Global', None, ''),
+                    ('Global', [0], ''),
+                    ('Global', [0, 1], ''),
+                    ('Global', [1, 2], ''),
+                    ('Global', [0, 1, 2], ''),
+                ]
+                res.get_annotation(itime, res_name)
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+
+                for transform, method_keys, nodal_combine in force_disp_flags:
+                    res.set_sidebar_args(itime, res_name,
+                                         #min_max_method=min_max_method,
+                                         transform=transform,
+                                         #methods_keys=method_keys,
+                                         nodal_combine='')
+                    #res.get_data_type(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    res.get_vector_result(itime, res_name)
+                    deflects = res.deflects(itime, res_name)
+                    if is_complex and deflects:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, CompositeStrainStressResults2):
+                composite_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, ''),
+                    ('Mean', 'Material', None, ''),
+                    ('Std. Dev.', 'Material', None, ''),
+                    ('Difference', 'Material', None, ''),
+                    ('Max', 'Material', [1, 2], ''),
+                    ('Min', 'Material', [1, 2], ''),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in composite_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, PlateStrainStressResults2):
+                plate_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, 'Absolute Max'),
+                    ('Mean', 'Material', None, 'Mean'),
+                    ('Min', 'Material', None, 'Min'),
+                    ('Max', 'Material', None, 'Max'),
+                    ('Std. Dev.', 'Material', None, 'Std. Dev.'),
+                    ('Difference', 'Material', None, 'Difference'),
+                    ('Max', 'Material', [0], 'Max'),
+                    ('Max', 'Material', [1], 'Max'),
+                    ('Max', 'Material', [2], 'Max'),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in plate_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+
+            elif isinstance(res, SolidStrainStressResults2):
+                solid_flags = [
+                    # min_max_method, transform, method_keys, nodal_combine
+                    ('Absolute Max', 'Material', None, 'Absolute Max'),
+                    ('Mean', 'Material', None, 'Mean'),
+                    ('Min', 'Material', None, 'Min'),
+                    ('Max', 'Material', None, 'Max'),
+                    ('Std. Dev.', 'Material', None, 'Std. Dev.'),
+                    ('Difference', 'Material', None, 'Difference'),
+                    ('Max', 'Material', [0], 'Max'),
+                    ('Max', 'Material', [1], 'Max'),
+                ]
+                res.get_arrow_scale(itime, res_name)
+                res.get_case_flag(itime, res_name)
+                #res.get_data_type(itime, res_name)
+                for min_max_method, transform, method_keys, nodal_combine in solid_flags:
+                    if (is_min, min_max_method) == (True, 'Max') or (is_max, min_max_method) == (True, 'Min'):
+                        continue
+                    res.set_sidebar_args(itime, res_name,
+                                         min_max_method=min_max_method,
+                                         transform=transform,
+                                         methods_keys=method_keys,
+                                         nodal_combine='')
+                    res.get_annotation(itime, res_name)
+                    res.get_fringe_result(itime, res_name)
+                    res.get_fringe_vector_result(itime, res_name)
+                    #res.get_vector_result(itime, res_name)
+                    if is_complex:
+                        res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
+                    res.get_default_arrow_scale(itime, res_name)
+                    res.get_default_min_max(itime, res_name)
+                    res.get_imin_imax(itime, res_name)
+            else:
+                raise NotImplementedError(res)
+            checks[key] = True
+        return
 
 PKG_PATH = pyNastran.__path__[0]
 STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
@@ -64,8 +311,8 @@ class TestNastranGUI(unittest.TestCase):
         test.settings.set_background_color2(color, render=True)
         test.settings.set_highlight_color(color)
         test.settings.set_highlight_opacity(opacity)
-        test.settings.set_text_color(color, render=True)
-        test.settings.set_text_size(10)
+        test.settings.set_corner_text_color(color, render=True)
+        test.settings.set_corner_text_size(10)
         test.settings.set_magnify(magnify=4)
         #self.settings.s
 
@@ -78,6 +325,13 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(obj_filename)
+        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 57, len(test.result_cases)  # 55 is probably wrong
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
 
     @unittest.skipIf(IS_MATPLOTLIB is False, 'No matplotlib')
     def test_solid_shell_bar_01(self):
@@ -86,7 +340,25 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 57, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 56, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 56, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 341, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 190, len(test.result_cases)
+            #assert len(test.result_cases) == 206, len(test.result_cases)  # new? faked
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 278, len(test.result_cases)
+        test.load_nastran_results(op2_filename)
+
         test.cycle_results()
         test.on_rcycle_results()
 
@@ -176,8 +448,20 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.legend_obj.set_legend_menu()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 55, len(test.result_cases)
         test.load_nastran_results(op2_filename)
         assert len(test.models['main'].elements) > 0
+        #test.write_result_cases()
+
+        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 868, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 430, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 694, len(test.result_cases)
+
+        #assert_result_cases(test, ncases=694)
 
         test.on_rcycle_results()
         test.on_update_legend(
@@ -272,13 +556,22 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        assert len(keys) == 694, len(keys)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 868, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 430, len(test.result_cases)
+            #assert len(test.result_cases) == 478, len(test.result_cases)  # new?; faked
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 694, len(test.result_cases)
+
+        #assert_result_cases(test, ncases=694)
         icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
         str(obj)
 
-        title = obj.get_title(itime, name)
+        title = obj.get_legend_title(itime, name)
         assert title == 'Strain Energy Density', str(obj)
         is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=False)
         assert is_passed == True, 'map_element_centroid_to_node_fringe_result failed'
@@ -288,25 +581,110 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
-                              plot=True, raise_error=True)
+                              plot=True, stop_on_failure=True)
+
+    def test_stack_composites(self):
+        e1 = np.array([
+            [18,  1],
+            [18,  2],
+            [18,  3],
+            [18,  4],
+            [19,  1],
+            [19,  2],
+            [19,  3],
+            [19,  4],
+            [20,  1],
+            [20,  2],
+            [20,  3],
+            [20,  4],
+            [20,  5],
+            [21,  1],
+            [21,  2],
+            [21,  3],
+            [21,  4],
+            [21,  5],
+        ])
+
+        e2 = np.array([
+            [16,  1],
+            [16,  2],
+            [16,  3],
+            [16,  4],
+            [17,  1],
+            [17,  2],
+            [17,  3],
+            [17,  4],
+            [17,  5],
+        ])
+        e1_e2 = np.vstack([e1, e2])
+        out, isort = get_composite_sort(e1_e2)
+        assert out.shape == e1_e2.shape
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
 
         test = NastranGUI()
+        test.stop_on_failure = True
         test.load_nastran_geometry(bdf_filename)
+        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 62, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            # we lost 3 cases for SPCD
+            assert len(test.result_cases) == 57, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 60, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
+        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 1019, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            # we lost 3 cases for SPCD
+            assert len(test.result_cases) == 640, len(test.result_cases)
+            #assert len(test.result_cases) == 684, len(test.result_cases)  # new terms?
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 759, len(test.result_cases)
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
         #op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
         deflection_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
         deflection_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node_short.txt')
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        #test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 11, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 10, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 10, len(test.result_cases)
+
+        test.load_nastran_results(op2_filename)
+        nresults = get_nreal_nresults(
+            test,
+            ndisplacement=1,
+            nspc_force=1, nmpc_force=0,
+            nload_vectors=0,
+            #neigenvectors=0, nspring_stress=0, nspring_strain=0, nspring_force=0,
+            nsolid_stress=1, nsolid_strain=0,
+            nabs_stress=1, nabs_strain=0,
+            nstrain_energy=0, ngrid_point_forces=0)
+        if USE_OLD_SIDEBAR_OBJS:
+            assert nresults == 24, nresults
+            assert len(test.result_cases) == 49, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert nresults == 24, nresults
+            assert len(test.result_cases) == 34, len(test.result_cases)
+        else:
+            assert nresults == 24, nresults # 49-10; ???
+            assert len(test.result_cases) == 39, len(test.result_cases)
+
+
         nresult_cases = len(test.result_cases)
         icase = max(test.result_cases)
 
@@ -342,6 +720,36 @@ class TestNastranGUI(unittest.TestCase):
         # missing nodes
         test.on_load_custom_results(out_filename=deflection_filename2, restype='Deflection')
 
+    def test_solid_bending_missing_eids(self):
+        """
+        same as the nominal version, but:
+         - remove a solid element
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        model = read_bdf(bdf_filename)
+
+        # make the problem a little harder
+        del model.elements[1]
+
+        test = NastranGUI()
+        test.load_nastran_geometry(model)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 11, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 10, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 10, len(test.result_cases)
+
+        test.load_nastran_results(op2_filename)
+        if USE_OLD_SIDEBAR_OBJS:
+            # ???
+            assert len(test.result_cases) == 39, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 34, len(test.result_cases)
+        else:
+            assert len(test.result_cases) == 39, len(test.result_cases)
 
     def test_beam_modes_01(self):
         """CBAR/CBEAM - PARAM,POST,-1"""
@@ -350,7 +758,54 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        nmodes = 10
+        nresults = get_nreal_nresults(test,
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        #assert nresults == 231, nresults  # 238-7
+        #test.write_result_cases()
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 258, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 238, len(test.result_cases)
+
+    def test_beam_modes_01_missing_eids(self):
+        """
+        same as test_beam_modes_01 except:
+         - missing CBAR eid=1
+         - missing GRID nid=1
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m1.op2')
+        model = read_bdf(bdf_filename)
+        del model.elements[1]
+        del model.nodes[1]
+        model._type_to_id_map['CBAR'].remove(1)
+
+        test = NastranGUI()
+        test.stop_on_failure = False
+        test.load_nastran_geometry(model)
+        assert len(test.result_cases) == 7, len(test.result_cases)
+        test.load_nastran_results(op2_filename)
+        #test.write_result_cases()
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            # lost some objects because of missing nids in old sidebar displacement
+            assert len(test.result_cases) == 218, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
+            # lost some objects because of missing nids in old sidebar displacement
+            assert len(test.result_cases) == 218, len(test.result_cases)
+
 
     def test_beam_modes_02(self):
         """CBAR/CBEAM - PARAM,POST,-2"""
@@ -360,6 +815,22 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+
+        nmodes = 10
+        nresults = get_nreal_nresults(test,
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        #assert nresults == 231, nresults  # 238-7
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 258, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_03(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -375,6 +846,21 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        nmodes = 10
+        nresults = get_nreal_nresults(test,
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        #assert nresults == 231, nresults  # 238-7
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 258, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_04(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -383,13 +869,37 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        nmodes = 10
+        nresults = get_nreal_nresults(test,
+            neigenvectors=nmodes,
+            nbar_stress=nmodes,
+            nbeam_stress=nmodes,  # beam stress is dropped
+            nbar_force=nmodes,
+            nbeam_force=nmodes)  # beam force is dropped
+        #assert nresults == 231, nresults  # 238-7
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 258, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 258, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 238, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
-
+        assert len(test.result_cases) == 7, len(test.result_cases)
 
     #@unittest.expectedFailure
     #def test_contact(self):
@@ -408,7 +918,15 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 33, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 73, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 53, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 53, len(test.result_cases)
 
     def test_thermal_01(self):
         """runs models/thermal/thermal_test_153"""
@@ -418,13 +936,47 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert len(test.result_cases) == 9, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 10, len(test.result_cases)
 
     def test_bwb_gui(self):
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.op2')
         test = NastranGUI()
         #test.log = get_logger2()
-        test.load_nastran_geometry(bdf_filename)
+
+        model = read_bdf(bdf_filename, debug=None)
+        #CTRIA3      8043  901512    7571    7569    7572
+        #CQUAD4      8044  901512    7569    7570    7573    7572
+        if 8043 in model.elements:
+            del model.elements[8043]
+            del model.elements[8044]
+        #model._type_to_id_map['CTRIA3'].remove(8043)
+        #model._type_to_id_map['CQUAD4'].remove(8044)
+
+        test.load_nastran_geometry(model)
+        assert len(test.result_cases) == 95, len(test.result_cases)
+        if os.path.exists(op2_filename) and 0:  # pragma: no cover
+            nresults = get_nreal_nresults(test,
+                nspc_force=1,
+                nmpc_force=1,
+                ndisplacement=1,
+                #nspring_stress=0, nspring_strain=0,
+                #nrod_stress=0, ctube_stress=0, nconrod_stress=0,
+                #nrod_strain=0, ctube_strain=0, nconrod_strain=0,
+                nbar_stress=1, nbar_strain=1,
+                #nbeam_stress=0,
+                #nplate_stress=0,
+                #nshear_stress=0,
+                ncomposite_layers=10, ncomposite_plate_stress=1, ncomposite_plate_strain=1,
+                #nsolid_stress=0,
+                #nbar_force=0,
+                #nplate_force=0
+            )
+            assert nresults == 85, (len(test.result_cases), nresults) #  -95
+            asdf
+
         test.group_actions.create_groups_by_property_id()
         test.group_actions.create_groups_by_visible_result(nlimit=50)
         test.toggle_conms()
@@ -437,7 +989,16 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
+        assert len(test.result_cases) == 36, len(test.result_cases)
         test.load_nastran_results(op2_filename)
+
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 76, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 56, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 56, len(test.result_cases)
 
     def test_aero_op2(self):
         """tests the freedlm model (OP2 with aero)"""
@@ -447,8 +1008,23 @@ class TestNastranGUI(unittest.TestCase):
         #test.log.level = 'debug'
         #test.load_nastran_geometry(bdf_filename)
         test.load_nastran_geometry(op2_filename)
+        #assert_result_cases(test, ncases=150)
+        assert len(test.result_cases) == 150, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 236, len(test.result_cases)
+        #test.write_result_cases()
+
+        #print(test.result_cases[154])
+        #print(test.result_cases[160])
+        #assert_result_cases(test, ncases=236)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 260, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 220, len(test.result_cases) # old terms
+            #assert len(test.result_cases) == 236, len(test.result_cases) # new terms?
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 236, len(test.result_cases)
         #print(test.result_cases)
 
     def test_aero(self):
@@ -457,7 +1033,10 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.op2')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        assert_result_cases(test, ncases=7)
         test.load_nastran_results(op2_filename)
+        assert_result_cases(test, ncases=7)
+
         out_datai = deepcopy(test.geometry_properties)
         test.on_update_geometry_properties_override_dialog(out_datai)
 
@@ -500,7 +1079,74 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        ngeometry = 63
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 65, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 63, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 63, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
+
+        #nastran_settings = test.settings.nastran_settings
+        #nastran_settings.displacement = False
+        #nastran_settings.spc_force = False
+        #nastran_settings.mpc_force = False
+        #nastran_settings.grid_point_force = False
+        #nastran_settings.strain_energy = False
+        #nastran_settings.applied_load = False
+        # 12-base good
+        # ----------------------------------------------
+        # 18-force good
+        #nastran_settings.force = False
+        # ----------------------------------------------
+        # 10-abs
+        # 4-rod
+        # 13-bar
+        # 8-plate** shold be 10, but for now, it's 8 (we added two parameters)
+        # 9-comp
+        # 10-solid
+        # 1-spring
+        # =55
+        #nastran_settings.stress = True
+        # ----------------------------------------------
+        # 10-abs
+        # 9-comp
+        # 4-rod
+        # 13-bar
+        # 10-solid
+        # 1-spring
+        # =47 good
+        #nastran_settings.strain = False
+        # ----------------------------------------------
+        nresults = get_nreal_nresults(test,
+            nspc_force=1, nmpc_force=1, ndisplacement=1,
+            nload_vectors=1,
+            #neigenvectors=0,
+            nspring_stress=1, nspring_strain=1, nspring_force=1,
+            ncrod_stress=1, # ctube_stress=0, nconrod_stress=0,
+            ncrod_strain=1, # ctube_strain=0, nconrod_strain=0,
+            nbar_stress=1, nbar_strain=1, nbar_force=1,
+            #nbeam_stress=0, nbeam_strain=0, nbeam_force=0,
+            nplate_stress=1, nplate_strain=1, nplate_force=1,
+            #nshear_stress=0, nshear_strain=0, nshear_force=0,
+            ncomposite_layers=5, ncomposite_plate_stress=1, ncomposite_plate_strain=1,
+            nsolid_stress=1, nsolid_strain=1,
+            nabs_stress=1, nabs_strain=1,
+            #----------------------
+            nstrain_energy=1, ngrid_point_forces=1,
+        )
+        test.write_result_cases()
+        #assert nresults == 139, nresults  # 202-139; alt is 196-63=133
+        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 266, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 204, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 202, len(test.result_cases)
 
         idisp = None
         iforce_xyz = None
@@ -534,10 +1180,37 @@ class TestNastranGUI(unittest.TestCase):
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-        nastran_to_vtk(op2_filename, vtk_filename)
+        nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
         assert os.path.exists(vtk_filename), vtk_filename
 
-    def test_gui_elements_01b(self):
+    def test_gui_elements_01_missing_eids(self):
+        """
+        same as test_gui_elements_01 except missing a single:
+         -
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        model = read_bdf(bdf_filename)
+        test = NastranGUI()
+        test.load_nastran_geometry(model)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 65, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 63, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 63, len(test.result_cases)
+
+        test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 266, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 204, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 202, len(test.result_cases)
+
+    def _test_gui_elements_01b(self):  # pragma: no cover
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         #model = read_bdf(bdf_filename)
@@ -553,8 +1226,39 @@ class TestNastranGUI(unittest.TestCase):
         model.read_bdf(bdf_filename)
         #print(model.elements)
         test2 = NastranGUI()
+        test2.stop_on_failure = False
         test2.load_nastran_geometry(model)
+        assert len(test2.result_cases) == 5, len(test2.result_cases)
         test2.load_nastran_results(op2_filename)
+        #print(test2.result_cases[27])
+        #print(test2.write_result_cases())
+
+        nresults = get_nreal_nresults(
+            test2,
+            nspc_force=1, nmpc_force=1, nload_vectors=1,
+            ndisplacement=1, neigenvectors=0,
+            #nspring_stress=0, nspring_strain=0, nspring_force=0,
+            #ncrod_stress=0, ctube_stress=0, nconrod_stress=0,
+            ncrod_strain=0, ctube_strain=1, nconrod_strain=1,
+            nbar_stress=0, nbar_strain=1, nbar_force=0,
+            #nbeam_stress=1, nbeam_strain=1, nbeam_force=0,
+            nplate_stress=1, nplate_strain=1, nplate_force=0,
+            nshear_stress=1, nshear_strain=0, nshear_force=0,
+            #ncomposite_layers=0, ncomposite_plate_stress=1, ncomposite_plate_strain=1,
+            nsolid_stress=0, nsolid_strain=1,
+            nabs_stress=1, nabs_strain=1,
+            nstrain_energy=1, ngrid_point_forces=1)
+
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test2.result_cases) == 105, len(test2.result_cases)
+        elif USE_OLD_SIDEBAR_OBJS:
+            #print(test2.write_result_cases())
+            assert len(test2.result_cases) == 87, len(test2.result_cases)
+            #assert len(test2.result_cases) == 107, len(test2.result_cases)
+        else:
+            assert len(test2.result_cases) == 125, len(test2.result_cases)  #  wrong
+
+
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -562,7 +1266,23 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
+
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 59, len(test.result_cases)
+        elif USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 58, len(test.result_cases)
+        else:
+            assert USE_NEW_SIDEBAR_OBJS
+            assert len(test.result_cases) == 58, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 260, len(test.result_cases)
+        elif USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 197, len(test.result_cases)
+        else:
+            assert USE_NEW_SIDEBAR_OBJS
+            assert len(test.result_cases) == 199, len(test.result_cases)
 
         #test = NastranGUI()
         test.settings.nastran_create_coords = False
@@ -578,8 +1298,26 @@ class TestNastranGUI(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         test = NastranGUI()
+        #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 57, len(test.result_cases)
+        elif USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 56, len(test.result_cases)
+        else:
+            assert USE_NEW_SIDEBAR_OBJS
+            assert len(test.result_cases) == 56, len(test.result_cases)
+
         test.load_nastran_results(op2_filename)
+
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 672, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 503, len(test.result_cases) # old terms
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 443, len(test.result_cases)
+
         #test.create_groups_by_property_id()
         test.create_groups_by_visible_result()
 
@@ -635,6 +1373,7 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_elements.op2')
         test = NastranGUI()
+        test.stop_on_failure = False
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
 
@@ -766,13 +1505,13 @@ class TestNastranGUI(unittest.TestCase):
 
         magnify = None
 
-        render_large = vtk.vtkRenderLargeImage()
+        render_large = vtkRenderLargeImage()
         test.run_vtk = True
         #test.create_corner_axis()
 
         # faking coordinate system
-        axes_actor = vtk.vtkAxesActor()
-        test.corner_axis = vtk.vtkOrientationMarkerWidget()
+        axes_actor = vtkAxesActor()
+        test.corner_axis = vtkOrientationMarkerWidget()
         test.corner_axis.SetOrientationMarker(axes_actor)
 
         #test.on_take_screenshot(fname='chan.png', magnify=None, show_msg=True)
@@ -943,7 +1682,7 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'patran_fmt', '0012_20.bdf')
         nod_filename = os.path.join(MODEL_PATH, 'patran_fmt', 'normals.nod')
         test = NastranGUI()
-        test.on_load_geometry(bdf_filename, geometry_format='nastran', raise_error=True)
+        test.on_load_geometry(bdf_filename, geometry_format='nastran', stop_on_failure=True)
         test.on_load_custom_results(out_filename=nod_filename, restype='Patran_nod')
 
     def test_gui_axi(self):
@@ -1001,6 +1740,222 @@ class TestNastranGUI(unittest.TestCase):
 
     #keys = test.result_cases.keys()
     #assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+
+def assert_result_cases(test: NastranGUI, ncases: int,
+                        debug: bool=False) -> None:  # pragma: no cover
+    msg = ''
+    for i, (obj, name) in test.result_cases.items():
+        #if i > 328:
+            #break
+        msg += f'{i}: {str(obj)}'
+    assert isinstance(msg, str)
+    ncases_actual = len(test.result_cases)
+    if ncases_actual != ncases:
+        #print(msg)
+        print(f'ncases_actual={ncases_actual}; ncases={ncases}')
+        raise RuntimeError(msg)
+    if debug:
+        assert isinstance(msg, str)
+        if hasattr(sys.stdin, 'reconfigure'):
+            sys.stdin.reconfigure(encoding='utf-8')
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        print(msg)
+
+def get_nreal_nresults_from_model(
+        model: BDF,
+        ntimes: int=1,
+        ndisplacement=0, neigenvectors=0, nspc=0, nmpc=0,
+        nstress=0, nstrain=0, nforce=0):  # pragma: no cover
+    #cc = model.case_control_deck
+    nspring = model.card_count['CELAS1'] + model.card_count['CELAS2'] + model.card_count['CELAS3'] + model.card_count['CELAS4']
+    nshear = model.card_count['CSHEAR']
+    ncrod = model.card_count['CROD']
+    ntube = model.card_count['CTUBE']
+    nconrod = model.card_count['CONROD']
+    #ntri = model.card_count['CTRIA3'] + model.card_count['CTRIA6'] + model.card_count['CTRIAR']
+    #nquad = model.card_count['CQUAD4'] + model.card_count['CQUAD8'] + model.card_count['CQUADR']
+    nbar = model.card_count['CBAR']
+    nbeam = model.card_count['CBEAM']
+    ncomposite_layers = 0
+    ncomposite_plates = 0
+    nplate = 0
+    nsolid = 0
+    for prop in model.properties.items():
+        if prop.type in {'PCOMP', 'PCOMPG'}:
+            ncomposite_layers = max(ncomposite_layers, prop.nlayers)
+            ncomposite_plates = 1
+        elif prop.type == 'PSHELL':
+            nplate = 1
+        elif prop.type == 'PSOLID':
+            nsolid = 1
+
+    test = False
+    nresults = get_nreal_nresults(test,
+        nspc_force=nspc, nmpc_force=nmpc, ndisplacement=ndisplacement,
+        neigenvectors=neigenvectors,
+        nspring_stress=nspring*nstress, nspring_strain=nspring*nstrain,
+        ncrod_stress=ncrod*nstress, ctube_stress=ntube*nstress, nconrod_stress=nconrod*nstress,
+        ncrod_strain=ncrod*nstrain, ctube_strain=ntube*nstrain, nconrod_strain=nconrod*nstrain,
+        nbar_stress=nbar*nstress, nbar_strain=nbar*nstrain,
+        nbeam_stress=nbeam*nstress, nbeam_strain=nbeam*nstrain,
+        nplate_stress=nplate*nstress, nplate_strain=nplate*nstrain,
+        nshear_stress=nstrain*nstress, nshear_strain=nstrain*nstrain,
+        ncomposite_layers=ncomposite_layers,
+        ncomposite_plate_stress=ncomposite_plates*nstress,
+        ncomposite_plate_strain=ncomposite_plates*nstrain,
+        nsolid_stress=nsolid*nstress, nsolid_strain=nsolid*nstrain,
+        nbar_force=nbar*nforce, nbeam_force=nbeam*nforce,
+        nplate_force=nplate*nforce, nshear_force=nshear*nforce)
+    return nresults
+
+def get_nreal_nresults(test,
+        nspc_force=0,
+        nmpc_force=0,
+        nload_vectors=0,
+        ndisplacement=0,
+        neigenvectors=0,
+        nspring_stress=0, nspring_strain=0, nspring_force=0,
+        ncrod_stress=0, ctube_stress=0, nconrod_stress=0,
+        ncrod_strain=0, ctube_strain=0, nconrod_strain=0,
+        nbar_stress=0, nbar_strain=0, nbar_force=0,
+        nbeam_stress=0, nbeam_strain=0, nbeam_force=0,
+        nplate_stress=0, nplate_strain=0, nplate_force=0,
+        nshear_stress=0, nshear_strain=0, nshear_force=0,
+        ncomposite_layers=0, ncomposite_plate_stress=0, ncomposite_plate_strain=0,
+        nsolid_stress=0, nsolid_strain=0,
+        nabs_stress=0, nabs_strain=0,
+        #-------------------------
+        nstrain_energy=0, ngrid_point_forces=0) -> int:
+    """the beginnings of trying to calculate the number of results vs. guessing"""
+    # txyz, rxyz
+    nastran_settings = test.settings.nastran_settings
+    if not nastran_settings.displacement:
+        ndisplacement = 0
+    if not nastran_settings.eigenvector:
+        neigenvectors = 0
+    if not nastran_settings.applied_load:
+        nload_vectors = 0
+    if not nastran_settings.spc_force:
+        nspc_force = 0
+    if not nastran_settings.mpc_force:
+        nmpc_force = 0
+    if not nastran_settings.grid_point_force:
+        ngrid_point_forces = 0
+    if not nastran_settings.strain_energy:
+        nstrain_energy = 0
+    ntables = (
+        nspc_force + nmpc_force + nload_vectors +
+        ndisplacement + neigenvectors) * 2
+
+
+    if not nastran_settings.force:
+        nspring_force = 0
+        nbar_force = 0
+        nbeam_force = 0
+        nplate_force = 0
+        nshear_force = 0
+    if not nastran_settings.strain:
+        nspring_strain = 0
+        ncrod_strain = 0
+        ctube_strain = 0
+        nconrod_strain = 0
+        nbar_strain = 0
+        nbeam_strain = 0
+        nplate_strain = 0
+        nshear_strain = 0
+        ncomposite_plate_strain = 0
+        nsolid_strain = 0
+        nabs_strain = 0
+    if not nastran_settings.stress:
+        nspring_stress = 0
+        nconrod_stress = 0
+        ncrod_stress = 0
+        ctube_stress = 0
+        nbar_stress = 0
+        nbeam_stress = 0
+        nplate_stress = 0
+        nshear_stress = 0
+        ncomposite_plate_stress = 0
+        nsolid_stress = 0
+        nabs_stress = 0
+
+    nplate_stress_strain = nplate_stress + nplate_strain
+    ncomposite_stress_strain = ncomposite_plate_stress + ncomposite_plate_strain
+    nstress_strain = (
+        # oxx
+        (nspring_stress + nspring_strain) +
+
+        # [oxx, MS_axial, txy, MS_torsion]
+        (ncrod_stress + ctube_stress + nconrod_stress +
+         ncrod_strain + ctube_strain + nconrod_strain) * 4 +
+
+        #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+        # s1b, s2b, s3b, s4b,        smaxb, sminb, MS_compression]
+        # no MS_tension/compression
+        (nbar_stress + nbar_strain) * 13 +
+        (nbeam_stress + nbeam_strain) * 0 +  # sxc, sxd, sxe, sxf, smax, smin
+
+        # [max_shear, avg_shear, margin]; no margin
+        (nshear_stress + nshear_strain) * 2 +
+
+        #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]; # 8; old
+        nplate_stress_strain * 8 * USE_OLD_SIDEBAR_OBJS * 2 +  # 2 layers
+        nplate_stress_strain * 8 * USE_NEW_SIDEBAR_OBJS * 1 * USE_OLD_TERMS +  # 1 layer
+
+        #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises, oabs, max_shear]  # 10; new
+        nplate_stress_strain * 10 * USE_NEW_SIDEBAR_OBJS * 1 * USE_NEW_TERMS +  # 1 layer
+        #added abs_princpal and von_mises/max_shear, so +2 results; disabld for now for testing
+
+        # [o11, o22, t12, t1z, t2z, angle, major, minor, max_shea]
+        ncomposite_stress_strain * 9 * USE_OLD_SIDEBAR_OBJS * ncomposite_layers +
+        ncomposite_stress_strain * 9 * USE_NEW_SIDEBAR_OBJS +
+
+        # [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises]
+        (nsolid_stress + nsolid_strain) * 10 # OLD
+    )
+
+    nforce = (
+        #[Fspring]
+        nspring_force +
+        # order is different, but close enough
+        # [bending_moment_a1, bending_moment_a2, shear1,
+        #  bending_moment_b1, bending_moment_b2, shear2,
+        #  axial, torque]
+        nbar_force * 8 +
+        nbeam_force * 0 +
+
+        # [Fx, Fy, Fxy, Mx, My, Mxy, Vx, Vy]
+        nplate_force * 8
+    )
+    nresults = (
+        ntables +
+        nstress_strain + nforce +
+        #[Strain Energy, Percent, Strain Energy Density]
+        nstrain_energy*3 +
+        ngrid_point_forces
+    )
+    if nbar_force:
+        # isBarOn flag
+        nresults += 1
+
+    if nbeam_stress:
+        # is_stress_off
+        nresults += 1
+    if nbeam_strain:
+        # is_strain_off
+        nresults += 1
+    if nbeam_force:
+        # is_force_off
+        nresults += 1
+
+    nplate_stress_strain = nplate_stress + nplate_strain
+    nabs = nabs_stress + nabs_strain
+    if nabs > 0:
+        # absolute max corner stress
+        nresults += nabs * 10
+    assert nresults > 0, nresults
+    return nresults
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -8,6 +8,7 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import Model, SingleChoiceQTableView
 from pyNastran.gui.qt_version import qt_int as qt_version
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from qtpy import QtCore
 from qtpy.QtGui import QColor, QPalette
@@ -121,11 +122,11 @@ class EditNodeProperties(QDialog):
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
 
-        self.opacity = QLabel("Opacity:")
+        self.opacity = QLabel('Opacity:')
         self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
-        self.opacity_edit.setDecimals(1)
-        self.opacity_edit.setSingleStep(0.1)
+        self.opacity_edit.setDecimals(2)
+        self.opacity_edit.setSingleStep(0.05)
         self.opacity_edit.setValue(opacity)
 
         # show/hide
@@ -429,15 +430,15 @@ class EditNodeProperties(QDialog):
 
     #def on_default_name(self):
         #self.name_edit.setText(str(self._default_name))
-        #self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+        #self.name_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     #def check_name(self, cell):
         #text = str(cell.text()).strip()
         #if len(text):
-            #cell.setStyleSheet("QLineEdit{background: white;}")
+            #cell.setStyleSheet(QLINEEDIT_GOOD)
             #return text, True
         #else:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
+            #cell.setStyleSheet(QLINEEDIT_ERROR)
             #return None, False
 
     def on_validate(self):

@@ -59,6 +59,7 @@ class EPT:
             (902, 9, 29): ['PROD', self._read_prod],          # record 49
             (1002, 10, 42): ['PSHEAR', self._read_pshear],    # record 50
             (2402, 24, 281): ['PSOLID', self._read_psolid],   # record 51
+            (15202, 152, 709): ['PCOMPLS', self._read_pcompls],
             (2302, 23, 283): ['PSHELL', self._read_pshell],   # record 52
             (1602, 16, 30): ['PTUBE', self._read_ptube],      # record 56
 
@@ -116,17 +117,16 @@ class EPT:
 
             # MSC-specific
             (14602, 146, 692): ['PSLDN1', self._read_fake],
-            (16502, 165, 916): ['PAXSYMH', self._read_fake],
+            (16502, 165, 916): ['PAXSYMH', self._read_paxsymh],
             (13201, 132, 513): ['PBRSECT', self._read_fake],
 
             (13701, 137, 638): ['PWSEAM', self._read_fake],
-            (7001, 70, 632): ['???', self._read_fake],
+            (7001, 70, 632): ['???7001', self._read_fake_7001],
             (15106, 151, 953): ['PCOMPG1', self._read_fake],
             (3901, 39, 969): ['PSHL3D', self._read_fake],
             (17006, 170, 901): ['MATCID', self._read_fake],
 
             (9601, 96, 691): ['PJOINT', self._read_fake],
-            (16502, 165, 916): ['???', self._read_fake],
 
             (9701, 97, 692): ['PJOINT2', self._read_fake],
             (13401, 134, 611): ['PBEAM3', self._read_pbeam3],
@@ -172,6 +172,12 @@ class EPT:
         self.op2._add_methods._add_convection_property_object(prop)
 
 # HGSUPPR
+
+    def _read_paxsymh(self, data: bytes, n: int) -> None:
+        op2 = self.op2
+        op2.log.info(f'geom skipping PAXSYMH in {op2.table_name}; ndata={len(data)-12}')
+        #op2.show_data(data[n:], types='ifs')
+        return len(data)
 
     def _read_desc(self, data: bytes, n: int) -> int:
         """
@@ -2434,7 +2440,7 @@ class EPT:
         7 CONDTYPE  I Condition type (0=rigid, 1=equivalent)
         8 WELDTYPE  I Weld type (0=spot weld, 1=but seam, 2=T-seam)
 
-        9 MINLEN   RS Minimum length of spot weld
+        9  MINLEN  RS Minimum length of spot weld
         10 MAXLEN  RS Maximum length of spot weld
         11 GMCHK    I Perform geometry check
         12 SPCGS    I SPC the master grid GS
@@ -2468,14 +2474,17 @@ class EPT:
             out = struct1.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  PFAST=%s\n' % str(out))
-            (pid, d, mcid, unused_connbeh, unused_conntype, unused_extcon,
+            (pid, mid, d, unused_connbeh, unused_conntype, unused_extcon,
              unused_condtype, unused_weldtype, unused_minlen, unused_maxlen,
              unused_gmcheck, unused_spcgs, mass, ge,
              unused_aa, unused_bb, unused_cc, mcid, mflag,
              kt1, kt2, kt3, kr1, kr2, kr3) = out
 
+            #(pid, d, mcid, mflag, kt1, kt2, kt3,
+             #kr1, kr2, kr3, mass, ge) = data
             data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
                        kr1, kr2, kr3, mass, ge)
+            assert isinstance(d, float), d
             prop = PFAST.add_op2_data(data_in)
             str(prop)
             #print(prop)
@@ -2488,9 +2497,17 @@ class EPT:
         """
         PFAST(3601,36,55)
         NX only
+
+        Word Name Type Description
+        1 PID       I Property identification number
+        2 D        RS Diameter of the spot weld
+        3 MCID      I Element stiffness coordinate system
+        4 MFLAG     I Defines MCID as absolute or relative
+        5-7 KT(3)  RS Translational stiffness
+        8-10 KR(3) RS Rotational stiffness
         """
         op2 = self.op2
-        ntotal = 48
+        ntotal = 48 * self.factor
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
@@ -2504,6 +2521,7 @@ class EPT:
 
             data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
                        kr1, kr2, kr3, mass, ge)
+            assert isinstance(d, float), d
             prop = PFAST.add_op2_data(data_in)
             self._add_op2_property(prop)
             n += ntotal
@@ -2752,6 +2770,45 @@ class EPT:
             n += ntotal
         return n, props
 
+    def _read_fake_16502(self, data: bytes, n: int) -> int:
+        """(16502, 165, 916)"""
+        op2 = self.op2
+        op2.show_data(data)
+        asdf
+
+    def _read_fake_7001(self, data: bytes, n: int) -> int:
+        """
+        (7001, 70, 632)
+        What is the type????
+        Pid ???
+
+        should be NX, but also checked MSC...need an example
+        related to acoustics
+        """
+        op2 = self.op2
+        op2.show_data(data)
+        asdf
+        ntotal = 32 * self.factor # 8*4
+        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i', self.size))
+        asdf
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
+            out = struct1.unpack(data[n:n+ntotal])
+            pid, mid, t, nsm, foropt, csopt = out[:6]
+            #print(out)
+            assert csopt == 0, csopt
+            pplane = op2.add_pplane(pid, mid, t=t, nsm=nsm,
+                                     formulation_option=foropt)
+            pplane.validate()
+            #print(pplane)
+            str(pplane)
+            n += ntotal
+        op2.card_count['PLPLANE'] = nentries
+        return n
+
     def _read_pplane(self, data: bytes, n: int) -> int:
         """
         RECORD – PPLANE(3801,38,979)
@@ -2958,12 +3015,141 @@ class EPT:
             op2.card_count['PSHELL'] = nproperties
         return n
 
+    def _read_pcompls(self, data: bytes, n: int) -> int:
+        """
+        1 Each PCOMPLS creates a fake PSOLID with MID from its first ply, see ifp6nlm.F
+        2 # of , see also ta0n2m.F
+        3 PID          I #01, Property ID
+        4 DIRECT       I #02, Layer direction
+        5 CORDM        I #03, ID of the Material coordinate system
+        6 SB          RS #04, Allowable shear stress of bonding material
+        7 IANAL        I #05, Implicit/Explicit/Structure/Heat, see nlmanal.prm
+        8 UNDEF(3) none #06-08
+        11 MICRO   CHAR4 #09, If 'MICR', activates Micro-Mechanics progressive failure analysis
+        12 BEH8    CHAR4 ?01, Structual Behavior for 8-noded elements
+        13 INT8    CHAR4 ?02, Integration Scheme for 8-noded elements
+        14 BEH8H   CHAR4 ?03, Heat Transfer Behavior for 8-noded elements
+        15 INT8H   CHAR4 ?04, Heat Transfer Integration Scheme for 8-noded elements
+        16 BEH20   CHAR4 ?01, Structual Behavior for 20-noded elements
+        17 INT20   CHAR4 ?02, Integration Scheme for 20-noded elements
+        18 BEH20H  CHAR4 ?03, Heat Transfer Behavior for 20-noded elements
+        19 INT20H  CHAR4 ?04, Heat Transfer Integration Scheme for 20-noded elements
+        20 NPLY(C)     I ?xx, Number of plies, =0 before IFP6, >0 after IFP6
+        NPLY =0 before IFP6
+        21 GPLYID      I ?01, Global Ply ID
+        22 MID         I ?02, Material ID
+        23 THICK      RS ?03, Thicknesses of the ply, fractional if DIRECT > 0
+        24 THETA      RS ?04, Orientation angle of the ply
+        25 SOUT    CHAR4 ?05, Stress or strain output request (YES or NO)
+        26 MIDMTX      I ?06, Matrix material ID
+        27 VF         RS ?07, Fiber volume fraction
+        28 VV         RS ?08, Void volume fraction
+        29 CTEMP      RS ?09, Reference temperature
+        30 MOIST      RS ?10, Moisture percentage
+        31 CRIT    CHAR4 ?11, CRIT=critical or NONC=non-critical
+        32 NFTI        I ?12, Number of non-blank Failure Theories coming next
+        33 FTI(24) CHAR4 ?13-36, Failure Theories
+        Words 21 through 56 repeat until End of Record
+        NPLY = after IFP6
+        21 GPLYID      I ?01, Global Ply ID
+        22 MID         I ?02, Material ID
+        23 THICK      RS ?03, Thicknesses of the ply, fractional if DIRECT > 0
+        24 THETA      RS ?04, Orientation angle of the ply
+        25 SOUT    CHAR4 ?05, Stress or strain output request (YES or NO)
+        26 MIDMTX      I ?06, Matrix material ID
+        27 VF         RS ?07, Fiber volume fraction
+        28 VV         RS ?08, Void volume fraction
+        29 CTEMP      RS ?09, Reference temperature
+        30 MOIST      RS ?10, Moisture percentage
+        31 CRIT    CHAR4 ?11, CRIT=critical or NONC=non-critical
+        32 NFTI        I ?12, Number of non-blank Failure Theories coming next
+        33 FTI(24) CHAR4 ?13-36, Failure Theories
+        Words 21 through 56 repeat NPLY times
+        End NPLY
+        """
+        op2 = self.op2
+        struct_base = Struct('3i f i 3i 4s4s4s4s4s4s4s4s4s i')
+        struct1 = Struct(b'2i 2f 4s i 4f 4s i 4s4s4s4s 4s4s4s4s 4s4s4s4s 4s4s4s4s  4s4s4s4s  4s4s4s4s ')
+        nbase = 18 * 4 * self.factor
+        n1 = 144 * self.factor
+
+        while n < len(data):
+            data_base = data[n:n+nbase]
+            #op2.show_data(data_base)
+            out = struct_base.unpack(data_base)
+            #print(out)
+            pid, direct, cordm, sb, ianal, dunnoa, dunno_b, dunno_c, micro, beh8, int8, beh8h, int8h, beh20, int20, beh20h, int20h, nply = out
+            #3 PID          I #01, Property ID
+            #4 DIRECT       I #02, Layer direction
+            #5 CORDM        I #03, ID of the Material coordinate system
+            #6 SB          RS #04, Allowable shear stress of bonding material
+            #7 IANAL        I #05, Implicit/Explicit/Structure/Heat, see nlmanal.prm
+            #8 UNDEF(3) none #06-08
+            #11 MICRO   CHAR4 #09, If 'MICR', activates Micro-Mechanics progressive failure analysis
+            #12 BEH8    CHAR4 ?01, Structual Behavior for 8-noded elements
+            #13 INT8    CHAR4 ?02, Integration Scheme for 8-noded elements
+            #14 BEH8H   CHAR4 ?03, Heat Transfer Behavior for 8-noded elements
+            #15 INT8H   CHAR4 ?04, Heat Transfer Integration Scheme for 8-noded elements
+            #16 BEH20   CHAR4 ?01, Structual Behavior for 20-noded elements
+            #17 INT20   CHAR4 ?02, Integration Scheme for 20-noded elements
+            #18 BEH20H  CHAR4 ?03, Heat Transfer Behavior for 20-noded elements
+            #19 INT20H  CHAR4 ?04, Heat Transfer Integration Scheme for 20-noded elements
+            #20 NPLY(C)     I ?xx, Number of plies, =0 before IFP6, >0 after IFP6
+            n += nbase
+            if nply == 0:
+                adsf
+            else:
+                mids = []
+                thicknesses = []
+                thetas = []
+                souts = []
+                for iply in range(nply):
+                    data1 = data[n:n+n1]
+                    #op2.show_data(data1)
+                    out1 = struct1.unpack(data1)
+                    #print('  ', out1)
+                    (gply_id, mid, thick, theta, sout, mid_mtx, vf, vv, ctemp, moist, crit_bytes, nfti,
+                     ft_bytes1, ft_bytes2, ft_bytes3, ft_bytes4,
+                     ft_bytes5, ft_bytes6, ft_bytes7, ft_bytes8,
+                     ft_bytes9, ft_bytes10, ft_bytes11, ft_bytes12,
+                     ft_bytes13, ft_bytes14, ft_bytes15, ft_bytes16,
+                     ft_bytes17, ft_bytes18, ft_bytes19, ft_bytes20,
+                     ft_bytes21, ft_bytes22, ft_bytes23, ft_bytes24,) = out1
+                    #21 GPLYID      I ?01, Global Ply ID
+                    #22 MID         I ?02, Material ID
+                    #23 THICK      RS ?03, Thicknesses of the ply, fractional if DIRECT > 0
+                    #24 THETA      RS ?04, Orientation angle of the ply
+                    #25 SOUT    CHAR4 ?05, Stress or strain output request (YES or NO)
+                    #26 MIDMTX      I ?06, Matrix material ID
+                    #27 VF         RS ?07, Fiber volume fraction
+                    #28 VV         RS ?08, Void volume fraction
+                    #29 CTEMP      RS ?09, Reference temperature
+                    #30 MOIST      RS ?10, Moisture percentage
+                    #31 CRIT    CHAR4 ?11, CRIT=critical or NONC=non-critical
+                    #32 NFTI        I ?12, Number of non-blank Failure Theories coming next
+                    #33 FTI(24) CHAR4 ?13-36, Failure Theories
+                    #Words 21 through 56 repeat NPLY times
+                    n += n1
+                    mids.append(mid)
+                    thicknesses.append(thick)
+                    thetas.append(theta)
+                    souts.append('YES')
+                #raise RuntimeError(nply)
+            op2.show_data(data[n:])
+            op2.add_pcomp(pid, mids, thicknesses, thetas=thetas, souts=souts,
+                          nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+            #op2.add_pcompls(pid, )
+        #asdf
+        op2.log.error('representing PCOMPLS (solid composite) as PCOMP (shell composite)')
+        return n
+
     def _read_psolid(self, data: bytes, n: int) -> int:
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
         op2 = self.op2
         #print("reading PSOLID")
+        #op2.show_data(data[n:])
         if self.size == 4:
             ntotal = 28  # 7*4
             struct_6i4s = Struct(op2._endian + b'6i4s')

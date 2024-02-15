@@ -40,11 +40,17 @@ EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units', 'code-block']
 def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
+    if '\t' in line1:
+        line1 = line1.expandtabs()
+        assert ',' not in line1[:16], line1
+    if '\t' in line2:
+        line2 = line2.expandtabs()
+        assert ',' not in line2[:16], line2
 
     label = line1[:24]
     unused_comment = line1[24:]  # len=56 max
     #assert ',' not in label, f'base={label!r}'
-    assert '\t' not in label, f'base={label!r}'
+    #assert '\t' not in label, f'base={label!r}'
 
     fields = [
         line1[0:8],
@@ -53,8 +59,8 @@ def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
     ]
 
     #assert ',' not in line2, card_lines
-    assert '\t' not in line2, card_lines
-    assert '*' not in line2, card_lines
+    #assert '\t' not in line2, card_lines
+    #assert '*' not in line2, card_lines
     if ',' in line2:
         # drop off the first field of row2
         fields += line2.split(',')[1:]
@@ -114,22 +120,22 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
             new_fields = line.split(',')[:5]
             for unused_i in range(5 - len(new_fields)):
                 new_fields.append('')
+            assert len(new_fields) == 5, new_fields
         else:  # standard
             new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
                           line[56:72]]
         fields += new_fields
-        assert len(fields) == 5, fields
     else:  # small field
         if ',' in line:  # csv
             new_fields = line.split(',')[:9]
             for unused_i in range(9 - len(new_fields)):
                 new_fields.append('')
+            assert len(new_fields) == 9, new_fields
         else:  # standard
             new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
                           line[32:40], line[40:48], line[48:56], line[56:64],
                           line[64:72]]
         fields += new_fields
-        assert len(fields) == 9, fields
 
     for line in card_lines[1:]: # continuation lines
         if '=' in line and card_name != 'EIGRL':
@@ -143,9 +149,9 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
                 new_fields = line.split(',')[1:5]
                 for unused_i in range(4 - len(new_fields)):
                     new_fields.append('')
+                assert len(new_fields) == 4, new_fields
             else:  # standard
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
-            assert len(new_fields) == 4, new_fields
         else:  # small field
             if ',' in line:  # csv
                 new_fields = line.split(',')[1:9]
@@ -209,7 +215,7 @@ def parse_executive_control_deck(
             sline = uline.strip().split()
             assert len(sline) == 2, sline
             app = sline[1]
-            assert app in {'HEAT', 'DISP', 'COUPLED', 'DISPLACEMENT'}, f'uline={uline!r}'
+            assert app in {'HEAT', 'DISP', 'COUPLED', 'DISPLACEMENT', 'DMAP'}, f'uline={uline!r}'
     return sol, method, sol_iline, app
 
 

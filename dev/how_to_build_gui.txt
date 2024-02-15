@@ -25,3 +25,13 @@ if sys.platform == 'win32':
 python_path = 'C:\\Python27_x86'
 
 Do the same thing and cross your fingers.
+
+
+From Scratch
+------------
+pyinstaller --log-level DEBUG --debug all --distpath distpath --workpath workpath --onedir --name pyNastranGUI ..\pyNastran\gui\gui.py
+
+
+From Script
+-----------
+>>> pyinstaller --log-level DEBUG .\pyNastranGUI.spec > junk.out 2>&1

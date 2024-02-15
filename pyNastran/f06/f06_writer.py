@@ -3,6 +3,7 @@ defines the F06Writer class and:
  - write_f06(...)
 """
 #pylint: disable=W0201,C0301,C0111
+from __future__ import annotations
 import os
 import sys
 import copy
@@ -10,18 +11,18 @@ import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
-from typing import Union, Optional, cast, TYPE_CHECKING
+from typing import Union, Optional, cast, TextIO, TYPE_CHECKING
 
 import numpy as np
 
 import pyNastran
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
-from pyNastran.op2.tables.onmd import NormalizedMassDensity
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
-#if TYPE_CHECKING:
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
+if TYPE_CHECKING:
+    from pyNastran.op2.tables.onmd import NormalizedMassDensity
 
 
 def make_stamp(title: Optional[str],
@@ -60,7 +61,7 @@ def make_f06_header() -> str:
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2023                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2024                        */\n',
         spaces + '/*                             Steven Doyle                             */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
@@ -378,7 +379,7 @@ class F06Writer(OP2_F06_Common):
             f06_file.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_outname: str, matrix_filename: Optional[str]=None,
+    def write_f06(self, f06_filename: str, matrix_filename: Optional[str]=None,
                   is_mag_phase: bool=False, is_sort1: bool=True,
                   delete_objects: bool=False, end_flag: bool=False,
                   quiet: bool=True, repr_check: bool=False,
@@ -388,11 +389,11 @@ class F06Writer(OP2_F06_Common):
 
         Parameters
         ----------
-        f06_outname : str
+        f06_filename : str
             the name of the F06 file to write
         matrix_filename : str; default=None
             str : the name of the .mat file to write
-            None : based on f06_outname
+            None : based on f06_filename
         is_mag_phase : bool; default=False
             should complex data be written using Magnitude/Phase
             instead of Real/Imaginary
@@ -410,29 +411,13 @@ class F06Writer(OP2_F06_Common):
             calls the object repr as a validation test (prints nothing)
         close : bool; default=True
             close the f06 file
+
         """
         if not quiet:
             print("F06:")
 
-        if isinstance(f06_outname, str):
-            if matrix_filename is None:
-                matrix_filename = os.path.splitext(f06_outname)[0] + '.mat'
-            #print("matrix_filename =", matrix_filename)
-            #mat = open(matrix_filename, 'wb')
-
-            f06 = open(f06_outname, 'w')
-            self._write_summary(f06)
-        elif hasattr(f06_outname, 'read') and hasattr(f06_outname, 'write'):
-            #f06 = f06_outname
-        #else:
-            #print('type(f06_outname) =', type(f06_outname))
-            #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
-            f06 = f06_outname
-            f06_outname = f06.name
-            if matrix_filename is None:
-                matrix_filename = os.path.splitext(f06_outname)[0] + '.mat'
-            if not quiet:
-                print('f06_outname =', f06_outname)
+        f06, f06_filename, matrix_filename = _get_file_obj(
+            self, f06_filename, matrix_filename, quiet=quiet)
 
         page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight:
@@ -508,14 +493,12 @@ class F06Writer(OP2_F06_Common):
                 )
                 np.savetxt(mat_file, data, header=header, delimiter=',')
 
-
-
     def _write_f06_subcase_based(self, f06, page_stamp: str,
                                  delete_objects=True,
-                                 is_mag_phase=False,
-                                 is_sort1=True,
-                                 quiet=False,
-                                 repr_check=False):
+                                 is_mag_phase: bool=False,
+                                 is_sort1: bool=True,
+                                 quiet: bool=False,
+                                 repr_check: bool=False):
         """
         Helper function for ``write_f06`` that does the real work
 
@@ -542,15 +525,15 @@ class F06Writer(OP2_F06_Common):
             calls the object repr as a validation test (prints nothing)
 
         """
-        log = self.log
+        model = self
+        log = model.log
         #is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
         # eigenvalues are written first
-        f06.write(page_stamp % self.page_num)
         self.page_num += 1
-        for ikey, result in sorted(self.eigenvalues.items()):
+        for ikey, result in sorted(model.eigenvalues.items()):
             if not quiet:
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
@@ -567,9 +550,9 @@ class F06Writer(OP2_F06_Common):
         # isubcases = sorted(self.isubcase_name_map.keys())
 
         # TODO: superelement version...need the nominal...
-        res_keys_subcase = self.subcase_key
+        res_keys_subcase = model.subcase_key
         if len(res_keys_subcase) == 0:
-            log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
+            log.warning('no cases to write...subcase_key=%r' % model.subcase_key)
             return
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
@@ -582,9 +565,9 @@ class F06Writer(OP2_F06_Common):
                     #is_compressed = True
                     isubcase = res_key
 
-                if res_key not in self.eigenvectors:
+                if res_key not in model.eigenvectors:
                     continue
-                result = self.eigenvectors[res_key]
+                result = model.eigenvectors[res_key]
                 if repr_check:
                     str(result)
                 subtitle = result.subtitle
@@ -622,7 +605,7 @@ class F06Writer(OP2_F06_Common):
         header = copy.deepcopy(header_old)
         unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin',
                              'grid_point_weight', 'psds', 'monitor1', 'monitor3']
-        res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
+        res_types = list(model.get_result(table_type) for table_type in sorted(model.get_table_types())
                          if table_type not in unallowed_results and not table_type.startswith('responses.'))
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
@@ -632,7 +615,7 @@ class F06Writer(OP2_F06_Common):
                 #else:
                     #is_compressed = True
 
-                res_length = self._get_result_length(res_types, res_key)
+                res_length = model._get_result_length(res_types, res_key)
                 if res_length == 0:
                     # skipped subcase; no saved results
                     continue
@@ -700,7 +683,7 @@ class F06Writer(OP2_F06_Common):
         normalized_mass_density = self.op2_results.responses.normalized_mass_density
         if normalized_mass_density is None:
             return
-        normalized_mass_density0 = normalized_mass_density[0]  # type: NormalizedMassDensity
+        normalized_mass_density0: NormalizedMassDensity = normalized_mass_density[0]
 
         f06.write('NORMALIZED MASS DENSITY HISTORY\n')
         for mass in normalized_mass_density0:
@@ -775,3 +758,29 @@ def get_all_results_string(all_results: list[str]) -> str:
             for valuei in value:
                 msg += f'   - {valuei}\n'
     return msg
+
+
+def _get_file_obj(self: F06Writer,
+                  f06_filename: str,
+                  matrix_filename: Optional[str],
+                  quiet: bool=True) -> tuple[TextIO, str, str]:
+    if isinstance(f06_filename, str):
+        if matrix_filename is None:
+            matrix_filename = os.path.splitext(f06_filename)[0] + '.mat'
+        #print("matrix_filename =", matrix_filename)
+        #mat = open(matrix_filename, 'wb')
+
+        f06 = open(f06_filename, 'w')
+        self._write_summary(f06)
+    elif hasattr(f06_filename, 'read') and hasattr(f06_filename, 'write'):
+        #f06 = f06_filename
+    #else:
+        #print('type(f06_filename) =', type(f06_filename))
+        #assert isinstance(f06_outname, file), 'type(f06_filename)= %s' % f06_filename
+        f06 = f06_filename
+        f06_filename = f06.name
+        if matrix_filename is None:
+            matrix_filename = os.path.splitext(f06_filename)[0] + '.mat'
+        if not quiet:
+            print('f06_filename =', f06_filename)
+    return f06, f06_filename, matrix_filename

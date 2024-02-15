@@ -343,7 +343,7 @@ def rod_section(class_name, beam_type, dim, prop):
     I12 = 0.
     return A, I1, I2, I12
 
-def tube_section(class_type, beam_type, dim, prop):
+def tube_section(class_type: str, beam_type: str, dim: np.ndarray, prop):
     r_outer, r_inner = dim
     assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
     A = pi * (r_outer ** 2 - r_inner ** 2)
@@ -352,7 +352,7 @@ def tube_section(class_type, beam_type, dim, prop):
     I12 = 0.
     return A, I1, I2, I12
 
-def tube2_section(class_type, beam_type, dim, prop):
+def tube2_section(class_type: str, beam_type: str, dim, prop):
     r_outer, thick = dim
     r_inner = r_outer - thick
     assert r_outer > r_inner, 'TUBE2; r_outer=%s r_inner=%s' % (r_outer, r_inner)
@@ -364,7 +364,7 @@ def tube2_section(class_type, beam_type, dim, prop):
     I12 = 0.
     return A, I1, I2, I12
 
-def bar_section(class_type, beam_type, dim, prop):
+def bar_section(class_type: str, beam_type: str, dim, prop):
     #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
     # <------> D1
     #
@@ -381,7 +381,7 @@ def bar_section(class_type, beam_type, dim, prop):
     #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
     return A, I1, I2, I12
 
-def box_section(class_name, beam_type, dim, prop):
+def box_section(class_name: str, beam_type: str, dim, prop):
     #
     # +----------+ ^     ^
     # |          | | d3  |
@@ -413,7 +413,7 @@ def box_section(class_name, beam_type, dim, prop):
     #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
     return A, I1, I2, I12
 
-def box1_section(class_name, beam_type, dim, prop):
+def box1_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4, dim5, dim6 = dim
     h1 = dim3  # top
     w1 = dim1
@@ -430,7 +430,7 @@ def box1_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def cross_section(class_type, beam_type, dim, prop):
+def cross_section(class_type: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     h1 = dim3
     w1 = dim2
@@ -441,7 +441,7 @@ def cross_section(class_type, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def h_section(class_name, beam_type, dim, prop):
+def h_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     h1 = dim3
     w1 = dim2
@@ -452,7 +452,7 @@ def h_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def t_section(class_name, beam_type, dim, prop):
+def t_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
     #       ^ y
     #       |
@@ -489,7 +489,7 @@ def t_section(class_name, beam_type, dim, prop):
     #j = 1/3 * (tf**3*d + tw**3 * h)
     return A, i1, i2, i12
 
-def t1_section(class_name, beam_type, dim, prop):
+def t1_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     h1 = dim1
     w1 = dim3
@@ -500,7 +500,7 @@ def t1_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def t2_section(class_name, beam_type, dim, prop):
+def t2_section(class_name: str, beam_type: str, dim, prop):
     #       ^ y
     #       |
     #       |
@@ -530,7 +530,7 @@ def t2_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def zee_section(class_name, beam_type, dim, prop):
+def zee_section(class_name: str, beam_type: str, dim, prop):
     #  bflange bweb
     # <--d1-><--d2-->
     # +-------------+            ^
@@ -553,7 +553,7 @@ def zee_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def hexa_section(class_name, beam_type, dim, prop):
+def hexa_section(class_name: str, beam_type: str, dim, prop):
     #     _______
     #   /        \     ^
     #  /          \    |
@@ -576,7 +576,7 @@ def hexa_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def hat_section(class_name, beam_type, dim, prop):
+def hat_section(class_name: str, beam_type: str, dim, prop):
     #
     #        <--------d3------->
     #
@@ -600,7 +600,7 @@ def hat_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def hat1_section(class_name, beam_type, dim, prop):
+def hat1_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
     #
     #        <-----d3=wmid----->
@@ -650,7 +650,7 @@ def hat1_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def i_section(class_name, beam_type, dim, prop):
+def i_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
 
     #  <----d3=b---->
@@ -700,7 +700,7 @@ def i_section(class_name, beam_type, dim, prop):
     #CAN NOT BE GREATER THAT THE WEB HEIGHT, DIM1.
     return A, i1, i2, i12
 
-def i1_section(class_name, beam_type, dim, prop):
+def i1_section(class_name: str, beam_type: str, dim, prop):
     #
     #  d1/2   d2  d1/2
     #  <---><---><--->
@@ -738,7 +738,7 @@ def i1_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def l_section(class_type, beam_type, dim, prop):
+def l_section(class_type: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
     #
     #  D4
@@ -786,7 +786,7 @@ def l_section(class_type, beam_type, dim, prop):
     #zna = zc
     return A, i1, i2, i12
 
-def chan_section(class_name, beam_type, dim, prop):
+def chan_section(class_name: str, beam_type: str, dim, prop):
     #
     # +-+----+   ^  ^
     # | |    |   |  | d4 = tf
@@ -848,7 +848,7 @@ def chan_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def chan1_section(class_name, beam_type, dim, prop):
+def chan1_section(class_name: str, beam_type: str, dim, prop):
     #
     # +--------+  ^
     # |        |  |
@@ -881,7 +881,7 @@ def chan1_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def chan2_section(class_name, beam_type, dim, prop):
+def chan2_section(class_name: str, beam_type: str, dim, prop):
     #  d1        d1
     # <-->      <-->
     # +--+      +--+        ^
@@ -912,7 +912,7 @@ def chan2_section(class_name, beam_type, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
-def dbox_section(class_name, beam_type, dim, prop):
+def dbox_section(class_name: str, beam_type: str, dim, prop):
     #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
     #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
     #

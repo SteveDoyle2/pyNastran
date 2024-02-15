@@ -3,6 +3,14 @@ is_pynastrangui_exe = False
 is_installed = False
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
+
+    #from importlib.metadata import version, PackageNotFoundError
+    #__version__ = version('pyNastran')
+    #try:
+        #__version__ = version('pyNastran')
+    #except PackageNotFoundError:
+        ## package is not installed
+        #pass
     from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
     import os
@@ -31,32 +39,35 @@ else:
         except Exception:
             # git isn't installed
             ghash = 'no.checksum.error'
+        # 1.5.0+dev.0eccfa918
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
     __version_release__ = '1.4.0'
+
+    # only for release; 1.4.0
+    __version__ = __version_release__
+    # 1.4.0+dev.0eccfa918
     __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2022/8/xx'
-    __releaseDate2__ = 'AUGUST xx, 2022'
+    __releaseDate__ = '2024/8/xx'
+    __releaseDate2__ = 'AUGUST xx, 2024'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__ = 'BSD-3'
-__copyright__ = f'Copyright {__license__}; 2011-2022'
+__copyright__ = f'Copyright {__license__}; 2011-2024'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
-#__docs__ = 'http://pynastran.m4-engineering.com/master'  # still not setup...
-DEV = 'dev' in  __version__
+
+DEV = 'dev' in __version__
 if DEV:
-    __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
-    __docs__ = __docs_rtd__
+    __docs__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
 else:
     # 1.3
     # we don't do separate doc releases for 1.3 vs 1.3.1
-    __docs_rtd__ = f'https://pynastran-git.readthedocs.io/en/{__version__[:3]}/quick_start/index.html'
-    __docs__ = f'http://pynastran.m4-engineering.com/{__version__}'
+    __docs__ = f'https://pynastran-git.readthedocs.io/en/{__version__[:3]}/quick_start/index.html'
 
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'

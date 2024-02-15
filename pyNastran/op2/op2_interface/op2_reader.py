@@ -2079,95 +2079,7 @@ class OP2Reader:
             itime = tstep_to_index_mapper[time_step]
             trmbu.eulers[subcase][element][itime, :, 0] = eids
             trmbu.eulers[subcase][element][itime, :, 1:] = eulers
-
         return
-
-    def read_obc1(self):
-        op2 = self.op2
-        unused_table_name = self._read_table_name(rewind=False)
-
-        #(102, 0, 0, 2, 1, 0, 0)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_3_markers([-2, 1, 0])
-
-        table_names = ['OBC1', 'OBC1X', 'OBG1']
-        subtable_name = self._read_subtable_name(table_names)
-
-        self.read_3_markers([-3, 1, 0])
-
-        op2.subtable_name = subtable_name
-        op2.data_code = {
-            'subtable_name': subtable_name,
-        }
-        #print(len(data))
-        #print(op2.data_code)
-        #str(op2.code_information())
-
-        itable = -4
-
-        if 0:
-            import struct
-            markers = self.get_nmarkers(1, rewind=True)
-            while markers[0] != 0:
-                self.read_3_markers([itable, 1, 0])
-
-                try:
-                    self.read_3_markers([itable - 1, 1, 0])
-                except struct.error:
-                    data = self._read_record()
-                    print(itable, len(data))
-                itable -= 1
-        else:
-            while 1:
-                #print(itable)
-                data = self._read_record() # 584
-                ndata = len(data)
-                #print('ndata A =', ndata)
-                op2._op2_readers.reader_obc.read_sort1_3(data, ndata)
-                #print('---------------')
-
-                self.read_3_markers([itable, 1, 0])  # -4
-                itable -= 1
-
-                marker = self.get_nmarkers(1, rewind=True)[0]
-                #print('marker A1 =', itable, marker)
-                if marker == itable:
-                    self.read_3_markers([itable, 1, 0]) # -5
-                    break
-                #self.show(100, types='isdq')
-                #self.show(100, types='isf')
-
-                data = self._read_record()
-                #print('ndata B =', len(data))
-
-                #self.show(100, types='isdq')
-                #print('---------------')
-
-                marker = self.get_nmarkers(1, rewind=True)[0]
-                #print('marker B =', marker, itable)
-                if marker != itable:
-                    aaa
-                self.read_3_markers([itable, 1, 0]) # -5
-                itable -= 1
-
-                marker = self.get_nmarkers(1, rewind=True)[0]
-                #print('marker C =', marker)
-                if marker == 0:
-                    break
-                #print('---------------')
-
-                #self.show(100, types='isdq')
-            marker = self.get_nmarkers(1, rewind=False)[0]
-            assert marker == 0, marker
-
-        #(4, -5, 4, 4, 1, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4)
-        #data = self._read_record()
-
-        #self.show_data(data)
-        #self.show(2000)
-        #aaa
 
     def _read_subtable_name(self, table_names: list[str]):
         data, ndata = self._read_record_ndata()
@@ -3185,11 +3097,11 @@ class OP2Reader:
         self.read_markers([0])
 
     def read_rst(self):
-        """
+        r"""
         reads the RST table (restart file?)
 
-        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
         """
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -5454,6 +5366,8 @@ class OP2Reader:
         """
         #print('-------------------------------------')
         op2 = self.op2
+        read_matpool = op2.read_matpool
+
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
@@ -5496,7 +5410,7 @@ class OP2Reader:
             #nvalues = len(data) // 4
             assert len(data) % 4 == 0, len(data) / 4
 
-            if self.read_mode == 1:
+            if self.read_mode == 1 and read_matpool:
                 self.read_matpool_result(code, op2, data, utable_name)
 
             self.read_3_markers([itable, 1, 0])
@@ -5508,7 +5422,7 @@ class OP2Reader:
                 #self.log.debug(f'  read [{itable},1,0]')
                 self.read_3_markers([itable, 1, 0])
                 break
-            elif self.read_mode == 1:
+            elif self.read_mode == 1 and read_matpool:
                 #self.show_data(data, types='ifs', endian=None, force=False)
                 code = struct_3i.unpack(data[:12*self.factor])
                 self.read_matpool_result(code, op2, data, utable_name)

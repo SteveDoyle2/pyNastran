@@ -27,6 +27,7 @@ import copy
 from struct import Struct, pack
 from itertools import count
 import warnings
+from typing import TextIO
 
 import numpy as np
 
@@ -35,7 +36,9 @@ from pyNastran.op2.result_objects.op2_objects import (
     ScalarObject, get_sort_node_sizes, set_as_sort1,
     NULL_GRIDTYPE, SORT1_TABLES, SORT2_TABLES)
 
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, write_floats_13e_long,
+    write_imag_floats_13e, write_float_12e)
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -1150,17 +1153,50 @@ class RealTableArray(TableArray):
             new_result = False
         return itable
 
-    def write_csv(self, csv_file, is_mag_phase=False):
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Displacement Table
+        ------------------
+        Flag, SubcaseID,  iTime, NID,       dx,      dy,       dz,      rx,       ry,      rz,  cd,  PointType
+        1,            1,  0,     101, 0.014159, 0.03448, 0.019135, 0.00637, 0.008042, 0.00762,   0,  1
+        uses cd=-1 for unknown cd
+
+        """
         name = str(self.__class__.__name__)
-        csv_file.write('%s\n' % name)
-        headers = ['Node', 'GridType'] + self.headers
-        csv_file.write('%s,' * len(headers) % tuple(headers) + '\n')
+        if write_header:
+            csv_file.write('%s\n' % name)
+            headers = ['Flag', 'Subcase', 'iTime', 'Node', ] + self.headers + ['cd', 'PointType']
+            csv_file.write('# ' + ','.join(headers) + '\n')
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        itime = 0
-        unused_times = self._times
+
+        #unused_times = self._times
+        isubcase = self.isubcase
+
+        flag_map = {
+            'RealDisplacementArray': 1,
+            'RealVelocityArray': 2,
+            'RealAccelerationArray': 3,
+            'RealEigenvectorArray': 4,
+
+            'RealLoadVectorArray': 5,
+            #'RealAppliedLoadsArray': 5,
+            'RealSPCForcesArray': 6,
+            'RealMPCForcesArray': 7,
+            #'Temperature' : 8,
+
+            #'HeatFlux' : 9,
+            'RealTemperatureGradientAndFluxArray': 9,
+        }
+        flag = flag_map[name]
 
         # sort1 as sort1
+        assert is_sort1 is True, is_sort1
+        nid_len = '%d' % len(str(node.max()))
+        cd = -1
         for itime in range(self.ntimes):
             #dt = self._times[itime]
             t1 = self.data[itime, :, 0]
@@ -1170,12 +1206,310 @@ class RealTableArray(TableArray):
             r2 = self.data[itime, :, 4]
             r3 = self.data[itime, :, 5]
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
-                csv_file.write('%s,' * 9 % (itime, node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i))
-                csv_file.write('\n')
+                #unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
+                assert is_exponent_format
+                if is_exponent_format:
+                    vals2 = write_floats_13e_long([t1i, t2i, t3i, r1i, r2i, r3i])
+                    (t1i, t2i, t3i, r1i, r2i, r3i) = vals2
+
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {node_id:{nid_len}d}, '
+                               f'{t1i}, {t2i}, {t3i}, {r1i}, {r2i}, {r3i}, {cd}, {gridtypei}\n')
         return
 
-    def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, write_words,
+    def write_frd(self, frd_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        https://web.mit.edu/calculix_v2.7/CalculiX/cgx_2.7/doc/cgx/node174.html
+
+        Nodal Results Block
+        Purpose: Stores values on node positions
+
+        1. Record:
+        Format:(1X,' 100','C',6A1,E12.5,I12,20A1,I2,I5,10A1,I2)
+        Values: KEY,CODE,SETNAME,VALUE,NUMNOD,TEXT,ICTYPE,NUMSTP,ANALYS,
+                FORMAT
+        Where: KEY    = 100
+               CODE   = C
+               SETNAME= Name (not used)
+               VALUE  = Could be frequency, time or any numerical value
+               NUMNOD = Number of nodes in this nodal results block
+               TEXT   = Any text
+               ICTYPE = Analysis type
+                        0  static
+                        1  time step
+                        2  frequency
+                        3  load step
+                        4  user named
+               NUMSTP = Step number
+               ANALYS = Type of analysis (description)
+               FORMAT = Format indicator
+                        0  short format
+                        1  long format
+                        2  binary format
+
+        #--------------------------------------------------------------------------
+        2. Record:
+        Format:(1X,I2,2X,8A1,2I5)
+        Values: KEY, NAME, NCOMPS, IRTYPE
+        Where: KEY    = -4
+               NAME   = Dataset name to be used in the menu
+               NCOMPS = Number of entities
+               IRTYPE = 1  Nodal data, material independent
+                        2  Nodal data, material dependant
+                        3  Element data at nodes (not used)
+
+        #--------------------------------------------------------------------------
+        3. Type of Record:
+        Format:(1X,I2,2X,8A1,5I5,8A1)
+        Values: KEY, NAME, MENU, ICTYPE, ICIND1, ICIND2, IEXIST, ICNAME
+        Where: KEY    = -5
+               NAME   = Entity name to be used in the menu for this comp.
+               MENU   = 1
+               ICTYPE = Type of entity
+                        1  scalar
+                        2  vector with 3 components
+                        4  matrix
+                       12  vector with 3 amplitudes and 3 phase-angles in
+                           degree
+               ICIND1 = sub-component index or row number
+               ICIND2 = column number for ICTYPE=4
+               IEXIST = 0  data are provided
+                        1  data are to be calculated by predefined
+                           functions (not used)
+                        2  as 0 but earmarked
+               ICNAME = Name of the predefined calculation (not used)
+                        ALL  calculate the total displacement if ICTYPE=2
+        This record must be repeated for each entity.
+
+        4. Type of Record:  (not used)
+        This record will be necessary in combination with the request for
+        predefined calculations. This type of record is not allowed in
+        combination with binary coding of data.
+        Format:(1X,I2,2I5,20I3)
+        Values: KEY,IRECTY,NUMCPS,(LSTCPS(I),I=1,NUMCPS)
+        Where: KEY    = -6
+               IRECTY = Record variant identification number
+               NUMCPS = Number of components
+               LSTCPS = For each variant component, the position of the
+                        corresponding component in attribute definition
+        #--------------------------------------------------------------------------
+
+        5. Type of Record:
+        The following records are data-records and the format is repeated
+        for each node.
+
+        In case of material independent data
+
+        - ascii coding:
+        Following records (ascci, FORMAT=0 | 1):
+         Short Format:(1X,I2,I5,6E12.5)
+         Long Format:(1X,I2,I10,6E12.5)
+         Values: KEY, NODE, XX..
+         Where: KEY  = -1 if its the first line of data for a given node
+                       -2 if its a continuation line
+               NODE  = node number or blank if KEY=-2
+               XX..  = data
+
+        - binary coding:
+         Following records (ascci, FORMAT=2):
+         (int,NCOMPS*float)
+         int and float are ansi-c data-types
+         Values: NODE, XX..
+         Where:
+               NODE   = node number or blank if KEY=-2
+               XX..   = data
+
+        In case of material dependant data
+        REMARK: Implemented only for NMATS=1
+        - first line:
+        Short Format:(1X,I2,4I5)
+        Long Format:(1X,I2,I10,3I5)
+        Values: KEY, NODENR, NMATS
+        Where: KEY    = -1
+               NODENR = Node number
+               NMATS  = Number of different materials at this node(unused)
+        - second and following lines:
+        Short Format:(1X,I2,I5,6E12.5)
+        Long Format:(1X,I2,I10,6E12.5)
+        Values: KEY, MAT, XX, YY, ZZ, XY, YZ, ZX ..
+        Where: KEY    = -2
+               MAT    = material-property-number if KEY=-2 (unused)
+               XX..   = data
+
+
+        Last Record (only FORMAT=0 | 1 (ascii), omitted for FORMAT=2):
+        Format:(1X,'-3')
+        Values: KEY
+        Displacement Table
+        ------------------
+        Flag, SubcaseID,  iTime, NID,       dx,      dy,       dz,      rx,       ry,      rz,  cd,  PointType
+        1,            1,  0,     101, 0.014159, 0.03448, 0.019135, 0.00637, 0.008042, 0.00762,   0,  1
+        uses cd=-1 for unknown cd
+
+        """
+        name = str(self.__class__.__name__)
+        name_map = {
+            'RealDisplacementArray': 'Displacement',
+            'RealSPCForcesArray': 'SPC_Force',
+            'RealMPCForcesArray': 'MPC_Force',
+        }
+        name = name_map[name]
+        #if write_header:
+            #csv_file.write('%s\n' % name)
+            #headers = ['Flag', 'Subcase', 'iTime', 'Node', ] + self.headers + ['cd', 'PointType']
+            #csv_file.write('# ' + ','.join(headers) + '\n')
+
+        node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+
+        #unused_times = self._times
+        #isubcase = self.isubcase
+
+        # sort1 as sort1
+        assert is_sort1 is True, is_sort1
+        #nid_len = '%d' % len(str(node.max()))
+        #cd = -1
+        num_step, nnode = self.data.shape[:2]
+        for itime in range(self.ntimes):
+            #dt = self._times[itime]
+            #1. Record:
+            #Format:(1X,  ' 100',    'C',      6A1, E12.5,    I12, 20A1,I2,I5,10A1,I2)
+            #Values:       KEY,     CODE,  SETNAME, VALUE, NUMNOD, TEXT,ICTYPE,NUMSTP,ANALYS,
+            #        FORMAT
+            #Where: KEY    = 100
+            #       CODE   = C
+            #       SETNAME= Name (not used)
+            #       VALUE  = Could be frequency, time or any numerical value
+            #       NUMNOD = Number of nodes in this nodal results block
+            #       TEXT   = Any text
+            #       ICTYPE = Analysis type
+            #                0  static
+            #                1  time step
+            #                2  frequency
+            #                3  load step
+            #                4  user named
+            #       NUMSTP = Step number
+            #       ANALYS = Type of analysis (description)
+            #       FORMAT = Format indicator
+            #                0  short format
+            #                1  long format
+            #                2  binary format
+            # basically table 3
+            key = 100
+
+            text = name
+            text_str = f'{text:<20s}'
+            assert len(text_str) == 20, len(text_str)
+            value = self._times[0]
+            map_analysis = {
+                # displacement -> ???
+                1: 1,
+            }
+            analysis = map_analysis[self.analysis_code]
+
+            code = 'C'
+            ic_type = '0'
+            data_format = 2
+            set_name = 'SET_NAME'
+            num_mod = nnode
+            frd_file.write(f'RECORD 1: {key} {code} {set_name} {value} {num_mod} {text} {ic_type} {num_step} {analysis} {data_format}\n')
+
+            # 2. Record:
+            # Format:(1X, I2, 2X,8A1,2I5)
+            # Values:    KEY, NAME, NCOMPS, IRTYPE
+            # Where: KEY    = -4
+            #        NAME   = Dataset name to be used in the menu
+            #        NCOMPS = Number of entities
+            #        IRTYPE = 1  Nodal data, material independent
+            #                 2  Nodal data, material dependant
+            #                 3  Element data at nodes (not used)
+            key = -4
+            name = f'disp{itime:d}'
+            ncomps = 6
+            ir_type = 1
+            frd_file.write(f'RECORD 2: {key} {name} {ncomps} {ir_type}\n')
+
+            # 3. Type of Record:
+            # Format:(1X,I2,2X,8A1,5I5,8A1)
+            # Values: KEY, NAME, MENU, ICTYPE, ICIND1, ICIND2, IEXIST, ICNAME
+            # Where: KEY    = -5
+            #        NAME   = Entity name to be used in the menu for this comp.
+            #        MENU   = 1
+            #        ICTYPE = Type of entity
+            #                 1  scalar
+            #                 2  vector with 3 components
+            #                 4  matrix
+            #                12  vector with 3 amplitudes and 3 phase-angles in
+            #                    degree
+            #        ICIND1 = sub-component index or row number
+            #        ICIND2 = column number for ICTYPE=4
+            #        IEXIST = 0  data are provided
+            #                 1  data are to be calculated by predefined
+            #                    functions (not used)
+            #                 2  as 0 but earmarked
+            #        ICNAME = Name of the predefined calculation (not used)
+            #                 ALL  calculate the total displacement if ICTYPE=2
+            # This record must be repeated for each entity
+            key = -5
+            name = 'Translation'
+            menu = 1
+            ic_type = 2
+            iexist = 0
+            ic_name = 'Translation'
+            icind1 = itime
+            icind2 = 0
+            frd_file.write(f'RECORD 3: {key} {name} {menu} {ic_type} {icind1} {icind2} {iexist} {ic_name}\n')
+
+            # 5. Type of Record:
+            # The following records are data-records and the format is repeated
+            # for each node.
+            #
+            # In case of material independent data
+            #
+            # - ascii coding:
+            # Following records (ascii, FORMAT=0 | 1):
+            #  Short Format:(1X,I2,I5,6E12.5)
+            #  Long Format:(1X,I2,I10,6E12.5)
+            #  Values: KEY, NODE, XX..
+            #  Where: KEY  = -1 if its the first line of data for a given node
+            #                -2 if its a continuation line
+            #        NODE  = node number or blank if KEY=-2
+            #        XX..  = data
+            #
+            # - binary coding:
+            #  Following records (ascci, FORMAT=2):
+            #  (int,NCOMPS*float)
+            #  int and float are ansi-c data-types
+            #  Values: NODE, XX..
+            #  Where:
+            #        NODE   = node number or blank if KEY=-2
+            #        XX..   = data
+
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+            for node_id, t1i, t2i, t3i in zip(node, t1, t2, t3):
+                frd_file.write(f'RECORD 5: 1 -1 {node_id} {t1i:12.5E} {t2i:12.5E} {t3i:12.5E}\n')
+
+            # This record must be repeated for each entity
+            #key = -5
+            name = 'Rotation'
+            #menu = 1
+            #ic_type = 2
+            #iexist = 0
+            ic_name = 'Rotation'
+            frd_file.write(f'RECORD 3:  {key} {name} {menu} {ic_type} {icind1} {icind2} {iexist} {ic_name}\n')
+            for node_id, r1i, r2i, r3i in zip(node, r1, r2, r3):
+                frd_file.write(f'RECORD 5: 1 -1 {node_id} {r1i:12.5E} {r2i:12.5E} {r3i:12.5E}\n')
+        return
+
+    def _write_f06_block(self, words, header, page_stamp, page_num, f06_file: TextIO,
+                         write_words,
                          is_mag_phase: bool=False, is_sort1: bool=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -1200,7 +1534,7 @@ class RealTableArray(TableArray):
         f06_file.write(page_stamp % page_num)
         return page_num
 
-    def _write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort2(self, f06_file: TextIO, page_num, page_stamp, header, words):
         nodes = self.node_gridtype[:, 0]
         gridtypes = self.node_gridtype[:, 1]
         times = self._times
@@ -1231,7 +1565,7 @@ class RealTableArray(TableArray):
             page_num += 1
         return page_num
 
-    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort1(self, f06_file: TextIO, page_num, page_stamp, header, words):
         nodes = self.node_gridtype[:, 0]
         gridtypes = self.node_gridtype[:, 1]
         unused_times = self._times
@@ -1296,7 +1630,7 @@ class RealTableArray(TableArray):
             #page_num += 1
         #return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file, write_words,
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file: TextIO, write_words,
                                    is_mag_phase=False, is_sort1=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -1839,12 +2173,55 @@ def pandas_extract_rows(data_frame, ugridtype_str, index_names):
             #print(eig.loc)
             #item = eig['Item']
             #print(item)
-            try:
-                eig = eig.replace({'Item' : {'t1' : letter}}).set_index(index_names)
-            except (TypeError, NotImplementedError):
-                print(f'skipping pandas cleanup due to issue with complex {letter} points')
-                return data_frame
-                #continue
+            #
+            # It looks like the error message was changed between pandas 1.5.3 and 2.0.
+            # Same issue though.
+            #
+            # This may be a solution:
+            # https://stackoverflow.com/questions/38663150/pivot-table-error1-ndim-categorical-are-not-supported-at-this-time
+
+            # code
+            #eig_replace = eig.replace({'Item' : {'t1' : letter}}).set_index(index_names)
+            #eig = eig_replace.set_index(index_names)
+            #
+            # pandas 1.5.3
+            # Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # eig_replace:
+            #     Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # NotImplementedError: > 1 ndim Categorical are not supported at this time
+            #
+            # pandas=2.1.1
+            # Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # eig_replace:
+            #     Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            #ValueError: Length mismatch: Expected axis has 3 elements, new values have 1 elements
+            #
+            eig_replace = eig.replace({'Item' : {'t1' : letter}})
+            if pd.__version__ < '2.0':
+                try:
+                    eig = eig_replace.set_index(index_names)
+                except (TypeError, NotImplementedError):
+                    print(f'skipping pandas cleanup due to issue with complex {letter} points')
+                    return data_frame
+            else:
+                try:
+                    eig = eig_replace.set_index(index_names)
+                except (ValueError):
+                    print(f'skipping pandas cleanup due to issue with complex {letter} points')
+                    return data_frame
+
         elif dim == 6:
             eig = data_frame.xs(letter, level=1)
         else:

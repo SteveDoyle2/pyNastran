@@ -28,6 +28,14 @@ class Boundary:
         self.type = 'displacement'
         self.nid_dof_to_value = nid_dof_to_value
 
+    def write(self):
+        if len(self.nid_dof_to_value) == 0:
+            return ''
+        msg = '*BOUNDARY\n'
+        for (nid, dof), value in self.nid_dof_to_value.items():
+            msg += f'{nid}, {dof}, {value}\n'
+        return msg
+
     @classmethod
     def from_data(cls, slines: list[list[str]]):
         """
@@ -63,44 +71,91 @@ class Boundary:
                 value = float(sline[3])
             for dof in dofs:
                 nid_dof_to_value[(nid, dof)] = value
-
         return Boundary(nid_dof_to_value)
+
+    def __repr__(self) -> str:
+        msg = f'Boundary(nid_dof_to_value={str(self.nid_dof_to_value)})'
+        return msg
 
 class ShellSection:
     """
-    A ShellSection defines thickness and a material
+    A ShellSection defines thickness and a material for a PSHELL/PCOMP
 
-    *SHELL SECTION,  ELSET=PLATE,  MATERIAL=A, ORIENTATION=GLOBAL
-    5.00000E-02
+    *SHELL SECTION, ELSET=PLATE, MATERIAL=A, ORIENTATION=GLOBAL, OFFSET=0.0
+    0.005
+    *SHELL SECTION, ELSET=CARBON_FIBER, ORIENTATION=GLOBAL, OFFSET=0.0
+    0.005,,CF
+    0.005,,CF
+    0.005,,CF
+
     """
-    def __init__(self, material_name: str, thickness: float, log: SimpleLogger):
+    def __init__(self, log: SimpleLogger,
+                 material_name: str, elset: str,
+                 thickness: float,
+                 orientation: int=-1,
+                 offset: float=0.0):
         #self.data_lines = data_lines
         #self.material = param_map['material']
         self.material_name = material_name
+        self.elset = elset
         self.thickness = thickness
+        self.orientation = orientation
+        self.offset = offset
         self.log = log
 
     @classmethod
     def add_from_data_lines(cls, param_map: dict[str, str],
                             data_lines: list[str],
                             log: SimpleLogger):
-        material_name = param_map['material']
-        log.debug(f'material_name = {material_name}')
+        elset = param_map['elset']
+        orientation = param_map.get('orientation', -1)
+        offset = param_map.get('offset', 0.0)
 
-        #if len(data_lines) == 0:
-            #pass
-        thickness = 0.
-        if len(data_lines) == 1:
-            assert len(data_lines) == 1, data_lines
-            line0 = data_lines[0]
-            assert len(line0) == 1, data_lines
-            thickness = float(line0[0])
-        #else:
-            #aa
+        if param_map['is_composite']:
+            material_name = []
+            thickness = []
+            orientation_name = []
+            for line in data_lines:
+                #thickness (required)
+                #not used
+                #name of the material to be used for this layer (required)
+                #name of the orientation to be used for this layer (optional)
+                sline = line.split(',')
+                if len(sline) == 3:
+                    thicknessi, junk, material_namei = sline
+                    orientation_namei = None
+                else:
+                    thicknessi, junk, material_namei, orientation_namei = sline
+                    ## TODO: how does orientation work (from the flags)
+                    ##       with the orientation name in this table?
+                    raise RuntimeError(sline)
+                material_namei = material_namei.strip().lower()
+                thicknessi = float(thicknessi)
+                thickness.append(thicknessi)
+                material_name.append(material_namei)
+                orientation_name.append(orientation_namei)
+        else:
+            orientation_name = None
+            material_name = param_map['material']
+            log.debug(f'material_name = {material_name}')
+
+            #if len(data_lines) == 0:
+                #pass
+            thickness = 0.
+            if len(data_lines) == 1:
+                assert len(data_lines) == 1, data_lines
+                line0 = data_lines[0].split()
+                assert len(line0) == 1, data_lines
+                thickness = float(line0[0])
+            else:
+                raise RuntimeError(data_lines)
 
         for line in data_lines:
-            log.info('shell - %r' % line)
-        return ShellSection(material_name, thickness, log)
+            log.debug('shell - %r' % line)
+        return ShellSection(log,
+                            material_name, elset, thickness,
+                            orientation=orientation,
+                            offset=offset)
 
     def __repr__(self):
         """prints a summary for the solid section"""
@@ -108,6 +163,8 @@ class ShellSection:
         #msg += '    param_map = %r,\n' % self.param_map
         msg += f'    material_name = {self.material_name},\n'
         msg += f'    thickness = {self.thickness},\n'
+        msg += f'    orientation = {self.orientation},\n'
+        msg += f'    offset = {self.offset},\n'
         msg += ')\n'
         return msg
 
@@ -140,7 +197,7 @@ class SolidSection:
             pass
         elif len(data_lines) == 1:
             assert len(data_lines) == 1, data_lines
-            line0 = data_lines[0]
+            line0 = data_lines[0].split()
             assert len(line0) == 1, data_lines
 
             try:
@@ -167,13 +224,13 @@ class Material:
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name: str,
                  sections: dict[str, float],
-                 is_elastic: bool=True,
-                 density: Optional[float]=None,
+                 density: float=0.0,
                  ndepvars: Optional[int]=None,
                  ndelete: Optional[int]=None):
+        assert isinstance(density, float), density
         self.name = name
         self.density = density
-        self.is_elastic = is_elastic
+        #self.is_elastic = is_elastic
 
         #self.depvar = None
         self.ndelete = ndelete
@@ -221,9 +278,32 @@ class Material:
         *Elastic
             2e+11, 0.3
         """
-        elastic_word = 'elastic, ' if self.is_elastic else ''
-        abq_file.write('*Material, %sname=%s\n' % (elastic_word, write_name(self.name)))
-        if self.density is not None:
+        name = write_name(self.name)
+        abq_file.write(f'*Material, name={name}\n')
+        if 'elastic' in self.sections:
+            e, g = self.sections['elastic']
+            abq_file.write(f'*Elastic\n')
+            abq_file.write(f'{e},{g}\n')
+
+        if 'engineering constants' in self.sections:
+            #*Shell section, Elset=Internal_Selection-1_Shell_section-1, COMPOSITE
+            #0.25,,Steel
+            #0.25,,Steel
+            #*Material, Name=CF
+            #*ELASTIC,TYPE=ENGINEERING CONSTANTS
+            #135000.,10000.,10000.,0.3,0.3,,5000.,5000.,
+            #5000,273
+            eng_consts = self.sections['engineering constants']
+            eng_const_strs = ['%g' % val for val in eng_consts]
+            args1 = eng_const_strs[:8]
+            args2 = eng_const_strs[8:]
+            assert len(args1) == 8, args1
+            assert len(args2) == 2, args2
+            abq_file.write(f'*Elastic,type=Engineering Constants\n')
+            abq_file.write.write(','.join(args1))
+            abq_file.write.write(','.join(args2))
+
+        if self.density > 0.:
             abq_file.write(f'*Density\n  {self.density},\n')
         if self.ndepvars:
             ndelete = '' if self.ndelete is None else f', delete={self.ndelete}'
@@ -262,7 +342,7 @@ class Part:
                  nodes: np.ndarray,
                  element_types: dict[str, np.ndarray],
                  node_sets: dict[str, np.ndarray],
-                 element_sets: dict[str, np.ndarray],
+                 element_sets: dict[str, tuple[np.ndarray, str]],
                  solid_sections: list[SolidSection],
                  shell_sections: list[ShellSection],
                  log: SimpleLogger):
@@ -273,7 +353,7 @@ class Part:
         ----------
         name : str
             the name
-        element_types : dict[element_type] : node_ids
+        element_types : dict[element_type] : (node_ids, set_name)
             element_type : str
                 the element type
             bars:
@@ -376,6 +456,8 @@ class Step:
                  node_output: list[str],
                  element_output: list[str],
                  cloads: dict[str, Any],
+                 dloads: dict[str, Any],
+                 surfaces: list[Any],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -394,11 +476,13 @@ class Step:
         """
         self.name = name
         self.is_nlgeom = is_nlgeom
-        self.boundaries = boundaries
+        self.boundaries: list[Boundary] = boundaries
         self.node_output = node_output
         self.element_output = element_output
         self.cloads = cloads
+        self.dloads = dloads
         assert isinstance(cloads, list), cloads
+        assert isinstance(dloads, list), dloads
 
     def __repr__(self) -> str:
         msg = (
@@ -412,7 +496,7 @@ class Step:
         )
         return msg
 
-    def write(self, abq_file) -> None:
+    def write(self, abq_file: TextIO) -> None:
         """writes a Step"""
         name = write_name(self.name)
         nlgeom = ', nlgeom=YES' if self.is_nlgeom else ''
@@ -420,7 +504,7 @@ class Step:
         abq_file.write('*Static\n')
         abq_file.write('0.1, 1.0, 0.1, 0.1\n')
         for boundary in self.boundaries:
-            abq_file.write(boundary + '\n')
+            abq_file.write(boundary.write())
 
         for cload in self.cloads:
             abq_file.write('*CLOAD\n')
@@ -516,3 +600,51 @@ class Transform:
         pa = np.array(tranform_fields[:3], dtype='float64')
         pb = np.array(tranform_fields[3:], dtype='float64')
         return Transform(transform_type, nset, pa, pb)
+
+
+class Surface:
+    def __init__(self, name: str, surface_type: str,
+                 set_names: list[str], faces: list[str]):
+        self.name = name
+        self.surface_type = surface_type
+        self.set_names = set_names
+        self.faces = faces
+        str(self)
+
+    def __repr__(self) -> str:
+        msg = (f'Surface(name={self.name!r}, surface_type={self.surface_type!r}, '
+               f'set_names={self.set_names}, faces={self.faces})')
+        return msg
+
+
+class Tie:
+    def __init__(self, name: str, master: str, slave: str,
+                 position_tolerance: float):
+        self.name = name
+        self.master = master
+        self.slave = slave
+        self.position_tolerance = position_tolerance
+        str(self)
+
+    def __repr__(self) -> str:
+        msg = (
+            f'Tie(name={self.name!r}, '
+            f'master={self.master!r}, slave={self.slave!r}, '
+            'position_tolerance={self.position_tolerance})')
+        return msg
+
+
+class Orientation:
+    def __init__(self, name: str, system: str,
+                 origin: np.ndarray,
+                 x_axis=None, xy_plane=None,
+                 axis=None, alpha=None):
+        self.name = name.lower()
+        self.system = system
+
+        self.origin = origin
+        self.x_axis = x_axis
+        self.xy_plane = xy_plane
+
+        self.axis = axis
+        self.alpha = alpha

@@ -108,7 +108,7 @@ class BFRIC(BaseCard):
         self.mu1 = mu1
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         friction_id = integer(card, 1, 'friction_id')
         fstiff = double_or_blank(card, 2, 'fstiff')
         #
@@ -203,19 +203,32 @@ class BLSEG(BaseCard):
         return self.comment + print_card_8(card)
 
 class BCBODY(BaseCard):
-    """TODO
-
-        | BCBODY | BID     | DIM    | BEHAV  | BSID |  ISTYP | FRIC    | IDSPL  | CONTROL |
-        |        | NLOAD   | ANGVEL | DCOS1  | DCOS2|  DCOS3 | VELRB1  | VELRB2 | VELRB3  |
-        |        | ADVANCE | SANGLE | COPTB  | USER |        |         |        |         |
-        |        | CTYPE   | ISMALL | ITYPE  | IAUG | PENALT | AUGDIST |
-        |        | RIGID   | CGID   | NENT   | --- Rigid Body Name --- |
-        |        | APPROV  | A      |  N1    | N2       |    N3   |    V1   |    V2   |   V3   |
-        |        | RTEMP   | G(temp)|  Tempr | T(Tempr) |         |         |         |        |
-        |        | SINK    | G(sink)|  Tsink | T(Tsink) |         |         |         |        |
-        |        | GROW    | GF1    |  GF2   |   GF3    | TAB-GF1 | TAB-GF2 | TAB-GF3 |        |
-        |        | HEAT    | CFILM  |  TSINK |   CHEAT  | TBODY   | HCV     | HNC     | ITYPE  |
-        |        | BNC     | EMISS  |  HBL   |          |         |         |         |        |
+    """
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |    1   |    2    |    3   |   4    |    5     |     6   |    7    |    8    |    9    |
+    +========+=========+========+========+==========+=========+=========+=========+=========+
+    | BCBODY | BID     | DIM    | BEHAV  |   BSID   |   ISTYP | FRIC    |  IDSPL  | CONTROL |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | NLOAD   | ANGVEL | DCOS1  |   DCOS2  |   DCOS3 | VELRB1  |  VELRB2 | VELRB3  |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | ADVANCE | SANGLE | COPTB  |   USER   |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | CTYPE   | ISMALL | ITYPE  |   IAUG   |  PENALT | AUGDIST |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | RIGID   | CGID   | NENT   | --- Rigid Body Name ---      |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | APPROV  | A      |  N1    | N2       |    N3   |    V1   |    V2   |    V3   |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | RTEMP   | G(temp)|  Tempr | T(Tempr) |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | SINK    | G(sink)|  Tsink | T(Tsink) |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | GROW    | GF1    |  GF2   |   GF3    | TAB-GF1 | TAB-GF2 | TAB-GF3 |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | HEAT    | CFILM  |  TSINK |   CHEAT  | TBODY   | HCV     | HNC     |  ITYPE  |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
+    |        | BNC     | EMISS  |  HBL   |          |         |         |         |         |
+    +--------+---------+--------+--------+----------+---------+---------+---------+---------+
     """
     type = 'BCBODY'
     @classmethod
@@ -322,36 +335,36 @@ class BCBODY(BaseCard):
         contact_id = integer(card, 1, 'contact_id')
         dim = string_choice_or_blank(card, 2, 'dim',
                                      ('2D', '3D'),
-                                     '3D')
+                                     default='3D')
 
         behav = string_choice_or_blank(card, 3, 'behav',
                                        ('RIGID', 'DEFORM', 'SYMM', 'ACOUS', 'WORK', 'HEAT'),
-                                       'DEFORM')
+                                       default='DEFORM')
         if behav == 'DEFORM':
             bsid = integer(card, 4, 'bsid')
         else:
             bsid = integer_double_or_blank(card, 4, 'bsid')
 
-        istype = integer_or_blank(card, 5, 'istype', 0)
-        fric = integer_double_or_blank(card, 6, 'fric', 0)
-        idispl = integer_or_blank(card, 7, 'idispl', 0)
-        control = integer_or_blank(card, 8, 'control', 0)
+        istype = integer_or_blank(card, 5, 'istype', default=0)
+        fric = integer_double_or_blank(card, 6, 'fric', default=0)
+        idispl = integer_or_blank(card, 7, 'idispl', default=0)
+        control = integer_or_blank(card, 8, 'control', default=0)
 
         # NLOAD   | ANGVEL | DCOS1  | DCOS2|  DCOS3 | VELRB1  | VELRB2 | VELRB3
         word_nload = integer_string_or_blank(card, 9, 'nload (int) / word (str)', default=None)
         i = 9
         if word_nload is None or isinstance(word_nload, int):
             nload = integer_or_blank(card, 9, 'nload')
-            ang_vel = double_or_blank(card, 10, 'ang_vel', 0.0)
+            ang_vel = double_or_blank(card, 10, 'ang_vel', default=0.0)
             dcos = [
-                integer_double_or_blank(card, 11, 'dcos1', 0.0),
-                integer_double_or_blank(card, 12, 'dcos2', 0.0),
-                integer_double_or_blank(card, 13, 'dcos3', 0.0),
+                integer_double_or_blank(card, 11, 'dcos1', default=0.0),
+                integer_double_or_blank(card, 12, 'dcos2', default=0.0),
+                integer_double_or_blank(card, 13, 'dcos3', default=0.0),
             ]
             vel_rb = [
-                integer_double_or_blank(card, 14, 'vel_rb1', 0.0),
-                integer_double_or_blank(card, 15, 'vel_rb2', 0.0),
-                integer_double_or_blank(card, 16, 'vel_rb3', 0.0),
+                integer_double_or_blank(card, 14, 'vel_rb1', default=0.0),
+                integer_double_or_blank(card, 15, 'vel_rb2', default=0.0),
+                integer_double_or_blank(card, 16, 'vel_rb3', default=0.0),
             ]
             i += 8
 
@@ -548,7 +561,7 @@ class BCONP(BaseCard):
         self.master_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -563,10 +576,10 @@ class BCONP(BaseCard):
         contact_id = integer(card, 1, 'contact_id')
         slave = integer(card, 2, 'slave')
         master = integer(card, 3, 'master')
-        sfac = double_or_blank(card, 5, 'sfac', 1.0)
+        sfac = double_or_blank(card, 5, 'sfac', default=1.0)
         friction_id = integer_or_blank(card, 6, 'fric_id')
-        ptype = integer_or_blank(card, 7, 'ptype', 1)
-        cid = integer_or_blank(card, 8, 'cid', 0)
+        ptype = integer_or_blank(card, 7, 'ptype', default=1)
+        cid = integer_or_blank(card, 8, 'cid', default=0)
         return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
                      comment=comment)
 
@@ -796,7 +809,7 @@ class BCTSET(BaseCard):
     +========+=======+======+=======+=======+=======+=======+
     | BCTSET | CSID  | SID1 | TID1  | FRIC1 | MIND1 | MAXD1 |
     +--------+-------+------+-------+-------+-------+-------+
-    |        |       | SID2  | TID2 | FRIC2 | MIND2 | MAXD2 |
+    |        |       | SID2 | TID2  | FRIC2 | MIND2 | MAXD2 |
     +--------+-------+------+-------+-------+-------+-------+
     |        |  etc. |      |       |       |       |       |
     +--------+-------+------+-------+-------+-------+-------+
@@ -851,13 +864,13 @@ class BCTSET(BaseCard):
         while i < nfields:
             sids.append(integer(card, i, 'sid%s' % j))
             tids.append(integer(card, i + 1, 'tid%s' % j))
-            frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
+            frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, default=0.0))
 
             # we ignore what the NX QRG says about the min/max distance for SOL 401
             # if you don't, Nastran will crash
             #if sol == 101:
-            min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
-            max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
+            min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, default=0.0))
+            max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, default=0.0))
             #else:
                 #min_distances.append(None)
                 #max_distances.append(None)
@@ -897,8 +910,9 @@ class BCRPARA(BaseCard):
         crid = 1
         return BCRPARA(crid, offset=None, surf='TOP', Type='FLEX', grid_point=0, comment='')
 
-    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', grid_point=0,
-                 comment=''):
+    def __init__(self, crid: int, offset: Optional[float]=None,
+                 surf: str='TOP', Type: str='FLEX', grid_point: int=0,
+                 comment: str=''):
         """
         Creates a BCRPARA card
 
@@ -950,7 +964,7 @@ class BCRPARA(BaseCard):
         self.grid_point = grid_point
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCRPARA card from ``BDF.add_card(...)``
 
@@ -963,10 +977,10 @@ class BCRPARA(BaseCard):
 
         """
         crid = integer(card, 1, 'crid')
-        surf = string_or_blank(card, 2, 'surf', 'TOP')
-        offset = double_or_blank(card, 3, 'offset', None)
-        Type = string_or_blank(card, 4, 'type', 'FLEX')
-        grid_point = integer_or_blank(card, 5, 'grid_point', 0)
+        surf = string_or_blank(card, 2, 'surf', default='TOP')
+        offset = double_or_blank(card, 3, 'offset', default=None)
+        Type = string_or_blank(card, 4, 'type', default='FLEX')
+        grid_point = integer_or_blank(card, 5, 'grid_point', default=0)
         return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
                        grid_point=grid_point, comment=comment)
 
@@ -1048,7 +1062,7 @@ class BCPARA(BaseCard):
             a comment for the card
 
         """
-        csid = integer_or_blank(card, 1, 'csid', 0)
+        csid = integer_or_blank(card, 1, 'csid', default=0)
         i = 2
         j = 1
         params = {}
@@ -1070,18 +1084,18 @@ class BCPARA(BaseCard):
                 # Default = 0.0 for IGLUE <>0. Note that when IGLUE<>0, BIAS can only be given
                 # by the BCTABLE or BCONPRG.
                 # Default = 0.0 for BEHAVE=SYMM on BCBODY, if field left blank or 0.0.
-                value = double_or_blank(card, i, f'value{j}', 0.0)
+                value = double_or_blank(card, i, f'value{j}', default=0.0)
             elif param == 'DDULMT':
                 # Maximum value of DDU in a Newton-Raphson cycle. (Real ≥ 0.0;
                 # Default = 0.0, no limitation)
-                value = double_or_blank(card, i, f'value{j}', 0.0)
+                value = double_or_blank(card, i, f'value{j}', default=0.0)
             elif param == 'ERRBAS':
                 # Error computation option.
                 # Integer
                 # 0 = compute error globally or
                 # 1 = calculate error based on each pair of slave-master;
                 # Default = 0)
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [0, 1], f'ERRBAS must be [0, 1]; ERRBAS={value}'
             elif param == 'ERROR':
                 # Distance below which a node is considered touching a body. (Real; Default = blank).
@@ -1121,7 +1135,7 @@ class BCPARA(BaseCard):
                 # 5 Stick-slip Coulomb friction.
                 # 6 Bilinear Coulomb friction. (Default if friction is present and FTYPE is not entered.)
                 # 7 Bilinear Shear friction.
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [0, 1, 2, 3, 4, 5, 6], f'FTYPE must be [0, 1, 2, 3, 4, 5, 6]; FTYPE={value}'
             elif param == 'IBSEP':
                 # Flag for separation based on stresses or forces. (Integer > 0; Default = 0)
@@ -1133,7 +1147,7 @@ class BCPARA(BaseCard):
                 # Only option 2 and 4 can be used with mid-side node elements where the mid-side
                 # nodes contact (LINQUAD=-1). For segment to segment contact, the program will
                 # set IBSEP to 2 internally. See Remarks 6. and 10.
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [0, 1, 2, 3, 4], f'IBSEP must be [0, 1, 2, 3, 4]; IBSEP={value}'
             elif param == 'ISPLIT':
                 # ISPLIT (2,7) Flag for increment splitting procedure. (Integer > 0; Default = 3 for
@@ -1158,7 +1172,7 @@ class BCPARA(BaseCard):
                 # converge due to an excessive number of “iterative
                 # penetration checking” messages, ISPLIT=2 may help,
                 # however the time steps may need to be set to smaller values.
-                value = integer_or_blank(card, i, f'value{j}', 3)
+                value = integer_or_blank(card, i, f'value{j}', default=3)
                 assert value in [0, 1, 2, 3], f'ISPLIT must be [0, 1, 2, 3]; ISPLIT={value}'
             elif param == 'ICSEP':
                 # ICSEP Flag to control separation. Not used for segment-to-segment contact. (Integer > 0;
@@ -1172,7 +1186,7 @@ class BCPARA(BaseCard):
                 # 2 If a new node comes into contact during this increment, it is not
                 # allowed to separate during this increment, prevents chattering.
                 # 3 Both 1 and 2 are in effect.
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [0, 1, 2, 3], f'ICSEP must be [0, 1, 2, 3]; ICSEP={value}'
             elif param == 'LINQUAD':
                 # LINQUAD (2,14)
@@ -1185,10 +1199,10 @@ class BCPARA(BaseCard):
                 # If this flag is set to -1 and IBSEP is blank, IBSEP will be reset
                 # to 2. This option is only available with Marc 2003 and
                 # subsequent releases.
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [-1, 1], f'LINQUAD must be [-1, 1]; LINQUAD={value}'
             elif param == 'LINCNT':
-                value = integer_or_blank(card, i, f'value{j}', 0)
+                value = integer_or_blank(card, i, f'value{j}', default=0)
                 assert value in [-1, 0, 1], f'LINCNT must be [-1, 0, 1]; LINQUAD={value}'
             elif param == 'METHOD':
                 #METHOD Flag to select Contact methods. (Character)
@@ -1196,7 +1210,7 @@ class BCPARA(BaseCard):
                 #SEGTOSEG Segment to segment contact.
                 value = string_choice_or_blank(card, i, f'value{j}',
                                        ('NODESURF', 'SEGTOSEG', 'SEGSMALL', 'SEGLARGE'),
-                                        'NODESURF')
+                                        default='NODESURF')
             elif param == 'MAXENT':
                 # MAXENT (2,2) Maximum number of entities created for any contact body. (Integer >
                 # 0 or blank; default is max element number or 1.5 times the number of
@@ -1216,24 +1230,24 @@ class BCPARA(BaseCard):
                 #(first subcase and first step) contain IGLUE >0, permanent glued contact with small
                 #rotation condition will be used for all SLAVE entries in all subcases and all steps
                 #unless BCPARA,0,,1 is specified. If IGLUE < 0 exists, permanent glued
-                value = integer_or_blank(card, i, f'value{j}', 1)
+                value = integer_or_blank(card, i, f'value{j}', default=1)
                 assert value in [0, 1], f'NLGLUE must be [0, 1]; NLGLUE={value}'
             elif param == 'SLDLMT':
                 #SLDLMT Maximum allowed sliding distance, beyond it the contact segments are
                 # redefined, for segment to segment contact analysis with large deformation.
                 # (Real ≥ 0.0; Default = 0.0) See remark 9.
-                value = double_or_blank(card, i, f'value{j}', 0.0)
+                value = double_or_blank(card, i, f'value{j}', default=0.0)
             elif param == 'SEGSYM':
                 #Specify symmetric or non-symmetric friction matrix in segment to segment contact
                 #analysis. (Integer 0 = symmetric matrix or 1 = non-symmetric matrix; Default = 0)
-                value = integer_or_blank(card, i, f'value{j}', 1)
+                value = integer_or_blank(card, i, f'value{j}', default=1)
                 assert value in [0, 1], f'SEGSYM must be [0, 1]; SEGSYM={value}'
             elif param == 'THKOFF':
                 #Ignore thickness from the tolerance used by ISEARCH=2 in node-to-surface contact
                 #or from the characteristic length (for PENALT and AUGDIST) in segment-tosegment
                 #contact. (Integer 0 = do not ignore thickness or 1 = remove thickness;
                 #Default = 0)
-                value = integer_or_blank(card, i, f'value{j}', 1)
+                value = integer_or_blank(card, i, f'value{j}', default=1)
                 assert value in [0, 1], f'THKOFF must be [0, 1]; THKOFF={value}'
             else:
                 raise NotImplementedError(f'param={param} card={card}')
@@ -1365,7 +1379,7 @@ class BCTPARM(BaseCard):
             param = string(card, i, 'param%s' % j)
             i += 1
             if param == 'TYPE' and 0:
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
             elif param == 'PENN':
                 #PENN 10.0
@@ -1380,42 +1394,42 @@ class BCTPARM(BaseCard):
                 #SHLTHK 1
                 value = integer(card, i, 'value%s' % j)
             #elif param == 'TYPE': # NX
-                #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
+                #value = string_or_blank(card, i, 'value%s' % j, default='FLEX').upper()
                 #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
 
             #elif param == 'NSIDE':
-                #value = integer_or_blank(card, i, 'value%s' % j, 1)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=1)
                 #assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
             #elif param == 'TBIRTH':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             #elif param == 'TDEATH':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             #elif param == 'INIPENE':
-                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 #assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
             #elif param == 'PDEPTH':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             #elif param == 'SEGNORM':
-                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 #assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
             #elif param == 'OFFTYPE':
-                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 #assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
             #elif param == 'OFFSET':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             #elif param == 'TZPENE':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
 
             #elif param == 'CSTIFF':
-                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 #assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
             #elif param == 'TIED':
-                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 #assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
             #elif param == 'TIEDTOL':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             #elif param == 'EXTFAC':
-                #value = double_or_blank(card, i, 'value%s' % j, 0.001)
+                #value = double_or_blank(card, i, 'value%s' % j, default=0.001)
                 #assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
             else:
                 # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
@@ -1523,45 +1537,45 @@ class BCTPARA(BaseCard):
             param = string(card, i, f'param{j}')
             i += 1
             if param == 'TYPE':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
             #elif param == 'TYPE': # NX
                 #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
                 #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
 
             elif param == 'NSIDE':
-                value = integer_or_blank(card, i, 'value%s' % j, 1)
+                value = integer_or_blank(card, i, 'value%s' % j, default=1)
                 assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
             elif param == 'TBIRTH':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             elif param == 'TDEATH':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             elif param == 'INIPENE':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
             elif param == 'PDEPTH':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             elif param == 'SEGNORM':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
             elif param == 'OFFTYPE':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
             elif param == 'OFFSET':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             elif param == 'TZPENE':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
 
             elif param == 'CSTIFF':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
             elif param == 'TIED':
-                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                value = integer_or_blank(card, i, 'value%s' % j, default=0)
                 assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
             elif param == 'TIEDTOL':
-                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
             elif param == 'EXTFAC':
-                value = double_or_blank(card, i, 'value%s' % j, 0.001)
+                value = double_or_blank(card, i, 'value%s' % j, default=0.001)
                 assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
             else:
                 # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
@@ -1790,9 +1804,9 @@ class BGSET(BaseCard):
 
             sids.append(integer(card, i, 'sid%s' % j))
             tids.append(integer(card, i + 1, 'tid%s' % j))
-            sdists.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
+            sdists.append(double_or_blank(card, i + 2, 'fric%s' % j, default=0.0))
             #if sol == 101:
-            exts.append(double_or_blank(card, i + 4, 'mind%s' % j, 0.0))
+            exts.append(double_or_blank(card, i + 4, 'mind%s' % j, default=0.0))
             #else:
                 #exts.append(None)
             i += 8

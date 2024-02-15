@@ -300,11 +300,11 @@ class EditGeometryProperties(PyDialog):
         self.is_bar_scale_edit_active = False
         self.is_bar_scale_edit_slider_active = False
 
-        self.opacity = QLabel("Opacity:")
+        self.opacity = QLabel('Opacity:')
         self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
-        self.opacity_edit.setDecimals(1)
-        self.opacity_edit.setSingleStep(0.1)
+        self.opacity_edit.setDecimals(2)
+        self.opacity_edit.setSingleStep(0.05)
         self.opacity_edit.setValue(rounded_int(opacity))
         if self.use_slider:
             self.opacity_slider_edit = QSlider(QtCore.Qt.Horizontal)

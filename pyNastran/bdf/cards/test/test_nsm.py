@@ -63,7 +63,7 @@ class TestNsm(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.0)
 
         # TODO: these are correct barring incorrect formulas
-        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.5
+        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.5; area=1.5 for PSHELL
         model.add_nsm1(1001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
         model.add_nsm1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
         model.add_nsm1(1003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
@@ -234,16 +234,16 @@ class TestNsm(unittest.TestCase):
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""
         eid_quad = 1
-        unused_eid_tri = 2
-        unused_eid_conrod = 3
-        unused_eid_crod = 4
-        unused_eid_pbeaml = 5
-        unused_eid_pbarl = 6
-        unused_pid_pbeaml = 40
+        #unused_eid_tri = 2
+        #unused_eid_conrod = 3
+        #unused_eid_crod = 4
+        #unused_eid_pbeaml = 5
+        #unused_eid_pbarl = 6
+        #unused_pid_pbeaml = 40
         pid_pshell = 10
-        unused_pid_pbeaml = 21
-        unused_pid_pbarl = 31
-        unused_pid_prod = 41
+        #unused_pid_pbeaml = 21
+        #unused_pid_pbarl = 31
+        #unused_pid_prod = 41
         mid = 100
         E = 3.0e7
         G = None
@@ -267,6 +267,15 @@ class TestNsm(unittest.TestCase):
         model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
         model.cross_reference()
         model.pop_xref_errors()
+
+        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=1000)
+        self.assertAlmostEqual(mass, 1.0)
+        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=2000)
+        self.assertAlmostEqual(mass, 1.0)
+        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=3000)
+        self.assertAlmostEqual(mass, 1.0)
+        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=4000)
+        self.assertAlmostEqual(mass, 1.0)
 
         mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=5000)
         self.assertAlmostEqual(mass, 8.0)

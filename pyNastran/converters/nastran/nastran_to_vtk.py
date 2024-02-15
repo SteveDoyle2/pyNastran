@@ -1,7 +1,11 @@
 """tests the NastranIO class"""
 import os
 
-from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
+#from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
+from vtkmodules.vtkCommonCore import vtkFloatArray
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -12,8 +16,13 @@ from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult, check_title # NormalResult,
 from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults # , ElementalTableResults
-from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
-
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -23,15 +32,16 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
 
 
-def save_nastran_results(gui: NastranGUI) -> vtkUnstructuredGrid:
+def save_nastran_results(gui: NastranGUI,
+                         vtk_ugrid: vtkUnstructuredGrid) -> None:
     log = gui.log
-    vtk_ugrid = gui.grid
 
     point_data = vtk_ugrid.GetPointData()
     cell_data = vtk_ugrid.GetCellData()
 
     used_titles = set()
     for key, case_data in gui.result_cases.items():
+        icase = key
         case, index_name = case_data
         if case.is_complex:
             log.warning(f'skipping case {str(case)} because it is complex')
@@ -59,13 +69,34 @@ def save_nastran_results(gui: NastranGUI) -> vtkUnstructuredGrid:
             vtk_array = _save_layered_table_results(case,
                                                     key, index_name, used_titles,
                                                     point_data, cell_data, log)
+            location = case.location
+
+        elif isinstance(case, (DisplacementResults2, ForceResults2)):
+            #vector = case.get_force_vector_result(*index_name)
+            vector, *unused_junk = case.get_vector_data_dense(*index_name)
+            titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
+            check_title(titlei, used_titles)
+            vtk_array = numpy_to_vtk(vector, deep=0, array_type=None)
+            vtk_array.SetName(titlei)
+            location = case.location
+        elif isinstance(case, (CompositeStrainStressResults2, PlateStrainStressResults2, SolidStrainStressResults2)):
+            fringe = case.get_fringe_result(*index_name)
+            titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
+            check_title(titlei, used_titles)
+            vtk_array = numpy_to_vtk(fringe, deep=0, array_type=None)
+            vtk_array.SetName(titlei)
+            location = case.get_location(*index_name)
         else:
             if case.title == 'Normals' and case.scalar is None:
                 continue
+            if not isinstance(case, GuiResult):  # pragma: no cover
+                log.warning(f'skipping case {str(case)} because it is unhandled')
+                log.warning(str(case))
+                return
             assert isinstance(case, GuiResult), case
+            location = case.location
             vtk_array = case.save_vtk_result(used_titles)
-        add_vtk_array(case.location, point_data, cell_data, vtk_array)
-    return vtk_ugrid
+        add_vtk_array(location, point_data, cell_data, vtk_array)
 
 def _save_force_table_results(case: ForceTableResults,
                               key: int,
@@ -147,7 +178,8 @@ def _save_simple_table_results(case: SimpleTableResults,
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
     titlei =  f'{case.uname}: {method}_{header2}_subcase={case.subcase_id}'
-    res = case.get_result(key, name)
+    fringe, vector = case.get_fringe_vector_result(key, name)
+    res = vector if vector is not None else fringe
 
     # form_name = case.form_names[itime, ilayer, imethod]
     check_title(titlei, used_titles)
@@ -177,7 +209,9 @@ def _save_layered_table_results(case: LayeredTableResults,
     form_name = case.form_names[itime, ilayer, imethod]
     #for method in case.methods:
     titlei =  f'{form_name}_subcase={case.subcase_id}'
-    res = case.get_result(key, name)
+    method = case.get_methods(key, name)[0]
+    fringe, vector = case.get_fringe_vector_result(key, name)
+    res = vector if vector is not None else fringe
 
     check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
@@ -185,7 +219,9 @@ def _save_layered_table_results(case: LayeredTableResults,
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
+def nastran_to_vtk(bdf_filename: str,
+                   op2_filename: str,
+                   vtk_filename: str) -> None:
     """kind of a hack, but it will always work assuming the GUI works"""
     gui = NastranGUI()
     gui.create_secondary_actors = False
@@ -196,9 +232,10 @@ def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
     #log.set_level('error')
     #log.set_level('warning')
 
-    gui.load_nastran_geometry(op2_filename)
+    gui.load_nastran_geometry(bdf_filename)
     gui.load_nastran_results(op2_filename)
-    vtk_ugrid = save_nastran_results(gui)
+    vtk_ugrid = gui.grid
+    vtk_ugrid = save_nastran_results(gui, vtk_ugrid)
 
     #root = vtkMultiBlockDataSet()
     #coords_branch = vtkMultiBlockDataSet()
@@ -227,17 +264,18 @@ def add_vtk_array(location: str,
         cell_data.AddArray(vtk_array)
     return
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     PKG_PATH = pyNastran.__path__[0]
     MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
+    bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
     op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
     vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-    nastran_to_vtk(op2_filename, vtk_filename)
+    nastran_to_vtk(bdf_filename, op2_filename, vtk_filename)
 
     op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
     vtk_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.vtu')
-    nastran_to_vtk(op2_filename, vtk_filename)
+    nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

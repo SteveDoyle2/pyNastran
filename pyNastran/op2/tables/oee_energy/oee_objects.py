@@ -1,8 +1,10 @@
+from typing import TextIO
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
-from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
+from pyNastran.f06.f06_formatting import (
+    write_float_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.result_objects.op2_objects import set_as_sort1
@@ -398,6 +400,100 @@ class RealStrainEnergyArray(BaseElement):
         #msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
+
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Strain Energy Table
+        -------------------
+        Flag, SubcaseID, iTime,       Eid, BLANK, BLANK,  StrainEnergy,     Percent, StrainEnergyDensity, BLANK, BLANK, BLANK
+        14,           1,     0,        14,     0,     0,  1.861520E-01,  3.7039E+01,        1.861519E+00,     0,     0,     0
+        14,           1,     0,        15,     0,     0,  1.285691E-01,  2.5383E+01,        1.285691E+00,     0,     0,     0
+        14,           1,     0, 100000000,     0,     0,  3.147211E-01,  6.2422E+01,                 NAN,     0,     0,     0
+        14,           1,     1,        14,     0,     0,  1.944612E-03,  3.8224E-01,        1.944612E-02,     0,     0,     0
+        14,           1,     1,        15,     0,     0,  8.724089E-03,  1.7818E+00,        8.724089E-02,     0,     0,     0
+        14,           1,     1, 100000000,     0,     0,  1.066870E-02,  2.1740E+00,                 NAN,     0,     0,     0
+        14,           1,     2,        14,     0,     0,  2.729307E-02,  5.4615E+00,        2.729307E-01,     0,     0,     0
+        14,           1,     2,        15,     0,     0,  2.109067E-01,  4.2134E+01,        2.109067E+00,     0,     0,     0
+
+        """
+        name = str(self.__class__.__name__)
+        if write_header:
+            csv_file.write('# %s\n' % name)
+            #'                                    ELEMENT-ID                  STRAIN-ENERGY     PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy', 'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+        flag = 14 # strain energy
+        isubcase = self.isubcase
+        #times = self._times
+
+        # write the csv
+        ntimes = self.data.shape[0]
+        eids = self.element
+        eid_len = len(str(eids.max()))
+
+        #zero = ' 0.000000E+00'
+
+        ntimes = self.data.shape[0]
+
+        #etype = self.element_data_type
+        for itime in range(ntimes):
+            #dt = self._times[itime]  # TODO: rename this...
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #total_energy = 0.
+            #total_set_energy = 0.
+
+            eids = self.element[itime, :]
+            # energy, percent, density
+            energy = self.data[itime, :, 0]
+            percent = self.data[itime, :, 1]
+            density = self.data[itime, :, 2]
+
+            #itotal = np.where(eids == 100000000)[0][0]
+            #total_energy = self.data[:, :, 0].sum()
+            #total_set_energy = energy.sum()
+            #total_set_energy = energy[itotal]
+            #total_percent = percent.sum()
+
+
+            #msg_temp2 = [msg_temp % (self.element_name, total_energy, itime + 1, total_set_energy)]
+            #csv_file.write(''.join(header + msg_temp2))
+
+
+            #fmt1 = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
+            #fmt1_nan = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
+            fmt = f'{flag}, {isubcase}, {itime}, %{eid_len}d, 0, 0, %s, %s, %s, 0, 0, 0\n'
+
+            #headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy', 'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
+
+            for (eid, energyi, percenti, densityi) in zip(eids, energy, percent, density):
+                if is_exponent_format:
+                    [senergyi, percenti, sdensityi] = write_floats_13e_long([energyi, percenti, densityi])
+                # ELEMENT-ID    STRAIN-ENERGY   PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
+                #          1   -8.307121E-12         0.0052           -2.886861E-12
+                #if eid == 100000000:
+                    #csv_file.write(fmt2 % (self.element_name, senergyi, percenti))
+                    #break
+                #try:
+                csv_file.write(fmt % (eid, senergyi, percenti, sdensityi))
+                #except TypeError:
+                    #print('eid = %r; type=%s' % (eid, type(eid)))
+                    #print('senergyi = %r; type=%s' % (senergyi, type(senergyi)))
+                    #print('percenti = %r; type=%s' % (percenti, type(percenti)))
+                    #print('sdensityi = %r; type=%s' % (sdensityi, type(sdensityi)))
+                    #assert np.isnan(sdensityi), 'eid=%s sdensityi=%s' % (eid, sdensityi)
+                    #csv_file.write(fmt1_nan % (eid, senergyi, percenti, ''))
+                    #if 0:
+                        #print('senergyi = %r; type=%s' % (senergyi, type(senergyi)))
+                        #print('percenti = %r; type=%s' % (percenti, type(percenti)))
+                        #print('sdensityi = %r; type=%s' % (sdensityi, type(sdensityi)))
+                        #msg = fmt1 % (eid, senergyi, percenti, sdensityi)
+                        #raise TypeError(msg)
+                    #raise RuntimeError(msg)
+        return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):

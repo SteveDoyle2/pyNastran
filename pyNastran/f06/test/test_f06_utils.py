@@ -8,7 +8,7 @@ from cpylog import get_logger2
 try:
     import matplotlib  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 if IS_MATPLOTLIB:
@@ -27,6 +27,7 @@ from pyNastran.f06.utils import (split_float_colons, split_int_colon,
 from pyNastran.f06.parse_flutter import plot_flutter_f06, make_flutter_plots
 from pyNastran.f06.parse_trim import read_f06_trim
 
+DIRNAME = os.path.dirname(__file__)
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
@@ -227,12 +228,37 @@ class TestF06Utils(unittest.TestCase):
                                #kfreq_damping_filename=kfreq_damping_filename,
                                show=False, clear=True, close=True)
 
+            export_zona_filename = os.path.join(DIRNAME, 'zona_%i.f06')
+            export_veas_filename = os.path.join(DIRNAME, 'flutter_%i.veas')
+            export_f06_filename = os.path.join(DIRNAME, 'flutter_%i.f06')
+            make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                               plot_type,
+                               plot_vg=True, plot_vg_vf=True,
+                               plot_root_locus=True, plot_kfreq_damping=True,
+                               nopoints=True, noline=False,
+                               export_zona_filename=export_zona_filename,
+                               export_veas_filename=export_veas_filename,
+                               export_f06_filename=export_f06_filename,
+                               #vg_filename=vg_filename,
+                               #vg_vf_filename=vg_vf_filename,
+                               #root_locus_filename=root_locus_filename,
+                               #kfreq_damping_filename=kfreq_damping_filename,
+                               show=False, clear=True, close=True)
+
     def test_cmd_line_plot_flutter(self):
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         argv = ['f06', 'plot_145', f06_filename, '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
                 '--modes', '1:', '--ylimdamp', '-.3:']
+        cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+
+    def test_cmd_line_plot_flutter_no_input(self):
+        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
+        argv = ['f06', 'plot_145', f06_filename, '--eas',
+                '--out_units', 'english_in']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

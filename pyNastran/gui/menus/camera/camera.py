@@ -195,10 +195,10 @@ class CameraWindow(PyDialog):
 #def check_name(cell):
     #text = str(cell.text()).strip()
     #if len(text):
-        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #cell.setStyleSheet(QLINEEDIT_GOOD)
         #return text, True
     #else:
-        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
 

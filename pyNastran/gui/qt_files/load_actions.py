@@ -2,17 +2,32 @@ import os
 import sys
 import traceback
 import time as time_module
-from typing import Optional, Any
+from typing import Optional, Any, cast, Callable, TYPE_CHECKING
 
 import numpy as np
 from qtpy.compat import getopenfilename
 #from qtpy.QtWidgets import QFileDialog
+
+from pyNastran.utils import check_path, print_bad_path
+from pyNastran.femutils.io import loadtxt_nice
+from pyNastran.gui.utils.paths import get_delimiter_from_filename
+
 from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
-from pyNastran.utils import print_bad_path
 
 from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.utils.load_results import (
-    load_csv, load_deflection_csv, create_res_obj)
+    load_csv, load_deflection_csv, create_res_obj,
+    load_user_geom,
+)
+from pyNastran.gui.qt_files.user_geometry import add_user_geometry
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
+
+from pyNastran.gui.gui_objects.settings import Settings, filter_recent_files
+if TYPE_CHECKING:
+    #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.qt_files.tool_actions import ToolActions
 IS_TESTING = 'test' in sys.argv[0]
 
 
@@ -24,8 +39,10 @@ class LoadActions(BaseGui):
         #"""links the the GUI's log"""
         #return self.gui.log
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=False):
+    def on_load_geometry(self, infile_name=None, geometry_format=None,
+                         name: str='main',
+                         plot: bool=True,
+                         stop_on_failure: bool=False):
         """
         Loads a baseline geometry
 
@@ -40,70 +57,79 @@ class LoadActions(BaseGui):
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
-        raise_error : bool; default=True
+        stop_on_failure : bool; default=True
             stop the code if True
 
         """
-        assert isinstance(name, str), 'name=%r type=%s' % (name, type(name))
+        assert isinstance(name, str), f'name={name!r} type={type(name)}; infile_name={infile_name} geometry_format={geometry_format!r}; plot={plot}; stop_on_failure={stop_on_failure}'
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)
         if is_failed:
             return
 
+        if not hasattr(self, 'model_objs'):
+            self.model_objs = {}
+
+        gui = self.gui
         has_results = False
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            self.gui.last_dir = os.path.split(infile_name)[0]
+            #settings: Settings = gui.settings
+            #if settings.use_startup_directory and os.path.exists(settings.startup_directory):
+                #last_dir = settings.startup_directory
+            #else:
+            self._set_last_dir(infile_name)
 
-            if self.gui.name == '':
+            if gui.name == '':
                 name = 'main'
             else:
                 print('name = %r' % name)
 
-            if name != self.gui.name:
+            if name != gui.name:
                 #scalar_range = self.grid_selected.GetScalarRange()
                 #self.grid_mapper.SetScalarRange(scalar_range)
-                self.gui.grid_mapper.ScalarVisibilityOff()
+                gui.grid_mapper.ScalarVisibilityOff()
                 #self.grid_mapper.SetLookupTable(self.color_function)
-            self.gui.name = name
-            self.gui._reset_model(name)
+            gui.name = name
+            gui._reset_model(name)
 
             # reset alt grids
-            names = self.gui.alt_grids.keys()
+            names = gui.alt_grids.keys()
             for name in names:
-                self.gui.alt_grids[name].Reset()
-                self.gui.alt_grids[name].Modified()
+                gui.alt_grids[name].Reset()
+                gui.alt_grids[name].Modified()
 
             if not os.path.exists(infile_name) and geometry_format:
-                msg = 'input file=%r does not exist' % infile_name
-                self.gui.log_error(msg)
-                self.gui.log_error(print_bad_path(infile_name))
+                msg = f'input file={infile_name!r} does not exist'
+                gui.log_error(msg)
+                gui.log_error(print_bad_path(infile_name))
                 return
 
             # clear out old data
-            if self.gui.model_type is not None:
-                clear_name = 'clear_' + self.gui.model_type
+            if gui.model_type is not None:
+                clear_name = 'clear_' + gui.model_type
                 try:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
                 except Exception:
                     self.gui.log_error("method %r does not exist" % clear_name)
-            self.gui.log_info("reading %s file %r" % (geometry_format, infile_name))
+            gui.log_info(f'reading {geometry_format} file {infile_name!r}')
 
             try:
                 time0 = time_module.time()
 
-                if geometry_format2 in self.gui.format_class_map:
+                if geometry_format2 in gui.format_class_map:
                     # initialize the class
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
 
                     # TODO: was geometry_format going into this...
-                    cls = self.gui.format_class_map[geometry_format2](self.gui)
+                    cls = gui.format_class_map[geometry_format2](gui)
 
-                    function_name2 = 'load_%s_geometry' % geometry_format2
+                    function_name2 = f'load_{geometry_format2}_geometry'
                     load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
+                    self.model_objs[name] = cls
                 else:
                     #  nastran
                     assert 'nastran' in geometry_format2
@@ -121,36 +147,62 @@ class LoadActions(BaseGui):
             except Exception as error:
                 #raise
                 msg = traceback.format_exc()
-                self.gui.log_error(msg)
-                if raise_error or self.gui.dev:
+                gui.log_error(msg)
+                if stop_on_failure or gui.dev:
                     raise
                 #return
             #self.vtk_panel.Update()
-            self.gui.rend.ResetCamera()
+            gui.rend.ResetCamera()
 
         # the model has been loaded, so we enable load_results
         if filter_index >= 0:
-            self.gui.format = formats[filter_index].lower()
+            geometry_format_out = formats[filter_index].lower()
+            gui.format = geometry_format_out
             unused_enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
             return
         #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
-        self.gui.infile_name = infile_name
-        self.gui.out_filename = None
+        gui.infile_name = infile_name
+        gui.out_filename = None
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
 
         if name == 'main':
-            msg = '%s - %s' % (self.gui.format, self.gui.infile_name)
-            self.gui.window_title = msg
-            self.gui.update_menu_bar()
+            msg = '%s - %s' % (geometry_format_out, gui.infile_name)
+            gui.window_title = msg
+            gui.update_menu_bar()
             main_str = ''
         else:
             main_str = ', name=%r' % name
+        self._add_recent_file(infile_name, geometry_format_out)
 
-        self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
-            infile_name, self.gui.format, main_str))
+        gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+            infile_name, geometry_format_out, main_str))
+
+    def _set_last_dir(self, infile_name: str) -> None:
+        """
+        Update the directory after finding a file not after completing
+        sucessfully.  If the user explicitly loaded a file as part of
+        the script, that doesn't count.
+        """
+        gui: MainWindow = self.gui
+        last_dir = os.path.split(infile_name)[0]
+        gui.last_dir = last_dir
+        gui.settings.startup_directory = last_dir
+
+    def _add_recent_file(self, infile_name: str,
+                         geometry_format: str) -> None:
+        gui: MainWindow = self.gui
+        abs_filename = os.path.abspath(infile_name)
+        arg = (abs_filename, geometry_format)
+        recent_files = gui.settings.recent_files
+        if arg in recent_files:
+            recent_files.remove(arg)
+        recent_files.insert(0, arg)
+        gui.settings.recent_files = filter_recent_files(recent_files)
+        gui.update_recent_files_menu()
+        #gui.settings.recent_files
 
     def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
         """gets the filename and format"""
@@ -200,6 +252,9 @@ class LoadActions(BaseGui):
             # setup the selectable formats
             for fmt in self.gui.fmts:
                 fmt_name, _major_name, geom_wildcard, geom_func, res_wildcard, _res_func = fmt
+                _major_name = cast(str, _major_name)
+                geom_wildcard = cast(str, geom_wildcard)
+                geom_func = cast(Callable, geom_func)
                 formats.append(_major_name)
                 wildcard_list.append(geom_wildcard)
                 load_functions.append(geom_func)
@@ -259,12 +314,12 @@ class LoadActions(BaseGui):
                     load_function = _resfunc
                     break
             else:
-                msg = 'format=%r is not supported' % geometry_format
+                msg = f'format={geometry_format!r} is not supported'
                 self.gui.log_error(msg)
                 raise RuntimeError(msg)
 
             if wildcard is None:
-                msg = 'format=%r has no method to load results' % geometry_format
+                msg = f'format={geometry_format!r} has no method to load results'
                 self.gui.log_error(msg)
                 return
             out_filename = self.create_load_file_dialog(wildcard, title)[1]
@@ -294,6 +349,13 @@ class LoadActions(BaseGui):
                 #raise IOError(msg)
             self.gui.last_dir = os.path.split(out_filenamei)[0]
 
+            name = 'main'
+            if name in self.model_objs:
+                model = self.model_objs[name]
+                if fmt[0] == 'nastran3':
+                    fmti, geo1, geo2, res1, res2 = model.get_nastran3_wildcard_geometry_results_functions()
+                    load_function = res2
+
             try:
                 load_function(out_filenamei)
             except Exception: #  as e
@@ -306,18 +368,21 @@ class LoadActions(BaseGui):
             self.gui.out_filename = out_filenamei
             msg = '%s - %s - %s' % (self.gui.format, self.gui.infile_name, out_filenamei)
             self.gui.window_title = msg
-            print("on_load_results(%r)" % out_filenamei)
+            print("self.load_actions.on_load_results(%r)" % out_filenamei)
             self.gui.out_filename = out_filenamei
             self.gui.log_command("on_load_results(%r)" % out_filenamei)
 
-    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure=False):
+    #---------------------------------------------------------------------------
+    def on_load_custom_results(self, out_filename=None,
+                               restype=None,
+                               stop_on_failure: bool=False) -> bool:
         """will be a more generalized results reader"""
         is_failed, out_filename, iwildcard = self._on_load_custom_results_load_filename(
             out_filename=out_filename, restype=restype)
 
         if is_failed:
             if stop_on_failure:  # pragma: no cover
-                raise RuntimeError('failed getting filename')
+                raise RuntimeError(f'failed getting filename={out_filename!r}')
             return is_failed
         if out_filename == '':
             is_failed = True
@@ -331,12 +396,15 @@ class LoadActions(BaseGui):
                 raise RuntimeError(msg)
             return is_failed
 
+        self._set_last_dir(out_filename)
         try:
             if iwildcard == 0:
-                self._on_load_nodal_elemental_results('Nodal', out_filename, stop_on_failure=stop_on_failure)
+                self._on_load_nodal_elemental_results(
+                    'Nodal', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Node'
             elif iwildcard == 1:
-                self._on_load_nodal_elemental_results('Elemental', out_filename, stop_on_failure=stop_on_failure)
+                self._on_load_nodal_elemental_results(
+                    'Elemental', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Element'
             elif iwildcard == 2:
                 self._load_deflection(out_filename)
@@ -347,7 +415,7 @@ class LoadActions(BaseGui):
             elif iwildcard == 4:
                 self.load_patran_nod(out_filename)
                 restype = 'Patran_nod'
-            else:
+            else:  # pramga: no cover
                 raise NotImplementedError('iwildcard = %s' % iwildcard)
         except Exception:
             msg = traceback.format_exc()
@@ -355,19 +423,27 @@ class LoadActions(BaseGui):
             if stop_on_failure:  # pragma: no cover
                 raise RuntimeError(msg)
             return is_failed
-        self.gui.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
+        self.gui.log_command('self.load_actions.on_load_custom_results('
+                             f'{out_filename!r}, restype={restype!r})')
         is_failed = False
         return is_failed
 
-    def _on_load_custom_results_load_filename(self, out_filename=None, restype=None):
+    def _on_load_custom_results_load_filename(self, out_filename=None,
+                                              restype=None) -> tuple[bool, str, int]:
+        """
+        Parameters
+        ----------
+        restype: str
+            'node', 'element', 'deflection', 'force', 'patran_nod'
+        """
         is_failed = True
         #unused_geometry_format = self.format
         if self.gui.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.gui.log_error(msg)
-            return is_failed, None, None
+            return is_failed, '', -1
 
-        if out_filename in [None, False]:
+        if out_filename in (None, False):
             title = 'Select a Custom Results File for %s' % (self.gui.format)
 
             #print('wildcard_level =', wildcard_level)
@@ -382,7 +458,7 @@ class LoadActions(BaseGui):
             fmt = ';;'.join(fmts)
             wildcard_level, out_filename = self.create_load_file_dialog(fmt, title)
             if not out_filename:
-                return is_failed, None, None # user clicked cancel
+                return is_failed, '', -1 # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
         else:
             fmts = [
@@ -392,15 +468,18 @@ class LoadActions(BaseGui):
         is_failed = False
         return is_failed, out_filename, iwildcard
 
-    def _load_deflection(self, out_filename):
+    def _load_deflection(self, out_filename: str) -> None:
         """loads a deflection file"""
         self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
-    def _load_force(self, out_filename):
+    def _load_force(self, out_filename: str) -> None:
         """loads a force file"""
         self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
 
-    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
+    def _load_deflection_force(self, out_filename: str,
+                               is_deflection: bool=False,
+                               is_force: bool=False) -> None:
+        """loads a force/deflection file"""
         out_filename_short = os.path.basename(out_filename)
         A, nids_index, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
@@ -411,9 +490,10 @@ class LoadActions(BaseGui):
         nnodes = self.gui.nnodes
         if nrows != nnodes:
             #'nrows=%s nnodes=%s' % (nrows, self.gui.nnodes)
-            self.log.warning('The deflection CSV has %i rows, but there are %i nodes in the model.'
-                             "  Verify that the result is for the correct model and that it's "
-                             'not an elemental result.' % (nrows, nnodes))
+            self.log.warning(f'The deflection CSV has {nrows:d} rows, but '
+                             f'there are {nnodes:d} nodes in the model.  '
+                             'Verify that the result is for the correct '
+                             "model and that it's not an elemental result.")
             A = _resize_array(A, nids_index, self.gui.node_ids, nrows, nnodes)
 
         result_type = 'node'
@@ -421,7 +501,9 @@ class LoadActions(BaseGui):
                                 out_filename_short, update=True, is_scalar=False,
                                 is_deflection=is_deflection, is_force=is_force)
 
-    def _on_load_nodal_elemental_results(self, result_type, out_filename=None, stop_on_failure=False):
+    def _on_load_nodal_elemental_results(self, result_type: str,
+                                         out_filename=None,
+                                         stop_on_failure: bool=False) -> None:
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
@@ -449,7 +531,299 @@ class LoadActions(BaseGui):
             #self.window_title = msg
             #self.out_filename = out_filename
 
-    def load_patran_nod(self, nod_filename):
+    #---------------------------------------------------------------------------
+    def on_load_user_geom(self, csv_filename: Optional[str]=None,
+                          name: Optional[str]=None,
+                          color: Optional[list[float]]=None) -> None:
+        """
+        Loads a User Geometry CSV File of the form:
+
+        #    id  x    y    z
+        GRID, 1, 0.2, 0.3, 0.3
+        GRID, 2, 1.2, 0.3, 0.3
+        GRID, 3, 2.2, 0.3, 0.3
+        GRID, 4, 5.2, 0.3, 0.3
+        grid, 5, 5.2, 1.3, 2.3  # case insensitive
+
+        #    ID, nodes
+        BAR,  1, 1, 2
+        TRI,  2, 1, 2, 3
+        # this is a comment
+
+        QUAD, 3, 1, 5, 3, 4
+        QUAD, 4, 1, 2, 3, 4  # this is after a blank line
+
+        #RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
+        # in element id sorted order: value1, value2
+        #1.0, 2.0 # bar
+        #1.0, 2.0 # tri
+        #1.0, 2.0 # quad
+        #1.0, 2.0 # quad
+
+        #RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
+        # same difference
+
+        #RESULT,VECTOR3,GEOM,DXYZ
+        # 3xN
+
+        Parameters
+        ----------
+        csv_filename : str (default=None -> load a dialog)
+            the path to the user geometry CSV file
+        name : str (default=None -> extract from fname)
+            the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+
+        """
+        gui = self.gui
+        if csv_filename in [None, False]:
+            title = 'Load User Geometry'
+            csv_filename = gui.load_actions.create_load_file_dialog(
+                #gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
+                gui.wildcard_delimited, title)[1]
+            if not csv_filename:
+                return
+            self._set_last_dir(csv_filename)
+        assert isinstance(csv_filename, str), csv_filename
+
+        if color is None:
+            # we mod the num_user_points so we don't go outside the range
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
+        if name is None:
+            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+
+        self._add_user_geometry(csv_filename, name, color)
+        gui.log_command(f'self.on_load_user_geom({csv_filename}, name={name!r}, color={str(color)})')
+
+    def _add_user_geometry(self, csv_filename: str,
+                           name: str,
+                           color: list[float]) -> None:
+        """
+        helper method for ``on_load_user_geom``
+
+        A custom geometry can be the pyNastran custom form or an STL
+
+        """
+        gui: MainWindow = self.gui
+        tool_actions: ToolActions = gui.tool_actions
+        if name in gui.geometry_actors:
+            msg = f'Name: {name!r} is already in geometry_actors\nChoose a different name.'
+            raise ValueError(msg)
+        if len(name) == 0:
+            msg = f'Invalid Name: name={name!r}'
+            raise ValueError(msg)
+
+        point_name = name + '_point'
+        geom_name = name + '_geom'
+
+        grid_ids, xyz, bars, tris, quads = load_user_geom(
+            csv_filename, self.gui.log, encoding='latin1')
+        nbars = len(bars)
+        ntris = len(tris)
+        nquads = len(quads)
+        nelements = nbars + ntris + nquads
+        gui.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
+                                      point_size=5, representation='point')
+
+        if nelements > 0:
+            nid_map = {}
+            i = 0
+            for nid in grid_ids:
+                nid_map[nid] = i
+                i += 1
+            gui.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
+                                          line_width=5, representation='toggle')
+
+        # allocate
+        nnodes = len(grid_ids)
+        #self.alt_grids[point_name].Allocate(npoints, 1000)
+        #if nelements > 0:
+            #self.alt_grids[geom_name].Allocate(npoints, 1000)
+
+        alt_grid = gui.alt_grids[point_name]
+        geom_grid = gui.alt_grids[geom_name]
+
+        add_user_geometry(
+            alt_grid, geom_grid,
+            xyz, nid_map, nnodes,
+            bars, tris, quads)
+
+        # create actor/mapper
+        tool_actions.add_alt_geometry(alt_grid, point_name)
+        if nelements > 0:
+            tool_actions.add_alt_geometry(geom_grid, geom_name)
+
+        # set representation to points
+        #self.geometry_properties[point_name].representation = 'point'
+        #self.geometry_properties[geom_name].representation = 'toggle'
+        #actor = self.geometry_actors[name]
+        #prop = actor.GetProperty()
+        #prop.SetRepresentationToPoints()
+        #prop.SetPointSize(4)
+
+    #---------------------------------------------------------------------------
+    def on_load_csv_points(self, csv_filename: Optional[str]=None,
+                           name: Optional[str]=None,
+                           color: Optional[list[float]]=None) -> bool:
+        """
+        Loads a User Points CSV File of the form:
+
+        1.0, 2.0, 3.0
+        1.5, 2.5, 3.5
+
+        Parameters
+        -----------
+        csv_filename : str (default=None -> load a dialog)
+            the path to the user points CSV file
+        name : str (default=None -> extract from fname)
+            the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+
+        .. note:: no header line is required
+        .. note:: nodes are in the global frame
+
+        .. todo:: support changing the name
+        .. todo:: support changing the color
+        .. todo:: support overwriting points
+
+        """
+        is_failed = True
+        gui = self.gui
+        if csv_filename in {None, False}:
+            title = 'Load User Points'
+            csv_filename = gui.load_actions.create_load_file_dialog(
+                gui.wildcard_delimited, title)[1]
+            if not csv_filename:
+                return is_failed
+        assert isinstance(csv_filename, str), csv_filename
+
+        if color is None:
+            # we mod the num_user_points so we don't go outside the range
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
+        if name is None:
+            sline = os.path.basename(csv_filename).rsplit('.', 1)
+            name = sline[0]
+        name = _get_unique_name(gui.geometry_actors, name)
+
+        is_failed = self._add_user_points_from_csv(csv_filename, name, color)
+        if not is_failed:
+            gui.num_user_points += 1
+            gui.log_command(f'self.on_load_csv_points({csv_filename!r}, name{name!r}, color={str(color)})')
+        return is_failed
+
+    def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
+                                  color: list[float], point_size: int=4) -> bool:
+        """
+        Helper method for adding csv nodes to the gui
+
+        Parameters
+        ----------
+        csv_points_filename : str
+            CSV filename that defines one xyz point per line
+        name : str
+            name of the geometry actor
+        color : list[float, float, float]
+            RGB values; [0. to 1.]
+        point_size : int; default=4
+            the nominal point size
+
+        """
+        is_failed = True
+        try:
+            check_path(csv_points_filename, 'csv_points_filename')
+            # read input file
+            delimiter = get_delimiter_from_filename(csv_points_filename)
+            try:
+                user_points = np.loadtxt(csv_points_filename, comments='#', delimiter=delimiter)
+            except ValueError:
+                user_points = loadtxt_nice(csv_points_filename, comments='#', delimiter=delimiter)
+                # can't handle leading spaces?
+                #raise
+        except ValueError as error:
+            #self.log_error(traceback.print_stack(f))
+            self.gui.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.gui.log_error(str(error))
+            return is_failed
+
+        self._add_user_points(user_points, name, color, csv_points_filename,
+                              point_size=point_size)
+        is_failed = False
+        return False
+
+    def _add_user_points(self, user_points: np.ndarray,
+                         name: str, color: list[float],
+                         csv_points_filename: str='',
+                         point_size: int=4) -> None:
+        """
+        Helper method for adding csv nodes to the gui
+
+        Parameters
+        ----------
+        user_points : (n, 3) float ndarray
+            the points to add
+        name : str
+            name of the geometry actor
+        color : list[float, float, float]
+            RGB values; [0. to 1.]
+        point_size : int; default=4
+            the nominal point size
+
+        """
+        gui: MainWindow = self.gui
+        if name in gui.geometry_actors:
+            msg = f'Name: {name} is already in geometry_actors\nChoose a different name.'
+            raise ValueError(msg)
+        if len(name) == 0:
+            msg = f'Invalid Name: name={name!r}'
+            raise ValueError(msg)
+
+        tool_actions: ToolActions = gui.tool_actions
+
+        # create grid
+        gui.create_alternate_vtk_grid(
+            name, color=color, line_width=5, opacity=1.0,
+            point_size=point_size, representation='point')
+
+        npoints = user_points.shape[0]
+        if npoints == 0:
+            raise RuntimeError('npoints=0 in %r' % csv_points_filename)
+        if len(user_points.shape) == 1:
+            user_points = user_points.reshape(1, npoints)
+
+        # allocate grid
+        alt_grid = gui.alt_grids[name]
+        #alt_grid.Allocate(npoints, 1000)
+
+        # set points
+        points = numpy_to_vtk_points(user_points)
+
+        # set elements
+        vertex_cell_type = 1
+        elements = np.ones((npoints, 1), dtype='int32')
+        elements[:, 0] = np.arange(npoints)
+        create_vtk_cells_of_constant_element_type(alt_grid, elements, vertex_cell_type)
+        alt_grid.SetPoints(points)
+
+        # create actor/mapper
+        tool_actions.add_alt_geometry(alt_grid, name)
+
+        # set representation to points
+        gui.model_data.geometry_properties[name].representation = 'point'
+        actor = gui.geometry_actors[name]
+        prop = actor.GetProperty()
+        prop.SetRepresentationToPoints()
+        prop.RenderPointsAsSpheresOn()
+        prop.SetLighting(False)
+        #prop.SetInterpolationToFlat()
+        prop.SetPointSize(point_size)
+
+    #---------------------------------------------------------------------------
+    def load_patran_nod(self, nod_filename: str) -> None:
         """reads a Patran formatted *.nod file"""
         A, fmt_dict, headers = load_patran_nod(nod_filename, self.gui.node_ids)
 
@@ -459,7 +833,9 @@ class LoadActions(BaseGui):
                                 out_filename_short, update=True,
                                 is_scalar=True)
 
-    def _load_csv(self, result_type, out_filename, stop_on_failure=False):
+    def _load_csv(self, result_type: str,
+                  out_filename: str,
+                  stop_on_failure: bool=False) -> None:
         """
         common method between:
           - on_add_nodal_results(filename)
@@ -473,6 +849,7 @@ class LoadActions(BaseGui):
             the CSV filename to load
 
         """
+        gui: MainWindow = self.gui
         out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
@@ -481,23 +858,25 @@ class LoadActions(BaseGui):
         nrows = result0.size
 
         if result_type == 'Nodal':
-            nnodes = self.gui.nnodes
+            nnodes = gui.nnodes
             if nrows != nnodes:
-                self.log.warning('The fringe CSV has %i rows, but there are %i nodes in the '
-                                 'model.  Verify that the result is for the correct model and '
-                                 "that it's not an elemental result." % (nrows, nnodes))
-                A = _resize_array(A, A['index'], self.gui.node_ids, nrows, nnodes)
+                gui.log.warning(f'The fringe CSV has {nrows!r} rows, but '
+                                f'there are {nnodes} nodes in the model.  '
+                                'Verify that the result is for the correct model and '
+                                "that it's not an elemental result.")
+                A = _resize_array(A, A['index'], gui.node_ids, nrows, nnodes)
             result_type2 = 'node'
         elif result_type == 'Elemental':
-            nelements = self.gui.nelements
+            nelements = gui.nelements
             if nrows != nelements:
-                self.log.warning('The fringe CSV has %i rows, but there are %i elements in the '
-                                 'model.  Verify that the result is for the correct model and '
-                                 "that it's not a nodal result." % (nrows, nelements))
-                A = _resize_array(A, A['index'], self.gui.element_ids, nrows, nelements)
+                gui.log.warning(f'The fringe CSV has {nrows!r} rows, but '
+                                f'there are {nelements} elements in the model.  '
+                                'Verify that the result is for the correct model and '
+                                "that it's not a nodal result.")
+                A = _resize_array(A, A['index'], gui.element_ids, nrows, nelements)
             result_type2 = 'centroid'
-        else:
-            raise NotImplementedError('result_type=%r' % result_type)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'result_type={result_type!r}')
 
         #num_ids = len(ids)
         #if num_ids != nrows:
@@ -512,9 +891,15 @@ class LoadActions(BaseGui):
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True, is_scalar=True)
 
-    def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
-                           out_filename_short, update=True, is_scalar=True,
-                           is_deflection=False, is_force=False):
+    def _add_cases_to_form(self, A: dict[str, np.ndarray],
+                           fmt_dict: dict[str, str],
+                           headers: list[str],
+                           result_type: str,
+                           out_filename_short: str,
+                           update: bool=True,
+                           is_scalar: bool=True,
+                           is_deflection: bool=False,
+                           is_force: bool=False):
         """
         common method between:
           - _load_csv
@@ -552,47 +937,49 @@ class LoadActions(BaseGui):
         # A['f0']
         # A['f1']
         """
-        #print('A =', A)
-        formi = []
-        form = self.gui.get_form()
-        icase = len(self.gui.case_keys)
+        gui: MainWindow = self.gui
+        formi: list[tuple[str, Any, Any]]= []
+        form = gui.get_form()
+        icase = len(gui.case_keys)
         islot = 0
-        for case_key in self.gui.case_keys:
+        for case_key in gui.case_keys:
             if isinstance(case_key, tuple):
                 islot = case_key[0]
                 break
 
         #assert len(headers) > 0, 'headers=%s' % (headers)
         #assert len(headers) < 50, 'headers=%s' % (headers)
+        settings: Settings = gui.settings
         for header in headers:
             if is_scalar:
                 out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                                     colormap='jet')
+                                     colormap=settings.colormap)
             else:
                 out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
                                      is_deflection=is_deflection, is_force=is_force,
-                                     dim_max=self.gui.settings.dim_max, xyz_cid0=self.gui.xyz_cid0,
-                                     colormap='jet')
+                                     dim_max=settings.dim_max, xyz_cid0=gui.xyz_cid0,
+                                     colormap=settings.colormap)
             res_obj, title = out
 
             #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
             #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
             #key = (res_obj, (0, title))
-            self.gui.case_keys.append(icase)
-            self.gui.result_cases[icase] = (res_obj, (islot, title))
+            gui.case_keys.append(icase)
+            gui.result_cases[icase] = (res_obj, (islot, title))
             formi.append((header, icase, []))
 
             # TODO: double check this should be a string instead of an int
-            self.gui.label_actors[icase] = []
-            self.gui.label_ids[icase] = set()
+            gui.label_actors[icase] = []
+            gui.label_ids[icase] = set()
             icase += 1
         form.append((out_filename_short, None, formi))
 
         self.gui.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
         if update:
-            self.gui.res_widget.update_results(form, 'main')
+            gui.res_widget.update_results(form, 'main')
 
+    #---------------------------------------------------------------------------
     def create_load_file_dialog(self, qt_wildcard: str, title: str,
                                 default_filename: Optional[str]=None) -> tuple[str, str]:
         #options = QFileDialog.Options()
@@ -602,11 +989,26 @@ class LoadActions(BaseGui):
         #flt = str(filt).strip()
         #return fname, flt
 
-        if default_filename is None:
-            default_filename = self.gui.last_dir
+        use_startup_directory = self.settings.use_startup_directory
+        startup_directory = self.settings.startup_directory.strip()
+        last_dir = self.gui.last_dir
+
+        basedir = ''
+        if use_startup_directory and os.path.exists(startup_directory):
+            basedir = startup_directory
+        else:
+            basedir = last_dir
+
+        if not os.path.exists(basedir):
+            basedir = ''
+
+        #if startup_directory == '' and default_filename is None and os.path.exists(last_dir):
+        #elif os.path.exists(startup_directory):
+            #basedir = startup_directory
+
         fname, wildcard_level = getopenfilename(
             parent=self.gui, caption=title,
-            basedir=default_filename, filters=qt_wildcard,
+            basedir=basedir, filters=qt_wildcard,
             selectedfilter='', options=None)
         return wildcard_level, fname
 
@@ -624,9 +1026,44 @@ class LoadActions(BaseGui):
             #wildcard_level = dialog.selectedFilter()
             #return str(wildcard_level), str(fname)
         #return None, None
+    # --------------------------------------------------------------------------
+
+    def on_run_script(self, python_file=False) -> bool:
+        """pulldown for running a python script"""
+        is_passed = False
+        gui: MainWindow = self.gui
+        if python_file in [None, False]:
+            title = 'Choose a Python Script to Run'
+            wildcard = 'Python (*.py)'
+            infile_name = self.create_load_file_dialog(
+                wildcard, title, gui._default_python_file)[1]
+            if not infile_name:
+                return is_passed # user clicked cancel
+
+            #python_file = os.path.join(script_path, infile_name)
+            python_file = os.path.join(infile_name)
+            self._set_last_dir(python_file)
+
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            gui.log_error(msg)
+            return is_passed
+
+        with open(python_file, 'r') as python_file_obj:
+            txt = python_file_obj.read()
+        is_passed = gui._execute_python_code(txt, show_msg=False)
+        if not is_passed:
+            return is_passed
+        gui._default_python_file = python_file
+        gui.log_command(f'self.on_run_script({python_file!r})')
+        print(f'self.on_run_script({python_file!r})')
+        return is_passed
 
 
-def _resize_array(A, nids_index, node_ids, nrows, nnodes):
+def _resize_array(A: dict[str, np.ndarray],
+                  nids_index: np.ndarray,
+                  node_ids: np.ndarray,
+                  nrows: int, nnodes: int) -> dict[str, np.ndarray]:
     """
     Resizes an array to be the right size.
 
@@ -693,3 +1130,18 @@ def _resize_array(A, nids_index, node_ids, nrows, nnodes):
         #print('A2[%s].shape = %s' % (key, A2[key].shape))
     #print()
     return A2
+
+def _get_unique_name(geometry_actors: dict[str, Any],
+                     name: str) -> str:
+    """
+    Duplicate names in a dictionary are not allowed,
+    so append a number to the name if it's invalid
+    """
+    if name in geometry_actors:
+        i = 1
+        name2 = f'{name}_{i}'
+        while name2 in geometry_actors:
+            i += 1
+            name2 = f'{name}_{i}'
+        name = name2
+    return name

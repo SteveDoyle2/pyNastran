@@ -14,13 +14,13 @@ try:
     #warnings.filterwarnings(
         #'ignore',
         #'.*unorderable dtypes; returning scalar but in the future this will be an error.*')
-except ImportError:
+except ModuleNotFoundError:
     IS_PANDAS = False
 
 try:
     import h5py  # pylint: disable=unused-import
     IS_H5PY = True
-except ImportError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 
@@ -43,6 +43,7 @@ from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
+from pyNastran.f06.csv_writer import write_csv
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
@@ -800,6 +801,7 @@ class TestOP2Main(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.csv')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -820,6 +822,7 @@ class TestOP2Main(Tester):
             stop_on_failure=True, dev=False, log=log)
         with self.assertRaises(NotImplementedError):
             op2.save()
+        write_csv(op2, csv_filename)
 
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
@@ -830,13 +833,14 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        op2.save()
+        write_csv(op2, csv_filename)
 
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
@@ -846,14 +850,16 @@ class TestOP2Main(Tester):
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
-        run_op2(op2_filename, make_geom=True, write_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, log=log)
+        write_csv(op2, csv_filename)
 
 
     def test_bdf_op2_elements_03(self):
@@ -861,20 +867,23 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -883,6 +892,7 @@ class TestOP2Main(Tester):
         """tests a large number of elements and results in SOL 108-freq"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.csv')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
@@ -890,14 +900,16 @@ class TestOP2Main(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -907,20 +919,23 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -930,20 +945,23 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        #csv_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, log=log)
+        #write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -953,20 +971,23 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.csv')
         op2_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.op2')
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=True,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=True,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -976,6 +997,7 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         unused_bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
         #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
@@ -988,14 +1010,16 @@ class TestOP2Main(Tester):
                  #build_dataframe=False,
                  #skip_undefined_matrices=True, mode='msc',
                  #encoding=None)
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, post=-4, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, post=-4, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1005,20 +1029,23 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1031,21 +1058,24 @@ class TestOP2Main(Tester):
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
 
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'hd15306.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'other', 'hd15306.csv')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'hd15306.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1054,26 +1084,30 @@ class TestOP2Main(Tester):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.csv')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
 
     def test_bdf_op2_thermal_04(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.csv')
         op2_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
@@ -1083,20 +1117,23 @@ class TestOP2Main(Tester):
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model)
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
 
     def test_bdf_op2_thermal_05(self):
         """checks htflw47.bdf"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.csv')
         op2_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.op2')
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
@@ -1107,15 +1144,17 @@ class TestOP2Main(Tester):
         #save_load_deck(model)
 
         # make_geom=False: duplicate ids
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        write_csv(op2, csv_filename)
 
 
     def test_cbar100(self):

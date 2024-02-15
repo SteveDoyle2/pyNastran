@@ -1,8 +1,10 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
 import os.path
+import contextlib
 from math import ceil
-from typing import Optional, Callable, Any
+from functools import partial
+from typing import Callable, Optional, Union, Any, cast
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -13,12 +15,21 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar,
+    QMenu, QToolButton, QMenuBar)
+#QKeySequence = QtGui.QKeySequence
+MenuTuple = tuple[QMenu, tuple[str, ...]]
 
-from vtk import (
-    vtkImageActor, vtkSelectionNode, vtkSelection, vtkExtractSelection,
-    vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader,
-)
+#from vtk import (vtkExtractSelection,
+                 #vtkSelection, vtkSelectionNode,
+                 #vtkImageActor,
+                 #vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
+from vtkmodules.vtkRenderingCore import vtkImageActor
+from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
+
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer
 import pyNastran
@@ -26,12 +37,8 @@ import pyNastran
 
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
-#from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
-if VTK_VERSION_SPLIT[0] >= 9:
-    from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
-else:
-    from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
@@ -44,7 +51,7 @@ from .gui_objects.alt_geometry_storage import AltGeometry
 
 from .menus.menus import (
     on_set_modify_groups, Group,
-    Sidebar,
+    ResultsSidebar,
     ApplicationLogWidget,
     PythonConsoleWidget)
 
@@ -63,9 +70,23 @@ except ImportError:
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.formats import CLASS_MAP
+from pyNastran.utils.numpy_utils import integer_types
 
-Tool = tuple[str, str, str, Optional[str], str, Callable]
-BANNED_SHORTCUTS = {}
+Tool = tuple[str, str, str, str, str, Callable[..., Any], bool]
+BANNED_SHORTCUTS: set[str] = set([])
+
+from pyNastran.gui.gui_objects.settings import Settings, NFILES_TO_SAVE
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+from pyNastran.gui.gui_objects.displacements import (
+    DisplacementResults, ForceTableResults, ElementalTableResults)
+
+#if qt_version == 'pyqt6':
+    #def _update_shortcut(shortcut: str):
+        #return QKeySequence(shortcut)
+#else:
+    #def _update_shortcut(shortcut: str):
+        #return shortcut
+
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon(QMainWindow, GuiVTKCommon):
@@ -100,24 +121,23 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #-----------------------------------------------------------------------
         self._active_background_image = None
         self.reset_settings = False
-        self.fmts = fmt_order
+        self.fmt_order = fmt_order
         self.base_window_title = f'pyNastran v{pyNastran.__version__}'
 
         #defaults
         self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
 
         # initializes tools/checkables
-        self.set_tools()
+        #self.set_tools()
 
         self.html_logging = html_logging
         self.execute_python = True
 
-        self.scalar_bar = ScalarBar(self.legend_obj.is_horizontal_scalar_bar)
+        self.scalar_bar = ScalarBar(self.settings)
 
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
-        #self.recent_files = []
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -154,6 +174,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         |                               |
         +-------------------------------+
         """
+        settings: Settings = self.settings
+
         #self.resize(1100, 700)
         self.statusBar().showMessage('Ready')
 
@@ -170,11 +192,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
-        self.res_widget = Sidebar(
+        self.res_widget = ResultsSidebar(
             self,
-            include_case_spinner=True,
-            include_deflection_scale=False,
-            include_vector_scale=False,
+            left_click_callback=self._set_methods_by_icase,
+            include_vector_checks=True,
+            use_new_sidebar=settings.use_new_sidebar,
         )
         #self.res_widget.update_results(data)
         #self.res_widget.setWidget(sidebar)
@@ -187,6 +209,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         self.run_vtk = True
         if self.run_vtk:
+            self.scalar_bar.update_position(
+                is_horizontal=settings.is_horizontal_scalar_bar)
             self._create_vtk_objects()
         self._build_menubar()
         #self._hide_menubar()
@@ -211,6 +235,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if self.html_logging is True:
             self.log_dock_widget = ApplicationLogWidget(self)
             self.log_widget = self.log_dock_widget.log_widget
+            self.log_dock_widget.setVisible(self.settings.log_dock_visible)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
         else:
             self.log_widget = self.log
@@ -218,6 +243,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
             self.python_dock_widget.setObjectName('python_console')
+            self.python_dock_widget.setVisible(self.settings.python_dock_visible)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.python_dock_widget)
 
     def _on_execute_python_button(self, clear=False):
@@ -234,7 +260,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             enter_data.clear()
 
     def set_tools(self,
-                  tools: list[tuple[str, str, str, Optional[str], str, Callable]]=None,
+                  tools: Optional[list[tuple[str, str, str, Optional[str], str, Callable]]]=None,
                   checkables: Optional[dict[str, bool]]=None):
         """Creates the GUI tools"""
         if checkables is None:
@@ -262,176 +288,220 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 'zoom' : False,
             }
 
+        is_visible = True
         if tools is None:
-            file_tools = [
-                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
+            recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
 
-                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
-                ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
-                ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
-                ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
-                ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
-                ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
+            file_tools: list[Tool] = [
+                # flag,  label,   picture,     shortcut, tooltip             func
+                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent, is_visible),
 
-                ('save_vtk', 'Export VTK...', '', None, 'Export a VTK file', self.on_save_vtk),
-                ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ]
+                ('reload',               'Reload Model...',           'treload.png',       '',       'Remove the model and reload the same geometry file', self.on_reload, is_visible),
+                ('load_geometry',        'Load &Geometry...',         'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry, is_visible),
+                ('load_results',         'Load &Results...',          'load_results.png',  'Ctrl+R', 'Loads a results file', self.on_load_results, is_visible),
+                ('load_csv_user_geom',   'Load CSV User Geometry...', '',                  '',       'Loads custom geometry file', self.on_load_user_geom, is_visible),
+                ('load_csv_user_points', 'Load CSV User Points...',   'user_points.png',   '',       'Loads CSV points', self.on_load_csv_points, is_visible),
+                ('load_custom_result',   'Load Custom Results...',    '',                  '',       'Loads a custom results file', self.on_load_custom_results, is_visible),
 
-            tools = file_tools + [
+                ('save_vtk', 'Export VTK...',        '',             '', 'Export a VTK file', self.on_save_vtk, is_visible),
+                ('script',   'Run Python Script...', 'python48.png', '', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
+            ] + recent_file_tools
+
+            tools: list[Tool] = file_tools + [
                 # labels
-                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels),
-                ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
+                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels, is_visible),
+                ('label_reset', 'Clear All Labels',     '', '',       'Clear all labels',     self.reset_labels, is_visible),
 
                 # view
-                ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-                ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+                ('wireframe',  'Wireframe Model',      'twireframe.png', 'w',      'Show Model as a Wireframe Model', self.on_wireframe, is_visible),
+                ('surface',    'Surface Model',        'tsolid.png',     's',      'Show Model as a Surface Model', self.on_surface, is_visible),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png',    'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot, is_visible),
 
                 # geometry
                 # Geometry:
                 #  - Create
                 #  - Modify
-                ('geometry', 'Geometry', 'geometry.png', None, 'Geometry', self.geometry_obj.show),
+                ('geometry', 'Geometry', 'geometry.png', '', 'Geometry', self.geometry_obj.show, is_visible),
                 #
                 # core menus
-                ('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
-                ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
-                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
-                ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
-                ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
-                ('map_element_fringe', 'Map Element Fringe', '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result),
+                ('legend',             'Modify Legend...',           'legend.png',      'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu, is_visible),
+                ('animation',          'Create Animation...',        'animation.png',   'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu, is_visible),
+                ('clipping',           'Set Clipping...',            '',                '',       'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
+                ('set_preferences',    'Preferences...',             'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
+                ('geo_properties',     'Edit Geometry Properties...', '',               'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
+                ('map_element_fringe', 'Map Element Fringe',          '',               'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
 
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 # groups
-                ('modify_groups', 'Modify Groups...', '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups),
-                ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
-                ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
-                ('create_groups_by_model_group', 'Create Groups By Model Group', '', None, 'Create Groups', self.create_groups_by_model_group),
+                ('modify_groups',                     'Modify Groups...',                '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups, is_visible),
+                ('create_groups_by_visible_result',   'Create Groups By Visible Result', '', '',       'Create Groups', self.create_groups_by_visible_result, is_visible),
+                ('create_groups_by_property_id',      'Create Groups By Property ID',    '', '',       'Create Groups', self.create_groups_by_property_id, is_visible),
+                ('create_groups_by_model_group',      'Create Groups By Model Group',    '', '',       'Create Groups', self.create_groups_by_model_group, is_visible),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 # logging
-                ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
-                ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
-                ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
-                ('show_warning', 'Show WARNING', 'show_warning.png', None, 'Show "COMMAND" messages', self.on_show_warning),
-                ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
+                ('show_info',    'Show INFO',    'show_info.png',    '', 'Show "INFO" messages', self.on_show_info, is_visible),
+                ('show_debug',   'Show DEBUG',   'show_debug.png',   '', 'Show "DEBUG" messages', self.on_show_debug, is_visible),
+                ('show_command', 'Show COMMAND', 'show_command.png', '', 'Show "COMMAND" messages', self.on_show_command, is_visible),
+                ('show_warning', 'Show WARNING', 'show_warning.png', '', 'Show "COMMAND" messages', self.on_show_warning, is_visible),
+                ('show_error',   'Show ERROR',   'show_error.png',   '', 'Show "COMMAND" messages', self.on_show_error, is_visible),
 
                 # zoom
-                ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
-                ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Zoom In', 'plus_zoom.png',  'm',       'Increase Magnfication', self.on_increase_magnification, is_visible),
+                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification, is_visible),
 
                 # rotation
-                ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+                ('rotate_clockwise',  'Rotate Clockwise',         'tclock.png',  'o',       'Rotate Clockwise', self.on_rotate_clockwise, is_visible),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise, is_visible),
 
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 # help
-                ('website', 'Open pyNastran Website...', '', None, 'Open the pyNastran website', self.open_website),
-                ('docs', 'Open pyNastran Docs Website...', '', None, 'Open the pyNastran documentation website', self.open_docs),
-                ('report_issue', 'Report a Bug/Feature Request...', '', None, 'Open the pyNastran issue tracker', self.open_issue),
-                ('discussion_forum', 'Discussion Forum Website...', '', None, 'Open the discussion forum to ask questions', self.open_discussion_forum),
-                ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+                ('website',          'Open pyNastran Website...',       '',           '',       'Open the pyNastran website', self.open_website, is_visible),
+                ('docs',             'Open pyNastran Docs Website...',  '',           '',       'Open the pyNastran documentation website', self.open_docs, is_visible),
+                ('report_issue',     'Report a Bug/Feature Request...', '',           '',       'Open the pyNastran issue tracker', self.open_issue, is_visible),
+                ('discussion_forum', 'Discussion Forum Website...',     '',           '',       'Open the discussion forum to ask questions', self.open_discussion_forum, is_visible),
+                ('about',            'About pyNastran GUI...',          'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog, is_visible),
 
                 # camera
-                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
-                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('view',         'Camera View',       'view.png',     '',  'Load the camera menu', self.camera_obj.set_camera_menu, is_visible),
+                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera, is_visible),
 
                 # results
-                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'L', 'Changes the result case', self.on_cycle_results),
-                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results),
+                ('cycle_results',  'Cycle Results', 'cycle_results.png',  'L', 'Changes the result case', self.on_cycle_results, is_visible),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'k', 'Changes the result case', self.on_rcycle_results, is_visible),
 
                 # view actions
-                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
-                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
-                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
-                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
+                ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x'), is_visible),
+                ('right_view',  'Right View',  'right.png',  'y',       'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y'), is_visible),
+                ('top_view',    'Top View',    'top.png',    'z',       'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z'), is_visible),
+                ('front_view',  'Front View',  'front.png',  'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x'), is_visible),
+                ('left_view',   'Left View',   'left.png',   'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y'), is_visible),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z'), is_visible),
 
 
-                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-                ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
-                ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
-                ('anti_alias_1', '1x', '', None, 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1)),
-                ('anti_alias_2', '2x', '', None, 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2)),
-                ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
-                ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
+                ('edges',       'Show/Hide Edges',   'tedges.png',       'e', 'Show/Hide Model Edges', self.on_flip_edge_visibility, is_visible),
+                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_flip_edge_color, is_visible),
+                ('anti_alias_0', 'Off',              '',                 '',  'Disable Anti-Aliasing',   lambda: self.on_set_anti_aliasing(0), is_visible),
+                ('anti_alias_1', '1x',               '',                 '',  'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1), is_visible),
+                ('anti_alias_2', '2x',               '',                 '',  'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2), is_visible),
+                ('anti_alias_4', '4x',               '',                 '',  'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4), is_visible),
+                ('anti_alias_8', '8x',               '',                 '',  'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8), is_visible),
 
                 # mouse buttons
-                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
-                ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
-                ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
-                ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
+                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
+                ('measure_distance', 'Measure Distance',        'measure_distance.png', '',  'Measure the distance between two nodes', self.mouse_actions.on_measure_distance, is_visible),
+                ('highlight_cell',   'Highlight Cell',          '',                     '',  'Highlight a single cell', self.mouse_actions.on_highlight_cell, is_visible),
+                ('highlight_node',   'Highlight Node',          '',                     '',  'Highlight a single node', self.mouse_actions.on_highlight_node, is_visible),
 
                 # name, gui_name, png, shortcut, desc, func
-                ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
-                ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
+                ('probe_result',       'Probe the model and mark it with the value of a node/element', 'tprobe.png', '',  'Probe the displayed result', self.mouse_actions.on_probe_result, is_visible),
+                ('quick_probe_result', 'Quick Probe',                                                  '',           'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result, is_visible),
 
-                ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
-                ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
+                #Probe all the results at the given location (slow!)
+                ('probe_result_all',       'Probe All Results', 'tprobe_all.png', '',  'Probe results for all cases', self.mouse_actions.on_probe_result_all, is_visible),
+                ('quick_probe_result_all', 'Quick Probe All',   '',               'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all, is_visible),
 
-                ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
+                ('zoom', 'Zoom', 'zoom.png', '', 'Zoom In', self.mouse_actions.on_zoom, is_visible),
 
                 # font size
-                ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
-                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
+                ('font_size_increase', 'Increase Font Size', 'text_up.png',   'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size, is_visible),
+                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size, is_visible),
 
                 # picking
-                ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
-                ('highlight', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight),
-                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_menu),
-                ('mark_nodes_elements', 'Mark', 'tmark.png', None, 'Mark a list of nodes/elements', self.mark_obj.set_menu),
+                ('area_pick',                'Area Pick', 'tarea_pick.png', '', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
+                ('highlight',                'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
+                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.highlight_obj.set_menu, is_visible),
+                ('mark_nodes_elements',      'Mark',      'tmark.png',      '', 'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
             ]
 
         if hasattr(self, 'cutting_plane_obj'):
-            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu))
+            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', '', 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu, is_visible))
 
-        if 'nastran' in self.fmts:
+        if 'nastran' in self.fmt_order:
             tools += [
-                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
-                ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
-                ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
-                ('min', 'Min', '', None, 'Show/Hide Min Label', self.show_hide_min_actor),
-                ('max', 'Max', '', None, 'Show/Hide Max Label', self.show_hide_max_actor),
+                ('caero',           'Show/Hide CAERO Panels', '', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero_subpanels', 'Toggle CAERO Subpanels', '', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
+                ('conm2', 'Toggle CONM2s', '', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
+                ('min',   'Min',           '', '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
+                ('max',   'Max',           '', '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
             ]
         self.tools: list[Tool] = tools
         self.checkables: dict[str, bool] = checkables
+
+    def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
+                              ) -> list[Tool]:
+        """
+        file1, file2 are 1-based
+        shortcuts are 1-based Control+1
+
+        It's assumed that the files are already filtered
+        """
+        is_visible = True
+        recent_file_tools = []
+        for ifile, (fname, geometry_format) in enumerate(recent_files):
+            if ifile == NFILES_TO_SAVE:
+                break
+            label = fname
+            tooltip = f'Load {fname}'
+            image = ''
+            shortcut = f'Ctrl+{ifile+1}'
+            func = partial(self.on_load_geometry, fname, geometry_format)
+            #print(f'ifile={ifile} shortcut={shortcut}')
+            file_tool = (f'file{ifile+1:d}', label, image, shortcut, tooltip, func, is_visible)
+            recent_file_tools.append(file_tool)
+        if len(recent_file_tools) < NFILES_TO_SAVE:
+            is_visible = False
+            for jfile in range(ifile+1, NFILES_TO_SAVE):
+                label = f'<blank> file {jfile:d}'
+                tooltip = f'Load <blank>'
+                image = ''
+                shortcut = f'Ctrl+{jfile+1}'
+                #print(f'jfile={jfile} shortcut={shortcut}')
+                func = None
+                file_tool = (f'file{jfile+1:d}', label, image, shortcut, tooltip, func, is_visible)
+                recent_file_tools.append(file_tool)
+        return recent_file_tools
 
     def keyPressEvent(self, qkey_event):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
     def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None) -> None:
-        self.menu_bar_oder = menu_bar_order
+        self.menu_bar_order = menu_bar_order
         if menu_bar_order is None:
-            menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
+            menu_bar_order = ['menu_file', 'menu_view', 'menu_tools', 'menu_window', 'menu_help']
 
+        menubar: QMenuBar = self.menubar
         for key in menu_bar_order:
             if key == 'menu_file':
-                self.menu_file = self.menubar.addMenu('&File')
+                self.menu_file: QMenu = menubar.addMenu('&File')
             elif key == 'menu_view':
-                self.menu_view = self.menubar.addMenu('&View')
+                self.menu_view: QMenu = menubar.addMenu('&View')
+            elif key == 'menu_tools':
+                self.menu_tools: QMenu = menubar.addMenu('Tools')
+                self.menu_tools.setEnabled(False)
+                #self.menu_tools.setVisible(False)
             elif key == 'menu_window':
-                self.menu_window = self.menubar.addMenu('&Window')
+                self.menu_window: QMenu = menubar.addMenu('&Window')
             elif key == 'menu_help':
-                self.menu_help = self.menubar.addMenu('&Help')
+                self.menu_help: QMenu = menubar.addMenu('&Help')
             elif isinstance(key, tuple):
                 attr_name, name = key
-                submenu = self.menubar.addMenu(name)
+                submenu = menubar.addMenu(name)
                 setattr(self, attr_name, submenu)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(key)
         # always last
-        self.menu_hidden = self.menubar.addMenu('&Hidden')
+        self.menu_hidden = menubar.addMenu('&Hidden')
         self.menu_hidden.menuAction().setVisible(False)
 
     def _create_menu_items(self, actions=None,
                            create_menu_bar: bool=True,
-                           menu_bar_order=None) -> dict[str, tuple[QMenu, tuple[str, ...]]]:
+                           menu_bar_order=None) -> dict[str, MenuTuple]:
         if actions is None:
             actions = self.actions
 
@@ -457,9 +527,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
-            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'set_preferences', #'cutting_plane',
-            '',
+            'set_preferences', '', #'cutting_plane',
+            'camera_reset', '',
+            'wireframe', 'surface', 'edges', 'edges_black', '',
             'label_clear', 'label_reset', '',
             'legend', 'animation', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
@@ -471,8 +541,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                           'create_groups_by_model_group',]
 
         menu_view += [
-            '', 'clipping', #'axis',
-            'edges', 'edges_black',]
+            '', 'clipping', 'view', #'axis',
+        ]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
             self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
@@ -486,7 +556,15 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         menu_file = [
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
-            'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
+            'load_csv_user_points', 'load_csv_user_geom', 'script', '',
+            'screenshot', '']
+        if NFILES_TO_SAVE:
+            filei = [f'file{ifile+1:d}' for ifile in range(NFILES_TO_SAVE)]
+            #print(f'filei={filei}')
+            menu_file.extend(filei)
+            menu_file.append('')
+        menu_file.append('exit')
+
         toolbar_tools = [
             'reload', 'load_geometry', 'load_results',
             'front_view', 'back_view', 'top_view', 'bottom_view',
@@ -499,14 +577,15 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
             'wireframe', 'surface', 'edges']
         toolbar_tools += [
-            'camera_reset', 'view', 'screenshot', 'min', 'max', 'map_element_fringe',
+            'camera_reset',
+            'min', 'max', 'map_element_fringe',
             '', # 'exit'
         ]
         hidden_tools = ('cycle_results', 'rcycle_results',
                         'font_size_increase', 'font_size_decrease', 'highlight',
                         'quick_probe_result_all')
 
-        menu_items = {}
+        menu_items: dict[str, MenuTuple] = {}
         if create_menu_bar:
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
@@ -530,7 +609,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # in other words, it can set shortcuts
         #self._dummy_toolbar = self.addToolBar('Dummy toolbar')
         #self._dummy_toolbar.setObjectName('dummy_toolbar')
-        self.menubar = self.menuBar()
+        self.menubar: QMenuBar = self.menuBar()
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
         action_names = list(self.actions.keys())
@@ -542,11 +621,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         menu_items = self._create_menu_items(actions)
         self._populate_menu(menu_items)
 
-        self.actions['show_info'].setChecked(self.settings.show_info)
-        self.actions['show_debug'].setChecked(self.settings.show_debug)
-        self.actions['show_command'].setChecked(self.settings.show_command)
-        self.actions['show_warning'].setChecked(self.settings.show_warning)
-        self.actions['show_error'].setChecked(self.settings.show_error)
+        settings: Settings = self.settings
+        self.actions['show_info'].setChecked(settings.show_info)
+        self.actions['show_debug'].setChecked(settings.show_debug)
+        self.actions['show_command'].setChecked(settings.show_command)
+        self.actions['show_warning'].setChecked(settings.show_warning)
+        self.actions['show_error'].setChecked(settings.show_error)
 
 
     def _populate_menu(self, menu_items: dict[str, tuple[Any, Any]],
@@ -571,7 +651,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                             populate_sub_qtoolbar(menu, item, actions)
                         elif isinstance(menu, QMenu):
                             populate_sub_qmenu(menu, item, actions)
-                        else:
+                        else:  # pragma: no cover
                             raise TypeError(menu)
                         continue
                     elif not isinstance(item, str):
@@ -579,7 +659,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                     try:
                         action = self.actions[item] #if isinstance(item, str) else item()
-                    except Exception:
+                    except Exception:  # pragma: no cover
                         keysi = list(self.actions.keys())
                         self.log.error(str(keysi))
                         raise
@@ -617,7 +697,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #splane.SetPoint1(origin + dx * vx)
         #splane.SetPoint2(origin + dy * vy)
 
-        #actor = vtk.vtkLODActor()
+        #actor = vtkLODActor()
         #mapper = vtkPolyDataMapper()
         ##mapper.InterpolateScalarsBeforeMappingOn()
         ##mapper.UseLookupTableScalarRangeOn()
@@ -657,7 +737,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _prepare_actions_helper(self, icon_path: str,
                                 tools: list[Tool],
-                                actions,
+                                actions: dict[str, QAction],
                                 checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
@@ -666,9 +746,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if checkables is None:
             checkables = {}
 
-        used_shortcuts = {}
+        used_shortcuts: dict[str, str] = {}
         for tool in tools:
-            (name, txt, icon, shortcut, tip, func) = tool
+            (name, txt, icon, shortcut, tip, func, is_visible) = tool
+
             #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
             if name in actions:
                 self.log_error('trying to create a duplicate action %r' % name)
@@ -684,30 +765,36 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
             if name in checkables:
                 is_checked = checkables[name]
-                actions[name] = QAction(ico, txt, self, checkable=True)
-                actions[name].setChecked(is_checked)
+                action = QAction(ico, txt, self, checkable=True)
+                action.setChecked(is_checked)
             else:
-                actions[name] = QAction(ico, txt, self)
+                action = QAction(ico, txt, self)
+            update_shortcut_tip_func_visible(used_shortcuts, action, name,
+                                             shortcut, tip, func, is_visible)
+            actions[name] = action
 
-            if shortcut:
-                #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
-                if shortcut in BANNED_SHORTCUTS:
-                    raise RuntimeError(f'tool name={name!r} has a shortcut='
-                                       f'{shortcut!r} that is banned.  '
-                                       'Pick a different letter')
-                if shortcut in used_shortcuts:
-                    raise RuntimeError(f'tool name={name!r} has a shortcut='
-                                       f'{shortcut!r} that is already used.  '
-                                       'Pick a different letter.  '
-                                       f'Used={used_shortcuts[shortcut]}')
-                used_shortcuts[shortcut] = shortcut
-                actions[name].setShortcut(shortcut)
-                #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
+    def update_recent_files_menu(self) -> None:
+        """updates the File Menu with the updated input files"""
+        recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
+        #(f'file{jfile:d}', label, image, shortcut, tooltip, func, is_visible)
+        used_shortcuts: dict[str, str] = {}
+        for (name, label, image, shortcut, tooltip, func, is_visible) in recent_file_tools:
+            #print(f'updating name={name} -> {label}')
+            action: QAction = self.actions[name]
+            shortcut = ''
 
-            if tip:
-                actions[name].setStatusTip(tip)
-            if func:
-                actions[name].triggered.connect(func)
+            # the action is file0 which changes, so we have to disconnect
+            # the function
+            with contextlib.suppress(RuntimeError):
+                action.triggered.disconnect()
+            #if not is_visible:
+                # i don't think removing the shortcut is neccessary
+                # since we disconnect the function
+                #action.setShortcut(QKeySequence())  # remove shortcut
+            update_shortcut_tip_func_visible(used_shortcuts, action, name,
+                                             shortcut, tooltip, func, is_visible,
+                                             text=label)
+        del image
 
     def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
         """
@@ -732,15 +819,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             print(name, msg2)
             return
 
-        if 'DEBUG' in log_type and not self.settings.show_debug:
+        settings = self.settings
+        if 'DEBUG' in log_type and not settings.show_debug:
             return
-        elif 'INFO' in log_type and not self.settings.show_info:
+        elif 'INFO' in log_type and not settings.show_info:
             return
-        elif 'COMMAND' in log_type and not self.settings.show_command:
+        elif 'COMMAND' in log_type and not settings.show_command:
             return
-        elif 'WARNING' in log_type and not self.settings.show_warning:
+        elif 'WARNING' in log_type and not settings.show_warning:
             return
-        elif 'ERROR' in log_type and not self.settings.show_error:
+        elif 'ERROR' in log_type and not settings.show_error:
             return
 
         if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
@@ -936,7 +1024,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.load_nastran_geometry(None, None)
 
         #for cid, axes in self.axes.items():
-            #self.rend.AddActor(axes)
+            #rend.AddActor(axes)
         self.add_geometry()
         if nframes == 2:
             rend.AddActor(self.geom_actor)
@@ -952,47 +1040,64 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.geometry_properties['main'] = geom_props
 
         #self.addAltGeometry()
-        self.rend.GetActiveCamera().ParallelProjectionOn()
-        self.rend.SetBackground(*self.settings.background_color)
+        rend = self.rend
+        settings: Settings = self.settings
+        if settings.use_parallel_projection:
+            rend.GetActiveCamera().ParallelProjectionOn()
+        rend.SetBackground(*settings.background_color)
         #self.rend.SetBackground2(*self.background_color2)
 
-        self.rend.ResetCamera()
+        rend.ResetCamera()
         self.mouse_actions.set_style_as_trackball()
         self._build_vtk_frame_post()
 
     def on_reset_camera(self):
-        self.log_command('on_reset_camera()')
+        self.log_command('self.on_reset_camera()')
         self._simulate_key_press('r')
         self.vtk_interactor.Render()
 
-    def on_flip_edges(self):
+    def on_flip_edge_visibility(self) -> None:
         """turn edges on/off"""
-        self.is_edges = not self.is_edges
-        self.edge_actor.SetVisibility(self.is_edges)
+        settings = self.settings
+        is_edges_visible = not settings.is_edges_visible
+        self.on_set_edge_visibility(is_edges_visible, render=True)
+
+    def on_flip_edge_color(self) -> None:
+        settings = self.settings
+        is_edges_black = not settings.is_edges_black
+        self.on_set_edge_color(is_edges_black, render=True)
+
+    def on_set_edge_visibility(self, is_edges_visible: bool,
+                               render: bool=True) -> None:
+        self.settings.is_edges_visible = is_edges_visible
+        self.edge_actor.SetVisibility(is_edges_visible)
         # cart3d edge color isn't black...
         #self.edge_actor.GetProperty().SetColor(0, 0, 0)
         self.edge_actor.Modified()
         #self.widget.Update()
         #self._update_camera()
-        self.Render()
+        if render:
+            self.Render()
         #self.refresh()
-        self.log_command('on_flip_edges()')
+        self.log_command(f'self.on_set_edge_visibility(is_edges_visible={is_edges_visible}, render={render})')
 
-    def on_set_edge_visibility(self):
-        #self.edge_actor.SetVisibility(self.is_edges_black)
-        self.is_edges_black = not self.is_edges_black
-        if self.is_edges_black:
-            prop = self.edge_actor.GetProperty()
+    def on_set_edge_color(self, is_edges_black: bool,
+                          render: bool=True) -> None:
+        self.settings.is_edges_black = is_edges_black
+
+        prop = self.edge_actor.GetProperty()
+        if is_edges_black:
             prop.EdgeVisibilityOn()
             self.edge_mapper.SetLookupTable(self.color_function_black)
         else:
-            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
             self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_actor.Modified()
         prop.Modified()
-        self.vtk_interactor.Render()
-        self.log_command('on_set_edge_visibility()')
+        if render:
+            self.vtk_interactor.Render()
+        self.log_command(f'self.on_set_edge_color(is_edges_black={is_edges_black}, render={render})')
+        return
 
     #---------------------------------------------------------------------
     # groups
@@ -1256,7 +1361,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             render_window = self.vtk_interactor.GetRenderWindow()
             render_window.Render()
 
-    def update_all(self, render=True):
+    def update_all(self, render: bool=True):
         self.grid_selected.Modified()
 
         #selection_node.Update()
@@ -1292,7 +1397,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             render_window.Render()
 
 
-    def _setup_element_mask(self, create_grid_selected=True):
+    def _setup_element_mask(self, create_grid_selected: bool=True) -> None:
         """
         starts the masking
 
@@ -1344,13 +1449,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             )
         self.log = log
 
-    def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
-                                raise_error=False):
+    def on_load_geometry_button(self, infile_name=None, geometry_format=None,
+                                name: str='main',
+                                stop_on_failure: bool=False):
         """action version of ``on_load_geometry``"""
         self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
-                              name=name, plot=True, raise_error=raise_error)
+                              name=name, plot=True, stop_on_failure=stop_on_failure)
 
-    def _update_menu_bar_to_format(self, fmt, method):
+    def _update_menu_bar_to_format(self, fmt: str, method: str) -> None:
         """customizes the gui to be nastran/cart3d-focused"""
         self.menu_bar_format = fmt
         tools, menu_items = getattr(self, method)()
@@ -1390,7 +1496,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #"""loads a deflection file"""
         #self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
-    def setup_gui(self, is_gui=True):
+    def setup_gui(self, is_gui: bool=True) -> None:
         """
         Setup the gui
 
@@ -1402,7 +1508,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         assert self.fmts != [], f'supported_formats={self.supported_formats}'
         self.start_logging()
-        settings = QtCore.QSettings()
+        #qsettings = QtCore.QSettings()
+        qsettings = QSettingsLike()
+        if hasattr(qsettings, 'load_json'):
+            qsettings.load_json()
+
         self.create_vtk_actors()
 
         # build GUI and restore saved application state
@@ -1414,15 +1524,17 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if self.reset_settings or qt_version in [5, 'pyside']:
             #self.settings.reset_settings()
         #else:
-        self.settings.load(settings)
+        self.settings.load(qsettings)
 
+        self.set_tools()
         self.init_ui()
         if self.reset_settings:
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        unused_main_window_state = settings.value('mainWindowState')
-        self.create_corner_axis()
+        #unused_main_window_state = qsettings.value('main_window_state', default='')
+        self.tool_actions.create_corner_axis()
+        self.settings.finish_startup()
         #-------------
         # loading
         if is_gui:
@@ -1485,7 +1597,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.log_info("select_point = %s" % str(select_point))
 
     #def on_cell_picker(self):
-        #self.log_command("on_cell_picker()")
+        #self.log_command("self.on_cell_picker()")
         #picker = self.cell_picker
         #world_position = picker.GetPickPosition()
         #cell_id = picker.GetCellId()
@@ -1515,7 +1627,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
 
-    def make_gif(self, gif_filename, scale, istep=None,
+    def make_gif(self, gif_filename: str, scale: float,
+                 istep=None,
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase_fringe=None, icase_disp=None, icase_vector=None,
@@ -1523,10 +1636,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                  icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
                  icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                  icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
-                 time=2.0, animation_profile='0 to scale',
-                 nrepeat=0, fps=30, magnify=1,
-                 make_images=True, delete_images=False, make_gif=True, stop_animation=False,
-                 animate_in_gui=True):
+                 time: float=2.0,
+                 animation_profile: str='0 to scale',
+                 nrepeat: int=0, fps: int=30, magnify: int=1,
+                 make_images: bool=True,
+                 delete_images: bool=False,
+                 make_gif: bool=True,
+                 stop_animation: bool=False,
+                 animate_in_gui: bool=True) -> bool:
         """
         Makes an animated gif
 
@@ -1683,20 +1800,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             pass
         elif animate_in_gui:
             msg = (
-                'make_gif(%r, %s, istep=%s,\n'
-                '         min_value=%s, max_value=%s,\n'
-                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
-                #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
-                "         time=%s, animation_profile=%r,\n"
-                '         fps=%s, stop_animation=%s, animate_in_gui=%s)\n' % (
-                    gif_filename, scale, istep, min_value, max_value,
-                    animate_scale, animate_phase, animate_time,
-                    icase_msg,
-                    #icase_fringe, icase_disp, icase_vector,
-                    #icase_start, icase_end, icase_delta,
-                    time, animation_profile,
-                    fps, stop_animation, animate_in_gui)
+                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'    min_value={min_value}, max_value={max_value},\n'
+                f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'    animate_time={animate_time},\n{icase_msg}'
+                #'    icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                #'    icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                f'    time={time}, animation_profile={animation_profile!r},\n'
+                f'    nrepeat={nrepeat}, magnify={magnify},\n'
+                f'    make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
+                f'    fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
             # onesided has no advantages for in-gui animations and creates confusion
@@ -1730,19 +1843,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if not is_failed:
             msg = (
-                'make_gif(%r, %s, istep=%s,\n'
-                '         min_value=%s, max_value=%s,\n'
-                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
-                "         time=%s, animation_profile=%r,\n"
-                '         nrepeat=%s, fps=%s, magnify=%s,\n'
-                '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
-                '         animate_in_gui=%s)\n' % (
-                    gif_filename, scale, istep, min_value, max_value,
-                    animate_scale, animate_phase, animate_time,
-                    icase_msg,
-                    time, animation_profile,
-                    nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
-                    animate_in_gui)
+                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'    min_value={min_value}, max_value={max_value},\n'
+                f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'    animate_time={animate_time},\n{icase_msg}\n'
+                f"    time={time}, animation_profile={animation_profile!r},\n"
+                f'    nrepeat={nrepeat}, fps={fps}, magnify={magnify},\n'
+                f'    make_images={make_images}, delete_images={delete_images},\n'
+                f'    make_gif={make_gif},\n'
+                f'    stop_animation={stop_animation},\n'
+                f'    animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
 
@@ -1781,10 +1891,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self.mouse_actions.setup_mouse_buttons(mode='default', force=True)
         return is_failed
 
-    def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
-                         icase_fringe, icase_disp, icase_vector, scale, phase,
-                         animate_fringe, unused_animate_vector,
-                         normalized_frings_scale,
+    def animation_update(self,
+                         icase_fringe0: int, icase_disp0: int, icase_vector0: int,
+                         icase_fringe: int, icase_disp: int, icase_vector: int,
+                         scale: float, phase: float,
+                         animate_fringe: bool, unused_animate_vector: bool,
+                         normalized_fringe_scale: Optional[float],
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
@@ -1799,24 +1911,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self.cycle_results_explicit(icase_disp, explicit=True,
                                         min_value=min_value, max_value=max_value)
 
-        if icase_fringe is not None and icase_fringe != icase_fringe0:
-            is_valid = self.on_fringe(icase_fringe,
-                                      update_legend_window=False, show_msg=False)
-            if is_legend_shown:
-                # TODO: sort of a hack for the animation
-                # the fringe always shows the legend, but we may not want that
-                # just use whatever is active
-                self.show_legend()
-
-            if not is_valid:
-                self.log_error(f'Invalid Fringe Case {icase_fringe:d}')
-                return False
-
-        is_valid = self.animation_update_fringe(
-            icase_fringe, animate_fringe, normalized_frings_scale)
-        if not is_valid:
-            return is_valid
-
+        #-----------------------------------------------------------------------
         if icase_disp is not None:
             try:
                 # apply the deflection
@@ -1832,30 +1927,59 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             except(AttributeError, KeyError) as error:
                 self.log_error(f'Invalid Vector Case {icase_vector:d}{str(error)}')
                 return False
+
+        #-----------------------------------------------------------------------
+        if icase_fringe is not None and icase_fringe != icase_fringe0:
+            is_valid = self.on_fringe(icase_fringe,
+                                      update_legend_window=False, show_msg=False)
+            if is_legend_shown:
+                # TODO: sort of a hack for the animation
+                # the fringe always shows the legend, but we may not want that
+                # just use whatever is active
+                self.show_legend()
+
+            if not is_valid:
+                self.log_error(f'Invalid Fringe Case {icase_fringe:d}')
+                return False
+
+        is_valid = self.animation_update_fringe(
+            icase_fringe, animate_fringe, normalized_fringe_scale)
+        if not is_valid:
+            return is_valid
+
         is_valid = True
         return is_valid
 
-    def animation_update_fringe(self, icase_fringe, animate_fringe, normalized_frings_scale):
-        """helper method for ``animation_update``"""
+    def animation_update_fringe(self, icase_fringe: int,
+                                animate_fringe: bool,
+                                normalized_fringe_scale: Optional[float]) -> bool:
+        """
+        Updates the:
+         - vtk fringe
+         - scalar bar
+         - min/max actor location
+
+        """
         if animate_fringe:
             # e^(i*(theta + phase)) = sin(theta + phase) + i*cos(theta + phase)
-            is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_frings_scale)
+            is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_fringe_scale)
             if not is_valid:
                 return is_valid
 
             #icase = data.icase
             result_type = data.result_type
-            #location = data.location
+            location = data.location
             min_value = data.min_value
             max_value = data.max_value
             #norm_value = data.norm_value
-            #imin = data.imin
-            #imax = data.imax
+            imin = data.imin
+            imax = data.imax
             data_format = data.data_format
             nlabels = data.nlabels
             labelsize = data.labelsize
             ncolors = data.ncolors
             colormap = data.colormap
+            location = data.location
             #subcase_id = data.subcase_id
             #subtitle = data.subtitle
             #label = data.label
@@ -1866,7 +1990,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,
                                    is_shown=is_legend_shown)
+
             #obj.get_vector_array_by_phase(i, name, )
+            self._update_min_max_actors(location, icase_fringe,
+                                        imin, min_value,
+                                        imax, max_value)
         is_valid = True
         return is_valid
 
@@ -1972,13 +2100,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             for istep, icase_fringe, icase_disp, icase_vector, scale, phase in zip(
                     isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
-                normalized_frings_scale = scale / scale_max
+                normalized_fringe_scale = scale / scale_max
                 is_valid = self.animation_update(
                     icase_fringe0, icase_disp0, icase_vector0,
                     icase_fringe, icase_disp, icase_vector,
                     scale, phase,
                     animate_fringe, animate_vector,
-                    normalized_frings_scale,
+                    normalized_fringe_scale,
                     min_value, max_value)
                 if not is_valid:
                     return is_failed
@@ -2030,7 +2158,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
+    def _finish_results_io2(self, model_name: str,
+                            form, cases,
+                            reset_labels: bool=True):
         """
         Adds results to the Sidebar
 
@@ -2083,7 +2213,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         }
         case_keys = [0, 1, 2, 3, 4, 5, 6]
         """
-        self.turn_text_on()
+        for obj, (i, resname) in cases.items():
+            assert resname != 'main', obj
+        self.turn_corner_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
         # self.case_keys = cases.keys()
@@ -2111,7 +2243,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         data = []
         for key in self.case_keys:
             assert isinstance(key, integer_types), key
-            unused_obj, (i, unused_name) = self.result_cases[key]
+            unused_obj, (i, resname) = self.result_cases[key]
+            assert resname != 'main', resname
             tuple_data = (i, [])
             data.append(tuple_data)
 
@@ -2146,7 +2279,50 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
 
-    def clear_application_log(self, force=False):
+    def _set_methods_by_icase(self, icase: Optional[int]) -> bool:
+        """
+        fills up the Methods in the Sidebar
+
+        This is a callback function from the Sidebar
+        """
+        if icase is None:
+            return False
+        obj, (i, resname) = self.result_cases[icase]
+
+        obj = cast(Union[GuiResult, DisplacementResults], obj)
+        methods = obj.get_methods(i, resname)
+
+        data = []
+        for method in methods:
+            datai = (method, None, [])
+            data.append(datai)
+        self.res_widget.update_methods(data)
+
+        is_methods_visible = obj.has_methods_table(i, resname)
+        is_coord_visible, coords = obj.has_coord_transform(i, resname)
+        is_derivation_visible, min_max_averages_dict = obj.has_derivation_transform(i, resname)
+        is_nodal_combine_visible, combine_methods = obj.has_nodal_combine_transform(i, resname)
+        (is_enabled_fringe, is_checked_fringe,
+         is_enabled_disp, is_checked_disp,
+         is_enabled_vector, is_checked_vector) = obj.has_output_checks(i, resname)
+
+        self.res_widget.set_methods_table_visible(is_methods_visible)
+        self.res_widget.set_coord_transform_visible(is_coord_visible, coords)
+        self.res_widget.set_derivation_visible(is_derivation_visible, min_max_averages_dict) # min/max/avg
+        self.res_widget.set_nodal_combine_visible(is_nodal_combine_visible, combine_methods)
+        self.res_widget.set_output_checkbox(
+            is_enabled_fringe, is_checked_fringe,
+            is_enabled_disp, is_checked_disp,
+            is_enabled_vector, is_checked_vector)
+
+        #self.res_widget.set_displacement_scale_visible(is_visible)
+
+        x = 1
+        pass
+        return True
+
+
+    def clear_application_log(self, force: bool=False) -> None:
         """
         Clears the application log
 
@@ -2158,7 +2334,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # popup menu
         if force:
             self.log_widget.clear()
-            self.log_command('clear_application_log(force=%s)' % force)
+            self.log_command(f'self.clear_application_log(force={force})')
         else:
             widget = QWidget()
             title = 'Clear Application Log'
@@ -2167,7 +2343,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
-                self.log_command(f'clear_application_log(force={force})')
+                self.log_command(f'self.clear_application_log(force={force})')
 
     #---------------------------------------------------------------------------------------
     # PICKER
@@ -2202,7 +2378,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         renwin.PointSmoothingOn()
         renwin.SetMultiSamples(scale)
         self.vtk_interactor.Render()
-        self.log_command(f'on_set_anti_aliasing({scale!r})')
+        self.log_command(f'self.on_set_anti_aliasing({scale!r})')
 
     #---------------------------------------------------------------------------------------
 
@@ -2302,3 +2478,36 @@ def get_image_reader(image_filename: str):
         raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
     return image_reader
 
+def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
+                                     action: QAction,
+                                     name: str,
+                                     shortcut: str,
+                                     tip: str,
+                                     func: Callable,
+                                     is_visible: bool,
+                                     text: str='') -> None:
+
+    if shortcut:
+        #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
+        if shortcut in BANNED_SHORTCUTS:
+            raise RuntimeError(f'tool name={name!r} has a shortcut='
+                               f'{shortcut!r} that is banned.  '
+                               'Pick a different letter')
+        if shortcut in used_shortcuts:
+            raise RuntimeError(f'tool name={name!r} has a shortcut='
+                               f'{shortcut!r} that is already used.  '
+                               'Pick a different letter.  '
+                               f'Used={used_shortcuts[shortcut]}')
+        used_shortcuts[shortcut] = shortcut
+
+        #shortcut = _update_shortcut(shortcut)
+        action.setShortcut(shortcut)
+        #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
+
+    if text:
+        action.setText(text)
+    if tip:
+        action.setStatusTip(tip)
+    if func:
+        action.triggered.connect(func)
+    action.setVisible(is_visible)

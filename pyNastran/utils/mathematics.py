@@ -51,14 +51,15 @@ from scipy.integrate import quad  # type: ignore
 
 def get_abs_max(min_values: np.ndarray,
                 max_values: np.ndarray,
-                dtype: str='float32') -> tuple[np.ndarray]:
+                dtype: str='float32') -> np.ndarray:
     """Get return the value with the greatest magnitude, preserving sign."""
     min_values = np.asarray(min_values)
     max_values = np.asarray(max_values)
     imin = np.abs(min_values) > np.abs(max_values)
-    out = np.zeros(min_values.shape, dtype=dtype)
+    #out = np.zeros(min_values.shape, dtype=dtype)
+    out = max_values.copy()
     out[imin] = min_values[imin]
-    out[~imin] = max_values[~imin]
+    #out[~imin] = max_values[~imin]
     return out
 
     #nvalues = len(min_values)

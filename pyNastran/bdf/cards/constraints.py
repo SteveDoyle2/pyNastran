@@ -280,7 +280,7 @@ class SUPORT(Constraint):
         """
         nfields = len(card)
         assert len(card) > 1, card
-        nterms = int(nfields / 2.)
+        nterms = nfields // 2
         n = 1
         nodes = []
         components = []

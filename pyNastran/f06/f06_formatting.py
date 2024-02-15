@@ -30,6 +30,11 @@ def write_float_13e(val: float) -> str:
         val2 = ' 0.0'
     return val2
 
+def write_float_13e_long(val: float) -> str:
+    """writes a Nastran formatted 13.6 float"""
+    #assert isinstance(val, (float, np.float32, np.float64)), val
+    val2 = '%13.6E' % val
+    return val2
 
 def write_floats_10e(vals: list[float]) -> list[str]:
     """writes a series of Nastran formatted 10.3 floats"""
@@ -52,6 +57,13 @@ def write_floats_12e(vals: list[float]) -> list[str]:
         vals2.append(v2)
     return vals2
 
+def write_floats_12e_long(vals: list[float]) -> list[str]:
+    """writes a series of Nastran formatted 12.5 floats"""
+    vals2 = []
+    for v in vals:
+        v2 = '%12.5E' % v
+        vals2.append(v2)
+    return vals2
 
 def write_floats_13e(vals: list[float]) -> list[str]:
     """writes a series of Nastran formatted 13.6 floats"""
@@ -63,6 +75,13 @@ def write_floats_13e(vals: list[float]) -> list[str]:
         vals2.append(v2)
     return vals2
 
+def write_floats_13e_long(vals: list[float]) -> list[str]:
+    """writes a series of Nastran formatted 13.6 floats"""
+    vals2 = []
+    for v in vals:
+        v2 = '%13.6E' % v
+        vals2.append(v2)
+    return vals2
 
 def write_imag_floats_13e(vals: list[float], is_mag_phase: bool) -> list[str]:
     vals2 = []

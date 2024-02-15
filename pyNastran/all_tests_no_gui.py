@@ -3,7 +3,14 @@
 
 import sys
 import os
+try:
+    import tables
+    IS_TABLES = True
+except ModuleNotFoundError:
+    IS_TABLES = False
+
 import pyNastran
+
 pkg_path = pyNastran.__path__[0]
 
 # , 'py_to_rst.py'
@@ -45,6 +52,8 @@ try:
     from pyNastran.dev.solver.test_springs import *
 except ImportError:  # pragma: no cover
     pass
+if IS_TABLES:
+    from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 
 
 if __name__ == "__main__":  # pragma: no cover

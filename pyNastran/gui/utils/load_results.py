@@ -22,13 +22,16 @@ from pyNastran.utils import _filename
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 from pyNastran.converters.stl.stl import read_stl
 
 
 def create_res_obj(islot: int,
                    headers: list[str], # str too?
                    header: str,  # list[str] too?
-                   A, fmt_dict, result_type,
+                   A: dict[str, np.ndarray],
+                   fmt_dict, result_type,
                    is_deflection: bool=False, is_force: bool=False,
                    dim_max=None, xyz_cid0=None, colormap: str='jet') -> tuple[Any, str]:
     """
@@ -60,6 +63,7 @@ def create_res_obj(islot: int,
         required for forces/displacements
     xyz_cid0 : (nnodes, 3)
         the points
+
     """
     #print('create_res_object, header=%r' % header)
     datai = A[header]
@@ -95,6 +99,16 @@ def create_res_obj(islot: int,
         dxyz = datai
         if is_deflection:
             xyz = xyz_cid0
+            #disp_scalar = None
+            #disp_scales = None
+            #res_obj = DisplacementResults2(
+            #    islot, xyz, dxyz, disp_scalar, disp_scales,
+            #    dim_max=dim_max, data_format='%e',
+            #    nlabels=None, labelsize=None, ncolors=None,
+            #    colormap='',
+            #    #set_max_min=False, uname='DisplacementResults',
+            #)
+
             res_obj = DisplacementResults(
                 #subcase_id, titles, headers, xyz, dxyz, unused_scalar
                 islot, titles, headers,
@@ -116,7 +130,9 @@ def create_res_obj(islot: int,
         raise RuntimeError('vector_size=%s' % (vector_size))
     return res_obj, title
 
-def load_deflection_csv(out_filename: str, encoding: str='latin1'):
+def load_deflection_csv(out_filename: str,
+                        encoding: str='latin1') -> tuple[dict[str, np.ndarray],
+                                                         Any, Any, Any]:
     """
     The GUI deflection CSV loading function.
 
@@ -141,6 +157,8 @@ def load_deflection_csv(out_filename: str, encoding: str='latin1'):
                 ext, len(names), delimiter, dtype)
             raise RuntimeError(msg)
 
+    # names_without_index = [x, y, z]
+    # fmt_dict_without_index = {'x': '%.3f', 'y': '%.3f', 'z': '%.3f'}
     names_without_index = names[1:]
     fmt_dict_without_index = {key:fmt_dict[key] for key in names_without_index}
 
@@ -301,7 +319,7 @@ def _load_format_header(file_obj, ext, force_float=False):
     }
     return names, fmt_dict, dtype, delimiter
 
-def load_user_geom(fname, log=None, encoding='latin1'):
+def load_user_geom(fname: str, log=None, encoding: str='latin1'):
     """
     Loads a file of the form:
 

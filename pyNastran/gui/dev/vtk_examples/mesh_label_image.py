@@ -83,7 +83,7 @@ for index in range(1, int(srange[1]) + 1):
     point_normal_array = triangle_cell_normals.GetOutput().GetCellData().GetNormals()
     quality_array = triangle_cell_mesh_quality.GetOutput().GetCellData().GetArray("Quality")
 
-    if point_normal_array.GetNumberOfTuples() != qualityArray.GetNumberOfTuples():
+    if point_normal_array.GetNumberOfTuples() != quality_array.GetNumberOfTuples():
         print("Error! Sizes of normal array and area array dont equal!")
         exit(1)
 

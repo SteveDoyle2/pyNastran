@@ -3,14 +3,19 @@ defines:
  - MarkActions
 
 """
-from typing import Optional, Any
+from __future__ import annotations
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
-from vtk import vtkSelection, vtkExtractSelection
+from vtkmodules.vtkCommonDataModel import vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+
 from pyNastran.gui.vtk_rendering_core import vtkBillboardTextActor3D
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 
 class MarkActions:
@@ -92,8 +97,12 @@ class MarkActions:
         assert isinstance(case_key, integer_types), case_key
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
-        result_values = case[node_id]
+        #method = obj.get_methods(i, res_name)[0]
+
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
+            return None
+        result_values = values[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
@@ -176,14 +185,17 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
+        #method = obj.get_methods(i, res_name)[0]
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
+            return None
 
         try:
-            result_values = case[cell_id]
+            result_values = values[cell_id]
         except IndexError:
-            msg = ('case[cell_id] is out of bounds; length=%s\n'
+            msg = ('values[cell_id] is out of bounds; length=%s\n'
                    'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), res_name, cell_id, case_key))
+                       len(values), res_name, cell_id, case_key))
             raise IndexError(msg)
 
         grid = self.gui.grid_selected
@@ -260,13 +272,16 @@ class MarkActions:
 
         (obj, (i, res_name)) = case
         unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
+        #method = obj.get_methods(i, res_name)
+        is_value, values = get_plottable_values(obj, i, res_name)
+        if not is_value:
+            return None
 
         try:
-            result_values = case[cell_ids]
+            result_values = values[cell_ids]
         except IndexError:
             msg = (
-                f'case[cell_id] is out of bounds; length={len(case)}\n'
+                f'values[cell_id] is out of bounds; length={len(values)}\n'
                 f'result_name={res_name!r} cell_id={cell_ids} case_key={case_key}\n')
             raise IndexError(msg)
 
@@ -318,7 +333,7 @@ class MarkActions:
         i = np.searchsorted(all_nids, nids)
         xyz = all_xyz[i, :]
 
-        #ugrid = vtk.vtkUnstrucuturedGrid()
+        #ugrid = vtkUnstrucuturedGrid()
         points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
         ugrid = create_unstructured_point_grid(points, npoints)
         actor = self.gui.mouse_actions.create_highlighted_actor(
@@ -343,14 +358,14 @@ class MarkActions:
         #all_eids = self.gui.get_element_ids(model_name=model_name, ids=None)
         #cell_ids = np.searchsorted(all_eids, eids)
 
-        #ids = vtk.vtkIdTypeArray()
+        #ids = vtkIdTypeArray()
         #ids.SetNumberOfComponents(1)
         #for cell_id in cell_ids:
             #ids.InsertNextValue(cell_id)
 
-        #selection_node = vtk.vtkSelectionNode()
-        #selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        #selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        #selection_node = vtkSelectionNode()
+        #selection_node.SetFieldType(vtkSelectionNode.CELL)
+        #selection_node.SetContentType(vtkSelectionNode.INDICES)
         #selection_node.SetSelectionList(ids)
 
         #actor = self._highlight_picker_by_selection_node(
@@ -478,7 +493,9 @@ def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0):
         slot.append(create_annotation(gui, texti, xi, yi, zi))
     return slot
 
-def create_annotation(gui, text, x, y, z):
+def create_annotation(gui: MainWindow,
+                      text: str,
+                      x: float, y: float, z: float) -> vtkBillboardTextActor3D:
     """
     Creates the actual annotation and appends it to slot
 
@@ -531,3 +548,16 @@ def create_annotation(gui, text, x, y, z):
     #camera.GetClippingRange()
     #camera.GetFocalPoint()
     return text_actor
+
+def get_plottable_values(obj, i, res_name) -> tuple[bool, Optional[np.ndarray]]:
+    """returns a vector -> fringe depending on what's available"""
+    is_value = False
+    fringe, vector = obj.get_fringe_vector_result(i, res_name)
+
+    if vector is None:
+        if fringe is not None:
+            vector = fringe
+        else:
+            return is_value, None
+    is_values = True
+    return is_values, vector

@@ -19,6 +19,7 @@ from qtpy.QtWidgets import (
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, check_color
+from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
@@ -28,6 +29,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
     #check_name_str, check_name_length, check_format, check_format_str,
 )
 from pyNastran.gui.utils.wildcards import wildcard_csv
+
 
 class CuttingPlaneWindow(PyDialog):
     """
@@ -466,9 +468,9 @@ class CuttingPlaneWindow(PyDialog):
     #---------------------------------------------------------------------------
 
     def on_validate(self):
-        p1_cidi = self.p1_cid_pulldown.currentText()
-        p2_cidi = self.p2_cid_pulldown.currentText()
-        zaxis_cidi = self.zaxis_cid_pulldown.currentText()
+        p1_cidi = get_combo_box_text(self.p1_cid_pulldown)
+        p2_cidi = get_combo_box_text(self.p2_cid_pulldown)
+        zaxis_cidi = get_combo_box_text(self.zaxis_cid_pulldown)
         p1_cid = int(p1_cidi) if 'Global' not in p1_cidi else 0
         p2_cid = int(p2_cidi) if 'Global' not in p2_cidi else 0
         zaxis_cid = int(zaxis_cidi) if 'Global' not in zaxis_cidi else 0
@@ -561,7 +563,9 @@ def get_zaxis(win_parent, zaxis_method_pulldown, zaxis_x_edit, zaxis_y_edit, zax
         raise NotImplementedError(zaxis_method)
     return flag1, flag2, flag3, zaxis_cid, zaxis
 
-def get_pulldown_text(method_int, methods, pulldown):
+def get_pulldown_text(method_int: int,
+                      methods: list[str],
+                      pulldown: QComboBox):
     if method_int is None:
         #method = pulldown.getText()
         method = pulldown.currentText()

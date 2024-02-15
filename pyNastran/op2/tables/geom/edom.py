@@ -12,7 +12,6 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, 
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from .utils import get_minus1_start_end
 
-#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR
 from pyNastran.op2.errors import DoubleCardError
 DSCREEN_INT_TO_RTYPE = {
@@ -54,18 +53,18 @@ FLAG_TO_RESP_NX = {
     15 : 'CEIG',
     17 : 'Compliance',
     19 : 'ERP',
-    20: 'FRDISP',
-    21: 'FRVELO',
-    22: 'FRACCL',
-    23: 'FRSPCF',
-    24: 'FRSTRE',
-    25: 'FRFORC',
-    26: 'RMSDISP',
-    27: 'RMSVELO',
-    28: 'RMSACCL',
-    29: 'PSDDISP',
-    30: 'PSDVELO',
-    31: 'PSDACCL',
+    20 : 'FRDISP',
+    21 : 'FRVELO',
+    22 : 'FRACCL',
+    23 : 'FRSPCF',
+    24 : 'FRSTRE',
+    25 : 'FRFORC',
+    26 : 'RMSDISP',
+    27 : 'RMSVELO',
+    28 : 'RMSACCL',
+    29 : 'PSDDISP',
+    30 : 'PSDVELO',
+    31 : 'PSDACCL',
 
     60 : 'TDISP',
     61 : 'TVELO',
@@ -578,7 +577,7 @@ class EDOM(GeomCommon):
             n += ntotal
             dconstrs.append(dconstr)
         assert n == len(data), f'n={n} ndata={len(data)}'
-        op2.to_msc('; DCONSTR-32 found')
+        #op2.to_msc('; DCONSTR-32 found')
         return n, dconstrs
 
     def _read_dscreen(self, data: bytes, n: int) -> int:
@@ -610,14 +609,17 @@ class EDOM(GeomCommon):
                 rtype = DSCREEN_INT_TO_RTYPE[rtype_int]
             elif rtype_int == 7:  # STRAIN/FORCE/EQUA?
                 # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mereiglc.op2
-                #DSCREEN,DISP,-1000.0,20
-                #DSCREEN,STRESS,-1000.0,20
-                #DSCREEN,STRAIN,-1000.0,20
-                #DSCREEN,FORCE,-1000.0,20
-                #DSCREEN,EQUA,-1000.0,20
-                #DSCREEN,EIGN,-1000.0
-                #DSCREEN,LAMA,-1000.0
-
+                #DSCREEN,DISP,-1000.0,20       -> 5
+                #DSCREEN,STRESS,-1000.0,20     -> 20
+                #DSCREEN,STRAIN,-1000.0,20     -> ?
+                #DSCREEN,FORCE,-1000.0,20      -> ?
+                #DSCREEN,EQUA,-1000.0,20       -> ?
+                #DSCREEN,EIGN,-1000.0          -> 4
+                #DSCREEN,LAMA,-1000.0          -> 3
+                #STRESS = 20 ??? seems like an odd choice
+                #EQUA   = 7, 8, 91  (probably 91)
+                #FORCE  = 7, 8, 91
+                #STRAIN = 7, 8, 91
                 rtype = 'STRAIN?'
                 msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
                 continue
@@ -639,11 +641,11 @@ class EDOM(GeomCommon):
                 msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
                 continue
                 #raise NotImplementedError(f'rtype_int={rtype_int}? trs={trs} nstr={nstr}')
-            #op2.log.info(f'rtype_int={rtype_int} trs={trs} nstr={nstr}')
+            op2.log.info(f'rtype={rtype} rtype_int={rtype_int} trs={trs} nstr={nstr}')
             dscreen = op2.add_dscreen(rtype, trs=trs, nstr=nstr)
             dscreen.validate()
             str(dscreen)
-            #print(dscreen.rstrip())
+            op2.log.info(dscreen.rstrip())
         assert n == len(data), f'n={n} ndata={len(data)}'
         if msg:
             msg2 = 'Error reading DSCREEN\n' + msg
@@ -1340,18 +1342,6 @@ class EDOM(GeomCommon):
           8 ATTA I Response attribute
           9 ATTB I Response attribute
           10 MONE I Entry is -1
-        FLAG = 17 Compliance
-          5 UNDEF(2) None
-          7 UNDEF I Reserved for SEID for compliance DRESP1
-          8 UNDEF(2) None
-          10 MONE I Entry is -1
-        FLAG = 19 ERP
-          5 UNDEF(2) None
-          7 REGION I Region identifier
-          8 ATTA   I Response attribute
-          9 ATTB   I Frequency or real code for character input, or -1=spawn)
-          10 ATTi  I Panel SET3 IDs
-          Word 10 repeats until -1 occurs
         FLAG = 20 FRDISP
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
@@ -1501,8 +1491,10 @@ class EDOM(GeomCommon):
             flag_to_resp = FLAG_TO_RESP_NX
 
         #self.show_data(data[n:], types='qds')
-        ints = np.frombuffer(data[n:], op2.idtype8).copy()
-        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        datan = data[n:]
+        #strings = np.frombuffer(datan, '|S4').copy()
+        ints = np.frombuffer(datan, op2.idtype8).copy()
+        floats = np.frombuffer(datan, op2.fdtype8).copy()
         #print(ints.tolist())
         istart, iend = get_minus1_start_end(ints)
         #if self.size == 4:
@@ -1534,6 +1526,7 @@ class EDOM(GeomCommon):
                 #ddd
             return attb
 
+        #is_nx = True
         size = self.size
         idresps_to_skip = set()
         for (idresp, i0, i1) in zip(count(), istart, iend):
@@ -1561,14 +1554,25 @@ class EDOM(GeomCommon):
                 # WEIGHT
                 # 5 UNDEF(2) None
                 # 7 REGION I Region identifier for constraint screening
-                # 8 ATTA   I Response attribute (-10 for DWEIGHT which is the topology optimization design weight
+                # 8 ATTA   I Response attribute
+                #   -10 for DWEIGHT which is the topology optimization design weight
                 # 9 ATTB   I Response attribute
                 # 10 MONE  I Entry is -1
+                #
+                #
+                #ints    = (13, 'WGT     ', 1, '        ', 0,   -10, -9999, -1)
+                #floats  = (13, 'WGT     ', 1, '        ', 0.0, nan, nan, nan)
+                #DRESP1, 13, WGT, DWEIGHT
+
                 region, atta, attb = ints[i0+6:i0+9]
                 property_type = None
                 #response_type = 'WEIGHT'
-                assert atta == 33, atta
+                if atta == -10:
+                    atta = 'DWEIGHT'
+                else:
+                    assert atta == 33, atta
                 assert attb == -9999, attb
+
                 atta = None
                 attb = None
                 atti = None
@@ -1689,10 +1693,16 @@ class EDOM(GeomCommon):
                 #   7 UNDEF I Reserved for SEID for compliance DRESP1
                 #   8 UNDEF(2) None
                 #   10 MONE I Entry is -1
+                #
+                # DRESP1, 12, CMPL1, CMPLNCE
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
+                #print('ints:', ints[i0:i0+10])
+                #print('floats:', floats[i0:i0+10])
+                #print('strings:', strings[i0:i0+10])
                 atti = None
                 #print(17, region, atta, attb)
+
             elif flag == 19 and is_nx: # ERP
                 # FLAG = 19 ERP
                 #   5 UNDEF(2) None
@@ -1895,7 +1905,7 @@ class EDOM(GeomCommon):
                 print('floats =', floats)
                 continue
             else:
-                raise NotImplementedError(flag)
+                raise NotImplementedError((flag, is_nx))
 
             #print(response_type)
             if property_type == '':

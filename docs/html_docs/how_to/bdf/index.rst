@@ -3,8 +3,9 @@ How To: BDF
 ###########
 
 .. toctree::
-   code_organization
-   read_write
+   bdf_headers
+   bdf_model_groups
    mass_properties
-   equivalence
-   renumber
+
+..
+   code_organization, read_write, equivalence, renumber

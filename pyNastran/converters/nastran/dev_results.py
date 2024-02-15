@@ -1,6 +1,6 @@
 from copy import deepcopy
 from numpy import zeros
-from numpy.linalg import norm  # type: ignore
+from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
@@ -60,7 +60,7 @@ class TransientElementResults:
             ntimes = 1
             self.default_mins = zeros(1, dtype=self.dxyz.dtype)
             self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
-            normi = norm(self.dxyz, axis=1)
+            normi = safe_norm(self.dxyz, axis=1)
             self.default_mins[0] = normi.min().real
             self.default_maxs[0] = normi.max().real
         elif self.dim == 3:
@@ -68,7 +68,7 @@ class TransientElementResults:
             self.default_mins = zeros(ntimes)
             self.default_maxs = zeros(ntimes)
             for itime in range(ntimes):
-                normi = norm(self.dxyz[itime, :, :], axis=1)
+                normi = safe_norm(self.dxyz[itime, :, :], axis=1)
                 self.default_mins[itime] = normi.min().real
                 self.default_maxs[itime] = normi.max().real
 
@@ -103,7 +103,7 @@ class TransientElementResults:
     #-------------------------------------
     # getters
 
-    def get_header(self, i, unused_name):
+    def get_annotation(self, i, unused_name):
         return self.headers[i]
 
     #def get_phase(self, i, name):
@@ -114,7 +114,7 @@ class TransientElementResults:
     def get_data_format(self, i, unused_name):
         return self.data_formats[i]
 
-    def get_title(self, i, unused_name):
+    def get_legend_title(self, i, unused_name):
         return self.titles[i]
 
     def get_min_max(self, i, unused_name):
@@ -134,7 +134,7 @@ class TransientElementResults:
             #return
         #self.phases[i] = phase
 
-    def set_title(self, i, unused_name, title):
+    def set_legend_title(self, i, unused_name, title):
         self.titles[i] = title
 
     def set_min_max(self, i, unused_name, min_value, max_value):
@@ -146,7 +146,7 @@ class TransientElementResults:
     def get_default_data_format(self, i, unused_name):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i, unused_name):
+    def get_default_min_max(self, i, unused_name) -> tuple[float, float]:
         return self.default_mins[i], self.default_maxs[i]
 
     def get_nlabels_labelsize_ncolors_colormap(self, unused_i, unused_name):
@@ -159,7 +159,7 @@ class TransientElementResults:
         self.ncolors = ncolors
         self.colormap = colormap
 
-    #def get_default_min_max(self, i, name):
+    #def get_default_min_max(self, i, name) -> tuple[float, float]:
         #return self.min_default[i], self.max_default[i]
 
     #def get_default_scale(self, i, name):
@@ -173,7 +173,7 @@ class TransientElementResults:
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i, unused_sname):
+    def get_default_legend_title(self, i, unused_sname):
         return self.titles_default[i]
 
     #-------------------------------------
@@ -188,7 +188,7 @@ class TransientElementResults:
         return 'centroid'
 
     def get_vector_size(self, unused_i, unused_name):
-        """the result size"""
+        """vector_size=1 is the default and this vector has 3 components"""
         return 3
 
     #-------------------------------------
@@ -199,19 +199,19 @@ class TransientElementResults:
         else:
             return ['node real', 'node imag', 'node magnitude', 'node phase']
 
-    def get_plot_value(self, i, unused_name):
-        if self.is_real:
-            if self.dim == 2:
-                dxyz = self.dxyz
-            elif self.dim == 3:
-                dxyz = self.dxyz[i, :]
-            else:
-                raise NotImplementedError('dim=%s' % self.dim)
-        else:
-            dxyz = self._get_complex_displacements(i)
+    #def get_plot_value(self, i, unused_name):
+        #if self.is_real:
+            #if self.dim == 2:
+                #dxyz = self.dxyz
+            #elif self.dim == 3:
+                #dxyz = self.dxyz[i, :]
+            #else:
+                #raise NotImplementedError('dim=%s' % self.dim)
+        #else:
+            #dxyz = self._get_complex_displacements(i)
 
-        assert len(dxyz.shape) == 2, dxyz.shape
-        return dxyz
+        #assert len(dxyz.shape) == 2, dxyz.shape
+        #return dxyz
 
     #def _get_complex_displacements_by_phase(self, i, phase=0.):
         #"""
@@ -226,7 +226,7 @@ class TransientElementResults:
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    def get_result(self, i, unused_name):
+    def get_fringe_vector_result(self, i, unused_name):
         if self.is_real:
             if self.dim == 2:
                 # single result
@@ -243,15 +243,8 @@ class TransientElementResults:
             dxyz = self._get_complex_displacements(i)
 
         assert len(dxyz.shape) == 2, dxyz.shape
-        return dxyz
-
-    #@property
-    #def scalar(self):
-        #return self.dxyz_norm
-
-    #def get_scalar(self, i, name):
-        ##print(self.dxyz_norm)
-        #return self.dxyz_norm
+        normi = safe_norm(dxyz, axis=1)
+        return normi, dxyz
 
     def get_vector_result(self, i, name):
         assert len(self.xyz.shape) == 2, self.xyz.shape

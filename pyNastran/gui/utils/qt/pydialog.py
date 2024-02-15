@@ -5,10 +5,11 @@ defines:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from pyNastran.gui.qt_version import qt_version
+#from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
-from qtpy.QtWidgets import QDialog, QComboBox, QLineEdit
+from qtpy.QtWidgets import QDialog, QLineEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -46,7 +47,9 @@ class PyDialog(QDialog):
         super(PyDialog, self).__init__(win_parent)
         self.out_data = data
         self.win_parent = win_parent
-        self.font_size = None
+
+        # we set this to 0 to indicate we haven't called on_font yet
+        self.font_size = 0 # data['font_size']
 
     def set_font_size(self, font_size):
         """
@@ -69,16 +72,19 @@ class PyDialog(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
-            self.on_cancel()
+            if hasattr(self, 'on_cancel'):
+                self.on_cancel()
+            else:
+                self.closeEvent(event)
 
 def check_patran_syntax(cell, pound=None):
     text = str(cell.text())
     try:
         values = parse_patran_syntax(text, pound=pound)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return values, True
     except ValueError as error:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
         return None, False
 
@@ -86,48 +92,13 @@ def check_patran_syntax_dict(cell, pound=None):
     text = str(cell.text())
     try:
         value = parse_patran_syntax_dict(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         cell.setToolTip('')
         return value, True
     except (ValueError, SyntaxError, KeyError) as error:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
         return None, False
-
-def make_combo_box(items, initial_value):
-    """
-    Makes a QComboBox, sets the items, and sets an initial value.
-
-    Parameters
-    ----------
-    items : list[str]
-        the values of the combo box
-    initial_value : str
-        the value to set the combo box to
-
-    Returns
-    -------
-    combo_box : QComboBox
-        the pulldown
-    """
-    assert initial_value in items, 'initial_value=%r items=%s' % (initial_value, items)
-    combo_box = QComboBox()
-    combo_box.addItems(items)
-    set_combo_box_text(combo_box, initial_value)
-
-    if initial_value not in items:
-        msg = 'initial_value=%r is not supported in %s' % (initial_value, items)
-        raise RuntimeError(msg)
-    return combo_box
-
-def set_combo_box_text(combo_box, value):
-    """sets the combo_box text"""
-    if qt_version == 'pyside':
-        items = [combo_box.itemText(i) for i in range(combo_box.count())]
-        j = items.index(value)
-        combo_box.setCurrentIndex(j)
-    else:
-        combo_box.setCurrentText(value)
 
 def check_color(color_float):
     assert len(color_float) == 3, color_float

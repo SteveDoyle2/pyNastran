@@ -1,5 +1,6 @@
 import sys
 import vtk
+from vtk import vtkPoints
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor,
@@ -48,7 +49,7 @@ def main():
     # Now create a control mesh, in this case a octagon that encloses
     # the point set
 
-    points = vtk.vtkPoints()
+    points = vtkPoints()
     points.SetNumberOfPoints(6)
     points.SetPoint(0,
                     bounds[0] - .1 * (bounds[1] - bounds[0]),

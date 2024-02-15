@@ -11,7 +11,7 @@ with warnings.catch_warnings():  # avoid an imp module deprecation warning
 
 import numpy
 import scipy
-from pyNastran.gui.vtk_common_core import VTK_VERSION # import vtk
+from pyNastran.gui.vtk_common_core import VTK_VERSION
 import docopt
 import pyNastran
 
@@ -211,6 +211,8 @@ def get_packages() -> dict[str, str]:
         'cpylog' : cpylog.__version__,
         'matplotlib' : 'N/A',
         'pandas' : 'N/A',
+        'h5py' : 'N/A',
+        'tables' : 'N/A',
         'imageio' : 'N/A',
         'PIL' : 'N/A',
         'vtk' : VTK_VERSION,
@@ -223,7 +225,7 @@ def get_packages() -> dict[str, str]:
     if 'pyside' in qt_name.lower():
         del packages['QScintilla2']
 
-    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'pygments']:
+    for name in ['matplotlib', 'pandas', 'h5py', 'tables', 'imageio', 'PIL', 'pygments']:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:

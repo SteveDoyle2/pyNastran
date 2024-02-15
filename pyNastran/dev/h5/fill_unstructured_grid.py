@@ -2,7 +2,6 @@ from __future__ import annotations
 from itertools import count
 import numpy as np
 import h5py
-import vtk
 import vtkmodules
 
 from vtk.numpy_interface import dataset_adapter as dsa
@@ -34,7 +33,7 @@ def numpy_to_vtk_points(nodes: np.ndarray,
     points_array = numpy_to_vtk(
         num_array=nodes,
         deep=deep,
-        array_type=vtk.VTK_FLOAT,
+        array_type=VTK_FLOAT,
     )
     points.SetData(points_array)
     return points

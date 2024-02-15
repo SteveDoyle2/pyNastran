@@ -32,12 +32,14 @@ from numpy import unique, hstack
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
     integer_string_or_blank, integer_or_double, #parse_components,
     modal_components_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -579,7 +581,7 @@ class FREQ1(BaseCard):
         self.freqs = unique(freqs)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ1 card from ``BDF.add_card(...)``
 
@@ -592,9 +594,29 @@ class FREQ1(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-        f1 = double_or_blank(card, 2, 'f1', 0.0)
+        f1 = double_or_blank(card, 2, 'f1', default=0.0)
         df = double(card, 3, 'df')
-        ndf = integer_or_blank(card, 4, 'ndf', 1)
+        ndf = integer_or_blank(card, 4, 'ndf', default=1)
+        assert len(card) <= 5, f'len(FREQ card) = {len(card):d}\ncard={card}'
+        return FREQ1(sid, f1, df, ndf, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a FREQ1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        f1 = double_or_blank(card, 2, 'f1', default=0.0)
+        df = force_double(card, 3, 'df')
+        ndf = integer_or_blank(card, 4, 'ndf', default=1)
         assert len(card) <= 5, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
@@ -755,6 +777,49 @@ class FREQ3(FREQ):
     def validate(self):
         assert self.freq_type in ['LINEAR', 'LOG'], 'freq_type=%r' % self.freq_type
 
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        f1 = self.f1
+        f2 = self.f2
+        freq_type = self.freq_type
+        cluster = 1 / self.cluster
+        nef = self.nef
+        if f1 == f2:
+            return np.array([f1], dtype='float64')
+
+        natural_freq2 = np.unique(np.hstack([[f1, f2], natural_freq]))
+        ifreq = (f1 <= natural_freq2) & (natural_freq2 <= f2)
+        natural_freq3 = natural_freq2[ifreq]
+        #f1_plus_f2 = 0.5 * (f1s + f2s)
+        #f2_minus_f1 = 0.5 * (f2s - f1s)
+        #nef = 11
+        #cluster = 1 / 0.25
+        k = np.arange(nef, dtype='int32')
+        zeta = -1 + 2 * k / (nef - 1)
+        zeta2 = np.abs(zeta) ** cluster * np.sign(zeta)
+
+        #f1s = [10.]
+        #f2s = [20.]
+
+        frequencies_list = []
+        if freq_type == 'LINEAR':
+            f1s = natural_freq3[:-1]
+            f2s = natural_freq3[1:]
+            for f1, f2 in zip(f1s, f2s):
+                fhat = 0.5 * (f1 + f2) + 0.5 * (f2 - f1) * zeta2
+                frequencies_list.append(fhat)
+        elif freq_type == 'LOG':
+            f1s = np.log10(natural_freq3[:-1])
+            f2s = np.log10(natural_freq3[1:])
+            for f1, f2 in zip(f1s, f2s):
+                flog_hat = 0.5 * (f1 + f2) + 0.5 * (f2 - f1) * zeta2
+                fhat = 10 ** flog_hat
+                frequencies_list.append(fhat)
+        else:  # pragma: no cover
+            raise RuntimeError(self.get_stats())
+
+        frequencies = np.unique(np.hstack(frequencies_list))
+        return frequencies
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -770,10 +835,10 @@ class FREQ3(FREQ):
         """
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')
-        f2 = double_or_blank(card, 3, 'f2', f1)
+        f2 = double_or_blank(card, 3, 'f2', default=f1)
         freq_type = string_or_blank(card, 4, 'Type', 'LINEAR')
-        nef = integer_or_blank(card, 5, 'nef', 10)
-        cluster = double_or_blank(card, 6, 'cluster', 1.0)
+        nef = integer_or_blank(card, 5, 'nef', default=10)
+        cluster = double_or_blank(card, 6, 'cluster', default=1.0)
         return FREQ3(sid, f1, f2=f2, freq_type=freq_type, nef=nef, cluster=cluster,
                      comment=comment)
 
@@ -858,6 +923,22 @@ class FREQ4(FREQ):
         assert len(card) <= 6, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        # 21 equally spaced bands for each mode
+        num = self.nfm
+        f1 = self.f1
+        f2 = self.f2
+        fspread = self.fspread
+        frequencies_list = []
+        for natural_freqi in natural_freq:
+            if not(f1 <= natural_freqi <= f2):
+                continue
+            f1i = (1 - fspread) * natural_freqi
+            f2i = (1 + fspread) * natural_freqi
+            freqs = np.linspace(f1i, f2i, num=num)
+            frequencies_list.append(freqs)
+        return np.unique(np.hstack(frequencies_list))
+
     def raw_fields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspread, self.nfm]
         return list_fields
@@ -931,8 +1012,18 @@ class FREQ5(FREQ):
     def validate(self):
         assert len(self.fractions) > 0, 'FREQ5: fractions=%s' % self.fractions
 
-    #def get_freqs(self):
-        #raise NameError()
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        """
+        #f1     : 20.0
+        #f2     : 200.0
+        #fractions : [0.6, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2]
+        """
+        fractions = np.unique(self.fractions)
+        freqsi = fractions[:, np.newaxis] * natural_freq[np.newaxis, :]
+        freqsi2 = np.unique(freqsi)
+        ifreq = (self.f1 <= freqsi2) & (freqsi2 <= self.f2)
+        frequencies = freqsi2[ifreq]
+        return frequencies
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1105,7 +1196,7 @@ class NLPARM(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NLPARM card from ``BDF.add_card(...)``
+        Adds an NLPARM card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1159,7 +1250,7 @@ class NLPARM(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        Adds a NLPARM card from the OP2
+        Adds an NLPARM card from the OP2
 
         Parameters
         ----------
@@ -1275,7 +1366,7 @@ class NLPCI(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NLPCI card from ``BDF.add_card(...)``
+        Adds an NLPCI card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1851,10 +1942,10 @@ class TF(BaseCard):
             j = irow * 8 + 9
             #ifield = irow + 1
             nid = integer(card, j, 'grid_%i' % (irow + 1))
-            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), '0')
-            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
-            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
-            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
+            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), default='0')
+            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), default=0.)
+            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), default=0.)
+            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), default=0.)
             nids.append(nid)
             components.append(component)
             a.append([a0, a1, a2])
@@ -2346,7 +2437,8 @@ class TSTEPNL(BaseCard):
             # KSTEP=1      stiffness matrix will not be updated.
             # KSTEP=BLANK: the program will decide whether to update depending element type.
             # KSTEP=-1:    stiffness matrix will be forced to be updated
-            kstep = integer(card, 6, 'kstep')
+            kstep = integer_or_blank(card, 6, 'kstep')
+            assert kstep in {1, -1, None}, f'TSTEPNL method={method!r} and kstep={kstep}, which should be -1, 1 or blank'
         else:
             msg = 'invalid TSTEPNL Method.  method=%r; allowed_methods=[%s]' % (
                 method, ', '.join(cls.allowed_methods))

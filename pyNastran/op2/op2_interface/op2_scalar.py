@@ -74,6 +74,7 @@ from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 """
 ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
 
@@ -344,14 +345,14 @@ FLOAT_PARAMS_1 = {
 FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
     b'CM1', b'CM2',
-    b'G1', b'G2', b'G3', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10',
-    b'G11', b'G12', b'G13', b'G14', b'G15', b'G16', b'G17', b'G18', b'G19',
+    # handled as a special case
+    #b'G1', b'G2', b'G3', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10',
+    #b'G11', b'G12', b'G13', b'G14', b'G15', b'G16', b'G17', b'G18', b'G19',
     b'ALPHA1', b'ALPHA2',
     b'CA1', b'CA2',
     b'CP1', b'CP2',
     b'LOADFACS',
     b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
-
 
     # should this be FLOAT_PARAMS_1???
     #b'EPPRT',
@@ -421,6 +422,9 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 
     b'GPACAO',
+
+    # vbaop2_test
+    b'STABFEM',
 }
 def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""
@@ -452,41 +456,22 @@ class OP2_Scalar(OP2Common, FortranFormat):
     @property
     def modal_effective_mass_fraction(self):
         """6xnmodes matrix"""
-        return self.matrices['EFMFACS']#.dataframe
+        return self.matrices['EFMFACS']
 
     @property
     def modal_participation_factors(self):
         """6xnmodes matrix"""
-        return self.matrices['MPFACS']#.dataframe
+        return self.matrices['MPFACS']
 
     @property
     def modal_effective_mass(self):
         """6xnmodes matrix"""
-        return self.matrices['MEFMASS']#.dataframe
+        return self.matrices['MEFMASS']
 
     @property
     def modal_effective_weight(self):
         """6xnmodes matrix"""
-        return self.matrices['MEFWTS']#.dataframe
-
-
-    #@property
-    #def monitor1(self):
-        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        #return self.op2_results.monitor1
-    #@monitor1.setter
-    #def monitor1(self, monitor1):
-        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        #self.op2_results.monitor1 = monitor1
-
-    #@property
-    #def monitor3(self):
-        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        #return self.op2_results.monitor3
-    #@monitor3.setter
-    #def monitor3(self, monitor3):
-        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        #self.op2_results.monitor3 = monitor3
+        return self.matrices['MEFWTS']
 
     @property
     def matrix_tables(self):
@@ -578,7 +563,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         self.result_names = set()
 
-        self.grid_point_weight = {}
+        self.grid_point_weight: dict[str, GridPointWeight] = {}
         self.words = []
         self.debug = debug
         self._last_comment = None
@@ -651,7 +636,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_opg = self._op2_readers.reader_opg
         reader_opr = self._op2_readers.reader_opr
         reader_oqg = self._op2_readers.reader_oqg
-        reader_obc = self._op2_readers.reader_obc
         reader_ogs = self._op2_readers.reader_ogs
 
         # oug
@@ -663,6 +647,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_obolt = self._op2_readers.reader_obolt
 
         # contact
+        reader_obc = self._op2_readers.reader_obc
         reader_oslide = self._op2_readers.reader_oslide
         reader_ougstrs = self._op2_readers.reader_ougstrs
         reader_ofcon3d = self._op2_readers.reader_ofcon3d
@@ -1655,7 +1640,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             OIBULK, 3, YES,
             OMACHPR, 3, YES,
             POSTEXT, 3, YES,
-            UNITSYS, 3, MN-MM)
+            UNITSYS, 3, MN-MM,
+            G123, 5, 1.0, 2.0,
+            )
         """
         if self.read_mode == 2:
             return ndata
@@ -1811,7 +1798,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #self.show_data(data[(i+3)*xword:(i+5)*xword], types='ifsqd', endian=None, force=False)
                 values = struct2f.unpack(slot)
                 values = list(values)
-                assert word in FLOAT_PARAMS_2, f'word={word}'
+                if key[0] == 'G':
+                    if word[1:].isdigit():  # G1, G21, G123
+                        pass
+                    else:
+                        assert word in FLOAT_PARAMS_2, f'word={word}'
+                else:
+                    assert word in FLOAT_PARAMS_2, f'word={word}'
                 i += 5
 
             elif flag == 7: # logical/int
@@ -1839,7 +1832,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'
-                               'table_name={self.table_name!r} len(data)={ndata}')
+                               f'table_name={self.table_name!r} len(data)={ndata}')
 
     def _table_crasher(self, data: bytes, ndata: int):
         """auto-table crasher"""

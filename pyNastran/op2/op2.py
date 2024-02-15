@@ -40,6 +40,7 @@ from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
                                   OverwriteTableError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
+from pyNastran.op2.op2_interface.types import NastranKey
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
     transform_displacement_to_global, transform_gpforce_to_globali)
@@ -87,6 +88,9 @@ class OP2(OP2_Scalar, OP2Writer):
         # you can pass a few more tests if you add the OP2 table name (i.e., OUGV1)
         # to the result key, but rarely do you want to do it
         self.use_table_name_in_code = False
+
+        # flag that you can disable
+        self.read_matpool = True
 
         self.encoding = None
         self.mode = mode
@@ -651,8 +655,8 @@ class OP2(OP2_Scalar, OP2Writer):
 
         """
         import pandas
-        if pandas.__version__ >= '2.0.0':
-            raise NotImplementedError('pandas >= 2.0 is not supported')
+        #if pandas.__version__ >= '2.0.0':
+            #raise NotImplementedError('pandas >= 2.0 is not supported')
         # TODO: sorter = uniques.argsort()
         #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198:
         #    DeprecationWarning: unorderable dtypes;
@@ -1014,12 +1018,36 @@ class OP2(OP2_Scalar, OP2Writer):
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
 
-    def get_key_order(self) -> list[tuple[int, int, int, int, int, str]]:
+    def get_key_order(self) -> list[NastranKey]:
         """
         Returns
         -------
-        keys3 : list[int, int, int, int, int, str]
+        keys3 : list[tuple[int, int, int, int, int, str, str]]
             the keys in order
+
+            key: isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
+
+            isubcase: int
+               subcase id
+            analysis_code: int (rough guess)
+                1: statics
+                2: modes
+                5: freq
+                6: transient
+                8: post-buckling
+                9: complex eigenvalues
+                10: nonlinear statics
+            sort_method: int
+                0: SORT1; 1: SORT2
+            count: int
+                optimization flag; default = 0
+            ogs: int
+                default = 0
+            superelement_adaptivity_index: str
+                default = ''
+            pval_step: str
+                default = ''
+
         """
         keys = []
         table_types = self.get_table_types()
@@ -1063,17 +1091,21 @@ class OP2(OP2_Scalar, OP2Writer):
         superelement_adaptivity_indexs = set()
         pval_steps = set()
 
+        used_keys = set([])
         for key in keys:
             #print('key = %s' % str(key))
             if len(key) == 6:
                 isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
+                used_key = (isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step)
                 ogs = 0
             elif len(key) == 7:
                 isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step = key
+                used_key = key
             else:
                 print('  %s' % str(key))
                 raise RuntimeError(key)
                 #isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index = key
+
             isubcases.add(isubcase)
             analysis_codes.add(analysis_code)
             sort_methods.add(sort_method)
@@ -1081,6 +1113,8 @@ class OP2(OP2_Scalar, OP2Writer):
             ogss.add(ogs)
             superelement_adaptivity_indexs.add(superelement_adaptivity_index)
             pval_steps.add(pval_step)
+
+            used_keys.add(used_key)
 
         isubcase_list = list(isubcases)
         analysis_code_list = list(analysis_codes)
@@ -1098,7 +1132,7 @@ class OP2(OP2_Scalar, OP2Writer):
         superelement_adaptivity_index_list.sort()
         pval_step_list.sort()
 
-        keys3 = []  # type: list[tuple[int, int, int, int, int, int, str]]
+        keys3: list[NastranKey] = []
         for isubcase in isubcase_list:
             for count in count_list:
                 for analysis_code in analysis_code_list:
@@ -1106,10 +1140,11 @@ class OP2(OP2_Scalar, OP2Writer):
                         for pval_step in pval_step_list:
                             for sort_method in sort_method_list:
                                 for ogs in ogs_list:
-                                    key = (isubcase, analysis_code, sort_method,
-                                           count, ogs, superelement_adaptivity_index, pval_step)
+                                    key = (isubcase, analysis_code, sort_method, count, ogs,  # ints
+                                           superelement_adaptivity_index, pval_step) # str
                                     if key not in keys3:
                                         #print('adding ', key)
+                                        #assert key in used_keys, key
                                         keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))

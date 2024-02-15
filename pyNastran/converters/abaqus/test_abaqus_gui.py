@@ -29,7 +29,7 @@ class TestAbaqusGui(unittest.TestCase):
         test = AbaqusGui()
         test.log = log
         #test.load_abaqus_geometry(abaqus_filename)
-        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
+        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', stop_on_failure=True)
         os.remove(abaqus_filename)
 
     def test_abaqus_gui_2(self):
@@ -40,7 +40,7 @@ class TestAbaqusGui(unittest.TestCase):
         test = AbaqusGui()
         test.log = log
         #test.load_abaqus_geometry(abaqus_filename)
-        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
+        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', stop_on_failure=True)
 
     def test_abaqus_gui_xform(self):
         """test_xform.inp"""
@@ -49,7 +49,7 @@ class TestAbaqusGui(unittest.TestCase):
 
         test = AbaqusGui()
         test.log = log
-        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
+        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', stop_on_failure=True)
 
 if __name__ == '__main__':  #  pragma: no cover
     unittest.main()

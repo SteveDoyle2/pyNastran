@@ -24,7 +24,7 @@ class TestFastGUI(unittest.TestCase):
 
         test = FastGUI()
         #test.load_fast_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='fast', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='fast', stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

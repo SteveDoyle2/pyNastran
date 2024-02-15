@@ -2147,15 +2147,15 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
         i = 0
         for i in range(0, nfields, 2):
             dvids.append(end_fields[i])
             coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+        if len(dvids) != len(coeffs): # nfields % 2 == 1:
             print(card)
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
@@ -2559,16 +2559,16 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
         #print("end_fields = ",end_fields)
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
 
         i = 0
         for i in range(0, nfields, 2):
             dvids.append(end_fields[i])
             coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+        if len(dvids) != len(coeffs): # nfields % 2 == 1:
             print(card)
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
@@ -3010,15 +3010,15 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
         i = 0
         for i in range(0, nfields, 2):
             dvids.append(end_fields[i])
             coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+        if len(dvids) != len(coeffs): # nfields % 2 == 1:
             print(card)
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))

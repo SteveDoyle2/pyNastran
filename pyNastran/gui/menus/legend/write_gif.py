@@ -17,7 +17,7 @@ try:
         import imageio.v2 as imageio
     import PIL
     IS_IMAGEIO = True
-except ImportError:
+except ModuleNotFoundError:
     IS_IMAGEIO = False
 
 from pyNastran import is_pynastrangui_exe
@@ -25,7 +25,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils import remove_files, PathLike
 
 if is_pynastrangui_exe:  # pragma: no cover
-    assert IS_IMAGEIO, 'imageio is not istalled for the exe'
+    assert IS_IMAGEIO, 'imageio is not installed for the exe'
 
 if IS_IMAGEIO:
     from pyNastran.utils import int_version

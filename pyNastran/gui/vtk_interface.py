@@ -13,9 +13,8 @@ try:
         vtkPolyData,
         VTK_POLYHEDRON,
     )
-
-except ImportError:
-    print('error vtk_interface')
+except ModuleNotFoundError:
+    #print('error vtk_interface')
     from vtk import (
         vtkVertex,
         vtkLine, vtkQuadraticEdge,

@@ -8,15 +8,9 @@ http://math.stackexchange.com/questions/544946/determine-if-projection-of-3d-poi
 import numpy as np
 
 from pyNastran.converters.stl.stl import read_stl
-from pyNastran.utils import int_version
 import scipy.interpolate
 
-SCIPY_VERSION = int_version('scipy', scipy.__version__)
-import scipy.spatial
-if SCIPY_VERSION > [1, 6, 0]:
-    KDTree = scipy.spatial.KDTree
-else:
-    KDTree = scipy.spatial.cKDTree
+from scipy.spatial import KDTree
 
 
 #def projected_barycentric_coord(p, q, u, v):
@@ -65,7 +59,7 @@ def project_points_onto_stl(stl, points):
         tree = KDTree(centroids, leafsize=16, compact_nodes=True,
                       copy_data=False, balanced_tree=True)
         stl.tree = tree
-    #tree = scipy.spatial.KDTree(data, leafsize=10)
+    #tree = KDTree(data, leafsize=10)
     #tree.query_ball_point(x, r, p=2., eps=0)
     #tree.query_ball_tree(other, r, p=2., eps=0)
     #tree.query_pairs(r, p=2., eps=0)

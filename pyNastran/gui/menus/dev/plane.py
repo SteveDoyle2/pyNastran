@@ -4,7 +4,7 @@ from qtpy.QtWidgets import (
     QComboBox, QCheckBox, QHBoxLayout, QVBoxLayout, QGridLayout)
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import check_float
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float, QLINEEDIT_GOOD, QLINEEDIT_ERROR
 from pyNastran.utils.locale import func_str
 
 
@@ -266,31 +266,31 @@ class BCMap(QDialog):
 
     def on_default_name(self):
         self.name_edit.setText(str(self._default_name))
-        self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.name_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_origin(self):
         self.origin_x_edit.setText(str(self._origin_x_default))
         self.origin_y_edit.setText(str(self._origin_y_default))
         self.origin_z_edit.setText(str(self._origin_z_default))
-        self.origin_x_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.origin_y_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.origin_z_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.origin_x_edit.setStyleSheet(QLINEEDIT_GOOD)
+        self.origin_y_edit.setStyleSheet(QLINEEDIT_GOOD)
+        self.origin_z_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_normal(self):
         self.normal_x_edit.setText(str(self._normal_x_default))
         self.normal_y_edit.setText(str(self._normal_y_default))
         self.normal_z_edit.setText(str(self._normal_z_default))
-        self.normal_x_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.normal_y_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.normal_z_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.normal_x_edit.setStyleSheet(QLINEEDIT_GOOD)
+        self.normal_y_edit.setStyleSheet(QLINEEDIT_GOOD)
+        self.normal_z_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def check_name(self, cell):
         text = str(cell.text()).strip()
         if text:
-            cell.setStyleSheet("QLineEdit{background: white;}")
+            cell.setStyleSheet(QLINEEDIT_GOOD)
             return text, True
         else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
+            cell.setStyleSheet(QLINEEDIT_ERROR)
             return None, False
 
     def on_validate(self):
@@ -329,9 +329,9 @@ class BCMap(QDialog):
 def _on_float(field):
     try:
         eval_float_from_string(field.text())
-        field.setStyleSheet("QLineEdit{background: white;}")
+        field.setStyleSheet(QLINEEDIT_GOOD)
     except ValueError:
-        field.setStyleSheet("QLineEdit{background: red;}")
+        field.setStyleSheet(QLINEEDIT_ERROR)
 
 
 def main():  # pragma: no cover

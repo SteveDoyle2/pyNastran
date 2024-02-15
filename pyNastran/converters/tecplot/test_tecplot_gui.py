@@ -27,7 +27,7 @@ class TestTecplotGUI(unittest.TestCase):
         test.log = SimpleLogger(level='warning', encoding='utf-8')
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', 'point_fetri_2d_02.dat')
         #test.model.load_tecplot_geometry(tecplot_filename, '')
-        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', raise_error=True)
+        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', stop_on_failure=True)
         #test.model.load_nastran_geometry(geometry_filename)
         #test.model.load_shabp_geometry(geometry_filename)
 
@@ -37,7 +37,7 @@ class TestTecplotGUI(unittest.TestCase):
         test.log = SimpleLogger(level='warning', encoding='utf-8')
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', 'multzn2d.dat')
         #test.model.load_tecplot_geometry(tecplot_filename, '')
-        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', raise_error=True)
+        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', stop_on_failure=True)
 
     def test_tecplot_geometry_3(self):
         """2d structured example"""
@@ -45,7 +45,7 @@ class TestTecplotGUI(unittest.TestCase):
         test.log = SimpleLogger(level='warning', encoding='utf-8')
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', '2d_1x1x1.plt')
         #test.model.load_tecplot_geometry(tecplot_filename, '')
-        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', raise_error=True)
+        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', stop_on_failure=True)
 
     def test_tecplot_geometry_4(self):
         """3d structured example"""
@@ -53,7 +53,7 @@ class TestTecplotGUI(unittest.TestCase):
         test.log = SimpleLogger(level='warning', encoding='utf-8')
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', '3d_2x3x4.plt')
         #test.model.load_tecplot_geometry(tecplot_filename, '')
-        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', raise_error=True)
+        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', stop_on_failure=True)
 
     def test_tecplot_box(self):
         """simple UGRID3D box model"""
@@ -68,7 +68,7 @@ class TestTecplotGUI(unittest.TestCase):
         test = TecplotGUI()
         test.log = log
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', 'point_fetri_2d_02.dat')
-        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', raise_error=True)
+        test.on_load_geometry(tecplot_filename, geometry_format='tecplot', stop_on_failure=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

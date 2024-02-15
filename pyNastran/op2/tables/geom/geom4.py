@@ -105,10 +105,16 @@ class GEOM4(GeomCommon):
             (6210, 62, 344): ['SPCOFF1', self._read_spcoff1],    # record
             (2110, 21, 194) : ['USET1', self._read_uset1],  # record
             (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
+            (910,   9, 319): ['SECSET', self._read_secset],  # record
+            (710,   7, 317): ['SEBSET', self._read_sebset],  # record
+            (810,   8, 318): ['SEBSET1', self._read_sebset1],  # record
+
+            (1810, 18, 334): ['SEUSET', self._read_seuset],  # record
+            (1910, 19, 335): ['SEUSET1', self._read_seuset1],  # record
 
             (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_fake],         # record
             #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_seqset1b],         # record
-            (610, 6, 0): ['SESET/SEQSET1?', self._read_fake],           # record
+            (610, 6, 0): ['SESET/SEQSET1?', self._read_seseta],           # record
             (5110, 51, 620256): ['SPCD?', self._read_fake],    # record
             (5501, 55, 620016): ['SPC', self._read_spcb],    # record
             (410, 4, 0): ['', self._read_fake],    # record
@@ -147,6 +153,16 @@ class GEOM4(GeomCommon):
             #(4901, 49, 320017) : ['???', self._read_fake],
             #(4901, 49, 320017) : ['???', self._read_fake],
         }
+
+    def _read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover
+        r"""
+        (610, 6, 0,
+         12, 0, 1, -1)
+        C:\MSC.Software\msc_nastran_runs\see10195.op2
+        """
+        self.op2.log.info(f'geom skipping ??? in {self.op2.table_name}; ndata={len(data)-n}')
+        self.op2.show_data(data, types='ifs')
+        return len(data)
 
     def _read_mpc3(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
@@ -270,14 +286,14 @@ class GEOM4(GeomCommon):
         components = out[1]
         thru_flag = out[2]
         if thru_flag == 0:
-            nids = out[3:]
+            nids = out[3:].tolist()
             thru_check = False
         else:
             nids = list(range(out[3], out[4]+1))
             thru_check = True
 
         in_data = [seid, components, nids]
-        assert -1 not in nids, (seid, components, nids.tolist())
+        assert -1 not in nids, (seid, components, nids)
         card = cls.add_op2_data(in_data)
         add_method(card)
         op2.increase_card_count(card_name, 1)
@@ -770,9 +786,30 @@ class GEOM4(GeomCommon):
         self.op2.log.info('geom skipping RWELD in GEOM4')
         return len(data)
 
+    def _read_secset(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 ID I Grid or scalar point identification number
+        3 C I Component numbers
+        """
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nints = len(ints)
+        assert nints % 3 == 0, nints
+        ints = ints.reshape(nints // 3, 3)
+        for seid, nid, component in ints:
+            op2.add_secset(seid, [nid], [str(component)])
+        return len(data)
+
     def _read_sebset(self, data: bytes, n: int) -> int:
-        #asdf
-        self.op2.log.info('geom skipping SEBSET in GEOM4')
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nints = len(ints)
+        assert nints % 3 == 0, nints
+        ints = ints.reshape(nints // 3, 3)
+        for seid, nid, component in ints:
+            op2.add_sebset(seid, [nid], [str(component)])
         return len(data)
 
     def _read_sebset1(self, data: bytes, n: int) -> int:
@@ -784,11 +821,6 @@ class GEOM4(GeomCommon):
         for (seid, comp, values) in cards:
             #print('SEBSET1', seid, comp, values)
             op2.add_sebset1(seid, values, comp)
-        return len(data)
-
-    def _read_secset(self, data: bytes, n: int) -> int:
-        #asdf
-        self.op2.log.info('geom skipping SECSET in GEOM4')
         return len(data)
 
     def _read_secset1(self, data: bytes, n: int) -> int:
@@ -819,13 +851,18 @@ class GEOM4(GeomCommon):
         i, cards = ints_to_secset1s('SECSET1', ints)
         for (seid, comp, values) in cards:
             #print('SECSET1', seid, comp, values)
-            op2.add_secset1(seid, values, comp)
+            op2.add_secset1(seid, values, str(comp))
         return len(data)
 
     def _read_seqset(self, data: bytes, n: int) -> int:
         """SEQSET(1110,11,321) - Record 40"""
-        #asdf
-        self.op2.log.info('geom skipping SEQSET in GEOM4')
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nints = len(ints)
+        assert nints % 3 == 0, nints
+        ints = ints.reshape(nints // 3, 3)
+        for seid, nid, component in ints:
+            op2.add_seqset(seid, [nid], [str(component)])
         return len(data)
         #return self._read_xset(data, n, 'SEQSET', SEQSET, self.add_SEQSET)
 
@@ -864,13 +901,17 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_seuset(self, data: bytes, n: int) -> int:
-        #asdf
         self.op2.log.info('geom skipping SEUSET in GEOM4')
+        asdf
         return len(data)
 
     def _read_seuset1(self, data: bytes, n: int) -> int:
-        #asdf
-        self.op2.log.info('geom skipping SEUSET1 in GEOM4')
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        i, cards = ints_to_secset1s('SEUSET1', ints)
+        for (seid, comp, values) in cards:
+            op2.add_seuset1(seid, values, comp)
+        #self.op2.log.info('geom skipping SEUSET1 in GEOM4')
         return len(data)
 
     def _read_spcoff(self, data: bytes, n: int) -> int:
@@ -1363,6 +1404,7 @@ class GEOM4(GeomCommon):
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\fsp11j.op2
         self.op2.show_data(data)
+        return len(data)
 
     def _read_uset1(self, data: bytes, n: int) -> int:
         """USET1(2110,21,194) - Record 65

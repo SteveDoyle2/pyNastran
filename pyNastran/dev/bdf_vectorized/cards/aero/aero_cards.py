@@ -3526,7 +3526,7 @@ class FLUTTER(BaseCard):
         reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
 
         if method in ['K', 'KE']:
-            imethod = string_or_blank(card, 6, 'imethod', 'L')
+            imethod = string_or_blank(card, 6, 'imethod', default='L')
             nvalue = integer_or_blank(card, 7, 'nvalue')
             omax = None
             assert imethod in ['L', 'S', 'TCUB'], 'imethod = %s' % imethod  # linear-surface
@@ -3546,7 +3546,7 @@ class FLUTTER(BaseCard):
             raise NotImplementedError('FLUTTER method=%r' % method)
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
-        epsilon = double_or_blank(card, 8, 'epsilon', 1e-3)  # not defined in QRG
+        epsilon = double_or_blank(card, 8, 'epsilon', default=1e-3)  # not defined in QRG
         assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,

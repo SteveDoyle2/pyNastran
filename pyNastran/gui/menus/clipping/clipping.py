@@ -3,13 +3,13 @@ defines:
  - ClippingPropertiesWindow
 """
 from pyNastran.gui.qt_version import qt_int as qt_version
-from qtpy import QtCore
+#from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QVBoxLayout)
+    QLabel, QPushButton, QGridLayout, QApplication, QVBoxLayout)
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import check_float
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float, QLINEEDIT_GOOD
 
 
 class ClippingPropertiesWindow(PyDialog):
@@ -84,11 +84,11 @@ class ClippingPropertiesWindow(PyDialog):
 
     def on_default_min(self):
         self.min_edit.setText(func_str(self._default_min))
-        self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_default_max(self):
         self.max_edit.setText(func_str(self._default_max))
-        self.max_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
     def on_validate(self):
         min_value, flag0 = check_float(self.min_edit)
@@ -110,6 +110,7 @@ class ClippingPropertiesWindow(PyDialog):
     def on_ok(self):
         passed = self.on_apply()
         if passed:
+            self._updated_clipping = True
             self.close()
             #self.destroy()
 

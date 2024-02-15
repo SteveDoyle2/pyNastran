@@ -3,6 +3,8 @@ defines:
  - CuttingPlaneObject
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 import matplotlib
@@ -22,11 +24,12 @@ from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
 from pyNastran.gui.menus.cutting_plane.cutting_plane import CuttingPlaneWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
-
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 class CuttingPlaneObject(BaseGui):
     def __init__(self, gui):
-        self.gui = gui
+        self.gui: MainWindow = gui
         self._cutting_plane_window_shown = False
         self._cutting_plane_window = None
 
@@ -180,7 +183,7 @@ class CuttingPlaneObject(BaseGui):
         beta = coord.beta().T
 
         cid = ''
-        self.gui.create_coordinate_system(
+        self.gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type='xyz')
 
@@ -188,7 +191,8 @@ class CuttingPlaneObject(BaseGui):
 
         #case = self.result_cases[self.icase_aero]
         (obj, (i, name)) = self.gui.result_cases[self.gui.icase_fringe]
-        res_scalars = obj.get_scalar(i, name)
+        fringe, vector = obj.get_fringe_vector_result(i, name)
+        res_scalars = vector if vector is not None else fringe
         location = obj.get_location(i, name)
 
         if res_scalars is None:

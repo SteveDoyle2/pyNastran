@@ -52,13 +52,13 @@ class AnimationCallback:
         icase_vector = self.icases_vector[i]
         scale = self.scales[i]
         phase = self.phases[i]
-        normalized_frings_scale = scale / self.scale_max
+        normalized_fringe_scale = scale / self.scale_max
         is_valid = self.parent.animation_update(
             self.icase_fringe0, self.icase_disp0, self.icase_vector0,
             icase_fringe, icase_disp, icase_vector,
             scale, phase,
             self.animate_fringe, self.animate_vector,
-            normalized_frings_scale,
+            normalized_fringe_scale,
             self.min_value, self.max_value)
         if not is_valid:
             self.parent.stop_animation()

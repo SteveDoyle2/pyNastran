@@ -1,18 +1,22 @@
->>> python setup_no_reqs.py develop
->>> python all_tests.py
+1. Update docs (docs are on RTD and auto-build)
 
-build docs
->>>make html
-upload docs
+2. python all_tests.py
 
-build gui
->>> pyinstaller pyNastran.spec
-test docs
+3. build docs
+   >>> make html
 
-build wheel
->>> python setup_no_reqs.py bdist_wheel
+4. build gui & upload:
+   >>> pyinstaller pyNastran.spec
 
-per https://pypi.org/project/twine/
+5.  build wheel:
+  a) Update pyNastran/../dev/test_files.txt
+  b) Manually remove test files and gui/images (it's large)
+    >>> remove_test_files.py
+  c) build wheel
+    --no-deps just speeds this up
+    >>> pip wheel . --no-deps
+
+6. per https://pypi.org/project/twine/
  >>> twine upload *.whl
 
-fix website version
+7. fix website version

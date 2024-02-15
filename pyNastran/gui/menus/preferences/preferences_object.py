@@ -29,19 +29,21 @@ class PreferencesObject(BaseGui):
 
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
-        settings = self.gui.settings  # type: Settings
+        settings: Settings = self.gui.settings
         data = {
             'font_size' : settings.font_size,
             'annotation_size' : settings.annotation_size, # int
             'annotation_color' : settings.annotation_color,
+
+            'use_startup_directory': settings.use_startup_directory,
 
             'use_gradient_background' : settings.use_gradient_background,
             'use_parallel_projection': settings.use_parallel_projection,
             'background_color' : settings.background_color,
             'background_color2' : settings.background_color2,
 
-            'text_size' : settings.text_size,
-            'text_color' : settings.text_color,
+            'corner_text_size' : settings.corner_text_size,
+            'corner_text_color' : settings.corner_text_color,
 
             'highlight_color' : settings.highlight_color,
             'highlight_opacity' : settings.highlight_opacity,

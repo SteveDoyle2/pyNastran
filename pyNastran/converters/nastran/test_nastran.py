@@ -5,7 +5,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf
 
 from pyNastran.converters.format_converter import cmd_line_format_converter
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
@@ -22,7 +22,7 @@ from pyNastran.converters.tecplot.tecplot_to_nastran import nastran_tables_to_te
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
-
+DIRNAME = os.path.dirname(__file__)
 
 class FakeCase:
     def __init__(self, times: np.ndarray):
@@ -36,6 +36,84 @@ class FakeCase:
 
 
 class TestNastran(unittest.TestCase):
+    def test_nastran_to_cart3d_se2(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 2, [1, 2, 3, 4])
+        model.add_ctria3(2, 2, [2, 3, 4])
+
+        model.add_cquadr(3, 2, [1, 2, 3, 4])
+        model.add_ctriar(4, 2, [2, 3, 4])
+        model.add_pshell(2, mid1=100, t=0.1)
+        model.add_mat1(100, 3.0e7, None, 0.3)
+        model.add_cbar(101, 200, [3, 2], [1., 1., 1.], None)
+        model.add_pbarl(200, 100, 'ROD', [1.])
+        model.card_count = {
+            'GRID': 4,
+            'CQUAD4': 1,
+            'CQUADR': 1,
+            'CTRIA3': 1,
+            'CTRIAR': 1,
+            'CBAR': 1,
+        }
+        cart3d = nastran_to_cart3d(model)
+        cart3d.flip_model()
+        assert len(cart3d.nodes) == 4
+        assert len(cart3d.elements) == 6
+        cart3d.remove_elements([0], remove_associated_nodes=True)
+        assert len(cart3d.nodes) == 4
+        assert len(cart3d.elements) == 5
+        cart3d.keep_elements([2], remove_associated_nodes=True)
+        assert len(cart3d.nodes) == 3
+        assert len(cart3d.elements) == 1
+
+        bdf_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.bdf')
+        model.write_bdf(bdf_filename)
+        cart3d_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.tri')
+        nastran_to_cart3d_filename(bdf_filename, cart3d_filename)
+
+    def test_nastran_to_cart3d(self):
+        model = BDF(debug=False)
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [1., 1., 0.])
+        model.add_grid(5, [0., 1., 0.])
+        model.add_cquad4(10, 2, [2, 3, 4, 5])
+        model.add_ctria3(12, 2, [2, 3, 4])
+
+        model.add_cquadr(100, 2, [2, 3, 4, 5])
+        model.add_ctriar(121, 2, [2, 3, 4])
+        model.add_pshell(2, mid1=100, t=0.1)
+        model.add_mat1(100, 3.0e7, None, 0.3)
+        model.add_cbar(101, 200, [3, 2], [1., 1., 1.], None)
+        model.add_pbarl(200, 100, 'ROD', [1.])
+        model.card_count = {
+            'GRID': 4,
+            'CQUAD4': 1,
+            'CQUADR': 1,
+            'CTRIA3': 1,
+            'CTRIAR': 1,
+            'CBAR': 1,
+        }
+        cart3d = nastran_to_cart3d(model)
+        cart3d.flip_model()
+        assert len(cart3d.nodes) == 4
+        assert len(cart3d.elements) == 6
+        cart3d.remove_elements([0], remove_associated_nodes=True)
+        assert len(cart3d.nodes) == 4
+        assert len(cart3d.elements) == 5
+        cart3d.keep_elements([2], remove_associated_nodes=True)
+        assert len(cart3d.nodes) == 3
+        assert len(cart3d.elements) == 1
+
+        bdf_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.bdf')
+        model.write_bdf(bdf_filename)
+        cart3d_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.tri')
+        nastran_to_cart3d_filename(bdf_filename, cart3d_filename)
+
     def test_nastran_to_tecplot(self):
         """tests a large number of elements and results in SOL 101"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
@@ -98,7 +176,7 @@ class TestNastran(unittest.TestCase):
                         size=size, is_double=False)
         read_bdf(skin_bdf_filename2, log=log, debug=debug)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(NotImplementedError):
             nastran_to_cart3d_filename(skin_bdf_filename2, skin_cart3d_filename)
 
         ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=False,

@@ -3,15 +3,18 @@ defines:
  - Cart3dGeometry
 
 """
+from typing import Any
 from copy import deepcopy
+import numpy as np
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
 class Cart3dGeometry(GuiResultCommon):
     """Stores the cart3d results."""
     def __init__(self, subcase_id, labels,
-                 nodes, elements, regions, area, cnormals, colormap='jet',
-                 uname='Cart3dGeometry'):
+                 nodes, elements, regions, area, cnormals,
+                 colormap: str='jet',
+                 uname: str='Cart3dGeometry'):
         GuiResultCommon.__init__(self)
         self.colormap_default = colormap
         self.uname = uname
@@ -49,7 +52,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.ncolors = [None] * ntitles
         self.colormap = [self.colormap_default] * ntitles
 
-    def get_header(self, i, name):
+    def get_annotation(self, i, name):
         """
         header : str
             the sidebar word
@@ -82,19 +85,37 @@ class Cart3dGeometry(GuiResultCommon):
         #j = self.titles.index(name)
         #return 0.0
 
-    def get_vector_size(self, i, name):
-        #j = self.titles.index(name)
-        return 1
+    def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
+        return False, []
+    def has_derivation_transform(self, i: int, resname: str) -> tuple[bool, dict[str, Any]]:
+        """min/max/avg"""
+        return False, {}
+    def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
+        """elemental -> nodal"""
+        return False, []
+    #def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool]:
+        #is_enabled_fringe = False
+        #is_checked_fringe = True
+        #is_enabled_disp = False
+        #is_checked_disp = False
+        #is_enabled_vector = False
+        #is_checked_vector = False
+        #out = (
+            #is_enabled_fringe, is_checked_fringe,
+            #is_enabled_disp, is_checked_disp,
+            #is_enabled_vector, is_checked_vector)
+        #return out
 
-    def get_methods(self, i):
+    def get_methods(self, i: str, name: str):
         if i == 1:
             return ['centroid']
         return ['node']
 
-    def get_scalar(self, i, name):
-        return self.get_result(i, name)
+    def get_fringe_vector_result(self, i, name) -> tuple[np.ndarray, None]:
+        fringe = self.get_fringe_result(i, name)
+        return fringe, None
 
-    def get_result(self, i, name):
+    def get_fringe_result(self, i, name) -> np.ndarray:
         if name == 'NodeID':
             res = self.nodes
         elif name == 'ElementID':
@@ -109,7 +130,7 @@ class Cart3dGeometry(GuiResultCommon):
             res = self.centroid_normals[:, 1]
         elif name == 'NormalZ':
             res = self.centroid_normals[:, 2]
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('i=%s' % str(i))
         return res
 
@@ -129,15 +150,15 @@ class Cart3dGeometry(GuiResultCommon):
 
     #----------------------------------------------------
     # title
-    def get_title(self, i, name):
+    def get_legend_title(self, i, name):
         j = self.titles.index(name)
         return self.result_types[j]
 
-    def set_title(self, i, name, title):
+    def set_legend_title(self, i, name, title):
         j = self.titles.index(name)
         self.result_types[j] = title
 
-    def get_default_title(self, i, name):
+    def get_default_legend_title(self, i, name):
         j = self.titles.index(name)
         return self.title_default[j]
 
@@ -157,7 +178,9 @@ class Cart3dGeometry(GuiResultCommon):
 
     #----------------------------------------------------
     # min/max
-    def get_min_max(self, i, name):
+    def get_imin_imax(self, i, name) -> tuple[None, None]:
+        return None, None
+    def get_min_max(self, i, name) -> tuple[float, float]:
         j = self.titles.index(name)
         return self.min_value[j], self.max_value[j]
 
@@ -166,7 +189,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.min_value[j] = min_value
         self.max_value[j] = max_value
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i, name) -> tuple[float, float]:
         j = self.titles.index(name)
         return self.min_default[j], self.max_default[j]
 

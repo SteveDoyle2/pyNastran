@@ -13,7 +13,7 @@ def get_numpy_typing():
     #Array3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
     #ArrayNxNx3 = Annotated[npt.NDArray[DType], Literal["N", "N", 3]]
 
-    FloatArray = npt.NDArray[np.float_]
+    FloatArray = npt.NDArray[np.float64]
     IntArray = npt.NDArray[np.int_]
     BoolArray = npt.NDArray[np.bool_]
 
@@ -180,7 +180,7 @@ def get_nptyping_null():
 
 
 import numpy as np
-if np.__version__ > '1.20':
+if np.__version__ > '1.20' and np.__version__ < '2.0':
     out = get_numpy_typing()
     #import nptyping
     #assert nptyping.__version__ > '2.0'

@@ -43,6 +43,13 @@ class TestOpt(unittest.TestCase):
     def test_opt_2(self):
         """tests updating model based on DESVARs"""
         model = BDF(debug=False)
+
+        modtrak_id = 100
+        low_range = 3
+        high_range = 6
+        mt_filter = 0.9
+        model.add_modtrak(modtrak_id, low_range, high_range, mt_filter, comment='modtrak')
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -155,6 +162,7 @@ class TestOpt(unittest.TestCase):
         assert model.Mass(eid_conm2).mass == mass_new, 'mass=%s mass_new=%s' % (model.Mass(eid_conm2).mass, mass_new)
         assert model.Mass(eid_conm2).X[0] == x1_new, 'X1=%s x1_new=%s' % (model.Mass(eid_conm2).mass, x1_new)
         assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
+        save_load_deck(model)
 
     def test_ddval(self):
         """tests a DDVAL"""
@@ -231,6 +239,143 @@ class TestOpt(unittest.TestCase):
         model2.add_card(lines, 'DLINK', is_list=False)
         dlink = model.dlinks[10]
         dlink.write_card()
+        save_load_deck(model)
+
+    def test_dresp1s(self):
+        model = BDF(debug=False)
+
+        pid = 1
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_pshell(pid, mid1=mid, t=1.0)
+        model.add_mat1(mid, E, G, nu)
+        #----------------------------------------------
+        #no args
+        dresp_id = 1
+        label = 'COMPLIA'
+        #DRESP1, 12, CMPL1, CMPLNCE
+        response_type = 'Compliance'
+        property_type = None
+        region = None
+        atta = None
+        attb = None
+        atti = []
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'DWEIGHT'
+        response_type = 'DWEIGHT'
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'WEIGHT'
+        response_type = 'WEIGHT'
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        #----------------------------------------------
+        dresp_id += 1
+        label = 'FLUTTER'
+        response_type = 'FLUTTER'
+        atti = [1, 2, 3, 4]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        #----------------------------------------------
+        # reset
+        atti = []
+
+        #----------------------------------------------
+        # atta only
+        dresp_id += 1
+        atta = 2
+        label = 'CEIG'
+        response_type = 'CEIG'
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        atta = 2
+        label = 'LAMA'
+        response_type = 'LAMA'
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        atta = 2
+        label = 'EIGN'
+        response_type = 'EIGN'
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        #----------------------------------------------
+        # atti only
+        dresp_id += 1
+        #atta = 2
+        label = 'STABDER'
+        response_type = 'STABDER'
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        # reset
+        atti = []
+        #----------------------------------------------
+        # property_type, atta only
+        property_type = None
+        # ---------------------------------------------
+        # property_type, atta, atti
+        dresp_id += 1
+        label = 'STRESS'
+        response_type = 'STRESS'
+        property_type = 'PSHELL'
+        atta = 4
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'STRAIN'
+        response_type = 'STRAIN'
+        property_type = 'PSHELL'
+        atta = 4
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'FORCE'
+        response_type = 'FORCE'
+        property_type = 'PROD'
+        atta = 2
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        # attb is the lamina number
+        dresp_id += 1
+        label = 'CSTRESS'
+        response_type = 'CSTRESS'
+        property_type = 'PCOMP'
+        atta = 4
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'CSTRAIN'
+        response_type = 'CSTRAIN'
+        property_type = 'PCOMP'
+        atta = 4
+        atti = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        dresp_id += 1
+        label = 'CFAILURE'
+        response_type = 'CFAILURE'
+        property_type = 'PCOMP'
+        atta = 3
+        attai = [1]
+        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        # ---------------------------------------------
+
+        #  reset
+        property_type = None
+        atta = None
+        atti = []
+        # ---------------------------------------------
+
         save_load_deck(model)
 
     def test_dvprel1(self):

@@ -455,7 +455,7 @@ class QSET(ABCQSet):
         ABCQSet.__init__(self, ids, components, comment)
 
 
-class ABQSet1(Set):
+class ABCQSet1(Set):
     """
     Generic Class ASET1, BSET1, QSET1 cards inherit from.
 
@@ -671,7 +671,7 @@ class SuperABCQSet1(Set):
         return self.comment + print_card_8(list_fields)
 
 
-class ASET1(ABQSet1):
+class ASET1(ABCQSet1):
     """
     Defines degrees-of-freedom in the analysis set (a-set)
 
@@ -709,7 +709,7 @@ class ASET1(ABQSet1):
             a comment for the card
 
         """
-        ABQSet1.__init__(self, ids, components, comment)
+        ABCQSet1.__init__(self, ids, components, comment)
 
 class OMIT(ABCQSet):
     """
@@ -755,7 +755,7 @@ class OMIT(ABCQSet):
         ABCQSet.__init__(self, ids, components, comment)
 
 
-class OMIT1(ABQSet1):
+class OMIT1(ABCQSet1):
     """
     Defines degrees-of-freedom to be excluded (o-set) from the analysis set (a-set).
 
@@ -793,10 +793,10 @@ class OMIT1(ABQSet1):
             a comment for the card
 
         """
-        ABQSet1.__init__(self, ids, components, comment)
+        ABCQSet1.__init__(self, ids, components, comment)
 
 
-class BSET1(ABQSet1):
+class BSET1(ABCQSet1):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
     during generalized dynamic reduction or component mode synthesis
@@ -837,10 +837,10 @@ class BSET1(ABQSet1):
             a comment for the card
 
         """
-        ABQSet1.__init__(self, ids, components, comment)
+        ABCQSet1.__init__(self, ids, components, comment)
 
 
-class CSET1(ABQSet1):
+class CSET1(ABCQSet1):
     """
     Defines the degree of freedoms that will be free during a
     generalized dynamic reduction or component model synthesis
@@ -952,7 +952,7 @@ class CSET1(ABQSet1):
         return self.comment + print_card_8(list_fields)
 
 
-class QSET1(ABQSet1):
+class QSET1(ABCQSet1):
     """
     Defines generalized degrees-of-freedom (q-set) to be used for
     dynamic reduction or component mode synthesis.
@@ -982,7 +982,7 @@ class QSET1(ABQSet1):
             a comment for the card
 
         """
-        ABQSet1.__init__(self, ids, components, comment)
+        ABCQSet1.__init__(self, ids, components, comment)
 
 
 class SET1(Set):
@@ -1433,6 +1433,7 @@ class SET3(Set):
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
+        ids = [idi for idi in ids if idi is not None]
         self.ids = expand_thru(ids, set_fields=False, sort_fields=False)
         self.ids_ref = None
         self.xref_type = None
@@ -1491,7 +1492,7 @@ class SET3(Set):
         """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
-        ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
+        ids = fields(integer_string_or_blank, card, 'ID', i=3, j=len(card))
         return SET3(sid, desc, ids, comment=comment)
 
     def union(self, set3):
@@ -1822,7 +1823,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         return list_fields
 
 
-class RADSET(ABQSet1):
+class RADSET(ABCQSet1):
     """
     Specifies which radiation cavities are to be included for
     radiation enclosure analysis.
@@ -1869,9 +1870,9 @@ class RADSET(ABQSet1):
         #self.ids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a USET1 card from ``BDF.add_card(...)``
+        Adds a RADSET card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2050,7 +2051,7 @@ class USET(Set):
         return list_fields
 
 
-class USET1(ABQSet1):
+class USET1(ABCQSet1):
     """
     Defines a degree-of-freedom set.
 
@@ -2092,7 +2093,7 @@ class USET1(ABQSet1):
             a comment for the card
 
         """
-        ABQSet1.__init__(self, ids, components, comment=comment)
+        ABCQSet1.__init__(self, ids, components, comment=comment)
         #if comment:
             #self.comment = comment
         self.name = name

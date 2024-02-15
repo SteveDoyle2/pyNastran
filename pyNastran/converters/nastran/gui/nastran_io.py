@@ -45,10 +45,10 @@ else:
 from qtpy import QtCore
 from qtpy.QtWidgets import QDockWidget
 
-from pyNastran.gui.vtk_common_core import vtkPoints, vtkUnsignedCharArray, VTK_ID_TYPE
+from pyNastran.gui.vtk_common_core import vtkPoints
 from pyNastran.gui.vtk_interface import (
     vtkVertex, vtkLine, vtkQuad,
-    vtkCellArray
+    vtkUnstructuredGrid,
 )
 #from pyNastran import is_release
 from pyNastran import __version__
@@ -56,7 +56,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
     isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
     isgreater_int)
-from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
+from pyNastran.femutils.utils import duplicates, is_monotonic, safe_norm
 
 
 from pyNastran.bdf.patran_utils.colon_syntax import _apply_colon_set
@@ -101,15 +101,15 @@ from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     YELLOW_FLOAT, ORANGE_FLOAT)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
-from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult # , NormalResult
 from pyNastran.gui.gui_objects.displacements import ForceTableResults # , ElementalTableResults
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 
 
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .beams3d import get_bar_nids, get_beam_sections_map # , create_3d_beams
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
 from .results_helper import NastranGuiResults, fill_responses, _get_times
-from .bdf_vectorized import add_vectorized_elements
 from .utils import (
     #build_offset_normals_dims,
     build_map_centroidal_result,
@@ -122,7 +122,6 @@ from .nastran_io_utils import (
     build_normals_quality, create_monpnt,
     map_elements1_quality_helper,
     map_elements1_no_quality_helper,
-    map_elements3_helper, # SIDE_MAP,
     get_caero_control_surface_grid,
     get_model_unvectorized,
 )
@@ -131,6 +130,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.converters.nastran.gui.types import KeysMap, NastranKey
     #from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 DESIRED_RESULTS = [
@@ -183,11 +183,32 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     """helper class that doesn't have any pyqt requirements"""
     def __init__(self):
         super().__init__()
-        self.nid_release_map = {}
+        self.clear_nastran()
         self.make_spc_mpc_supports = True
-        #self.export_vtk = False
         self.create_secondary_actors = True
+        self.stop_on_failure = True
 
+    def clear_nastran(self):
+        """cleans up variables specific to Nastran"""
+        self.eid_map = {}
+        self.nid_map = {}
+        self.eid_to_nid_map = {}
+        self.element_ids = None
+        self.node_ids = None
+        self.model = None
+        self.nid_release_map = {}
+        self.normals = None
+        self.icd_transform = {}
+
+        self.dependents_nodes: set[int] = set([])
+        unused_node_ids = np.zeros((0, 2), dtype='int32')
+        self.nid_release_map = {}
+        self.xyz_cid0 = np.zeros((0, 3), dtype='float64')
+        self.nnodes = 0
+        self.nelements = 0
+        self.bar_eids = {}
+        self.bar_lines = {}
+        self.gui.isubcase_name_map = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """gets the Nastran wildcard loader used in the file load menu"""
@@ -226,66 +247,45 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def on_create_coord(self):
         pass
 
-    def _get_geometry_properties_by_name(self, names):
-        """
-        Get a subset of the self.geometry_properties dict specified by
-        names.  Any names not in the dict will be ignored.
-
-        Parameters
-        -----------
-        names : list [str, ...]
-            list of names.
-
-        Returns
-        --------
-        geometry_properties : dict {str : AltGeometry or CoordProperties}
-            Dictonairy from name to property object.
-
-        """
-        geometry_properties = {}
-        for name in names:
-            try:
-                prop = self.gui.geometry_properties[name]
-            except KeyError:
-                continue
-            geometry_properties[name] = prop
-        return geometry_properties
-
     def on_update_geometry_properties_window(self, geometry_properties):
         """updates the 'Edit Geometry Properties' window"""
-        self.gui.on_update_geometry_properties_window(geometry_properties)
+        gui: MainWindow = self.gui
+        gui.on_update_geometry_properties_window(geometry_properties)
 
-    def toggle_caero_sub_panels(self):
+    def toggle_caero_sub_panels(self) -> None:
         """
         Toggle the visibility of the CAERO sub panels
         """
         if not self.has_caero:
             return
 
+        gui: MainWindow = self.gui
+        settings = gui.settings.nastran_settings
         names = ['caero', 'caero_subpanels']
-        geometry_properties = self.gui._get_geometry_properties_by_name(names)
+        geometry_properties = _get_geometry_properties_by_name(gui, names)
 
-        self.show_caero_sub_panels = not self.show_caero_sub_panels
-        if self.show_caero_actor:
-            if self.show_caero_sub_panels:
+        settings.show_caero_sub_panels = not settings.show_caero_sub_panels
+        if settings.show_caero_actor:
+            if settings.show_caero_sub_panels:
                 geometry_properties['caero'].is_visible = False
                 geometry_properties['caero_subpanels'].is_visible = True
             else:
                 geometry_properties['caero'].is_visible = True
                 geometry_properties['caero_subpanels'].is_visible = False
-        self.gui.on_update_geometry_properties_override_dialog(geometry_properties)
+        gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
-    def toggle_conms(self):
+    def toggle_conms(self) -> None:
         """
         Toggle the visibility of the CONMS
         """
         name = 'conm2'
-        if name in self.gui.geometry_actors:
-            geometry_properties_change = {name : self.gui.geometry_properties[name]}
+        gui: MainWindow = self.gui
+        if name in gui.alt_grids:
+            geometry_properties_change = {name : gui.geometry_properties[name]}
             visibility_prev = geometry_properties_change[name].is_visible
             geometry_properties_change[name].is_visible = not visibility_prev
 
-            self.gui.on_update_geometry_properties_override_dialog(geometry_properties_change)
+            gui.on_update_geometry_properties_override_dialog(geometry_properties_change)
 
     def _create_coord(self, dim_max: float, cid: int, coord, coord_type: str) -> None:
         """
@@ -308,7 +308,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         origin = coord.origin
         beta = coord.beta().T
         ## TODO: support FEMAP syntax which is????
-        self.gui.create_coordinate_system(
+        gui: MainWindow = self.gui
+        gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
 
@@ -330,14 +331,15 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             'C' : 'Rtz',
             'S' : 'Rtp',
         }
-        self.gui.create_global_axes(dim_max)
-        if not self.gui.settings.nastran_settings.create_coords:
+        gui: MainWindow = self.gui
+        gui.create_global_axes(dim_max)
+        if not gui.settings.nastran_settings.create_coords:  # pragma: no cover
             return
         for cid, coord in sorted(model.coords.items()):
             if cid in [0, -1]:
                 continue
             cid_type = cid_types[coord.Type]
-            self.gui._create_coord(dim_max, cid, coord, cid_type)
+            gui._create_coord(dim_max, cid, coord, cid_type)
 
     def _remove_old_nastran_geometry(self, bdf_filename: str) -> bool:
         """cleans up the nastran model"""
@@ -351,13 +353,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             skip_reading = True
             return skip_reading
         else:
-            self.gui.turn_text_off()
-            self.gui.grid.Reset()
+            gui: MainWindow = self.gui
+            gui.turn_corner_text_off()
+            gui.grid.Reset()
 
             #self.gui.eid_map = {}
             #self.gui.nid_map = {}
-            self.gui.result_cases = {}
-            self.gui.ncases = 0
+            gui.result_cases = {}
+            gui.ncases = 0
 
         # TODO: is this doing anything?
         for name in ('case_keys', 'icase', 'isubcase_name_map'):
@@ -421,38 +424,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         make_nid_map(self.gui.nid_map, nid_cp_cd_out[:, 0])
         return xyz_cid0_out, nid_cp_cd_out
 
-    def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
-        """
-        Creates the grid points efficiently
-
-        Used by ``load_nastran_geometry_vectorized``
-        """
-        xyz_cid0 = None
-        nid_cp_cd = None
-        if self.gui.nnodes > 0:
-            #xyz_cid0 = {}
-            #nid_cp_cd = {}
-
-            out = model.get_displacement_index_xyz_cp_cd(
-                fdtype=fdtype, idtype='int32')
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.icd_transform = icd_transform
-
-            #print("transform_xyzcp_to_xyz_cid")
-            #model.nodes.cp = nid_cp_cd[:, 1]
-            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-                xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
-                in_place=False)
-            model.nodes.xyz_cid0 = xyz_cid0
-            model.nodes.nids = nid_cp_cd[:, 0]
-
-            nid_map = self.gui.nid_map
-            for i, nid in enumerate(nid_cp_cd[:, 0]):
-                nid_map[nid] = i
-
-            self._add_nastran_spoints_to_grid(model.spoints, nid_map)
-        return xyz_cid0, nid_cp_cd
-
     def _get_model_unvectorized(self,
                                 bdf_filename: Union[str, BDF],
                                 xref_loads: bool=True) -> tuple[BDF, bool]:
@@ -463,7 +434,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.model_type = 'nastran'
         return model, xref_nodes
 
-    def load_nastran_geometry(self, bdf_filename, name='main', plot=True, **kwargs):
+    def load_nastran_geometry(self, bdf_filename: Union[str, BDF],
+                              name: str='main',
+                              plot: bool=True, **kwargs):
         """
         The entry point for Nastran geometry loading.
 
@@ -484,9 +457,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             code is being called from load_nastran_geometry_and_results
             not used...
         """
-        self.gui.eid_maps[name] = {}
-        self.gui.nid_maps[name] = {}
-        self.icd_transform = {}
+        gui: MainWindow = self.gui
+        gui.eid_maps[name] = {}
+        gui.nid_maps[name] = {}
+
+        self.clear_nastran()
         #self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.case_keys[self.icase]
@@ -504,570 +479,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
-        #load_geom = True
-        if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
-            # if we're running test_pynastrangui or we have the --test flag on the command line
-            # this has (technically) nothing to do with if we're running the tests or not
-            if IS_TESTING or self.gui.is_testing_flag:
-                try:
-                    self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                except NoSuperelements:
-                    self.log.error('\n' + traceback.format_exc())
-                self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
-            else:
-                self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
-                #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-        else:
-            self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
-        self.gui.format = 'nastran'
-
-    def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
-        """
-        The entry point for Nastran geometry loading.
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the Nastran filename to load
-        plot : bool; default=True
-            should the model be generated or should we wait until
-            after the results are loaded
-        """
-        model_name = 'main'
-        #self.isubcase_name_map[None] = ['a', 'b']
-        reset_labels = True
-        if plot:
-            self.gui.scalar_bar_actor.VisibilityOff()
-            self.gui.scalar_bar_actor.Modified()
-
-        model = self._get_model_vectorized(bdf_filename)
-
-        nnodes = len(model.grid)
-        nspoints = len(model.spoints)
-        nepoints = len(model.epoints)
-        ncaero_cards = len(model.caeros)
-        ngridb = len(model.gridb)
-        #if model.spoints:
-            #spoints = sorted([spoint.nid for spoint in model.spoints.values()])
-        #if model.epoints:
-            #epoints = sorted([epoint.nid for epoint in model.epoints.values()])
-
-        ngui_nodes = nnodes + nspoints + nepoints + ngridb
-        if ngui_nodes + ncaero_cards == 0:
-            msg = 'nnodes + nspoints + nepoints = 0\n'
-            msg += 'card_count = %r' % str(model.card_count)
-            raise NoGeometry(msg)
-
-        nelements2 = len(model.elements2)
-        #nelements = len(model.elements) + nelements2
-        nelements = nelements2
-
-        nmasses = len(model.masses)
-        nplotels = len(model.plotels)
-        nrigid = len(model.rigid_elements)
-
-        #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
-        if len(model.superelement_models):
-            raise NoSuperelements('superelements are not supported in vectorized BDF')
-
-        if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
-            msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
-            msg += 'card_count = %r' % str(model.card_count)
-            raise NoGeometry(msg)
-
-        self.gui.nnodes = ngui_nodes
-        self.gui.nelements = nelements  # approximate...
-
-        self.gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')
-        msg = model.get_bdf_stats(return_type='string')
-        self.gui.log_debug(msg)
-        msg = model.get_bdf_stats(return_type='list')
-
-        # this call will break the GUI if there are a lot of lines and
-        # by a lot I mean 37641.  It's fine for a single call.
-        #for msgi in msg:
-            #model.log.debug(msgi)
-
-        nconm2 = 0
-        #if 'CONM2' in model.card_count:
-            #nconm2 += model.card_count['CONM2']
-        #if 'CMASS1' in model.card_count:
-            #nconm2 += model.card_count['CMASS1']
-        #if 'CMASS2' in model.card_count:
-            #nconm2 += model.card_count['CMASS2']
-
-        if nconm2 > 0:
-            self.gui.create_alternate_vtk_grid(
-                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
-                representation='point', follower_function=None)
-
-        # Allocate grids
-        self.gui.grid.Allocate(self.nelements, 1000)
-        #self._create_caero_actors(ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface)
-        #if nconm2 > 0:
-            #self.gui.alt_grids['conm2'].Allocate(nconm2, 1000)
-
-        if self.save_data:
-            self.model = model
-
-        #-----------------------------------------------------------------------
-        # nodes/coords
-        #print('get_xyz_in_coord')
-        dim_max = 1.0
-        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord_vectorized(model, cid=0, fdtype='float32')
-        if xyz_cid0 is not None:
-            dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
-        #-----------------------------------------------------------------------
-
-        #------------------------------------------------------------
-        # TEMP
-        j = 0
-        results = self._map_elements_vectorized(self.nid_map, model, j, dim_max,
-                                                nid_cp_cd, plot=True, xref_loads=True)
-        has_control_surface = False
-        geometry_names = []
-        #------------------------------------------------------------
-        cases = {}
-        form = ['Geometry', None, []]
-        form0 = form[2]
-
-        subcase_id = 0
-
-        colormap = self.gui.settings.colormap
-        if self.gui.nnodes > 0:
-            icase = 0
-            all_nids = nid_cp_cd[:, 0]
-            self.gui.node_ids = all_nids
-
-            nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
-                                mask_value=0,
-                                nlabels=None,
-                                labelsize=None,
-                                ncolors=None,
-                                colormap=colormap,
-                                data_format=None,
-                                uname='GuiResult')
-            cases[icase] = (nid_res, (0, 'Node ID'))
-            form0.append(('Node ID', icase, []))
-            icase += 1
-
-            nid_res = GuiResult(subcase_id, 'iNode', 'iNode', 'node',
-                                np.arange(len(all_nids), dtype='int32'),
-                                mask_value=0,
-                                nlabels=None,
-                                labelsize=None,
-                                ncolors=None,
-                                colormap=colormap,
-                                data_format=None,
-                                uname='GuiResult')
-            cases[icase] = (nid_res, (0, 'Node ID'))
-            form0.append(('iNode', icase, []))
-            icase += 1
-
-            # this intentionally makes a deepcopy
-            cds = np.array(nid_cp_cd[:, 2])
-            if cds.max() > 0:
-                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                                   location='node', scalar=cds, colormap=colormap)
-                cases[icase] = (cd_res, (0, 'NodeCd'))
-                form0.append(('NodeCd', icase, []))
-                icase += 1
-
-        if self.gui.nelements > 0:
-            eids_array = results['eid']
-            eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids_array,
-                                mask_value=0,
-                                nlabels=None,
-                                labelsize=None,
-                                ncolors=None,
-                                colormap=colormap,
-                                data_format=None,
-                                uname='GuiResult')
-            cases[icase] = (eid_res, (0, 'ElementID'))
-            form0.append(('ElementID', icase, []))
-            icase += 1
-
-            eids_array = results['eid']
-            eid_res = GuiResult(subcase_id, 'iElement', 'iElement', 'centroid',
-                                np.arange(len(eids_array), dtype='int32'),
-                                mask_value=-1,
-                                nlabels=None,
-                                labelsize=None,
-                                ncolors=None,
-                                colormap=colormap,
-                                data_format=None,
-                                uname='GuiResult')
-            cases[icase] = (eid_res, (0, 'iElement'))
-            form0.append(('iElement', icase, []))
-            icase += 1
-
-            #is_element_dim = True
-            dim_array = results['dim']
-            if len(np.unique(dim_array)) > 1:
-                dim_res = GuiResult(subcase_id, 'ElementDim', 'ElementDim', 'centroid', dim_array,
-                                    mask_value=-1,
-                                    nlabels=None,
-                                    labelsize=None,
-                                    ncolors=None,
-                                    colormap=colormap,
-                                    data_format=None,
-                                    uname='GuiResult')
-                cases[icase] = (dim_res, (0, 'ElementDim'))
-                form0.append(('ElementDim', icase, []))
-                icase += 1
-
-            nnodes_array = results['nnodes']
-            if nnodes_array.max() > -1:
-                nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem',
-                                       'centroid', nnodes_array,
-                                       mask_value=-1,
-                                       nlabels=None,
-                                       labelsize=None,
-                                       ncolors=None,
-                                       colormap=colormap,
-                                       data_format=None,
-                                       uname='GuiResult')
-                cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
-                form0.append(('NNodes/Elem', icase, []))
-                icase += 1
-
-            pids_array = results['pid']
-            pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
-                                location='centroid', scalar=pids_array, mask_value=0)
-            cases[icase] = (pid_res, (0, 'PropertyID'))
-            form0.append(('PropertyID', icase, []))
-            icase += 1
-
-            #upids = np.unique(pids_array)
-            unused_mid_eids_skip = []
-
-
-            pcomp_nplies = 0
-            nplies = 1
-            is_pshell = False
-            is_pcomp = False
-            if 'PSHELL' in model.card_count:
-                nplies = 4
-                is_pshell = True
-            for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
-                prop = model.properties[pid]
-                pcomp_nplies = max(pcomp_nplies, prop.nplies)
-                is_pcomp = True
-            is_pshell_pcomp = (is_pshell, is_pcomp)
-            nplies = max(nplies, pcomp_nplies + 1)
-            mids = np.zeros((nelements, nplies), dtype='int32')
-            thickness = np.full((nelements, nplies), np.nan, dtype='float32')
-            theta = np.full((nelements, nplies), np.nan, dtype='float32')
-            #rho = np.full((nelements, nplies), np.nan, dtype='float32')
-            nplies = np.zeros(nelements, dtype='int32')
-
-            # materials
-            upids = np.unique(pids_array)
-            ipids = np.zeros(len(pids_array), dtype='int32')
-            iupid = 0
-            for upid in upids: # upid_old
-                if upid == 0:
-                    # elements w/o properties
-                    continue
-
-                ipid = np.where(pids_array == upid)[0]
-                ipids[ipid] = iupid
-                if len(ipid):
-                    try:
-                        prop = model.properties[upid]
-                    except KeyError:
-                        raise KeyError('pid=%r properties=%s' % (upid, str(model.properties)))
-                    if prop.type == 'PSHELL':
-                        nplies[ipid] = 4
-                        thickness[ipid, 0] = prop.Thickness()
-                    elif prop.type in {'PCOMP', 'PCOMPG'}:
-                        nplies[ipid] = prop.nplies
-                        for iply in range(prop.nplies):
-                            mids[ipid, iply+1] = prop.Mid(iply)
-                            thickness[ipid, iply+1] = prop.Thickness(iply)
-                            theta[ipid, iply+1] = prop.Theta(iply)
-                    else:
-                        self.log.error(f'skipping setting mids (vectorized) for {prop.type}')
-                    iupid += 1
-
-            if len(model.conrod):
-                #mids[ieid, 0] = 42
-                pass
-
-            pid_res = GuiResult(0, header='iProperty', title='iProperty',
-                                location='centroid', scalar=ipids, colormap=colormap)
-            cases[icase] = (pid_res, (0, 'iProperty'))
-            form0.append(('iProperty', icase, []))
-            icase += 1
-
-            #if nplies.max() > 0:
-                #nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
-                                       #location='centroid', scalar=nplies, mask_value=0)
-                #cases[icase] = (nplies_res, (0, 'Number of Plies'))
-                #form0.append(('Number of Plies', icase, []))
-                #icase += 1
-
-            pshell = {
-                'mids' : mids,
-                'thickness' : nplies,
-            }
-            pcomp = {
-                'mids' : mids,
-                'thickness' : nplies,
-                'nplies' : nplies,
-                'theta': theta,
-            }
-            icase = _build_materials(model, pshell, pcomp, is_pshell_pcomp,
-                                     cases, form0, icase)
-
-        #------------------------------------------------------------
-        # add alternate actors
-        self.gui._add_alt_actors(self.gui.alt_grids)
-
-        # set default representation
-        self._set_caero_representation(has_control_surface)
-
-        for grid_name in geometry_names:
-            if grid_name in self.gui.geometry_actors:
-                self.gui.geometry_actors[grid_name].Modified()
-
-        #self.gui.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        if 0:
-            if plot:
-                self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
-            else:
-                self.gui._set_results([form], cases)
-
-    def _map_elements_vectorized(self, unused_nid_map, model, unused_j, unused_dim_max,
-                                 unused_nid_cp_cd, plot=True, xref_loads=True):
-        """
-        Much, much faster way to add elements that directly builds the
-        VTK objects rather than using for loops.
-
-        Parameters
-        ----------
-        nid_map : ???
-           ???
-        model : BDF()
-            the BDF model object
-        j : int
-            ???
-        dim_max : float
-            ???
-        nid_cp_cd : ???
-            ???
-        plot : bool; default=True
-            ???
-        xref_loads : bool; default=True
-            ???
-
-        Returns
-        -------
-        nid_to_pid_map  : dict
-            node to property id map
-            used to show SPC constraints (we don't want to show constraints
-            on 456 DOFs)
-        icase : int
-            the result number
-        cases : dict
-            the GuiResult objects
-        form : list[???, ???, ???]
-            the Results sidebar data
-
-        TDOO: Not quite done on:
-               - ???
-        """
-        self.gui.isubcase_name_map = {1: ['Nastran', '']}
-        grid = self.gui.grid
-
-        nelements = self.nelements
-        if nelements == 0:
-            return None
-        idtype = get_numpy_idtype_for_vtk()
-        log = self.log
-        cell_types_array, cell_offsets_array, nids_list, eids_array, results = add_vectorized_elements(
-            model, nelements, idtype, log)
-
-        if cell_types_array.min() == 0:
-
-            # all the non-elemental cards should be listed
-            # it's not hugely important, but it cleans up dev error messages
-            skip_cards = [
-                'CONM2',
-                #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'PLOTEL',
-                'PARAM',
-                #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC',
-                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLEST',
-                'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
-                'MATT1', 'MATT2', 'MATT8',
-                'MATS1', 'MATHP',
-
-                'PLOAD', 'PLOAD1', 'PLOAD2', 'FORCE', 'PLOAD4', 'LOAD',
-                'MAT1', 'PSHEAR', 'PSHELL', 'PTUBE', 'PDAMP',
-                'PELAST', 'PBEND', 'PBEAM', 'PCOMP', 'PCOMPG', 'PBAR', 'PSOLID',
-                'PLPLANE', 'PLSOLID',
-                'PROD', 'PELAS', 'PVISC', 'PBUSH1D', 'PBUSH2D',
-                #'EPOINT',
-                #'CQUADR', 'CTRIAR', 'SPOINT',
-                #'CQUAD8', 'CTRIA6',
-                'ENDDATA',
-                'CORD2R', 'CORD2C', 'CORD2S', 'CORD1R', 'CORD1C', 'CORD1S',
-                'GRID', 'SPOINT', 'EPOINT', 'TF',
-
-                'RFORCE', 'RFORCE1', 'RFORCE2', 'FORCE', 'FORCE1', 'FORCE2',
-                'MOMENT', 'MOMENT1', 'MOMENT2', 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                'LOAD', 'TLOAD1', 'TLOAD2', 'DLOAD', 'LSEQ', 'DAREA',
-                'RLOAD1', 'RLOAD2',
-
-                'SUPORT', 'SUPORT1', 'MPC', 'MPCADD', 'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RCROSS',
-                'SPCADD', 'SPC', 'SPC1', 'SPCD', 'SPCAX', 'DMIG', 'DMI', 'DMIJ', 'DMIJI', 'DMIK',
-
-                'AELIST', 'AELINK', 'AESURF', 'AESURFS', 'AERO', 'AEROS', 'TRIM',
-                'FLUTTER', 'DIVERG',
-                'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-                'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
-                'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7',
-                'CLOAD', 'TABLES1', 'NLPARM', 'GRDSET',
-            ]
-            potential_elements_found = [key for key in model.card_count if key not in skip_cards]
-            etypes = [
-                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC',
-                'CBUSH', 'CBUSH1D', 'CBUSH2D',
-                'CONROD', 'CROD', 'CTUBE', 'PLOTEL',
-                'CBAR', 'CBEAM', 'CBEND',
-                'CSHEAR',
-                'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CTRIAR', 'CQUADR',
-                'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
-                'CHBDYG', 'CHBDYE', 'CHBDYP',
-                # nastran 95
-                'CQUAD1',
-            ]
-            for key in potential_elements_found:
-                if key not in etypes:
-                    log.warning('is %s an element?' % key)
-
-            msg = (
-                'Cell Type is not defined (cell_type=0).\n'
-                '  cell_types_array = %s\n'
-                '  potential_elements_found=[%s]\n'
-                '  nelements=%s\n\n'
-                '%s\n\n' % (
-                    cell_types_array,
-                    ', '.join(potential_elements_found),
-                    len(cell_types_array),
-                    '', #str(model.elements2),
-                )
-            )
-            print(str(model.elements2))
-            #msg += model.get_bdf_stats()
-            raise RuntimeError(msg)
-
-        deep = 1
-        if len(nids_list) == 1:
-            nids_array = nids_list[0].ravel()
-        else:
-            #raise NotImplementedError(len(nids_list))
-            nids_array = np.hstack([nid_list.flatten() for nid_list in nids_list])
-            #nids_array = np.array(nids_list, dtype=dtype)
-
-        #-----------------------------------------------------------------
-        # saving some data members
-        self.gui.element_ids = eids_array
-
-        #-----------------------------------------------------------------
-        # build the grid
-
-        #self.log.info('nids_array = %s' % nids_array)
-        #self.log.info('cell_offsets_array = %s' % cell_offsets_array)
-        #self.log.info('cell_types_array = %s' % cell_types_array)
-
-        # Create the array of cells
-        #print('nids_array =', nids_array)
-        cells_id_type = numpy_to_vtkIdTypeArray(nids_array, deep=1)
-        vtk_cells = vtkCellArray()
-        vtk_cells.SetCells(nelements, cells_id_type)
-
-        # Cell types
-        vtk_cell_types = numpy_to_vtk(
-            cell_types_array, deep=deep,
-            array_type=vtkUnsignedCharArray().GetDataType())
-
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=deep,
-                                        array_type=VTK_ID_TYPE)
-
-        grid = self.gui.grid
-        #grid = vtkUnstructuredGrid()
-        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
-        return results
-
-    def _get_model_vectorized(self, bdf_filename):
-        """Loads the BDF/OP2 geometry"""
-        ext = os.path.splitext(bdf_filename)[1].lower()
-        punch = False
-        if ext == '.pch':
-            punch = True
-
-        self.model_type = 'nastran'
-        log = self.log
-        if ext == '.op2':
-            from pyNastran.dev.bdf_vectorized2.op2_geom_vectorized import (
-                OP2Geom as OP2Geom_)
-            model = OP2Geom_(make_geom=True, debug=False, log=log,
-                             debug_file=None)
-            model.clear_results()
-            model.read_op2(op2_filename=bdf_filename)
-        else:  # read the bdf/punch
-            from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDF_
-            model = BDF_(log=log, debug=True)
-
-            # static_elements.bdf
-            #skip_cards = [
-                #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'PLOTEL', 'PARAM',
-                #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC',
-                #'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                #'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-                #'PLOAD', 'PLOAD1', 'PLOAD2', 'FORCE', 'PLOAD4', 'LOAD',
-                #'SPCADD', 'MAT1', 'PSHEAR', 'PSHELL', 'PTUBE', 'PDAMP',
-                #'SPC1', 'CONM2', 'PELAST', 'PBEND', 'PBEAM', 'PCOMP', 'PCOMPG', 'PBAR', 'PSOLID',
-                #'PBUSH1D',
-                #'EPOINT',
-                #'CQUADR', 'CTRIAR', 'SPOINT', 'PROD', 'PELAS', 'PVISC',
-                #'CQUAD8', 'CTRIA6',
-                #]
-            #model.disable_cards(skip_cards)
-            model.read_bdf(bdf_filename,
-                           punch=punch, xref=False,
-                           validate=True)
-            #print(list(key for key in model.card_count.keys() if key not in skip_cards))
-
-        #xref_loads = False
-        #xref_aero = len(model.caeros) > 0
-        #model.cross_reference(
-            #xref=True,
-            #xref_nodes=True,
-            #xref_elements=False,
-            #xref_nodes_with_elements=False,
-            #xref_properties=True,
-            #xref_masses=True,
-            #xref_materials=False,
-            #xref_loads=xref_loads,
-            #xref_constraints=False,
-            #xref_optimization=False,
-            #xref_aero=False,
-            #xref_sets=False,
-        #)
-        return model
+        #if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
+            ## if we're running test_pynastrangui or we have the --test flag on the command line
+            ## this has (technically) nothing to do with if we're running the tests or not
+        self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
+        gui.format = 'nastran'
 
     def _points_to_vtkpoints_coords(self, model, xyz_cid0):
         """
         helper method for:
          - load_nastran_geometry_unvectorized
-         - load_nastran_geometry_vectorized
         """
+        gui: MainWindow = self.gui
         points = numpy_to_vtk_points(xyz_cid0)
-        self.gui.grid.SetPoints(points)
+        gui.grid.SetPoints(points)
 
         self.xyz_cid0 = xyz_cid0
 
@@ -1078,13 +503,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         xmin, ymin, zmin = mini
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
-        #print('_create_nastran_coords')
         self._create_nastran_coords(model, dim_max)
-        #print('done _create_nastran_coords')
 
-        self.gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         return dim_max
 
     def load_nastran_geometry_unvectorized(self, bdf_filename: str, plot: bool=True):
@@ -1101,14 +524,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """
         model_name = 'main'
         reset_labels = True
-        settings: Settings = self.gui.settings
+        gui: MainWindow = self.gui
+        settings: Settings = gui.settings
         nastran_settings: NastranSettings = settings.nastran_settings
         if plot:
-            self.gui.scalar_bar_actor.VisibilityOff()
-            self.gui.scalar_bar_actor.Modified()
+            gui.scalar_bar_actor.VisibilityOff()
+            gui.scalar_bar_actor.Modified()
 
         xref_loads = True # should be True
-        model, xref_nodes = self._get_model_unvectorized(bdf_filename, xref_loads=xref_loads)
+        model, xref_nodes = self._get_model_unvectorized(
+            bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
@@ -1148,16 +573,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.nnodes = ngui_nodes
         self.nelements = nelements  # approximate...
 
-        out = self.make_caeros(model, create_secondary_actors=self.create_secondary_actors)
+        out = self.make_caeros(model)
         (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
          ncaeros_points, ncaero_sub_points,
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
         self.has_caero = has_caero
 
         #-----------------------------------------------------------------------
-        self.gui.log_info("nnodes=%d nelements=%d" % (self.nnodes, self.nelements))
+        gui.log_info("nnodes=%d nelements=%d" % (self.nnodes, self.nelements))
         msg = model.get_bdf_stats(return_type='string')
-        self.gui.log_debug(msg)
+        gui.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')
 
         # this call will break the GUI if there are a lot of lines and
@@ -1171,20 +596,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         dim_max = 1.0
         xyz_cid0 = None
         nid_cp_cd = None
-        if self.gui.nnodes:
+        if gui.nnodes:
             xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
             dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         self.node_ids = nid_cp_cd[:, 0]
 
         #-----------------------------------------------------------------------
-        nconm2 = _create_masses(self.gui, model, self.gui.node_ids,
-                                create_secondary_actors=self.create_secondary_actors)
+        nconm2 = _create_masses(
+            gui, model, gui.node_ids,
+            create_secondary_actors=self.create_secondary_actors)
 
         # Allocate grids
-        self.gui.grid.Allocate(self.nelements, 1000)
+        gui.grid.Allocate(self.nelements, 1000)
         self._create_caero_actors(ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface)
         if nconm2 > 0:
-            self.gui.alt_grids['conm2'].Allocate(nconm2, 1000)
+            gui.alt_grids['conm2'].Allocate(nconm2, 1000)
 
         if self.save_data:
             self.model = model
@@ -1206,56 +632,59 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             self._set_conm_grid(nconm2, model)
 
         geometry_names = []
-        if self.create_secondary_actors and self.make_spc_mpc_supports and xref_nodes:
-            geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map,
-                                                          idtype)
+        if self.create_secondary_actors:
+            if self.make_spc_mpc_supports and xref_nodes:
+                geometry_names = self.set_spc_mpc_suport_grid(
+                    model, nid_to_pid_map, idtype)
 
-        if self.create_secondary_actors and xref_nodes and nastran_settings.is_bar_axes:
-            icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
+            if xref_nodes and nastran_settings.is_bar_axes:
+                icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
         assert icase is not None
 
         #------------------------------------------------------------
         #print('dependent_nodes =', self.dependents_nodes)
-        icase = self._set_subcases_unvectorized(model, form, cases, icase, xref_nodes, xref_loads)
+        icase = self._set_subcases_unvectorized(model, form, cases, icase,
+                                                xref_nodes, xref_loads)
 
         name = 'main_copy'
-        self.gui.duplicate_alternate_vtk_grid(
+        gui.duplicate_alternate_vtk_grid(
             name, 'main', color=(0., 0., 0.), line_width=5,
             opacity=0.1, is_visible=False)
 
         #------------------------------------------------------------
         # add alternate actors
-        self.gui._add_alt_actors(self.gui.alt_grids)
+        gui._add_alt_actors(gui.alt_grids)
 
         # set default representation
         self._set_caero_representation(has_control_surface)
 
         for grid_name in geometry_names:
-            if grid_name in self.gui.geometry_actors:
-                self.gui.geometry_actors[grid_name].Modified()
+            if grid_name in gui.geometry_actors:
+                gui.geometry_actors[grid_name].Modified()
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         stop_on_failure = IS_TESTING
-        build_map_centroidal_result(model, nid_map, stop_on_failure=stop_on_failure)
+        build_map_centroidal_result(
+            model, nid_map, stop_on_failure=stop_on_failure)
 
-        if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
-            self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
-            self.sidebar_nastran.set_model(model)
+        #if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
+            #self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
+            #self.sidebar_nastran.set_model(model)
 
-            self.res_dock_nastran = QDockWidget("Nastran Model", self)
-            self.res_dock_nastran.setObjectName("nastran_model")
-            self.res_dock_nastran.setWidget(self.sidebar_nastran)
-            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+            #self.res_dock_nastran = QDockWidget("Nastran Model", self)
+            #self.res_dock_nastran.setObjectName("nastran_model")
+            #self.res_dock_nastran.setWidget(self.sidebar_nastran)
+            #self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
 
         #self.res_dock.setWidget(self.res_widget)
         if plot:
-            self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
+            gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:
-            self.gui._set_results([form], cases)
+            gui._set_results([form], cases)
 
     def update_caeros(self, obj):
         """the update call for the ModifyMenu"""
-        model = self.model # type: BDF
+        model: BDF = self.model
         xref_errors = {}
         model._uncross_reference_aero()
         model._cross_reference_aero(check_caero_element_ids=False)
@@ -1283,7 +712,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         zfighting_offset0 = 0.001
         zfighting_offset = zfighting_offset0
         self._create_splines(model, box_id_to_caero_element_map, caero_points)
-        if 'caero' in self.gui.alt_grids:
+        gui: MainWindow = self.gui
+        if 'caero' in gui.alt_grids:
             self.set_caero_grid(ncaeros_points, model)
             self.set_caero_subpanel_grid(ncaero_sub_points, model)
             if has_control_surface:
@@ -1314,7 +744,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
         """helper for ``load_nastran_geometry_unvectorized``"""
-        settings = self.gui.settings  # type: Settings
+        gui: MainWindow = self.gui
+        settings: Settings = gui.settings
         colormap = settings.colormap
         form0 = form[2]
         assert icase is not None
@@ -1328,7 +759,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 subcase_id = 1
             elif subcase_id == 0:
                 continue
-            self.gui.log_debug('NastranIOv subcase_id = %s' % subcase_id)
+            gui.log_debug('NastranIOv subcase_id = %s' % subcase_id)
 
             subtitle = ''
             if 'SUBTITLE' in subcase:
@@ -1377,19 +808,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          - caero_subpanels
          - caero_control_surfaces
         """
-        if self.has_caero:
-            gui = self.gui
-            gui.create_alternate_vtk_grid(
-                'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
-                representation='toggle', is_visible=True, is_pickable=False)
-            gui.create_alternate_vtk_grid(
-                'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
-                representation='toggle', is_visible=False, is_pickable=False)
+        if not self.has_caero:
+            return
+        gui: MainWindow = self.gui
+        gui.create_alternate_vtk_grid(
+            'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+            representation='toggle', is_visible=True, is_pickable=False)
+        gui.create_alternate_vtk_grid(
+            'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+            representation='toggle', is_visible=False, is_pickable=False)
 
-            gui.alt_grids['caero'].Allocate(ncaeros, 1000)
-            gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
-            if has_control_surface:
-                gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
+        gui.alt_grids['caero'].Allocate(ncaeros, 1000)
+        gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
+        if has_control_surface:
+            gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
 
     def _set_caero_representation(self, has_control_surface: bool) -> None:
@@ -1400,24 +832,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             is there a control surface
 
         """
-        geometry_actors = self.gui.geometry_actors
+        gui: MainWindow = self.gui
+        geometry_actors = gui.geometry_actors
         if 'caero_control_surfaces' in geometry_actors:
-            self.gui.geometry_properties['caero_control_surfaces'].opacity = 0.5
+            gui.geometry_properties['caero_control_surfaces'].opacity = 0.5
+            geometry_actors['caero_control_surfaces'].Modified()
 
-            if 'caero' not in geometry_actors:
-                return
-            geometry_actors['caero'].Modified()
-            geometry_actors['caero_subpanels'].Modified()
-            if has_control_surface:
-                geometry_actors['caero_control_surfaces'].Modified()
-            if hasattr(geometry_actors['caero'], 'Update'):
-                geometry_actors['caero'].Update()
-            if hasattr(geometry_actors['caero_subpanels'], 'Update'):
-                geometry_actors['caero_subpanels'].Update()
-            if has_control_surface and hasattr(geometry_actors['caero_subpanels'], 'Update'):
-                geometry_actors['caero_control_surfaces'].Update()
+        if 'caero' not in geometry_actors:
+            return
+        geometry_actors['caero'].Modified()
+        geometry_actors['caero_subpanels'].Modified()
 
-    def _create_splines(self, model: BDF, box_id_to_caero_element_map: dict[int, int], caero_points):
+    def _create_splines(self, model: BDF,
+                        box_id_to_caero_element_map: dict[int, int],
+                        caero_points):
         """
         Sets the following actors:
           - spline_%s_structure_points % spline_id
@@ -1433,66 +861,68 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             ???
         """
         stored_msg = []
-        if model.splines:
-            # 0 - caero / caero_subpanel
-            # 1 - control surface
-            # 3/5/7/... - spline points
-            # 2/4/6/... - spline panels
-            iaero = 2
-            for spline_id, spline in sorted(model.splines.items()):
-                setg_ref = spline.setg_ref
-                if setg_ref is None:
-                    msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
-                    #n, filename = log_properties(1)
-                    #print(filename, n)
-                    #stored_msg.append(msg)
-                    self.log.error(msg)
-                    #raise RuntimeError(msg)
-                    continue
-                else:
-                    structure_points = setg_ref.get_ids()
+        if not len(model.splines):
+            return
 
-                try:
-                    aero_box_ids = spline.aero_element_ids
-                except Exception:
-                    print(spline.object_attributes())
-                    print(spline.object_methods())
-                    raise
-                if spline.type != 'SPLINE3_ZAERO':
-                    assert len(aero_box_ids) > 0, spline
-                # the control surfaces all lie perfectly on top of each other
-                # such that we have z fighting, so based on the aero index,
-                # we calculate a z offset.
-                zfighting_offset = 0.0001 * (iaero + 1)
-                grid_name = 'spline_%s_structure_points' % spline_id
-                self.gui.create_alternate_vtk_grid(
-                    grid_name, color=BLUE_FLOAT, opacity=1.0, point_size=5,
-                    representation='point', is_visible=False)
-                msg = ', which is required by %r' % grid_name
-                stored_msgi = self._add_nastran_nodes_to_grid(
-                    grid_name, structure_points, model, msg, store_msg=True)
+        gui: MainWindow = self.gui
+        # 0 - caero / caero_subpanel
+        # 1 - control surface
+        # 3/5/7/... - spline points
+        # 2/4/6/... - spline panels
+        iaero = 2
+        for spline_id, spline in sorted(model.splines.items()):
+            setg_ref = spline.setg_ref
+            if setg_ref is None:
+                msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
+                #n, filename = log_properties(1)
+                #print(filename, n)
+                #stored_msg.append(msg)
+                self.log.error(msg)
+                #raise RuntimeError(msg)
+                continue
+            else:
+                structure_points = setg_ref.get_ids()
 
-                zfighting_offset = 0.0001 * (iaero + 2)
-                grid_name = 'spline_%s_boxes' % spline_id
-                self.gui.create_alternate_vtk_grid(
-                    grid_name, color=BLUE_FLOAT, opacity=0.3,
-                    line_width=4,
-                    representation='toggle', is_visible=False)
-                stored_msgi2 = self.set_caero_control_surface_grid(
-                    grid_name, aero_box_ids,
-                    box_id_to_caero_element_map, caero_points,
-                    zfighting_offset=zfighting_offset, store_msg=True)
-                iaero += 2
-                if stored_msgi:
-                    stored_msg.append(stored_msgi)
-                if stored_msgi2:
-                    stored_msg.append(stored_msgi2)
+            try:
+                aero_box_ids = spline.aero_element_ids
+            except Exception:
+                print(spline.object_attributes())
+                print(spline.object_methods())
+                raise
+            if spline.type != 'SPLINE3_ZAERO':
+                assert len(aero_box_ids) > 0, spline
+            # the control surfaces all lie perfectly on top of each other
+            # such that we have z fighting, so based on the aero index,
+            # we calculate a z offset.
+            zfighting_offset = 0.0001 * (iaero + 1)
+            grid_name = f'spline_{spline_id:d}_structure_points'
+            gui.create_alternate_vtk_grid(
+                grid_name, color=BLUE_FLOAT, opacity=1.0, point_size=5,
+                representation='point', is_visible=False)
+            msg = f', which is required by {grid_name!r}'
+            stored_msgi = self._add_nastran_nodes_to_grid(
+                grid_name, structure_points, model, msg, store_msg=True)
+
+            zfighting_offset = 0.0001 * (iaero + 2)
+            grid_name = f'spline_{spline_id:d}_boxes'
+            gui.create_alternate_vtk_grid(
+                grid_name, color=BLUE_FLOAT, opacity=0.3,
+                line_width=4,
+                representation='toggle', is_visible=False)
+            stored_msgi2 = self.set_caero_control_surface_grid(
+                grid_name, aero_box_ids,
+                box_id_to_caero_element_map, caero_points,
+                zfighting_offset=zfighting_offset, store_msg=True)
+            iaero += 2
+            if stored_msgi:
+                stored_msg.append(stored_msgi)
+            if stored_msgi2:
+                stored_msg.append(stored_msgi2)
         if stored_msg:
             model.log.warning('\n' + '\n'.join(stored_msg))
 
-    def make_caeros(self, model: BDF,
-                    create_secondary_actors=True) -> tuple[np.ndarray, int, int, int, int, bool,
-                                                           dict[int, int], list[int]]:
+    def make_caeros(self, model: BDF) -> tuple[np.ndarray, int, int, int, int, bool,
+                                               dict[int, int], list[int]]:
         """
         Creates the CAERO panel inputs including:
          - caero
@@ -1530,16 +960,36 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             list of panels used by each aero panel
 
         """
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(
-            model, create_secondary_actors)
+        # when caeros is empty, SPLINEx/AESURF cannot be defined
+        if not self.create_secondary_actors or len(model.caeros) == 0:
+            caero_points = np.empty((0, 3))
+            has_caero = False
+            ncaeros = 0
+            ncaeros_sub = 0
+            ncaeros_cs = 0
+            ncaeros_points = 0
+            ncaero_sub_points = 0
+            has_control_surface = False
+            box_id_to_caero_element_map = {}
+            cs_box_ids = defaultdict(list)
+            all_control_surface_name = ''
+            caero_control_surface_names = []
+            out = (
+                has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+                ncaeros_points, ncaero_sub_points,
+                has_control_surface, box_id_to_caero_element_map, cs_box_ids,
+            )
+            return out
 
+        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        gui: MainWindow = self.gui
         if all_control_surface_name:
-            self.gui.create_alternate_vtk_grid(
+            gui.create_alternate_vtk_grid(
                 'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
                 representation='surface', is_visible=False)
 
         for cs_name in caero_control_surfaces:
-            self.gui.create_alternate_vtk_grid(
+            gui.create_alternate_vtk_grid(
                 cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
                 representation='surface')
         return out
@@ -1556,7 +1006,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             the bdf model
 
         """
-        gui = self.gui
+        gui: MainWindow = self.gui
         points = vtkPoints()
         points.SetNumberOfPoints(ncaeros_points)
 
@@ -1656,9 +1106,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         """
         nodes, elements = get_caero_subpanel_grid(model)
-        if elements.shape[0] == 0:
+        if elements.shape[0] == 0:  # pragma: no cover
             return
-        grid = self.gui.alt_grids['caero_subpanels']
+        gui: MainWindow = self.gui
+        grid = gui.alt_grids['caero_subpanels']
         quad_etype = 9
         create_vtk_cells_of_constant_element_type(grid, elements, quad_etype)
 
@@ -1703,8 +1154,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             ???
 
         """
-        gui = self.gui
-        log = self.gui.log
+        gui: MainWindow = self.gui
+        log = gui.log
         boxes_to_show, stored_msg = check_for_missing_control_surface_boxes(
             name, cs_box_ids, box_id_to_caero_element_map, log,
             store_msg=store_msg)
@@ -1780,14 +1231,15 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         because it's really a "mass" actor
         """
-        if not self.create_secondary_actors:
+        if not self.create_secondary_actors:  # pramga: no cover
             return
         j = 0
+        gui: MainWindow = self.gui
         points = vtkPoints()
         points.SetNumberOfPoints(nconm2)
 
         #sphere_size = self._get_sphere_size(dim_max)
-        alt_grid = self.gui.alt_grids['conm2']
+        alt_grid = gui.alt_grids['conm2']
         for unused_eid, element in sorted(model.masses.items()):
             if isinstance(element, CONM2):
                 xyz_nid = element.nid_ref.get_position()
@@ -1821,7 +1273,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
                 j += 1
             else:
-                self.gui.log_info("skipping %s" % element.type)
+                gui.log_info("skipping %s" % element.type)
         alt_grid.SetPoints(points)
 
     def set_spc_mpc_suport_grid(self, model, nid_to_pid_map, idtype):
@@ -1835,6 +1287,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         TODO: consider changing the varying ids to huh???
         """
+        gui: MainWindow = self.gui
         spc_names = []
         mpc_names = []
         suport_names = []
@@ -1955,7 +1408,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 idsi = suport.node_ids
                 ids += idsi
             grid_name = 'SUPORT'
-            self.gui.create_alternate_vtk_grid(
+            gui.create_alternate_vtk_grid(
                 grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
@@ -1970,19 +1423,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 depname, indname, linename, idtype)
 
         for grid_name, group in model.model_groups.items():
-            if len(group.nodes):
-                nids_colon = []
-                for groupi in group.nodes:
-                    colon_groupi = '%d:%d:%d' % groupi
-                    expanded_nids = _apply_colon_set(colon_groupi)
-                    nids_colon.extend(expanded_nids)
-                nids = np.unique(np.hstack(nids_colon))
-                msg = f', which is required by {grid_name!r}'
-                self.gui.create_alternate_vtk_grid(
-                    grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
-                    representation='point', is_visible=True)
-                self._add_nastran_nodes_to_grid(grid_name, nids, model, msg)
-                del nids, nids_colon
+            if not len(group.nodes):
+                continue
+            nids_colon = []
+            for groupi in group.nodes:
+                colon_groupi = '%d:%d:%d' % groupi
+                expanded_nids = _apply_colon_set(colon_groupi)
+                nids_colon.extend(expanded_nids)
+            nids = np.unique(np.hstack(nids_colon))
+            msg = f', which is required by {grid_name!r}'
+            gui.create_alternate_vtk_grid(
+                grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
+                representation='point', is_visible=True)
+            self._add_nastran_nodes_to_grid(grid_name, nids, model, msg)
+            del nids, nids_colon
 
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
@@ -1991,7 +1445,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                   nid_to_pid_map: dict[int, list[int]]) -> list[str]:
         """creates the spc secondary actors"""
         spc_names = [spc_name]
-        self.gui.create_alternate_vtk_grid(
+        gui: MainWindow = self.gui
+        gui.create_alternate_vtk_grid(
             spc_name, color=PURPLE_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
 
@@ -2036,6 +1491,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         TODO: needs a better interface in the gui
         """
+        gui: MainWindow = self.gui
         nids = []
         text = []
         #result_name = self.icase
@@ -2051,15 +1507,24 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #texti = ', '.join(['%s-%s'  % (pin_flagi, eid) for (eid, pin_flagi) in data])
             nids.append(nid)
             text.append(texti)
-        self.gui.mark_nodes(nids, result_name, text)
+        gui.mark_nodes(nids, result_name, text)
 
-    def _fill_bar_yz(self, unused_dim_max, model, icase, cases, form, debug=False):
+    def _fill_bar_yz(self, unused_dim_max: float,
+                     model: BDF, icase: int,
+                     cases, form,
+                     debug: bool=False) -> int:
         """
         plots the y, z vectors for CBAR & CBEAM elements
         """
+        gui: MainWindow = self.gui
+        include_rod = False
         card_types = ['CBAR', 'CBEAM']
+        if include_rod:
+            card_types.append('CROD')
         out = model.get_card_ids_by_card_types(card_types=card_types)
         bar_beam_eids = out['CBAR'] + out['CBEAM']
+        if include_rod:
+            bar_beam_eids += out['CROD']
 
         bar_pid_to_eids = get_beam_sections_map(model, bar_beam_eids)
         bar_nids = get_bar_nids(model, bar_beam_eids)
@@ -2078,7 +1543,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)
-        self.gui.create_alternate_vtk_grid(
+        gui.create_alternate_vtk_grid(
             'Bar Nodes', color=RED_FLOAT, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=False)
         msg = ", which is required by 'Bar Nodes'"
@@ -2110,10 +1575,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 bar_y = bar_type + '_y'
                 bar_z = bar_type + '_z'
 
-                self.gui.create_alternate_vtk_grid(
+                gui.create_alternate_vtk_grid(
                     bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-                self.gui.create_alternate_vtk_grid(
+                gui.create_alternate_vtk_grid(
                     bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
@@ -2151,11 +1616,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """creates the bar orientation vector lines"""
         nlines = len(lines)
         nnodes = nlines * 2
-        if nlines == 0:
+        if nlines == 0:  # pragma: no cover
             return
 
         assert name != 'Bar Nodes', name
-        grid = self.gui.alt_grids[name]
+        gui: MainWindow = self.gui
+        grid = gui.alt_grids[name]
 
         bar_eids = np.asarray(eids, dtype='int32')
         bar_lines = np.asarray(lines, dtype='float32').reshape(nlines, 6)
@@ -2176,14 +1642,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """creates the mpc actors"""
         if not lines:
             return []
-
-        self.gui.create_alternate_vtk_grid(
+        gui: MainWindow = self.gui
+        gui.create_alternate_vtk_grid(
             depname, color=GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
-        self.gui.create_alternate_vtk_grid(
+        gui.create_alternate_vtk_grid(
             indname, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
-        self.gui.create_alternate_vtk_grid(
+        gui.create_alternate_vtk_grid(
             linename, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='wire', is_visible=False)
 
@@ -2215,10 +1681,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nnodes = len(node_ids)
         stored_msg = []
         if nnodes == 0:
-            msg = '0 nodes added for %r' % name
+            msg = f'0 nodes added for {name!r}'
             out_msg = store_warning(model.log, store_msg, msg)
             return out_msg
-        self.gui.follower_nodes[name] = node_ids
+        gui: MainWindow = self.gui
+        gui.follower_nodes[name] = node_ids
 
         #numpy_to_vtk_points(nodes)
         points = vtkPoints()
@@ -2226,8 +1693,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         points.SetNumberOfPoints(nnodes)
 
         j = 0
-        nid_map = self.gui.nid_map
-        alt_grid = self.gui.alt_grids[name]
+        nid_map = gui.nid_map
+        alt_grid = gui.alt_grids[name]
         missing_nodes = []
         for nid in sorted(node_ids):
             try:
@@ -2272,7 +1739,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def _add_nastran_spoints_to_grid(self, spoints, nid_map):
         """used to create SPOINTs"""
-        if not spoints:
+        if not spoints:  # pragma: no cover
             return
         spoint_ids = list(spoints.keys())
         assert isinstance(spoint_ids, list), type(spoint_ids)
@@ -2280,9 +1747,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nspoints = len(spoint_ids)
         name = 'SPoints'
         if nspoints == 0:
-            self.log.warning('0 spoints added for %r' % name)
+            self.log.warning(f'0 spoints added for {name!r}')
             return
-        gui = self.gui
+        gui: MainWindow = self.gui
         gui.create_alternate_vtk_grid(
             name, color=BLUE_FLOAT, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
@@ -2324,16 +1791,17 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #nids = np.unique(lines)
         #nnodes = len(nids)
         nnodes = nlines * 2
-        if nnodes == 0:
+        if nnodes == 0:  # pragma: no cover
             return
-        self.gui.follower_nodes[name] = lines.ravel()
+        gui: MainWindow = self.gui
+        gui.follower_nodes[name] = lines.ravel()
         points = vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         j = 0
         etype = 3 # vtkLine
-        nid_map = self.gui.nid_map
-        alt_grid = self.gui.alt_grids[name]
+        nid_map = gui.nid_map
+        alt_grid = gui.alt_grids[name]
         for nid1, nid2 in lines:
             try:
                 unused_i1 = nid_map[nid1]
@@ -2367,7 +1835,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def _fill_suport(self, suport_id, unused_subcase_id, model):
         """creates SUPORT and SUPORT1 nodes"""
         suport_name = 'suport1_id=%i' % suport_id
-        self.gui.create_alternate_vtk_grid(
+        gui: MainWindow = self.gui
+        gui.create_alternate_vtk_grid(
             suport_name, color=RED_FLOAT, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
         suport_nids = get_suport_node_ids(model, suport_id)
@@ -2377,488 +1846,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def _get_sphere_size(self, dim_max: float) -> float:
         return 0.01 * dim_max
-
-    def _map_elements3(self, nid_map,
-                       model: BDF,
-                       unused_j, unused_dim_max,
-                       nid_cp_cd: np.ndarray,
-                       xref_loads: bool=True):
-        """
-        Much, much faster way to add elements that directly builds the VTK objects
-        rather than using for loops.
-
-        Returns
-        -------
-        nid_to_pid_map  : dict
-            node to property id map
-            used to show SPC constraints (we don't want to show constraints on 456 DOFs)
-        icase : int
-            the result number
-        cases : dict
-            the GuiResult objects
-        form : list[???, ???, ???]
-            the Results sidebar data
-
-        TDOO: Not quite done on:
-               - ???
-        """
-        settings = self.gui.settings  # type: Settings
-        nastran_settings = settings.nastran_settings  # type: NastranSettings
-        log = self.log
-
-        elements, nelements, unused_superelements = get_elements_nelements_unvectorized(model)
-        xyz_cid0 = self.xyz_cid0
-        dtype = get_numpy_idtype_for_vtk()
-        out = map_elements3_helper(
-            model,
-            nid_map, nid_cp_cd, xyz_cid0,
-            self.eid_map, elements, nelements,
-            dtype)
-        (
-            skipped_etypes,
-            nids_list, all_nids,
-            nelements, eids_array, pids_array, mcid_array, material_theta_array, dim_array, nnodes_array,
-            min_interior_angle, max_interior_angle, dideal_theta, max_skew_angle, max_warp_angle,
-            max_aspect_ratio, area, area_ratio, taper_ratio, min_edge_length, normals,
-            cell_types_array, cell_offsets_array,
-        ) = out
-
-        #print('self.eid_map =', self.eid_map)
-
-        icells_zero = np.where(cell_types_array == 0)[0]
-        # TODO: I'd like to get rid of deep=1, but it'll crash the edges
-        deep = 1
-        if len(icells_zero):
-            icells = np.where(cell_types_array != 0)[0]
-            if len(icells) == 0:
-                log.error('skipped_etypes = %s' % skipped_etypes)
-                raise RuntimeError('there are no elements...')
-            eids_array = eids_array[icells]
-            pids_array = pids_array[icells]
-            #dim_array = pids_array[dim_array]
-            cell_types_array = cell_types_array[icells]
-            cell_offsets_array = cell_offsets_array[icells]
-            nnodes_array = nnodes_array[icells]
-            normals = normals[icells, :]
-            #deep = 1
-        #print('deep = %s' % deep)
-        if skipped_etypes:
-            log.error('skipped_etypes = %s' % list(skipped_etypes))
-            #print('skipped_etypes = %s' % skipped_etypes)
-        if len(pids_array) != nelements:
-            msg = 'nelements=%s len(pids_array)=%s' % (nelements, len(pids_array))
-            raise RuntimeError(msg)
-        if len(cell_offsets_array) != nelements:
-            msg = 'nelements=%s len(cell_offsets_array)=%s' % (nelements, len(cell_offsets_array))
-            raise RuntimeError(msg)
-
-        nids_array = np.array(nids_list, dtype=dtype)
-
-        #-----------------------------------------------------------------
-        # saving some data members
-        self.element_ids = eids_array
-
-        #print('cell_types_array* = ', cell_types_array.tolist())
-        #print('cell_offsets_array* = ', cell_offsets_array.tolist())
-
-        #-----------------------------------------------------------------
-        # build the grid
-
-        #self.log.info('nids_array = %s' % nids_array)
-        #self.log.info('cell_offsets_array = %s' % cell_offsets_array)
-        #self.log.info('cell_types_array = %s' % cell_types_array)
-
-        # Create the array of cells
-        cells_id_type = numpy_to_vtkIdTypeArray(nids_array, deep=1)
-        vtk_cells = vtkCellArray()
-        vtk_cells.SetCells(nelements, cells_id_type)
-
-        # Cell types
-        vtk_cell_types = numpy_to_vtk(
-            cell_types_array, deep=deep,
-            array_type=vtkUnsignedCharArray().GetDataType())
-
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=deep,
-                                        array_type=VTK_ID_TYPE)
-
-        grid = self.grid
-        #grid = vtkUnstructuredGrid()
-        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
-
-        #-----------------------------------------------------------------
-        # fill the results
-        nid_to_pid_map = None
-        self.isubcase_name_map = {1: ['Nastran', '']}
-        icase = 0
-        cases = {}
-        form = ['Geometry', None, []]
-        form0 = form[2]
-
-        subcase_id = 0
-
-        #nids_set = True
-        #if nids_set:
-        # this intentionally makes a deepcopy
-        #nids = np.array(nid_cp_cd[:, 0])
-
-        # this intentionally makes a deepcopy
-        cds = np.array(nid_cp_cd[:, 2])
-        colormap = settings.colormap
-        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
-                            mask_value=0,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (nid_res, (0, 'Node ID'))
-        form0.append(('Node ID', icase, []))
-        icase += 1
-
-        if cds.max() > 0:
-            cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                               location='node', scalar=cds)
-            cases[icase] = (cd_res, (0, 'NodeCd'))
-            form0.append(('NodeCd', icase, []))
-            icase += 1
-
-        eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids_array,
-                            mask_value=0,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (eid_res, (0, 'ElementID'))
-        form0.append(('ElementID', icase, []))
-        icase += 1
-
-        is_element_dim = True
-        #if len(np.unique(dim_array)) > 1:
-            #dim_res = GuiResult(subcase_id, 'ElementDim', 'ElementDim', 'centroid', dim_array,
-                                   #mask_value=-1,
-                                   #nlabels=None,
-                                   #labelsize=None,
-                                   #ncolors=None,
-                                   #colormap=colormap,
-                                   #data_format=None,
-                                   #uname='GuiResult')
-            #cases[icase] = (dim_res, (0, 'ElementDim'))
-            #form0.append(('ElementDim', icase, []))
-            #icase += 1
-
-        if nnodes_array.max() > -1:
-            nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem',
-                                   'centroid', nnodes_array,
-                                   mask_value=0,
-                                   nlabels=None,
-                                   labelsize=None,
-                                   ncolors=None,
-                                   colormap=colormap,
-                                   data_format=None,
-                                   uname='GuiResult')
-            cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
-            form0.append(('NNodes/Elem', icase, []))
-            icase += 1
-
-        #pid_res = GuiResult(subcase_id, 'PropertyID', 'PropertyID', 'centroid', pids_array,
-                            #mask_value=0,
-                            #nlabels=None,
-                            #labelsize=None,
-                            #ncolors=None,
-                            #colormap=colormap,
-                            #data_format=None,
-                            #uname='GuiResult')
-        #cases[icase] = (pid_res, (0, 'PropertyID'))
-        #form0.append(('PropertyID', icase, []))
-        #icase += 1
-
-        if len(model.properties) and nelements and nastran_settings.is_properties:
-            icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
-                model, nelements, eids_array, pids_array, cases, form0, icase)
-            icase = _build_materials(model, pcomp, pshell, is_pshell_pcomp,
-                                     cases, form0, icase)
-            try:
-                icase = _build_optimization(model, pids_array, upids,
-                                            nelements, cases, form0, icase)
-            except Exception:
-                #raise
-                s = StringIO()
-                traceback.print_exc(file=s)
-                sout = s.getvalue()
-                self.gui.log_error(sout)
-                print(sout)
-
-        #if isgreater_int(mcid_array, -1):
-            #mcid_res = GuiResult(subcase_id, 'Material Coordinate System', 'MaterialCoord',
-                                 #'centroid', mcid_array,
-                                 #mask_value=-1,
-                                 #nlabels=None,
-                                 #labelsize=None,
-                                 #ncolors=None,
-                                 #colormap=colormap,
-                                 #data_format=None,
-                                 #uname='GuiResult')
-            #cases[icase] = (mcid_res, (0, 'Material Coordinate System'))
-            #form0.append(('Material Coordinate System', icase, []))
-            #icase += 1
-
-        #if np.isfinite(theta_array).any():
-            #print('np.nanmax(theta_array) =', np.nanmax(theta_array))
-            #theta_res = GuiResult(subcase_id, 'Theta', 'Theta', 'centroid', theta_array,
-                                  #mask_value=None,
-                                  #nlabels=None,
-                                  #labelsize=None,
-                                  #ncolors=None,
-                                  #colormap=colormap,
-                                  #data_format=None,
-                                  #uname='GuiResult')
-            #cases[icase] = (theta_res, (0, 'Theta'))
-            #form0.append(('Theta', icase, []))
-            #icase += 1
-
-        normal_mag = underflow_norm(normals, axis=1)
-        assert len(normal_mag) == nelements
-        normals /= normal_mag.reshape(nelements, 1)
-        i_not_nan = np.isnan(normal_mag)
-
-        #if self.make_offset_normals_dim and nelements:
-            #material_coord = None
-            #icase, normals = build_normals_quality(
-                #model, self.gui.eid_map, nelements, cases, form0, icase,
-                #xyz_cid0, material_coord, material_theta,
-                #min_interior_angle, max_interior_angle, dideal_theta,
-                #area, max_skew_angle, taper_ratio,
-                #max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
-                #make_offset_normals_dim=self.make_offset_normals_dim,
-                #is_testing=IS_TESTING)
-            #self.normals = normals
-
-        #----------------------------------------------------------
-
-        is_shell = False
-        if False in i_not_nan:
-            #max_normal = np.nanmax(normal_mag[i_not_nan])
-            #is_shell = np.abs(max_normal) > 0.
-            is_shell = True
-        is_solid = isfinite_and_nonzero(max_interior_angle)
-        #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
-        if is_shell:
-            nx_res = GuiResult(
-                0, header='NormalX', title='NormalX',
-                location='centroid', scalar=normals[:, 0], data_format='%.2f')
-            ny_res = GuiResult(
-                0, header='NormalY', title='NormalY',
-                location='centroid', scalar=normals[:, 1], data_format='%.2f')
-            nz_res = GuiResult(
-                0, header='NormalZ', title='NormalZ',
-                location='centroid', scalar=normals[:, 2], data_format='%.2f')
-            nxyz_res = NormalResult(0, 'Normals', 'Normals',
-                                    nlabels=2, labelsize=5, ncolors=2,
-                                    colormap=colormap, data_format='%.1f',
-                                    uname='NormalResult')
-
-
-            area_res = GuiResult(0, header='Area', title='Area',
-                                 location='centroid', scalar=area)
-            min_edge_length_res = GuiResult(
-                0, header='Min Edge Length', title='Min Edge Length',
-                location='centroid', scalar=min_edge_length)
-
-            min_theta_res = GuiResult(
-                0, header='Min Interior Angle', title='Min Interior Angle',
-                location='centroid', scalar=np.degrees(min_interior_angle))
-            max_theta_res = GuiResult(
-                0, header='Max Interior Angle', title='Max Interior Angle',
-                location='centroid', scalar=np.degrees(max_interior_angle))
-            dideal_theta_res = GuiResult(
-                0, header='Delta Ideal Angle', title='Delta Ideal Angle',
-                location='centroid', scalar=np.degrees(dideal_theta))
-
-            skew = np.degrees(max_skew_angle)
-            skew_res = GuiResult(
-                0, header='Max Skew Angle', title='MaxSkewAngle',
-                location='centroid', scalar=skew)
-            aspect_res = GuiResult(
-                0, header='Aspect Ratio', title='AspectRatio',
-                location='centroid', scalar=max_aspect_ratio)
-
-            form_checks = []
-            form0.append(('Element Checks', None, form_checks))
-            if is_element_dim:
-                form_checks.append(('ElementDim', icase, []))
-
-            if self.make_offset_normals_dim and self.make_nnodes_result and 0:  # pragma: no cover
-                nnodes_res = GuiResult(
-                    0, header='NNodes/Elem', title='NNodes/Elem',
-                    location='centroid', scalar=nnodes_array)
-                form_checks.append(('NNodes', icase + 1, []))
-                cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
-                icase += 1
-
-            if self.make_offset_normals_dim or 1:
-                cases[icase + 1] = (nx_res, (0, 'NormalX'))
-                cases[icase + 2] = (ny_res, (0, 'NormalY'))
-                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 4] = (nxyz_res, (0, 'Normal'))
-
-                form_checks.append(('NormalX', icase + 1, []))
-                form_checks.append(('NormalY', icase + 2, []))
-                form_checks.append(('NormalZ', icase + 3, []))
-                form_checks.append(('Normal', icase + 4, []))
-
-            cases[icase + 5] = (area_res, (0, 'Area'))
-            cases[icase + 6] = (min_edge_length_res, (0, 'Min Edge Length'))
-            cases[icase + 7] = (min_theta_res, (0, 'Min Interior Angle'))
-            cases[icase + 8] = (max_theta_res, (0, 'Max Interior Angle'))
-            cases[icase + 9] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-            cases[icase + 10] = (skew_res, (0, 'Max Skew Angle'))
-            cases[icase + 11] = (aspect_res, (0, 'Aspect Ratio'))
-
-            form_checks.append(('Area', icase + 5, []))
-            form_checks.append(('Min Edge Length', icase + 6, []))
-            form_checks.append(('Min Interior Angle', icase + 7, []))
-            form_checks.append(('Max Interior Angle', icase + 8, []))
-            form_checks.append(('Delta Ideal Angle', icase + 9, []))
-            form_checks.append(('Max Skew Angle', icase + 10, []))
-            form_checks.append(('Aspect Ratio', icase + 11, []))
-            icase += 12
-
-            if np.any(np.isfinite(area_ratio)) and np.nanmax(area_ratio) > 1.:
-                arearatio_res = GuiResult(
-                    0, header='Area Ratio', title='Area Ratio',
-                    location='centroid', scalar=area_ratio)
-                cases[icase] = (arearatio_res, (0, 'Area Ratio'))
-                form_checks.append(('Area Ratio', icase, []))
-                icase += 1
-
-            if np.any(np.isfinite(taper_ratio)) and np.nanmax(taper_ratio) > 1.:
-                taperratio_res = GuiResult(
-                    0, header='Taper Ratio', title='Taper Ratio',
-                    location='centroid', scalar=taper_ratio)
-                cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
-                form_checks.append(('Taper Ratio', icase, []))
-                icase += 1
-
-            if isfinite_and_nonzero(max_warp_angle):
-                warp_res = GuiResult(
-                    0, header='Max Warp Angle', title='MaxWarpAngle',
-                    location='centroid', scalar=np.degrees(max_warp_angle))
-                cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
-                form_checks.append(('Max Warp Angle', icase, []))
-                icase += 1
-
-            #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
-                #np.abs(zoffset).max() > 0.0):
-            # offsets
-            #offset_res = GuiResult(
-                #0, header='Offset', title='Offset',
-                #location='centroid', scalar=offset, data_format='%g')
-            #offset_x_res = GuiResult(
-                #0, header='OffsetX', title='OffsetX',
-                #location='centroid', scalar=xoffset, data_format='%g')
-            #offset_y_res = GuiResult(
-                #0, header='OffsetY', title='OffsetY',
-                #location='centroid', scalar=yoffset, data_format='%g')
-            #offset_z_res = GuiResult(
-                #0, header='OffsetZ', title='OffsetZ',
-                #location='centroid', scalar=zoffset, data_format='%g')
-
-            #cases[icase] = (offset_res, (0, 'Offset'))
-            #cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
-            #cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
-            #cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
-
-            #form_checks.append(('Offset', icase, []))
-            #form_checks.append(('OffsetX', icase + 1, []))
-            #form_checks.append(('OffsetY', icase + 2, []))
-            #form_checks.append(('OffsetZ', icase + 3, []))
-            #icase += 4
-
-            if self.make_xyz or IS_TESTING:
-                x_res = GuiResult(
-                    0, header='X', title='X',
-                    location='node', scalar=xyz_cid0[:, 0], data_format='%g')
-                y_res = GuiResult(
-                    0, header='Y', title='Y',
-                    location='node', scalar=xyz_cid0[:, 1], data_format='%g')
-                z_res = GuiResult(
-                    0, header='Z', title='Z',
-                    location='node', scalar=xyz_cid0[:, 2], data_format='%g')
-                cases[icase] = (x_res, (0, 'X'))
-                cases[icase + 1] = (y_res, (0, 'Y'))
-                cases[icase + 2] = (z_res, (0, 'Z'))
-                form_checks.append(('X', icase + 0, []))
-                form_checks.append(('Y', icase + 1, []))
-                form_checks.append(('Z', icase + 2, []))
-                icase += 3
-
-        elif is_solid:
-            # only solid elements
-            form_checks = []
-            form0.append(('Element Checks', None, form_checks))
-
-            min_edge_length_res = GuiResult(
-                0, header='Min Edge Length', title='Min Edge Length',
-                location='centroid', scalar=min_edge_length)
-            min_theta_res = GuiResult(
-                0, header='Min Interior Angle', title='Min Interior Angle',
-                location='centroid', scalar=np.degrees(min_interior_angle))
-            max_theta_res = GuiResult(
-                0, header='Max Interior Angle', title='Max Interior Angle',
-                location='centroid', scalar=np.degrees(max_interior_angle))
-            skew = 90. - np.degrees(max_skew_angle)
-            #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
-                                    #location='centroid', scalar=skew)
-            if is_element_dim:
-                form_checks.append(('ElementDim', icase, []))
-            form_checks.append(('Min Edge Length', icase + 1, []))
-            form_checks.append(('Min Interior Angle', icase + 2, []))
-            form_checks.append(('Max Interior Angle', icase + 3, []))
-            form_checks.append(('Max Skew Angle', icase + 4, []))
-            cases[icase + 1] = (min_edge_length_res, (0, 'Min Edge Length'))
-            cases[icase + 2] = (min_theta_res, (0, 'Min Interior Angle'))
-            cases[icase + 3] = (max_theta_res, (0, 'Max Interior Angle'))
-            #cases[icase + 4] = (skew_res, (0, 'Max Skew Angle'))
-            icase += 4
-
-        else:
-            form0.append(('ElementDim', icase, []))
-            icase += 1
-
-        if isgreater_int(mcid_array, -1):
-            material_coord_res = GuiResult(
-                0, header='MaterialCoord', title='MaterialCoord',
-                location='centroid',
-                scalar=mcid_array, mask_value=-1, data_format='%i')
-            cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
-            form0.append(('MaterialCoord', icase, []))
-            icase += 1
-        if isfinite(material_theta_array):
-            material_theta_res = GuiResult(
-                0, header='MaterialTheta', title='MaterialTheta',
-                location='centroid',
-                scalar=material_theta_array, data_format='%.3f')
-            cases[icase] = (material_theta_res, (0, 'MaterialTheta'))
-            form0.append(('MaterialTheta', icase, []))
-            icase += 1
-
-        #print(normals)
-        #----------------------------------------------------------
-        # finishing up vtk
-        if nelements and isfinite(min_edge_length):
-            mean_edge_length = np.nanmean(min_edge_length)
-            self.set_glyph_scale_factor(mean_edge_length * 2.5)  # was 1.5
-
-        grid.Modified()
-        #----------------------------------------------------------
-        # finishing up parameters
-        self.node_ids = all_nids
-        self.normals = normals
-
-        return nid_to_pid_map, icase, cases, form
 
     def map_elements(self, xyz_cid0: np.ndarray, nid_cp_cd: np.ndarray,
                      nid_map: dict[int, int],
@@ -2885,13 +1872,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             the max(dx, dy, dz) dimension
             use for ???
         """
-        grid = self.gui.grid
-        settings = self.gui.settings  # type: Settings
-        nastran_settings = settings.nastran_settings  # type: NastranSettings
-
-        if IS_TESTING:
-            self._map_elements3(nid_map, model, j, dim_max,
-                                nid_cp_cd, xref_loads=xref_loads)
+        gui: MainWindow = self.gui
+        grid = gui.grid
+        settings: Settings = gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
 
         if nastran_settings.is_element_quality:
             out = self._map_elements1_quality(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
@@ -3004,6 +1988,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """creates the shell material coordinate vectors"""
         etype = 3 # vtkLine
 
+        gui: MainWindow = self.gui
         nodes, bars = export_mcids_all(model, eids=None, log=None, debug=False)
         for iply, nodesi in nodes.items():
             barsi = bars[iply]
@@ -3021,16 +2006,18 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             assert nbars > 0, model.card_count
 
             is_visible = False
-            self.gui.create_alternate_vtk_grid(
+            gui.create_alternate_vtk_grid(
                 name, color=RED_FLOAT, line_width=3, opacity=1.0,
-                representation='surface', is_visible=is_visible, is_pickable=False)
-            grid = self.gui.alt_grids[name]
+                representation='surface', is_visible=is_visible,
+                is_pickable=False)
+            grid = gui.alt_grids[name]
             grid.Allocate(nbars, 1000)
 
             nodes_array = np.array(nodesi, dtype='float32')
             elements = np.array(barsi, dtype='int32')
             assert elements.min() == 0, elements.min()
-            points = numpy_to_vtk_points(nodes_array, points=None, dtype='<f', deep=1)
+            points = numpy_to_vtk_points(nodes_array, points=None,
+                                         dtype='<f', deep=1)
             grid.SetPoints(points)
             create_vtk_cells_of_constant_element_type(grid, elements, etype)
         return
@@ -3038,19 +2025,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def _build_plotels(self, model: BDF) -> None:
         """creates the plotel actor"""
         nplotels = len(model.plotels)
-        if nplotels:
-            # sorting these don't matter, but why not?
-            #lines = [element.node_ids for unused_eid, element in sorted(model.plotels.items())]
-            lines = []
-            for unused_eid, element in sorted(model.plotels.items()):
-                node_ids = element.node_ids
-                lines.append(node_ids)
-            lines = np.array(lines, dtype='int32')
+        if not nplotels:  # pragma: no cover
+            return
+        gui: MainWindow = self.gui
+        # sorting these don't matter, but why not?
+        #lines = [element.node_ids for unused_eid, element in sorted(model.plotels.items())]
+        lines = []
+        for unused_eid, element in sorted(model.plotels.items()):
+            node_ids = element.node_ids
+            lines.append(node_ids)
+        lines = np.array(lines, dtype='int32')
 
-            self.gui.create_alternate_vtk_grid(
-                'plotel', color=RED_FLOAT, line_width=2, opacity=0.8,
-                point_size=5, representation='wire', is_visible=True)
-            self._add_nastran_lines_to_grid('plotel', lines, model)
+        gui.create_alternate_vtk_grid(
+            'plotel', color=RED_FLOAT, line_width=2, opacity=0.8,
+            point_size=5, representation='wire', is_visible=True)
+        self._add_nastran_lines_to_grid('plotel', lines, model)
 
     def _map_elements1_no_quality(self,
                                   model: BDF,
@@ -3427,10 +2416,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 self._build_mcid_vectors(model, nplies)
             except Exception as exception:
                 model.log.error(str(exception))
+                if self.stop_on_failure:
+                    raise
 
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
-    def _plot_pressures(self, model: BDF, cases, form0,
+    def _plot_pressures(self, model: BDF,
+                        cases: CasesDict,
+                        form0,
                         icase: int, subcase_id: int) -> int:
         """
         pressure act normal to a shell (as opposed to anti-normal to a
@@ -3459,7 +2452,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return icase
 
         is_pressure, pressures = get_pressure_array(
-            model, load_case_id, eids=self.element_ids, stop_on_failure=False, fdtype=fdtype)
+            model, load_case_id, eids=self.element_ids,
+            stop_on_failure=False, fdtype=fdtype)
         if not is_pressure:
             return icase
 
@@ -3476,8 +2470,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             icase += 1
         return icase
 
-    def _plot_applied_loads(self, model, cases, form0, icase, subcase_id,
-                            xref_loads=True, colormap='jet'):
+    def _plot_applied_loads(self, model,
+                            cases: CasesDict,
+                            form0, icase: int,
+                            subcase_id: int,
+                            xref_loads: bool=True,
+                            colormap: str='jet') -> int:
         """
         Applied loads include:
         ----------------------
@@ -3490,6 +2488,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          - Temperature(BOTH)
 
         """
+        gui: MainWindow = self.gui
+        settings: Settings = gui.settings
         #if not self.plot_applied_loads:
             #model.log.debug('self.plot_applied_loads=False')
             #return icase
@@ -3521,11 +2521,28 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     fxyz = forces[:, :3]
                     fscalar = np.linalg.norm(fxyz, axis=1)
                     if fscalar.max() > 0:
-                        titles = ['Force XYZ']
+                        title = 'Force'
+                        titles = [title + ' XYZ']
                         headers = titles
                         assert fxyz.shape[1] == 3, fxyz.shape
                         assert fxyz.shape[0] == len(fscalar)
                         scales = [1.0]
+
+                        methods_txyz_rxyz = ['Fx', 'Fy', 'Fz']
+                        index_to_base_title_annotation = {
+                            0: {'title': 'F_', 'corner': 'F_'},
+                        }
+                        force_case = Case2D(self.node_ids, fxyz)
+                        force_xyz_res2 = ForceResults2(
+                            subcase_id,
+                            self.node_ids, self.xyz_cid0,
+                            force_case, title,
+                            index_to_base_title_annotation=index_to_base_title_annotation,
+                            t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz,
+                            dim_max=1.0, data_format='%g',
+                            is_variable_data_format=False,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='',
+                            set_max_min=False, uname='NastranGeometry-ForceResults2')
 
                         force_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, fxyz, fscalar,
@@ -3534,19 +2551,41 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             set_max_min=False, uname='NastranGeometry')
                         force_xyz_res.save_defaults()
 
-                        cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
-                        form0.append(('Force XYZ', icase, []))
-                        icase += 1
+                        if settings.use_new_sidebar_objects:
+                            cases[icase] = (force_xyz_res2, (0, 'Force XYZ'))
+                            form0.append(('Force XYZ', icase, []))
+                            icase += 1
+                        if settings.use_old_sidebar_objects:
+                            cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
+                            form0.append(('Force XYZ', icase, []))
+                            icase += 1
 
                 if np.abs(moments.max() - moments.min()) > 0.0:
                     mxyz = moments[:, :3]
                     mscalar = np.linalg.norm(mxyz, axis=1)
                     if mscalar.max() > 0:
-                        titles = ['Moment XYZ']
+                        title = 'Moment'
+                        titles = [title + ' XYZ']
                         headers = titles
                         assert mxyz.shape[1] == 3, mxyz.shape
                         assert mxyz.shape[0] == len(mscalar)
                         scales = [1.0]
+
+                        index_to_base_title_annotation = {
+                            0: {'title': 'M_', 'corner': 'M_'},
+                        }
+                        methods_txyz_rxyz = ['Mx', 'My', 'Mz']
+                        moment_case = Case2D(self.node_ids, mxyz)
+                        moment_xyz_res2 = ForceResults2(
+                            subcase_id,
+                            self.node_ids, self.xyz_cid0,
+                            moment_case, title,
+                            index_to_base_title_annotation=index_to_base_title_annotation,
+                            t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz,
+                            dim_max=1.0, data_format='%g',
+                            is_variable_data_format=False,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='',
+                            set_max_min=False, uname='NastranGeometry-MomentResults2')
 
                         moment_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, mxyz, mscalar,
@@ -3555,40 +2594,81 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             set_max_min=False, uname='NastranGeometry')
                         moment_xyz_res.save_defaults()
 
-                        cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
-                        form0.append(('Moment XYZ', icase, []))
-                        icase += 1
+                        if settings.use_new_sidebar_objects:
+                            cases[icase] = (moment_xyz_res2, (0, 'Moment XYZ'))
+                            form0.append(('Moment XYZ', icase, []))
+                            icase += 1
+                        if settings.use_old_sidebar_objects:
+                            cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
+                            form0.append(('Moment XYZ', icase, []))
+                            icase += 1
 
                 if np.abs(spcd.max() - spcd.min()) > 0.0:
+                    # SPCD has displacements only
                     t123 = spcd[:, :3]
                     tnorm = norm(t123, axis=1)
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
                     assert len(tnorm) == len(self.nid_map)
 
+                    force_case = Case2D(self.node_ids, spcd)
+                    title = 'SPCD'
+                    index_to_base_title_annotation = {
+                        0: {'title': 'T_', 'corner': 'T_'},
+                        #3: {'title': 'R_', 'corner': 'R_'},
+                    }
+                    methods_txyz_rxyz = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
+                    enforced_txyz_res2 = ForceResults2(
+                        subcase_id,
+                        self.node_ids, self.xyz_cid0,
+                        force_case, title,
+                        methods_txyz_rxyz=methods_txyz_rxyz,
+                        index_to_base_title_annotation=index_to_base_title_annotation,
+                        t123_offset=0, dim_max=1.0, data_format='%g',
+                        is_variable_data_format=False,
+                        nlabels=None, labelsize=None, ncolors=None, colormap='',
+                        set_max_min=False, uname='NastranGeometry-SPCD-TXYZ_ForceResults2')
+
+                    #enforced_rxyz_res2 = ForceResults2(
+                        #subcase_id,
+                        #self.node_ids, self.xyz_cid0,
+                        #force_case, title,
+                        #methods_txyz_rxyz=methods_txyz_rxyz,
+                        #index_to_base_title_annotation=index_to_base_title_annotation,
+                        #t123_offset=3, dim_max=1.0, data_format='%g',
+                        #is_variable_data_format=False,
+                        #nlabels=None, labelsize=None, ncolors=None, colormap='',
+                        #set_max_min=False, uname='NastranGeometry-SPCD-RXYZ_Results2')
+
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
-                                           location='node', scalar=forces[:, 0])
+                                           location='node', scalar=spcd[:, 0])
                     spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
-                                           location='node', scalar=forces[:, 1])
+                                           location='node', scalar=spcd[:, 1])
                     spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
-                                           location='node', scalar=forces[:, 2])
+                                           location='node', scalar=spcd[:, 2])
                     spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
                                              location='node', scalar=tnorm)
 
-                    cases[icase] = (spcd_x_res, (0, 'SPCDx'))
-                    form0.append(('SPCDx', icase, []))
-                    icase += 1
+                    if settings.use_new_sidebar_objects:
+                        cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
+                        form0.append(('SPCD Translation', icase, []))
+                        icase += 1
+                        #cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
+                        #form0.append(('SPCD Rotation', icase, []))
+                        #icase += 1
 
-                    cases[icase] = (spcd_y_res, (0, 'SPCDy'))
-                    form0.append(('SPCDy', icase, []))
-                    icase += 1
-
-                    cases[icase] = (spcd_z_res, (0, 'SPCDz'))
-                    form0.append(('SPCDz', icase, []))
-                    icase += 1
-
-                    cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
-                    form0.append(('SPCD XYZ', icase, []))
-                    icase += 1
+                    if settings.use_old_sidebar_objects:
+                        cases[icase] = (spcd_x_res, (0, 'SPCDx'))
+                        form0.append(('SPCDx', icase, []))
+                        icase += 1
+                        cases[icase] = (spcd_y_res, (0, 'SPCDy'))
+                        form0.append(('SPCDy', icase, []))
+                        icase += 1
+                        cases[icase] = (spcd_z_res, (0, 'SPCDz'))
+                        form0.append(('SPCDz', icase, []))
+                        icase += 1
+                        cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
+                        form0.append(('SPCD XYZ', icase, []))
+                        icase += 1
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data
@@ -3607,15 +2687,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, results_filename: str):
+    def load_nastran_results(self, results_filename: str) -> None:
         """
         Loads the Nastran results into the GUI
         """
+        gui: MainWindow = self.gui
         model_name = 'main'
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
-        log = self.gui.log
+        log = gui.log
         if isinstance(results_filename, str):
             model = self._load_nastran_results_str(results_filename, log)
             if model is None:
@@ -3646,8 +2727,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #form = []
             #icase = 0
         #else:
-        cases = self.result_cases
-        form = self.get_form()
+        cases = gui.result_cases
+        form = gui.get_form()
         icase = len(cases)
         # form = self.res_widget.get_form()
 
@@ -3682,17 +2763,18 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                                 # in model.isubcase_name_map.items()}
 
         form = self._fill_op2_output(results_filename, cases, model, form, icase, log)
-        self.gui._finish_results_io2(model_name, form, cases)
+        gui._finish_results_io2(model_name, form, cases)
 
         #name = 'spike'
         #eids = np.arange(10, 40)
         #self.create_group_with_name(name, eids)
         #self.post_group_by_name(name)
 
-    def _load_nastran_results_str(self, results_filename: str, log) -> None:
+    def _load_nastran_results_str(self, results_filename: str, log) -> Optional[OP2]:
         print("trying to read...%s" % results_filename)
         ext = os.path.splitext(results_filename)[1].lower()
 
+        gui: MainWindow = self.gui
         if ext == '.op2':
             op2_filename = results_filename
             try:
@@ -3702,6 +2784,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
             model = OP2(log=log, mode=mode, debug=True)
             model.IS_TESTING = False
+            model.read_matpool = False
 
             #if 0:  # pragma: no cover
                 #model._results.saved = set()
@@ -3710,7 +2793,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     #if result in all_results:
                         #model._results.saved.add(result)
 
-            nastran_settings: NastranSettings = self.gui.settings.nastran_settings
+            nastran_settings: NastranSettings = gui.settings.nastran_settings
             exclude_results = get_results_to_exclude(nastran_settings)
             model.include_exclude_results(
                 exclude_results=exclude_results,
@@ -3724,11 +2807,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             # print(model.get_op2_stats())
 
         elif ext == '.nod':
-            self.gui.load_patran_nod(results_filename)
-            self.gui.cycle_results_explicit()  # start at icase=0
+            gui.load_patran_nod(results_filename)
+            gui.cycle_results_explicit()  # start at icase=0
             return None
         elif ext == '.h5' and IS_H5PY:
             model = OP2(log=log, debug=True)
+            model.read_matpool = False
             hdf5_filename = results_filename
             model.load_hdf5_filename(hdf5_filename, combine=False)
         #elif ext == '.pch':
@@ -3744,9 +2828,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return model
 
     def _fill_op2_output(self, op2_filename: str,
-                         cases: dict[int, Any],
+                         cases: CasesDict,
                          model: OP2,
-                         form, icase: int, log):
+                         form,
+                         icase: int,
+                         log: SimpleLogger) -> Any:
         """
         SOL 101 (Static)
         ----------------
@@ -3797,7 +2883,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         header_dict = {}
         keys_map = {}
-        key_itime = []
+        key_itimes = []
 
         icase, form_optimization = fill_responses(cases, model, icase)
         for key in keys:
@@ -3818,37 +2904,54 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             unused_form_time = []
 
             ncases_old = icase
-            icase = self._fill_op2_oug_oqg(cases, model, key, icase,
-                                           disp_dict, header_dict, keys_map,
-                                           log)
 
-            icase = self._fill_grid_point_forces(cases, model, key, icase,
-                                                 disp_dict, header_dict, keys_map)
+            eid_to_nid_map = {}
+            for eid, elem in self.model.elements.items():
+                eid_to_nid_map[eid] = elem.nodes
+
+            stop_on_failure = self.stop_on_failure
+            icase = self._fill_op2_oug_oqg(
+                cases, model, key, icase,
+                disp_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
+
+            # TODO: why is this disp_dict and does it matter?
+            icase = self._fill_grid_point_forces(
+                cases, model, key, icase,
+                disp_dict, header_dict, keys_map,
+                stop_on_failure=stop_on_failure)
 
             # stress
             icase = self._fill_op2_centroidal_stress(
                 cases, model, times, key, icase,
-                stress_dict, header_dict, keys_map)
+                stress_dict, header_dict, keys_map,
+                eid_to_nid_map,
+                log, stop_on_failure=stop_on_failure)
 
-            # stress
+            # strain
             icase = self._fill_op2_centroidal_strain(
                 cases, model, times, key, icase,
-                strain_dict, header_dict, keys_map)
+                strain_dict, header_dict, keys_map,
+                eid_to_nid_map,
+                log, stop_on_failure=stop_on_failure)
 
             # force
             icase = self._fill_op2_centroidal_force(
                 cases, model, times, key, icase,
-                force_dict, header_dict, keys_map)
+                force_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # strain energy
             icase = self._fill_op2_centroidal_strain_energy(
                 cases, model, times, key, icase,
-                strain_energy_dict, header_dict, keys_map)
+                strain_energy_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             # force
             icase = self._fill_op2_gpstress(
                 cases, model, times, key, icase,
-                gpstress_dict, header_dict, keys_map)
+                gpstress_dict, header_dict, keys_map,
+                log, stop_on_failure=stop_on_failure)
 
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
@@ -3857,11 +2960,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if ncases:
                 for itime, unused_dt in enumerate(times):
                     new_key = (key, itime)
-                    key_itime.append(new_key)
+                    key_itimes.append(new_key)
 
         # ----------------------------------------------------------------------
         #print('Key,itime:')
-        #for key_itimei in key_itime:
+        #for key_itimei in key_itimes:
             #print('  %s' % str(key_itimei))
 
         unused_form_out = []
@@ -3870,30 +2973,23 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         basename = os.path.basename(op2_filename).rstrip()
         form_results = (basename + '-Results', None, form_optimization)
 
-        if len(key_itime) == 0:
+        if len(key_itimes) == 0:
             #print('header_dict =', header_dict)
-            #print('key_itime =', key_itime)
+            #print('key_itimes =', key_itimes)
             if form_optimization:
                 form.append(form_results)
             else:
                 log.error('No OP2 results were found')
             return form
 
+        #assert len(keys_map) == 3, keys_map
         form = _build_sort1_table(
-            key_itime, keys_map, header_dict,
+            key_itimes, keys_map, header_dict,
             form, form_results, form_resultsi,
             disp_dict, stress_dict, strain_dict, force_dict,
             strain_energy_dict, gpstress_dict,
             log)
         return form
-
-    def clear_nastran(self):
-        """cleans up variables specific to Nastran"""
-        self.eid_map = {}
-        self.nid_map = {}
-        self.eid_to_nid_map = {}
-        self.element_ids = None
-        self.node_ids = None
 
 
 class NastranIO(NastranIO_):
@@ -3931,25 +3027,26 @@ class NastranIO(NastranIO_):
         ]
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
+        gui: MainWindow = self.gui
         if hasattr(self, 'nastran_toolbar'):
             self.nastran_tools_menu.setVisible(True)
-            self.gui.nastran_toolbar.setVisible(True)
-            self.gui.actions['nastran'].setVisible(True)
+            gui.nastran_toolbar.setVisible(True)
+            gui.actions['nastran'].setVisible(True)
         else:
             #self.menubar.addMenu('&File')
-            self.create_nastran_tools_menu(self.gui)
+            self.create_nastran_tools_menu(gui)
 
-            self.gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
-            self.gui.nastran_toolbar.setObjectName('nastran_toolbar')
-            #self.gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            self.gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            self.gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
-        #self.gui.file.menuAction().setVisible(False)
-        #self.gui.menu_help.
+            gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            gui.nastran_toolbar.setObjectName('nastran_toolbar')
+            #gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+        #gui.file.menuAction().setVisible(False)
+        #gui.menu_help.
 
-        #self.gui.actions['about'].Disable()
+        #gui.actions['about'].Disable()
         menu_items = {}
-        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar,
+        menu_items['nastran_toolbar'] = (gui.nastran_toolbar,
                                          ('caero', 'caero_subpanels', 'conm2'))
         #menu_items = [
             #(self.menu_help2, ('about_nastran',)),
@@ -3960,31 +3057,30 @@ class NastranIO(NastranIO_):
 
         return tools, menu_items
 
-    def create_nastran_tools_menu(self, gui):
+    def create_nastran_tools_menu(self, gui: MainWindow) -> None:
         #if 'dev' not in __version__:
             #return
         if not hasattr(self, 'shear_moment_torque_obj'):
             return
-
+        is_visible = True
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
-             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
-            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
+            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', '',
+             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu, is_visible),
+            ('create_coord', 'Create Coordinate System...', 'coord.png', '', 'Creates a Coordinate System', self.on_create_coord, is_visible),
         ]
         items = (
             'shear_moment_torque',
-            'create_coord',
+            #'create_coord',  # not done
         )
-
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
+        gui.menu_tools.setEnabled(True)
+        #gui.menu_tools.setVisible(True)
         menu_items = {
-            'nastran_tools' : (nastran_tools_menu, items),
+            'nastran_tools' : (self.menu_tools, items),
         }
         icon_path = ''
-        gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
-        gui._populate_menu(menu_items, actions=self.actions)
+        gui._prepare_actions_helper(icon_path, tools, gui.actions, checkables=None)
+        gui._populate_menu(menu_items, actions=gui.actions)
 
     def toggle_caero_panels(self):
         """
@@ -3994,17 +3090,19 @@ class NastranIO(NastranIO_):
         """
         if not self.has_caero:
             return
-        self.show_caero_actor = not self.show_caero_actor
+        gui: MainWindow = self.gui
+        settings = gui.settings.nastran_settings
+        settings.show_caero_actor = not settings.show_caero_actor
 
         names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
-        geometry_properties = self.gui._get_geometry_properties_by_name(names)
+        geometry_properties = _get_geometry_properties_by_name(gui, names)
 
-        if self.show_caero_actor:
+        if settings.show_caero_actor:
             try:
                 geometry_properties['caero_control_surfaces'].is_visible = True
             except KeyError:
                 pass
-            if self.show_caero_sub_panels:
+            if settings.show_caero_sub_panels:
                 geometry_properties['caero_subpanels'].is_visible = True
             else:
                 geometry_properties['caero'].is_visible = True
@@ -4015,7 +3113,7 @@ class NastranIO(NastranIO_):
                 pass
             geometry_properties['caero'].is_visible = False
             geometry_properties['caero_subpanels'].is_visible = False
-        self.gui.on_update_geometry_properties_override_dialog(geometry_properties)
+        gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
 
 def jsonify(comment_lower: str) -> str:
@@ -4024,26 +3122,36 @@ def jsonify(comment_lower: str) -> str:
     rhs = sline[1].rstrip()
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
-def _build_sort1_table(key_itime, keys_map, header_dict,
+def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
+                       keys_map: KeysMap,
+                       header_dict: dict[tuple[str, int], str],
                        form, form_results, form_resultsi,
                        disp_dict, stress_dict, strain_dict, force_dict,
-                       strain_energy_dict, gpstress_dict, log):
+                       strain_energy_dict, gpstress_dict,
+                       log: SimpleLogger):
     """combines the SORT1-based OP2 results into a SORT1 table"""
+    #print('stress_dict.keys():')
+    #for (key, itime), value in stress_dict.items():
+        #print(f'  key={key} itime={itime}: {value}')
+
     is_results = False
     form_resultsi_subcase = []
     #for key, value in header_dict.items():
         #print(key, value)
-    # (isubcase, analysis_code, sort_method,
-    #  count, ogs, superelement_adaptivity_index) = key
-    key_itime0 = key_itime[0]
+    # (isubcase, analysis_code, sort_method, count, ogs, # int
+    #  superelement_adaptivity_index) = key  # str
+    key_itime0 = key_itimes[0]
     key0 = key_itime0[0]
-    # (isubcase, analysis_code, sort_method,
-    #  count, ogs, superelement_adaptivity_index, pval_step) = key
     subcase_id_old = key0[0]
     count_old = key0[3]
     ogs_old = key0[4]
     subtitle_old = key0[5]
-    subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
+
+    keys_mapi = keys_map[key0]
+    subtitle_old = keys_mapi.subtitle
+    label_old = keys_mapi.label
+    superelement_adaptivity_index_old = keys_mapi.superelement_adaptivity_index
+    unused_pval_step_old = keys_mapi.pval_step
     del label_old
     del superelement_adaptivity_index_old
 
@@ -4051,17 +3159,32 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
     # in sorted order
     #
     # TODO: consider pval_step
-    for key, itime in key_itime:
-        # (isubcase, analysis_code, sort_method,
-        #  count, ogs, superelement_adaptivity_index, pval_step) = key
+    for key_itime in key_itimes:
+        key, itime = key_itime
+        # (isubcase, analysis_code, sort_method, count, ogs,
+        #  superelement_adaptivity_index, pval_step) = key
         #print('key =', key)
         subcase_id = key[0]
         count = key[3]
         ogs = key[4]
         #print('*ogs =', ogs)
         #subtitle = key[4]
+
         try:
-            subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
+            mapped_key = keys_map[key]
+        except Exception:
+            #continue
+            subcase_id = subcase_id_old
+            subtitle = subtitle_old + '?'
+            superelement_adaptivity_index = '?'
+            raise
+
+        try:
+            subtitle = mapped_key.subtitle
+            #unused_label = mapped_key.label
+            superelement_adaptivity_index = mapped_key.superelement_adaptivity_index
+            #unused_pval_step = mapped_key.pval_step
+            #subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = mapped_key
         except Exception:
             subcase_id = subcase_id_old
             subtitle = subtitle_old + '?'
@@ -4089,7 +3212,7 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
 
 
         try:
-            header = header_dict[(key, itime)]
+            header = header_dict[key_itime]
         except KeyError:  # this hits for strain energy
             msg = 'Missing (key, itime) in header_dict\n'
             msg += '  key=%s\n' % str(key)
@@ -4124,12 +3247,12 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
 
         form_outi = []
         form_out = (header, None, form_outi)
-        disp_formi = disp_dict[(key, itime)]
-        stress_formi = stress_dict[(key, itime)]
-        strain_formi = strain_dict[(key, itime)]
-        force_formi = force_dict[(key, itime)]
-        strain_energy_formi = strain_energy_dict[(key, itime)]
-        gpstress_formi = gpstress_dict[(key, itime)]
+        disp_formi = disp_dict[key_itime]
+        stress_formi = stress_dict[key_itime]
+        strain_formi = strain_dict[key_itime]
+        force_formi = force_dict[key_itime]
+        strain_energy_formi = strain_energy_dict[key_itime]
+        gpstress_formi = gpstress_dict[key_itime]
         if disp_formi:
             form_outi += disp_formi
             #form_outi.append(('Disp', None, disp_formi))
@@ -4185,8 +3308,11 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
     #print('form_results =', form_results)
     return form
 
-def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
-                     cases, form0, icase):
+def _build_materials(model: BDF,
+                     pcomp: dict[str, np.ndarray],
+                     pshell: dict[str, np.ndarray],
+                     is_pshell_pcomp: tuple[bool, bool],
+                     cases, form0, icase: int) -> int:
     """
     creates:
       - Thickness
@@ -4350,7 +3476,8 @@ def _add_material_mid_e11_e22(model: BDF, icase: int,
 
     return icase
 
-def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,
+def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray,
+                        nelements: int,
                         cases, form0, icase: int) -> int:
     """
     Creates the optimization visualization.  Supports:
@@ -4414,6 +3541,7 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
         cards_to_skip=None, log=None, debug=False)
 
     _model2 = BDF(debug=None, log=log, mode='msc')
+    _model2.use_new_deck_parser = True
     _model2.read_bdf(bdf_filename=bdf_filename_out,
                      validate=False, xref=False, punch=False, read_includes=True,
                      save_file_structure=False, encoding=model._encoding)
@@ -4471,7 +3599,7 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
             #raise NotImplementedError(sebulk)
     #model.write_bdf('spike.bdf')
 
-def _create_masses(gui: NastranIO, model: BDF, node_ids: np.ndarray,
+def _create_masses(gui: MainWindow, model: BDF, node_ids: np.ndarray,
                    create_secondary_actors: bool=True) -> int:
     """
     Count the masses.
@@ -4494,38 +3622,8 @@ def _create_masses(gui: NastranIO, model: BDF, node_ids: np.ndarray,
     def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes) -> None:
         if not gui.settings.nastran_settings.is_update_conm2:
             return
-        j2 = 0
         mass_grid = gui.alt_grids['conm2']
-        for unused_eid, element in sorted(model.masses.items()):
-            if isinstance(element, CONM2):
-                nid = element.nid
-                inid = np.searchsorted(node_ids, nid)
-                xyz_nid = nodes[inid, :]
-                centroid = element.offset(xyz_nid)
-                points.SetPoint(j2, *centroid)
-
-            elif element.type in ('CMASS1', 'CMASS2'):
-                n1, n2 = element.nodes
-                factor = 0.
-                if element.nodes[0] is not None:
-                    inid = np.searchsorted(node_ids, n1)
-                    p1 = nodes[inid, :]
-                    factor += 1.
-                if element.nodes[1] is not None:
-                    inid = np.searchsorted(node_ids, n2)
-                    p2 = nodes[inid, :]
-                    factor += 1.
-                centroid = (p1 + p2) / factor
-                points.SetPoint(j2, *centroid)
-
-                elem = vtkVertex()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(0, j2)
-                mass_grid.InsertNextCell(elem.GetCellType(), point_ids)
-            else:
-                continue
-                #self.gui.log_info("skipping %s" % element.type)
-            j2 += 1
+        update_mass_grid(model, mass_grid, points, node_ids, nodes)
         return
 
     gui.create_alternate_vtk_grid(
@@ -4533,3 +3631,74 @@ def _create_masses(gui: NastranIO, model: BDF, node_ids: np.ndarray,
         follower_function=update_conm2s_function,
         representation='point')
     return nconm2
+
+def update_mass_grid(model: BDF,
+                     mass_grid: vtkUnstructuredGrid,
+                     points: vtkPoints,
+                     node_ids: np.ndarray,
+                     nodes: np.ndarray) -> None:
+    j2 = 0
+    for unused_eid, element in sorted(model.masses.items()):
+        if isinstance(element, CONM2):
+            nid = element.nid
+            inid = np.searchsorted(node_ids, nid)
+            xyz_nid = nodes[inid, :]
+            centroid = element.offset(xyz_nid)
+            points.SetPoint(j2, *centroid)
+
+        elif element.type in ('CMASS1', 'CMASS2'):
+            n1, n2 = element.nodes
+            factor = 0.
+            if element.nodes[0] is not None:
+                inid = np.searchsorted(node_ids, n1)
+                p1 = nodes[inid, :]
+                factor += 1.
+            if element.nodes[1] is not None:
+                inid = np.searchsorted(node_ids, n2)
+                p2 = nodes[inid, :]
+                factor += 1.
+            centroid = (p1 + p2) / factor
+            points.SetPoint(j2, *centroid)
+
+            elem = vtkVertex()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, j2)
+            mass_grid.InsertNextCell(elem.GetCellType(), point_ids)
+        else:
+            continue
+            #self.gui.log_info("skipping %s" % element.type)
+        j2 += 1
+    return
+
+def _get_geometry_properties_by_name(gui: MainWindow,
+                                     names: list[str]) -> dict[str, Any]:
+    """
+    Get a subset of the gui.geometry_properties dict specified by
+    names.  Any names not in the dict will be ignored.
+
+    Parameters
+    -----------
+    names : list [str, ...]
+        list of names.
+
+    Returns
+    --------
+    geometry_properties : dict {str : AltGeometry or CoordProperties}
+        Dictonairy from name to property object.
+
+    """
+    geometry_properties = {}
+    for name in names:
+        try:
+            prop = gui.geometry_properties[name]
+        except KeyError:
+            continue
+        geometry_properties[name] = prop
+    return geometry_properties
+
+
+class Case2D:
+    def __init__(self, node_id: np.ndarray, data: np.ndarray):
+        nnode = len(node_id)
+        self.node_gridtype = np.zeros((nnode, 2), dtype='int32')
+        self.data = data.reshape(1, nnode, 3)

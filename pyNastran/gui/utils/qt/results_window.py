@@ -1,25 +1,30 @@
 from typing import Any
 from qtpy import QtGui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
-from pyNastran.gui.utils.qt.qtreeview2 import RightClickTreeView, GenericRightClickTreeView
-
+#from qtpy.QtCore import QAbstractView
+from pyNastran.gui.utils.qt.qtreeview2 import ClickTreeView, ClickCallback
 
 class ResultsWindow(QWidget):
     """
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, parent, name, data, choices,
-                 actions: list[tuple[str, Any, bool]]=None,
-                 include_clear=True, include_export_case=True,
-                 include_delete=True,
-                 include_results=True):
+    def __init__(self, parent, name: str,
+                 data: list[Any],
+                 choices,
+                 is_single_select: bool,
+                 left_click_callback: ClickCallback,
+                 right_click_actions: list[tuple[str, ClickCallback, bool]]=None,
+                 include_clear: bool=True,
+                 include_export_case: bool=True,
+                 include_delete: bool=True,
+                 include_results: bool=True):
         """
         Parameters
         ----------
-        actions : varies
+        right_click_actions : varies
             None:
-                use the default actions
+                use the default right_click_actions
             list[tuple[str, Any, bool]]:
                 action : (name, function, return_icase)
                 name : str
@@ -41,44 +46,58 @@ class ResultsWindow(QWidget):
         self.choices = choices
         self.parent = parent
 
-        def on_modify(icase: int):
-            print('modify...%i' % icase)
-        def on_case(icase: int):
-            print('case...%i' % icase)
-        def on_delete():
-            print('delete...')
+        #def on_modify(icase: int):
+            #print('modify...%i' % icase)
+        #def on_case(icase: int):
+            #print('case...%i' % icase)
+        #def on_delete():
+            #print('delete...')
 
-        if actions:
-            #actions = [
-                ## (right_click_msg, callback, validate?)
-                ##('Clear Results...', self.on_clear_results, False),
-                ##('Apply Results to Fringe...', 'fringe', self.on_fringe, True),
-                ##('Apply Results to Displacement...', self.on_disp, True),
-                ##('Apply Results to Vector...', self.on_vector, True),
-                #('Delete...', on_delete, False),
-                #('Modify...', on_modify, True),
-            #]
-            self.treeView = GenericRightClickTreeView(
-                self, self.data, choices, actions,
-                include_clear=include_clear, include_delete=include_delete,
-                include_results=include_results)
-        else:
-            self.treeView = RightClickTreeView(
+        #right_click_actions = []
+        #right_click_actions = [
+            ## (right_click_msg, callback, validate?)
+            ##('Clear Results...', self.on_clear_results, False),
+            ##('Apply Results to Fringe...', 'fringe', self.on_fringe, True),
+            ##('Apply Results to Displacement...', self.on_disp, True),
+            ##('Apply Results to Vector...', self.on_vector, True),
+            #('Delete...', on_delete, False),
+            #('Modify...', on_modify, True),
+        #]
+        self.tree_view = ClickTreeView(
             self, self.data, choices,
-            include_clear=include_clear, include_export_case=include_export_case,
+            left_click_callback,
+            right_click_actions,
+            include_export_case=include_export_case,
+            include_clear=include_clear,
             include_delete=include_delete,
-            include_results=include_results, )
-        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            include_results=include_results)
+        self.tree_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()
         is_single = self.addItems(self.model, data)
-        self.treeView.setModel(self.model)
-        self.treeView.set_single(is_single)
+        self.tree_view.setModel(self.model)
+        self.tree_view.set_single(is_single)
+
+        assert isinstance(is_single_select, bool), is_single_select
+        if is_single_select:
+            self.tree_view.setSelectionMode(QAbstractItemView.SingleSelection)
+        else:
+            self.tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
+            #item = tree.invisibleRootItem()
+            #def select_item(item)
+                #item.setSelected(True)
+                #for i in range(item.childCount()):
+                    #child = item.child(i)
+                    #select_item(child)
+            #select_item(item)
+            #widget.selectAll()
+            self.tree_view.selectAll()
+            #youQTreeWidget.setSelectionMode(QGui.QAbstractView.MultiSelection)
 
         self.model.setHorizontalHeaderLabels([self.tr(self.name)])
 
         layout = QVBoxLayout()
-        layout.addWidget(self.treeView)
+        layout.addWidget(self.tree_view)
         self.setLayout(layout)
 
     def update_data(self, data):
@@ -93,14 +112,14 @@ class ResultsWindow(QWidget):
                 #self.addItems(self.model, data)
             #else:
                 #self.addItems(self.model, *tuple(data))
-        self.treeView.data = data
+        self.tree_view.data = data
         #layout = QVBoxLayout()
-        #layout.addWidget(self.treeView)
+        #layout.addWidget(self.tree_view)
         #self.setLayout(layout)
 
     def clear_data(self):
         self.model.clear()
-        self.treeView.data = []
+        self.tree_view.data = []
         self.model.setHorizontalHeaderLabels([self.tr(self.name)])
 
     def addItems(self, parent, elements, level=0, count_check=False):
@@ -146,8 +165,8 @@ class ResultsWindow(QWidget):
                 if nelements == 1 and nchildren == 0 and level == 0:
                     #self.result_data_window.setEnabled(False)
                     item.setEnabled(False)
-                    #print(dir(self.treeView))
-                    #self.treeView.setCurrentItem(self, 0)
+                    #print(dir(self.tree_view))
+                    #self.tree_view.setCurrentItem(self, 0)
                     #item.mousePressEvent(None)
                     redo = True
                 #else:

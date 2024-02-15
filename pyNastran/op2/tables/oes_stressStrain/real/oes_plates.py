@@ -2,8 +2,10 @@
 #pylint disable=C0103
 from itertools import count
 import warnings
+from typing import TextIO
 import numpy as np
 
+from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
@@ -11,7 +13,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_13e_long, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
 
 NUM_WIDE_CENTROID = 17
@@ -195,6 +197,31 @@ class RealPlateArray(OES_Object):
             self.element_node = element_node
             self.data = data
         #print(self.element_node.shape, self.data.shape)
+
+    def abs_principal(self) -> np.ndarray:
+        """hasn't been checked for strain; 2d von mises"""
+        omax = self.data[:, :, 5]
+        omin = self.data[:, :, 6]
+        abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
+        return abs_principal
+    def von_mises(self) -> np.ndarray:
+        """hasn't been checked for strain; 2d von mises"""
+        if self.is_von_mises:
+            return self.data[:, :, -1]
+        σxx = self.data[:, :, 1]
+        σyy = self.data[:, :, 2]
+        τxy = self.data[:, :, 3]
+        ovm = np.sqrt(σxx**2 + σyy**2 - σxx*σyy +3*(τxy**2) )
+        return ovm
+    def max_shear(self) -> np.ndarray:
+        """hasn't been checked for strain"""
+        if not self.is_von_mises:
+            return self.data[:, :, -1]
+        #headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
+        omax = self.data[:, :, 5]
+        omin = self.data[:, :, 6]
+        max_shear = (omax - omin) / 2.
+        return max_shear
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -571,7 +598,101 @@ class RealPlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Stress Table - PSHELL
+        ---------------------
+        2,  stress,  ,  ,  ,  ,  ,  ,  ,  ,
+        ,  E_type,  CQUAD4,  (PSHELL),  ,  ,  ,  ,  ,  ,
+        Flag, SubcaseID, iTime,  EID,  NID,      FD,      Sxx,        Syy,  Szz,       Sxy,  Syz,  Szx
+        2,            1,     0,  301,    0,   0.125,  265.173,   1535.666,    0,   169.811,    0,    0
+        2,            1,     0,  301,  101,   0.125,  62.7342,   1021.736,    0,  759.3948,    0,    0
+        2,            1,     0,  301,  102,   0.125,  12671707,  1078.741,    0,  1352.053,    0,    0
+        2,            1,     0,  301,  103,   0.125,  1797.972,  1944.449,    0,  719.5833,    0,    0
+        2,            1,     0,  301,  104,   0.125,  1109.873,  1651.793,    0,  1187.893,    0,    0
+        2,            1,     0,  301,    0,  -0.125,  389.2484,  1939.577,    0,  1270.192,    0,    0
+        2,            1,     0,  301,  101,  -0.125,  500.0936,  832.8021,    0,  1562.421,    0,    0
+        2,            1,     0,  301,  102,  -0.125,  1118429,   441.4652,    0,  303.9695,    0,    0
+        2,            1,     0,  301,  103,  -0.125,  530.9528,  116.0281,    0,  522.3726,    0,    0
+        2,            1,     0,  301,  104,  -0.125,  295.108,   1303.783,    0,  1465.683,    0,    0
+
+        ,  E_type,  CTRIA3,  (PSHELL),  ,  ,  ,  ,  ,  ,
+        Flag, SubcaseID, iTime, EID,  NID,      FD,       Sxx,       Syy,  Szz,       Sxy,  Syz,  Szx
+        2,            1,     0, 302,    0,  -0.125,  1289.590,  640.5084,    0,  1822.057,    0,    0
+        2,            1,     0, 302,    0,   0.125,  1851.625,  1957.094,    0,  1276.033,    0,    0
+
+        """
+        name = str(self.__class__.__name__)
+        if write_header:
+            csv_file.write('# %s\n' % name)
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Nid', 'FD', 'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+        # stress vs. strain
+        flag = 10 if 'Stress' in name else 11
+
+        #node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+        #itime = 0
+        isubcase = self.isubcase
+        #times = self._times
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        nid_len = '%d' % len(str(nids.max()))
+        eid_len = '%d' % len(str(eids.max()))
+        zero = ' 0.000000E+00'
+
+        #cen_word = 'CEN/%i' % nnodes
+        #cen_word = cen
+        for itime in range(ntimes):
+            #dt = self._times[itime]
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #f06_file.write(''.join(header + msg))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+            #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+            fiber_dist = self.data[itime, :, 0]
+            oxx = self.data[itime, :, 1]
+            oyy = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            #angle = self.data[itime, :, 4]
+            #major_principal = self.data[itime, :, 5]
+            #minor_principal = self.data[itime, :, 6]
+            #ovm = self.data[itime, :, 7]
+
+            is_linear = self.element_type in {33, 74, 227, 228, 83}
+            is_bilinear = self.element_type in {64, 70, 75, 82, 144}
+            for (i, eid, nid, fdi, oxxi, oyyi, txyi) in zip(
+                 count(), eids, nids, fiber_dist, oxx, oyy, txy):
+                if is_exponent_format:
+                    [fdi, oxxi, oyyi, txyi] = write_floats_13e_long(
+                        [fdi, oxxi, oyyi, txyi])
+
+                #Flag, SubcaseID, iTime,  EID,  NID,      FD,      Sxx,        Syy,  Szz,       Sxy,  Syz,  Szx
+                #2,            1,     0,  301,    0,   0.125,  265.173,   1535.666,    0,   169.811,    0,    0
+                #2,            1,     0,  301,  101,   0.125,  62.7342,   1021.736,    0,  759.3948,    0,    0
+                # tria3
+                if is_linear:  # CQUAD4, CTRIA3, CTRIAR linear, CQUADR linear
+                    csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, {0:{nid_len}d}, {fdi}, {oxxi}, {oyyi}, {zero}, {txyi}, {zero}, {zero}\n')
+
+                elif is_bilinear:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
+                    # bilinear
+                    csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, {nid:{nid_len}d}, {fdi}, {oxxi}, {oyyi}, {zero}, {txyi}, {zero}, {zero}\n')
+                else:  # pragma: no cover
+                    msg = 'element_name=%s self.element_type=%s' % (
+                        self.element_name, self.element_type)
+                    raise NotImplementedError(msg)
+        return
+
+    def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []

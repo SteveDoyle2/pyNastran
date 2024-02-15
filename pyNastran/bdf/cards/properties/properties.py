@@ -61,8 +61,11 @@ class PFAST(Property):
         return PFAST(pid, d, kt1, kt2, kt3,
                      mcid=-1, mflag=0, kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='')
 
-    def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                 kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
+    def __init__(self, pid: int, d: float,
+                 kt1: float, kt2: float, kt3: float,
+                 mcid: int=-1, mflag: int=0,
+                 kr1: float=0., kr2: float=0., kr3: float=0.,
+                 mass: float=0., ge: float=0., comment: str='') -> PFAST:
         """
         Creates a PFAST card
 
@@ -128,21 +131,22 @@ class PFAST(Property):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
-        d = double(card, 2, 'd')
-        mcid = integer_or_blank(card, 3, 'mcid', -1)
-        mflag = integer_or_blank(card, 4, 'mflag', 0)
+        d = double(card, 2, 'diameter')
+        mcid = integer_or_blank(card, 3, 'mcid', default=-1)
+        mflag = integer_or_blank(card, 4, 'mflag', default=0)
 
         kt1 = double(card, 5, 'kt1')
         kt2 = double(card, 6, 'kt2')
         kt3 = double(card, 7, 'kt3')
 
-        kr1 = double_or_blank(card, 8, 'kr1', 0.0)
-        kr2 = double_or_blank(card, 9, 'kr2', 0.0)
-        kr3 = double_or_blank(card, 10, 'kr3', 0.0)
-        mass = double_or_blank(card, 11, 'mass', 0.0)
-        ge = double_or_blank(card, 12, 'ge', 0.0)
+        kr1 = double_or_blank(card, 8, 'kr1', default=0.0)
+        kr2 = double_or_blank(card, 9, 'kr2', default=0.0)
+        kr3 = double_or_blank(card, 10, 'kr3', default=0.0)
+        mass = double_or_blank(card, 11, 'mass', default=0.0)
+        ge = double_or_blank(card, 12, 'ge', default=0.0)
         assert len(card) <= 13, f'len(PFAST card) = {len(card):d}\ncard={card}'
         return PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
                      kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,

@@ -9,6 +9,9 @@ class CardParseSyntaxError(SyntaxError):
     """
     pass
 
+class AuxModelError(RuntimeError):
+    pass
+
 class DuplicateIDsError(RuntimeError):
     pass
 

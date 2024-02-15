@@ -43,6 +43,30 @@ class Tester(unittest.TestCase):
 
 class TestBDFUnit(Tester):
 
+    def test_bdf_pickle_copy(self):
+        """verify we get 5 include files if they are one after the other"""
+        model = BDF(debug=False)
+        #from copy import deepcopy
+        #from pyNastran.bdf.bdf import read_bdf
+        #from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
+
+        dirname = os.path.join(MODEL_PATH, 'bugs', 'euler_column_linear_buckling')
+
+        bdf_filename = os.path.join(dirname, 'euler_column_linear_buckling.bdf')
+        obj_filename = os.path.join(dirname, 'model.obj')
+        model = read_bdf(bdf_filename)
+        model.log.debug('model')
+        model2 = model.__deepcopy__({})
+        model2.log.debug('model2')
+
+        #model2.cross_reference()
+        mass = mass_properties(model2)[0]  # fails because of missing cross-reference, comment to reach next line
+        model3 = model2.__deepcopy__({})  # fails while deep-copying
+        model3.log.debug('model3')
+
+        #import pickle
+        model3.save(obj_filename=obj_filename, unxref=True)
+
     def test_bdf_include5(self):
         """verify we get 5 include files if they are one after the other"""
         model = BDF(debug=False)

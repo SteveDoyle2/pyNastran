@@ -8,6 +8,7 @@ from qtpy.compat import getopenfilename
 from pyNastran.utils import print_bad_path
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui2 import MainWindow2
+    from pyNastran.gui.gui_objects.settings import Settings
 IS_TESTING = False
 
 class LoadActions:
@@ -25,7 +26,7 @@ class LoadActions:
                          geometry_format: Optional[str]=None,
                          name: str='main',
                          plot: bool=True,
-                         raise_error: bool=False):
+                         stop_on_failure: bool=False):
         """
         Loads a baseline geometry
 
@@ -44,7 +45,7 @@ class LoadActions:
             stop the code if True
 
         """
-        assert isinstance(name, str), 'name=%r type=%s' % (name, type(name))
+        assert isinstance(name, str), f'name={name!r} type={type(name)}; infile_name={infile_name} geometry_format={geometry_format!r}; plot={plot}; stop_on_failure={stop_on_failure}'
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)
@@ -55,7 +56,10 @@ class LoadActions:
         log = self.log
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            self.gui.last_dir = os.path.split(infile_name)[0]
+            last_dir = os.path.split(infile_name)[0]
+            settings: Settings = self.gui.settings
+            self.gui.last_dir = last_dir
+            settings.startup_directory = last_dir
 
             if self.gui.name == '':
                 name = 'main'

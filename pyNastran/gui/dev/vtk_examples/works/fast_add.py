@@ -39,6 +39,7 @@ from pyNastran.gui.vtk_interface import (
     vtkUnstructuredGrid, vtkCellArray)
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor)
+from vtk import vtkPoints
 
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
@@ -100,7 +101,7 @@ def mixed_type_unstructured_grid():
 
     points_data = numpy_to_vtk(pts, deep=1)
 
-    points = vtk.vtkPoints()
+    points = vtkPoints()
     points.SetNumberOfPoints(npoints)
     points.SetData(points_data)
     ug.SetPoints(points)

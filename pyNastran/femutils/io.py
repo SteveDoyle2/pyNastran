@@ -16,18 +16,6 @@ import numpy as np
 from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode
 
-#try:
-    #from pathlib import Path
-#except ImportError:
-    #Path = None
-
-#def is_pathlib_path(obj):
-    #"""
-    #Check whether obj is a pathlib.Path object.
-    #"""
-    #return Path is not None and isinstance(obj, Path)
-
-
 from pyNastran.utils import is_file_obj, _filename
 
 __all__ = ['loadtxt_nice', 'savetxt_nice']

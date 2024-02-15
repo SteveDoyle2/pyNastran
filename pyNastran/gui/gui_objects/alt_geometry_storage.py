@@ -1,6 +1,7 @@
 from typing import Union
 from copy import deepcopy
 
+
 class AltGeometry:
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
                        'bar', 'wire+point', 'wire+surf']
@@ -14,7 +15,8 @@ class AltGeometry:
                   self.is_pickable, self.label_actors))
         return msg
 
-    def __init__(self, parent, name: str, color=None, line_width: int=1,
+    def __init__(self, parent, name: str, color=None,
+                 line_width: int=1,
                  opacity: float=0.0,
                  point_size: int=1,
                  bar_scale: float=1.0,

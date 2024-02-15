@@ -15,14 +15,14 @@ from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import QApplication
 
 # 3rd party
-import vtk
+import vtkmodules
 
 # pyNastran
 import pyNastran
 from pyNastran.gui.formats import Cart3dIO#, CLASS_MAP
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
-from pyNastran.gui.gui_common import GuiCommon2
+from pyNastran.gui.gui_common import GuiCommon2, QSettingsLike
 
 
 try:
@@ -137,21 +137,23 @@ class MainWindow(GuiCommon2):
         Handling saving state before application when application is
         being closed.
         """
-        settings = QtCore.QSettings()
-        settings.setValue("main_WindowGeometry", self.saveGeometry())
-        settings.setValue("mainWindowState", self.saveState())
-        self.settings.save(settings)
+        #qsettings = QtCore.QSettings()
+        qsettings = QSettingsLike()
+        qsettings.setValue('main_window_geometry', self.saveGeometry())
+        qsettings.setValue('main_window_state', self.saveState())
+        self.settings.save(qsettings)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.window()
         width = main_window.frameGeometry().width()
         height = main_window.frameGeometry().height()
-        settings.setValue('screen_shape', (width, height))
+        qsettings.setValue('screen_shape', (width, height))
 
         qpos = self.pos()
         pos = qpos.x(), qpos.y()
-        settings.setValue('pos', pos)
+        qsettings.setValue('pos', pos)
 
+        qsettings.save_json()
         q_app = QApplication.instance()
         if q_app is None:
             sys.exit()

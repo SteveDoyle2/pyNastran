@@ -300,7 +300,7 @@ class NXSTRAT(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NXSTRAT card from ``BDF.add_card(...)``
+        Adds an NXSTRAT card from ``BDF.add_card(...)``
 
         Parameters
         ----------

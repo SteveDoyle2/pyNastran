@@ -29,6 +29,7 @@
 *.png binary
 *.jpg binary
 *.gif binary
+*.h5 binary
 *.op2 binary
 *.op4 binary
 *.plt binary

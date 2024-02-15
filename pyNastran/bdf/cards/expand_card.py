@@ -103,7 +103,10 @@ def expand_thru_by(fields: list[str], set_fields: bool=True, sort_fields: bool=T
 
     Notes
     -----
-    used for QBDY3 and what else ???
+    used for:
+      BLSEG, DDVAL, NSM1, ACCEL1
+      QVECT, QBDY3, RADBC, QVOL
+    what else ???
 
     """
     if require_int:

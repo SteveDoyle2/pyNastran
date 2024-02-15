@@ -40,7 +40,7 @@ class Cart3D(Cart3dReaderWriter):
         self.points = None
         self.elements = None
 
-    def flip_model(self):
+    def flip_model(self) -> None:
         """flip the model about the y-axis"""
         self.points[:, 1] *= -1.
         self.elements = np.hstack([
@@ -48,7 +48,7 @@ class Cart3D(Cart3dReaderWriter):
             self.elements[:, 2:3],
             self.elements[:, 1:2],
         ])
-        print(self.elements.shape)
+        #print(self.elements.shape)
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """

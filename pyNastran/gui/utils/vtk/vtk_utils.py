@@ -9,18 +9,26 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
-from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter
-from pyNastran.gui.vtk_common_core import vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT
+#from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
+#from vtk import vtkCellData, vtkPointData
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData, vtkSelectionNode, vtkSelection
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkFiltersCore import vtkIdFilter
+from vtkmodules.util.vtkConstants import VTK_ID_TYPE
+
+from pyNastran.gui.vtk_common_core import (
+    vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT)
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
 from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
-from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
+#from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
+    from vtkmodules.vtkFiltersGeneral import vtkAxes
 # // Linear cells
 # VTK_EMPTY_CELL = 0
 # VTK_VERTEX = 1
@@ -116,7 +124,7 @@ ETYPES_EXPECTED_DICT = {
     27: 13, # cpyram13
 }
 
-def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
+def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> vtkPoints:
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
@@ -297,7 +305,7 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
         array_type=vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
-                                    array_type=vtkConstants.VTK_ID_TYPE)
+                                    array_type=VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
@@ -415,7 +423,7 @@ def map_element_centroid_to_node_fringe_result(
     energy, this will map properly.
     """
     is_passed = False
-    failed_out = (None, None, None, None)
+    failed_out = (0, 0, 0.0, 0.0)
     if location == 'node':
         log.error('Not a centroidal result.')
         return is_passed, failed_out
@@ -425,8 +433,8 @@ def map_element_centroid_to_node_fringe_result(
     # points = ugrid.GetPoints()
 
 
-    cell_data = ugrid.GetCellData()
-    point_data = ugrid.GetPointData()
+    cell_data: vtkCellData = ugrid.GetCellData()
+    point_data: vtkPointData = ugrid.GetPointData()
     # nnodes = point_data.GetNumberOfPoints()  # bad
     nnodes = ugrid.GetNumberOfPoints()
 
@@ -480,7 +488,6 @@ def map_element_centroid_to_node_fringe_result(
     #out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
     #nlabels, labelsize, ncolors, colormap = out
 
-
     cell_data.SetActiveScalars(None)
     point_data.SetActiveScalars('name')
     is_passed = True
@@ -514,17 +521,11 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
         1 : cell
 
     """
-    try:
-        if VTK_VERSION_SPLIT >= [9, 2]:
-            if point_cell_type == 0:
-                ids.SetPointIdsArrayName(name)
-            elif point_cell_type == 1:
-                ids.SetCellIdsArrayName(name)
-            else:
-                raise RuntimeError(point_cell_type)
-        else:
-            ids.SetIdsArrayName(name)
-    except AttributeError:
-        print(f'  failed setting SetIdsArrayName to name {name!r}')
+    if point_cell_type == 0:
+        ids.SetPointIdsArrayName(name)
+    elif point_cell_type == 1:
+        ids.SetCellIdsArrayName(name)
+    else:
+        raise RuntimeError(point_cell_type)
     return
 

@@ -1,9 +1,14 @@
 """
 defines the ProbeResultStyle class
 """
-import vtk
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
+if TYPE_CHECKING:
+    from pyNastran.gui.gui import MainWindow
 
-class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
+
+class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
     """Custom TrackballCamera"""
 
     def __init__(self, parent=None):
@@ -14,7 +19,7 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
 
     def left_button_press_event(self, obj, event) -> None:
         """pick a point and apply the label based on the current displayed result"""
-        gui = self.parent # type: MainWindow
+        gui: MainWindow = self.parent
         picker = gui.cell_picker
         pixel_x, pixel_y = gui.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, gui.rend)

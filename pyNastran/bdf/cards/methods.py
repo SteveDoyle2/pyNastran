@@ -784,16 +784,40 @@ class EIGR(Method):
             raise ValueError(msg)
 
         if method == 'SINV':
-            nd = integer_or_blank(card, 6, 'nd', 600)
+            nd = integer_or_blank(card, 6, 'nd', default=600)
         elif method == 'INV':
-            ne = integer(card, 5, 'ne')
-            nd = integer_or_blank(card, 6, 'nd', 3 * ne)
-        elif method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
-            nd = integer_or_blank(card, 6, 'nd', 0)
+            ne = integer_or_blank(card, 5, 'ne', default=0)
+            nd = integer_or_blank(card, 6, 'nd', default=3 * ne)
+        elif method in {'GIV', 'MGIV', 'AGIV',
+                        'HOU', 'MHOU', 'AHOU'}:
+            # AHOU = automatic selection of HOU or MHOU
+            # AGIV = automatic selection of GIV or MGIV
+            nd = integer_or_blank(card, 6, 'nd', default=0)
+        elif method == 'LAN':
+            #The LAN method is the most general-purpose method, and may be used on
+            #both small- and large-size problems. It takes advantage of sparsity of input
+            #matrices, leading to greater efficiency on large-size problems. Because Lanczos
+            #performance is tuned for medium to large problems, this has caused difficulties
+            #with very small problems. Thus, by default, on problems with fewer than 20
+            #degrees-of-freedom when the LAN method is selected, the method is switched to
+            #AHOU. The criteria for automatic switching is controlled by SYSTEM(359) on the
+            #NASTRAN entry.
+            #The NE, G, and C fields are ignored for the LAN method. The
+            #NORM field may be set to MASS (the default value) or NORM.
+            #
+            # The conventions used when both the Fi and ND fields are specified are
+            # described in Table 1 of the IGRL entry description.
+            #
+            # The EIGRL entry is an alternate method to select the
+            # LAN method. It has several other input options for special cases.
+            #
+            # When both and EIGRL and EIGR have the same SID and that SID is
+            # selected by a METHOD ommand the EIGRL entry takes precedence.
+            nd = integer_or_blank(card, 6, 'nd')
         else:
             nd = integer(card, 6, 'nd')
         crit = double_or_blank(card, 8, 'crit')
-        norm = string_or_blank(card, 9, 'norm', 'MASS')
+        norm = string_or_blank(card, 9, 'norm', default='MASS')
 
         if norm == 'POINT':
             G = integer(card, 10, 'G')
@@ -1147,7 +1171,7 @@ class MODTRAK(BaseCard):
     MODTRAK SID LOWRNG HIGHRNG MTFILTER
     MODTRAK 100   1      26      0.80
     """
-    def __init__(self, sid, low_range, high_range, mt_filter, comment=''):
+    def __init__(self, sid: int, low_range: int, high_range: int, mt_filter: float, comment: str=''):
         BaseCard.__init__(self)
         self.sid = sid
         self.low_range = low_range
@@ -1160,6 +1184,7 @@ class MODTRAK(BaseCard):
         low_range = integer_or_blank(card, 2, 'low_range', default=0)
         high_range = integer(card, 3, 'high_range')
         mt_filter = double_or_blank(card, 4, 'mt_filter', default=0.9)
+        assert len(card) <= 5, f'len(MODTRAK card) = {len(card):d}\ncard={card}'
         return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
 
     def raw_fields(self) -> list[Any]:

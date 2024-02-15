@@ -1929,8 +1929,11 @@ class AddCards:
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_pfast(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='') -> PFAST:
+    def add_pfast(self, pid: int, d: int,
+                  kt1: float, kt2: float, kt3: float,
+                  mcid: int=-1, mflag: int=0,
+                  kr1: float=0., kr2: float=0., kr3: float=0.,
+                  mass: float=0., ge: float=0., comment: str='') -> PFAST:
         """
         Creates a PAST card
 
@@ -3872,12 +3875,11 @@ class AddCards:
 
     def add_matt1(self, mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
                   a_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
-                  comment='') -> MATT1:
+                  comment='') -> int:
         """Creates a MATT1 card"""
         mat = MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
                     ge_table, st_table, sc_table, ss_table,
                     comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
         return mat
 
     def add_matt2(self, mid, g11_table=None, g12_table=None, g13_table=None, g22_table=None,
@@ -4100,7 +4102,7 @@ class AddCards:
                    us0: float=0.0, vs0: float=0.0,
                    comment: str='') -> TLOAD1:
         """
-        Creates a TLOAD1 card, which defienes a load based on a table
+        Creates a TLOAD1 card, which defines a load based on a table
 
         Parameters
         ----------
@@ -4193,7 +4195,7 @@ class AddCards:
     def add_rload1(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0,
                    Type='LOAD', comment='') -> RLOAD1:
         """
-        Creates an RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -4235,7 +4237,7 @@ class AddCards:
     def add_rload2(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0,
                    Type='LOAD', comment='') -> RLOAD2:
         """
-        Creates a nRLOAD2 card, which defienes a frequency-dependent load
+        Creates an RLOAD2 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -4573,7 +4575,7 @@ class AddCards:
     def add_deform(self, sid: int, eid: int, deformation: float, comment='') -> DEFORM:
         """
         Creates an DEFORM card, which defines applied deformation on
-        a 1D elemment.  Links to the DEFORM card in the case control
+        a 1D element.  Links to the DEFORM card in the case control
         deck.
 
         Parameters
@@ -6015,7 +6017,7 @@ class AddCards:
         """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
-    def add_sebset(self, seid, ids, components, comment='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset(self, seid: int, ids: list[int], components, comment='') -> Union[SEBSET, SEBSET1]:
         """Creates an SEBSET/SEBSET1 card"""
         if isinstance(components, integer_string_types):
             sebset = SEBSET1(seid, ids, components, comment=comment)
@@ -6024,11 +6026,13 @@ class AddCards:
         self._add_methods._add_sebset_object(sebset)
         return sebset
 
-    def add_sebset1(self, seid, ids, components, comment='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset1(self, seid: int, ids: list[int],
+                    components, comment='') -> Union[SEBSET, SEBSET1]:
         """.. seealso:: ``add_secset``"""
         return self.add_sebset(seid, ids, components, comment=comment)
 
-    def add_secset(self, seid, ids, components, comment='') -> Union[SECSET, SECSET1]:
+    def add_secset(self, seid: int, ids: list[int],
+                   components, comment='') -> Union[SECSET, SECSET1]:
         """Creates an SECSET/SECSET1 card"""
         if isinstance(components, integer_string_types):
             secset = SECSET1(seid, ids, components, comment=comment)
@@ -6037,11 +6041,13 @@ class AddCards:
         self._add_methods._add_secset_object(secset)
         return secset
 
-    def add_secset1(self, seid, ids, components, comment='') -> Union[SECSET, SECSET1]:
+    def add_secset1(self, seid: int, ids: list[int],
+                    components, comment='') -> Union[SECSET, SECSET1]:
         """.. seealso:: ``add_secset``"""
         return self.add_secset(seid, ids, components, comment=comment)
 
-    def add_seqset(self, seid, ids, components, comment='') -> Union[SEQSET, SEQSET1]:
+    def add_seqset(self, seid: int, ids: list[int],
+                   components, comment='') -> Union[SEQSET, SEQSET1]:
         """Creates an SEQSET card"""
         if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)
@@ -7488,7 +7494,7 @@ class AddCards:
         self._add_methods._add_doptprm_object(doptprm)
         return doptprm
 
-    def add_dscreen(self, rtype: str, trs=-0.5, nstr=20, comment='') -> DSCREEN:
+    def add_dscreen(self, rtype: str, trs: float=-0.5, nstr: int=20, comment: str='') -> DSCREEN:
         """
         Creates a DSCREEN object
 
@@ -8940,7 +8946,8 @@ class AddCards:
         return pacabs
 
     def add_bolt_msc(self):
-        asdf
+        raise NotImplementedError('BOLT-MSC')
+
     def add_bolt_nx(self, bolt_id: int,
                     element_type: int,
                     eids: Optional[list]=None,  # element_type=1

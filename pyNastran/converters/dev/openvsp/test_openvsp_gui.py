@@ -36,7 +36,7 @@ class TestOpenVSP_GUI(unittest.TestCase):
         test.log = log
         #test.load_nastran_geometry(geometry_filename)
         #test.load_degen_geom_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='degen_geom', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='degen_geom', stop_on_failure=True)
 
     def test_openvsp_geometry_2(self):
         log = get_logger(level='warning')

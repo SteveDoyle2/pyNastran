@@ -1,3 +1,4 @@
+from typing import TextIO
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -7,7 +8,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
 )
-from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_12e_long, _eigenvalue_header
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 
 
@@ -434,7 +435,71 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Stress Table - PCOMP
+        ---------------------
+        Flag,  SubcaseID, iTime, EID, Layer,      FD,      Sxx,      Syy, Szz,       Sxy, Syz, Szx
+        10,            1,     1, 301,     1, -0.1250, 1208.084, 290.0204,   0,  1594.263,   0,   0
+        10,            1,     1, 301,     2, -0.0625, 291.0046, 991.1379,   0,  916.3578,   0,   0
+        10,            1,     1, 301,     3,       0, 809.2431, 413.8515,   0,  966.4908,   0,   0
+        10,            1,     1, 301,     4,  0.0625, 443.0045, 1707.213,   0,  1897.417,   0,   0
+        10,            1,     1, 301,     5,   0.125, 370.4785, 1253.329,   0,  1221.529,   0,   0
+
+        """
+        name = str(self.__class__.__name__)
+        if write_header:
+            csv_file.write('# %s\n' % name)
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Layer', 'FD',
+                       'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+        # stress vs. strain
+        flag = 10 if 'Stress' in name else 11
+
+        isubcase = self.isubcase
+        #times = self._times
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_layer[:, 0]
+        layers = self.element_layer[:, 1]
+
+        zero = ' 0.000000E+00'
+        for itime in range(ntimes):
+            #dt = self._times[itime]
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+            #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+            o11 = self.data[itime, :, 0]
+            o22 = self.data[itime, :, 1]
+            t12 = self.data[itime, :, 2]
+            t1z = self.data[itime, :, 3]
+            t2z = self.data[itime, :, 4]
+            #angle = self.data[itime, :, 5]
+            #major = self.data[itime, :, 6]
+            #minor = self.data[itime, :, 7]
+            #ovm = self.data[itime, :, 8]
+
+            #fd = 0.
+            fd = np.nan
+            for eid, layer, o11i, o22i, t12i, t1zi, t2zi in zip(
+                    eids, layers, o11, o22, t12, t1z, t2z):
+                if is_exponent_format:
+                    [o11i, o22i, t12i, t1zi, t2zi] = write_floats_12e_long([
+                        o11i, o22i, t12i, t1zi, t2zi])
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid}, {layer}, {fd}, '
+                               f'{o11i}, {o22i}, {zero}, '
+                               f'{t12i}, {t1zi}, {t2zi}\n')
+        return
+
+    def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []

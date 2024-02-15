@@ -20,6 +20,8 @@ class NamesStorage:
         """
         adds the approximate name and value to the loaded_names dictionary
         """
+        if not isinstance(name, tuple):  # yes
+            raise TypeError(name)
         #print('name =', name)
         key = name[:4]
         value = name[4:]
@@ -31,17 +33,25 @@ class NamesStorage:
 
     def remove(self, name):
         """removes the approximate name from the loaded_names dictionary"""
+        if not isinstance(name, tuple):  # yes
+            raise TypeError(name)
         key = name[:4]
         del self.loaded_names[key]
 
     def get_name_string(self, name):
         """Gets the approximate name as a string"""
+        ## TODO: the str is a bug...
+        ##       happens when you use the right click apply result menu
+        if not isinstance(name, (tuple, str)):
+            raise TypeError(name)
         key = name[:4]
         value = name[4:]
         return '_'.join([str(k) for k in key])
 
     def has_close_name(self, name):
         """checks to see if the approximate key is in loaded_names"""
+        if not isinstance(name, tuple):  # yes
+            raise TypeError(name)
         key = name[:4]
         return key in self.loaded_names
 
@@ -49,8 +59,11 @@ class NamesStorage:
         """
         checks to see if the approximate key is in loaded_names
         and the value is the expected value
+
+        (1, 0, 'NodeID', 'label=NA; NodeID', 0.0)
         """
+        if not isinstance(name, tuple):  # yes
+            raise TypeError(name)
         key = name[:4]
         value = name[4:]
         return key in self.loaded_names and self.loaded_names[key] == value
-

@@ -4,6 +4,7 @@ from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse as sci_sparse
+from scipy.sparse import csc_matrix
 
 from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
 from .utils import lambda1d, DOF_MAP
@@ -155,7 +156,7 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
         return nelements
 
     for eid in eids:
-        elem = model.elements[eid]  # type: CBAR
+        elem: CBAR = model.elements[eid]
         nid1, nid2 = elem.nodes
         is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
         assert is_passed
@@ -183,7 +184,7 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
     pid_ref = elem.pid_ref
     mat = pid_ref.mid_ref
 
-    #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #is_passed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     #T = np.vstack([ihat, jhat, khat])
     #z = np.zeros((3, 3), dtype='float64')
     prop = elem.pid_ref
@@ -202,7 +203,7 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
         #[T, z],
         #[z, T],
     #])
-    is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     assert is_failed is False
     #print(wa, wb)
     xyz1 = elem.nodes_ref[0].get_position() + wa
@@ -371,7 +372,7 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         L = np.linalg.norm(dxyz)
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
         #print(wa, wb, ihat, jhat, khat)
         assert is_failed is False
         T = np.vstack([ihat, jhat, khat])
@@ -495,8 +496,8 @@ def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
 def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
                ngrid: int, ndof_per_grid: int, inplace=True) -> NDArrayNNfloat:
     """does an in-place transformation"""
-    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
-    #assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
+    assert isinstance(Kbb, (np.ndarray, csc_matrix)), type(Kbb)
+    #assert isinstance(Kbb, (np.ndarray, csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
     if not isinstance(Kbb, np.ndarray):
         Kbb = Kbb.tolil()
 

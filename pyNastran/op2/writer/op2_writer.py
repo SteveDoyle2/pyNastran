@@ -310,7 +310,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
             #print(res)
             _fix_subcase_id(key, res)
 
-            if hasattr(res, 'table_name_str'): # params
+            if hasattr(res, 'table_name_str') and res.table_name_str not in {'LAMA'}: # params
                 #print(table_type)
                 res_categories2[res.table_name_str].append(res)
             else:

@@ -19,7 +19,7 @@ from pyNastran.bdf.cards.nodes import write_xpoints
 
 try:
     from natsort import natsorted
-except ImportError:
+except ModuleNotFoundError:
     natsorted = sorted
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -147,8 +147,16 @@ class WriteMesh(BDFAttributes):
 
         if self.superelement_models:
             bdf_file.write('$' + '*'*80+'\n')
-            for superelement_id, superelement in sorted(self.superelement_models.items()):
-                bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
+            for superelement_tuple, superelement in self.superelement_models.items():
+                if isinstance(superelement_tuple, int):
+                    superelement_id = superelement_tuple
+                    bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
+                else:
+                    word, value, label = superelement_tuple
+                    if label:
+                        bdf_file.write(f'BEGIN {word}={value:d} LABEL={label}\n')
+                    else:
+                        bdf_file.write(f'BEGIN {word}={value:d}\n')
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
                                        interspersed=interspersed, enddata=False,
@@ -265,6 +273,8 @@ class WriteMesh(BDFAttributes):
             for line in self.executive_control_lines:
                 msg += line + '\n'
             bdf_file.write(msg)
+            if 'CEND' not in msg:
+                bdf_file.write('CEND\n')
 
     def _write_case_control_deck(self, bdf_file: Any) -> None:
         """Writes the Case Control Deck."""
@@ -455,8 +465,8 @@ class WriteMesh(BDFAttributes):
         if (write_aero_in_gust and self.aero) or self.gusts:
             bdf_file.write('$GUST\n')
             if write_aero_in_gust:
-                for (unused_id, aero) in sorted(self.aero.items()):
-                    bdf_file.write(aero.write_card(size, is_double))
+                if model.aero is not None:
+                    bdf_file.write(model.aero.write_card(size, is_double))
             for (unused_id, gust) in sorted(self.gusts.items()):
                 bdf_file.write(gust.write_card(size, is_double))
 
@@ -825,7 +835,7 @@ class WriteMesh(BDFAttributes):
             for group in self.model_groups.values():
                 #bdf_file.write(f'$ {group}\n')
                 print(group)
-            x = 1
+            #x = 1
 
     def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -1280,7 +1290,7 @@ class WriteMesh(BDFAttributes):
 def _fix_sizes(size: int,
                nodes_size: Optional[int],
                elements_size: Optional[int],
-               loads_size: Optional[int]) -> tuple[int, int]:
+               loads_size: Optional[int]) -> tuple[int, int, int, int]:
     if nodes_size is None:
         nodes_size = size
     if elements_size is None:

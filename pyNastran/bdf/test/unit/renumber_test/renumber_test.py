@@ -14,7 +14,7 @@ for k, n in enumerate(mesh.elements.keys()):
     mesh.elements[n].eid = k + startnum
 
 for k, n in enumerate(mesh.rigid_elements.keys()):
-    mesh.rigidelements[n].eid = k + startnum
+    mesh.rigid_elements[n].eid = k + startnum
 
 # renumber properties
 

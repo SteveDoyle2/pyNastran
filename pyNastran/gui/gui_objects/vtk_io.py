@@ -5,14 +5,17 @@ import numpy as np
 #from numpy import vstack, amax, amin, arange, ones, zeros, where
 
 #VTK_TRIANGLE = 5
-#from pyNastran.gui.vtk_common_core import vtkPoints
 #from pyNastran.gui.vtk_interface import vtkVertex
+#from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
 
-from vtk import (
+#from vtk import (
     #vtkUnstructuredGridReader,
-    vtkXMLUnstructuredGridReader,
-    vtkTypeFloat32Array)
-from pyNastran.gui.vtk_common_core import vtkPoints, VTK_ID_TYPE
+    #vtkXMLUnstructuredGridReader,
+#)
+from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
+
+from pyNastran.gui.vtk_common_core import vtkPoints, vtkTypeFloat32Array, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.types import Cases, Form, Formi
 from pyNastran.gui.gui_objects.gui_result import GuiResult, INT_TYPES as INT_DTYPES, REAL_TYPES as REAL_DTYPES
@@ -211,7 +214,7 @@ def load_point_data(ugrid: vtkUnstructuredGrid,
                     cases: Cases,
                     geometry_form: Form) -> tuple[int, np.ndarray, int, np.ndarray]:
     vtk_points: vtkPoints = ugrid.GetPoints()
-    point_data= ugrid.GetPointData()
+    point_data: vtkPointData = ugrid.GetPointData()
 
     vtk_array_xyz: vtkTypeFloat32Array = vtk_points.GetData()
     xyz = vtk_to_numpy(vtk_array_xyz)
@@ -287,7 +290,7 @@ def load_point_data(ugrid: vtkUnstructuredGrid,
 def load_cell_data(ugrid: vtkUnstructuredGrid,
                    icase: int, subcase_id: int,
                    cases, geometry_form) -> tuple[int, int, np.ndarray]:
-    cell_data = ugrid.GetCellData()
+    cell_data: vtkCellData = ugrid.GetCellData()
     nelements = 0
     element_ids = np.array([], dtype='int32')
 

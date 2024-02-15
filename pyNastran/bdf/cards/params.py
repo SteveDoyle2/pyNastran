@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
-    integer_double_string_or_blank, blank)
+    integer_string_or_blank, integer_double_string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -133,7 +133,7 @@ PARAMS = (
     ('EST', 2),
     ('EXTBEMI', 0, [0, 1]),
     ('EXTBEMO', 0, [0, 1]),
-    ('EXTDR', 'NO', ['NO']), # missing values?
+    ('EXTDR', 'NO', ['YES', 'NO']), # missing values?
     ('EXTDROUT', 'NO', ['NO', 'MATRIXDB', 'DMIGDB', 'DMIGOP2']),  # missing values?
     ('EXTDRUNT', 31),
     ('EXTOUT', 'NO', ['NO', 'MATRIXDB', 'DMIGDB', 'DMIGOP2', 'DMIGPCH']),
@@ -185,7 +185,7 @@ PARAMS = (
     ('KGGCPCH', 0, [0, 1]),
     ('KGGLPCH', 0, [0, 1]),
 
-    ('OUGCORD', '', ['', 'GLOBAL']),
+    ('OUGCORD', '', ['', 'GLOBAL', 'BASIC']),
     ('UNITSYS', '', unit_systems),
     # L
 )
@@ -262,7 +262,7 @@ INT_WORDS_1 = {
     'MARCREVR', 'MARCRIGD', 'MARCRUN', 'MARCSETT', 'MARCSINC',
     'MARCSLHT', 'MARCSUMY', 'MARCT19', 'MARCTABL', 'MARCTNSF',
     'MARCTNSF', 'MARCTOL', 'MARCVERS', 'MATFILE', 'MATNL', 'MAXIT',
-    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MDOF', 'MODACC', 'MODTRK',
+    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MODACC', 'MODTRK',
     'MPCX', 'MPTDUMP', 'MRALIAS', 'MRFOLOW1', 'MRFOLOW3', 'MRFOLOW4',
     'MRORINTS', 'MROUTLAY', 'MRTIMING', 'NASPRT', 'NBRUPT', 'NEWSEQ',
     'NEWSET', 'NLAYERS', 'NLDISP', 'NLPACK', 'NLTOL', 'NMLOOP', 'NOAP',
@@ -310,7 +310,7 @@ class PARAM(BaseCard):
     type = 'PARAM'
     _field_map = {1: 'key'}
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value) -> None:
         if n - 2 >= 0:
             try:
                 self.values[n - 2] = value
@@ -327,7 +327,7 @@ class PARAM(BaseCard):
         values = -1
         return PARAM(key, values, comment='')
 
-    def __init__(self, key, values, comment=''):
+    def __init__(self, key: str, values, comment: str=''):
         """
         Creates a PARAM card
 
@@ -356,7 +356,7 @@ class PARAM(BaseCard):
             #assert not isinstance(values[0], tuple), values
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PARAM card from ``BDF.add_card(...)``
 
@@ -403,11 +403,19 @@ class PARAM(BaseCard):
             if value in {'SMEAR', 'SMEARED'}:  # assume
                 value = 'YES'
             assert value in {'YES', 'NO', 'NONSMEAR'}, 'value=%r' % value
-
+        elif key == 'LIMITER':
+            value1 = string_or_blank(card, 2, 'value', default='ROE')
+            value2 = blank(card, 3, 'blank', default=None)
+            if value1 in 'ROE-SCHEME':
+                value1 = 'ROE'
         elif key == 'POST':
             value = integer_or_blank(card, 2, 'value', default=1)
         elif key == 'UNITSYS':
             value = string_or_blank(card, 2, 'value', default='')
+        elif key == 'MDOF':
+            # NX  - integer
+            # MSC - string
+            value = integer_string_or_blank(card, 2, 'value', default=None)
 
         #-------------------------------------------------------------
         # strings; has defaults
@@ -1273,7 +1281,7 @@ class PARAM_MYSTRAN(BaseCard):
                 #IntMKL: Intel Math Kernel Library (matrices stored in sparse form)
                 #LAPACK (matrices stored in band form)
                 #YaleSMP: (matrices stored in sparse form) – not fully implemented in MYSTRAN
-            assert values[0] in ['INTMKL', 'LAPACK', 'YALESMP'], values
+            assert values[0] in ['INTMKL', 'LAPACK', 'YALESMP', 'BANDED', 'SPARSE'], values
         elif key == 'SPARSTOR':
             values = [
                 string_or_blank(card, 2, 'storage', 'SYM'),
@@ -1449,6 +1457,17 @@ class PARAM_MYSTRAN(BaseCard):
             ]
             for i, value in enumerate(values):
                 assert value in [1, 3], f'i={i} values={values}'
+        elif key == 'MXITERI':
+            values = [integer_or_blank(card, 2, 'MAXITERI-2', default=50),]
+        elif key == 'LANCMETH':
+            values = [string(card, 2, 'LANCMETH-2'),]
+            assert values[0] in {'ARPACK'}, values
+            #ARPACK or TRLan
+        elif key == 'GRIDSEQ':
+            values = [string_or_blank(card, 2, 'GRIDSEQ-2', default='BANDIT'),]
+            assert values[0] in {'BANDIT', 'GRID', 'INPUT'}, values
+        elif key == 'SORT_MAX':
+            values = [integer_or_blank(card, 2, 'SORT_MAX-2', default=5),]
         else:
             raise NotImplementedError(card)
 
@@ -1479,6 +1498,43 @@ MDLPRM_INT_KEYS_1 = {
 
     # undefined in MSC
     'RBEDOF', 'NLDIAG', 'ITRFMT', 'NLSPCD', 'MRCONV', 'LA3FLG', 'TIMADJ',
+}
+MDLPRM_INT_KEYS_1_DEFAULT = {
+    # ...more
+    'GNLSTN': 0,
+    'HDF5': -1,
+    'H5GM34': -1,
+    'H5MDL': 1,
+    'H5MTX': 1,
+    'H5NORDOF': 0,
+    'IGNSHBDN': 0,
+    'INTOUT': 0,
+    'LMT2MPC': 0,
+    'MLTSPLIN': 0,
+    'MPCF129': 0,
+    'NSGRDS4': 0,
+    'PRDIDPVT': 1,
+    'PRDITRFN': 0,
+
+    'QR6ROT': 0,
+    'QRSHEAR': 0,
+
+    'RDBOTH': 0,
+    'RELAXF': 0,
+    'RSTIGNDP': 0,
+
+    'SHRTOQ4': 0,
+    'TWBRBML': 0,
+}
+MDLPRM_STR_KEYS_1_DEFAULT = {
+    'PRTELAS': 'NO',
+    'PRTFAST': 'NO',
+    'PRTSEAM': 'NO',
+    'PRTWELD': 'NO',
+    'SHEARP': 'GARVEY',
+}
+MDLPRM_FLOAT_KEYS_1_DEFAULT = {
+    'SPBLNDX': 1.0,
 }
 MDLPRM_STR_KEYS_1 = {'COMPN1', 'SHEARP', 'OFFDEF',
                      'PRTELAS', 'PRTFAST', 'PRTMASS', 'PRTSEAM', 'PRTWELD'}
@@ -1551,11 +1607,17 @@ class MDLPRM(BaseCard):
                 ifield += 2
                 continue
             elif key in MDLPRM_INT_KEYS_1:
-                value = integer_or_blank(card, ifield+1, 'value')
+                default = MDLPRM_INT_KEYS_1_DEFAULT.get(key, None)
+                value = integer_or_blank(card, ifield+1, 'value', default=default)
+                assert isinstance(value, integer_types), f'MDLPRM key={key!r} value={value!r} must be an integer; card={card}'
             elif key in MDLPRM_STR_KEYS_1:
-                value = string(card, ifield+1, key)
+                default = MDLPRM_STR_KEYS_1_DEFAULT.get(key, None)
+                value = string_or_blank(card, ifield+1, key, default=default)
+                assert isinstance(value, str), f'MDLPRM key={key!r} value={value!r} must be a string; card={card}'
             elif key in MDLPRM_FLOAT_KEYS_1:
-                value = double(card, ifield+1, key)
+                default = MDLPRM_FLOAT_KEYS_1_DEFAULT.get(key, None)
+                value = double_or_blank(card, ifield+1, key, default=default)
+                assert isinstance(value, float_types), f'MDLPRM key={key!r} value={value!r} must be an float; card={card}'
             else:
                 raise RuntimeError(f'MDLPRM key={key!r} is not supported; value={card.field(ifield+1)}')
             mdlprm_dict[key] = value

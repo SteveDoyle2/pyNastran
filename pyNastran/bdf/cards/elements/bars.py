@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import Optional, Any, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -23,16 +23,17 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, GRID
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self):
         Element.__init__(self)
-        self.pid_ref = None  # type: Optional[Any]
+        self.pid_ref: Optional[Any] = None
         #self.nodes_ref = None
 
     def C(self):
@@ -842,7 +843,7 @@ class CBAR(LineElement):
         #x3 = set_blank_if_default(self.x[2], 0.0)
         return list(self.x)
 
-    def get_axes(self, model):
+    def get_axes(self, model: BDF) -> tuple[bool, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -851,8 +852,12 @@ class CBAR(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
+        Returns
+        -------
         is_passed: bool
-        out: (wa, wb, ihat, jhat, khat)
+            flag
+        out: (v, ihat, jhat, khat, wa, wb)
+            data
         """
         is_failed = True
 
@@ -869,17 +874,14 @@ class CBAR(LineElement):
         xyz1 = node1.get_position()
         xyz2 = node2.get_position()
 
-        elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        if pid_ref is None:
-            pid_ref = model.Property(elem.pid)
-        assert not isinstance(pid_ref, integer_types), elem
+        is_failed, (v, ihat, yhat, zhat, wa, wb) = self.get_axes_by_nodes(
+            model, node1, node2, xyz1, xyz2, model.log)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
-        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
-            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
-        return is_failed, (wa, wb, ihat, yhat, zhat)
-
-    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+    def get_axes_by_nodes(self, model: BDF,
+                          node1: GRID, node2: GRID,
+                          xyz1: np.ndarray, xyz2: np.ndarray,
+                          log: SimpleLogger) -> tuple[bool, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -914,43 +916,60 @@ class CBAR(LineElement):
             raise ValueError(msg)
         i_offset = i / Li
 
-        unused_v, wa, wb, xform = rotate_v_wa_wb(
+        v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
             xyz1, xyz2, node1, node2,
             i_offset, i, eid, Li, log)
+
         if wb is None:
             # one or more of v, wa, wb are bad
-
+            #
             # xform is xform_offset...assuming None
             ihat = None
             yhat = None
             zhat = None
-            return is_failed, (wa, wb, ihat, yhat, zhat)
+            return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
         ihat = xform[0, :]
         yhat = xform[1, :]
         zhat = xform[2, :]
 
         is_failed = False
-        return is_failed, (wa, wb, ihat, yhat, zhat)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
-    def get_orientation_vector(self, xyz):
+    def get_orientation_vector(self, model: BDF):
         """
-        Element offsets are defined in a Cartesian system located at the
-        connecting grid point. The components of the offsets are always
-        defined in units of translation, even if the displacement
-        coordinate system is cylindrical or spherical.
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        For example, in Figure 11-11, the grid point displacement
-        coordinate system is cylindrical, and the offset vector is
-        defined using Cartesian coordinates u1, u2, and u3 in units of
-        translation.
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
+        description of the OFFT flag.
+
         """
-        if self.g0:
-            v = xyz[self.g0] - xyz[self.Ga()]
-        else:
-            v = self.x
-        assert self.offt == 'GGG', self.offt
+        #TODO: not integrated with CBAR yet...
+
+        eid = self.eid
+
+        elem = self
+        node1 = self.nodes_ref[0]
+        node2 = self.nodes_ref[1]
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
+        i = xyz2 - xyz1
+        ihat_norm = norm(i)
+        if ihat_norm== 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            raise ValueError(msg)
+        i_offset = i / ihat_norm
+
+        v, unused_wa, unused_wb, unused_xform = rotate_v_wa_wb(
+            model, elem,
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, ihat_norm, model.log)
         return v
 
     @property
@@ -1089,33 +1108,33 @@ class CBEAM3(LineElement):  # was CBAR
 
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
         gc = integer_or_blank(card, 5, 'gc')
 
         # card, eid, x1_default, x2_default, x3_default
         x, g0 = init_x_g0_cbeam3(card, eid, 0., 0., 0.)
-        wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
-                       double_or_blank(card, 10, 'w2a', 0.0),
-                       double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 9, 'w1a', default=0.0),
+                       double_or_blank(card, 10, 'w2a', default=0.0),
+                       double_or_blank(card, 11, 'w3a', default=0.0)], dtype='float64')
 
-        wb = np.array([double_or_blank(card, 12, 'w1b', 0.0),
-                       double_or_blank(card, 13, 'w2b', 0.0),
-                       double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
+        wb = np.array([double_or_blank(card, 12, 'w1b', default=0.0),
+                       double_or_blank(card, 13, 'w2b', default=0.0),
+                       double_or_blank(card, 14, 'w3b', default=0.0)], dtype='float64')
 
-        wc = np.array([double_or_blank(card, 15, 'w1c', 0.0),
-                       double_or_blank(card, 16, 'w2c', 0.0),
-                       double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
+        wc = np.array([double_or_blank(card, 15, 'w1c', default=0.0),
+                       double_or_blank(card, 16, 'w2c', default=0.0),
+                       double_or_blank(card, 17, 'w3c', default=0.0)], dtype='float64')
 
         tw = np.array([double_or_blank(card, 18, 'twa', 0.),
                        double_or_blank(card, 19, 'twb', 0.),
                        double_or_blank(card, 20, 'twc', 0.)], dtype='float64')
 
         # TODO: what are the defaults?
-        s = np.array([integer_or_blank(card, 21, 'sa', -1),
-                      integer_or_blank(card, 22, 'sb', -1),
-                      integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
+        s = np.array([integer_or_blank(card, 21, 'sa', default=-1),
+                      integer_or_blank(card, 22, 'sb', default=-1),
+                      integer_or_blank(card, 23, 'sc', default=-1)], dtype='int32')
         assert len(card) <= 24, f'len(CBEAM3 card) = {len(card):d}\ncard={card}'
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
@@ -1802,7 +1821,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
-def get_bar_vector(model, elem, node1, node2, xyz1):
+def get_bar_vector(model: BDF, elem, node1: GRID, node2: GRID, xyz1: np.ndarray):
     """helper method for ``rotate_v_wa_wb``"""
     cd1 = node1.Cd()
     cd2 = node2.Cd()
@@ -1839,8 +1858,12 @@ def get_bar_vector(model, elem, node1, node2, xyz1):
 
     return v, cd1, cd1_ref, cd2, cd2_ref
 
-def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
-                   Li_offset,
+def rotate_v_wa_wb(model: BDF, elem,
+                   xyz1: np.ndarray, xyz2: np.ndarray,
+                   node1: GRID, node2: GRID,
+                   ihat_offset: np.ndarray, i_offset: np.ndarray,
+                   eid: int,
+                   Li_offset: float,
                    log: SimpleLogger) -> tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
     """
     Rotates v, wa, wb
@@ -1916,6 +1939,7 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
         # end A
         # global - cid != 0
         if cd1 != 0:
+            cd1_ref = cast(CORD2R, cd1_ref)
             v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
     elif offt_vector == 'B':
         # basic - cid = 0
@@ -1991,7 +2015,11 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
 
     return v, wa, wb, xform
 
-def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
+def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
+                         eid: int,
+                         xyz1: np.ndarray, xyz2: np.ndarray,
+                         nid1: int, nid2: int,
+                         i: np.ndarray, Li: float) -> tuple[np.ndarray, np.ndarray]:
     """
     helper method for ``_get_bar_yz_arrays``
 

@@ -1,15 +1,23 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran.converters.nastran.gui.results import SimpleTableResults # , LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults # , LayeredTableResults
 from .stress import add_simple_methods_to_form, concatenate_scalars
+#from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict # , Case, Cases
+from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap
 
 if TYPE_CHECKING: # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
 
 
-def get_spring_force(eids, cases, model: OP2, times, key, icase,
-                     form_dict, header_dict, keys_map):
+def get_spring_force(eids: np.ndarray,
+                     cases,
+                     model: OP2,
+                     times: np.ndarray, key, icase: int,
+                     form_dict, header_dict,
+                     keys_map: KeysMap,
+                     log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -40,10 +48,10 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (spring)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+            log.warning(msg)
             continue
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
+            log.error('skipping because lookup is out of range...')
             continue
         spring_cases.append(case)
         spring_ieids.append(i)
@@ -66,8 +74,9 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in spring_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
         scalars = case.data
         scalars_array.append(scalars)
 
@@ -82,30 +91,39 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Spring')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Spring')
     return icase
 
-def get_bar_force(eids, cases, model: OP2, times, key, icase,
-                  form_dict, header_dict, keys_map):
+def get_bar_force(eids: np.ndarray, cases,
+                  model: OP2,
+                  times: np.ndarray, key, icase: int,
+                  form_dict, header_dict,
+                  keys_map: KeysMap,
+                  log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
     #print("***stress eids=", eids)
     subcase_id = key[0]
-    bars = [model.cbar_force]
+    result = model.cbar_force
 
     #titles = []
     bar_cases = []
     bar_ieids = []
-    for result in bars:
-        if key not in result:
-            continue
-        case = result[key]
+    if key not in result:
+        return icase
+    case = result[key]
 
-        eidsi = case.element
-        i = np.searchsorted(eids, eidsi)
+    eidsi = case.element
+    common_eids = np.intersect1d(eids, eidsi)
+    if len(common_eids) == 0:
+        return icase
+    i = np.searchsorted(eids, common_eids)
+    j = np.searchsorted(eidsi, common_eids)
+    if 0:  # pragma: no cover
         if len(i) != len(np.unique(i)):
             #print(case.element_node)
             #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
@@ -115,17 +133,18 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
             #print('  eidsiB = %s' % eidsi)
             msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
-            continue
+            log.warning(msg)
+            return icase
         if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
-            continue
-        #print('i =', i, i.max())
-        #print('eids =', eids, len(eids))
-        #print('eidsi =', eidsi, eids)
-        #print(f'------------adding i={i} for {case.element_name}-----------')
-        bar_cases.append(case)
-        bar_ieids.append(i)
+            log.error('skipping because lookup is out of range...')
+            return icase
+    #print('i =', i, i.max())
+    #print('eids =', eids, len(eids))
+    #print('eidsi =', eidsi, eids)
+    #print(f'------------adding i={i} for {case.element_name}-----------')
+    bar_cases.append(case)
+    bar_ieids.append(i)
+
     if not bar_ieids:
         return icase
 
@@ -169,14 +188,15 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
 
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         #nnodes_per_element = case.nnodes
         #nelements_nnodes = nnodes_nlayers // 2
         #nelements = nelements_nnodes // nnodes_per_element
         #nlayers = 2
-        scalars = case.data
+        scalars = case.data[:, j, :]
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:
@@ -193,14 +213,21 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Bar ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Bar')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Bar')
     return icase
 
 
-def get_plate_force(eids, cases, model: OP2, times, key, icase,
-                    form_dict, header_dict, keys_map):
+def get_plate_force(eids: np.ndarray, cases,
+                    model: OP2,
+                    times: np.ndarray,
+                    key,
+                    icase: int,
+                    form_dict, header_dict,
+                    keys_map: KeysMap,
+                    log: SimpleLogger) -> int:
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -237,24 +264,29 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
         #print(case)
         #print(eids)
         #print(eidsi)
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            #print(case.element_node)
-            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-            #print('iplate = %s' % i)
-            #print('  eids = %s' % eids)
-            #print('  eidsiA = %s' % case.element_node[:, 0])
-            #print('  eidsiB = %s' % eidsi)
-            msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
-            #msg = 'iplate=%s is not unique' % str(i)
-            model.log.warning(msg)
+        common_eids = np.intersect1d(eids, eidsi)
+        if len(common_eids) == 0:
             continue
-        if i.max() == len(eids):
-            model.log.error('skipping because lookup is out of range...')
-            continue
+        i = np.searchsorted(eids, common_eids)
+        j = np.searchsorted(eidsi, common_eids)
+        if 0:  # pragma: no cover
+            if len(i) != len(np.unique(i)):
+                #print(case.element_node)
+                #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+                #print('iplate = %s' % i)
+                #print('  eids = %s' % eids)
+                #print('  eidsiA = %s' % case.element_node[:, 0])
+                #print('  eidsiB = %s' % eidsi)
+                msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
+                #msg = 'iplate=%s is not unique' % str(i)
+                model.log.warning(msg)
+                continue
+            if i.max() == len(eids):
+                model.log.error('skipping because lookup is out of range...')
+                continue
         #model.log.info('saving i%s (plate)' % (case.element_name))
         #print(f'------------adding i={i} for {case.element_name}-----------')
-        plate_cases.append(case)
+        plate_cases.append((case, j))
         plate_ieids.append(i)
     if not plate_ieids:
         return icase
@@ -263,7 +295,7 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
     ieid_max = len(eids)
     #print('ieid_max =', ieid_max)
 
-    case = plate_cases[0]
+    case, j = plate_cases[0]
     case_headers = case.get_headers()
     #print(case_headers)
 
@@ -295,15 +327,16 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
     methods = [method_map[headeri] for headeri in case_headers]
 
     scalars_array = []
-    for case in plate_cases:
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
+    for case, j in plate_cases:
+        keys_map[key] = KeyMap(case.subtitle, case.label,
+                               case.superelement_adaptivity_index,
+                               case.pval_step)
 
         nnodes = case.nnodes_per_element
-        if nnodes == 1:
-            scalars = case.data
-        else:
-            scalars = case.data[:, ::nnodes, :]
+        #if nnodes == 1:
+            #scalars = case.data[:, j, :]
+        #else:
+        scalars = case.data[:, j*nnodes, :]
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:
@@ -317,7 +350,8 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Plate ' + word)
 
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Plate')
+    icase = add_simple_methods_to_form(
+        icase, cases, key, subcase_id, word, res, case,
+        form_dict, header_dict, methods,
+        name='Plate')
     return icase

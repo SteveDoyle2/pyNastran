@@ -567,8 +567,10 @@ class FLUTTER(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
-    def __init__(self, sid: int, method, density, mach, reduced_freq_velocity,
-                 imethod: str='L', nvalue=None, omax=None, epsilon: float=1.0e-3, comment='',
+    def __init__(self, sid: int, method: str,
+                 density: int, mach: int, reduced_freq_velocity: int,
+                 imethod: str='L', nvalue=None, omax=None,
+                 epsilon: float=1.0e-3, comment: str='',
                  validate: bool=False):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
@@ -670,7 +672,7 @@ class FLUTTER(BaseCard):
         reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
 
         omax = None
-        imethod = string_or_blank(card, 6, 'imethod', 'L')
+        imethod = string_or_blank(card, 6, 'imethod', default='L')
         if method in ['K', 'KE']:
             nvalue = integer_or_blank(card, 7, 'nvalue')
             assert imethod in ['L', 'S', 'TCUB'], 'imethod = %s' % imethod  # linear-surface
@@ -685,7 +687,7 @@ class FLUTTER(BaseCard):
             raise NotImplementedError('FLUTTER method=%r' % method)
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
-        epsilon = double_or_blank(card, 8, 'epsilon', 1e-3)  # not defined in QRG
+        epsilon = double_or_blank(card, 8, 'epsilon', default=1e-3)  # not defined in QRG
         assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,

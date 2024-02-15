@@ -7,7 +7,7 @@ import numpy as np
 try:
     import matplotlib.pyplot as plt
     IS_MATPLOTLIB = True
-except ImportError:
+except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 import pyNastran

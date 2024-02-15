@@ -1,17 +1,18 @@
 numpy>=1.10.2
-#scipy==1.0.0
-docopt-ng==0.7.2
+scipy>=1.0.0
+h5py
+docopt-ng==0.9.0
 #vtk==5.10.0
-pillow>=2.7.0
+pillow>=10.0.0
 cycler>=0.10
 
 # extra modules for docs
-alabaster>=0.7.10
-sphinx>=1.9.0,<3.0
-sphinx_rtd_theme>=0.1.9
-numpydoc>=0.8.0
-pygments>=2.1.0
-docutils>=0.12
+alabaster>=0.7.13
+sphinx>=7.0.0
+sphinx_rtd_theme>=1.3.0
+numpydoc>=1.5.0
+pygments>=2.16.0
+docutils>=0.18
 
 # for notebook conversion
 ipython

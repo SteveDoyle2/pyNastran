@@ -1783,7 +1783,8 @@ def cpenta_face(nid, nid_opposite, nids):
         pack2 = [i - 1 for i in pack2]
     return pack2
 
-def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
+def cpenta_face_area_centroid_normal(nid: int, nid_opposite: int,
+                                     nids: list[int], nodes_ref):
     """
     Parameters
     ----------
@@ -1791,6 +1792,7 @@ def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
         G1 - a grid point on the corner of a face
     nid_opposite : int / None
         G3 - the grid point diagonally opposite of G1
+
     """
     face = cpenta_face(nid, nid_opposite, nids)
 
@@ -1803,6 +1805,7 @@ def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
         b = p2 - p1
         centroid = (p1 + p2 + p3) / 3.
     else:
+        # uses a backwards face?
         n1i, n2i, n3i, n4i = face
         p1 = nodes_ref[n1i].get_position()
         p2 = nodes_ref[n2i].get_position()

@@ -5,7 +5,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
-from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename
+from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename, cmd_abaqus_to_nastran
 from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
@@ -17,43 +17,48 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class TestAbaqus(unittest.TestCase):
     def test_abaqus_to_nastran_1(self):
         """plate conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
+        #log = get_logger(level='debug', encoding='utf-8')
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate_out.inp')
-        nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+        nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename, log=log)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'plate2_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_2(self):
         """plate conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'in.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_3(self):
         """ctetra4 conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_4(self):
         """ctetra4 conversion"""
+        log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket_separate.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_separate_out.bdf')
-        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_1(self):
         """simple test"""
@@ -70,7 +75,7 @@ class TestAbaqus(unittest.TestCase):
             abaqus_file.writelines('\n'.join(lines))
 
         bdf_filename = os.path.join(MODEL_PATH, 'spike.bdf')
-        abaqus_to_nastran_filename(model, bdf_filename)
+        abaqus_to_nastran_filename(model, bdf_filename, log=log)
         os.remove(bdf_filename)
 
     def test_abaqus_2(self):
@@ -148,6 +153,49 @@ class TestAbaqus(unittest.TestCase):
         argv = ['format_converter', 'abaqus', abaqus_filename,
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+
+    def test_abaqus_to_nastran_pload4_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'pload4_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_force_cquad4(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'force_cquad4.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'force_cquad4.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_grav_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'grav_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'grav_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_pload4_chexa20(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+    def test_abaqus_to_nastran_force_chexa8(self):
+        abaqus_filename = os.path.join(MODEL_PATH, 'force_chexa8.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'force_chexa8.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        #argv = ['format_converter', 'abaqus', abaqus_filename,
+                #'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        #cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         os.remove(bdf_filename)
 
 def make_model():

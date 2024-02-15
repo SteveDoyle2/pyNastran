@@ -8,11 +8,13 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
 ]
 
-PYTHON_REQUIRES = '>=3.10'
+PYTHON_REQUIRES = '>=3.9'
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',
@@ -22,8 +24,28 @@ EXCLUDE_WORDS = [
     'pyNastran.dev',
     'pyNastran.dev.xdb',
     'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+    'pyNastran.dev.bdf_vectorized3', 'pyNastran.dev.op2_vectorized3',
 ]
 
+CONSOLE_SCRIPTS = [
+    #'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
+    'test_bdf  = pyNastran.bdf.test.test_bdf:main',
+    'test_op2  = pyNastran.op2.test.test_op2:main',
+    'test_op4  = pyNastran.op4.test.test_op4:main',
+
+    'pyNastranGUI = pyNastran.gui.gui:cmd_line',
+    'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
+    'f06 = pyNastran.f06.utils:cmd_line',
+    'format_converter = pyNastran.converters.format_converter:cmd_line_format_converter',
+    'abaqus_to_nastran = pyNastran.converters.abaqus.abaqus_to_nastran:cmd_abaqus_to_nastran',
+    'test_pynastrangui = pyNastran.gui.test.test_gui:main',
+
+    'test_bdfv = pyNastran.dev.bdf_vectorized3.test.test_bdf:main',
+    #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+    #'test_bdfv2 = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
+    #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
+    #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
+]
 
 # features in packages used by pyNastran
 # numpy
@@ -47,16 +69,16 @@ EXCLUDE_WORDS = [
 
 # the packages that change requirements based on python version
 REQS = {
-    '3.8' : {
-        'numpy' : ('1.17', '>=1.17.3,!=1.19.4'),
-        'scipy' : ('1.3.2', '>=1.3.2'),
-        'matplotlib' : ('3.1.2', '>=3.1.2'),
-    },
-    '3.9' : {
-        'numpy' : ('1.19.3', '>=1.19.3,!=1.19.4'),
-        'scipy' : ('1.5.4', '>=1.5.4'),
-        'matplotlib' : ('3.4.0', '>=3.4.0'),
-    },
+    #'3.8' : {
+        #'numpy' : ('1.17', '>=1.17.3,!=1.19.4'),
+        #'scipy' : ('1.3.2', '>=1.3.2'),
+        #'matplotlib' : ('3.1.2', '>=3.1.2'),
+    #},
+    #'3.9' : {
+        #'numpy' : ('1.19.3', '>=1.19.3,!=1.19.4'),
+        #'scipy' : ('1.5.4', '>=1.5.4'),
+        #'matplotlib' : ('3.4.0', '>=3.4.0'),
+    #},
     '3.10' : {
         'numpy' : ('1.21.2', '>=1.21.2'),
         'scipy' : ('1.7.1', '>=1.7.1'),
@@ -204,8 +226,8 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
-        all_reqs['docopt-ng'] = '>= 0.8.1'
-        install_requires.append('docopt-ng >= 0.8.1')  # 0.8.1 used
+        all_reqs['docopt-ng'] = '>= 0.9.0'
+        install_requires.append('docopt-ng >= 0.9.0')  # 0.9.0 used
     else:
         _add_docopt(all_reqs, install_requires)
 
@@ -230,18 +252,18 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     return all_reqs, install_requires
 
 def _add_docopt(all_reqs, install_requires):
-    required_version_str = '0.8.1'
+    required_version_str = '0.9.0'
     try:
         import docopt
         iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 8, 1]:
+        if iver < [0, 9, 0]:
             print(f'docopt.__version__ = {docopt.__version__!r} < {required_version_str!r}')
             all_reqs['docopt-ng'] = f'>= {required_version_str}'
             install_requires.append(f'docopt-ng >= {required_version_str}')
     except ImportError:
         all_reqs['docopt-ng'] = f'>= {required_version_str}'
-        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.8.1 used
+        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.9.0 used
 
 def _add_numpy(version_check, required_version,
                all_reqs, install_requires):
@@ -400,7 +422,9 @@ def _add_pillow(all_reqs, install_requires):
 
 def _add_imageio(found_numpy, all_reqs, install_requires):
     # pip messes up dependency resolution if you use newer versions of numpy
-    imageio_str_ver = '>= 2.2.0, <3'
+    #imageio_str_ver = '>= 2.2.0, <3'
+    #imageio_str_ver = '>= 2.2.0, <2.31.6'
+    imageio_str_ver = '>= 2.2.0'
 
     try:
         import imageio

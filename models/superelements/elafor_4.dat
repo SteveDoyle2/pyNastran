@@ -1,0 +1,606 @@
+$
+$ 
+$ id msc, q62754560.dat $ tin v2008 9-Jul-2008
+$ID test 
+SOL 111  
+TIME 1000
+CEND
+$
+TITLE = Multi-Load Cases Random Vibe of Two Headed Flyswatter                      
+SUBTITLE = Single Level SE( WO K & M Matrices & supported at grids 1 & 2 )
+ECHO = NONE
+$
+
+SET 15 = 11,21,13,14
+SET 16 = 8,7
+SET 17 = 13,14,33,46,45
+$SET 17 = 13,33,39,19,27,9,14,1
+$ACCEL(plot,PSDF,RPrint) = 17
+$DISPLACEMENT(PRINT,SORT2)=17
+$  STRESS(PSDF,RPUNCH) = 16
+$ 
+  FREQUENCY = 500  
+  SDAMPING  = 200
+$
+$------------------SE1 Bulk Data
+SUBCASE 1
+  LABEL = SUPERELEMENT 1 ( Top-Left )  
+  SUPER = 1
+  METHOD = 1
+  ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE2 Bulk Data
+SUBCASE 2
+  LABEL = SUPERELEMENT 2 ( Top-Right ) 
+  SUPER = 2
+  METHOD = 2
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE3 Bulk Data
+SUBCASE 3
+  LABEL = SUPERELEMENT 3 ( Middle-Left )  
+  SUPER = 3
+  METHOD = 3
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE4 Bulk Data
+SUBCASE 4
+  LABEL = SUPERELEMENT 4 ( Middle-Right )
+  SUPER = 4
+  METHOD = 4
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE5 Bulk Data
+SUBCASE 5
+  LABEL = SUPERELEMENT 5 ( Middle-Left ) 
+  SUPER = 5
+  METHOD = 5
+  RANDOM = 5001
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE6 Bulk Data
+SUBCASE 6
+  LABEL = SUPERELEMENT 6 ( Middle-Right )
+  SUPER = 6
+  METHOD = 6
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$------------------SE7 Bulk Data
+SUBCASE 7
+  LABEL = SUPERELEMENT 7 ( Bottom )      
+  SUPER = 7
+  METHOD = 7
+  $ELAFORCES(PRINT,SORT2)=17
+  MASSSET = 33
+$  SPC = 8000
+$
+$
+$------------------SE0( Residual Structure ) 
+SUBCASE 81
+  LABEL = RESIDUAL STRUCTURE Load Case 1
+  SUPER = 0
+  METHOD = 8
+  SPC = 8000
+  ELAFORCES(PLOT,SORT2)=17
+  RANDOM=8001
+  MASSSET = 33
+  DLOAD= 81
+$
+OUTPUT(XYPLOT)
+$
+$  Residual Structure
+SEPLOT 0
+$
+XYPUNCH ACCEL PSDF / 13(T3)
+XYPUNCH ACCEL PSDF / 14(T3)
+$
+$  Superelement
+SEPLOT 5
+$
+XYPRINT ACCEL PSDF/ 21(T3)   
+XYPUNCH ACCEL PSDF/ 11(T3)   
+$
+$***********************************************
+BEGIN BULK
+$***********************************************
+$
+PARAM,AUTOSPC,YES
+$PARAM,POST,-1
+PARAM,ENFMOTN,ABS
+PARAM   GRDPNT   0
+$
+MASSSET  33      1.0     1.0     0       1.0     300
+$
+SPC1,8000,123456,23
+SPCD,100,23,3,386.1
+$
+TABDMP1, 200, CRIT,
++, 1.0, .02, 1000., .05, 2000., .05, ENDT
+$
+FREQ1,500,1.,10.,5
+$FREQ3,500,1.,2000.,LINEAR,10,4.0
+$FREQ4,500,1.,2000.,.02,9
+$
+$ Residual Structure  (all SECONCT entries have been deleted)
+$
+$INCLUDE 'part0.dat'  
+CQUAD4  5       1       13      14      24      23                              
+$
+$GRDSET                                                  6                       
+GRID    13              -.4     3.6     0.                                      
+GRID    14              .4      3.6     0.                                      
+GRID    23              -.4     4.4     0.                                      
+GRID    24              .4      4.4     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PSHELL,1,1,.05,1,,1
+$
+param,wtmass,.002588
+$
+EIGRL,8,-0.1,2000.0,7,0,20
+$
+RANDPS,8001,81,81,1., 0., 111
+RANDPS,5001,5,5,1., 0., 111
+$
+RLOAD2,81,100, , ,201, ,ACCE
+$
+TABLED1,201,
++, 20., 1., 2000., 1., ENDT
+$
+$ Random environment, R5 POGO Z-dir ( Zone U-2 Y-dir )
+$			
+TABRND1	111	LINEAR	LOG                                             +
++            15.    0.01    170.    0.01    200.    0.05    490.    0.05+
++           520.    0.08    680.    0.08    700.    0.80    730.    0.80+
++           740.    0.10    760.    0.10    850.    6.00    980.    6.00+
++          1040.    2.70   1190.    2.70   1210.    0.70   1310.    0.70+
++          1330.    2.00   1390.    2.00   1430.    1.20   1530.    1.20+
++          1600.    4.00   1630.    4.00   1680.    0.70   1730.    0.70+
++          1750.    1.70   1850.    1.70   1870.    2.30   2000.    2.30+
++           ENDT
+$
+$====================================================
+$
+BEGIN SUPER = 1
+$PARAM   GRDPNT   0
+$INCLUDE 'part1.dat'
+$
+$     part1.dat
+$                                                                               
+CQUAD4  18      1       33      34      46      45                              
+CQUAD4  19      1       34      35      47      46                              
+CQUAD4  20      1       35      36      48      47                              
+CQUAD4  21      1       36      37      49      48                              
+CQUAD4  22      1       37      38      50      49                              
+CQUAD4  23      1       45      46      58      57                              
+CQUAD4  24      1       46      47      59      58                              
+CQUAD4  25      1       47      48      60      59                              
+CQUAD4  26      1       48      49      61      60                              
+CQUAD4  27      1       49      50      62      61                              
+CQUAD4  28      1       57      58      70      69                              
+CQUAD4  29      1       58      59      71      70                              
+CQUAD4  30      1       59      60      72      71                              
+CQUAD4  31      1       60      61      73      72                              
+CQUAD4  32      1       61      62      74      73                              
+CQUAD4  33      1       69      70      82      81                              
+CQUAD4  34      1       70      71      83      82                              
+CQUAD4  35      1       71      72      84      83                              
+CQUAD4  36      1       72      73      85      84                              
+CQUAD4  37      1       73      74      86      85                              
+CQUAD4  38      1       81      82      94      93                              
+CQUAD4  39      1       82      83      95      94                              
+CQUAD4  40      1       83      84      96      95                              
+CQUAD4  41      1       84      85      97      96                              
+CQUAD4  42      1       85      86      98      97                              
+$
+param,k6rot,100.
+$
+$     boundary grids
+$
+GRID    35              -3.6    6.      0.                                      
+GRID    36              -2.8    6.      0.                                      
+$
+GRID    33              -5.2    6.      0.                                      
+GRID    34              -4.4    6.      0.                                      
+GRID    37              -2.     6.      0.                                      
+GRID    38              -1.2    6.      0.                                      
+$
+GRID    45              -5.2    6.8     0.                                      
+GRID    46              -4.4    6.8     0.                                      
+GRID    47              -3.6    6.8     0.                                      
+GRID    48              -2.8    6.8     0.                                      
+GRID    49              -2.     6.8     0.                                      
+GRID    50              -1.2    6.8     0.                                      
+GRID    57              -5.2    7.6     0.                                      
+GRID    58              -4.4    7.6     0.                                      
+GRID    59              -3.6    7.6     0.                                      
+GRID    60              -2.8    7.6     0.                                      
+GRID    61              -2.     7.6     0.                                      
+GRID    62              -1.2    7.6     0.                                      
+GRID    69              -5.2    8.4     0.                                      
+GRID    70              -4.4    8.4     0.                                      
+GRID    71              -3.6    8.4     0.                                      
+GRID    72              -2.8    8.4     0.                                      
+GRID    73              -2.     8.4     0.                                      
+GRID    74              -1.2    8.4     0.                                      
+GRID    81              -5.2    9.2     0.                                      
+GRID    82              -4.4    9.2     0.                                      
+GRID    83              -3.6    9.2     0.                                      
+GRID    84              -2.8    9.2     0.                                      
+GRID    85              -2.     9.2     0.                                      
+GRID    86              -1.2    9.2     0.                                      
+GRID    93              -5.2    10.     0.                                      
+GRID    94              -4.4    10.     0.                                      
+GRID    95              -3.6    10.     0.                                      
+GRID    96              -2.8    10.     0.                                      
+GRID    97              -2.     10.     0.                                      
+GRID    98              -1.2    10.     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,1,,3000.0,6
+SPOINT,11001,THRU,11020
+QSET1,0,11001,THRU,11020
+$
+BEGIN SUPER = 2
+$INCLUDE 'part2.dat'
+$                                                                               
+$    part2.dat
+$
+CQUAD4  43      1       39      40      52      51                              
+CQUAD4  44      1       40      41      53      52                              
+CQUAD4  45      1       41      42      54      53                              
+CQUAD4  46      1       42      43      55      54                              
+CQUAD4  47      1       43      44      56      55                              
+CQUAD4  48      1       51      52      64      63                              
+CQUAD4  49      1       52      53      65      64                              
+CQUAD4  50      1       53      54      66      65                              
+CQUAD4  51      1       54      55      67      66                              
+CQUAD4  52      1       55      56      68      67                              
+CQUAD4  53      1       63      64      76      75                              
+CQUAD4  54      1       64      65      77      76                              
+CQUAD4  55      1       65      66      78      77                              
+CQUAD4  56      1       66      67      79      78                              
+CQUAD4  57      1       67      68      80      79                              
+CQUAD4  58      1       75      76      88      87                              
+CQUAD4  59      1       76      77      89      88                              
+CQUAD4  60      1       77      78      90      89                              
+CQUAD4  61      1       78      79      91      90                              
+CQUAD4  62      1       79      80      92      91                              
+CQUAD4  63      1       87      88      100     99                              
+CQUAD4  64      1       88      89      101     100                             
+CQUAD4  65      1       89      90      102     101                             
+CQUAD4  66      1       90      91      103     102                             
+CQUAD4  67      1       91      92      104     103                             
+$
+param,k6rot,100.
+$
+$     boundary grids
+$
+GRID    41              2.8     6.      0.                                      
+GRID    42              3.6     6.      0.                                      
+$
+GRID    39              1.2     6.      0.                                      
+GRID    40              2.      6.      0.                                      
+GRID    43              4.4     6.      0.                                      
+GRID    44              5.2     6.      0.                                      
+$
+GRID    51              1.2     6.8     0.                                      
+GRID    52              2.      6.8     0.                                      
+GRID    53              2.8     6.8     0.                                      
+GRID    54              3.6     6.8     0.                                      
+GRID    55              4.4     6.8     0.                                      
+GRID    56              5.2     6.8     0.                                      
+GRID    63              1.2     7.6     0.                                      
+GRID    64              2.      7.6     0.                                      
+GRID    65              2.8     7.6     0.                                      
+GRID    66              3.6     7.6     0.                                      
+GRID    67              4.4     7.6     0.                                      
+GRID    68              5.2     7.6     0.                                      
+GRID    75              1.2     8.4     0.                                      
+GRID    76              2.      8.4     0.                                      
+GRID    77              2.8     8.4     0.                                      
+GRID    78              3.6     8.4     0.                                      
+GRID    79              4.4     8.4     0.                                      
+GRID    80              5.2     8.4     0.                                      
+GRID    87              1.2     9.2     0.                                      
+GRID    88              2.      9.2     0.                                      
+GRID    89              2.8     9.2     0.                                      
+GRID    90              3.6     9.2     0.                                      
+GRID    91              4.4     9.2     0.                                      
+GRID    92              5.2     9.2     0.                                      
+GRID    99              1.2     10.     0.                                      
+GRID    100             2.      10.     0.                                      
+GRID    101             2.8     10.     0.                                      
+GRID    102             3.6     10.     0.                                      
+GRID    103             4.4     10.     0.                                      
+GRID    104             5.2     10.     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,2,,3000.0,6
+SPOINT,21001,THRU,21020
+QSET1,0,21001,THRU,21020
+$
+BEGIN SUPER = 3
+$INCLUDE 'part3.dat'
+$
+$    part3.dat
+$                                                                               
+CQUAD4  14      1       19      20      30      29                              
+CQUAD4  15      1       29      30      36      35                              
+$
+param,k6rot,100.
+$
+$     boundary grids
+$
+GRID    19              -3.6    4.4     0.                                      
+GRID    20              -2.8    4.4     0.                                      
+GRID    35              -3.6    6.      0.                                      
+GRID    36              -2.8    6.      0.                                      
+$
+GRID    29              -3.6    5.2     0.                                      
+GRID    30              -2.8    5.2     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,3,,,6
+SPOINT,31001,THRU,31020
+QSET1,0,31001,THRU,31020
+$
+BEGIN SUPER = 4
+$INCLUDE 'part4.dat'
+$
+$      part4.dat
+$                                                                               
+CQUAD4  16      1       27      28      32      31                              
+CQUAD4  17      1       31      32      42      41                              
+$
+param,k6rot,100.
+$
+$       boundary grids
+$
+GRID    27              2.8     4.4     0.                                      
+GRID    28              3.6     4.4     0.                                      
+GRID    41              2.8     6.      0.                                      
+GRID    42              3.6     6.      0.                                      
+$
+GRID    31              2.8     5.2     0.                                      
+GRID    32              3.6     5.2     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,4,,,6
+SPOINT,41001,THRU,41020
+QSET1,0,41001,THRU,41020
+$
+BEGIN SUPER = 5
+$INCLUDE 'part5.dat'
+$                                                                               
+$      part5.dat
+$
+CQUAD4  6       1       9       10      20      19                              
+CQUAD4  7       1       10      11      21      20                              
+CQUAD4  8       1       11      12      22      21                              
+CQUAD4  9       1       12      13      23      22                              
+$
+param,k6rot,100.
+$
+$      boundary grids
+$
+GRID    19              -3.6    4.4     0.                                      
+GRID    20              -2.8    4.4     0.                                      
+GRID    13              -.4     3.6     0.                                      
+GRID    23              -.4     4.4     0.                                      
+$
+GRID    9               -3.6    3.6     0.                                      
+GRID    10              -2.8    3.6     0.                                      
+GRID    11              -2.     3.6     0.                                      
+GRID    12              -1.2    3.6     0.                                      
+GRID    21              -2.     4.4     0.                                      
+GRID    22              -1.2    4.4     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,5,,,6
+SPOINT,51001,THRU,51020
+QSET1,0,51001,THRU,51020
+$
+BEGIN SUPER = 6
+$INCLUDE 'part6.dat'
+$                                                                               
+$       part6.dat
+$
+CQUAD4  10      1       14      15      25      24                              
+CQUAD4  11      1       15      16      26      25                              
+CQUAD4  12      1       16      17      27      26                              
+CQUAD4  13      1       17      18      28      27                              
+$
+param,k6rot,100.
+$
+$    boundary grids
+$
+GRID    27              2.8     4.4     0.                                      
+GRID    28              3.6     4.4     0.                                      
+GRID    14              .4      3.6     0.                                      
+GRID    24              .4      4.4     0.                                      
+$
+GRID    15              1.2     3.6     0.                                      
+GRID    16              2.      3.6     0.                                      
+GRID    17              2.8     3.6     0.                                      
+GRID    18              3.6     3.6     0.                                      
+$
+GRID    25              1.2     4.4     0.                                      
+GRID    26              2.      4.4     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,6,,,6
+SPOINT,61001,THRU,61020
+QSET1,0,61001,THRU,61020
+$
+BEGIN SUPER = 7
+SPC1,8000,123456,1,2
+$INCLUDE 'part7.dat'
+$                                                                               
+$     part7.dat
+$
+CQUAD4  1       1       1       2       4       3                               
+CQUAD4  2       1       3       4       6       5                               
+CQUAD4  3       1       5       6       8       7                               
+CQUAD4  4       1       7       8       14      13                              
+$
+param,k6rot,100.
+$
+GRID    1               -.4     0.      0.                                
+GRID    2               .4      0.      0.                               
+GRID    3               -.4     0.9     0.                                      
+GRID    4               .4      0.9     0.                                      
+GRID    5               -.4     1.8     0.                                      
+GRID    6               .4      1.8     0.                                      
+GRID    7               -.4     2.7     0.                                      
+GRID    8               .4      2.7     0.                                      
+$
+$       boundary grids
+$
+GRID    13              -.4     3.6     0.                                      
+GRID    14              .4      3.6     0.                                      
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1
+$
+EIGRL,7,,,6
+SPOINT,71001,THRU,71020
+QSET1,0,71001,THRU,71020
+$ 
+$====================================================
+$ 
+$---------------------------------------------------
+BEGIN   SUPER=1 MASSID=300
+CQUAD4  18      1       33      34      46      45                              
+CQUAD4  19      1       34      35      47      46                              
+CQUAD4  20      1       35      36      48      47                              
+CQUAD4  21      1       36      37      49      48                              
+CQUAD4  22      1       37      38      50      49                              
+CQUAD4  23      1       45      46      58      57                              
+CQUAD4  24      1       46      47      59      58                              
+CQUAD4  25      1       47      48      60      59                              
+CQUAD4  26      1       48      49      61      60                              
+CQUAD4  27      1       49      50      62      61                              
+CQUAD4  28      1       57      58      70      69                              
+CQUAD4  29      1       58      59      71      70                              
+CQUAD4  30      1       59      60      72      71                              
+CQUAD4  31      1       60      61      73      72                              
+CQUAD4  32      1       61      62      74      73                              
+CQUAD4  33      1       69      70      82      81                              
+CQUAD4  34      1       70      71      83      82                              
+CQUAD4  35      1       71      72      84      83                              
+CQUAD4  36      1       72      73      85      84                              
+CQUAD4  37      1       73      74      86      85                              
+CQUAD4  38      1       81      82      94      93                              
+CQUAD4  39      1       82      83      95      94                              
+CQUAD4  40      1       83      84      96      95                              
+CQUAD4  41      1       84      85      97      96                              
+CQUAD4  42      1       85      86      98      97                              
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+                
+$---------------------------------------------------
+BEGIN   SUPER=2 MASSID=300
+CQUAD4  43      1       39      40      52      51                              
+CQUAD4  44      1       40      41      53      52                              
+CQUAD4  45      1       41      42      54      53                              
+CQUAD4  46      1       42      43      55      54                              
+CQUAD4  47      1       43      44      56      55                              
+CQUAD4  48      1       51      52      64      63                              
+CQUAD4  49      1       52      53      65      64                              
+CQUAD4  50      1       53      54      66      65                              
+CQUAD4  51      1       54      55      67      66                              
+CQUAD4  52      1       55      56      68      67                              
+CQUAD4  53      1       63      64      76      75                              
+CQUAD4  54      1       64      65      77      76                              
+CQUAD4  55      1       65      66      78      77                              
+CQUAD4  56      1       66      67      79      78                              
+CQUAD4  57      1       67      68      80      79                              
+CQUAD4  58      1       75      76      88      87                              
+CQUAD4  59      1       76      77      89      88                              
+CQUAD4  60      1       77      78      90      89                              
+CQUAD4  61      1       78      79      91      90                              
+CQUAD4  62      1       79      80      92      91                              
+CQUAD4  63      1       87      88      100     99                              
+CQUAD4  64      1       88      89      101     100                             
+CQUAD4  65      1       89      90      102     101                             
+CQUAD4  66      1       90      91      103     102                             
+CQUAD4  67      1       91      92      104     103                            
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+$---------------------------------------------------
+BEGIN   SUPER=3 MASSID=300
+CQUAD4  14      1       19      20      30      29                              
+CQUAD4  15      1       29      30      36      35 
+param,k6rot,100.
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+$---------------------------------------------------
+BEGIN   SUPER=4 MASSID=300
+CQUAD4  16      1       27      28      32      31                              
+CQUAD4  17      1       31      32      42      41 
+param,k6rot,100.
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+$---------------------------------------------------
+BEGIN   SUPER=5 MASSID=300                         
+CQUAD4  6       1       9       10      20      19                              
+CQUAD4  7       1       10      11      21      20                              
+CQUAD4  8       1       11      12      22      21                              
+CQUAD4  9       1       12      13      23      22  
+param,k6rot,100.
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+$---------------------------------------------------
+BEGIN   SUPER=6 MASSID=300                         
+CQUAD4  10      1       14      15      25      24                              
+CQUAD4  11      1       15      16      26      25                              
+CQUAD4  12      1       16      17      27      26                              
+CQUAD4  13      1       17      18      28      27
+param,k6rot,100.
+MAT1,1,30.+6,,.3,.283
+PSHELL,1,1,.05,1,,1
+PARAM,WTMASS,.00259
+$---------------------------------------------------
+BEGIN   SUPER=7 MASSID=300
+CQUAD4  1       1       1       2       4       3                               
+CQUAD4  2       1       3       4       6       5                               
+CQUAD4  3       1       5       6       8       7                               
+CQUAD4  4       1       7       8       14      13           
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+PARAM,POST,-1
+ENDDATA
+ENDDATA

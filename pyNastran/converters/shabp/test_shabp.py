@@ -57,7 +57,7 @@ class TestShabp(unittest.TestCase):
         shabp_outfilename = os.path.join(MODEL_PATH, 'flap', 'SHABP.OUT')
 
         #test.model.load_shabp_geometry(shabp_infilename)
-        #test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        #test.on_load_geometry(shabp_infilename, geometry_format='shabp', stop_on_failure=True)
         model = read_shabp(shabp_infilename, read_special_routines=True,
                            log=log, debug=None)
 

@@ -383,7 +383,7 @@ class AddCard(BDFAttributes):
         self.dvgrids[key].append(dvgrid)
 
     def _add_nlparm_object(self, nlparm):
-        """adds a NLPARM object"""
+        """adds an NLPARM object"""
         key = nlparm.nlparm_id
         assert key not in self.nlparms
         assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
@@ -403,7 +403,7 @@ class AddCard(BDFAttributes):
         self._type_to_id_map[rotor.type].append(key)
 
     def _add_nlpci_object(self, nlpci):
-        """adds a NLPCI object"""
+        """adds an NLPCI object"""
         key = nlpci.nlpci_id
         assert key not in self.nlpcis
         assert key > 0

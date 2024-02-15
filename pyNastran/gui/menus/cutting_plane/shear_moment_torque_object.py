@@ -16,11 +16,12 @@ from pyNastran.op2.tables.ogf_gridPointForces.smt import (
     get_nid_cd_xyz_cid0, plot_smt, setup_coord_from_plane)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+    from pyNastran.gui.main_window import MainWindow
 
 
 class ShearMomentTorqueObject(BaseGui):
     """wrapper around ShearMomentTorqueWindow"""
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         #self.gui = gui
         super().__init__(gui)
         self._smt_shown = False
@@ -57,12 +58,16 @@ class ShearMomentTorqueObject(BaseGui):
             cids = [0]
 
         icase = self.gui.icase
+        if icase == -1 or len(gui.result_cases) == 0:
+            gui.log.error('Select a Grid Point Forces result.')
+            return
+
         (obj, (unused_i, unused_name)) = gui.result_cases[icase]
         if not hasattr(obj, 'gpforce_array'):
             gui.log.error('Select a Grid Point Forces result.')
             return
 
-        gpforce = obj.gpforce_array  # type: RealGridPointForcesArray
+        gpforce: RealGridPointForcesArray = obj.gpforce_array
         data = {
             'font_size' : settings.font_size,
             'cids' : cids,
@@ -108,7 +113,7 @@ class ShearMomentTorqueObject(BaseGui):
         #self.out_data['clicked_ok'] = True
 
         model_name = data['model_name']
-        gpforce = data['gpforce']  # type: RealGridPointForcesArray
+        gpforce: RealGridPointForcesArray = data['gpforce']
         nplanes = data['nplanes']
         #model = self.models[model_name]
 
@@ -224,7 +229,7 @@ class ShearMomentTorqueObject(BaseGui):
         beta = coord.beta().T
 
         cid = ''
-        self.gui.create_coordinate_system(
+        self.gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type='xyz')
 

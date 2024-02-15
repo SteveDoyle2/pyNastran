@@ -1,3 +1,4 @@
+from typing import TextIO
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -7,7 +8,9 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_element_case, set_static_case, set_modal_case,
     set_transient_case, set_post_buckling_case)
 from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_fdtype
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, write_floats_13e_long,
+    _eigenvalue_header) #, get_key0
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CROD' : 1,
@@ -308,7 +311,51 @@ class RealRodArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+    def write_csv(self, csv_file: TextIO,
+                  is_exponent_format: bool=False,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  write_header: bool=True):
+        """
+        Stress Table - CROD/CONROD/CTUBE
+        --------------------------------
+        Flag, SubcaseID, iTime, EID,  BLANK,  BLANK,  Sxx,       Syy,  Szz,      Sxy,  Syz,  Szx
+        10,           1,     0, 312,      0,      0,  1642.503,    0,    0,  167.541,    0,    0
+        10,           1,     0, 313,      0,      0,  3937.541,    0,    0,   66.171,    0,    0
+        """
+        name = str(self.__class__.__name__)
+        if write_header:
+            csv_file.write('# %s\n' % name)
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+        # stress vs. strain
+        flag = 10 if 'Stress' in name else 11
+
+        isubcase = self.isubcase
+        #times = self._times
+
+        # write the f06
+        ntimes = self.data.shape[0]
+        eids = self.element
+        eid_len = '%d' % len(str(eids.max()))
+
+        zero = ' 0.000000E+00'
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            axial = self.data[itime, :, 0]
+            torsion = self.data[itime, :, 2]
+            for eid, axiali, torsioni in zip(eids, axial, torsion):
+                if is_exponent_format:
+                    [axiali, torsioni] = write_floats_13e_long([axiali, torsioni])
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
+                               f'{axiali}, {zero}, {zero}, {torsioni}, {zero}, {zero}\n')
+        return
+
+    def write_f06(self, f06_file: TextIO, header=None, page_stamp: str='PAGE %s',
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         (unused_elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
@@ -316,7 +363,7 @@ class RealRodArray(OES_Object):
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file: TextIO, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element

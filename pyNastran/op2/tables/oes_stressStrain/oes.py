@@ -1228,7 +1228,7 @@ class OES(OP2Common2):
             #prefix = 'sideline_'
         elif table_name_bytes in [b'DOES1', b'DOSTR1']:
             self._set_as_sort1()
-            assert op2.thermal in {2, 4, 8}, op2.code_information()
+            assert op2.thermal in {0, 2, 4, 8}, op2.code_information()
             prefix, postfix = get_shock_prefix_postfix(op2.thermal)
         elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
             prefix = 'nonlinear_'

@@ -1,7 +1,7 @@
+# coding: utf-8
 """
 creates the pyNastranGUI
 """
-# coding: utf-8
 
 # we're intentionally putting this here to validate the imports
 # before doing lots of work
@@ -14,7 +14,6 @@ import ctypes
 # doesn't save the current state as presumably there's been an error
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
 import pyNastran
 from pyNastran.gui.main_window import MainWindow, get_stylesheet

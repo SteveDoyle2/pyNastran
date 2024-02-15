@@ -11,29 +11,20 @@ defines:
 """
 from __future__ import annotations
 from itertools import combinations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 import numpy as np
-from numpy import (array, unique, arange, searchsorted,
-                   setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm  # type: ignore
 import scipy
-import scipy.spatial
+from scipy.spatial import KDTree
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
-from pyNastran.utils import int_version
+from pyNastran.femutils.utils import unique2d
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import GRID
-
-SCIPY_VERSION = int_version('scipy', scipy.__version__)
-import scipy.spatial
-if SCIPY_VERSION > [1, 6, 0]:
-    KDTree = scipy.spatial.KDTree
-else:
-    KDTree = scipy.spatial.cKDTree
 
 
 def bdf_equivalence_nodes(bdf_filename: str,
@@ -150,14 +141,16 @@ def bdf_equivalence_nodes(bdf_filename: str,
     # list of ndarrays
     #return node_set
 
-def _simplify_node_set(node_set: Optional[Union[list[int], set[int], list[NDArrayNint]]],
+def _simplify_node_set(node_set: Optional[Union[list[int],
+                                                set[int],
+                                                list[NDArrayNint]]],
                        idtype: str='int32') -> Optional[list[NDArrayNint]]:  # pragma: no cover
     """
     accepts multiple forms of the node_set parameter
      - list[int]
      - set[int]
-     - list[int ndarray]
      - int ndarray
+     - list[int ndarray]
 
      """
     if node_set is None:
@@ -165,7 +158,7 @@ def _simplify_node_set(node_set: Optional[Union[list[int], set[int], list[NDArra
     if isinstance(node_set, np.ndarray):
         return [node_set]
     elif isinstance(node_set, set):
-        node_set_array = asarray(list(node_set), dtype=idtype)
+        node_set_array = np.asarray(list(node_set), dtype=idtype)
         node_set_array.sort()
         return [node_set_array]
 
@@ -196,9 +189,11 @@ def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
                            renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
                            node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,
-                           debug: bool=True, method: str='new',
-                           idtype: str='int32', fdtype: str='float64') -> tuple[BDF,
-                                                                                list[tuple[int, int]]]:
+                           debug: bool=True,
+                           method: str='new',
+                           idtype: str='int32',
+                           fdtype: str='float64') -> tuple[BDF,
+                                                           list[tuple[int, int]]]:
     """helper for bdf_equivalence_nodes"""
     all_node_set = get_all_node_set(node_set)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -228,20 +223,12 @@ def _eq_nodes_setup(bdf_filename,
     if node_set is not None:
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
-
-        #print(type(node_set))
         #print('*node_set', node_set)
         assert len(node_set) > 0, node_set
         assert isinstance(node_set, list), type(node_set)
     all_node_set = get_all_node_set(node_set)
 
     model = get_bdf_model(bdf_filename, xref=xref, log=log, debug=debug)
-
-    # quads / tris
-    #nids_quads = []
-    #eids_quads = []
-    #nids_tris = []
-    #eids_tris = []
 
     # map the node ids to the slot in the nids array
     renumber_nodes = False
@@ -259,17 +246,18 @@ def _eq_nodes_setup(bdf_filename,
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
     return nodes_xyz, model, nids, inew
 
-def _get_xyz_cid0(model: BDF, nids: NDArrayNint, fdtype: str='float32') -> NDArrayN3float:
+def _get_xyz_cid0(model: BDF, nids: NDArrayNint,
+                  fdtype: str='float32') -> NDArrayN3float:
     """gets xyz_cid0"""
     coord_ids = model.coord_ids
     needs_get_position = (coord_ids == [0])
 
     if needs_get_position:
-        nodes_xyz = array([model.nodes[nid].get_position()
-                           for nid in nids], dtype=fdtype)
+        nodes_xyz = np.array([model.nodes[nid].get_position()
+                              for nid in nids], dtype=fdtype)
     else:
-        nodes_xyz = array([model.nodes[nid].xyz
-                           for nid in nids], dtype=fdtype)
+        nodes_xyz = np.array([model.nodes[nid].xyz
+                              for nid in nids], dtype=fdtype)
     return nodes_xyz
 
 def _eq_nodes_setup_node_set(model: BDF,
@@ -282,13 +270,13 @@ def _eq_nodes_setup_node_set(model: BDF,
         model.log.warning(f'multi node_sets; n={len(node_set)}')
 
     node_list = list(model.nodes.keys())
-    all_nids = array(node_list, dtype=idtype)
+    all_nids = np.array(node_list, dtype=idtype)
     #all_nids.sort()
 
     # B - A
     # these are all the nodes that are requested from all_node_set that are missing
     #   thus len(diff_nodes) == 0
-    diff_nodes = setdiff1d(all_node_set, all_nids)
+    diff_nodes = np.setdiff1d(all_node_set, all_nids)
     if len(diff_nodes) != 0:
         msg = ('The following nodes cannot be found, but are included'
                ' in the reduced set; nids=%s' % diff_nodes)
@@ -298,7 +286,7 @@ def _eq_nodes_setup_node_set(model: BDF,
     # the nodes to analyze are the union of all the nodes and the desired set
     # which is basically the same as:
     #   nids = unique(all_node_set)
-    nids = intersect1d(all_nids, all_node_set, assume_unique=True)  # the new values
+    nids = np.intersect1d(all_nids, all_node_set, assume_unique=True)  # the new values
 
     if renumber_nodes:
         raise NotImplementedError('node_set is not None & renumber_nodes=True')
@@ -309,7 +297,16 @@ def _eq_nodes_setup_node_set(model: BDF,
 
 def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
                          idtype: str='int32') -> tuple[NDArrayNint, NDArrayNint]:
-    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets"""
+    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets
+
+    Returns
+    -------
+    nids : (nnode,) int array
+        ???
+    all_nids : (nnode,) int array
+        all the GRID ids
+
+    """
     inode = 0
     if renumber_nodes:
         model.log.info('renumbering nodes')
@@ -317,11 +314,11 @@ def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
             node.nid = inode + 1
             inode += 1
         nnodes = len(model.nodes)
-        nids = arange(1, inode + 1, dtype=idtype)
+        nids = np.arange(1, inode + 1, dtype=idtype)
         assert nids[-1] == nnodes
     else:
         nodes_list = list(model.nodes.keys())
-        nids = array(nodes_list, dtype=idtype)
+        nids = np.array(nodes_list, dtype=idtype)
         nids.sort()
     all_nids = nids
     return nids, all_nids
@@ -331,7 +328,14 @@ def _check_for_referenced_nodes(model: BDF,
                                 nids: NDArrayNint,
                                 all_nids: NDArrayNint,
                                 nodes_xyz: NDArrayN3float) -> Optional[NDArrayNint]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup``
+
+    Parameters
+    ----------
+    nodes_xyz : (nnode, 3) float array
+        the xyz for nids
+
+    """
     if node_set is not None:
         assert nodes_xyz.shape[0] == len(nids)
 
@@ -355,13 +359,14 @@ def _check_for_referenced_nodes(model: BDF,
         for unused_eid, element in sorted(model.masses.items()):
             spoint_epoint_nid_set.update(element.node_ids)
 
-        nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
-
+        nids_new: set[Optional[int]] = (
+            spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
+        )
         if None in nids_new:
             nids_new.remove(None)
 
         # autosorts the data
-        nids_new = unique(list(nids_new))
+        nids_new = np.unique(list(nids_new))
         assert isinstance(nids_new[0], integer_types), type(nids_new[0])
 
         missing_nids = list(set(nids_new) - set(all_nids))
@@ -372,7 +377,7 @@ def _check_for_referenced_nodes(model: BDF,
             raise RuntimeError(msg)
 
         # get the node_id mapping for the kdtree
-        inew = searchsorted(nids, nids_new, side='left')
+        inew = np.searchsorted(nids, nids_new, side='left')
         # print('nids_new =', nids_new)
     else:
         inew = None
@@ -393,6 +398,10 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
                          node_set: Optional[list[NDArrayNint]]=None) -> list[tuple[int, int]]:
     """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
+    if len(irows) == 0:
+        return []
+        #return np.array([], dtype='int32')
+
     all_node_set = get_all_node_set(node_set)
     if node_set is not None and len(node_set) > 1:
         log.warning(f'multi node_sets; n={len(node_set)}')
@@ -402,22 +411,26 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
     #skip_nodes = []
     nid_pairs = []
     if node_set is None:
-        for (irow, icol) in zip(irows, icols):
-            inid2 = ieq[irow, icol]
-            nid1 = nids[irow]
-            nid2 = nids[inid2]
-            if nid1 == nid2:
-                continue
-            nid_pairs.append((nid1, nid2))
-        return nid_pairs
-
-    for (irow, icol) in zip(irows, icols):
-        inid2 = ieq[irow, icol]
-        nid1 = nids[irow]
-        nid2 = nids[inid2]
-        if nid1 == nid2:
-            continue
-        if node_set is not None:
+        inids2 = ieq[irows, icols]
+        nids1 = nids[irows]
+        nids2 = nids[inids2]
+        is_unique = (nids1 != nids2)
+        nid1_nid2 = np.column_stack([
+            nids1[is_unique],
+            nids2[is_unique],
+        ])
+        nid_pairs.append(nid1_nid2)
+    else:
+        #node_set is not None
+        inids2 = ieq[irows, icols]
+        nids1 = nids[irows]
+        nids2 = nids[inids2]
+        is_unique = (nids1 != nids2)
+        nid1_nid2 = np.column_stack([
+            nids1[is_unique],
+            nids2[is_unique],
+        ])
+        for nid1, nid2 in nid1_nid2:
             if nid1 not in all_node_set and nid2 not in all_node_set:
                 continue
             for seti in node_set:
@@ -425,11 +438,28 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
                     nid_pairs.append((nid1, nid2))
                     #print(f'({nid1}, {nid2})')
                     break
-    return nid_pairs
+
+    if len(nid_pairs) == 0:
+        return []
+        #return np.array([], dtype='int32')
+
+    nid_pairs_array = np.vstack(nid_pairs)
+    nid_pairs_array.sort(axis=1) #  inplace sort [min, max]
+    #assert nid_pairs_array.shape == nid_pairs_array2.shape
+
+    nid_pairs_array2 = unique2d(nid_pairs_array).tolist()
+    nid_pairs_3 = [tuple(nid_pair) for nid_pair in nid_pairs_array2]
+    #if len(nid_pairs) > 2_000:
+        #asdf
+    #return nid_pairs_array3
+    return nid_pairs_3
 
 
-def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
-                    all_node_set: NDArrayNint, debug: bool=False) -> None:
+def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
+                    model: BDF,
+                    tol: float,
+                    all_node_set: NDArrayNint,
+                    debug: bool=False) -> None:
     """apply nodal equivalencing to model"""
     #log = model.log
     #log.info('_eq_nodes_final')
@@ -483,7 +513,7 @@ def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
         #skip_nodes.append(nid2)
     return
 
-def _update_grid(node1: GRID, node2: GRID):
+def _update_grid(node1: GRID, node2: GRID) -> None:
     """helper method for _eq_nodes_final"""
     node2.nid = node1.nid
     node2.xyz = node1.xyz
@@ -501,7 +531,8 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  log: SimpleLogger,
                                  inew: NDArrayNint,
                                  node_set: Optional[NDArrayNint]=None,
-                                 neq_max: int=4, method: str='new',
+                                 neq_max: int=4,
+                                 method: str='new',
                                  debug: bool=False) -> list[tuple[int, int]]:
     """
     Helper for equivalencing
@@ -524,12 +555,17 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
 def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
                                      nids: NDArrayNint,
                                      all_node_set: NDArrayNint,
-                                     node_set: Optional[NDArrayNint], tol: float):
+                                     node_set: Optional[NDArrayNint],
+                                     tol: float,
+                                     log: SimpleLogger) -> list[tuple[int, int]]:
     """
     helper function for `bdf_equivalence_nodes`
     """
     ieq3 = kdt.query_ball_tree(kdt, tol)
-    nid_pairs = []
+    #log.info('made ieq3')
+    nid_pairs = set()
+
+    #print(ieq3)
 
     if node_set is None:
         for pair in ieq3:
@@ -540,10 +576,8 @@ def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
                 nid1 = nids[inid1]
                 nid2 = nids[inid2]
                 pair = (nid1, nid2)
-                if pair in nid_pairs:
-                    continue
-                nid_pairs.append(pair)
-        return nid_pairs
+                nid_pairs.add(pair)
+        return list(nid_pairs)
 
     nsets = len(node_set)
     #if nsets > 1:
@@ -561,22 +595,24 @@ def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
             if nid1 not in all_node_set and nid2 not in all_node_set:
                 continue
             pair = (nid1, nid2)
-            if pair in nid_pairs:
-                continue
-            nid_pairs.append(pair)
+            nid_pairs.add(pair)
 
     if nsets > 1:
         # nid_pairs was simply the set of all potential connections
         # now we filter connections that aren't part of an explicit set
-        nid_pairs2 = []
+        nid_pairs2 = set([])
         for pair in nid_pairs:
             for seti in node_set:
                 nid1, nid2 = pair
                 if nid1 in seti and nid2 in seti:
-                    nid_pairs2.append(pair)
+                    nid_pairs2.add(pair)
                     break
-        return nid_pairs2
-    return nid_pairs
+        #return nid_pairs2
+        nid_pairs = nid_pairs2
+    nid_pairs3 = np.array(list(nid_pairs))
+    nid_pairs4 = unique2d(nid_pairs3).tolist()
+    nid_pairs5 = [tuple(nid_pair) for nid_pair in nid_pairs4]
+    return nid_pairs5
 
 def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          nids: NDArrayNint,
@@ -585,7 +621,9 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          log: SimpleLogger,
                          inew=None,
                          node_set: Optional[NDArrayNint]=None,
-                         neq_max: int=4, method: str='new', msg: str='',
+                         neq_max: int=4,
+                         method: str='new',
+                         msg: str='',
                          debug: bool=False) -> tuple[KDTree,
                                                      list[tuple[int, int]]]:
     """
@@ -616,18 +654,21 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
         a series of (nid1, nid2) pairs
 
     """
+    #log.info('_eq_nodes_build_tree')
     nnodes = len(nids)
     if inew is None:
         inew = slice(None)
 
     assert isinstance(tol, float), 'tol=%r' % tol
     kdt = _get_tree(nodes_xyz, msg=msg)
+    #log.info('made kdt')
 
     is_not_node_set = inew is None or inew == slice(None)
 
     # check the closest 10 nodes for equality
     if method == 'new' and is_not_node_set:
-        kdt, nid_pairs = _eq_nodes_build_tree_new(
+        #log.info('method=new is_not_node_set')
+        nid_pairs = _eq_nodes_build_tree_new(
             kdt, nodes_xyz,
             nids, all_node_set,
             nnodes, is_not_node_set,
@@ -635,6 +676,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
             inew=inew, node_set=node_set, neq_max=neq_max, msg=msg,
             debug=debug)
     else:
+        #log.info('method=old')
         if method == 'new':
             log.warning(f'setting method to "old" because node_set is specified')
 
@@ -665,17 +707,24 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
                              tol: float,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
-                             debug: float=False) -> tuple[Any, list[tuple[int, int]]]:
+                             debug: float=False) -> list[tuple[int, int]]:
     assert isinstance(nnodes, int), nnodes
+    #log.info('calling query')
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+    #log.info('building slots')
     slots = np.where(ieq[:, :] < nnodes)
-    nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, log, all_node_set, node_set=node_set)
+    #log.info('building pairs')
+    nid_pairs_expected = _eq_nodes_find_pairs(
+        nids, slots, ieq, log, all_node_set, node_set=node_set)
     if is_not_node_set:
-        nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, all_node_set,
-                                                     node_set, tol)
-    else:
+        #log.info('creating new pairs')
+        nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(
+            kdt, nids, all_node_set,
+            node_set, tol, log)
+    else:  # pragma: no cover
         raise NotImplementedError(f'node_set = {node_set}')
 
+    #log.info('final checks...')
     snid_pairs = set(nid_pairs)
     snid_pairs_expected = set(nid_pairs_expected)
     diff_bad = snid_pairs - snid_pairs_expected
@@ -683,10 +732,13 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
     if debug and len(diff_bad) or len(diff_missed):  # pragma: no cover
         #log.warning(f'nid_pairs          = {nid_pairs}')
         #log.warning(f'nid_pairs_expected = {nid_pairs_expected}')
-        log.warning(f'diff_bad = {diff_bad}')
-        log.warning(f'diff_missed = {diff_missed}')
+        if (len(diff_bad) + len(diff_missed) < 20):
+            log.warning(f'diff_bad = {diff_bad}')
+            log.warning(f'diff_missed = {diff_missed}')
+        else:
+            log.warning(f'diff_bad diff_missed are large...cause?')
 
-    return kdt, nid_pairs
+    return nid_pairs
 
 def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> KDTree:
     """gets the kdtree"""

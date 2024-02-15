@@ -11,7 +11,8 @@ The preferences menu handles:
 """
 from __future__ import annotations
 from math import log10, ceil
-from typing import TYPE_CHECKING
+from functools import partial
+from typing import Optional, Any, TYPE_CHECKING
 
 from qtpy import QtGui
 from qtpy.QtWidgets import (
@@ -21,9 +22,17 @@ from qtpy.QtWidgets import (
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
-    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE,
+    FONT_SIZE, MAGNIFY,
+    COORD_SCALE, COORD_TEXT_SCALE,
+    BACKGROUND_COLOR, BACKGROUND_COLOR2,
+    ANNOTATION_COLOR, ANNOTATION_SIZE,
+    CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
+    HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, # HIGHLIGHT_LINE_THICKNESS,
+    USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
 )
 if TYPE_CHECKING:
@@ -42,6 +51,7 @@ class PreferencesWindow(PyDialog):
     | Back Color       ______         |
     | Text Color       ______         |
     |                                 |
+    |            Reset Defaults       |
     |        Apply OK Cancel          |
     +---------------------------------+
     """
@@ -57,8 +67,12 @@ class PreferencesWindow(PyDialog):
         self.dim_max = data['dim_max']
 
         # font size for menu
-        self._default_font_size = FONT_SIZE
-        self._default_text_size = TEXT_SIZE
+        self._default_font_size = data['font_size']
+
+        # corner text
+        self._default_corner_text_size = CORNER_TEXT_SIZE
+
+        self.use_startup_directory = data['use_startup_directory']
 
         # an annotation is the marked/probe label
         self._default_annotation_size = ANNOTATION_SIZE
@@ -83,7 +97,7 @@ class PreferencesWindow(PyDialog):
         self._coord_text_scale = data['coord_text_scale'] * 100.
 
         self._magnify = data['magnify']
-        self._text_size = data['text_size']
+        self._corner_text_size = data['corner_text_size']
         self._highlight_opacity = data['highlight_opacity']
         self._highlight_point_size = data['highlight_point_size']
 
@@ -93,8 +107,8 @@ class PreferencesWindow(PyDialog):
             data['background_color'])
         self.background_color2_float, self.background_color2_int = check_color(
             data['background_color2'])
-        self.text_color_float, self.text_color_int = check_color(
-            data['text_color'])
+        self.corner_text_color_float, self.corner_text_color_int = check_color(
+            data['corner_text_color'])
         self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
 
@@ -137,36 +151,39 @@ class PreferencesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        self.on_font(self._default_font_size)
+        self.on_font(self.font_size)
         self.on_gradient_scale()
         #self.show()
 
     def create_widgets(self):
         """creates the display window"""
-        # Text Size
-        self.font_size_label = QLabel("Font Size:")
+        # window text size
+        self.font_size_label = QLabel('Font Size:')
         self.font_size_edit = QSpinBox(self)
         self.font_size_edit.setValue(self._default_font_size)
         self.font_size_edit.setRange(7, 20)
-        self.font_size_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
-        # Annotation Color
-        self.annotation_color_label = QLabel("Annotation Color:")
-        self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
-        self.annotation_color_label.hide()
-        self.annotation_color_edit.hide()
+        self.startup_directory_label = QLabel('Remember Last Directory:')
+        self.startup_directory_checkbox = QCheckBox(self)
+        self.startup_directory_checkbox.setChecked(self.use_startup_directory)
+        self.startup_directory_checkbox.setToolTip('True: Remember the last directory when saving\n'
+                                                   'False: Start from local directory')
+        #self.startup_directory_button = QPushButton('...')
+
         #-----------------------------------------------------------------------
-        # Text Color
-        self.text_size_label = QLabel("Text Size:")
-        self.text_size_edit = QSpinBox(self)
-        self.text_size_edit.setValue(self._default_text_size)
-        self.text_size_edit.setRange(7, 30)
-        self.text_size_button = QPushButton("Default")
+        # Corner Text Color
+        self.corner_text_size_label = QLabel('Corner Text Size:')
+        self.corner_text_size_edit = QSpinBox(self)
+        self.corner_text_size_edit.setValue(self._default_corner_text_size)
+        self.corner_text_size_edit.setRange(7, 30)
+        self.corner_text_size_edit.setToolTip('Sets the lower left corner text size')
+        self.corner_text_size_button = QPushButton("Default")
 
         # Text Color
-        self.text_color_label = QLabel("Text Color:")
-        self.text_color_edit = QPushButtonColor(self.text_color_int)
+        self.corner_text_color_label = QLabel("Corner Text Color:")
+        self.corner_text_color_edit = QPushButtonColor(self.corner_text_color_int)
+        self.corner_text_color_edit.setToolTip('Sets the lower left corner text color')
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -174,8 +191,9 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit = QDoubleSpinBox(self)
         self.highlight_opacity_edit.setValue(self._highlight_opacity)
         self.highlight_opacity_edit.setRange(0.1, 1.0)
-        self.highlight_opacity_edit.setDecimals(1)
-        self.highlight_opacity_edit.setSingleStep(0.1)
+        self.highlight_opacity_edit.setDecimals(2)
+        self.highlight_opacity_edit.setSingleStep(0.05)
+        self.highlight_opacity_edit.setToolTip('Sets the highlight opacity (0=invisible, 1=solid)')
         self.highlight_opacity_button = QPushButton("Default")
 
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
@@ -184,16 +202,19 @@ class PreferencesWindow(PyDialog):
         self.highlight_point_size_edit.setRange(5.0, 30.0)
         self.highlight_point_size_edit.setDecimals(2)
         self.highlight_point_size_edit.setSingleStep(0.25)
+        self.highlight_point_size_edit.setToolTip('Sets the highlight node size')
         self.highlight_point_size_button = QPushButton("Default")
 
         # Text Color
         self.highlight_color_label = QLabel("Highlight Color:")
         self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
+        self.highlight_color_edit.setToolTip('Sets the highlight color')
 
         #-----------------------------------------------------------------------
         # Background Color
         self.background_color_label = QLabel("Btm Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
+        self.background_color_edit.setToolTip('Sets the lower background color')
 
         # Background Color2
         self.gradient_scale_label = QLabel("Gradient Background:")
@@ -202,6 +223,7 @@ class PreferencesWindow(PyDialog):
 
         self.background_color2_label = QLabel("Top Background Color:")
         self.background_color2_edit = QPushButtonColor(self.background_color2_int)
+        self.background_color2_edit.setToolTip('Sets the upper background color')
 
         #-----------------------------------------------------------------------
         # Annotation Size
@@ -209,10 +231,19 @@ class PreferencesWindow(PyDialog):
         self.annotation_size_edit = QSpinBox(self)
         self.annotation_size_edit.setRange(1, 500)
         self.annotation_size_edit.setValue(self._annotation_size)
+        self.annotation_size_edit.setToolTip('Sets the "Probe" and Min/Max text size')
+        #self.annotation_size_edit.setToolTip('Sets the hiannotation text size')
         self.annotation_size_button = QPushButton("Default")
 
+        # Annotation Color - unused
+        self.annotation_color_label = QLabel("Annotation Color:")
+        self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
+        self.annotation_color_edit.setToolTip('The "Probe" is an annotation')
+        #self.annotation_color_label.hide()
+        #self.annotation_color_edit.hide()
+
         #-----------------------------------------------------------------------
-        # Picker Size
+        # Picker Sizef
         self.picker_size_label = QLabel("Picker Size (% of Screen):")
         self.picker_size_edit = QDoubleSpinBox(self)
         self.picker_size_edit.setRange(0., 10.)
@@ -224,21 +255,24 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setDecimals(decimals)
         self.picker_size_edit.setSingleStep(10. / 5000.)
         self.picker_size_edit.setValue(self._picker_size)
+        self.picker_size_edit.setToolTip('Sets the picker tolerance')
 
         self.parallel_projection_label = QLabel('Parallel Projection:')
         self.parallel_projection_edit = QCheckBox()
         self.parallel_projection_edit.setChecked(self._parallel_projection)
+        self.parallel_projection_edit.setToolTip('Checked: Typical engineering perspective\n'
+                                                 'Unchecked: Distort the model like a real camera')
 
         #-----------------------------------------------------------------------
         # Clipping Min
-        self.clipping_min_label = QLabel("Clipping Min:")
+        self.clipping_min_label = QLabel('Clipping Min:')
         self.clipping_min_edit = QLineEdit(func_str(self._default_clipping_min))
-        self.clipping_min_button = QPushButton("Default")
+        self.clipping_min_button = QPushButton('Default')
 
         # Clipping Max
-        self.clipping_max_label = QLabel("Clipping Max:")
+        self.clipping_max_label = QLabel('Clipping Max:')
         self.clipping_max_edit = QLineEdit(func_str(self._default_clipping_max))
-        self.clipping_max_button = QPushButton("Default")
+        self.clipping_max_button = QPushButton('Default')
 
         #-----------------------------------------------------------------------
         self.coord_scale_label = QLabel('Coordinate System Scale:')
@@ -249,6 +283,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
+        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system size')
 
         self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
         self.coord_text_scale_button = QPushButton("Default")
@@ -258,9 +293,10 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit.setDecimals(3)
         self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
+        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system text size')
 
         # Show corner coord
-        self.corner_coord_label = QLabel("Show Corner Coordinate System:")
+        self.corner_coord_label = QLabel('Show Corner Coordinate System:')
         self.corner_coord_checkbox = QCheckBox()
         self.corner_coord_checkbox.setChecked(self._show_corner_coord)
 
@@ -270,6 +306,7 @@ class PreferencesWindow(PyDialog):
         self.magnify_edit.setMinimum(1)
         self.magnify_edit.setMaximum(10)
         self.magnify_edit.setValue(self._magnify)
+        self.magnify_edit.setToolTip('1: Standard resolution; >1: high quality')
 
         #-----------------------------------------------------------------------
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
@@ -289,9 +326,9 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D Bar/Beam cross-sections when deformations are applied')
         self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
 
-        self.nastran_is_shell_mcid_checkbox = QCheckBox('Shell MCIDs')
-        self.nastran_is_shell_mcid_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
-        self.nastran_is_shell_mcid_checkbox.setChecked(self._nastran_is_shell_mcids)
+        self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
+        self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
+        self.nastran_is_shell_mcids_checkbox.setChecked(self._nastran_is_shell_mcids)
 
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
@@ -310,11 +347,11 @@ class PreferencesWindow(PyDialog):
             self.nastran_acceleration_checkbox.setChecked(self._nastran_acceleration)
             self.nastran_eigenvector_checkbox.setChecked(self._nastran_eigenvector)
 
-            self.nastran_spc_forces_checkbox = QCheckBox('SPC Force')
-            self.nastran_mpc_forces_checkbox = QCheckBox('MPC Force')
+            self.nastran_spc_force_checkbox = QCheckBox('SPC Force')
+            self.nastran_mpc_force_checkbox = QCheckBox('MPC Force')
             self.nastran_applied_load_checkbox = QCheckBox('Applied Load')
-            self.nastran_spc_forces_checkbox.setChecked(self._nastran_spc_force)
-            self.nastran_mpc_forces_checkbox.setChecked(self._nastran_mpc_force)
+            self.nastran_spc_force_checkbox.setChecked(self._nastran_spc_force)
+            self.nastran_mpc_force_checkbox.setChecked(self._nastran_mpc_force)
             self.nastran_applied_load_checkbox.setChecked(self._nastran_applied_load)
 
             self.nastran_force_checkbox = QCheckBox('Force')
@@ -354,9 +391,10 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # closing
-        self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("OK")
-        self.cancel_button = QPushButton("Cancel")
+        self.reset_defaults_button = QPushButton('Reset Defaults')
+        self.apply_button = QPushButton('Apply')
+        self.ok_button = QPushButton('OK')
+        self.cancel_button = QPushButton('Cancel')
 
     #def create_legend_widgets(self):
         #"""
@@ -419,7 +457,10 @@ class PreferencesWindow(PyDialog):
         irow = 0
         grid.addWidget(self.font_size_label, irow, 0)
         grid.addWidget(self.font_size_edit, irow, 1)
-        grid.addWidget(self.font_size_button, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.startup_directory_label, irow, 0)
+        grid.addWidget(self.startup_directory_checkbox, irow, 1)
         irow += 1
 
         grid.addWidget(self.gradient_scale_label, irow, 0)
@@ -448,13 +489,13 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.highlight_point_size_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.text_color_label, irow, 0)
-        grid.addWidget(self.text_color_edit, irow, 1)
+        grid.addWidget(self.corner_text_color_label, irow, 0)
+        grid.addWidget(self.corner_text_color_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.text_size_label, irow, 0)
-        grid.addWidget(self.text_size_edit, irow, 1)
-        grid.addWidget(self.text_size_button, irow, 2)
+        grid.addWidget(self.corner_text_size_label, irow, 0)
+        grid.addWidget(self.corner_text_size_edit, irow, 1)
+        grid.addWidget(self.corner_text_size_button, irow, 2)
         irow += 1
 
         grid.addWidget(self.annotation_color_label, irow, 0)
@@ -508,7 +549,7 @@ class PreferencesWindow(PyDialog):
         grid_nastran = self._get_grid_nastran_layout()
         grid_nastran_results = self._get_grid_nastran_results_layout()
 
-        #bold_font = make_font(self._default_font_size, is_bold=True)
+        #bold_font = make_font(self.font_size, is_bold=True)
         vbox_nastran = QVBoxLayout()
         self.nastran_label = QLabel('Nastran:')
         vbox_nastran.addWidget(self.nastran_label)
@@ -535,6 +576,7 @@ class PreferencesWindow(PyDialog):
         #vbox.addLayout(grid2)
         vbox.addStretch()
 
+        vbox.addWidget(self.reset_defaults_button)
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 
@@ -552,7 +594,7 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
         irow += 1
 
-        grid_nastran.addWidget(self.nastran_is_shell_mcid_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_shell_mcids_checkbox, irow, 0)
         irow += 1
 
         grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
@@ -573,8 +615,8 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         # ------------------------
-        grid_nastran.addWidget(self.nastran_spc_forces_checkbox, irow, 0)
-        grid_nastran.addWidget(self.nastran_mpc_forces_checkbox, irow, 1)
+        grid_nastran.addWidget(self.nastran_spc_force_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_mpc_force_checkbox, irow, 1)
         grid_nastran.addWidget(self.nastran_applied_load_checkbox, irow, 2)
         irow += 1
 
@@ -603,36 +645,37 @@ class PreferencesWindow(PyDialog):
 
     def _set_nastran_connections(self):
         # format-specific
-        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
-        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
-        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
-        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
-        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
-        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
-        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
+        self.nastran_is_element_quality_checkbox.clicked.connect(partial(on_nastran, self, 'is_element_quality'))
+        self.nastran_is_properties_checkbox.clicked.connect(partial(on_nastran, self, 'is_properties'))
+        self.nastran_is_3d_bars_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars'))
+        self.nastran_is_3d_bars_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars_update'))
+        self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
+        self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
+        self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
 
+        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
 
-        self.nastran_displacement_checkbox.clicked.connect(self.on_nastran_displacement)
-        self.nastran_velocity_checkbox.clicked.connect(self.on_nastran_velocity)
-        self.nastran_acceleration_checkbox.clicked.connect(self.on_nastran_acceleration)
-        self.nastran_eigenvector_checkbox.clicked.connect(self.on_nastran_eigenvector)
+        self.nastran_displacement_checkbox.clicked.connect(partial(on_nastran, self, 'displacement'))
+        self.nastran_velocity_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
+        self.nastran_acceleration_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
+        self.nastran_eigenvector_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector'))
 
-        self.nastran_spc_forces_checkbox.clicked.connect(self.on_nastran_spc_force)
-        self.nastran_mpc_forces_checkbox.clicked.connect(self.on_nastran_mpc_force)
-        self.nastran_applied_load_checkbox.clicked.connect(self.on_nastran_applied_load)
-        self.nastran_grid_point_force_checkbox.clicked.connect(self.on_nastran_grid_point_force)
+        self.nastran_spc_force_checkbox.clicked.connect(partial(on_nastran, self, 'spc_force'))
+        self.nastran_mpc_force_checkbox.clicked.connect(partial(on_nastran, self, 'mpc_force'))
+        self.nastran_applied_load_checkbox.clicked.connect(partial(on_nastran, self, 'applied_load'))
+        self.nastran_grid_point_force_checkbox.clicked.connect(partial(on_nastran, self, 'grid_point_force'))
 
-        self.nastran_force_checkbox.clicked.connect(self.on_nastran_force)
-        self.nastran_strain_checkbox.clicked.connect(self.on_nastran_strain)
-        self.nastran_stress_checkbox.clicked.connect(self.on_nastran_stress)
-
-        self.nastran_strain_energy_checkbox.clicked.connect(self.on_nastran_strain_energy)
+        self.nastran_force_checkbox.clicked.connect(partial(on_nastran, self, 'force'))
+        self.nastran_strain_checkbox.clicked.connect(partial(on_nastran, self, 'strain'))
+        self.nastran_stress_checkbox.clicked.connect(partial(on_nastran, self, 'stress'))
+        self.nastran_strain_energy_checkbox.clicked.connect(partial(on_nastran, self, 'strain_energy'))
 
     def set_connections(self):
         """creates the actions for the menu"""
-        self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_font)
+
+        self.startup_directory_checkbox.clicked.connect(self.on_startup_directory_checked)
 
         self.annotation_size_edit.editingFinished.connect(self.on_annotation_size)
         self.annotation_size_edit.valueChanged.connect(self.on_annotation_size)
@@ -646,9 +689,9 @@ class PreferencesWindow(PyDialog):
         self.highlight_color_edit.clicked.connect(self.on_highlight_color)
         self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
 
-        self.text_color_edit.clicked.connect(self.on_text_color)
-        self.text_size_edit.valueChanged.connect(self.on_text_size)
-        self.text_size_button.clicked.connect(self.on_default_text_size)
+        self.corner_text_color_edit.clicked.connect(self.on_corner_text_color)
+        self.corner_text_size_edit.valueChanged.connect(self.on_corner_text_size)
+        self.corner_text_size_button.clicked.connect(self.on_default_corner_text_size)
 
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
@@ -674,104 +717,83 @@ class PreferencesWindow(PyDialog):
         self._set_nastran_connections()
         #------------------------------------
 
+
+        self.reset_defaults_button.clicked.connect(self.on_reset_defaults)
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
 
-    def on_nastran_is_element_quality(self):
-        """set the nastran element quality preferences"""
-        is_checked = self.nastran_is_element_quality_checkbox.isChecked()
+    def on_startup_directory_checked(self):
+        """opens a folder dialog"""
+        is_checked = self.startup_directory_checkbox.isCheckable()
         if self.win_parent is not None:
-            self.nastran_settings.is_element_quality = is_checked
-    def on_nastran_is_properties(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_properties_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_properties = is_checked
-    def on_nastran_is_3d_bars(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_3d_bars_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_3d_bars = is_checked
-    def on_nastran_is_3d_bars_update(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_3d_bars_update_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_3d_bars_update = is_checked
-    #def on_nastran_is_update_conm2(self):
-        #"""set the nastran properties preferences"""
-        #is_checked = self.nastran_is_conm2_update.isChecked()
-        #if self.win_parent is not None:
-            #self.nastran_settings.is_update_conm2 = is_checked
+            self.nastran_settings.use_startup_directory = is_checked
 
-    def on_nastran_is_bar_axes(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_bar_axes = is_checked
-    def on_nastran_create_coords(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_create_coords_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.create_coords = is_checked
-    def on_nastran_is_shell_mcids(self):
-        """set the nastran properties preferences"""
-        is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.is_shell_mcids = is_checked
+    def on_reset_defaults(self):
+        """reset all of the preferences to their defaults"""
+        self.on_font(FONT_SIZE)
+        self.on_default_annotation_size()
+        self.on_default_clipping_max()
+        self.on_default_clipping_min()
+        self.on_default_coord_scale()
+        self.on_default_coord_text_scale()
+        self.on_default_corner_text_size()
+        self.startup_directory_checkbox.setChecked(True)
 
-    def on_nastran_displacement(self):
-        is_checked = self.nastran_displacement_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.displacement = is_checked
-    def on_nastran_velocity(self):
-        is_checked = self.nastran_velocity_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.velocity = is_checked
-    def on_nastran_acceleration(self):
-        is_checked = self.nastran_acceleration_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.acceleration = is_checked
-    def on_nastran_eigenvector(self):
-        is_checked = self.nastran_eigenvector_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.eigenvector = is_checked
+        self.magnify_edit.setValue(MAGNIFY)
+        self.picker_size_edit.setValue(self._picker_size)
 
-    def on_nastran_spc_force(self):
-        is_checked = self.nastran_spc_forces_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.spc_force = is_checked
-    def on_nastran_mpc_force(self):
-        is_checked = self.nastran_mpc_forces_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.mpc_force = is_checked
+        self.highlight_opacity_edit.setValue(HIGHLIGHT_OPACITY)
+        self.highlight_point_size_edit.setValue(HIGHLIGHT_POINT_SIZE)
+        self.parallel_projection_edit.setChecked(USE_PARALLEL_PROJECTION)
+        #self.highlight_line_thickness_edit.setValue(HIGHLIGHT_LINE_THICKNESS)
 
-    def on_nastran_applied_load(self):
-        is_checked = self.nastran_applied_load_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.applied_load = is_checked
-    def on_nastran_grid_point_force(self):
-        is_checked = self.nastran_grid_point_force_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.grid_point_force = is_checked
+        self.background_color1_float = BACKGROUND_COLOR
+        self.background_color2_float = BACKGROUND_COLOR2
+        self.highlight_color_float = HIGHLIGHT_COLOR
+        self.corner_text_color_float = CORNER_TEXT_COLOR
+        self.annotation_color_float = ANNOTATION_COLOR
 
-    def on_nastran_force(self):
-        is_checked = self.nastran_force_checkbox.isChecked()
+        self.gradient_scale_checkbox.setChecked(True)
+        self.on_gradient_scale()
+        self.corner_coord_checkbox.setChecked(True)
+
+        self.background_color1_int = tuple([round(val * 255) for val in BACKGROUND_COLOR])
+        self.background_color2_int = tuple([round(val * 255) for val in BACKGROUND_COLOR2])
+        self.highlight_color_int = tuple([round(val * 255) for val in HIGHLIGHT_COLOR])
+        self.corner_text_color_int = tuple([round(val * 255) for val in CORNER_TEXT_COLOR])
+        self.annotation_color_int = tuple([round(val * 255) for val in ANNOTATION_COLOR])
+
+        set_label_color(self.corner_text_color_edit, self.corner_text_color_int)
+        set_label_color(self.highlight_color_edit, self.highlight_color_int)
+        set_label_color(self.background_color_edit, self.background_color1_int)
+        set_label_color(self.background_color2_edit, self.background_color2_int)
+        set_label_color(self.annotation_color_edit, self.annotation_color_int)
+
+        for key in NASTRAN_BOOL_KEYS:
+            checkbox_name = f'{key}_checkbox'
+            if hasattr(self, checkbox_name):
+                checkbox = getattr(self, checkbox_name)
+                checkbox.setChecked(True)
+
         if self.win_parent is not None:
-            self.nastran_settings.force = is_checked
-    def on_nastran_strain(self):
-        is_checked = self.nastran_strain_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.strain = is_checked
-    def on_nastran_stress(self):
-        is_checked = self.nastran_stress_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.stress = is_checked
-    def on_nastran_strain_energy(self):
-        is_checked = self.nastran_strain_energy_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.nastran_settings.strain_energy = is_checked
+            settings: Settings = self.settings
+            is_min = settings.is_min_visible
+            is_max = settings.is_max_visible
+            is_edges_black = settings.is_edges_black
+            is_edges_visible = settings.is_edges_visible
+            settings.reset_settings(resize=False, reset_dim_max=False)
+
+
+            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
+            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
+
+            settings.set_highlight_color(self.highlight_color_float, render=False)
+            settings.set_corner_text_color(self.corner_text_color_float, render=False)
+            settings.set_background_color(self.background_color1_float, render=False)
+            settings.set_background_color2(self.background_color2_float, render=True)
+        self.on_apply()
 
     @property
     def settings(self) -> Settings:
@@ -797,19 +819,21 @@ class PreferencesWindow(PyDialog):
         bold_font = make_font(value, is_bold=True)
         self.nastran_label.setFont(bold_font)
 
-    def on_annotation_size(self, value=None):
+    def on_annotation_size(self, value=None) -> None:
         """update the annotation size"""
         if value is None:
             value = int(self.annotation_size_edit.text())
         self._annotation_size = value
         #self.on_apply(force=True)
         #self.min_edit.setText(func_str(self._default_min))
-        #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        #self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.update_annotation_size_color()
 
-    def update_annotation_size_color(self):
+    def update_annotation_size_color(self) -> None:
         if self.win_parent is not None:
-            self.settings.set_annotation_size_color(size=self._annotation_size)
+            self.settings.set_annotation_size_color(
+                size=self._annotation_size,
+                                                    color=self.annotation_color_float)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
@@ -857,7 +881,7 @@ class PreferencesWindow(PyDialog):
             self.background_color2_int = rgb_color_ints
             self.background_color2_float = rgb_color_floats
 
-    def on_highlight_color(self):
+    def on_highlight_color(self) -> None:
         """ Choose a highlight color"""
         title = "Choose a highlight color"
         rgb_color_ints = self.highlight_color_int
@@ -883,7 +907,9 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.settings.set_highlight_point_size(value)
 
-    def _background_color(self, title, color_edit, rgb_color_ints, func_name):
+    def _background_color(self, title: str, color_edit: QPushButtonColor,
+                          rgb_color_ints: tuple[int, int, int],
+                          func_name: str):
         """helper method for ``on_background_color`` and ``on_background_color2``"""
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
             color_edit, rgb_color_ints, title)
@@ -894,62 +920,60 @@ class PreferencesWindow(PyDialog):
                 func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
 
-    def on_text_color(self):
-        """Choose a text color"""
-        rgb_color_ints = self.text_color_int
-        title = "Choose a text color"
+    def on_corner_text_color(self) -> None:
+        """Choose a corner text color"""
+        rgb_color_ints = self.corner_text_color_int
+        title = "Choose a corner text color"
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            self.text_color_edit, rgb_color_ints, title)
+            self.corner_text_color_edit, rgb_color_ints, title)
         if passed:
-            self.text_color_int = rgb_color_ints
-            self.text_color_float = rgb_color_floats
+            self.corner_text_color_int = rgb_color_ints
+            self.corner_text_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.settings.set_text_color(rgb_color_floats)
+                self.settings.set_corner_text_color(rgb_color_floats)
 
-    def on_default_text_size(self):
-        self.text_size_edit.setValue(self._default_text_size)
-        self.on_text_size(self._default_text_size)
+    def on_default_corner_text_size(self):
+        self.corner_text_size_edit.setValue(self._default_corner_text_size)
+        self.on_corner_text_size(self._default_corner_text_size)
 
-    def on_text_size(self, value=None):
+    def on_corner_text_size(self, value=None):
         if value is None:
-            value = self.text_size_edit.value()
-        self._text_size = value
+            value = self.corner_text_size_edit.value()
+        self._corner_text_size = value
         if self.win_parent is not None:
-            self.settings.set_text_size(value)
+            self.settings.set_corner_text_size(value)
 
-    def on_color(self, color_edit, rgb_color_ints, title):
+    def on_color(self, color_edit: QPushButtonColor,
+                 rgb_color_ints: tuple[int, int, int],
+                 title: str) -> tuple[bool, tuple[int, int, int], Any]:
         """pops a color dialog"""
         col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self,
                                     title)
         if not col.isValid():
             return False, rgb_color_ints, None
 
-        color_float = col.getRgbF()[:3]  # floats
-        color_int = [int(colori * 255) for colori in color_float]
+        color_float: list[float] = col.getRgbF()[:3]
+        color_int = tuple([int(colori * 255) for colori in color_float])
 
         assert isinstance(color_float[0], float), color_float
         assert isinstance(color_int[0], int), color_int
 
-        color_edit.setStyleSheet(
-            "QPushButton {"
-            "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
-            #"border:1px solid rgb(255, 170, 255); "
-            "}")
+        set_label_color(color_edit, color_int)
         return True, color_int, color_float
 
-    def on_picker_size(self):
+    def on_picker_size(self) -> None:
         self._picker_size = float_locale(self.picker_size_edit.text())
         if self.win_parent is not None:
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
 
-    def on_parallel_projection(self):
+    def on_parallel_projection(self) -> None:
         """set the nastran properties preferences"""
         is_checked = self.parallel_projection_edit.isChecked()
         if self.win_parent is not None:
             self.settings.set_parallel_projection(is_checked)
 
-    def on_magnify(self, value=None):
+    def on_magnify(self, value=None) -> None:
         if value is None:
             value = self.magnify_edit.value()
         self._magnify = value
@@ -957,18 +981,18 @@ class PreferencesWindow(PyDialog):
             self.settings.set_magnify(value)
 
     #---------------------------------------------------------------------------
-    def on_coord_scale(self, value=None):
+    def on_coord_scale(self, value=None) -> None:
         if value is None:
             value = self.coord_scale_edit.value()
         self._coord_scale = value
         if self.win_parent is not None:
             self.settings.set_coord_scale(value / 100.)
 
-    def on_default_coord_scale(self):
+    def on_default_coord_scale(self) -> None:
         self.coord_scale_edit.setValue(self._default_coord_scale)
         self.on_coord_scale(self._default_coord_scale)
 
-    def on_coord_text_scale(self, value=None):
+    def on_coord_text_scale(self, value=None) -> None:
         if value is None:
             value = self.coord_text_scale_edit.value()
         self._coord_text_scale = value
@@ -980,25 +1004,23 @@ class PreferencesWindow(PyDialog):
         self.on_coord_text_scale(self._default_coord_text_scale)
 
     #---------------------------------------------------------------------------
-    def on_default_font_size(self):
-        self.font_size_edit.setValue(self._default_font_size)
-        self.on_font(self._default_font_size)
 
-    def on_default_annotation_size(self):
+    def on_default_annotation_size(self) -> None:
         self.annotation_size_edit.setValue(self._default_annotation_size)
         self.on_annotation_size(self._default_annotation_size)
 
-    def on_default_clipping_min(self):
+    def on_default_clipping_min(self) -> None:
         self.clipping_min_edit.setText(func_str(self._default_clipping_min))
-        self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.clipping_min_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_default_clipping_max(self):
+    def on_default_clipping_max(self) -> None:
         self.clipping_max_edit.setText(func_str(self._default_clipping_max))
-        self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.clipping_max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_validate(self):
+    def on_validate(self) -> bool:
         font_size_value, flag0 = check_float(self.font_size_edit)
         annotation_size_value, flag1 = check_float(self.annotation_size_edit)
+
         assert isinstance(self.annotation_color_float[0], float), self.annotation_color_float
         assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
         picker_size_value, flag2 = check_float(self.picker_size_edit)
@@ -1022,7 +1044,6 @@ class PreferencesWindow(PyDialog):
 
         if (passed or force) and self.win_parent is not None:
             self.settings.on_set_font_size(self.out_data['font_size'])
-
             #self.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
@@ -1040,20 +1061,46 @@ class PreferencesWindow(PyDialog):
         self.close()
 
 
-def check_float(cell):
+def set_label_color(color_edit: QPushButtonColor,
+                    color_tuple: tuple[int, int, int]) -> None:
+    color_edit.setStyleSheet(
+        "QPushButton {"
+        "background-color: rgb(%s, %s, %s);" % tuple(color_tuple) +
+        #"border:1px solid rgb(255, 170, 255); "
+        "}")
+
+def check_float(cell: QDoubleSpinBox) -> tuple[str, bool]:
     text = cell.text()
     value = float_locale(text)
     return value, True
 
-def check_label_float(cell):
+def check_label_float(cell) -> tuple[Optional[float], bool]:
     text = cell.text()
     try:
         value = eval_float_from_string(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setStyleSheet(QLINEEDIT_GOOD)
         return value, True
     except ValueError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINEEDIT_ERROR)
         return None, False
+
+def on_nastran(self: PreferencesWindow, result_name: str) -> None:
+    """
+    Auto-checks to verify result name is correct.
+    Used for all Nastran settings, it's a lot less code.
+
+    self = PreferencesWindow
+    checkbox = self.nastran_displacement_checkbox
+    result_name = displacement
+    is_checked = True
+    """
+    #self.nastran_displacement_checkbox,
+    checkbox: QCheckBox = getattr(self, f'nastran_{result_name}_checkbox')
+    is_checked = checkbox.isChecked()
+    if self.win_parent is not None:
+        assert hasattr(self.nastran_settings, result_name), result_name
+        setattr(self.nastran_settings, result_name, is_checked)
+
 
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
@@ -1069,6 +1116,7 @@ def main():  # pragma: no cover
     #The Main window
     data = {
         'font_size' : 8,
+        'use_startup_directory': True,
         'use_gradient_background' : True,
         'background_color' : (0., 0., 0.), # black
         'background_color2' : (1., 0., 1.), # purple
@@ -1077,14 +1125,14 @@ def main():  # pragma: no cover
         'show_corner_coord' : False,
         'magnify' : 5,
 
-        'text_size' : 12,
-        'text_color' : (0., 1., 0.), # green
+        'corner_text_size' : 12,
+        'corner_text_color' : (0., 1., 0.), # green
 
         'highlight_color' : (1., 1., 0.), # yellow
         'highlight_opacity' : 0.8,
         'highlight_point_size' : 10.0,
 
-        'parallel_projection': True,
+        'use_parallel_projection': True,
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,
         'picker_size' : 10.,

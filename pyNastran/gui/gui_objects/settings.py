@@ -12,13 +12,14 @@ defines:
    - set_annotation_color(self, color, render=True)
    - set_background_color_to_white(self)
    - set_background_color(self, color)
-   - set_text_color(self, color)
+   - set_corner_text_color(self, color)
    - update_text_size(self, magnify=1.0)
 
  - repr_settings(settings)
 
 """
 from __future__ import annotations
+import os
 from typing import Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
@@ -26,24 +27,45 @@ from qtpy import QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
+from pyNastran.gui.utils.colormaps import colormap_keys as COLORMAPS
 from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
-    import vtk
+    from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
 
+from pyNastran.gui import (
+    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
+    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJECTS,
+    USE_NEW_TERMS_ as USE_NEW_TERMS)
 
+USE_NEW_SIDEBAR = False
+if USE_NEW_SIDEBAR_OBJECTS:
+    USE_NEW_SIDEBAR = False
+
+
+IS_WINDOWS = 'nt' in os.name
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
 ORANGE = (229/255., 92/255., 0.)
+
+BACKGROUND_COLOR = GREY
+BACKGROUND_COLOR2 = GREY
+HIGHLIGHT_COLOR = ORANGE
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 10.
 HIGHLIGHT_LINE_THICKNESS = 5.
+ANNOTATION_COLOR = BLACK
 ANNOTATION_SIZE = 18
 FONT_SIZE = 8
-TEXT_SIZE = 14
+CORNER_TEXT_SIZE = 14
+CORNER_TEXT_COLOR = BLACK
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_TEXT_SCALE = 0.5 # percent of nominal
+USE_PARALLEL_PROJECTION = True
+DEFAULT_COLORMAP = 'jet'
+MAGNIFY = 5
+NFILES_TO_SAVE = 9
 
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
@@ -68,6 +90,12 @@ NASTRAN_BOOL_KEYS = [
     'nastran_spring_force', 'nastran_gap_force', 'nastran_cbush_force',
 
     'nastran_grid_point_force', 'nastran_strain_energy',
+
+    # --------------------------------------------------------------
+    'nastran_show_caero_sub_panels',
+    'nastran_show_caero_actor',
+    #'nastran_show_control_surfaces',
+    #'nastran_show_conm',
 ]
 
 class NastranSettings:
@@ -75,6 +103,9 @@ class NastranSettings:
         """
         Creates the Settings object
         """
+        self.reset_settings()
+
+    def reset_settings(self):
         self.is_element_quality = True
         self.is_properties = True
         self.is_3d_bars = True
@@ -125,6 +156,17 @@ class NastranSettings:
         self.strain_energy = True
         self.grid_point_force = True
 
+        # ------------------------------------------------------
+
+        #: flips the nastran CAERO subpaneling
+        #:   False -> borders of CAEROs can be seen
+        #:   True  -> individual subpanels can be seen
+        self.show_caero_sub_panels = False
+
+        self.show_caero_actor = True  # show the caero mesh
+        #self.show_control_surfaces = True
+        #self.show_conm = True
+
     def __repr__(self) -> str:
         msg = '<NastranSettings>\n'
         keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
@@ -136,6 +178,7 @@ class NastranSettings:
                 value = str(value)
             msg += '  %r = %r\n' % (key, value)
         return msg
+
 
 class Settings:
     """storage class for various settings"""
@@ -150,96 +193,88 @@ class Settings:
         """
         self.parent = parent
 
-        # booleans
-        self.use_parallel_projection = True
-        self.use_gradient_background = True
+        self.recent_files = []
 
-        # rgb tuple
-        self.background_color = GREY
-        self.background_color2 = GREY
-
-        # TODO: what is an annotation color?
-        self.annotation_color = BLACK
-
-        # text in the lower left corner
-        self.text_size = TEXT_SIZE
-        self.text_color = BLACK
-
-        # used for highlight actors
-        self.highlight_color = ORANGE
-        self.highlight_opacity = HIGHLIGHT_OPACITY
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
-
-        self.show_info = True
-        self.show_debug = True
-        self.show_command = True
-        self.show_warning = True
-        self.show_error = True
-
-        # int
-        self.annotation_size = ANNOTATION_SIZE
-        self.font_size = FONT_SIZE
-        self.magnify = 5
-
-        # floats
-        self.coord_scale = COORD_SCALE
-        self.coord_text_scale = COORD_TEXT_SCALE
-        self.coord_linewidth = 2.0
-
-        # string
-        self.colormap = 'jet' # 'viridis'
-
-        # not stored
-        self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
+        self.reset_settings(resize=True, reset_dim_max=True)
         self.nastran_settings = NastranSettings()
 
-    def reset_settings(self) -> None:
+    def reset_settings(self, resize: bool=True, reset_dim_max: bool=True) -> None:
         """helper method for ``setup_gui``"""
         # rgb tuple
         self.use_gradient_background = True
-        self.background_color = GREY
-        self.background_color2 = GREY
+        self.background_color = BACKGROUND_COLOR
+        self.background_color2 = BACKGROUND_COLOR2
 
-        self.annotation_size = ANNOTATION_SIZE
-        self.annotation_color = BLACK
+        # grab bag
+        # int
+        self.font_size = FONT_SIZE
+        self.magnify = MAGNIFY
 
-        self.text_size = TEXT_SIZE
-        self.text_color = BLACK
+        # default directory: os.getcwd()
+        # activates after the first directory selection
+        self.startup_directory = ''
+        # False  os.getcwd()
+        # True:  startup directory
+        self.use_startup_directory = True
 
-        self.highlight_color = ORANGE
-        self.highlight_opacity = HIGHLIGHT_OPACITY
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
+        self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
+        self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
+        self.use_new_sidebar = USE_NEW_SIDEBAR
+        self.use_new_terms = USE_NEW_TERMS
 
-        self.use_parallel_projection = True
+        # probe color
+        # this includes:
+        #   - min/max actors
+        #   - probes
+        self.annotation_size = ANNOTATION_SIZE    # int
+        self.annotation_color = ANNOTATION_COLOR  # rgb floats
+
+        # text in the lower left corner
+        self.corner_text_size = CORNER_TEXT_SIZE    # int
+        self.corner_text_color = CORNER_TEXT_COLOR  # rgb floats
+
+        self.highlight_color = HIGHLIGHT_COLOR                    # rgb floats
+        self.highlight_opacity = HIGHLIGHT_OPACITY                # float
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE          # int
+        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS  # float
+
+        self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
-        self.show_debug = True
+        self.show_debug = False
         self.show_command = True
         self.show_warning = True
         self.show_error = True
 
-        # int
-        self.font_size = FONT_SIZE
-        self.magnify = 5
+        self.is_edges_visible = True
+        self.is_edges_black = True
+
+        self.is_horizontal_scalar_bar = False
+        self.is_min_visible = True
+        self.is_max_visible = True
 
         # float
-        self.coord_scale = COORD_SCALE
-        self.coord_text_scale = COORD_TEXT_SCALE
+        self.coord_scale = COORD_SCALE            # float
+        self.coord_text_scale = COORD_TEXT_SCALE  # float
         self.coord_linewidth = 2.0
 
         # string
         self.colormap = 'jet' # 'viridis'
 
-        self.parent.resize(1100, 700)
+        if resize:
+            self.parent.resize(1100, 700)
 
-        # not stored
-        self.dim_max = 1.0
+        if reset_dim_max: # not stored
+            self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
         self.nastran_settings = NastranSettings()
+
+    def finish_startup(self):
+        self.set_background_color(self.background_color, render=False, quiet=True)
+        self.set_background_color2(self.background_color2, render=False, quiet=True)
+        self.set_gradient_background(self.use_gradient_background, render=True, quiet=True)
 
     def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
@@ -256,78 +291,143 @@ class Settings:
 
         # sets the window size/position
         main_window_geometry = get_setting(
-            settings, setting_keys, ['main_window_geometry', 'mainWindowGeometry'], None)
+            settings, setting_keys, ['main_window_geometry'], None)
+        main_window_state = get_setting(
+            settings, setting_keys, ['main_window_state'], None)
         if main_window_geometry is not None:
             self.parent.restoreGeometry(main_window_geometry)
+        if main_window_state is not None:
+            self.parent.restoreState(main_window_state)
+        #settings.setValue('main_window_geometry', self.parent.saveGeometry())
+        #settings.setValue('main_window_state', self.parent.saveState())
 
         # this is the gui font
-        self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
+        self._set_setting(settings, setting_keys, ['font_size'],
+                          default=self.font_size,
+                          save=True, auto_type=int)
 
         # parallel/perspective
-        self._set_setting(settings, setting_keys, ['use_parallel_projection'], self.use_parallel_projection,
-                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_parallel_projection'],
+                          default=self.use_parallel_projection,
+                          save=True, auto_type=bool)
+
+        # launch in local or specified directory
+        self._set_setting(settings, setting_keys, ['startup_directory'],
+                          default=self.startup_directory,
+                          save=True, auto_type=str)
+        self._set_setting(settings, setting_keys, ['use_startup_directory'],
+                          default=self.use_startup_directory,
+                          save=True, auto_type=bool)
+        if os.path.exists(self.startup_directory):
+            self.parent.last_dir = self.startup_directory
+        else:
+            self.startup_directory = ''
+
+        self._set_setting(settings, setting_keys, ['use_old_sidebar_objects'],
+                          default=self.use_old_sidebar_objects,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_new_sidebar_objects'],
+                          default=self.use_new_sidebar_objects,
+                          save=True, auto_type=bool)
+        self.use_new_sidebar = self.use_new_sidebar_objects
+        #self._set_setting(settings, setting_keys, ['use_new_sidebar'], self.use_new_sidebar,
+                          #USE_NEW_SIDEBAR, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['use_new_terms'],
+                          default=self.use_new_terms,
+                          save=True, auto_type=bool)
 
         # the info/debug/gui/command preferences
-        self._set_setting(settings, setting_keys, ['show_info'], self.show_info,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_command'], self.show_command,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_warning'], self.show_warning,
-                          True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_error'], self.show_error,
-                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_debug'],
+                          default=self.show_debug,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_info'],
+                          default=self.show_info,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_command'],
+                          default=self.show_command,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_warning'],
+                          default=self.show_warning,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_error'],
+                          default=self.show_error,
+                          save=True, auto_type=bool)
+
+        # edges
+        self._set_setting(settings, setting_keys, ['is_edges_visible'],
+                          default=self.is_edges_visible,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['is_edges_black'],
+                          default=self.is_edges_black,
+                          save=True, auto_type=bool)
+
+        self._set_setting(settings, setting_keys, ['is_horizontal_scalar_bar'],
+                          default=self.is_horizontal_scalar_bar,
+                          save=True, auto_type=bool)
+
+        # min/max
+        self._set_setting(settings, setting_keys, ['is_min_visible'],
+                          default=self.is_min_visible,
+                          save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['is_max_visible'],
+                          default=self.is_max_visible,
+                          save=True, auto_type=bool)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
-                          False, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'],
-                          GREY, auto_type=float)
-        self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=float)
+                          default=False, save=True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['background_color'],
+                          default=GREY, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['background_color2'],
+                          default=GREY, save=True, auto_type=float)
 
         # scales the coordinate systems
-        self._set_setting(settings, setting_keys, ['coord_scale'], COORD_SCALE, auto_type=float)
-        self._set_setting(settings, setting_keys, ['coord_text_scale'], COORD_TEXT_SCALE, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_scale'],
+                          default=COORD_SCALE, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_text_scale'],
+                          default=COORD_TEXT_SCALE, save=True, auto_type=float)
 
         # this is for the 3d annotation
-        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
-                          BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['annotation_size'], ANNOTATION_SIZE, auto_type=int) # int
+        self._set_setting(settings, setting_keys, ['annotation_color'],
+                          default=BLACK, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['annotation_size'],
+                          default=ANNOTATION_SIZE, save=True, auto_type=int) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = ANNOTATION_SIZE
-        elif isinstance(self.annotation_size, int):
-            pass
-        else:
-            print('annotation_size = ', self.annotation_size)
+        #elif isinstance(self.annotation_size, int):
+            #pass
+        #else:
+            #print('annotation_size = ', self.annotation_size)
 
-        self._set_setting(settings, setting_keys, ['magnify'], self.magnify, auto_type=int)
+        self._set_setting(settings, setting_keys, ['magnify'],
+                          default=self.magnify, save=True, auto_type=int)
 
         # this is the text in the lower left corner
-        self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
-                          BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['text_size'], TEXT_SIZE, auto_type=int)
+        self._set_setting(settings, setting_keys, ['corner_text_color'],
+                          default=BLACK, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['corner_text_size'],
+                          default=CORNER_TEXT_SIZE, save=True, auto_type=int)
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
-                          ORANGE, auto_type=float)
+                          default=ORANGE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_opacity'],
-                          HIGHLIGHT_OPACITY, auto_type=float)
+                          default=HIGHLIGHT_OPACITY, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_point_size'],
-                          HIGHLIGHT_POINT_SIZE, auto_type=float)
+                          default=HIGHLIGHT_POINT_SIZE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
-                          HIGHLIGHT_LINE_THICKNESS, auto_type=float)
+                          default=HIGHLIGHT_LINE_THICKNESS, save=True, auto_type=float)
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
         # default colormap for legend
-        self._set_setting(settings, setting_keys, ['colormap'], 'jet')
-
-
+        self._set_setting(settings, setting_keys, ['colormap'], default=DEFAULT_COLORMAP, save=True)
+        if self.colormap not in COLORMAPS:
+            self.colormap = DEFAULT_COLORMAP
         # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
-                                         screen_shape_default, save=False, auto_type=int)
+                                         default=screen_shape_default, save=False, auto_type=int)
 
         #try:
             #screen_shape = settings.value("screen_shape", screen_shape_default)
@@ -335,11 +435,20 @@ class Settings:
             #screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
+        recent_files = self.recent_files
         try:
-            self.parent.recent_files = settings.value("recent_files", self.recent_files)
+            recent_files = settings.value("recent_files", default=self.recent_files)
         except (TypeError, AttributeError):
             pass
+        if not isinstance(recent_files, int):
+            # yeah seriously...it just returns 0
+            recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
+                             if os.path.exists(fname)]
 
+            #  only save 10 files
+            self.recent_files = recent_files2[:NFILES_TO_SAVE]
+
+        self.recent_files = filter_recent_files(self.recent_files)
         self._load_nastran_settings(settings, setting_keys)
 
         #w = screen_shape.width()
@@ -348,6 +457,20 @@ class Settings:
         if screen_shape:
             self.parent.resize(screen_shape[0], screen_shape[1])
             #width, height = screen_shape
+
+        pos = self._set_setting(settings, setting_keys, ['screen_position'],
+                          default=None, save=False)
+        #if pos is not None:
+            #x = 1
+            #qpos = parent.pos()
+            #pos = qpos.x(), qpos.y()
+
+        self.python_dock_visible = self._set_setting(
+            settings, setting_keys, ['python_dock_visible'],
+            default=False, save=False)
+        self.log_dock_visible = self._set_setting(
+            settings, setting_keys, ['log_dock_visible'],
+            default=True, save=False)
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
@@ -366,7 +489,8 @@ class Settings:
         is_loaded = True
         return is_loaded
 
-    def _load_nastran_settings(self, settings: QSettings, setting_keys: list[str]) -> None:
+    def _load_nastran_settings(self, settings: QSettings,
+                               setting_keys: list[str]) -> None:
         """
         loads the settings from 'nastran_displacement' (or similar)
         and save it to 'nastran_settings.displacement'
@@ -393,6 +517,7 @@ class Settings:
         """
         helper method for ``reapply_settings``
         """
+        assert isinstance(save, bool), save
         set_name = setting_names[0]
         value = get_setting(settings, setting_keys, setting_names, default,
                             auto_type=auto_type)
@@ -402,19 +527,32 @@ class Settings:
 
     def save(self, settings, is_testing: bool=False) -> None:
         """saves the settings"""
-        if not is_testing:
-            settings.setValue('main_window_geometry', self.parent.saveGeometry())
-            settings.setValue('mainWindowState', self.parent.saveState())
+        #if not is_testing:
+        parent = self.parent
+        if hasattr(parent, 'saveGeometry'):
+            settings.setValue('main_window_geometry', parent.saveGeometry())
+        if hasattr(parent, 'saveState'):
+            settings.setValue('main_window_state', parent.saveState())
 
         # booleans
         settings.setValue('use_parallel_projection', self.use_parallel_projection)
         settings.setValue('use_gradient_background', self.use_gradient_background)
 
+        # startup directory
+        settings.setValue('startup_directory', self.startup_directory)
+        settings.setValue('use_startup_directory', self.use_startup_directory)
+
+        settings.setValue('recent_files', self.recent_files[:NFILES_TO_SAVE])
+
+        settings.setValue('use_old_sidebar_objects', self.use_old_sidebar_objects)
+        settings.setValue('use_new_sidebar_objects', self.use_new_sidebar_objects)
+        settings.setValue('use_new_terms', self.use_new_terms)
+
         # rgb tuple
         settings.setValue('background_color', self.background_color)
         settings.setValue('background_color2', self.background_color2)
         settings.setValue('annotation_color', self.annotation_color)
-        settings.setValue('text_color', self.text_color)
+        settings.setValue('corner_text_color', self.corner_text_color)
 
         settings.setValue('highlight_color', self.highlight_color)
         settings.setValue('highlight_opacity', self.highlight_opacity)
@@ -426,13 +564,23 @@ class Settings:
         settings.setValue('show_warning', self.show_warning)
         settings.setValue('show_error', self.show_error)
 
+        # edges
+        settings.setValue('is_edges_visible', self.is_edges_visible)
+        settings.setValue('is_edge_black', self.is_edges_black)
+
+        settings.setValue('is_horizontal_scalar_bar', self.is_horizontal_scalar_bar)
+
+        # min/max
+        settings.setValue('is_min_visible', self.is_min_visible)
+        settings.setValue('is_max_visible', self.is_max_visible)
+
         # int
         settings.setValue('font_size', self.font_size)
         settings.setValue('annotation_size', self.annotation_size)
         settings.setValue('magnify', self.magnify)
 
         # float
-        settings.setValue('text_size', self.text_size)
+        settings.setValue('corner_text_size', self.corner_text_size)
         settings.setValue('coord_scale', self.coord_scale)
         settings.setValue('coord_text_scale', self.coord_text_scale)
 
@@ -449,15 +597,24 @@ class Settings:
             #print(f'*key={key!r} key2={key2!r} value={value!r}')
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+
+        # checks because tests don't have these
+        if hasattr(self.parent, 'python_dock_widget'):
+            python_dock_visible = self.parent.python_dock_widget.isVisible()
+            settings.setValue('python_dock_visible', python_dock_visible)
+        if hasattr(self.parent, 'log_dock_widget'):
+            log_dock_widget = self.parent.log_dock_widget.isVisible()
+            settings.setValue('log_dock_visible', log_dock_widget)
+
         if not is_testing:
             main_window = self.parent.window()
             width = main_window.frameGeometry().width()
             height = main_window.frameGeometry().height()
             settings.setValue('screen_shape', (width, height))
 
-            qpos = self.parent.pos()
+            qpos = parent.pos()
             pos = qpos.x(), qpos.y()
-            settings.setValue('pos', pos)
+            settings.setValue('screen_position', pos)
 
     #---------------------------------------------------------------------------
     # FONT SIZE
@@ -475,7 +632,8 @@ class Settings:
 
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
-    def set_annotation_size_color(self, size=None, color=None) -> None:
+    def set_annotation_size_color(self, size: Optional[float]=None,
+                                  color: Optional[tuple[float, float, float]]=None) -> None:
         """
         Parameters
         ----------
@@ -483,6 +641,7 @@ class Settings:
             annotation size
         color : (float, float, float)
             RGB values
+
         """
         if size is not None:
             assert isinstance(size, int), 'size=%r' % size
@@ -584,7 +743,8 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def set_annotation_color(self, color, render: bool=True) -> None:
+    def set_annotation_color(self, color: tuple[float, float, float],
+                             render: bool=True) -> None:
         """
         Set the annotation color
 
@@ -600,13 +760,13 @@ class Settings:
         # min/max
         for min_max_actor in self.parent.min_max_actors:
             #print(dir(min_max_actor))
-            prop = min_max_actor.GetProperty()
+            prop = min_max_actor.GetTextProperty()  # was GetProperty
             prop.SetColor(*color)
 
         # case attached annotations (typical)
         for follower_actors in self.parent.label_actors.values():
             for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
+                prop = follower_actor.GetTextProperty()
                 prop.SetColor(*color)
 
         # geometry property attached annotations (e.g., flaps)
@@ -615,17 +775,17 @@ class Settings:
                 continue
             elif isinstance(obj, AltGeometry):
                 pass
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(obj)
 
             follower_actors = obj.label_actors
             for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
+                prop = follower_actor.GetTextProperty()
                 prop.SetColor(*color)
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
-            self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
+        self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
     def set_background_color_to_white(self, render: bool=True) -> None:
@@ -633,14 +793,18 @@ class Settings:
         self.set_gradient_background(use_gradient_background=False, render=False)
         self.set_background_color(WHITE, render=render)
 
-    def set_gradient_background(self, use_gradient_background: bool=False, render: bool=True) -> None:
+    def set_gradient_background(self,
+                                use_gradient_background: bool=False,
+                                render: bool=True,
+                                quiet: bool=False) -> None:
         """enables/disables the gradient background"""
         self.use_gradient_background = use_gradient_background
         self.parent.rend.SetGradientBackground(self.use_gradient_background)
         if render:
             self.parent.vtk_interactor.Render()
 
-    def set_background_color(self, color, render=True):
+    def set_background_color(self, color: tuple[float, float, float],
+                             render: bool=True, quiet: bool=False) -> None:
         """
         Set the background color
 
@@ -653,9 +817,11 @@ class Settings:
         self.parent.rend.SetBackground(*color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
+        if not quiet:
+            self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
 
-    def set_background_color2(self, color, render=True):
+    def set_background_color2(self, color: tuple[float, float, float],
+                              render: bool=True, quiet: bool=False):
         """
         Set the background color
 
@@ -668,9 +834,10 @@ class Settings:
         self.parent.rend.SetBackground2(*color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
+        if not quiet:
+            self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color: list[float]) -> None:
+    def set_highlight_color(self, color: list[float], render: bool=True) -> None:
         """
         Set the highlight color
 
@@ -680,6 +847,8 @@ class Settings:
             RGB values as floats
         """
         self.highlight_color = color
+        if render:
+            self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_highlight_color(%s, %s, %s)' % color)
 
     def set_highlight_opacity(self, opacity: float) -> None:
@@ -693,7 +862,7 @@ class Settings:
             1.0 : solid
         """
         self.highlight_opacity = opacity
-        self.parent.log_command('settings.set_highlight_opacity(%s)' % opacity)
+        self.parent.log_command(f'settings.set_highlight_opacity({opacity})')
 
     def set_highlight_point_size(self, point_size: int) -> None:
         """
@@ -705,14 +874,15 @@ class Settings:
             10.0 : default
         """
         self.highlight_point_size = point_size
-        self.parent.log_command('settings.set_highlight_point_size(%s)' % point_size)
+        self.parent.log_command(f'settings.set_highlight_point_size({point_size})')
 
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color: list[float], render: str=True) -> None:
+    def set_corner_text_color(self, color: list[float],
+                              render: bool=True) -> None:
         """
-        Set the text color
+        Set the corner_text color
 
         Parameters
         ----------
@@ -720,39 +890,45 @@ class Settings:
             RGB values as floats
         """
         self.text_color = color
-        for text_actor in self.parent.text_actors.values():
+        text_actors =  self.parent.corner_text_actors
+        for text_actor in text_actors.values():
             text_actor.GetTextProperty().SetColor(color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_text_color(%s, %s, %s)' % color)
+        self.parent.log_command('settings.set_corner_text_color(%s, %s, %s)' % color)
 
-    def set_text_size(self, text_size: int,render: bool=True) -> None:
+    def set_corner_text_size(self, corner_text_size: int, render: bool=True) -> None:
         """
-        Set the text color
+        Set the corner text size
 
         Parameters
         ----------
-        text_size : int
+        corner_text_size : int
             the lower left text size (typical 14)
+
         """
-        i = 0
-        dtext_size = text_size + 1
-        self.text_size = text_size
-        for text_actor in self.parent.text_actors.values():
+        # we built these actors in reverse order,
+        # so that's how we update their sizes
+        text_actors =  self.parent.corner_text_actors
+        i = len(text_actors) - 1
+        dtext_size = corner_text_size + 1
+        self.text_size = corner_text_size
+        for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(text_size)
+            text_prop.SetFontSize(corner_text_size)
 
             position = [5, 5 + i * dtext_size]
             text_actor.SetDisplayPosition(*position)
-            i += 1
+            i -= 1
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_text_size(%s)' % text_size)
+        self.parent.log_command(f'settings.set_corner_text_size({corner_text_size})')
 
-    def update_text_size(self, magnify: float=1.0) -> None:
+    def update_corner_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
-        for text_actor in self.parent.text_actors.values():
+        text_actors =  self.parent.corner_text_actors
+        for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
@@ -760,7 +936,8 @@ class Settings:
         """sets the screenshot magnification factor"""
         self.magnify = magnify
 
-    def set_parallel_projection(self, parallel_projection: bool, render: bool=True) -> None:
+    def set_parallel_projection(self, parallel_projection: bool,
+                                render: bool=True) -> None:
         """sets the parallel_projection flag"""
         self.use_parallel_projection = parallel_projection
         camera = self.parent.rend.GetActiveCamera()
@@ -780,7 +957,7 @@ class Settings:
             msg += '  %r = %r\n' % (key, value)
         return msg
 
-def update_axes_text_size(axes: dict[int, vtk.vtkAxes],
+def update_axes_text_size(axes: dict[int, vtkAxes],
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25):
     """updates the coordinate system text size"""
@@ -815,3 +992,26 @@ def repr_settings(settings: QSettings) -> str:
         value = settings.value(key)
         msg += '    %r : %r\n' % (key, value)
     return msg
+
+def filter_recent_files(recent_files: list[tuple[str, str]]):
+    if IS_WINDOWS:
+        #recent_files_lower = [fname.lower() for (fname, fmt) in recent_files]]
+        recent_files_out = []
+        stored_files_lower = set([])
+        for i, (fname, geometry_format) in enumerate(recent_files):
+            if geometry_format is None or not os.path.exists(fname):
+                continue
+
+            fname_abs = os.path.abspath(fname)
+            fname_lower = fname.lower()
+            if fname_lower in stored_files_lower:
+                continue
+            stored_files_lower.add(fname_lower)
+            recent_files_out.append((fname_lower, geometry_format))
+    else:
+        recent_files_out = [(fname, fmt) for (fname, fmt) in recent_files
+                            if os.path.exists(fname) and fmt is not None]
+    return recent_files_out
+
+
+

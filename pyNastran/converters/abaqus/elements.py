@@ -54,7 +54,7 @@ allowed_element_types = [
     # springs?
     'conn2d2', 'springa',
 
-    #
+    # shells
     'cpe3', 'cpe4', 'cpe4r', 'cpe8r', # plane strain
     'cps3', 'cps4', 'cps4r', 'cps8r', # plane stress
 
@@ -62,7 +62,8 @@ allowed_element_types = [
     'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2',
 
     # 6/8 plates
-    's8r',
+    's3', 's4', 's6', 's8',
+    's3r', 's4r', 's6r', 's8r',
 
     # solid
     'c3d4', 'c3d4r', # tet4s
@@ -75,13 +76,14 @@ allowed_element_types = [
 
 class Elements:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, element_types: dict[str, np.ndarray], log: SimpleLogger):
+    def __init__(self, element_types: dict[str, tuple[np.ndarray, str]],
+                 log: SimpleLogger):
         """
         creates a Part object
 
         Parameters
         ----------
-        element_types : dict[element_type] : node_ids
+        element_types : dict[element_type] : (node_ids, elset)
             element_type : str
                 the element type
             rigid:
@@ -90,6 +92,15 @@ class Elements:
             beams:
                 b31h : (nelements, 3) int ndarray - 2 nodes and g0
             shells:
+                s3 : (nelements, 3) int ndarray
+                s4 : (nelements, 4) int ndarray
+                s8 : (nelements, 6) int ndarray
+                s8 : (nelements, 8) int ndarray
+                s3r : (nelements, 3) int ndarray
+                s4r : (nelements, 4) int ndarray
+                s4r : (nelements, 6) int ndarray
+                s8r : (nelements, 8) int ndarray
+
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
                 cpe4r : (nelements, 4) int ndarray
@@ -118,6 +129,7 @@ class Elements:
                 c3d10h : (nelements, 10) int ndarray
 
         """
+        self.element_type_to_elset_name: dict[str, str] = {}
         self.log = log
         #-----------------------------------
         # elements
@@ -158,7 +170,22 @@ class Elements:
         self.cax4r_eids = None
 
         # 6/8 shells
+        self.s3 = None
+        self.s4 = None
+        self.s6 = None
+        self.s8 = None
+        self.s3_eids = None
+        self.s4_eids = None
+        self.s6_eids = None
+        self.s8_eids = None
+
+        self.s3r = None
+        self.s4r = None
+        self.s6r = None
         self.s8r = None
+        self.s3r_eids = None
+        self.s4r_eids = None
+        self.s6r_eids = None
         self.s8r_eids = None
 
         # solids
@@ -212,6 +239,7 @@ class Elements:
 
             ('cps3', 3),
             ('cps4', 4),
+            ('cps3r', 3),
             ('cps4r', 4), # quad, plane stress, reduced
 
             ('coh2d4', 4), #  cohesive zone
@@ -219,6 +247,14 @@ class Elements:
             ('cax3', 3),
             ('cax4r', 4), # reduced
 
+            ('s3', 3),
+            ('s4', 4),
+            ('s6', 6),
+            ('s8', 8),
+
+            ('s3r', 3),
+            ('s4r', 4),
+            ('s6r', 6),
             ('s8r', 8), # CQUAD8 reduced
 
             #  solids
@@ -240,25 +276,41 @@ class Elements:
         ]
         return etypes_nnodes
 
-    def _store_elements(self, element_types: dict[str, list[int]]):
+    def _store_elements(self, element_types: dict[str, list[int]]) -> None:
         """helper method for the init"""
         if len(element_types) == 0:
             return
         etypes_nnodes = self._etypes_nnodes()
         is_elements = False
         etypes_used = set()
+        element_type_to_elset_name = {}
         element_types_all = set(list(element_types.keys()))
         for etype, nnodes in etypes_nnodes:
+
             if etype in element_types:
                 etype_eids = '%s_eids' % etype
-                elements = element_types[etype]
+                elements, elset = element_types[etype]
                 etypes_used.add(etype)
                 if len(elements) == 0:
                     continue
+                element_type_to_elset_name[etype] = elset
                 is_elements = True
-                eids_elements = np.array(elements, dtype='int32')
-                setattr(self, etype, eids_elements[:, 1:])  # r2d2
-                setattr(self, etype_eids, eids_elements[:, 0]) #  r2d2_eids
+                idtype = 'int32'
+                try:
+                    eids_elements = np.array(elements, dtype=idtype)
+                except ValueError:
+                    if etype != 'c3d20':
+                        self.log.error(f'expected {etype} elements to be on 1 line...reshaping...')
+                    inline_elements_str = np.hstack(elements)
+                    inline_elements = inline_elements_str.astype(idtype)
+                    nelements = len(inline_elements) // (nnodes + 1)
+                    eids_elements = inline_elements.reshape(nelements, nnodes+1)
+
+                eids = eids_elements[:, 0]
+                node_ids = eids_elements[:, 1:]
+                #print(f'eids[{etype}] = {eids}')
+                setattr(self, etype, node_ids)  # r2d2
+                setattr(self, etype_eids, eids) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
             #else:
                 #self.log.warning(f'skipping etype={etype!r}')
@@ -267,6 +319,7 @@ class Elements:
         assert len(unhandled_etypes) == 0, unhandled_etypes
         assert etypes_used, etypes_used
         assert is_elements, element_types
+        self.element_type_to_elset_name = element_type_to_elset_name
 
     def element(self, eid):
         """gets a specific element of the part"""
@@ -310,6 +363,13 @@ class Elements:
         n_cax4r = self.cax4r.shape[0] if self.cax4r is not None else 0
 
         # 6/8
+        n_s3 = self.s3.shape[0] if self.s3 is not None else 0
+        n_s4 = self.s4.shape[0] if self.s4 is not None else 0
+        n_s6 = self.s6.shape[0] if self.s6 is not None else 0
+        n_s8 = self.s8.shape[0] if self.s8 is not None else 0
+        n_s3r = self.s3r.shape[0] if self.s3r is not None else 0
+        n_s4r = self.s4r.shape[0] if self.s4r is not None else 0
+        n_s6r = self.s6r.shape[0] if self.s6r is not None else 0
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
 
         # solids
@@ -336,7 +396,8 @@ class Elements:
                  n_coh2d4 +
                  n_cohax4 + n_cax3 + n_cax4r +
                  #6 / 8 shells
-                 n_s8r +
+                 n_s3 + n_s4 + n_s6 + n_s8 +
+                 n_s3r + n_s4r + n_s6r + n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
                  n_c3d6 + n_c3d6r +
@@ -373,6 +434,13 @@ class Elements:
         n_cax4r = self.cax4r.shape[0] if self.r2d2 is not None else 0
 
         # 6/8 shells
+        n_s3 = self.s3.shape[0] if self.s3 is not None else 0
+        n_s4 = self.s4.shape[0] if self.s4 is not None else 0
+        n_s6 = self.s6.shape[0] if self.s6 is not None else 0
+        n_s8 = self.s8.shape[0] if self.s8 is not None else 0
+        n_s3r = self.s3r.shape[0] if self.s3r is not None else 0
+        n_s4r = self.s4r.shape[0] if self.s4r is not None else 0
+        n_s6r = self.s6r.shape[0] if self.s6r is not None else 0
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
 
         # solids
@@ -399,7 +467,8 @@ class Elements:
                  n_coh2d4 +
                  n_cohax4 + n_cax3 + n_cax4r +
                  # 6/8 shells
-                 n_s8r +
+                 n_s3 + n_s4 + n_s6 + n_s8 +
+                 n_s3r + n_s4r + n_s6r + n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
                  n_c3d6 + n_c3d6r +
@@ -408,11 +477,17 @@ class Elements:
                  n_c3d15 + n_c3d15r +
                  n_c3d20 + n_c3d20r)
         assert neids == self.nelements, 'something is out of date...'
+
+        elset_join = ', '.join(f'{key!r}: {value!r}'
+                               for key, value in self.element_type_to_elset_name.items())
+        elset_str = '{' + elset_join + '}'
         msg = (
-            f'Element(neids={neids:d},\n'
+            f'Element(neids={neids:d}, element_type_to_elset_name={elset_str},\n'
             f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n' # bar/beam
             f'        n_cpe3={n_cpe3}, n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r},\n' # plane strain
             f'        n_cps3={n_cps3}, n_cps4={n_cps4}, n_cps4r={n_cps4r},\n' # plane stress
+            f'        n_s3={n_s3}, n_s4={n_s4}, n_s8={n_s8},\n'
+            f'        n_s3r={n_s3r}, n_s4r={n_s4r}, n_s8r={n_s8r},\n'
             f'        n_coh2d4={n_coh2d4},\n'
             f'        n_cohax4={n_cohax4}, n_cax3={n_cax3}, n_cax4r={n_cax4r},\n'
             # solids
@@ -452,6 +527,13 @@ class Elements:
         element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
 
         # 6/8 shells
+        element_types['s3'] = (self.s3_eids, self.s3)
+        element_types['s4'] = (self.s4_eids, self.s4)
+        element_types['s6'] = (self.s6_eids, self.s6)
+        element_types['s8'] = (self.s8_eids, self.s8)
+        element_types['s3r'] = (self.s3r_eids, self.s3r)
+        element_types['s4r'] = (self.s4r_eids, self.s4r)
+        element_types['s6r'] = (self.s6r_eids, self.s6r)
         element_types['s8r'] = (self.s8r_eids, self.s8r)
 
         # solids

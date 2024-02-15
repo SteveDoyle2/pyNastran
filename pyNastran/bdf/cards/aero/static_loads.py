@@ -610,7 +610,7 @@ class DIVERG(BaseCard):
         self.machs = machs
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DIVERG card from ``BDF.add_card(...)``
 

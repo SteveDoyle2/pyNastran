@@ -16,7 +16,7 @@ for instructions on installing pyNastran.
 
 ### v1.3.4
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2022/5/30)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/1/14)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
@@ -51,23 +51,38 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/main.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=main)	|
 ### v1.4
 
-Last year MSC provided a copy of MSC Nastran free of charge to help support the project.
-Since then, modern MSC Nastran support has been added.
-In addition, NX 64-bit and OptiStruct support has been improved.
+It's been a while since the the update, but I've had a bit more time lately.
+I yet again went down a bit of rabbit hole to improve the speed of the BDF, 
+but this time I'm much happier with the results.  Still, getting back to parity
+takes a lot of time and it's not quite there.  It does simplify MSC HDF5 
+integration, so once I've added methods for updating more complicated objects
+(e.g., PBARL, PCOMP, RBE3), HDF5 will be next. If you want to test it out, 
+it's not included with the official release, but is found in 
+``pyNastran.dev.bdf_vectorized3``, so not my first attempt :)
 
-The biggest new features are:
- - MSC 2020 support (including contact)
- - much improved 64 bit support
- - improved op2 support
+MSC also provided a copy of MSC Nastran free of charge to help support the project.
+Since then, modern MSC Nastran support has been added.
+
+Finally, the GUI has receieved a lot of work including:
+ - A proper results selector.  There's still more work, but individual displacment
+   components are selectable.  For solid, plate, and composite stress/strain, 
+   nodal or centroidal stress may be shown and various blending methods including
+   nodal averaging is now supported.
+ - Preferences are also now exposed in a json file (vs the registry) and if you find
+   a bug in the new results, you can flip a flag to use the old objects.
+ - Grid Point Forces are supported in the GUI.  They take some getting used to but
+   you can make plots of shear, moment, and torque down an axis.
+ - A recent files history to speed up model loading and a whole bunch of other bug fixes.
 
 Programmatics:
- - Supports Python 3.7 - 3.10
- - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
+ - Supports Python 3.9 - 3.12 (later versions of Python requires downloading from github)
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 9+
  - improved testing of old versions of packages
- - updated nptyping requirements
+  - much improve NX 64-bit and OptiStruct support
 
 BDF:
  - fixed CAERO1 paneling bug
+ - 409? -> 429? cards
  - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
 
 OP2:
@@ -113,7 +128,7 @@ Programmatics:
  - supports Python 3.7-3.10
  - support for nptyping 1.1.1-2.0 (removed as a required dependency)
  - support for h5py >3.0
- - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-9
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
@@ -338,63 +353,7 @@ This result has been superseded by 1.2.1.  See release notes for details.
 
 ### v1.1.0 (2018/6/26)
 
-|  Version  | Docs  | Status |
-| :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) |  |  [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
-
-It's been roughly a year and ~100 tickets closed since the last version, so it's probably
-time for another release!  I want to thank everybody who helped with this release, especially
-Michael Redmond.  He is working on h5Nastran, which ties in with pyNastran.  It's not quite
-ready yet, but it offers the possibility of major speedups for large models.
-
-Regarding features, the focus has again been on robustness and testing.  There has been
-a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few
-changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and Pyside
-with the same API, so it's a bit easier to install from source as simplifying licensing
-issues as PyQt is GPL.
-
-Programmatics:
- - Dropping Python 3.4 support
- - Supports Python 2.7, 3.5-3.6
- - dropping VTK 5/6 support for the GUI
-
-BDF:
- - 343 cards supported (up from 312)
- - cross-referencing is now more straightforward to new users (much of v1.0 works using the `_ref` option)
-   - ``*_ref`` attributes are cross-referenced
-      - ``element.nodes`` is not cross-referenced
-      - ``element.nodes_ref`` is cross-referenced
- - pickling to reload your deck ~5x faster
- - decreased time required for Case Control Deck with large SETs, and many load cases
- - improved optimization checks
-
-OP2:
- - HDF5 export/import support
-      ```python
-     >>> op2_model = read_op2(op2_filename)
-     >>> op2_model.export_hdf5_filename(hdf5_filename)
-     >>> op2_model_new = OP2()
-     >>> op2_model_new.load_hdf5_filename(hdf5_filename, combine=True)
-     ```
- - pandas support for matrices
- - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
- - grid_point_stresses supported (disabled since v0.7)
- - fixed sparse matrices being stored as dense matrices
-
-GUI:
- - preliminary support for PySide
- - can now mix and match fringe/displacement/vector results (e.g., max principal stress shown on a displaced model)
- - improved animation menu
-    - in gui animation
-    - more animation profiles
- - bar profile visualization
- - nominal geometry (useful for deflection plots)
- - improved optimization support
- - improved picking display
- - better PSHELL/PCOMP distinction
-
-Known issues:
- - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
+See [v1.1.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0) for information regarding enhancements.
 
 ### v1.0.0 (2017/5/25)
 

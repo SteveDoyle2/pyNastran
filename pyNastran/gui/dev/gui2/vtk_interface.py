@@ -1,13 +1,14 @@
 from __future__ import annotations
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
+from vtkmodules.vtkRenderingCore import vtkRenderer
+from pyNastran.gui.qt_files.colors import BLACK_FLOAT
+from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+
 if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
-
-from pyNastran.gui.qt_files.colors import BLACK_FLOAT
-import vtk
-from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 
 
 class ScalarBar:
@@ -30,7 +31,7 @@ class VtkInterface:
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=parent)
         self.set_style_as_trackball()
 
-        self.rend = vtk.vtkRenderer()
+        self.rend = vtkRenderer()
         #self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
         fill_render_window(self.vtk_interactor, self.rend, nframes=1)
 
@@ -67,8 +68,8 @@ class VtkInterface:
 
 
 def fill_render_window(vtk_interactor,
-                       rend: vtk.vtkRenderer,
-                       nframes: int=1) -> list[vtk.vtkRenderer]:
+                       rend: vtkRenderer,
+                       nframes: int=1) -> list[vtkRenderer]:
     assert nframes in [1, 2, 4], nframes
 
     render_window = vtk_interactor.GetRenderWindow()
@@ -109,14 +110,14 @@ def fill_render_window(vtk_interactor,
     render_window.AddRenderer(rend)
 
     if nframes == 2:
-        rend2 = vtk.vtkRenderer()
+        rend2 = vtkRenderer()
         rend.SetViewport(*frame2)
         render_window.AddRenderer(rend2)
         return [rend, rend2]
     elif nframes == 4:
-        rend2 = vtk.vtkRenderer()
-        rend3 = vtk.vtkRenderer()
-        rend4 = vtk.vtkRenderer()
+        rend2 = vtkRenderer()
+        rend3 = vtkRenderer()
+        rend4 = vtkRenderer()
         rend2.SetViewport(*frame2)
         rend3.SetViewport(*frame3)
         rend4.SetViewport(*frame4)

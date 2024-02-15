@@ -4,7 +4,7 @@ Features
 
 Overview
 ========
- - Python 3.7-3.8
+ - Python 3.9-3.12
  - BSD-3 license
  - unicode support
  - importable from within Matlab
@@ -14,7 +14,7 @@ Overview
    - BDF/OP2:
 
       - h5py for HDF5 input/output support
-      - PyQt5/PySide2/wxpython for file loading popup
+      - PyQt5/PyQt6/PySide2/PySide6/tk/wxpython for file loading pop-up
    - OP2:
 
      - pandas for results/matrices for use in the Jupyter Notebook
@@ -23,8 +23,8 @@ Overview
      - matplotlib support for plotting
    - GUI: range of choices
 
-     - PyQt5/PySide2
-     - VTK 7-9
+     - PyQt5/PyQt6/PySide2/PySide6
+     - VTK 9
    - logging using **cpylog**
 
      - colorama for console logging
@@ -63,7 +63,7 @@ BDF Reader/Writer
    - nodal equivalencing
    - mesh quality
 
-     - aspect ratio, taper ratio, skew, min/max interior angle, warp angle
+     - aspect ratio, taper ratio, skew, min/max interior angle, area ratio, warp angle
      - quad collapsing
      - element deletion
    - deck merging
@@ -1372,11 +1372,11 @@ in terms of readers/writers/converters/viewing, but are not a main focus.
 
 These include:
 
+- Abaqus
 - AFLR
 - AVL
 - Cart3d
 - Panair
-- OpenFOAM
 - S/HABP
 - LAWGS
 - FAST
@@ -1385,4 +1385,3 @@ These include:
 - Tetgen
 - Tecplot
 - Usm3d
-- Abaqus

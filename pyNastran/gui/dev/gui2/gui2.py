@@ -12,14 +12,12 @@ from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
 
+from vtk import vtkAxesActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkDataSetMapper, vtkCamera, vtkTextActor)
 
-try:
-    from vtkmodules.vtkRenderingLOD import vtkLODActor
-except ImportError:
-    from vtk import vtkLODActor
+from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 import pyNastran
 from qtpy import QtCore, QtGui #, API
@@ -102,8 +100,8 @@ class MainWindow2(QMainWindow):
         # TODO: what is this for?
         self.title = ''
 
-        self.cases = {} # type: dict[int, Any]
-        self.form = []  # type: list[Any]
+        self.cases: dict[int, Any] = {}
+        self.form: list[Any] = []
         # -----------------------------------------
         self.name = 'main'
         self.model_type = None
@@ -111,7 +109,7 @@ class MainWindow2(QMainWindow):
         self.eid_maps = {}
 
         # the info in the lower left part of the screen
-        self.text_actors: dict[int, vtkTextActor] = {}
+        self.corner_text_actors: dict[int, vtkTextActor] = {}
 
         # the various coordinate systems (e.g., cid=0, 1)
         self.axes: dict[int, vtkAxesActor]= {}
@@ -128,7 +126,7 @@ class MainWindow2(QMainWindow):
         settings = QtCore.QSettings()
         self.settings.load(settings)
 
-        self.actions = {}  # type: dict[str, QAction]
+        self.actions: dict[str, QAction] = {}
         self.load_actions = LoadActions(self)
         self.view_actions = ViewActions(self)
         self.tool_actions = ToolActions(self)
@@ -187,12 +185,12 @@ class MainWindow2(QMainWindow):
         #self.on_load_geometry()
         self.load_actions.on_load_geometry(
             infile_name=cart3d_filename, geometry_format='cart3d',
-            name='cart3d', plot=True, raise_error=False)
+            name='cart3d', plot=True, stop_on_failure=False)
 
         stl_filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\stl\sphere.stl'
         self.load_actions.on_load_geometry(
             infile_name=stl_filename, geometry_format='stl',
-            name='stl', plot=True, raise_error=False)
+            name='stl', plot=True, stop_on_failure=False)
 
         # Render again to set the correct view
         self.render()
@@ -357,8 +355,8 @@ class MainWindow2(QMainWindow):
     def get_camera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
-    def turn_text_off(self) -> None:
-        self.log.warning('turn_text_off')
+    def turn_corner_text_off(self) -> None:
+        self.log.warning('turn_corner_text_off')
 
     #-----------------------------------------------------------------------
     # geometry
@@ -406,7 +404,14 @@ class MainWindow2(QMainWindow):
         file_actions_list = [
             'load_geometry', 'load_results', '',
             'load_custom_result', 'save_vtk', '',
-            'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit', ]
+            'load_csv_user_points', 'load_csv_user_geom', 'script', '',
+            'screenshot', '']
+        nfiles = len(self.gui.settings.recent_files)
+        fnames = [f'file{ifile}' for ifile in range(nfiles)]
+        if fnames:
+            file_actions_list.extend(fnames)
+            file_actions_list.append('')
+        file_actions_list.append('exit')
 
         help = HelpActions(self)
         toolbar_tools = [
@@ -435,7 +440,7 @@ class MainWindow2(QMainWindow):
         ]
 
         menu_view = [
-            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
+            'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', #'cutting_plane',
             '',
             'label_clear', 'label_reset', '',
@@ -462,9 +467,9 @@ class MainWindow2(QMainWindow):
             ('toolbar', self.toolbar, toolbar_tools),
         ]
 
-        self.actions = self._setup_actions(
+        self.actions: dict[str, QAction] = self._setup_actions(
             help, self.view_actions,
-            base_actions=self.actions)  # type: dict[str, QAction]
+            base_actions=self.actions)
         #self.actions['pulldown'] =
 
         #self.combo = QtGui.QComboBox()
@@ -545,7 +550,7 @@ class MainWindow2(QMainWindow):
     def on_load_geometry(self):
         self.load_actions.on_load_geometry(
             infile_name=None, geometry_format=None,
-            name='main', plot=True, raise_error=False)
+            name='main', plot=True, stop_on_failure=False)
 
     #def _reset_model(self, name: str) -> None:
         #self.log.info('_reset_model')
@@ -575,11 +580,11 @@ class MainWindow2(QMainWindow):
             actor = self.geometry_actors[filename]
             self.rend.RemoveActor(actor)
             del self.geometry_actors[filename]
-        #self.models = {}  # type: dict[str, Any]
-        #self.grid_mappers = {} # type: dict[str, Any]
-        #self.main_grids = {} #  type: dict[str, vtkUnstructuredGrid]
-        #self.alt_grids = {} # type: dict[str, vtkUnstructuredGrid]
-        #self.geometry_actors = {} # type: dict[str, vtkLODActor]
+        #self.models: dict[str, Any] = {}
+        #self.grid_mappers: dict[str, Any] = {}
+        #self.main_grids: dict[str, vtkUnstructuredGrid] = {}
+        #self.alt_grids: dict[str, vtkUnstructuredGrid] = {}
+        #self.geometry_actors: dict[str, vtkLODActor] = {}
 
     def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""
@@ -687,7 +692,7 @@ class MainWindow2(QMainWindow):
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(
+            infile_name = self.load_actions.create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
                 return is_passed # user clicked cancel
@@ -706,8 +711,8 @@ class MainWindow2(QMainWindow):
         if not is_passed:
             return is_passed
         self._default_python_file = python_file
-        self.log_command('self.on_run_script(%r)' % python_file)
-        print('self.on_run_script(%r)' % python_file)
+        self.log_command(f'self.on_run_script({python_file!r})')
+        print(f'self.on_run_script({python_file!r})')
         return is_passed
 
     # file
