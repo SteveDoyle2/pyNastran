@@ -298,6 +298,19 @@ class PBEAM(IntegratedLineProperty):
         if f2 is None:
             f2 = [None] * nxxb
 
+        if isinstance(so, str):
+            so = [so] * nxxb
+        if isinstance(area, float):
+            area = [area] * nxxb
+        if isinstance(i1, float):
+            i1 = [i1] * nxxb
+        if isinstance(i2, float):
+            i2 = [i2] * nxxb
+        if isinstance(i12, float):
+            i12 = [i12] * nxxb
+        if isinstance(j, float):
+            j = [j] * nxxb
+
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -1003,7 +1016,7 @@ class PBEAM(IntegratedLineProperty):
         n1a = set_blank_if_default(self.n1a, 0.0)
         n2a = set_blank_if_default(self.n2a, 0.0)
         n1b = set_blank_if_default(self.n1b, self.n1a)
-        n2b = set_blank_if_default(self.n2b, self.n2b)
+        n2b = set_blank_if_default(self.n2b, self.n2a)
 
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]

@@ -1665,11 +1665,13 @@ class PBEAM(Property):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
         for pid, mid, (istation0, istation1), nstation, \
             s1, s2, k1, k2, \
             nsia, nsib, cwa, cwb, \
             m1a, m2a, m1b, m2b, \
-            n1a, n2a, n1b, n2b in zip(self.property_id, self.material_id,
+            n1a, n2a, n1b, n2b in zip(property_ids, material_ids,
                                       self.istation, self.nstation,
                                       self.s1, self.s2, self.k1, self.k2,
                                       self.nsia, self.nsib, self.cwa, self.cwb,
@@ -1779,7 +1781,7 @@ class PBEAM(Property):
                 m2a = set_blank_if_default(m2a, 0.0)
 
                 n1b = set_blank_if_default(n1b, n1a)
-                n2b = set_blank_if_default(n2b, n2b)
+                n2b = set_blank_if_default(n2b, n2a)
                 n1a = set_blank_if_default(n1a, 0.0)
                 n2a = set_blank_if_default(n2a, 0.0)
 
