@@ -1,14 +1,14 @@
 """Defines the Abaqus class"""
 import os
 from io import StringIO
-from typing import Union, Optional
+from typing import Union, Optional, Any
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
     ShellSection, SolidSection, Surface, BeamSection,
-    Mass)
+    Mass, Boundary, Material)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -27,11 +27,11 @@ class Abaqus:
                  debug: Union[str, bool, None]=True):
         self.debug = debug
         self.parts: dict[str, Part] = {}
-        self.boundaries = {}
-        self.materials = {}
-        self.amplitudes = {}
-        self.assembly = None
-        self.initial_conditions = {}
+        self.boundaries: dict[str, Boundary] = {}
+        self.materials: dict[str, Material] = {}
+        self.amplitudes: dict[str, Any] = {}
+        self.assembly: Optional[Assembly] = None
+        self.initial_conditions: dict[str, Any] = {}
         self.steps: list[Step] = []
         self.heading: list[str] = []
         self.preprint = None
@@ -70,7 +70,7 @@ class Abaqus:
         nassembly = 0
         istep = 1
 
-        heading = []
+        heading: list[str] = []
         nids = []
         nodes = []
         node_sets = {}
@@ -450,8 +450,8 @@ class Abaqus:
             elif '*element' in line0:
                 # doesn't actually start on *element line
                 # 1,263,288,298,265
-                iline, line0, etype, elements = reader.read_element(iline, line0, lines, log, debug)
-                element_types[etype] = elements
+                iline, line0, etype, elset, elements = reader.read_element(iline, line0, lines, log, debug)
+                element_types[etype] = (elements, elset)
                 iline += 1
                 line0 = lines[iline].strip().lower()
                 #print('line_end =', line0)
