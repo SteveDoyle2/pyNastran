@@ -3,8 +3,10 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from .abaqus_cards import (
-    ShellSection, SolidSection, Boundary, Material, Transform,
+    Mass, BeamSection, ShellSection, SolidSection,
+    Boundary, Material, Transform,
     Surface, Tie, Orientation,
+    Frequency,
 )
 from .elements import allowed_element_types
 from .reader_utils import split_by_equals, print_data
@@ -274,6 +276,34 @@ def read_surface(line0: str, lines: list[str], iline: int,
     surface = Surface(surface_name, surface_type, set_names, faces)
     return iline, line0, surface
 
+
+def read_frequency(line0: str, lines: list[str], iline: int,
+                   log: SimpleLogger) -> tuple[int, str, Frequency]:
+    """
+    *Frequency, solver=Pardiso
+    10
+    """
+    log.debug(f'read_frequency {line0!r}')
+    iline += 1
+    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+
+    surface_name = ''
+    solver = ''
+    for key, value in split_strict_flags(flags):
+        if key == 'solver':
+            solver = value
+        else:  # pragma: no cover
+            raise NotImplementedError((key, value))
+
+    frequencies = []
+    for line in lines_out:
+        sline = line.strip().split(',')
+        assert len(sline) == 1, sline
+        freq = float(sline[0])
+        frequencies.append(freq)
+    frequency = Frequency(solver, frequencies)
+    return iline, line0, frequency
+
 def split_strict_flags(flags: list[str]) -> tuple[str, str]:
     for key_value in flags:
         key, value = key_value.split('=')
@@ -487,7 +517,7 @@ def read_material(iline: int, word: str,
     word = word_line.strip('*').lower()
     unused_allowed_words = ['elastic']
     unallowed_words = [
-        'shell section', 'solid section',
+        'shell section', 'solid section', 'beam section',
         'material', 'step', 'boundary', 'amplitude', 'surface interaction',
         'assembly', 'spring', 'orientation']
     #orientations = {}
@@ -916,7 +946,8 @@ def _generate_set(lines_out: list[str], generate: bool):
 
     if generate:
         assert len(set_ids_list) == 3, set_ids_list
-        set_ids = np.arange(int(set_ids_list[0]), int(set_ids_list[1]), int(set_ids_list[2]))
+        # +1 is becausee it's an inclusive set
+        set_ids = np.arange(int(set_ids_list[0]), int(set_ids_list[1])+1, int(set_ids_list[2]))
     elif len(set_ids_list) == 1 and not set_ids_list[0].isdigit():
         set_ids = set_ids_list[0]
     else:
@@ -1116,6 +1147,148 @@ def read_tie(line0: str, lines: list[str], iline: int,
 
     tie = Tie(name, master, slave, position_tolerance)
     return iline, line0, tie
+
+def read_beam_section(line0: str, lines: list[str], iline: int,
+                      log: SimpleLogger) -> tuple[str, int,
+                                                  str, list[list[str]]]:
+    """
+    *BEAM SECTION, ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
+    10,25
+    6.1E-17, 1, 0
+    https://docs.software.vt.edu/abaqusv2022/English/SIMACAEKEYRefMap/simakey-r-beamsection.htm
+
+    First line
+    ----------
+    1. Beam section geometric data.  Values should be given as specified in Beam
+       cross-section library for the chosen section type.  For solid circular
+       sections only, you can specify a distribution name to define a spatial
+       distribution for the beam radius.
+    2. Etc.
+
+    Second line (optional; enter a blank line if the default values are to be used)
+    -----------
+    1. First direction cosine of the first beam section axis.
+    2. Second direction cosine of the first beam section axis.
+    3. Third direction cosine of the first beam section axis.
+
+    The entries on this line must be (0, 0, −1) for planar beams. The default
+    for beams in space is (0, 0, −1) if the first beam section axis is not
+    defined by an additional node in the element's connectivity. See Beam
+    element cross-section orientation for details.
+
+    Third line (optional)
+    ---------------------
+    Number of integration points in the first direction or branch.
+    This number must be an odd number (for Simpson's integration),
+    unless noted otherwise in Beam cross-section library.
+
+    Number of integration points in the second direction or branch.
+    This number must be an odd number (for Simpson's integration),
+    unless noted otherwise in Beam cross-section library.
+    This entry is needed for the THICK PIPE section, as well as for beams in space.
+
+    Number of integration points in the third direction or branch.
+    This number must be an odd number (for Simpson's integration),
+    unless noted otherwise in Beam cross-section library. This entry is needed only for I-beams.
+
+    Sections
+    --------
+    - ARBITRARY, for an arbitrary section.
+    - BOX, for a rectangular, hollow box section.
+    - CIRC, for a solid circular section.
+    - HEX, for a hollow hexagonal section.
+    - I, for an I-beam section.
+    - L, for an L-beam section.
+    - PIPE, for a thin-walled circular section.
+    - RECT, for a solid, rectangular section.
+    - THICK PIPE, for a thick-walled circular section (Abaqus/Standard only).
+    - TRAPEZOID, for a trapezoidal section.
+    """
+    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    assert len(lines_out), lines_out
+
+    allowed_beam_section = ['ELSET', 'MATERIAL', 'SECTION']
+    if len(flags) == 0:
+        #ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
+        raise RuntimeError("looking for beam section info (e.g., '*Beam Section, ELSET=set_name, MATERIAL=mat_name, SECTION=RECT')\n"
+                           "line0=%r\nsline=%s; allowed:\n[%s]" % (
+                               line0, flags, ', '.join(allowed_beam_section)))
+
+    elset = ''
+    material = ''
+    section = ''
+    for flag_value in flags:
+        flag, value = flag_value.split('=')
+        flag = flag.strip().lower()
+        value = value.strip()
+        #if flag == 'name':
+            #assert etype == '', etype
+            #name = value
+        if flag == 'elset':
+            assert elset == '', elset
+            elset = value
+        elif flag == 'material':
+            assert material == '', material
+            material = value
+        elif flag == 'section':
+            assert section == '', section
+            section = value.upper()
+        else:  # pragma: no cover
+            raise RuntimeError(flag_value)
+    assert elset is not None, elset
+    assert material is not None, material
+    assert section in {'ARBITRARY', 'BOX', 'CIRC', 'HEX', 'I', 'L',
+                       'PIPE', 'RECT', 'THICK PIPE', 'TRAPEZOID',}, section
+    assert len(lines_out) == 2, lines_out
+    sline1 = lines_out[0].strip('\n\t ,').split(',')
+    sline2 = lines_out[1].strip('\n\t ,').split(',')
+
+    dimensions = np.array(sline1, dtype='float64')
+    x_vector = np.array(sline2, dtype='float64')
+    assert len(x_vector) == 3, x_vector
+
+    beam_section = BeamSection(elset, material, section, dimensions, x_vector)
+    return iline, line0, beam_section
+
+def read_mass(line0: str, lines: list[str], iline: int,
+                      log: SimpleLogger) -> tuple[str, int,
+                                                  str, list[list[str]]]:
+    """
+    *Mass, elset=mass_element
+    0.1
+    https://docs.software.vt.edu/abaqusv2022/English/SIMACAEELMRefMap/simaelm-c-masses.htm
+
+    """
+    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    assert len(lines_out), lines_out
+
+    allowed_mass_flags = ['ELSET']
+    if len(flags) == 0:
+        #ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
+        raise RuntimeError("looking for beam section info (e.g., '*Mass, ELSET=set_name')\n"
+                           "line0=%r\nsline=%s; allowed:\n[%s]" % (
+                               line0, flags, ', '.join(allowed_mass_flags)))
+
+    elset = ''
+    for flag_value in flags:
+        flag, value = flag_value.split('=')
+        flag = flag.strip().lower()
+        value = value.strip()
+        if flag == 'elset':
+            assert elset == '', elset
+            elset = value
+        else:  # pragma: no cover
+            raise RuntimeError(flag_value)
+    assert elset is not None, elset
+    assert len(lines_out) == 1, lines_out
+
+    sline = lines_out[0].strip('\n\t ,').split(',')
+    assert len(sline) == 1, sline
+
+    mass_value = float(sline[0])
+    mass = Mass(elset, mass_value)
+
+    return iline, line0, mass
 
 def read_generic_section(iline: int, line0: str, lines: list[str],
                          log: SimpleLogger,

@@ -62,7 +62,7 @@ quad_face_map = {
 def _add_part_to_nastran(nastran_model: BDF,
                          elements: Elements, pid: int,
                          nid_offset: int, eid_offset: int) -> int:
-    log = nastran_model.log
+    log: SimpleLogger = nastran_model.log
 
     log.debug('starting part...')
     element_types = {etype: eids_nids
@@ -74,7 +74,9 @@ def _add_part_to_nastran(nastran_model: BDF,
     ueids = np.unique(all_eids)
     map_eids = (len(all_eids) != len(ueids))
     abaqus_type_to_etype = {
+        'b31': 'CBEAM',
         'b31h': 'CBEAM',
+        'b31r': 'CBEAM',
         's3': 'CTRIA3',
         's3r': 'CTRIA3',
         'cpe3': 'CTRIA3',
@@ -139,14 +141,13 @@ def _add_part_to_nastran(nastran_model: BDF,
             log.warning('skipping r2d2; should this be a RBE1/RBAR?')
             continue
 
-        if etype == 'b31h':
-            for eid, nids in zip(eids, part_nids):
-                x = None
-                g0 = nids[2]
-                nids = [nids[0], nids[1]]
-                nastran_model.add_cbeam(
-                    eid, pid, nids, x, g0, offt='GGG', bit=None,
-                    pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        #Euler-Bernoulli beams (B23, B23H, B33, and B33H) are available only in Abaqus/Standard
+        #Timoshenko beams (B21, B22, B31, B31OS, B32, B32OS, PIPE21, PIPE22, PIPE31, PIPE32, and their 'hybrid' equivalents)
+        if etype in {'b31', 'b31h', 'b31r'}:
+            comment = f' etype={etype}; TODO: update this to a Timoshenko beam?'
+            #g0 = nids[2]
+            add_bars(nastran_model.add_cbar, pid, eids, part_nids, comment)
+
         elif etype in {'s3', 's3r', 'cpe3', 'cpe3r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctria3(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
@@ -206,6 +207,13 @@ def _add_part_to_nastran(nastran_model: BDF,
                     n13, n14, n15, n16,]
                 nastran_model.add_chexa(eid, pid, nids2, comment=comment)
                 comment = ''
+        elif etype == 'mass':
+            mass = 0.
+            for eid, nids in zip(eids, part_nids):
+                nid = nids[0]
+                nastran_model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment=comment)
+                comment = ''
+
         elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
             del eids, part_nids
             log.warning(f'skipping etype={etype!r}')
@@ -240,6 +248,37 @@ def _add_part_to_nastran(nastran_model: BDF,
     assert eid_offset > 0, eid_offset
     return eid_offset
 
+def add_bars(add_cbar_cbeam: Callable,
+             pid: int,
+             eids: np.ndarray,
+             part_nids: np.ndarray,
+             comment: str):
+    """adds CBARs/CBEAMs"""
+    is_g0 = (part_nids.shape[1] == 3)
+    if is_g0:
+        x = None
+        for eid, part_nidsi in zip(eids, part_nids):
+            nids = [part_nidsi[0], part_nidsi[1]]
+            g0 = part_nidsi[2]
+            add_cbar_cbeam(
+                eid, pid, nids, x, g0, offt='GGG',
+                pa=0, pb=0, wa=None, wb=None,
+                comment=comment)
+            comment = ''
+    else:
+        # we will overwrite g0 later
+        x = [1., 1., 1.]
+        g0 = None
+        for eid, part_nidsi in zip(eids, part_nids):
+            nids = [part_nidsi[0], part_nidsi[1]]
+            #nastran_model.add_cbeam(
+                #eid, pid, nids, x, g0, offt='GGG', bit=None,
+                #pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+            add_cbar_cbeam(
+                eid, pid, nids, x, g0, offt='GGG',
+                pa=0, pb=0, wa=None, wb=None,
+                comment=comment)
+            comment = ''
 
 def _create_nastran_nodes_elements(model: Abaqus,
                                    nastran_model: BDF) -> None:
@@ -268,6 +307,8 @@ def _create_nastran_nodes_elements(model: Abaqus,
         #nids.append(nidsi)
         assert eid_offset > 0, eid_offset
         nid_offset += nnodesi
+        for beam_section in part.beam_sections:
+            log.info('beam')
         for shell_section in part.shell_sections:
             log.info('shell')
         for shell_section in part.solid_sections:
@@ -282,6 +323,9 @@ def _create_nastran_nodes_elements(model: Abaqus,
         model, nastran_model, log, pid, mid,
         mat_name_to_mid_dict)
     pid, mid, cid = _create_shell_properties(
+        model, nastran_model, log, pid, mid, cid,
+        mat_name_to_mid_dict)
+    pid, mid = _create_bar_properties(
         model, nastran_model, log, pid, mid, cid,
         mat_name_to_mid_dict)
 
@@ -370,7 +414,7 @@ def _build_face_to_nids(
         model: Abaqus,
         elements: Elements,
         face_to_nids_map: dict[tuple[str, str, str], np.ndarray]) -> None:
-    log = model.log
+    log: SimpleLogger = model.log
 
     for set_type, set_name, face in list(face_to_nids_map.keys()):
         face_int = int(face[-1])
@@ -544,10 +588,58 @@ def build_coord(model: Abaqus,
 
     return cid
 
-def _create_shell_properties(model: Abaqus, nastran_model: BDF,
+def map_bar_section_dimensions(section: str,
+                               dimensions: np.ndarray) -> tuple[str, list[float]]:
+    if section == 'RECT':
+        return 'BAR', dimensions.tolist()
+    elif section == 'PIPE':
+        return 'TUBE2', dimensions.tolist()
+    raise RuntimeError(section)
+
+def _create_bar_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
                              pid: int, mid: int, cid: int,
                              mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int]:
+    for elset, mass in model.masses.items():
+        element_set_name = mass.elset
+        log.debug(f'element_set_name={element_set_name!r}')
+        comment = element_set_name
+        value = mass.value
+        map_mass_ids(model, nastran_model, element_set_name, value)
+
+
+    for elset, beam_section in model.beam_sections.items():
+        element_set_name = beam_section.elset
+        log.debug(f'element_set_name={element_set_name!r}')
+        comment = element_set_name
+
+        mat_name = beam_section.material_name
+        if isinstance(mat_name, str):
+            mat = model.materials[mat_name]
+            mat = _create_material(
+                nastran_model, mat, mid,
+                comment=mat_name,
+                is_solid=False)
+        else:
+            raise RuntimeError(mat_name)
+        section = beam_section.section
+        bar_section, dim = map_bar_section_dimensions(
+            section, beam_section.dimensions)
+
+        nastran_model.add_pbarl(pid, mid, bar_section, dim,
+                                group='MSCBML0', nsm=0., comment='')
+
+        x_vector = beam_section.x_vector
+        map_bar_property_ids(
+            model, nastran_model, element_set_name, pid, x_vector)
+        pid += 1
+        mid += 1
+    return pid, mid
+
+def _create_shell_properties(model: Abaqus, nastran_model: BDF,
+                             log: SimpleLogger,
+                             pid: int, mid: int, cid: int,
+                             mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int, int]:
     """
     Creates a series of PSHELL/PCOMP and associated coordinate systems and
     materials.
@@ -637,6 +729,75 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
         mid += delta_mid
     return pid, mid, cid
 
+def map_mass_ids(model: Abaqus, nastran_model: BDF,
+                 element_set_name: str,
+                 value: float) -> dict[str, list[int]]:
+    """
+    Updates all the bar elements in a given set to have new properties.
+    Uses a unique property_id for each element type because we want to set
+    the integration parameters per element type.  We may back off on this later.
+    """
+    log = model.log
+    try:
+        eids = get_eids_from_recursive_element_set(model, element_set_name)
+    except KeyError:
+        log.error(f'cant map section with elset={element_set_name}')
+        raise
+        return {}
+
+    if isinstance(eids, str):
+        log.debug(f'mapping section with elset={element_set_name} to {eids}')
+        element_name_to_type = {value: key for key, value in
+                                model.elements.element_type_to_elset_name.items()}
+        etype = element_name_to_type[eids]
+        eids = getattr(model.elements, f'{etype}_eids')
+        #return
+    etypes_eids = defaultdict(list)
+    for eid in eids:
+        elem = nastran_model.masses[eid]
+        etypes_eids[elem.type].append(eid)
+
+    for etype, eids in etypes_eids.items():
+        for eid in eids:
+            elem = nastran_model.masses[eid]
+            elem.mass = value
+    return etypes_eids
+
+def map_bar_property_ids(model: Abaqus, nastran_model: BDF,
+                           element_set_name: str,
+                           pid: int, x_vector: np.ndarray) -> dict[str, list[int]]:
+    """
+    Updates all the bar elements in a given set to have new properties.
+    Uses a unique property_id for each element type because we want to set
+    the integration parameters per element type.  We may back off on this later.
+    """
+    log = model.log
+    try:
+        eids = get_eids_from_recursive_element_set(model, element_set_name)
+    except KeyError:
+        log.error(f'cant map section with elset={element_set_name}')
+        return {}
+
+    if isinstance(eids, str):
+        log.debug(f'mapping section with elset={element_set_name} to {eids}')
+        element_name_to_type = {value: key for key, value in
+                                model.elements.element_type_to_elset_name.items()}
+        etype = element_name_to_type[eids]
+        eids = getattr(model.elements, f'{etype}_eids')
+        #return
+    etypes_eids = defaultdict(list)
+    for eid in eids:
+        elem = nastran_model.elements[eid]
+        etypes_eids[elem.type].append(eid)
+
+    for etype, eids in etypes_eids.items():
+        for eid in eids:
+            elem = nastran_model.elements[eid]
+            elem.pid = pid
+            elem.x = x_vector
+        pid += 1
+    return etypes_eids
+
 def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
                            element_set_name: str,
                            pid: int) -> dict[str, list[int]]:
@@ -666,7 +827,8 @@ def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
 
     for etype, eids in etypes_eids.items():
         for eid in eids:
-            elem = nastran_model.elements[eid].pid = pid
+            elem = nastran_model.elements[eid]
+            elem.pid = pid
         pid += 1
     return etypes_eids
 
@@ -695,7 +857,8 @@ def map_shell_property_ids(model: Abaqus, nastran_model: BDF,
         elem.zoffset = zoffset
         elem.theta_mcid = theta_mcid
 
-def get_eids_from_recursive_element_set(model: Abaqus, element_set_name: str) -> Union[np.ndarray, str]:
+def get_eids_from_recursive_element_set(model: Abaqus,
+                                        element_set_name: str) -> Union[np.ndarray, str]:
     """returns None if we cant find a set of eids"""
     eids = model.element_sets[element_set_name]
     if isinstance(eids, str):
@@ -821,6 +984,27 @@ def _xform_model(nastran_model: BDF, xform: bool):
             #x = 1
     log.error('xform is super buggy and largely untested')
 
+def _write_frequency(model: Abaqus,
+                     step: Abaqus,
+                     nastran_model: BDF,
+                     case_control_deck: CaseControlDeck) -> None:
+    if not step.frequencies:
+        return
+
+    for ifreq, freqs in enumerate(step.frequencies):
+        subcase_id = ifreq + 1
+        freq_id = ifreq + 1
+        if subcase_id in case_control_deck.subcases:
+            subcase = case_control_deck.subcases[subcase_id]
+        else:
+            subcase = case_control_deck.create_new_subcase(subcase_id)
+
+        if 'METHOD' not in subcase.params:
+            nastran_model.add_eigrl(freq_id, nd=6, comment=' assumed 6 modes')
+            subcase.add_integer_type('METHOD', freq_id)
+        subcase.add_integer_type('FREQ', freq_id)
+        nastran_model.add_freq(freq_id, freqs.frequencies)
+
 def _write_boundary_as_nastran(model: Abaqus,
                                step: Abaqus,
                                nastran_model: BDF,
@@ -878,6 +1062,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
         else:
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
+        _write_frequency(model, step, nastran_model, case_control_deck)
         _write_boundary_as_nastran(model, step, nastran_model, case_control_deck)
         for output in step.node_output + step.element_output:
             output_upper = output.upper()

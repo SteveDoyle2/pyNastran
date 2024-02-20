@@ -30,10 +30,11 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
     del element_sets_temp
     cloads = _process_constraints(nastran_model, node_sets)
 
+    beam_sections = []
     solid_sections = []
     shell_sections = []
     part = Part(name, nids, nodes, element_types, node_sets, element_sets,
-                solid_sections, shell_sections, log=log)
+                beam_sections, solid_sections, shell_sections, log=log)
     model.parts = {
         'model': part,
     }
@@ -45,7 +46,9 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
     node_output = []
     element_output = []
     static_step = Step(name, boundaries, node_output, element_output,
-                       cloads=cloads, dloads=[], surfaces=[], is_nlgeom=False)
+                       cloads=cloads, dloads=[], surfaces=[],
+                       frequencies=[],
+                       is_nlgeom=False)
     model.steps = [static_step]
     model.write(abaqus_inp_filename, is_2d=False)
 

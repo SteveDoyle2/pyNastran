@@ -167,7 +167,9 @@ def add_part(grid: vtkUnstructuredGrid,
     nids.append(nidsi)
     elements = part.elements
     add_lines(grid, nidsi, elements.r2d2_eids, elements.r2d2, nid_offset)
+    add_lines(grid, nidsi, elements.b31_eids, elements.b31, nid_offset)
     add_lines(grid, nidsi, elements.b31h_eids, elements.b31h, nid_offset)
+    add_lines(grid, nidsi, elements.b31r_eids, elements.b31r, nid_offset)
 
     add_tris(grid, nidsi, elements.cps3_eids, elements.cps3, nid_offset)
     add_tris(grid, nidsi, elements.cpe3_eids, elements.cpe3, nid_offset)

@@ -15,6 +15,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 
+class Frequency:
+    def __init__(self, solver, frequencies):
+        self.solver = solver
+        self.frequencies = frequencies
+
+    def __repr__(self) -> str:
+        msg = f'Frequency(solver={self.solver} frequencies={self.frequencies})'
+        return msg
+
 class Boundary:
     def __init__(self, nid_dof_to_value: dict[tuple[int, int], float]):
         """
@@ -76,6 +85,55 @@ class Boundary:
     def __repr__(self) -> str:
         msg = f'Boundary(nid_dof_to_value={str(self.nid_dof_to_value)})'
         return msg
+
+
+class Mass:
+    def __init__(self, elset: str,
+                 value: float):
+        self.elset = elset
+        self.value = value
+
+    def __repr__(self):
+        """prints a summary for the solid section"""
+        msg = 'BeamSection(\n'
+        #msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    elset = {self.elset},\n'
+        msg += f'    value = {self.value},\n'
+        msg += ')\n'
+        return msg
+
+
+class BeamSection:
+    section_name_to_npoints = {
+        'RECT': 2,  # consistent with PBARL
+        'PIPE': 2,  #  r (outside radius), t (wall thickness)
+    }
+    def __init__(self, elset: str,
+                 material_name: str,
+                 section: str,
+                 dimensions: np.ndarray,
+                 x_vector: np.ndarray):
+        self.elset = elset
+        self.material_name = material_name
+        self.section = section
+        self.dimensions = dimensions
+        self.x_vector = x_vector
+
+        npoints = self.section_name_to_npoints[section]
+        assert len(dimensions) == npoints, dimensions
+
+    def __repr__(self):
+        """prints a summary for the solid section"""
+        msg = 'BeamSection(\n'
+        #msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    elset = {self.elset},\n'
+        msg += f'    material_name = {self.material_name},\n'
+        msg += f'    section = {self.section},\n'
+        msg += f'    dimensions = {self.dimensions},\n'
+        msg += f'    x_vector = {self.x_vector},\n'
+        msg += ')\n'
+        return msg
+
 
 class ShellSection:
     """
@@ -343,6 +401,7 @@ class Part:
                  element_types: dict[str, np.ndarray],
                  node_sets: dict[str, np.ndarray],
                  element_sets: dict[str, tuple[np.ndarray, str]],
+                 beam_sections: list[BeamSection],
                  solid_sections: list[SolidSection],
                  shell_sections: list[ShellSection],
                  log: SimpleLogger):
@@ -358,6 +417,8 @@ class Part:
                 the element type
             bars:
                 r2d2 : (nelements, 2) int ndarray
+                b31 : (nelements, 2) int ndarray
+                b31h : (nelements, 2) int ndarray
             shells:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
@@ -379,11 +440,14 @@ class Part:
         self.element_sets = element_sets
 
         self.elements = Elements(element_types, self.log)
+        if beam_sections is None:
+            beam_sections = []
         if solid_sections is None:
             solid_sections = []
         if shell_sections is None:
             shell_sections = []
 
+        self.beam_sections = beam_sections
         self.solid_sections = solid_sections
         self.shell_sections = shell_sections
 
@@ -458,6 +522,7 @@ class Step:
                  cloads: dict[str, Any],
                  dloads: dict[str, Any],
                  surfaces: list[Any],
+                 frequencies: list[Any],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -481,6 +546,7 @@ class Step:
         self.element_output = element_output
         self.cloads = cloads
         self.dloads = dloads
+        self.frequencies = frequencies
         assert isinstance(cloads, list), cloads
         assert isinstance(dloads, list), dloads
 
@@ -493,6 +559,7 @@ class Step:
             f'  node_output={self.node_output}\n'
             f'  element_output={self.element_output}\n'
             f'  cloads={self.cloads}\n'
+            f'  frequencies={self.frequencies}\n'
         )
         return msg
 

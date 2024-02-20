@@ -7,7 +7,8 @@ import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
-    ShellSection, SolidSection, Surface)
+    ShellSection, SolidSection, Surface, BeamSection,
+    Mass)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -25,7 +26,7 @@ class Abaqus:
     def __init__(self, log: Optional[SimpleLogger]=None,
                  debug: Union[str, bool, None]=True):
         self.debug = debug
-        self.parts = {}
+        self.parts: dict[str, Part] = {}
         self.boundaries = {}
         self.materials = {}
         self.amplitudes = {}
@@ -80,8 +81,10 @@ class Abaqus:
         shell_sections = []
         boundaries = []
         surfaces: dict[str, Surface] = {}
-        steps = []
+        steps: list[Step] = []
         ties = []
+        beam_sections: dict[str, BeamSection] = {}
+        masses: dict[str, Mass] = {}
 
         #for ii, linei in enumerate(lines):
             #assert isinstance(linei, str), linei
@@ -331,6 +334,15 @@ class Abaqus:
                     #iline += 1
                     #iline, line0, flags, section = reader.read_generic_section(line0, lines, iline, self.log)
                     #self.log.warning('skipping tie section')
+                elif '*beam section' in line0:
+                    iline += 1
+                    iline, line0, beam_section = reader.read_beam_section(line0, lines, iline, self.log)
+                    beam_sections[beam_section.elset] = beam_section
+                elif '*mass' in line0:
+                    iline += 1
+                    iline, line0, mass = reader.read_mass(line0, lines, iline, self.log)
+                    masses[mass.elset] = mass
+                    del mass
                 else:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
                 assert isinstance(iline, int), word
@@ -351,7 +363,15 @@ class Abaqus:
 
         self.heading = heading
         self.elements = Elements(element_types, self.log)
+        for etype, elset_name in self.elements.element_type_to_elset_name.items():
+            if elset_name == '':
+                continue
+            eids = getattr(self.elements, f'{etype}_eids')
+            element_sets[elset_name] = eids
+            del eids
         self.ties = ties
+        self.masses = masses
+        self.beam_sections = beam_sections
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
         self.node_sets = node_sets
@@ -443,7 +463,8 @@ class Abaqus:
         assembly = Assembly(element_types, node_sets, element_sets)
         return iline, line0, assembly
 
-    def read_part(self, lines, iline, line0, word):
+    def read_part(self, lines: list[str], iline: int, line0: str,
+                  word: str) -> tuple[int, str, str, Part]:
         """reads a Part object"""
         sline2 = word.split(',', 1)[1:]
 
@@ -472,6 +493,7 @@ class Abaqus:
         nids = []
         nodes = []
         unused_is_start = True
+        beam_sections = []
         solid_sections = []
         shell_sections = []
         log = self.log
@@ -563,7 +585,7 @@ class Abaqus:
             self.log.debug('part_name = %r' % part_name)
         #print('part.shell_sections =', shell_sections)
         part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
-                    solid_sections, shell_sections, self.log)
+                    beam_sections, solid_sections, shell_sections, self.log)
         return iline, line0, part_name, part
 
     def read_step(self, lines, iline, line0, istep):
@@ -577,6 +599,7 @@ class Abaqus:
         cloads = []
         dloads = []
         surfaces = []
+        frequencies = []
         # case 1
         # ------
         # *Step, name=Step-1, nlgeom=NO, inc=10000
@@ -742,6 +765,12 @@ class Abaqus:
                     element_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif word.startswith('frequency'):
+                iline -= 1
+                line0 = lines[iline]
+                iline, line0, frequency = reader.read_frequency(line0, lines, iline, log)
+                iline += 1
+                frequencies.append(frequency)
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Step?\n')
                 raise NotImplementedError(msg)
@@ -753,7 +782,9 @@ class Abaqus:
         #iline -= 1
         step = Step(step_name, boundaries,
                     node_output, element_output,
-                    cloads, dloads, surfaces, is_nlgeom=False)
+                    cloads, dloads, surfaces,
+                    frequencies,
+                    is_nlgeom=False)
         self.log.debug('  end of step %i...' % istep)
         return iline, line0, step
 
@@ -801,8 +832,13 @@ class Abaqus:
             f'  assembly={self.assembly}\n'
             f'  initial_conditions={self.initial_conditions}\n'
             f'  steps={self.steps}\n'
-            f'  shell_sections={self.shell_sections}\n'
-            f'  solid_sections={self.solid_sections}\n'
+            f'  # Sections:\n'
+            f'    beam_sections={self.beam_sections}\n'
+            f'    shell_sections={self.shell_sections}\n'
+            f'    solid_sections={self.solid_sections}\n'
+            f'  # Sets:\n'
+            f'    node_sets={list(self.node_sets.keys())}\n'
+            f'    element_sets={list(self.element_sets.keys())}\n'
         )
         return msg
 

@@ -197,6 +197,28 @@ class TestAbaqus(unittest.TestCase):
         argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
         cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         os.remove(bdf_filename)
+    def test_b31h(self):
+        """
+        B31H - 3d euler-bernoulli beam element
+        -> CBAR/PBARL
+        """
+        abaqus_filename = os.path.join(MODEL_PATH, 'b31h.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'b31h.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
+        #os.remove(bdf_filename)
+
+    def _test_beam_freq(self):
+        """
+        B31H - 3d euler-bernoulli beam element
+        -> CBAR/PBARL
+        """
+        abaqus_filename = os.path.join(MODEL_PATH, 'beam_frequency_attached.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'beam_frequency_attached.bdf')
+        log = get_logger(level='debug', encoding='utf-8')
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
 
 def make_model():
     """makes a test model"""
