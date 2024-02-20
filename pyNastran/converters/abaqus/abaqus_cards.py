@@ -8,7 +8,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Union, TextIO, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.abaqus.elements import Elements
 if TYPE_CHECKING:  # pragma: no cover
@@ -544,7 +544,7 @@ class Step:
         self.boundaries: list[Boundary] = boundaries
         self.node_output = node_output
         self.element_output = element_output
-        self.cloads = cloads
+        self.cloads: list[tuple[Union[int, str], int, float]] = cloads
         self.dloads = dloads
         self.frequencies = frequencies
         assert isinstance(cloads, list), cloads
@@ -590,29 +590,31 @@ class Step:
         abq_file.write(f'*End Step\n')
 
 
-def cast_nodes(nids: list[Any], nodes: list[Any],
-               log: SimpleLogger, require: bool=True) -> tuple[np.ndarray, np.ndarray]:
-    if len(nids) == 0 and require == False:
-        assert len(nodes) == 0, len(nodes)
+def cast_nodes(nids_list: list[Any],
+               nodes_list: list[Any],
+               log: SimpleLogger,
+               require: bool=True) -> tuple[np.ndarray, np.ndarray]:
+    if len(nids_list) == 0 and require is False:
+        assert len(nodes_list) == 0, len(nodes_list)
         return None, None
 
     try:
-        nids = np.array(nids, dtype='int32')
+        nids = np.array(nids_list, dtype='int32')
     except ValueError:
         msg = f'nids={nids} are not integers'
         raise ValueError(msg)
     nnodes = len(nids)
 
-    node0 = nodes[0]
+    node0 = nodes_list[0]
     node_shape = len(node0)
 
     if node_shape == 3:
-        nodes = np.array(nodes, dtype='float32')
+        nodes = np.array(nodes_list, dtype='float32')
         log.info(f'3d model found; nodes.shape={nodes.shape}')
     elif node_shape == 2:
         # abaqus can have only x/y coordinates, so we fake the z coordinate
         nodes = np.zeros((nnodes, 3), dtype='float32')
-        nodes2 = np.array(nodes, dtype='float32')
+        nodes2 = np.array(nodes_list, dtype='float32')
         #print(nodes2.shape, self.nodes.shape)
         nodes[:, :2] = nodes2
         log.info(f'2d model found; nodes.shape={nodes.shape}')

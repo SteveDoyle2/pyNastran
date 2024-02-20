@@ -8,7 +8,7 @@ from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
     ShellSection, SolidSection, Surface, BeamSection,
-    Mass, Orientation)
+    Mass)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -129,8 +129,8 @@ class Abaqus:
                     nassembly += 1
 
                 elif word.startswith('part'):
-                    iline, line0, part_name, part = self.read_part(lines, iline, line0, word,
-                                                                   self.log, self.debug)
+                    iline, line0, part_name, part = reader.read_part(
+                        lines, iline, line0, word, self.log, self.debug)
                     self.parts[part_name] = part
                     #print('part_name', part_name)
                     if self.debug:
@@ -462,138 +462,6 @@ class Abaqus:
 
         assembly = Assembly(element_types, node_sets, element_sets)
         return iline, line0, assembly
-
-    def read_part(self, lines: list[str], iline: int, line0: str,
-                  word: str,
-                  log: SimpleLogger,
-                  debug: bool) -> tuple[int, str, str, Part]:
-        """reads a Part object"""
-        sline2 = word.split(',', 1)[1:]
-
-        assert len(sline2) == 1, f'looking for part_name; word={word!r} sline2={sline2}'
-        name_slot = sline2[0]
-        assert 'name' in name_slot, name_slot
-        part_name = name_slot.split('=', 1)[1]
-        log.debug(f'part_name = {part_name!r}')
-        #self.part_name = part_name
-
-        iline += 1
-        line0 = lines[iline].strip().lower()
-        assert line0.startswith('*node'), line0
-
-
-        #iline += 1
-        #line0 = lines[iline].strip().lower()
-
-        #iline += 1
-        #line0 = lines[iline].strip().lower()
-        #print('line0 * = ', line0)
-        element_types = {}
-        node_sets = {}
-        element_sets = {}
-        #print('resetting nids...')
-        nids = []
-        nodes = []
-        unused_is_start = True
-        beam_sections: dict[str, BeamSection] = {}
-        solid_sections: list[SolidSection]= []
-        shell_sections: list[ShellSection] = []
-        masses: dict[str, Mass] = {}
-        orientations: dict[str, Orientation]= {}
-        while not line0.startswith('*end part'):
-            #if is_start:
-            iline += 1 # skips over the header line
-            log.debug('  ' + line0)
-            iword = line0.strip('*').lower()
-            log.info(f'part: {iword:s}')
-            if '*node' in line0:
-                assert len(nids) == 0, nids
-                iline, line0, nids, nodes = reader.read_node(iline, lines, log)
-
-            elif '*element' in line0:
-                #print(line0)
-                iline, line0, etype, elset, elements = reader.read_element(
-                    iline, line0, lines, log, debug)
-                element_types[etype] = (elements, elset)
-                iline += 1
-
-            elif '*nset' in line0:
-                iline, line0, set_name, set_ids = reader.read_nset(
-                    iline, line0, lines, log, is_instance=False)
-                node_sets[set_name] = set_ids
-                iline += 1
-
-            elif '*elset' in line0:
-                iline, line0, set_name, set_ids = reader.read_elset(
-                    iline, line0, lines, log, is_instance=False)
-                element_sets[set_name] = set_ids
-                iline += 1
-
-            elif '*surface' in line0:
-                raise RuntimeError('surface part')
-                # TODO: skips header parsing
-                #iline += 1
-                line0 = lines[iline].strip().lower()
-                data_lines = []
-                while not line0.startswith('*'):
-                    data_lines.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-
-            elif '*solid section' in line0:
-                iline, solid_section = reader.read_solid_section(iline, line0, lines, log)
-                iline += 1
-                solid_sections.append(solid_section)
-            elif '*shell section' in line0:
-                iline, shell_section = reader.read_shell_section(iline, line0, lines, log)
-                iline += 1
-                shell_sections.append(shell_section)
-
-            elif '*cohesive section' in line0:
-                # TODO: skips header parsing
-                #iline += 1
-                #cohesive_section
-                line0 = lines[iline].strip().lower()
-                data_lines = []
-                while not line0.startswith('*'):
-                    data_lines.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-            elif '*mass' in line0:
-                iline, line0, mass = reader.read_mass(iline, line0, lines, log)
-                masses[mass.elset] = mass
-                # TODO: skips header parsing
-                #iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
-                iline += 1
-            elif '*rotary inertia' in line0:
-                # TODO: skips header parsing
-                iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
-                iline += 1
-            elif '*orientation' in line0:
-                iline, line0, orientation = reader.read_orientation(iline, line0, lines, log)
-                orientations[orientation.name] = orientation
-            else:
-                msg = f'line={line0!r}\n'
-                allowed = ['*node', '*element', '*nset', '*elset', '*surface',
-                           '*solid section', '*cohesive section']
-                msg += 'expected=[%r]' % ', '.join(allowed)
-                raise NotImplementedError(msg)
-
-            line0 = lines[iline].strip().lower()
-            unused_is_start = False
-
-            #print(line0)
-        #node_sets = []
-        #element_sets = []
-
-        if debug:
-            log.debug('part_name = %r' % part_name)
-        #print('part.shell_sections =', shell_sections)
-
-        del masses, orientations
-        part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
-                    beam_sections, solid_sections, shell_sections, log)
-        return iline, line0, part_name, part
 
     def write(self, abaqus_filename_out, is_2d=False):
         self.log.info('writing %r' % abaqus_filename_out)
