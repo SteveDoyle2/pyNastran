@@ -297,14 +297,14 @@ def _make_part(part_name):
         #165,     164,     163,     167,     168,     169,     170,     172,     171,
         #173,     174,
         #C3D20
-        '*mass',
-        'mass_str',
+        '*mass,elset=mass_set1',
+        '0.1',
         '*rotary inertia',
         'rotary_inertia_str',
         '*elset,elset=eset',
         '1',
-        '*mass',
-        'mass_str',
+        '*mass,elset=mass_set2',
+        '0.2',
         '*solid section,material=steel',
         '42',
         #''

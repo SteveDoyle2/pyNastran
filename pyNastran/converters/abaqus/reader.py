@@ -6,7 +6,7 @@ from .abaqus_cards import (
     Mass, BeamSection, ShellSection, SolidSection,
     Boundary, Material, Transform,
     Surface, Tie, Orientation,
-    Frequency,
+    Frequency, Step,
 )
 from .elements import allowed_element_types
 from .reader_utils import split_by_equals, print_data
@@ -287,7 +287,6 @@ def read_frequency(line0: str, lines: list[str], iline: int,
     iline += 1
     iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
 
-    surface_name = ''
     solver = ''
     for key, value in split_strict_flags(flags):
         if key == 'solver':
@@ -352,7 +351,7 @@ def read_node(lines, iline, log, skip_star=False):
 
 def read_element(iline: int, line0: str, lines: list[str],
                  log: SimpleLogger, debug: bool) -> tuple[str, int,
-                                                          str, str, list[list[str]]]:
+                                                          str, str, list[tuple[str, ...]]]:
     """
     '*element, type=mass, elset=topc_inertia-2_mass_'
     """
@@ -752,7 +751,7 @@ def _read_material_elastic(iline: int,
                            lines: [str],
                            word: str,
                            sections: dict[str, Any],
-                           log: SimpleLogger) -> str:
+                           log: SimpleLogger) -> tuple[int, str]:
     """reads a *Material/*Elastic block"""
     key = 'elastic'
     sword = word.split(',')
@@ -918,7 +917,8 @@ def read_star_block(iline: int, line0: str, lines: list[str],
 
 
 def read_star_block2(iline: int, line0: str,
-                     lines: list[str], log, debug=False):
+                     lines: list[str], log: SimpleLogger,
+                     debug: bool=False) -> tuple[int, str, list[str]]:
     """
     because this uses file streaming, there are 30,000 places where a
     try except block is needed, so this should probably be used all
@@ -938,7 +938,7 @@ def read_star_block2(iline: int, line0: str,
             log.debug(line)
     return iline, line0, data_lines
 
-def _generate_set(lines_out: list[str], generate: bool):
+def _generate_set(lines_out: list[str], generate: bool) -> np.ndarray:
     set_ids_list = []
     for line in lines_out:
         set_idsi = line.strip(', \n').split(',')
@@ -958,7 +958,8 @@ def _generate_set(lines_out: list[str], generate: bool):
             raise
     return set_ids
 
-def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger):
+def read_orientation(iline: int, line0: str, lines: list[str],
+                     log: SimpleLogger) -> tuple[int, str, Orientation]:
     assert isinstance(iline, int)
 
     iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
@@ -1015,7 +1016,8 @@ def read_orientation(iline: int, line0: str, lines: list[str], log: SimpleLogger
                               axis=axis, alpha=alpha)
     return iline, line0, orientation
 
-def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
+def read_system(line0: str, lines: list[str], iline: int,
+                log: SimpleLogger) -> tuple[int, str, list[str]]:
     """
     *SYSTEM
     6414.0    , 0.0       , -678.0    , 6414.03642, 0.81906834, -677.42746
@@ -1038,7 +1040,7 @@ def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
     return iline, line0, coordinate_system_fields
 
 def read_transform(line0: str, lines: list[str], iline: int,
-                   log: SimpleLogger):
+                   log: SimpleLogger) -> tuple[int, str, Transform]:
     """
     *TRANSFORM, TYPE=C, NSET=HM_auto_transform_3
     6414.0    , 0.0       , -678.0    ,  6513.79832,  -4.661E-06,  -684.34787
@@ -1107,8 +1109,7 @@ def _read_material_expansion(iline: int, word_line: str, lines: list[str],
     return iline, line0
 
 def read_tie(line0: str, lines: list[str], iline: int,
-             log: SimpleLogger) -> tuple[str, int,
-                                         str, list[list[str]]]:
+             log: SimpleLogger) -> tuple[str, int, Tie]:
     """
     '*tie, name=top_to_hub'
     ['Internal_Selection-1_Top_to_Hub_Slave, Internal_Selection-1_Top_to_Hub_Master\n']
@@ -1149,8 +1150,7 @@ def read_tie(line0: str, lines: list[str], iline: int,
     return iline, line0, tie
 
 def read_beam_section(line0: str, lines: list[str], iline: int,
-                      log: SimpleLogger) -> tuple[str, int,
-                                                  str, list[list[str]]]:
+                      log: SimpleLogger) -> tuple[str, int, BeamSection]:
     """
     *BEAM SECTION, ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
     10,25
@@ -1250,10 +1250,11 @@ def read_beam_section(line0: str, lines: list[str], iline: int,
     beam_section = BeamSection(elset, material, section, dimensions, x_vector)
     return iline, line0, beam_section
 
-def read_mass(line0: str, lines: list[str], iline: int,
-                      log: SimpleLogger) -> tuple[str, int,
-                                                  str, list[list[str]]]:
+def read_mass(iline: int, line0: str, lines: list[str],
+              log: SimpleLogger) -> tuple[str, int, Mass]:
     """
+    *Mass, elset=mass_element
+    0.1
     *Mass, elset=mass_element
     0.1
     https://docs.software.vt.edu/abaqusv2022/English/SIMACAEELMRefMap/simaelm-c-masses.htm
@@ -1264,6 +1265,7 @@ def read_mass(line0: str, lines: list[str], iline: int,
 
     allowed_mass_flags = ['ELSET']
     if len(flags) == 0:
+        pass
         #ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
         raise RuntimeError("looking for beam section info (e.g., '*Mass, ELSET=set_name')\n"
                            "line0=%r\nsline=%s; allowed:\n[%s]" % (
@@ -1292,7 +1294,7 @@ def read_mass(line0: str, lines: list[str], iline: int,
 
 def read_generic_section(iline: int, line0: str, lines: list[str],
                          log: SimpleLogger,
-                         require_lines_out: bool=True) -> tuple[int, str, list[str]]:
+                         require_lines_out: bool=True) -> tuple[int, str, list[str], list[str]]:
     """
     Parameters
     ----------
@@ -1307,6 +1309,10 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
         pointer to line
     line : str
         is the start of the next header
+    flags : list[str]
+        [key, value]
+    lines_out : list[str]
+        the lines in the main block
 
     """
     assert isinstance(iline, int)
@@ -1339,3 +1345,203 @@ def read_heading(iline: int, line0: str, lines: list[str],
     else:
         log.debug('empty header section')
     return iline, line0, heading
+
+def read_step(lines: list[str], iline: int, line0: str, istep: int,
+              log: SimpleLogger) -> tuple[int, str, Step]:
+    """reads a step object"""
+    log.debug(f'  start of step {istep:d}...')
+
+    boundaries = []
+    node_output = []
+    element_output = []
+    cloads = []
+    dloads = []
+    surfaces = []
+    frequencies = []
+    # case 1
+    # ------
+    # *Step, name=Step-1, nlgeom=NO, inc=10000
+    # *Static
+    # 0.01, 1., 1e-05, 0.01
+    #
+    # case 2
+    # ------
+    #*STEP, NLGEOM=YES, AMPLITUDE=RAMP, INC=10000
+    # Increase from T=117.0C to T=122.0C over 300.0 seconds  (1C/min)
+    # *Static
+    # 0.01, 1., 1e-05, 0.01
+    #
+    # case 3
+    # ------
+    # *STEP
+    # *STATIC
+    # *CLOAD
+    # LOAD,2,-25
+
+    iline += 1
+    line0 = lines[iline].strip().lower()
+    step_name = ''
+    if not line0.startswith('*'):
+        step_name = lines[iline].strip()
+        iline += 1
+        line0 = lines[iline].strip().lower()
+    word = line0.strip('*').lower()
+
+
+    #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
+                     #'element output']
+    #print('  word =', word)
+    #print('  lineA =', line0)
+    while word != 'end step':
+        log.debug('    step_word = %r' % word)
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        #print('word =', word)
+        #print('active_line =', line0)
+        unused_data_lines = []
+        if word.startswith('static'):
+            sword = word.split(',')
+            for word in sword[1:]:
+                word = word.strip()
+                assert word in {'solver=pardiso'}, f'words={sword}; word={word!r}'
+
+            sline = line0.split(',')
+            _line = lines[iline].strip().lower()
+            if _line.startswith('*'):
+                pass
+            else:
+                # 0.01, 1., 1e-05, 0.01
+                #print('sline', sline, line0)
+                assert len(sline) == 4, sline
+                iline += 1
+        elif word.startswith('restart'):
+            line0 = lines[iline].strip().lower()
+            word = line0.strip('*').lower()
+            continue
+            #print('  line_sline =', line0)
+            #iline -= 1
+            #line0 = lines[iline].strip().lower()
+            #sline = line0.split(',')
+            #assert len(sline) == 3, sline
+            #iline += 1
+
+        elif word.startswith('dsload'):
+            #iline += 1
+            #line0 = lines[iline].strip().lower()
+            #print('  line_sline =', line0)
+            sline = line0.split(',')
+            assert len(sline) == 3, sline
+            iline += 1
+        elif word.startswith('dynamic'):
+            log.debug(f'    line_sline = {line0!r}')
+            #iline += 1
+            #line0 = lines[iline].strip().lower()
+            sline = line0.split(',')
+            assert len(sline) >= 2, sline
+            iline += 1
+        elif word.startswith('visco'):
+            iline += 1
+        elif word.startswith('temperature'):
+            iline -= 1
+            line0 = lines[iline].strip().lower()
+            unused_data_lines, iline, line0 = read_star_block(
+                lines, iline, line0, log, debug=True)
+            iline += 1
+        elif word.startswith('controls'):
+            #log.debug('      controls')
+            unused_data_lines, iline, line0 = read_star_block(lines, iline, line0, log)
+            iline += 1
+            line0 = lines[iline].strip().lower()
+            #for line in data_lines:
+                #print(line)
+
+        elif word.startswith('output'):
+            line0 = lines[iline].strip().lower()
+            word = line0.strip('*').lower()
+            continue
+        elif word == 'node output':
+            node_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                node_output += [val.strip() for val in sline]
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('element output'):
+            element_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                element_output += [val.strip() for val in sline]
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('contact output'):
+            unused_contact_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                element_output += [val.strip() for val in sline]
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('boundary'):
+            iline, line0, boundary = read_boundary(iline, line0, lines)
+            if boundary:
+                boundaries.append(boundary)
+        elif word.startswith('buckle'):
+            node_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                node_output += sline
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('cload'):
+            iline, line0, cload = read_cload(iline, line0, lines, log)
+            cloads.append(cload)
+        elif word.startswith('dload'):
+            iline, line0, dload = read_dload(iline, line0, lines, log)
+            if dload:
+                dloads.append(dload)
+
+        elif word.startswith('surface'):
+            iline, line0, surface = read_surface(line0, lines, iline, log)
+            surfaces.append(surface)
+        elif word.startswith('node print'):
+            node_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                node_output += sline
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('node file'):
+            node_output = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                node_output += [val.strip() for val in sline]
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('el file'):
+            element_output = []
+            while '*' not in line0:
+                sline = line0.strip().split(',')
+                element_output += [val.strip() for val in sline]
+                iline += 1
+                line0 = lines[iline].strip().lower()
+        elif word.startswith('frequency'):
+            iline -= 1
+            line0 = lines[iline]
+            iline, line0, frequency = read_frequency(line0, lines, iline, log)
+            iline += 1
+            frequencies.append(frequency)
+        else:
+            msg = print_data(lines, iline, word, 'is this an unallowed word for *Step?\n')
+            raise NotImplementedError(msg)
+        line0 = lines[iline].strip().lower()
+        word = line0.strip('*').lower()
+        #print('  lineB =', line0)
+        #print('  word2 =', word)
+    #iline += 1
+    #iline -= 1
+    step = Step(step_name, boundaries,
+                node_output, element_output,
+                cloads, dloads, surfaces,
+                frequencies,
+                is_nlgeom=False)
+    log.debug('  end of step %i...' % istep)
+    return iline, line0, step
