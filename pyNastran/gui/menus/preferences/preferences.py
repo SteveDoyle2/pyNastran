@@ -688,6 +688,7 @@ class PreferencesWindow(PyDialog):
 
         self.highlight_color_edit.clicked.connect(self.on_highlight_color)
         self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
+        self.highlight_point_size_edit.valueChanged.connect(self.on_highlight_point_size)
 
         self.corner_text_color_edit.clicked.connect(self.on_corner_text_color)
         self.corner_text_size_edit.valueChanged.connect(self.on_corner_text_size)

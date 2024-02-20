@@ -350,7 +350,7 @@ class MouseActions:
 
     def on_area_pick(self, is_eids: bool=True,
                      is_nids: bool=True,
-                     representation: str='wire',
+                     representation: str='wire+points',
                      name=None,
                      callback: Optional[Callable]=None,
                      cleanup: bool=True,
