@@ -34,6 +34,22 @@ class TestBeams(unittest.TestCase):
       - CBEAM3, PBEAM3
 
     """
+    def test_pbeam_continuation(self):
+        """"""
+        nastran_model = BDF()
+        pbeam = nastran_model.add_pbeam(
+            1001, 1,
+            [0., 1.],
+            ['YES', 'YES'],
+            [10., 10.],
+            [50., 50.],
+            [55., 55.],
+            [0., 0.],
+            [30., 30.])
+        #print(pbeam)
+        print(pbeam.write_card_16())
+        x = 1
+
     def test_pbeam_01(self):
         """tests a nasty PBEAM"""
         lines = [

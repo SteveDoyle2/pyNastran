@@ -16,12 +16,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Frequency:
-    def __init__(self, solver, frequencies):
+    def __init__(self, solver: str, nmodes: int):
         self.solver = solver
-        self.frequencies = frequencies
+        self.nmodes = nmodes
 
     def __repr__(self) -> str:
-        msg = f'Frequency(solver={self.solver} frequencies={self.frequencies})'
+        msg = f'Frequency(solver={self.solver} nmodes={self.nmodes})'
         return msg
 
 class Boundary:
@@ -522,7 +522,7 @@ class Step:
                  cloads: dict[str, Any],
                  dloads: dict[str, Any],
                  surfaces: list[Any],
-                 frequencies: list[Any],
+                 frequencies: list[Frequency],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES

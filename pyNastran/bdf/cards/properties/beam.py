@@ -950,6 +950,7 @@ class PBEAM(IntegratedLineProperty):
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
         #print('i12 = %r' % self.i12)
+        nxxb = len(self.xxb)
         for (i, so, xxb, A, i1, i2, i12, j, nsm,
              c1, c2, d1, d2, e1, e2, f1, f2) in zip(
                  count(),
@@ -977,8 +978,12 @@ class PBEAM(IntegratedLineProperty):
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
                 if so in ['YES']:
+                    yes_footer = [c1, c2, d1, d2, e1, e2, f1, f2]
+                    if yes_footer == [None] * len(yes_footer):
+                        c1 = c2 = 0.0
                     list_fields += ['YES', xxb, A, i1, i2, i12, j, nsm,
                                     c1, c2, d1, d2, e1, e2, f1, f2]
+
                 elif so in ['NO']:
                     list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
                 elif so in ['YESA']:
@@ -1032,7 +1037,7 @@ class PBEAM(IntegratedLineProperty):
         return self.comment + print_card_16(card)
 
     def write_card_16(self, is_double=False):
-        card = self.raw_fields()
+        card = self.repr_fields()
         return self.comment + print_card_16(card)
 
 def pbeam_op2_data_to_init(data):

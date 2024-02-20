@@ -1,6 +1,6 @@
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
-is_installed = False
+is_installed = True
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
 

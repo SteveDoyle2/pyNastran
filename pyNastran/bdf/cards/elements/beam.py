@@ -203,9 +203,11 @@ class CBEAM(LineElement):
         h5_file.create_dataset('wa', data=wa)
         h5_file.create_dataset('wb', data=wb)
 
-
-    def __init__(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
-                 pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
+    def __init__(self, eid, pid, nids,
+                 x: Optional[list[float]], g0: Optional[int],
+                 offt='GGG', bit=None,
+                 pa=0, pb=0, wa=None, wb=None,
+                 sa=0, sb=0, comment=''):
         """
         Adds a CBEAM card
 

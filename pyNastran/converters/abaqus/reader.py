@@ -226,7 +226,7 @@ def read_dload(iline: int, line0: str,
         dload.append(dloadi)
     return iline, line0, dload
 
-def read_surface(line0: str, lines: list[str], iline: int,
+def read_surface(iline: int, line0: str, lines: list[str],
                  log: SimpleLogger) -> tuple[int, str, Surface]:
     """
     *Surface, Name=Internal_Selection-1_Uniform_Pressure-1, Type=Element
@@ -277,7 +277,7 @@ def read_surface(line0: str, lines: list[str], iline: int,
     return iline, line0, surface
 
 
-def read_frequency(line0: str, lines: list[str], iline: int,
+def read_frequency(iline: int, line0: str, lines: list[str],
                    log: SimpleLogger) -> tuple[int, str, Frequency]:
     """
     *Frequency, solver=Pardiso
@@ -294,13 +294,12 @@ def read_frequency(line0: str, lines: list[str], iline: int,
         else:  # pragma: no cover
             raise NotImplementedError((key, value))
 
-    frequencies = []
-    for line in lines_out:
-        sline = line.strip().split(',')
-        assert len(sline) == 1, sline
-        freq = float(sline[0])
-        frequencies.append(freq)
-    frequency = Frequency(solver, frequencies)
+    assert len(lines_out) == 1, lines_out
+    line = lines_out[0]
+    sline = line.strip().split(',')
+    assert len(sline) == 1, sline
+    nmodes = int(sline[0])
+    frequency = Frequency(solver, nmodes)
     return iline, line0, frequency
 
 def split_strict_flags(flags: list[str]) -> tuple[str, str]:
@@ -310,7 +309,9 @@ def split_strict_flags(flags: list[str]) -> tuple[str, str]:
         value = value.strip().lower()
         yield (key, value)
 
-def read_node(lines, iline, log, skip_star=False):
+def read_node(iline: int, lines: list[str], log: SimpleLogger,
+              skip_star: str=False) -> tuple[int, str, list[str],
+                                             list[tuple[str, str, str]]]:
     """reads *node"""
     if skip_star:
         iline += 1
@@ -391,7 +392,7 @@ def read_element(iline: int, line0: str, lines: list[str],
 
     return iline, line_out, etype, elset, elements
 
-def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> None:
+def read_spring(iline: int, lines: list[str], word: str, log: SimpleLogger) -> None:
     """
     *SPRING,ELSET=Eall
     blank line
@@ -1016,7 +1017,7 @@ def read_orientation(iline: int, line0: str, lines: list[str],
                               axis=axis, alpha=alpha)
     return iline, line0, orientation
 
-def read_system(line0: str, lines: list[str], iline: int,
+def read_system(iline: int, line0: str, lines: list[str],
                 log: SimpleLogger) -> tuple[int, str, list[str]]:
     """
     *SYSTEM
@@ -1039,7 +1040,7 @@ def read_system(line0: str, lines: list[str], iline: int,
     assert len(coordinate_system_fields) == 9, coordinate_system_fields
     return iline, line0, coordinate_system_fields
 
-def read_transform(line0: str, lines: list[str], iline: int,
+def read_transform(iline: int, line0: str, lines: list[str],
                    log: SimpleLogger) -> tuple[int, str, Transform]:
     """
     *TRANSFORM, TYPE=C, NSET=HM_auto_transform_3
@@ -1108,7 +1109,7 @@ def _read_material_expansion(iline: int, word_line: str, lines: list[str],
     #log.debug(line0)
     return iline, line0
 
-def read_tie(line0: str, lines: list[str], iline: int,
+def read_tie(iline: int, line0: str, lines: list[str],
              log: SimpleLogger) -> tuple[str, int, Tie]:
     """
     '*tie, name=top_to_hub'
@@ -1149,7 +1150,7 @@ def read_tie(line0: str, lines: list[str], iline: int,
     tie = Tie(name, master, slave, position_tolerance)
     return iline, line0, tie
 
-def read_beam_section(line0: str, lines: list[str], iline: int,
+def read_beam_section(iline: int, line0: str, lines: list[str],
                       log: SimpleLogger) -> tuple[str, int, BeamSection]:
     """
     *BEAM SECTION, ELSET=M0B0RstdD0, MATERIAL=MaterialSolid, SECTION=RECT
@@ -1500,7 +1501,7 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
                 dloads.append(dload)
 
         elif word.startswith('surface'):
-            iline, line0, surface = read_surface(line0, lines, iline, log)
+            iline, line0, surface = read_surface(iline, line0, lines, log)
             surfaces.append(surface)
         elif word.startswith('node print'):
             node_output = []
@@ -1526,7 +1527,7 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
         elif word.startswith('frequency'):
             iline -= 1
             line0 = lines[iline]
-            iline, line0, frequency = read_frequency(line0, lines, iline, log)
+            iline, line0, frequency = read_frequency(iline, line0, lines, log)
             iline += 1
             frequencies.append(frequency)
         else:

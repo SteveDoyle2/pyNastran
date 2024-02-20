@@ -209,7 +209,7 @@ class TestAbaqus(unittest.TestCase):
         cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         #os.remove(bdf_filename)
 
-    def _test_beam_freq(self):
+    def test_beam_freq(self):
         """
         B31H - 3d euler-bernoulli beam element
         -> CBAR/PBARL

@@ -999,11 +999,8 @@ def _write_frequency(model: Abaqus,
         else:
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
-        if 'METHOD' not in subcase.params:
-            nastran_model.add_eigrl(freq_id, nd=6, comment=' assumed 6 modes')
-            subcase.add_integer_type('METHOD', freq_id)
-        subcase.add_integer_type('FREQ', freq_id)
-        nastran_model.add_freq(freq_id, freqs.frequencies)
+        nastran_model.add_eigrl(freq_id, nd=freqs.nmodes, comment=' per Frequency')
+        subcase.add_integer_type('METHOD', freq_id)
 
 def _write_boundary_as_nastran(model: Abaqus,
                                step: Abaqus,

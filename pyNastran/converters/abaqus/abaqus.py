@@ -129,7 +129,8 @@ class Abaqus:
                     nassembly += 1
 
                 elif word.startswith('part'):
-                    iline, line0, part_name, part = self.read_part(lines, iline, line0, word)
+                    iline, line0, part_name, part = self.read_part(lines, iline, line0, word,
+                                                                   self.log, self.debug)
                     self.parts[part_name] = part
                     #print('part_name', part_name)
                     if self.debug:
@@ -254,7 +255,7 @@ class Abaqus:
                 #  part...
                 elif word.startswith('node'):
                     iline, line0, nidsi, nodesi = reader.read_node(
-                        lines, iline, log, skip_star=True)
+                        iline, lines, log, skip_star=True)
                     nids.append(nidsi)
                     nodes.append(nodesi)
                     #print(f'end of node; iline={iline}')
@@ -311,7 +312,7 @@ class Abaqus:
                     shell_sections.append(shell_section)
                     line0 = line0.strip().lower()
                 elif '*surface' in line0:
-                    iline, line0, surface = reader.read_surface(line0, lines, iline, log)
+                    iline, line0, surface = reader.read_surface(iline, line0, lines, log)
                     surfaces[surface.name] = surface
 
                 #elif '*hourglass stiffness' in line0:
@@ -321,12 +322,12 @@ class Abaqus:
                     iline, line0, orientation = reader.read_orientation(iline, line0, lines, log)
                     orientations[orientation.name] = orientation
                 elif '*system' in line0:
-                    iline, line0, system = reader.read_system(line0, lines, iline, log)
+                    iline, line0, system = reader.read_system(iline, line0, lines, log)
                 elif '*transform' in line0:
-                    iline, line0, transform = reader.read_transform(line0, lines, iline, log)
+                    iline, line0, transform = reader.read_transform(iline, line0, lines, log)
                 elif '*tie' in line0:
                     iline += 1
-                    iline, line0, tie = reader.read_tie(line0, lines, iline, log)
+                    iline, line0, tie = reader.read_tie(iline, line0, lines, log)
                     ties.append(tie)
 
                     #iline += 1
@@ -334,11 +335,11 @@ class Abaqus:
                     #log.warning('skipping tie section')
                 elif '*beam section' in line0:
                     iline += 1
-                    iline, line0, beam_section = reader.read_beam_section(line0, lines, iline, log)
+                    iline, line0, beam_section = reader.read_beam_section(iline, line0, lines, log)
                     beam_sections[beam_section.elset] = beam_section
                 elif '*mass' in line0:
                     iline += 1
-                    iline, line0, mass = reader.read_mass(line0, lines, iline, log)
+                    iline, line0, mass = reader.read_mass(iline, line0, lines, log)
                     masses[mass.elset] = mass
                     del mass
                 else:
@@ -445,7 +446,7 @@ class Abaqus:
 
             elif word == 'node':
                 iline, line0, nids, nodes = reader.read_node(
-                    lines, iline, log, skip_star=True)
+                    iline, lines, log, skip_star=True)
             elif '*element' in line0:
                 # doesn't actually start on *element line
                 # 1,263,288,298,265
@@ -463,7 +464,9 @@ class Abaqus:
         return iline, line0, assembly
 
     def read_part(self, lines: list[str], iline: int, line0: str,
-                  word: str) -> tuple[int, str, str, Part]:
+                  word: str,
+                  log: SimpleLogger,
+                  debug: bool) -> tuple[int, str, str, Part]:
         """reads a Part object"""
         sline2 = word.split(',', 1)[1:]
 
@@ -471,7 +474,7 @@ class Abaqus:
         name_slot = sline2[0]
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
-        self.log.debug(f'part_name = {part_name!r}')
+        log.debug(f'part_name = {part_name!r}')
         #self.part_name = part_name
 
         iline += 1
@@ -497,7 +500,6 @@ class Abaqus:
         shell_sections: list[ShellSection] = []
         masses: dict[str, Mass] = {}
         orientations: dict[str, Orientation]= {}
-        log = self.log
         while not line0.startswith('*end part'):
             #if is_start:
             iline += 1 # skips over the header line
@@ -506,12 +508,12 @@ class Abaqus:
             log.info(f'part: {iword:s}')
             if '*node' in line0:
                 assert len(nids) == 0, nids
-                iline, line0, nids, nodes = reader.read_node(lines, iline, log)
+                iline, line0, nids, nodes = reader.read_node(iline, lines, log)
 
             elif '*element' in line0:
                 #print(line0)
                 iline, line0, etype, elset, elements = reader.read_element(
-                    iline, line0, lines, log, self.debug)
+                    iline, line0, lines, log, debug)
                 element_types[etype] = (elements, elset)
                 iline += 1
 
@@ -584,7 +586,7 @@ class Abaqus:
         #node_sets = []
         #element_sets = []
 
-        if self.debug:
+        if debug:
             log.debug('part_name = %r' % part_name)
         #print('part.shell_sections =', shell_sections)
 
