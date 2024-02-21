@@ -35,7 +35,7 @@ class TestBeams(unittest.TestCase):
 
     """
     def test_pbeam_continuation(self):
-        """"""
+        """a buggy PBEAM unless you add a trailing +"""
         nastran_model = BDF()
         pbeam = nastran_model.add_pbeam(
             1001, 1,
@@ -46,8 +46,8 @@ class TestBeams(unittest.TestCase):
             [55., 55.],
             [0., 0.],
             [30., 30.])
-        #print(pbeam)
-        print(pbeam.write_card_16())
+        print(pbeam)
+        #print(pbeam.write_card_16())
         x = 1
 
     def test_pbeam_01(self):

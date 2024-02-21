@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import time as time_module
 import traceback
 
@@ -20,6 +20,12 @@ class LoadActions:
     def log(self):
         """links the the GUI's log"""
         return self.gui.log
+
+    def _set_last_dir(self, filename: str) -> None:
+        last_dir = os.path.split(filename)[0]
+        settings: Settings = self.gui.settings
+        self.gui.last_dir = last_dir
+        settings.startup_directory = last_dir
 
     def on_load_geometry(self,
                          infile_name: Optional[str]=None,
@@ -56,10 +62,7 @@ class LoadActions:
         log = self.log
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
-            last_dir = os.path.split(infile_name)[0]
-            settings: Settings = self.gui.settings
-            self.gui.last_dir = last_dir
-            settings.startup_directory = last_dir
+            self._set_last_dir(infile_name)
 
             if self.gui.name == '':
                 name = 'main'

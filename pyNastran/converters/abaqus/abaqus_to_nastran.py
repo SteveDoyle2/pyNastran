@@ -74,6 +74,7 @@ def _add_part_to_nastran(nastran_model: BDF,
     ueids = np.unique(all_eids)
     map_eids = (len(all_eids) != len(ueids))
     abaqus_type_to_etype = {
+        'mass': 'CONM2',
         'b31': 'CBEAM',
         'b31h': 'CBEAM',
         'b31r': 'CBEAM',
@@ -261,7 +262,7 @@ def add_bars(add_cbar_cbeam: Callable,
             nids = [part_nidsi[0], part_nidsi[1]]
             g0 = part_nidsi[2]
             add_cbar_cbeam(
-                eid, pid, nids, x, g0, offt='GGG',
+                eid, pid, nids, x=x, g0=g0, offt='GGG',
                 pa=0, pb=0, wa=None, wb=None,
                 comment=comment)
             comment = ''
@@ -275,7 +276,7 @@ def add_bars(add_cbar_cbeam: Callable,
                 #eid, pid, nids, x, g0, offt='GGG', bit=None,
                 #pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
             add_cbar_cbeam(
-                eid, pid, nids, x, g0, offt='GGG',
+                eid, pid, nids, x=x, g0=g0, offt='GGG',
                 pa=0, pb=0, wa=None, wb=None,
                 comment=comment)
             comment = ''

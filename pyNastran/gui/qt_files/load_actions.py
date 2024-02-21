@@ -187,7 +187,7 @@ class LoadActions(BaseGui):
         the script, that doesn't count.
         """
         gui: MainWindow = self.gui
-        last_dir = os.path.split(infile_name)[0]
+        last_dir = os.path.dirname(infile_name)
         gui.last_dir = last_dir
         gui.settings.startup_directory = last_dir
 
@@ -698,6 +698,7 @@ class LoadActions(BaseGui):
                 gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
+            self._set_last_dir(out_filename)
         assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
@@ -1045,7 +1046,7 @@ class LoadActions(BaseGui):
             self._set_last_dir(python_file)
 
         if not os.path.exists(python_file):
-            msg = 'python_file = %r does not exist' % python_file
+            msg = f'python_file = {python_file!r} does not exist'
             gui.log_error(msg)
             return is_passed
 
