@@ -23,7 +23,7 @@ USAGE_200 = (
     'Usage:\n'
     '  f06 plot_200 F06_FILENAME\n'
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):

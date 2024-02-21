@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR, rotate_by_thetad)
 ShellElement = Union[CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR]
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 SKIP_ETYPES = {

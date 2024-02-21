@@ -13,7 +13,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
 ClickCallback = Callable[[int], bool]
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import Sidebar
     from pyNastran.gui.main_window import MainWindow
 

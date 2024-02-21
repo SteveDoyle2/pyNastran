@@ -10,7 +10,7 @@ from .nodal_averaging import nodal_average, nodal_combine_map
 
 from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_3d, max_shear
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
     CaseTuple = tuple[int, int, str]

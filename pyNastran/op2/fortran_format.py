@@ -35,7 +35,7 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.opr import OPR
 from pyNastran.op2.tables.ogpwg import OGPWG
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

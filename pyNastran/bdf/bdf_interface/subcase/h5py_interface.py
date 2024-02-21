@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.utils import object_attributes
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.subcase import Subcase
 

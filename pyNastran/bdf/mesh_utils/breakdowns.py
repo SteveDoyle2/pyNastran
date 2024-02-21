@@ -20,7 +20,7 @@ defines:
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 from collections import defaultdict
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],

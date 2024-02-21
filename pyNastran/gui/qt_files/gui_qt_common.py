@@ -19,7 +19,6 @@ from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper,
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
-#import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
@@ -35,7 +34,7 @@ from pyNastran.gui.utils.utils import is_blank
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
 
 

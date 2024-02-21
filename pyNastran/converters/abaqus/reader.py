@@ -11,7 +11,7 @@ from .abaqus_cards import (
 from .elements import allowed_element_types
 from .reader_utils import split_by_equals, print_data
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

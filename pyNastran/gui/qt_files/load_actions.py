@@ -6,7 +6,6 @@ from typing import Optional, Any, cast, Callable, TYPE_CHECKING
 
 import numpy as np
 from qtpy.compat import getopenfilename
-#from qtpy.QtWidgets import QFileDialog
 
 from pyNastran.utils import check_path, print_bad_path
 from pyNastran.femutils.io import loadtxt_nice
@@ -24,7 +23,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 from pyNastran.gui.gui_objects.settings import Settings, filter_recent_files
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -698,7 +697,7 @@ class LoadActions(BaseGui):
                 gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
-            self._set_last_dir(out_filename)
+            self._set_last_dir(csv_filename)
         assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
@@ -982,7 +981,7 @@ class LoadActions(BaseGui):
 
     #---------------------------------------------------------------------------
     def create_load_file_dialog(self, qt_wildcard: str, title: str,
-                                default_filename: Optional[str]=None) -> tuple[str, str]:
+                                default_filename: str='') -> tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(

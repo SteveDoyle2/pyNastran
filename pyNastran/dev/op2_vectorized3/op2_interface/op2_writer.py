@@ -16,7 +16,7 @@ from pyNastran.op2.writer.geom1_writer import (
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.writer.op2_writer import TrashWriter, write_op2_header, _set_skips
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran2.dev.op2_vectorized3.op2_geom import OP2
 

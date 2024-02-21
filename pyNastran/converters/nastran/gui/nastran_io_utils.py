@@ -64,7 +64,7 @@ from pyNastran.gui.qt_files.colors import (
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import ElementalTableResults # ForceTableResults,
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
 

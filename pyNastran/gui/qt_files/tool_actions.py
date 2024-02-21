@@ -59,6 +59,7 @@ class ToolActions:
     def export_case_data(self, icases: Optional[list[int]]=None) -> None:
         """exports CSVs of the requested cases"""
         gui = self.gui
+        log = self.gui.log
         icases2 = self.get_icases(icases)
 
         csv_filename = 'None'
@@ -79,10 +80,11 @@ class ToolActions:
             print(subtitle, label, label2, location, name)
 
             word, eids_nids = gui.get_mapping_for_location(location)
-            csv_filename = _export_case(
+            is_failed, csv_filename = _export_case(
                 name, eids_nids, case, icase,
-                word, label2, data_format)
-            print(csv_filename)
+                word, label2, data_format, log)
+            if not is_failed:
+                print(csv_filename)
 
         if icases:
             gui.log_command(f'self.tool_actions.export_case_data(icases={icases})\n'
@@ -755,17 +757,26 @@ def _export_case(name: str,
                  eids_nids: np.ndarray,
                  case: np.ndarray,
                  icase: int,
-                 word: str, label2: str, data_format: str) -> str:
+                 word: str, label2: str,
+                 data_format: str,
+                 log: SimpleLogger) -> tuple[bool, str]:
     """
     Writes a csv of a gui result in a form that you can load back in.
     """
+    is_failed = True
     # fixing cast int data
     header = '%s(%%i),"%s(%s)"' % (word, label2, data_format)
     if 'i' in data_format and isinstance(case.dtype, np.floating):
         header = '%s(%%i),"%s"' % (word, label2)
 
     fname = '%s_%s.csv' % (icase, remove_invalid_filename_characters(name))
-    out_data = np.column_stack([eids_nids, case])
+    try:
+        out_data = np.column_stack([eids_nids, case])
+    except ValueError:
+        log.error(f'nodes/elements.shape={str(eids_nids.shape)} and '
+                  f'case.shape={str(case.shape)} are not the same '
+                  f'for {fname!r}')
+        return is_failed, ''
     try:
         np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
     except UnicodeEncodeError:  # pragma: no cover
@@ -774,4 +785,5 @@ def _export_case(name: str,
         except UnicodeEncodeError:  # pragma: no cover
             header = 'word,unicode_strikes_again'
             np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
-    return fname
+    is_failed = False
+    return is_failed, fname

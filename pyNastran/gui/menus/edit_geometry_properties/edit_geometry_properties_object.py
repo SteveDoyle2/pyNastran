@@ -13,7 +13,7 @@ from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeome
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.base_gui import BaseGui
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 # EDIT ACTOR PROPERTIES

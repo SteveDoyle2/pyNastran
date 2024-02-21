@@ -11,7 +11,7 @@ from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.utils.numpy_utils import integer_types
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 

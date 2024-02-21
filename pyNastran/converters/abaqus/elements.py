@@ -79,7 +79,7 @@ allowed_element_types = [
 
 class Elements:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, element_types: dict[str, tuple[np.ndarray, str]],
+    def __init__(self, element_types: dict[str, tuple[list[int], str]],
                  log: SimpleLogger):
         """
         creates a Part object
@@ -139,7 +139,6 @@ class Elements:
         self.log = log
         #-----------------------------------
         # elements
-
         self.mass = None
         self.mass_eids = None
 
@@ -236,77 +235,19 @@ class Elements:
         self.c3d10h_eids = None  # tet10 hybrid hydrostatic
         self._store_elements(element_types)
 
-    def _etypes_nnodes(self):
-        """internal helper method"""
-        etypes_nnodes = [
-            ('mass', 1),  #  similar to a CONM2
-
-            # rigid
-            ('r2d2', 2),  #  similar to a RBAR
-
-            # bar/beam
-            # 2 required nodes, but 3rd orientation node (g0) is possible
-            ('b31',  (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
-            ('b31h', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
-            ('b31r', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
-
-            #  shells
-            ('cpe3', 3),
-            ('cpe4', 4),
-            ('cpe4r', 4),  # quad plane strain, reduced
-
-            ('cps3', 3),
-            ('cps4', 4),
-            ('cps3r', 3),
-            ('cps4r', 4), # quad, plane stress, reduced
-
-            ('coh2d4', 4), #  cohesive zone
-            ('cohax4', 4), #  cohesive zone
-            ('cax3', 3),
-            ('cax4r', 4), # reduced
-
-            ('s3', 3),
-            ('s4', 4),
-            ('s6', 6),
-            ('s8', 8),
-
-            ('s3r', 3),
-            ('s4r', 4),
-            ('s6r', 6),
-            ('s8r', 8), # CQUAD8 reduced
-
-            #  solids
-            ('c3d4', 4),    # tet4
-            ('c3d6', 6),    # penta6
-            ('c3d8', 8),    # hexa8
-            ('c3d10', 10),  # tet10
-            ('c3d15', 15),  # penta15
-            ('c3d20', 20),  # hexa20
-
-            ('c3d4r', 4),    # tet4 reduced
-            ('c3d6r', 6),    # penta6 reduced
-            ('c3d8r', 8),    # hexa8 reduced
-            ('c3d10r', 10),  # tet10 reduced
-            ('c3d15r', 15),  # penta15 reduced
-            ('c3d20r', 20),  # hexa20 reduced
-
-            ('c3d10h', 10),  # tet10 hybrid hydrostatic
-        ]
-        return etypes_nnodes
-
-    def _store_elements(self, element_types: dict[str, list[int]]) -> None:
+    def _store_elements(self, element_types: dict[str, tuple[list[int], str]]) -> None:
         """helper method for the init"""
         if len(element_types) == 0:
             return
-        etypes_nnodes = self._etypes_nnodes()
+        etypes_nnodes = _etypes_nnodes()
         is_elements = False
         etypes_used = set()
-        element_type_to_elset_name = {}
+        element_type_to_elset_name: dict[str, str] = {}
         element_types_all = set(list(element_types.keys()))
-        for etype, nnodes in etypes_nnodes:
 
+        for etype, nnodes in etypes_nnodes:
             if etype in element_types:
-                etype_eids = '%s_eids' % etype
+                etype_eids = f'{etype}_eids'
                 elements, elset = element_types[etype]
                 etypes_used.add(etype)
                 if len(elements) == 0:
@@ -340,10 +281,10 @@ class Elements:
         assert is_elements, element_types
         self.element_type_to_elset_name = element_type_to_elset_name
 
-    def element(self, eid):
+    def element(self, eid: int):
         """gets a specific element of the part"""
         elem = None
-        etypes_nnodes = self._etypes_nnodes()
+        etypes_nnodes = _etypes_nnodes()
         for etype, nnodes in etypes_nnodes:
             etype_eids = '%s_eids' % etype
             eids = getattr(self, etype_eids)  # r2d2_eids
@@ -357,7 +298,7 @@ class Elements:
         return None, None, None
 
     @property
-    def nelements(self):
+    def nelements(self) -> int:
         """Gets the total number of elements"""
         n_mass = self.mass.shape[0] if self.mass is not None else 0
 
@@ -603,3 +544,62 @@ class Elements:
             fmt = '%d,\t' * (nnodes) + '%d\n'
             for eid_elem in eids_elems:
                 abq_file.write(fmt % tuple(eid_elem))
+
+
+def _etypes_nnodes() -> list[tuple[str, int]]:
+    """internal helper method"""
+    etypes_nnodes = [
+        ('mass', 1),  #  similar to a CONM2
+
+        # rigid
+        ('r2d2', 2),  #  similar to a RBAR
+
+        # bar/beam
+        # 2 required nodes, but 3rd orientation node (g0) is possible
+        ('b31',  (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+        ('b31h', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+        ('b31r', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+
+        #  shells
+        ('cpe3', 3),
+        ('cpe4', 4),
+        ('cpe4r', 4),  # quad plane strain, reduced
+
+        ('cps3', 3),
+        ('cps4', 4),
+        ('cps3r', 3),
+        ('cps4r', 4), # quad, plane stress, reduced
+
+        ('coh2d4', 4), #  cohesive zone
+        ('cohax4', 4), #  cohesive zone
+        ('cax3', 3),
+        ('cax4r', 4), # reduced
+
+        ('s3', 3),
+        ('s4', 4),
+        ('s6', 6),
+        ('s8', 8),
+
+        ('s3r', 3),
+        ('s4r', 4),
+        ('s6r', 6),
+        ('s8r', 8), # CQUAD8 reduced
+
+        #  solids
+        ('c3d4', 4),    # tet4
+        ('c3d6', 6),    # penta6
+        ('c3d8', 8),    # hexa8
+        ('c3d10', 10),  # tet10
+        ('c3d15', 15),  # penta15
+        ('c3d20', 20),  # hexa20
+
+        ('c3d4r', 4),    # tet4 reduced
+        ('c3d6r', 6),    # penta6 reduced
+        ('c3d8r', 8),    # hexa8 reduced
+        ('c3d10r', 10),  # tet10 reduced
+        ('c3d15r', 15),  # penta15 reduced
+        ('c3d20r', 20),  # hexa20 reduced
+
+        ('c3d10h', 10),  # tet10 hybrid hydrostatic
+    ]
+    return etypes_nnodes

@@ -26,7 +26,7 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from vtkmodules.vtkFiltersGeneral import vtkAxes
 # // Linear cells

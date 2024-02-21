@@ -22,7 +22,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_positive_int_or_blank, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.gui.qt_version import qt_int as qt_version
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.legend.legend_object import LegendObject
 
 

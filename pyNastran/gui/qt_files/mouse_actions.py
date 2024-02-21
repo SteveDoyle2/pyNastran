@@ -26,7 +26,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 

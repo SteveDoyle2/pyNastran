@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
 def break_domain_by_case(domains_df: pd.DataFrame, INDEX_DOMAIN) -> pd.DataFrame:

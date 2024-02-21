@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.subcase.utils import (
     write_stress_type, write_set, expand_thru_case_control)
 USER_NAME = getpass.getuser()
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

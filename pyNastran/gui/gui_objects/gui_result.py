@@ -778,19 +778,19 @@ class GuiResult(GuiResultCommon):
     def get_vector_array_by_phase(self, i: int, unused_name, phase=0.):
         raise RuntimeError()
         #assert len(self.xyz.shape) == 2, self.xyz.shape
-        if self.is_real:
-            # e(i*theta) = cos(theta) + i*sin(theta)
-            if self.dim == 2:
-                # single result
-                dxyz = self.dxyz
-            elif self.dim == 3:
-                dxyz = self.dxyz[i, :]
-            else:
-                raise NotImplementedError('dim=%s' % self.dim)
-        else:
-            dxyz = self._get_complex_displacements_by_phase(i, phase)
-        assert len(dxyz.shape) == 2, dxyz.shape
-        return xyz, dxyz
+        #if self.is_real:
+            ## e(i*theta) = cos(theta) + i*sin(theta)
+            #if self.dim == 2:
+                ## single result
+                #dxyz = self.dxyz
+            #elif self.dim == 3:
+                #dxyz = self.dxyz[i, :]
+            #else:
+                #raise NotImplementedError('dim=%s' % self.dim)
+        #else:
+            #dxyz = self._get_complex_displacements_by_phase(i, phase)
+        #assert len(dxyz.shape) == 2, dxyz.shape
+        #return xyz, dxyz
 
     def get_fringe_result(self, i: int, name: str) -> np.ndarray:
         if self.is_real:

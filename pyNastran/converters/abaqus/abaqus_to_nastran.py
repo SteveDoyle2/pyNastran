@@ -6,7 +6,7 @@ import os
 import sys
 from itertools import count
 from collections import defaultdict
-from typing import cast, TYPE_CHECKING
+from typing import Callable, Union, cast, TYPE_CHECKING
 
 import numpy as np
 
@@ -415,7 +415,7 @@ def _build_face_to_nids(
         model: Abaqus,
         elements: Elements,
         face_to_nids_map: dict[tuple[str, str, str], np.ndarray]) -> None:
-    log: SimpleLogger = model.log
+    #log: SimpleLogger = model.log
 
     for set_type, set_name, face in list(face_to_nids_map.keys()):
         face_int = int(face[-1])
@@ -621,14 +621,14 @@ def _create_bar_properties(model: Abaqus, nastran_model: BDF,
                 nastran_model, mat, mid,
                 comment=mat_name,
                 is_solid=False)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(mat_name)
         section = beam_section.section
         bar_section, dim = map_bar_section_dimensions(
             section, beam_section.dimensions)
 
         nastran_model.add_pbarl(pid, mid, bar_section, dim,
-                                group='MSCBML0', nsm=0., comment='')
+                                group='MSCBML0', nsm=0., comment=comment)
 
         x_vector = beam_section.x_vector
         map_bar_property_ids(
@@ -903,7 +903,7 @@ def _create_material(nastran_model: BDF,
             rho=rho, a1=0., a2=0., tref=0.,
             Xt=0., Xc=None, Yt=0., Yc=None, S=0.,
             ge=0., F12=0., strn=0., comment=comment)
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(sections)
     return material
 
@@ -986,7 +986,7 @@ def _xform_model(nastran_model: BDF, xform: bool):
     log.error('xform is super buggy and largely untested')
 
 def _write_frequency(model: Abaqus,
-                     step: Abaqus,
+                     step: Step,
                      nastran_model: BDF,
                      case_control_deck: CaseControlDeck) -> None:
     if not step.frequencies:
@@ -1004,7 +1004,7 @@ def _write_frequency(model: Abaqus,
         subcase.add_integer_type('METHOD', freq_id)
 
 def _write_boundary_as_nastran(model: Abaqus,
-                               step: Abaqus,
+                               step: Step,
                                nastran_model: BDF,
                                case_control_deck: CaseControlDeck) -> None:
     if not step.boundaries:
@@ -1035,7 +1035,8 @@ def _write_boundary_as_nastran(model: Abaqus,
         comment = '\n'.join(comment_list)
         nastran_model.spcs[spc_id][0].comment = comment
 
-def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
+def _create_nastran_loads(model: Abaqus,
+                          nastran_model: BDF) -> None:
     log = nastran_model.log
     if nastran_model.case_control_deck is None:
         nastran_model.case_control_deck = CaseControlDeck([], log=nastran_model.log)
@@ -1174,7 +1175,7 @@ def _write_distributed_loads(model: Abaqus,
                                 pressures = [mapped_face*pressure, None, None, None]
                             elif isinstance(mapped_face, tuple):
                                 log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
-                            else:
+                            else:  # pragma: no cover
                                 raise RuntimeError(mapped_face)
                             #assert face_int == 1, face_int
                             nastran_model.add_pload4(
@@ -1187,7 +1188,7 @@ def _write_distributed_loads(model: Abaqus,
                                 pressures = [mapped_face*pressure, None, None, None]
                             elif isinstance(mapped_face, tuple):
                                 log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
-                            else:
+                            else:  # pragma: no cover
                                 raise RuntimeError(mapped_face)
 
                             #assert face_int == 1, face_int

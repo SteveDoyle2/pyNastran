@@ -9,7 +9,7 @@ from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .vector_results import VectorResultsCommon, filter_ids
 from .nodal_averaging import nan_difference
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateArray
     CaseTuple = tuple[int, int, str]

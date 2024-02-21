@@ -26,7 +26,7 @@ from .nodal import read_nodal_result
 from .stress_strain import read_elemental_stress, read_elemental_strain, read_elemental_force
 from pyNastran.utils import print_bad_path
 #from .utils import get_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastrandev.op2_vectorized3.op2_geom import OP2, OP2Geom
 
 

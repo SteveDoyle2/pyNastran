@@ -35,7 +35,7 @@ from pyNastran.gui.gui_objects.settings import (
     USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
 
 

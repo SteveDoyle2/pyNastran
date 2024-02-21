@@ -4,7 +4,7 @@ defines the ProbeResultStyle class
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 

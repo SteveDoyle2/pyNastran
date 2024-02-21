@@ -34,7 +34,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_group_name, get_attributes
 #from pyNastran2.op2.op2_interface.h5_pytables.utils import get_analysis_code_times
 from .utils import break_domain_by_case, get_analysis_code_times # get_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
     import h5py
     from pyNastran.dev.op2_vectorized3.op2_geom import OP2

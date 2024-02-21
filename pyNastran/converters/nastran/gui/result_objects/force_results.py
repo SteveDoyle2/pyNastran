@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.femutils.utils import safe_norm
 from .vector_results import DispForceVectorResults # , _to_dense_vector
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (
         RealTableArray, ComplexTableArray)
 

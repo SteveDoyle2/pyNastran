@@ -4,7 +4,7 @@ import os
 import numpy as np
 from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
                                                  check_format_str)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from qtpy.QtWidgets import QLineEdit
 
 QLINEEDIT_ERROR = "QLineEdit{background: red;}"

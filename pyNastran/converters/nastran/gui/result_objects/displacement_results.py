@@ -4,7 +4,7 @@ from typing import Union, TYPE_CHECKING
 
 from .vector_results import DispForceVectorResults
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (
         RealTableArray, ComplexTableArray)
 

@@ -6,7 +6,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     CASE = dict[int, float]
     LOADS_DICT = dict[int, CASE]

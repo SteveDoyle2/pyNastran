@@ -57,7 +57,7 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from vtkmodules.vtkCommonDataModel import vtkPointData
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
+    from pyNastran.gui.typing import Format
 
 
 class GeometryObject(BaseGui):
@@ -941,7 +942,7 @@ class GuiAttributes:
 
     def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False) -> None:
         """populates the formats that will be supported"""
-        fmts: list[str] = []
+        fmts: list[Format] = []
         self.supported_formats = []
         #assert 'h5nastran' in fmt_order
         for fmt in fmt_order:
@@ -965,7 +966,7 @@ class GuiAttributes:
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
-        self.fmts = fmts
+        self.fmts: list[Format] = fmts
         #print("fmts =", fmts)
 
         if not IS_TESTING:  # pragma: no cover
@@ -1712,7 +1713,7 @@ class ModelData:
         return msg
 
 def _add_fmt(supported_fmts: list[str],
-             fmts: list[str], fmt: str,
+             fmts: list[Format], fmt: str,
              geom_results_funcs: str, data: Callable) -> None:
     """
     Adds a format
