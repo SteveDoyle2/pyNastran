@@ -559,6 +559,49 @@ class Stress:
         self.celas3_stress = {}
         self.celas4_stress = {}
 
+        # rods
+        self.crod_stress = {}
+        self.conrod_stress = {}
+        self.ctube_stress = {}
+
+        # bars/beams
+        self.cbar_stress = {}
+        self.cbar_stress_10nodes = {}
+        self.cbeam_stress = {}
+        self.cbend_stress = {}
+
+
+        # other 1d/2d
+        self.cshear_stress = {}
+        self.cweld_stress = {}
+        self.cfast_stress = {}
+        self.cbush_stress = {}
+
+        # shells
+        self.ctria3_stress = {}
+        self.ctria6_stress = {}
+        self.cquad4_stress = {}
+        self.cquad8_stress = {}
+        self.cquadr_stress = {}
+        self.ctriar_stress = {}
+
+        self.cquad4_composite_stress = {}
+        self.cquad8_composite_stress = {}
+        self.cquadr_composite_stress = {}
+        self.ctria3_composite_stress = {}
+        self.ctria6_composite_stress = {}
+        self.ctriar_composite_stress = {}
+
+        self.cplstn3_stress = {}
+        self.cplstn4_stress = {}
+        self.cplstn6_stress = {}
+        self.cplstn8_stress = {}
+        self.cplsts3_stress = {}
+        self.cplsts4_stress = {}
+        self.cplsts6_stress = {}
+        self.cplsts8_stress = {}
+
+        # solids
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
@@ -567,6 +610,13 @@ class Stress:
         # 269, 270
         self.chexa_composite_stress = {}
         self.cpenta_composite_stress = {}
+
+        #: OES - CTRIAX6
+        self.ctriax_stress = {}
+
+        # bushing
+        self.cbush1d_stress_strain = {}
+        self.hyperelastic_cquad4_stress = {}
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
@@ -577,6 +627,41 @@ class Stress:
             'ctetra_stress', 'cpenta_stress', 'chexa_stress', 'cpyram_stress',
 
             'chexa_composite_stress', 'cpenta_composite_stress',
+
+            # OES - isotropic CROD/CONROD/CTUBE stress/strain
+            'crod_stress', 'conrod_stress', 'ctube_stress',
+
+            # OES - isotropic CBAR stress/strain
+            'cbar_stress',
+            'cbar_stress_10nodes',
+
+            # OES - isotropic CBEAM stress/strain
+            'cbeam_stress',
+
+            # CBEND - isotropic CBEAM stress/strain
+            'cbend_stress', # 'cbend_force',
+
+            # OES - isotropic CTRIA3/CQUAD4 stress/strain
+            'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
+            'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
+            'ctriax_stress',
+            # OES - CTRIAX6
+            'cbush_stress',
+
+            # OES - composite CTRIA3/CQUAD4 stress/strain
+            'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress',
+            'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
+
+            # OES - CSHEAR stress/strain
+            'cshear_stress',
+
+            'cplstn3_stress', 'cplstn4_stress', 'cplstn6_stress', 'cplstn8_stress',
+            'cplsts3_stress', 'cplsts4_stress', 'cplsts6_stress', 'cplsts8_stress',
+
+            'cweld_stress',
+            'cfast_stress',
+            'cbush1d_stress_strain',
+            'hyperelastic_cquad4_stress',
         ]
         if include_class:
             return ['stress.' + table for table in tables]
@@ -584,20 +669,68 @@ class Stress:
 
 class Strain:
     def __init__(self):
-        self.ctetra_strain = {}
-        self.cpenta_strain = {}
-        self.chexa_strain = {}
-        self.cpyram_strain = {}
-
         # springs
         self.celas1_strain = {}
         self.celas2_strain = {}
         self.celas3_strain = {}
         self.celas4_strain = {}
 
+        # rods
+        self.crod_strain = {}
+        self.conrod_strain = {}
+        self.ctube_strain = {}
+
+        # bars/beams
+        self.cbar_strain = {}
+        self.cbar_strain_10nodes = {}
+        self.cbeam_strain = {}
+        self.cbend_strain = {}
+
+        # other 1d
+        self.cbush_strain = {}
+        self.cfast_strain = {}
+        self.cweld_strain = {}
+        self.cshear_strain = {}
+
+        # shells
+        self.ctria3_strain = {}
+        self.ctria6_strain = {}
+        self.cquad4_strain = {}
+        self.cquad8_strain = {}
+        self.cquadr_strain = {}
+        self.ctriar_strain = {}
+
+        self.cquad4_composite_strain = {}
+        self.cquad8_composite_strain = {}
+        self.cquadr_composite_strain = {}
+        self.ctria3_composite_strain = {}
+        self.ctria6_composite_strain = {}
+        self.ctriar_composite_strain = {}
+
+        self.cplstn3_strain = {}
+        self.cplstn4_strain = {}
+        self.cplstn6_strain = {}
+        self.cplstn8_strain = {}
+        self.cplsts3_strain = {}
+        self.cplsts4_strain = {}
+        self.cplsts6_strain = {}
+        self.cplsts8_strain = {}
+
+        # solids
+        self.ctetra_strain = {}
+        self.cpenta_strain = {}
+        self.chexa_strain = {}
+        self.cpyram_strain = {}
+
         # 269, 270
         self.chexa_composite_strain = {}
         self.cpenta_composite_strain = {}
+
+        #: OES - CTRIAX6
+        self.ctriax_strain = {}
+
+        self.hyperelastic_cquad4_strain = {}
+
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
@@ -608,6 +741,37 @@ class Strain:
             'ctetra_strain', 'cpenta_strain', 'chexa_strain', 'cpyram_strain',
 
             'chexa_composite_strain', 'cpenta_composite_strain',
+
+            # OES - isotropic CROD/CONROD/CTUBE
+            'crod_strain', 'conrod_strain', 'ctube_strain',
+
+            # OES - isotropic CBAR
+            'cbar_strain',          # OES - isotropic CBAR
+            'cbar_strain_10nodes',  # OES - isotropic CBAR
+            'cbeam_strain',         # OES - isotropic CBEAM
+            'cbend_strain',         # OES - isotropic CBEND
+
+            # OES - isotropic CTRIA3/CQUAD4
+            'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
+            'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
+            'ctriax_strain',
+
+            # OES - composite CTRIA3/CQUAD4
+            'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
+            'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
+
+            # OES - CSHEAR stress/strain
+            'cplstn3_strain', 'cplstn4_strain', 'cplstn6_strain', 'cplstn8_strain',
+            'cplsts3_strain', 'cplsts4_strain', 'cplsts6_strain', 'cplsts8_strain',
+
+            # other 1d/2d
+            'cshear_strain',
+            'cweld_strain',
+            'cfast_strain',
+            'cbush_strain',
+            'hyperelastic_cquad4_strain',
+
+
         ]
         if include_class:
             return ['strain.' + table for table in tables]

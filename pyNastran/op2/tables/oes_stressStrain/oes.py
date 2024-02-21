@@ -1219,8 +1219,12 @@ class OES(OP2Common2):
         assert isinstance(table_name_bytes, bytes), table_name_bytes
         is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
 
-        if table_name_bytes in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
-                               b'OES1C', b'OSTR1C', b'OES1', ]:
+        if table_name_bytes in [b'OES1X1', b'OES1X',
+                               b'OES1C', b'OES1', ]:
+            prefix = 'stress.'
+            self._set_as_sort1()
+        elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C']:
+            prefix = 'strain.'
             self._set_as_sort1()
         elif table_name_bytes in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
             self._set_as_sort2()
@@ -1400,7 +1404,7 @@ class OES(OP2Common2):
             prefix = 'modal_contribution.'
         elif table_name_bytes in [b'OESC1']:
             # NASA95
-            prefix = ''
+            prefix = 'stress.'
         else:
             raise NotImplementedError(op2.table_name)
 
@@ -1620,9 +1624,9 @@ class OES(OP2Common2):
             n, nelements, ntotal = self._oes_csolid_linear_hyperelastic_cosine(data, ndata, dt, is_magnitude_phase,
                                                                                result_type, prefix, postfix)
 
-        elif op2.element_type in [160, 163, 166,
-                                   161, # centroid
-                                   165,]:
+        #elif op2.element_type in [160, 163, 166,
+                                   #161, # centroid
+                                   #165,]:
             # nonlinear hyperelastic solids
             # 160-CPENTAFD
             # 163-CHEXAFD
@@ -1633,8 +1637,8 @@ class OES(OP2Common2):
 
             # many nodes?
             # 165-CPENTAFD
-            n, nelements, ntotal = self._oes_csolid_linear_hyperelastic(data, ndata, dt, is_magnitude_phase,
-                                                                        result_type, prefix, postfix)
+            #n, nelements, ntotal = self._oes_csolid_linear_hyperelastic(data, ndata, dt, is_magnitude_phase,
+                                                                        #result_type, prefix, postfix)
         elif op2.element_type in [202, 204,
                                    216, 218, 220, 221]:
             # nonlinear hyperelastic solids
@@ -7453,7 +7457,13 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         #if op2.is_stress:
-        result_name = prefix + 'hyperelastic_cquad4_strain' + postfix
+        result_name_base = 'hyperelastic_cquad4_'
+        if op2.is_stress:
+            flag = 'stress'
+        else:
+            flag = 'strain'
+        result_name = prefix + result_name_base + flag + postfix
+
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
 

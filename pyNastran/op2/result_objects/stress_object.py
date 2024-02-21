@@ -188,16 +188,18 @@ class StressObject:
 def create_plates(model: Any, key: NastranKey, is_stress: bool) -> dict[str, Any]:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
+        stress = model.op2_results.stress
         plates = [
-            model.ctria3_stress, model.cquad4_stress,
-            model.ctria6_stress, model.cquad8_stress,
-            model.ctriar_stress, model.cquadr_stress,
+            stress.ctria3_stress, stress.cquad4_stress,
+            stress.ctria6_stress, stress.cquad8_stress,
+            stress.ctriar_stress, stress.cquadr_stress,
         ]
     else:
+        strain = model.op2_results.strain
         plates = [
-            model.ctria3_strain, model.cquad4_strain,
-            model.ctria6_strain, model.cquad8_strain,
-            model.ctriar_strain, model.cquadr_strain,
+            strain.ctria3_strain, strain.cquad4_strain,
+            strain.ctria6_strain, strain.cquad8_strain,
+            strain.ctriar_strain, strain.cquadr_strain,
         ]
 
     #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
@@ -288,22 +290,24 @@ def create_composite_plates(model, key: NastranKey,
 
     """
     if is_stress:
+        stress = model.op2_results.stress
         cplates_dict = {
-            'CTRIA3' : model.ctria3_composite_stress,
-            'CTRIA6' : model.ctria6_composite_stress,
-            'CTRIAR' : model.ctriar_composite_stress,
-            'CQUAD4' : model.cquad4_composite_stress,
-            'CQUAD8' : model.cquad8_composite_stress,
-            'CQUADR' : model.cquadr_composite_stress,
+            'CTRIA3' : stress.ctria3_composite_stress,
+            'CTRIA6' : stress.ctria6_composite_stress,
+            'CTRIAR' : stress.ctriar_composite_stress,
+            'CQUAD4' : stress.cquad4_composite_stress,
+            'CQUAD8' : stress.cquad8_composite_stress,
+            'CQUADR' : stress.cquadr_composite_stress,
         }
     else:
+        strain = model.op2_results.strain
         cplates_dict = {
-            'CTRIA3' : model.ctria3_composite_strain,
-            'CTRIA6' : model.ctria6_composite_strain,
-            'CTRIAR' : model.ctriar_composite_strain,
-            'CQUAD4' : model.cquad4_composite_strain,
-            'CQUAD8' : model.cquad8_composite_strain,
-            'CQUADR' : model.cquadr_composite_strain,
+            'CTRIA3' : strain.ctria3_composite_strain,
+            'CTRIA6' : strain.ctria6_composite_strain,
+            'CTRIAR' : strain.ctriar_composite_strain,
+            'CQUAD4' : strain.cquad4_composite_strain,
+            'CQUAD8' : strain.cquad8_composite_strain,
+            'CQUADR' : strain.cquadr_composite_strain,
         }
     composite_data_dict = {}
     ncases = sum([len(res_dict) for res_dict in cplates_dict.values()])
@@ -437,9 +441,11 @@ def get_rod_stress_strain(model: OP2,
                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
-        rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
+        stress = model.op2_results.stress
+        rods = [stress.crod_stress, stress.conrod_stress, stress.ctube_stress,]
     else:
-        rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
+        strain = model.op2_results.strain
+        rods = [strain.crod_strain, strain.conrod_strain, strain.ctube_strain,]
 
     for result in rods:
         if key not in result:
@@ -513,9 +519,11 @@ def get_bar_stress_strain(model: OP2, key,
                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
-        bars = model.cbar_stress
+        stress = model.op2_results.stress
+        bars = stress.cbar_stress
     else:
-        bars = model.cbar_strain
+        strain = model.op2_results.strain
+        bars = strain.cbar_strain
 
     if key not in bars:
         return vm_word
@@ -602,9 +610,11 @@ def get_bar100_stress_strain(model: OP2,
                              log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
-        bars2 = model.cbar_stress_10nodes
+        stress = model.op2_results.stress
+        bars2 = stress.cbar_stress_10nodes
     else:
-        bars2 = model.cbar_strain_10nodes
+        strain = model.op2_results.strain
+        bars2 = strain.cbar_strain_10nodes
 
     if key in bars2:
         case = bars2[key]
@@ -666,9 +676,11 @@ def get_beam_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itime
                            log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
-        beams = model.cbeam_stress
+        stress = model.op2_results.stress
+        beams = stress.cbeam_stress
     else:
-        beams = model.cbeam_strain
+        strain = model.op2_results.strain
+        beams = strain.cbeam_strain
 
     if key in beams:
         case = beams[key]
@@ -737,16 +749,18 @@ def get_plate_stress_strain(model: OP2, key,
     Gets the max/min stress across all layers.
     """
     if is_stress:
+        stress = model.op2_results.stress
         plates = [
-            model.ctria3_stress, model.cquad4_stress,
-            model.ctria6_stress, model.cquad8_stress,
-            model.ctriar_stress, model.cquadr_stress,
+            stress.ctria3_stress, stress.cquad4_stress,
+            stress.ctria6_stress, stress.cquad8_stress,
+            stress.ctriar_stress, stress.cquadr_stress,
         ]
     else:
+        strain = model.op2_results.strain
         plates = [
-            model.ctria3_strain, model.cquad4_strain,
-            model.ctria6_strain, model.cquad8_strain,
-            model.ctriar_strain, model.cquadr_strain,
+            strain.ctria3_strain, strain.cquad4_strain,
+            strain.ctria6_strain, strain.cquad8_strain,
+            strain.ctriar_strain, strain.cquadr_strain,
         ]
 
     for result in plates:
@@ -874,13 +888,15 @@ def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itim
     """helper method for _fill_op2_time_centroidal_stress"""
     vm_word0 = vm_word
     if is_stress:
-        solids = [(model.ctetra_stress),
-                  (model.cpenta_stress),
-                  (model.chexa_stress),]
+        stress = model.op2_results.stress
+        solids = [(stress.ctetra_stress),
+                  (stress.cpenta_stress),
+                  (stress.chexa_stress),]
     else:
-        solids = [(model.ctetra_strain),
-                  (model.cpenta_strain),
-                  (model.chexa_strain),]
+        strain = model.op2_results.strain
+        solids = [(strain.ctetra_strain),
+                  (strain.cpenta_strain),
+                  (strain.chexa_strain),]
 
     for result in solids:
         if key not in result:

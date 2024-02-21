@@ -2363,8 +2363,8 @@ def oes_csolid_linear_hyperelastic_real(op2: OP2, data: bytes, obj,
             out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
             if op2.is_debug_file:
                 op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-            (grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
-             evol, exx, eyy, ezz, exy, eyz, exz) = out
+            #(grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
+             #evol, exx, eyy, ezz, exy, eyz, exz) = out
             #print(out)
 
             if op2.is_debug_file:

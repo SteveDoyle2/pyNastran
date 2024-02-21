@@ -37,7 +37,7 @@ def nocrash_log(func):
     @wraps(func)
     def wrapper(log: SimpleLogger, stop_on_failure: bool,
                 cases, *args, **kwargs):
-        assert isinstance(cases, dict), case
+        assert isinstance(cases, dict), cases
         ncases = len(cases)
         try:
             icase = func(cases, *args, **kwargs)
@@ -919,7 +919,10 @@ def _get_plates(model: OP2,
         results = model.op2_results.modal_contribution
         preword = 'Modal Contribution '
     elif prefix == '':
-        results = model
+        if is_stress:
+            results = model.op2_results.stress
+        else:
+            results = model.op2_results.strain
         preword = ''
     else:  # pragma: no cover
         raise NotImplementedError(prefix)
@@ -946,24 +949,26 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
                              is_stress: bool,
                              key=None):
     if is_stress:
+        stress = model.op2_results.stress
         case_map = {
             # element_name
-            'CTRIA3' : model.ctria3_composite_stress,
-            'CTRIA6' : model.ctria6_composite_stress,
-            'CTRIAR' : model.ctriar_composite_stress,
-            'CQUAD4' : model.cquad4_composite_stress,
-            'CQUAD8' : model.cquad8_composite_stress,
-            'CQUADR' : model.cquadr_composite_stress,
+            'CTRIA3' : stress.ctria3_composite_stress,
+            'CTRIA6' : stress.ctria6_composite_stress,
+            'CTRIAR' : stress.ctriar_composite_stress,
+            'CQUAD4' : stress.cquad4_composite_stress,
+            'CQUAD8' : stress.cquad8_composite_stress,
+            'CQUADR' : stress.cquadr_composite_stress,
         }
     else:
+        strain = model.op2_results.strain
         case_map = {
             # element_name
-            'CTRIA3' : model.ctria3_composite_strain,
-            'CTRIA6' : model.ctria6_composite_strain,
-            'CTRIAR' : model.ctriar_composite_strain,
-            'CQUAD4' : model.cquad4_composite_strain,
-            'CQUAD8' : model.cquad8_composite_strain,
-            'CQUADR' : model.cquadr_composite_strain,
+            'CTRIA3' : strain.ctria3_composite_strain,
+            'CTRIA6' : strain.ctria6_composite_strain,
+            'CTRIAR' : strain.ctriar_composite_strain,
+            'CQUAD4' : strain.cquad4_composite_strain,
+            'CQUAD8' : strain.cquad8_composite_strain,
+            'CQUADR' : strain.cquadr_composite_strain,
         }
 
     keys_map = {}

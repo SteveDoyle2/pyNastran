@@ -68,6 +68,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.validate_result_object_methods()
 
     def load_nastran_results(self, op2_filename: Union[str, OP2]):
+        self.stop_on_failure = True
         super().load_nastran_results(op2_filename)
         self.validate_result_object_methods()
 

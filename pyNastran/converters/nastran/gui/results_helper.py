@@ -886,7 +886,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 #eids, cases, model, times, key, icase,
                 #force_dict, header_dict, keys_map)
             if key in model.cbeam_force:
-                log.warning('skipping nastran beam force')
+                log.info('skipping nastran beam force')
 
         if nastran_settings.plate_force:
             icase = get_plate_force(
