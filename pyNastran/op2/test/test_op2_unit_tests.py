@@ -3805,7 +3805,7 @@ class TestOP2Main(Tester):
                 #build_pandas=True, log=log)
 
 
-def _verify_ids(bdf, op2, isubcase=1):
+def _verify_ids(bdf, op2: OP2, isubcase=1):
     """helper function for tests"""
     types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
     out = bdf.get_card_ids_by_card_types(types)

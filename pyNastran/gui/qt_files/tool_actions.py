@@ -77,17 +77,18 @@ class ToolActions:
             label2 = obj.get_annotation(i, name)
             data_format = obj.get_data_format(i, name)
             unused_vector_size = obj.get_vector_size(i, name)
-            print(subtitle, label, label2, location, name)
+            title = obj.get_legend_title(i, name)
+            print(subtitle, label, label2, location, name, title)
 
             word, eids_nids = gui.get_mapping_for_location(location)
             is_failed, csv_filename = _export_case(
-                name, eids_nids, case, icase,
+                title, eids_nids, case, icase,
                 word, label2, data_format, log)
             if not is_failed:
                 print(csv_filename)
 
         if icases:
-            gui.log_command(f'self.tool_actions.export_case_data(icases={icases})\n'
+            gui.log_command(f'self.export_case_data(icases={icases})\n'
                             f'# -> {csv_filename}')
 
     #---------------------------------------------------------------------------
@@ -763,6 +764,9 @@ def _export_case(name: str,
     """
     Writes a csv of a gui result in a form that you can load back in.
     """
+    # handles 'Force\nIsElementOn', which would mess up the csv_filename
+    name = name.replace('\n', '_')
+
     is_failed = True
     # fixing cast int data
     header = '%s(%%i),"%s(%s)"' % (word, label2, data_format)
