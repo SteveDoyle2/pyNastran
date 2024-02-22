@@ -406,6 +406,7 @@ class OP2_F06_Common:
         return self.op2_results.strain.ctriar_strain
     @property
     def ctriax_strain(self):
+        self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
         return self.op2_results.strain.ctriax_strain
 
     @property
@@ -424,15 +425,6 @@ class OP2_F06_Common:
     def cpyram_strain(self):
         self.deprecated('model.cpyram_strain', 'model.op2_results.strain.cpyram_strain', '1.4')
         return self.op2_results.strain.cpyram_strain
-
-    @property
-    def chexa_composite_strain(self):
-        self.deprecated('model.chexa_composite_strain', 'model.op2_results.strain.chexa_composite_strain', '1.4')
-        return self.op2_results.strain.chexa_composite_strain
-    @property
-    def cpenta_composite_strain(self):
-        self.deprecated('model.cpenta_composite_strain', 'model.op2_results.strain.cpenta_composite_strain', '1.4')
-        return self.op2_results.strain.cpenta_composite_strain
 
     @property
     def cplstn3_strain(self):
