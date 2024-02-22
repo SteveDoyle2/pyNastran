@@ -2820,6 +2820,23 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         save_load_deck(model)
 
+    def test_monpnt3(self):
+        """tests a MONPNT3 with an equals sign"""
+        model = BDF(debug=None)
+        card_lines = [
+            'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
+            '        123456  1       2       225     0.	0.	0.',
+            '        225',
+        ]
+        card_name = 'MONPNT3'
+        model.add_card_lines(card_lines, card_name, comment='', has_none=True)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        cid = 225
+        model.add_cord2r(cid, origin, zaxis, xzplane)
+        save_load_deck(model)
+
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')

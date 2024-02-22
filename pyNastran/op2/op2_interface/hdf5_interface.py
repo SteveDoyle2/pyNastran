@@ -65,6 +65,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressAr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_weld import RealWeldStressArray, RealWeldStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressArray, RealFastStrainArray
 
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray # , RealCompositePlateStrainStrengthRatioArray
+
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
@@ -93,6 +95,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateS
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import RandomCompositePlateStressArray, RandomCompositePlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_plates_vm import RandomPlateVMStressArray, RandomPlateVMStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonlinearBushArray
 
@@ -124,7 +127,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexDamperForceArray, ComplexPlate2ForceArray, ComplexPlateForceArray,
     ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
     ComplexViscForceArray, ComplexCBearForceArray,
-    ComplexCWeldForceArray,
+    ComplexCWeldForceArray, ComplexCWeldForceArrayMSC,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealChbdyHeatFluxArray, RealConvHeatFluxArray,
@@ -230,6 +233,8 @@ TABLE_OBJ_MAP = {
     'ROQGM1.mpc_forces': (RealMPCForcesArray, ),
 
     'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
+    'eigenvectors_structure' : (RealEigenvectorArray, ),
+    'eigenvectors_fluid' : (RealEigenvectorArray, ComplexEigenvectorArray, ),
     'RADCONS.eigenvectors' : (RealEigenvectorArray, ),
     'RADEATC.eigenvectors' : (RealEigenvectorArray, ),
     'RADEFFM.eigenvectors' : (RealEigenvectorArray, ),
@@ -482,7 +487,7 @@ TABLE_OBJ_MAP = {
     'rms.cbar_force' : (RealCBarForceArray, ),
     'no.cbar_force' : (RealCBarForceArray, ),
 
-    'force.cweld_force': (RealCWeldForceArray, RealCWeldForceArrayMSC, ComplexCWeldForceArray, ),
+    'force.cweld_force': (RealCWeldForceArray, RealCWeldForceArrayMSC, ComplexCWeldForceArray, ComplexCWeldForceArrayMSC),
     'force.cfast_force': (RealCFastForceArrayNX, RealCFastForceArrayMSC, ),
     'force.cbear_force': (RealCBearForceArray, ComplexCBearForceArray, ),
     'stress.cfast_stress' : (RealFastStressArray, ComplexFastStressArray, ),
@@ -545,7 +550,7 @@ TABLE_OBJ_MAP = {
     'crm.cquad4_stress' : (RandomPlateStressArray, ),
     'psd.cquad4_stress' : (RandomPlateStressArray, ),
     'rms.cquad4_stress' : (RandomPlateStressArray, ),
-    'no.cquad4_stress' : (RandomPlateStressArray, ),
+    'no.cquad4_stress' : (RandomPlateStressArray, RandomPlateVMStressArray),
     'modal_contribution.cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray, ComplexPlateVMStressArray),
     'RASCONS.cquad4_stress' : (RealPlateStressArray, ),
     'RASEATC.cquad4_stress' : (RealPlateStressArray, ),
@@ -650,6 +655,13 @@ TABLE_OBJ_MAP = {
     'stress.ctriar_composite_stress' : (RealCompositePlateStressArray, ),
     'stress.cquad8_composite_stress' : (RealCompositePlateStressArray, ),
     'stress.cquadr_composite_stress' : (RealCompositePlateStressArray, ),
+
+    'strength_ratio.ctria3_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
+    'strength_ratio.ctria6_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
+
+    'strength_ratio.cquad4_composite_stress' : (RealCompositePlateStressArray,
+                                                RealCompositePlateStressStrengthRatioArray),
+    'strength_ratio.cquad8_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
 
     'strain.cquad4_composite_strain' : (RealCompositePlateStrainArray, ),
     'strain.ctria3_composite_strain' : (RealCompositePlateStrainArray, ),
@@ -763,7 +775,7 @@ TABLE_OBJ_MAP = {
     'RAECONS.cpenta_strain' : (RealSolidStrainArray, ),
     'RAEEATC.cpenta_strain' : (RealSolidStrainArray, ),
 
-    'strain.chexa_strain' : (RealSolidStrainArray, RealSolidStressArrayNx, ComplexSolidStrainArray),
+    'strain.chexa_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'ato.chexa_strain' : (RandomSolidStrainArray, ),
     'crm.chexa_strain' : (RandomSolidStrainArray, ),
     'psd.chexa_strain' : (RandomSolidStrainArray, ),
@@ -869,7 +881,8 @@ TABLE_OBJ_MAP = {
     'RAFEATC.cbush_force' : (RealCBushForceArray, ),
 
     'stress.cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
-    'ctriax_strain' : (RealTriaxStressArray, ),
+    'strain.ctriax_strain' : (RealTriaxStressArray, ),
+    'strain.cweld_strain': (RealDisplacementArray, ),
 
     # -------------------------------------
     # strain energy
@@ -1000,8 +1013,14 @@ TABLE_OBJ_MAP = {
     'grid_point_strains_volume_principal' : (GridPointStrainsVolumePrincipalArray, ),
     'grid_point_strain_discontinuities' : (GridPointStrainsSurfaceDiscontinutiesArray, ),
 
+    # ----------------------------------------------------------
+    # contact
+    'contact_slide_distance': (RealDisplacementArray, ),
+    'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
+
     'contact_forces' : (RealContactForcesArray, ),
     'glue_forces' : (RealContactForcesArray, ),
+    'glue_contact_slide_distance': (RealDisplacementArray, ),
 
     # ----------------------------------------------------------
     'thermal_load.conv_thermal_load' : (RealConvHeatFluxArray,),
@@ -1055,7 +1074,6 @@ TABLE_OBJ_MAP = {
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
-    'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())

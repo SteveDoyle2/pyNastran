@@ -36,16 +36,52 @@ EXPECTED_HEADER_KEYS_CHECK = [
 ]
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units', 'code-block']
 
-
 def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
+    """splits a MONPNT1"""
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
+
+    fields = _monpnt_line1_fields(line1)
+
+    #assert ',' not in line2, card_lines
+    #assert '\t' not in line2, card_lines
+    #assert '*' not in line2, card_lines
+    fields += _monpnt_line2_to_fields(line2)
+    return fields
+
+def _to_fields_mntpnt3(card_lines: list[str]) -> list[str]:
+    assert len(card_lines) in {2, 3}, card_lines
+    line1 = card_lines[0]
+
+    fields = _monpnt_line1_fields(line1)
+
+    #assert ',' not in line2, card_lines
+    #assert '\t' not in line2, card_lines
+    #assert '*' not in line2, card_lines
+    card_lines_end = card_lines[1:]
+    for line in card_lines_end:
+        fields += _monpnt_line2_to_fields(line)
+    return fields
+
+#def _to_fields_monsumt(card_lines: list[str]) -> list[str]:
+    #assert len(card_lines) == 3, card_lines
+    #line1, line2, line3 = card_lines
+
+    #fields = _monpnt_line1_fields(line1)
+
+    ##assert ',' not in line2, card_lines
+    ##assert '\t' not in line2, card_lines
+    ##assert '*' not in line2, card_lines
+    #fields += _monpnt_line2_to_fields(line2)
+    #fields += _monpnt_line2_to_fields(line3)
+    #return fields
+
+def _monpnt_line1_fields(line1: str) -> list[str]:
+    """splits the first line of a MONPNT1/MONPNT3"""
+
     if '\t' in line1:
         line1 = line1.expandtabs()
         assert ',' not in line1[:16], line1
-    if '\t' in line2:
-        line2 = line2.expandtabs()
-        assert ',' not in line2[:16], line2
 
     label = line1[:24]
     unused_comment = line1[24:]  # len=56 max
@@ -57,20 +93,23 @@ def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
         line1[8:16], line1[16:24], line1[24:32], line1[32:40], line1[40:48],
         line1[48:56], line1[56:64], line1[64:72],
     ]
+    return fields
 
-    #assert ',' not in line2, card_lines
-    #assert '\t' not in line2, card_lines
-    #assert '*' not in line2, card_lines
+def _monpnt_line2_to_fields(line2: str) -> list[str]:
+    """splits a MONPNT3"""
+    if '\t' in line2:
+        line2 = line2.expandtabs()
+        assert ',' not in line2[:16], line2
+
     if ',' in line2:
         # drop off the first field of row2
-        fields += line2.split(',')[1:]
+        fields = line2.split(',')[1:]
     else:
-        fields += [
+        fields = [
             line2[8:16], line2[16:24], line2[24:32], line2[32:40], line2[40:48],
             line2[48:56], line2[56:64], line2[64:72],
         ]
     return fields
-
 
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
@@ -103,8 +142,10 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     fields = []  # type: list[str]
 
-    if card_name in ['MONPNT1']:
+    if card_name in ['MONPNT1', 'MONDSP1']:
         return _to_fields_mntpnt1(card_lines)
+    elif card_name in ['MONPNT3', 'MONSUMT']:
+        return _to_fields_mntpnt3(card_lines)
 
     # first line
     line = card_lines[0].rstrip()

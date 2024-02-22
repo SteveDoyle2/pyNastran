@@ -2030,7 +2030,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card[0] = card_name
         return card
 
-    def create_card_object(self, card_lines, card_name, is_list=True, has_none=True):
+    def create_card_object(self, card_lines: list[str], card_name: str,
+                           is_list: bool=True, has_none: bool=True):
         """
         Creates a BDFCard object, which is really just a list that
         allows indexing past the last field
