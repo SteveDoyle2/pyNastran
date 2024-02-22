@@ -1,3 +1,10 @@
+"""
+By default, there will be no syntax highlighting.  To get that, install:
+ - PyQt5: QScintilla, pygments
+ - PyQt6: QScintilla2, pygments
+
+It doesn't work in PySide2/6
+"""
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
 from qtpy.QtGui import QFont, QFontMetrics, QColor
@@ -31,7 +38,7 @@ elif qt_version == 'pyqt6':
 elif qt_version in {'pyside2', 'pyside6', 'pyqt6'}:
     IS_SCINTILLA = False
 else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+    raise NotImplementedError(f'qt_version = {qt_version!r}')
 
 # hack for pyinstaller...if QScintilla isn't working in the exe, but it is in
 # gui, enable this print block and diff the outputs
@@ -130,7 +137,7 @@ if IS_SCINTILLA:
             self.text.setTextCursor(cursor)
             self.text.setText(var)
 
-        def toPlainText(self):
+        def toPlainText(self) -> str:
             data = str(self.text())
             return data
 
