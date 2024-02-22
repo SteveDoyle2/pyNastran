@@ -135,9 +135,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if keys_to_skip is None:
             keys_to_skip = []
 
-        my_keys_to_skip = [
-            'object_methods', 'object_attributes',
-        ]
+        #my_keys_to_skip = []
+        my_keys_to_skip = _get_keys_to_skip(self)
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
@@ -169,11 +168,9 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []
+        #my_keys_to_skip = []
+        my_keys_to_skip = _get_keys_to_skip(self)
 
-        my_keys_to_skip = [
-            'object_methods', 'object_attributes',
-        ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model) -> bool:
@@ -1425,3 +1422,17 @@ def _create_hdf5_info(h5_file: H5File, op2_model: OP2) -> None:
         return
     from pyNastran.op2.op2_interface.hdf5_interface import create_info_group
     create_info_group(h5_file, op2_model)
+
+def _get_keys_to_skip(model: OP2) -> list[str]:
+    stress = model.op2_results.stress
+    strain = model.op2_results.strain
+    force = model.op2_results.force
+    strain_energy = model.op2_results.strain_energy
+    my_keys_to_skip = [
+        'object_methods', 'object_attributes',
+    ] + stress.get_table_types(include_class=False) + \
+        strain.get_table_types(include_class=False) + \
+        force.get_table_types(include_class=False) + \
+        strain_energy.get_table_types(include_class=False)
+    assert isinstance(my_keys_to_skip, list), my_keys_to_skip
+    return my_keys_to_skip

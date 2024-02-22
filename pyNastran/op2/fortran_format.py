@@ -341,5 +341,5 @@ class FortranFormat:
                     continue
                 msg += f'  {word}={val}\n'
         if msg:
-            print(object_attributes(self))
+            print(object_attributes(self, filter_properties=True))
             print(msg)

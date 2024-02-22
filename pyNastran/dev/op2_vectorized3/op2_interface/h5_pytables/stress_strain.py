@@ -57,7 +57,14 @@ def read_elemental_strain(model: OP2, domains: np.ndarray,
 
 
 def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
-                                 elemental: Node, elemental_index: Node, stress_strain: str):
+                                 elemental: Node, elemental_index: Node,
+                                 stress_strain: str):
+    """
+    Paramters
+    ---------
+    stress_strain : str
+       'stress', 'strain', 'force'
+    """
     iresult = 0
     results = {}
     #geom_model = None
@@ -85,61 +92,61 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
             index = elemental_index[name].read()
             #print(h5_node_)
             if name == 'BAR':
-                cresult_name = f'cbar_{stress_strain}'
+                cresult_name = f'{stress_strain}.cbar_{stress_strain}'
                 iresult = _bar_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'BEAM':
                 #log.warning(f'skipping {name} {stress_strain}')
-                cresult_name = f'cbeam_{stress_strain}'
+                cresult_name = f'{stress_strain}.cbeam_{stress_strain}'
                 iresult = _beam_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'ROD':
-                cresult_name = f'crod_{stress_strain}'
+                cresult_name = f'{stress_strain}.crod_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'TUBE':
-                cresult_name = f'ctube_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctube_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name == 'CONROD':
-                cresult_name = f'conrod_{stress_strain}'
+                cresult_name = f'{stress_strain}.conrod_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name in {'DAMP1', 'DAMP2', 'DAMP3', 'DAMP4'}:
                 n = name[4]
-                cresult_name = f'cdamp{n}_{stress_strain}'
+                cresult_name = f'{stress_strain}.cdamp{n}_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name in {'ELAS1', 'ELAS2', 'ELAS3', 'ELAS4'}:
                 n = name[4]
-                cresult_name = f'celas{n}_{stress_strain}'
+                cresult_name = f'{stress_strain}.celas{n}_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name == 'VISC':
-                cresult_name = f'cvisc_{stress_strain}'
+                cresult_name = f'{stress_strain}.cvisc_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name == 'SHEAR':
-                cresult_name = f'cshear_{stress_strain}'
+                cresult_name = f'{stress_strain}.cshear_{stress_strain}'
                 iresult = _real_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name == 'QUAD4':
-                cresult_name = f'cquad4_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad4_{stress_strain}'
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
@@ -150,7 +157,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquad8_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad8_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -158,7 +165,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquadr_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquadr_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -166,7 +173,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctria3_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctria3_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -174,7 +181,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctria6_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctria6_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -182,7 +189,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctriar_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctriar_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -191,28 +198,28 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquad4_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad4_{stress_strain}'
                 iresult = _real_shell_element(
                     cresult_name, name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
             elif name == 'QUAD4_COMP':
-                cresult_name = f'cquad4_composite_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad4_composite_{stress_strain}'
                 iresult = _real_composite_shell(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'TRIA3_COMP':
-                cresult_name = f'ctria3_composite_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctria3_composite_{stress_strain}'
                 iresult = _real_composite_shell(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'QUADR_COMP':
-                cresult_name = f'cquadr_composite_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquadr_composite_{stress_strain}'
                 iresult = _real_composite_shell(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'TRIAR_COMP':
-                cresult_name = f'ctriar_composite_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctriar_composite_{stress_strain}'
                 iresult = _real_composite_shell(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -221,7 +228,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctetra_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctetra_{stress_strain}'
                 iresult = _real_solid_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -229,7 +236,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cpenta_{stress_strain}'
+                cresult_name = f'{stress_strain}.cpenta_{stress_strain}'
                 iresult = _real_solid_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -237,7 +244,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'chexa_{stress_strain}'
+                cresult_name = f'{stress_strain}.chexa_{stress_strain}'
                 iresult = _real_solid_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -246,13 +253,13 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
             #complex       01234
             elif name in {'ELAS1_CPLX', 'ELAS2_CPLX', 'ELAS3_CPLX', 'ELAS4_CPLX'}:
                 n = name[4]
-                cresult_name = f'celas{n}_{stress_strain}'
+                cresult_name = f'{stress_strain}.celas{n}_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name in {'DAMP1_CPLX', 'DAMP2_CPLX', 'DAMP3_CPLX', 'DAMP4_CPLX'}:
                 n = name[4]
-                cresult_name = f'cdamp{n}_{stress_strain}'
+                cresult_name = f'{stress_strain}.cdamp{n}_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -262,27 +269,27 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
             elif name == 'BEAM_CPLX':
                 pass
             elif name == 'CONROD_CPLX':
-                cresult_name = f'conrod_{stress_strain}'
+                cresult_name = f'{stress_strain}.conrod_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'ROD_CPLX':
-                cresult_name = f'crod_{stress_strain}'
+                cresult_name = f'{stress_strain}.crod_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'TUBE_CPLX':
-                cresult_name = f'ctube_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctube_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'SHEAR_CPLX':
-                cresult_name = f'cshear_{stress_strain}'
+                cresult_name = f'{stress_strain}.cshear_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
             elif name == 'BUSH_CPLX':
-                cresult_name = f'cbush_{stress_strain}'
+                cresult_name = f'{stress_strain}.cbush_{stress_strain}'
                 iresult = load_complex_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -291,7 +298,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctria3_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctria3_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -299,7 +306,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctria6_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctria6_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -307,7 +314,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'ctriar_{stress_strain}'
+                cresult_name = f'{stress_strain}.ctriar_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -315,7 +322,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquad4_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad4_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -323,7 +330,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquad8_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad8_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -331,7 +338,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquadr_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquadr_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -349,7 +356,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
                     return
-                cresult_name = f'cquad4_{stress_strain}'
+                cresult_name = f'{stress_strain}.cquad4_{stress_strain}'
                 iresult = _complex_shell_stress(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
@@ -363,13 +370,13 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                     return
 
                 if name == 'TRIA3_COMP_CPLX':
-                    cresult_name = f'ctria3_composite_{stress_strain}'
+                    cresult_name = f'{stress_strain}.ctria3_composite_{stress_strain}'
                 elif name == 'TRIAR_COMP_CPLX':
-                    cresult_name = f'ctriar_composite_{stress_strain}'
+                    cresult_name = f'{stress_strain}.ctriar_composite_{stress_strain}'
                 elif name == 'QUAD4_COMP_CPLX':
-                    cresult_name = f'cquad4_composite_{stress_strain}'
+                    cresult_name = f'{stress_strain}.cquad4_composite_{stress_strain}'
                 elif name == 'QUADR_COMP_CPLX':
-                    cresult_name = f'cquadr_composite_{stress_strain}'
+                    cresult_name = f'{stress_strain}.cquadr_composite_{stress_strain}'
 
                 iresult = _complex_composite_shell(
                     cresult_name, iresult, results, domains, group, index, version,
@@ -404,36 +411,36 @@ def load_complex_element(result_name: str,
                          model: OP2,
                          subcases: Optional[list[int]]=None) -> int:
 
-    if result_name in {'crod_stress', 'conrod_stress', 'ctube_stress'}:
+    if result_name in {'stress.crod_stress', 'stress.conrod_stress', 'stress.ctube_stress'}:
         class_obj = ComplexRodStressArray
         table_name = 'OES1'
-    elif result_name  in {'crod_force', 'conrod_force', 'ctube_force'}:
+    elif result_name  in {'force.crod_force', 'force.conrod_force', 'force.ctube_force'}:
         class_obj = ComplexRodForceArray
         table_name = 'OEF1'
-    elif result_name in {'crod_strain', 'conrod_strain', 'ctube_strain'}:
+    elif result_name in {'strain.crod_strain', 'strain.conrod_strain', 'strain.ctube_strain'}:
         class_obj = ComplexRodStrainArray
         table_name = 'OSTR1'
 
-    elif result_name in {'celas1_stress', 'celas2_stress', 'celas3_stress'}:
+    elif result_name in {'stress.celas1_stress', 'stress.celas2_stress', 'stress.celas3_stress'}:
         class_obj = ComplexSpringStressArray
         table_name = 'OES1'
-    elif result_name in {'celas1_strain', 'celas2_strain', 'celas3_strain'}:
+    elif result_name in {'strain.celas1_strain', 'strain.celas2_strain', 'strain.celas3_strain'}:
         class_obj = ComplexSpringStrainArray
         table_name = 'OSTR1'
-    elif result_name in {'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force'}:
+    elif result_name in {'force.celas1_force', 'force.celas2_force', 'force.celas3_force', 'force.celas4_force'}:
         class_obj = ComplexSpringForceArray
         table_name = 'OEF1'
-    elif result_name in {'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force'}:
+    elif result_name in {'force.cdamp1_force', 'force.cdamp2_force', 'force.cdamp3_force', 'force.cdamp4_force'}:
         class_obj = ComplexDamperForceArray
         table_name = 'OEF1'
 
-    elif result_name == 'cshear_stress':
+    elif result_name == 'stress.cshear_stress':
         class_obj = ComplexShearStressArray
         table_name = 'OES1'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
     #is_strain = ('STRAIN' == stress_strain)
     is_force = ('FORCE' == stress_strain)
 
@@ -449,7 +456,7 @@ def load_complex_element(result_name: str,
     #names = group.dtype.names
 
     if is_force:
-        if result_name == 'conrod_force':
+        if result_name == 'force.conrod_force':
             #('EID', 'AFR', 'AFI', 'TRQR', 'TRQI', 'DOMAIN_ID')
             assert version == 0, version
             nresults = 2
@@ -462,7 +469,7 @@ def load_complex_element(result_name: str,
             nresults = 1
             F = group['FR'] + group['FI'] * 1j
             DATA = hstack_shape(nelements, F)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(result_name)
     elif 'crod_' in result_name or 'conrod_' in result_name:
         assert version == 0, version
@@ -486,7 +493,7 @@ def load_complex_element(result_name: str,
         assert version == 0, version
         nresults = 1
         DATA = (group['SR'] + group['SI'] * 1j).reshape(nelements, 1)
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
     mode, eigr, eigi, data_by_group = _get_data_by_group_element(
@@ -540,10 +547,10 @@ def load_complex_element(result_name: str,
                     element_name,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = res
+            model.get_result(result_name)[isubcase] = res
             #model.displacements[isubcase] = disp
 
     return iresult
@@ -564,46 +571,47 @@ def _real_element(result_name: str,
                   model: OP2,
                   subcases: Optional[list[int]]=None) -> int:
 
-    if result_name in {'crod_stress', 'conrod_stress', 'ctube_stress'}:
+    if result_name in {'stress.crod_stress', 'stress.conrod_stress', 'stress.ctube_stress'}:
         class_obj = RealRodStressArray
         table_name = 'OES1'
-    elif result_name  in {'crod_force', 'conrod_force', 'ctube_force'}:
+    elif result_name  in {'force.crod_force', 'force.conrod_force', 'force.ctube_force'}:
         class_obj = RealRodForceArray
         table_name = 'OEF1'
-    elif result_name in {'crod_strain', 'conrod_strain', 'ctube_strain'}:
+    elif result_name in {'strain.crod_strain', 'strain.conrod_strain', 'strain.ctube_strain'}:
         class_obj = RealRodStrainArray
         table_name = 'OSTR1'
 
-    elif result_name in {'celas1_stress', 'celas2_stress', 'celas3_stress'}:
+    elif result_name in {'stress.celas1_stress', 'stress.celas2_stress', 'stress.celas3_stress'}:
         class_obj = RealSpringStressArray
         table_name = 'OES1'
-    elif result_name in {'celas1_strain', 'celas2_strain', 'celas3_strain'}:
+    elif result_name in {'strain.celas1_strain', 'strain.celas2_strain', 'strain.celas3_strain'}:
         class_obj = RealSpringStrainArray
         table_name = 'OSTR1'
-    elif result_name in {'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force'}:
+    elif result_name in {'force.celas1_force', 'force.celas2_force',
+                         'force.celas3_force', 'force.celas4_force'}:
         class_obj = RealSpringForceArray
         table_name = 'OEF1'
-    elif result_name in {'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force'}:
+    elif result_name in {'force.cdamp1_force', 'force.cdamp2_force',
+                         'force.cdamp3_force', 'force.cdamp4_force'}:
         class_obj = RealDamperForceArray
         table_name = 'OEF1'
-    elif result_name == 'cvisc_force':
+    elif result_name == 'force.cvisc_force':
         class_obj = RealViscForceArray
         table_name = 'OEF1'
 
-
-    elif result_name == 'cshear_stress':
+    elif result_name == 'stress.cshear_stress':
         class_obj = RealShearStressArray
         table_name = 'OES1'
     #elif result_name == 'cshear_strain':
         #class_obj = RealShearStrainArray
         #table_name = 'OSTR1'
-    elif result_name == 'cshear_force':
+    elif result_name == 'force.cshear_force':
         class_obj = RealCShearForceArray
         table_name = 'OEF1'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
     #is_strain = ('STRAIN' == stress_strain)
     #is_force = ('FORCE' == stress_strain)
 
@@ -619,19 +627,20 @@ def _real_element(result_name: str,
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
 
-    if result_name in {'conrod_force', 'crod_force', 'ctube_force', 'cvisc_force'}:
+    if result_name in {'force.conrod_force', 'force.crod_force', 'force.ctube_force', 'force.cvisc_force'}:
         #('EID', 'AF', 'TRQ', 'DOMAIN_ID')
         assert version == 0, version
         axial = group['AF']
         torque = group['TRQ']
         DATA = hstack_shape(nelements, axial, torque)
-    elif result_name in {'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
-                         'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',}:
+    elif result_name in {'force.cdamp1_force', 'force.cdamp2_force', 'force.cdamp3_force', 'force.cdamp4_force',
+                         'force.celas1_force', 'force.celas2_force', 'force.celas3_force', 'force.celas4_force',}:
         #('EID', 'F', 'DOMAIN_ID')
         assert version == 0, version
         force = group['F']
         DATA = hstack_shape(nelements, force)
-    elif result_name in {'conrod_strain', 'crod_strain', 'conrod_stress', 'crod_stress'}:
+    elif result_name in {'strain.conrod_strain', 'strain.crod_strain',
+                         'stress.conrod_stress', 'stress.crod_stress'}:
         #('EID', 'A', 'T', 'MSA', 'MST', 'DOMAIN_ID')
         assert version == 0, version
         axial = group['A']
@@ -639,7 +648,7 @@ def _real_element(result_name: str,
         axial_margin = group['MSA']
         torsion_margin = group['MST']
         DATA = hstack_shape(nelements, axial, torque, axial_margin, torsion_margin)
-    elif result_name in {'ctube_stress', 'ctube_strain'}:
+    elif result_name in {'stress.ctube_stress', 'strain.ctube_strain'}:
         #('EID', 'AS', 'MSA', 'TS', 'MST', 'DOMAIN_ID')
         assert version == 0, version
         axial = group['AS']
@@ -648,13 +657,13 @@ def _real_element(result_name: str,
         torsion_margin = group['MST']
         DATA = hstack_shape(nelements, axial, torque, axial_margin, torsion_margin)
 
-    elif result_name in {'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
-                         'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain'}:
+    elif result_name in {'stress.celas1_stress', 'stress.celas2_stress', 'stress.celas3_stress', 'stress.celas4_stress',
+                         'strain.celas1_strain', 'strain.celas2_strain', 'strain.celas3_strain', 'strain.celas4_strain'}:
         #('EID', 'S', 'DOMAIN_ID')
         assert version == 0, version
         stress = group['S']
         DATA = hstack_shape(nelements, stress)
-    elif result_name in {'cshear_stress', 'cshear_strain'}:
+    elif result_name in {'stress.cshear_stress', 'strain.cshear_strain'}:
         # dtype=[('EID', '<i8'), ('TMAX', '<f8'), ('TAVG', '<f8'), ('MS', '<f8'), ('DOMAIN_ID', '<i8')])
         assert version == 0, version
         tmax = group['TMAX']
@@ -662,7 +671,7 @@ def _real_element(result_name: str,
         margin = group['MS']
         DATA = hstack_shape(nelements, tmax, tavg, margin)
 
-    elif result_name == 'cshear_force':
+    elif result_name == 'force.cshear_force':
         assert version == 0, version
         # dtype=[('EID', '<i8'), ('F41', '<f8'), ('F21', '<f8'), ('F12', '<f8'), ('F32', '<f8'),
         #        ('F23', '<f8'), ('F43', '<f8'), ('F34', '<f8'), ('F14', '<f8'), ('KF1', '<f8'),
@@ -694,7 +703,7 @@ def _real_element(result_name: str,
             force23, force43, force34, force14,
             kick_force1, shear12, kick_force2, shear23,
             kick_force3, shear34, kick_force4, shear41)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(result_name)
 
     assert DATA.shape[0] == nlength, f'DATA.shape={DATA.shape}; nlength={nlength}'
@@ -760,10 +769,10 @@ def _real_element(result_name: str,
                     modes, eigrs, eigis,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -778,19 +787,19 @@ def _bar_element(result_name: str,
                   model: OP2,
                   subcases: Optional[list[int]]=None) -> int:
 
-    if result_name == 'cbar_stress':
+    if result_name == 'stress.cbar_stress':
         class_obj = RealBarStressArray
         table_name = 'OES1X'
-    elif result_name == 'cbar_strain':
+    elif result_name == 'strain.cbar_strain':
         class_obj = RealBarStrainArray
         table_name = 'OSTR1X'
-    elif result_name == 'cbar_force':
+    elif result_name == 'force.cbar_force':
         class_obj = RealCBarForceArray
         table_name = 'OEF1X'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
 
     #is_strain = ('STRAIN' == stress_strain)
     #is_force = ('FORCE' == stress_strain)
@@ -807,7 +816,7 @@ def _bar_element(result_name: str,
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
 
-    if result_name == 'cbar_force':
+    if result_name == 'force.cbar_force':
         # ('EID', 'BM1A', 'BM2A', 'BM1B', 'BM2B', 'TS1', 'TS2', 'AF', 'TRQ', 'DOMAIN_ID')
         assert version == 0, version
         bm1a = group['BM1A']
@@ -819,7 +828,7 @@ def _bar_element(result_name: str,
         axial = group['AF']
         torque = group['TRQ']
         DATA = hstack_shape(nelements, bm1a, bm2a, bm1b, bm2b, ts1, ts2, axial, torque)
-    elif result_name in {'cbar_stress', 'cbar_strain'}:
+    elif result_name in {'stress.cbar_stress', 'strain.cbar_strain'}:
         # ('EID', 'X1A', 'X2A', 'X3A', 'X4A', 'MAXA', 'MINA', 'MST', 'AX',
         #        'X1B', 'X2B', 'X3B', 'X4B', 'MAXB', 'MINB', 'MSC', 'DOMAIN_ID')
         #headers = ['s1a', 's2a', 's3a', 's4a', 'axial', 'smaxa', 'smina', 'MS_tension',
@@ -844,7 +853,7 @@ def _bar_element(result_name: str,
         DATA = hstack_shape(nelements,
                             s1a, s2a, s3a, s4a, axial, smaxa, smina, mst,
                             s1b, s2b, s3b, s4b,        smaxb, sminb, msc)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(result_name)
 
     assert DATA.shape[0] == nlength, f'DATA.shape={DATA.shape}; nlength={nlength}'
@@ -911,10 +920,10 @@ def _bar_element(result_name: str,
                     modes, eigrs, eigis,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -929,19 +938,19 @@ def _beam_element(result_name: str,
                   model: OP2,
                   subcases: Optional[list[int]]=None) -> int:
 
-    if result_name == 'cbeam_stress':
+    if result_name == 'stress.cbeam_stress':
         class_obj = RealBeamStressArray
         table_name = 'OES1X'
-    elif result_name == 'cbeam_strain':
+    elif result_name == 'strain.cbeam_strain':
         class_obj = RealBeamStrainArray
         table_name = 'OSTR1X'
-    elif result_name == 'cbeam_force':
+    elif result_name == 'force.cbeam_force':
         class_obj = RealCBeamForceArray
         table_name = 'OEF1X'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
 
     #is_strain = ('STRAIN' == stress_strain)
     #is_force = ('FORCE' == stress_strain)
@@ -960,7 +969,7 @@ def _beam_element(result_name: str,
 
     nstations_per_element = 11
     nstations = nelements * nstations_per_element
-    if result_name == 'cbeam_force':
+    if result_name == 'force.cbeam_force':
         #('EID', 'GRID', 'SD', 'BM1', 'BM2', 'TS1', 'TS2', 'AF', 'TTRQ', 'WTRQ', 'DOMAIN_ID')
         assert version == 0, version
         #'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
@@ -979,7 +988,7 @@ def _beam_element(result_name: str,
         nresults = 8
         DATA = np.stack([xxb, bm1, bm2, shear1, shear2,
                          axial, torque, warping_torque], axis=2)
-    elif result_name in {'cbeam_stress', 'cbeam_strain'}:
+    elif result_name in {'stress.cbeam_stress', 'strain.cbeam_strain'}:
         assert version == 0, version
         element_nodes = np.zeros((nstations, 2), dtype=EID.dtype)
         element_nodes[:, 0] = np.repeat(EID, nstations_per_element)
@@ -1004,7 +1013,7 @@ def _beam_element(result_name: str,
         nresults = 8
         DATA = np.stack([sxc, sxd, sxe, sxf,
                          smax, smin, mst, msc], axis=2)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(result_name)
     element_nodes = element_nodes.reshape(nelements, nstations_per_element, 2)
 
@@ -1078,10 +1087,10 @@ def _beam_element(result_name: str,
                     modes, eigrs, eigis,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -1097,18 +1106,18 @@ def _real_shell_element(result_name: str,
                         model: OP2,
                         subcases: Optional[list[int]]=None) -> int:
 
-    if result_name in {'ctria3_stress', 'ctria6_stress', 'ctriar_stress',
-                       'cquad4_stress', 'cquad8_stress', 'cquadr_stress', 'cquad_stress'}:
+    if result_name in {'stress.ctria3_stress', 'stress.ctria6_stress', 'stress.ctriar_stress',
+                       'stress.cquad4_stress', 'stress.cquad8_stress', 'stress.cquadr_stress', 'stress.cquad_stress'}:
         class_obj = RealPlateStressArray
         table_name = 'OES1'
-    elif result_name in {'ctria3_strain', 'ctria6_strain', 'ctriar_strain',
-                         'cquad4_strain', 'cquad8_strain', 'cquadr_strain', 'cquad_strain'}:
+    elif result_name in {'strain.ctria3_strain', 'strain.ctria6_strain', 'strain.ctriar_strain',
+                         'strain.cquad4_strain', 'strain.cquad8_strain', 'strain.cquadr_strain', 'strain.cquad_strain'}:
         class_obj = RealPlateStrainArray
         table_name = 'OSTR1'
     else:
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
     #is_strain = ('STRAIN' == stress_strain)
     #is_force = ('FORCE' == stress_strain)
 
@@ -1233,7 +1242,7 @@ def _real_shell_element(result_name: str,
             group['FD2'], X2, Y2, TXY2, angle, major, minor, ovm,
         ], axis=2)
         assert DATA.shape[0] == nlength, f'DATA.shape={DATA.shape}; nlength={nlength}'
-    #else:
+    #else:  # pragma: no cover
         #raise NotImplementedError(result_name)
 
     if nnodes == 5 and element_name == 'CQUAD4':
@@ -1319,10 +1328,10 @@ def _real_shell_element(result_name: str,
             elif is_post_buckling:
                 model.log.warning(f'skipping {result_name} - add_buckling_case')
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -1337,16 +1346,16 @@ def _real_solid_element(result_name: str,
                         model: OP2,
                         subcases: Optional[list[int]]=None) -> int:
 
-    if result_name in {'chexa_stress', 'cpenta_stress', 'ctetra_stress'}:
+    if result_name in {'stress.chexa_stress', 'stress.cpenta_stress', 'stress.ctetra_stress'}:
         class_obj = RealSolidStressArray
         table_name = 'OES1'
-    elif result_name in {'chexa_strain', 'cpenta_strain', 'ctetra_strain'}:
+    elif result_name in {'strain.chexa_strain', 'strain.cpenta_strain', 'strain.ctetra_strain'}:
         class_obj = RealSolidStrainArray
         table_name = 'OSTR1'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
     #is_strain = ('STRAIN' == stress_strain)
     #is_force = ('FORCE' == stress_strain)
 
@@ -1399,7 +1408,7 @@ def _real_solid_element(result_name: str,
         element_cid[:, 1] = cid
         DATA = np.stack([oxx, oyy, ozz, txy, tyz, txz,
                          o1, o2, o3, ovm_shear], axis=2)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(result_name)
     element_node = element_node.reshape(nelements, nnodes_per_element, 2)
     #element_cid = element_cid.reshape(nelements, 2)
@@ -1467,10 +1476,10 @@ def _real_solid_element(result_name: str,
                     random_code=0, title='', subtitle='', label='')
                 #model.log.warning(f'skipping {result_name} - add_post_buckling_case')
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -1484,18 +1493,18 @@ def _real_composite_shell(result_name: str,
                           ids: np.ndarray,
                           model: OP2,
                           subcases: Optional[list[int]]=None) -> int:
-    if result_name in {'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
-                       'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress'}:
+    if result_name in {'stress.ctria3_composite_stress', 'stress.ctria6_composite_stress', 'stress.ctriar_composite_stress',
+                       'stress.cquad4_composite_stress', 'stress.cquad8_composite_stress', 'stress.cquadr_composite_stress'}:
         class_obj = RealCompositePlateStressArray
         table_name = 'OES1C'
-    elif result_name in {'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
-                         'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain'}:
+    elif result_name in {'strain.ctria3_composite_strain', 'strain.ctria6_composite_strain', 'strain.ctriar_composite_strain',
+                         'strain.cquad4_composite_strain', 'strain.cquad8_composite_strain', 'strain.cquadr_composite_strain'}:
         class_obj = RealCompositePlateStrainArray
         table_name = 'OSTR1C'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, composite, stress_strain = result_name.upper().split('_')
+    element_name, composite, stress_strain = result_name.upper().split('.')[1].split('_')
     #is_strain = ('STRAIN' == stress_strain)
 
     basename = result_name + ' (real)'
@@ -1595,10 +1604,10 @@ def _real_composite_shell(result_name: str,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -1612,15 +1621,15 @@ def _complex_composite_shell(result_name: str,
                              ids: np.ndarray,
                              model: OP2,
                              subcases: Optional[list[int]]=None) -> int:
-    if result_name in {'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
-                       'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress'}:
+    if result_name in {'stress.ctria3_composite_stress', 'stress.ctria6_composite_stress', 'stress.ctriar_composite_stress',
+                       'stress.cquad4_composite_stress', 'stress.cquad8_composite_stress', 'stress.cquadr_composite_stress'}:
         #class_obj = RealCompositePlateStressArray
         table_name = 'OES1C'
-    elif result_name in {'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
-                         'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain'}:
+    elif result_name in {'strain.ctria3_composite_strain', 'strain.ctria6_composite_strain', 'strain.ctriar_composite_strain',
+                         'strain.cquad4_composite_strain', 'strain.cquad8_composite_strain', 'strain.cquadr_composite_strain'}:
         #class_obj = RealCompositePlateStrainArray
         table_name = 'OSTR1C'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
     element_name, composite, stress_strain = result_name.upper().split('_')
@@ -1733,10 +1742,10 @@ def _complex_composite_shell(result_name: str,
             #elif is_buckling:
                 #model.log.warning(f'skipping {result_name} - add_buckling_case')
                 #continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -1750,18 +1759,18 @@ def _complex_shell_stress(result_name: str,
                           ids: np.ndarray,
                           model: OP2,
                           subcases: Optional[list[int]]=None) -> int:
-    if result_name in {'ctria3_stress', 'ctria6_stress', 'ctriar_stress',
-                       'cquad8_stress', 'cquadr_stress'}:
+    if result_name in {'stress.ctria3_stress', 'stress.ctria6_stress', 'stress.ctriar_stress',
+                       'stress.cquad8_stress', 'stress.cquadr_stress'}:
         class_obj = ComplexPlateStressArray
         table_name = 'OES1'
-    elif result_name in {'ctria3_strain', 'ctria6_strain', 'ctriar_strain',
-                         'cquad8_strain', 'cquadr_strain'}:
+    elif result_name in {'strain.ctria3_strain', 'strain.ctria6_strain', 'strain.ctriar_strain',
+                         'strain.cquad8_strain', 'strain.cquadr_strain'}:
         class_obj = ComplexPlateStrainArray
         table_name = 'OSTR1'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(result_name)
 
-    element_name, stress_strain = result_name.upper().split('_')
+    element_name, stress_strain = get_element_name_from_result_name(result_name)
     #is_strain = ('STRAIN' == stress_strain)
 
     basename = result_name + ' (complex)'
@@ -1932,10 +1941,10 @@ def _complex_shell_stress(result_name: str,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(analysis_code)
             model.subcase_key[isubcase].append(isubcase)
-            getattr(model, result_name)[isubcase] = disp
+            model.get_result(result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
     return iresult
 
@@ -2192,3 +2201,9 @@ def _preallocate_data_by_group(subcase: pd.Series,
     for subcasei, analysis_codei in zip(subcase, analysis_code):
         data_by_group[subcasei][analysis_codei] = {}
     return data_by_group
+
+def get_element_name_from_result_name(result_name: str) -> tuple[str, str]:
+    element_name, stress_strain = result_name.upper().split('_')
+    if '.' in element_name:
+        element_name = element_name.split('.')[1]
+    return element_name, stress_strain

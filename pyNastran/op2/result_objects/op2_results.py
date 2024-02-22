@@ -403,6 +403,8 @@ class Force(Load):
 
         self.cbeam_force = {}
         self.cbar_force = {}
+        self.cbar_force_10nodes = {}
+        self.cbend_force = {}
 
         self.ctria3_force = {}
         self.ctria6_force = {}
@@ -419,7 +421,6 @@ class Force(Load):
         self.cweld_force = {}
         self.cvisc_force = {}
 
-        self.cbend_force = {}
         self.cshear_force = {}
         self.cconeax_force = {}
 
@@ -438,7 +439,7 @@ class Force(Load):
 
             # 1d
             'crod_force', 'conrod_force', 'ctube_force',
-            'cbar_force', 'cbeam_force', 'cbend_force',
+            'cbar_force', 'cbeam_force', 'cbend_force', 'cbar_force_10nodes',
             'cfast_force', 'cweld_force', 'cbear_force',
 
             # 2d
@@ -728,6 +729,7 @@ class Strain:
 
         #: OES - CTRIAX6
         self.ctriax_strain = {}
+        self.ctriax6_strain = {}
 
         self.hyperelastic_cquad4_strain = {}
 
@@ -754,7 +756,7 @@ class Strain:
             # OES - isotropic CTRIA3/CQUAD4
             'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
-            'ctriax_strain',
+            'ctriax_strain', 'ctriax6_strain',
 
             # OES - composite CTRIA3/CQUAD4
             'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',

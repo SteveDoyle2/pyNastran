@@ -1,4 +1,5 @@
 from __future__ import annotations
+import getpass
 from typing import TYPE_CHECKING
 from numpy import unique, int32, int64
 
@@ -15,6 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
     from cpylog import SimpleLogger
 
+USER = getpass.getuser()
 
 class OP2_F06_Common:
     def __init__(self):
@@ -408,6 +410,10 @@ class OP2_F06_Common:
     def ctriax_strain(self):
         self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
         return self.op2_results.strain.ctriax_strain
+    @property
+    def ctriax6_strain(self):
+        self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
+        return self.op2_results.strain.ctriax6_strain
 
     @property
     def ctetra_strain(self):
@@ -799,6 +805,10 @@ class OP2_F06_Common:
     def cseam_strain_energy(self, cseam_strain_energy):
         self.deprecated('model.cseam_strain_energy', 'model.op2_results.strain_energy.cseam_strain_energy', '1.4')
         self.op2_results.strain_energy.cseam_strain_energy = cseam_strain_energy
+    @rbe3_strain_energy.setter
+    def rbe3_strain_energy(self, rbe3_strain_energy):
+        self.deprecated('model.rbe3_strain_energy', 'model.op2_results.strain_energy.rbe3_strain_energy', '1.4')
+        self.op2_results.strain_energy.rbe3_strain_energy = rbe3_strain_energy
     # ------------------------------------------------------------------
     # Stress - Getter
     @celas1_stress.setter
@@ -954,13 +964,13 @@ class OP2_F06_Common:
     def ctriar_strain(self, ctriar_strain):
         self.deprecated('model.ctriar_strain', 'model.op2_results.strain.ctriar_strain', '1.4')
         self.op2_results.strain.ctriar_strain = ctriar_strain
-    @ctetra_strain.setter
+    @ctriax_strain.setter
     def ctriax_strain(self, ctriax_strain):
-        self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
+        self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
         self.op2_results.strain.ctriax_strain = ctriax_strain
-    @ctetra_strain.setter
+    @ctriax6_strain.setter
     def ctriax6_strain(self, ctriax6_strain):
-        self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
+        self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
         self.op2_results.strain.ctriax6_strain = ctriax6_strain
 
     @ctetra_strain.setter
@@ -1471,9 +1481,6 @@ class OP2_F06_Common:
         self.nonlinear_conrod_stress = {}
         self.nonlinear_conrod_strain = {}
 
-        #: OESNLXR - CTRIA3/CQUAD4 strain
-        self.hyperelastic_cquad4_strain = {}
-
         self.nonlinear_cquad4_stress = {}
         self.nonlinear_ctria3_stress = {}
 
@@ -1700,18 +1707,31 @@ class OP2_F06_Common:
 
         return table_types
 
-    def _get_table_types_testing(self):
+    def _get_table_types_testing(self) -> list[str]:
         """testing method...don't use"""
+        table_types = self.get_table_types()
+
+        #if USER != 'sdoyle':
+        return table_types
+        stress = self.op2_results.stress
+        strain = self.op2_results.strain
+        force = self.op2_results.force
+        strain_energy = self.op2_results.strain_energy
         skipped_attributes = [
             'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
             'labels', 'subtitles', 'additional_matrices', 'matrices', 'matdicts',
             'subcase_key', 'end_options', 'expected_times', 'generalized_tables',
-            'op2_reader', 'table_count', 'table_mapper']
+            'op2_reader', 'table_count', 'table_mapper', ] + \
+            stress.get_table_types(include_class=False) + strain.get_table_types(include_class=False) + \
+            force.get_table_types(include_class=False) + strain_energy.get_table_types(include_class=False)
 
-        table_types = self.get_table_types()
         tables = object_attributes(self, 'public', filter_properties=True)
-        tables_with_properties = object_attributes(self, 'public', filter_properties=False)
+        tables_with_properties = object_attributes(
+            self, 'public', filter_properties=False,
+            #keys_to_skip=skipped_attributes,
+        )
         properties = set(tables_with_properties) - set(tables)
+        assert len(properties) == 0, properties
 
         strain_energy = self.op2_results.strain_energy
         stress = self.op2_results.stress
