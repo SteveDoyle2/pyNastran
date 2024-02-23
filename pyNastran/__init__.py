@@ -1,56 +1,21 @@
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
-is_installed = False
-if is_pynastrangui_exe or is_installed:
-    # pyInstaller
+is_installed = True
 
-    #from importlib.metadata import version, PackageNotFoundError
-    #__version__ = version('pyNastran')
-    #try:
-        #__version__ = version('pyNastran')
-    #except PackageNotFoundError:
-        ## package is not installed
-        #pass
-    from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
-else:
-    import os
-    import sys
-    import subprocess
-    # this is still a requirement, but disabling it so readthedocs works
-    if sys.version_info < (3, 9):  # pragma: no cover
-        IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
-        raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
-            IMAJOR, MINOR1, MINOR2))
+import sys
 
-    def get_git_revision_short_hash() -> str:
-        """determines the git revision; only works if the packages was checked
-        out using git"""
-        try:
-            #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+# this is still a requirement, but disabling it so readthedocs works
+if sys.version_info < (3, 9):  # pragma: no cover
+    IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
+    raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
+        IMAJOR, MINOR1, MINOR2))
 
-            # independent of pyNastran location as long as there is a git folder
-            #   what about if you use setup_user.py install?
-            #   what about if you don't have git?
-            # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash = subprocess.check_output(['git', 'describe', '--always'],
-                                            cwd=os.path.dirname(__file__))
+__version_release__ = '1.4.0'
 
-            ghash = ghash.decode('utf-8').rstrip()
-        except Exception:
-            # git isn't installed
-            ghash = 'no.checksum.error'
-        # 1.5.0+dev.0eccfa918
-        return 'dev.%s' % ghash
-
-    revision = get_git_revision_short_hash()
-    __version_release__ = '1.4.0'
-
-    # only for release; 1.4.0
-    __version__ = __version_release__
-    # 1.4.0+dev.0eccfa918
-    __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2024/8/xx'
-    __releaseDate2__ = 'AUGUST xx, 2024'
+# only for release; 1.4.0
+__version__ = __version_release__
+__releaseDate__ = '2024/2/22'
+__releaseDate2__ = 'FEBRUARY 22, 2024'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
