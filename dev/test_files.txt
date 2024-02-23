@@ -13,7 +13,6 @@ pyNastran/bdf/bdf_interface/test
 
 
 pyNastran/op2/dev
-pyNastran/op2/_transform_solids.py
 pyNastran/op2/op2_interface/test
 pyNastran/op2/tables/test
 pyNastran/op2/test/all_tests.py
@@ -29,48 +28,76 @@ pyNastran/converters/test_formats.py
 pyNastran/converters/test_gui_formats.py
 pyNastran/converters/gmsh
 
-pyNastran/converters/cart3d/dev
-pyNastran/converters/cart3d/gui
-pyNastran/converters/cart3d/test_cart3d.py
-pyNastran/converters/cart3d/test_cart3d_gui.py
-
-pyNastran/converters/fast/test_fast.py
-pyNastran/converters/fast/test_fast_gui.py
-
-pyNastran/converters/nastran/test_nastran.py
-pyNastran/converters/nastran/test_nastran_gui.py
-
 pyNastran/converters/abaqus/test_abaqus.py
 pyNastran/converters/abaqus/test_unit_abaqus.py
 pyNastran/converters/abaqus/test_abaqus_gui.py
 
+pyNastran/converters/aflr/aflr2/m3.bedge
+pyNastran/converters/aflr/ugrid/models
+pyNastran/converters/aflr/aflr2/m3.bedge
+
+pyNastran/converters/avl/examples
+
+pyNastran/converters/cart3d/dev
+pyNastran/converters/cart3d/gui
+pyNastran/converters/cart3d/models
+pyNastran/converters/cart3d/test_cart3d.py
+pyNastran/converters/cart3d/test_cart3d_gui.py
+
+pyNastran/converters/fast/demo1
+pyNastran/converters/fast/test_fast.py
+pyNastran/converters/fast/test_fast_gui.py
+
+pyNastran/converters/nastran/models
 pyNastran/converters/nastran/gui/menus
-pyNastran/converters/nastran/dev_results.py
 pyNastran/converters/nastran/test_nastran.py
 pyNastran/converters/nastran/test_nastran_gui.py
+pyNastran/converters/nastran/dev_results.py
 
+
+pyNastran/converters/panair/M100
+pyNastran/converters/panair/naca0012
+pyNastran/converters/panair/SWB
 pyNastran/converters/panair/test_panair.py
 pyNastran/converters/panair/test_panair_gui.py
 pyNastran/converters/panair/to_p3d.py
 
+pyNastran/converters/shabp/models
 pyNastran/converters/shabp/test_shabp.py
 pyNastran/converters/shabp/test_shabp_gui.py
 
 pyNastran/converters/stl/test_stl.py
 pyNastran/converters/stl/test_stl_gui.py
 pyNastran/converters/stl/dev
+pyNastran/converters/stl/sphere.stl
 
+pyNastran/converters/su2/fea_fsi_wall_channel_2d_mesh_fea.su2
+pyNastran/converters/su2/mesh_naca0012_inv.su2
+pyNastran/converters/su2/sliding_interface_pipe.su2
 pyNastran/converters/su2/test_su2.py
 pyNastran/converters/su2/test_su2_gui.py
 
+pyNastran/converters/tecplot/models
 pyNastran/converters/tecplot/test_tecplot.py
 pyNastran/converters/tecplot/test_tecplot_gui.py
 
+pyNastran/converters/tetgen/sav.smesh
+pyNastran/converters/tetgen/socket.off
+pyNastran/converters/tetgen/socket1.off
+pyNastran/converters/tetgen/gear.node
+
+pyNastran/converters/tetgen/tetgen_test.1.ele
+pyNastran/converters/tetgen/tetgen_test.1.node
+pyNastran/converters/tetgen/tetgen_test.1.smesh
+pyNastran/converters/tetgen/test_tetgen_gui.py
+
+pyNastran/converters/lawgs/tmx1242.wgs
+pyNastran/converters/lawgs/tnd6480.wgs
+pyNastran/converters/lawgs/test_wgs_gui.py
+
+pyNastran/converters/usm3d/box
 pyNastran/converters/usm3d/test_usm3d.py
 pyNastran/converters/usm3d/test_usm3d_gui.py
-
-pyNastran/converters/tetgen/test_tetgen_gui.py
-pyNastran/converters/lawgs/test_wgs_gui.py
 
 pyNastran/gui/images
 pyNastran/gui/test/all_tests.py
