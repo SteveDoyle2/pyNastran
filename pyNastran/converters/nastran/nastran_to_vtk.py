@@ -235,8 +235,10 @@ def nastran_to_vtk(bdf_filename: str,
     gui.load_nastran_geometry(bdf_filename)
     gui.load_nastran_results(op2_filename)
     vtk_ugrid = gui.grid
-    vtk_ugrid = save_nastran_results(gui, vtk_ugrid)
+    if vtk_ugrid is None:
+        raise RuntimeError('vtk_ugrid is None')
 
+    save_nastran_results(gui, vtk_ugrid)
     #root = vtkMultiBlockDataSet()
     #coords_branch = vtkMultiBlockDataSet()
 
@@ -249,8 +251,8 @@ def nastran_to_vtk(bdf_filename: str,
     writer = vtkXMLUnstructuredGridWriter()
     writer.SetFileName(vtk_filename)
     writer.SetInputData(vtk_ugrid)
-    writer.Write()
-    #print('done')
+    out = writer.Write()
+    #print('done', out)
 
 
 def add_vtk_array(location: str,
