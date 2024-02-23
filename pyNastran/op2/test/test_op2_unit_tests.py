@@ -43,7 +43,6 @@ from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
-from pyNastran.f06.csv_writer import write_csv
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
@@ -829,7 +828,6 @@ class TestOP2Main(Tester):
             stop_on_failure=True, dev=False, log=log)
         with self.assertRaises(NotImplementedError):
             op2.save()
-        write_csv(op2, csv_filename)
 
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
@@ -840,7 +838,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        write_csv(op2, csv_filename)
 
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""
@@ -866,8 +863,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        write_csv(op2, csv_filename)
-
 
     def test_bdf_op2_elements_03(self):
         """tests a large number of elements and results in SOL 108-freq"""
@@ -890,7 +885,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -916,7 +910,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -942,7 +935,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -968,7 +960,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        #write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -994,7 +985,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1026,7 +1016,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, post=-4, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1052,7 +1041,6 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1082,7 +1070,6 @@ class TestOP2Main(Tester):
             quiet=True,
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1108,7 +1095,6 @@ class TestOP2Main(Tester):
             quiet=True,
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
 
     def test_bdf_op2_thermal_04(self):
         """checks time_thermal_elements.bdf"""
@@ -1134,7 +1120,6 @@ class TestOP2Main(Tester):
             quiet=True,
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
 
     def test_bdf_op2_thermal_05(self):
         """checks htflw47.bdf"""
@@ -1161,8 +1146,6 @@ class TestOP2Main(Tester):
             quiet=True,
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
-        write_csv(op2, csv_filename)
-
 
     def test_cbar100(self):
         """tests a CBAR-100 model"""
