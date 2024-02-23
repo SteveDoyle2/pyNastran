@@ -20,7 +20,6 @@ from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.utils import Position, PositionWRT, transform_load
 from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
 class TestCoords(unittest.TestCase):
     """tests the coordinate systems and their transforms"""
@@ -500,9 +499,9 @@ class TestCoords(unittest.TestCase):
         #-------------------------------------------------
         model.cross_reference()
 
-        model2 = BDFv(debug=False)
-        model2.read_bdf(bdf_file, punch=True, xref=False, save_file_structure=False)
-        bdf_file.seek(0)
+        #model2 = BDFv(debug=False)
+        #model2.read_bdf(bdf_file, punch=True, xref=False, save_file_structure=False)
+        #bdf_file.seek(0)
         #-------------------------------------------------
 
         xyz_cid0_actual = array([
@@ -526,13 +525,10 @@ class TestCoords(unittest.TestCase):
             xyz_cp, nids, icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nids, array([30, 31, 32]))
-        model2.nodes.nids = nid_cp_cd[:, 0]
 
         for cid in [30, 31, 32]:
             unused_xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform, cid=cid)
-            unused_xyz_cid_b = model2.transform_xyzcp_to_xyz_cid(
-                xyz_cp, nids, icp_transform, cid=cid, atol=None)
             #assert np.allclose(xyz_cid_a, xyz_cid_b), '%s' % np.isclose(xyz_cid_a, xyz_cid_b)
 
             #print(xyz_cid_a)
