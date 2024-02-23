@@ -116,7 +116,6 @@ from .utils import (
     get_nastran_gui_layer_word, check_for_missing_control_surface_boxes,
     get_elements_nelements_unvectorized, # sget_shell_material_coord,
     make_nid_map, store_warning)
-from .menus.setup_model_sidebar import ModelSidebar
 from .nastran_io_utils import (
     get_pcomp_nplies, get_results_to_exclude, build_superelement_model,
     build_normals_quality, create_monpnt,
