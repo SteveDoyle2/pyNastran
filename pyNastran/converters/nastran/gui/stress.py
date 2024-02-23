@@ -70,13 +70,15 @@ def get_rod_stress_strains(cases: CasesDict,
     """
     subcase_id = key[0]
     if is_stress:
+        stress = model.op2_results.stress
         rods = [
-            model.crod_stress, model.conrod_stress, model.ctube_stress,
+            stress.crod_stress, stress.conrod_stress, stress.ctube_stress,
         ]
         word = 'Stress'
     else:
+        strain = model.op2_results.strain
         rods = [
-            model.crod_strain, model.conrod_strain, model.ctube_strain,
+            strain.crod_strain, strain.conrod_strain, strain.ctube_strain,
         ]
         word = 'Strain'
 
@@ -195,7 +197,8 @@ def get_bar_stress_strains(cases: CasesDict,
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
-        result = model.cbar_stress
+        stress = model.op2_results.stress
+        result = stress.cbar_stress
         word = 'Stress'
         method_map = {
              's1a' : 'Stress 1A',
@@ -219,7 +222,8 @@ def get_bar_stress_strains(cases: CasesDict,
         }
         data_format = '%.3f'
     else:
-        result = model.cbar_strain
+        strain = model.op2_results.strain
+        result = strain.cbar_strain
         word = 'Strain'
         method_map = {
             'e1a' : 'Strain 1A',
@@ -390,10 +394,12 @@ def get_beam_stress_strains(cases: CasesDict,
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
-        beams = [model.cbeam_stress]
+        stress = model.op2_results.stress
+        beams = [stress.cbeam_stress]
         word = 'Stress'
     else:
-        beams = [model.cbeam_strain]
+        strain = model.op2_results.strain
+        beams = [strain.cbeam_strain]
         word = 'Strain'
 
     #titles = []
@@ -686,7 +692,7 @@ def get_plate_stress_strains(cases: CasesDict,
             'emin' : 'Ïµmin',
             'evm' : 'Ïµ von Mises',
             'von_mises' : 'Ïµ von Mises',
-            'max_shear' : 'ğ›¾max',
+            'max_shear' : 'í µí»¾max',
         }
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:
@@ -1471,13 +1477,15 @@ def _get_solids(results: OP2,
         #raise NotImplementedError(prefix)
 
     if is_stress:
+        stress = results.op2_results.stress
         cards = [
-            results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
+            stress.ctetra_stress, stress.cpenta_stress, stress.chexa_stress, # stress.cpyram_stress,
         ]
         word = 'Stress'
     else:
+        strain = results.op2_results.strain
         cards = [
-            results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
+            strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
         ]
         word = 'Strain'
 
@@ -1685,16 +1693,17 @@ def get_spring_stress_strains(cases: CasesDict,
     helper method for _fill_op2_time_centroidal_stress.
     """
     subcase_id = key[0]
-    results = model
     if is_stress:
+        stress = model.op2_results.stress
         springs = [
-            results.celas1_stress, results.celas2_stress,
-            results.celas3_stress, results.celas4_stress]
+            stress.celas1_stress, stress.celas2_stress,
+            stress.celas3_stress, stress.celas4_stress]
         word = 'Stress'
     else:
+        strain = model.op2_results.strain
         springs = [
-            results.celas1_strain, results.celas2_strain,
-            results.celas3_strain, results.celas4_strain]
+            strain.celas1_strain, strain.celas2_strain,
+            strain.celas3_strain, strain.celas4_strain]
         word = 'Strain'
 
     spring_cases = []
