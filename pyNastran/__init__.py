@@ -1,6 +1,6 @@
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
-is_installed = True
+is_installed = False
 
 import sys
 
@@ -10,10 +10,11 @@ if sys.version_info < (3, 9):  # pragma: no cover
     raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
         IMAJOR, MINOR1, MINOR2))
 
-__version_release__ = '1.4.0'
+__version__ = '1.4.0'
+__version_release__ = __version__
 
 # only for release; 1.4.0
-__version__ = __version_release__
+#__version__ = __version_release__
 __releaseDate__ = '2024/2/22'
 __releaseDate2__ = 'FEBRUARY 22, 2024'
 
