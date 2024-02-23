@@ -117,19 +117,13 @@ class MainWindow(GuiCommon, NastranIO):
             # no results unless specified
             'nastran',  # results
         ]
-        if ISPY2:
-            fmt_order += ['h5nastran', 'nastran2']
-        fmt_order.append('nastran3')
 
         fmt_order += [
             'abaqus',
-            'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
-            'degen_geom',
             'fast',
             'lawgs',
-            'obj',
             'panair',  # results
             'shabp',  # results
             'stl',
@@ -138,7 +132,6 @@ class MainWindow(GuiCommon, NastranIO):
             'tetgen',
             'usm3d',  # results
             'avl', # no results
-            'vrml', # no results
             'vtk',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
