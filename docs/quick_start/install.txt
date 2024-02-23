@@ -1,2 +1,2 @@
 See the following link for install instructions:
-http://pynastran-git.readthedocs.io/en/latest/quick_start/Installation.html
+http://pynastran-git.readthedocs.io/en/1.4/quick_start/Installation.html
