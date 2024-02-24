@@ -21,12 +21,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateForceArray, RealPlateBilinearForceArray
     #from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexPlateForceArray, ComplexPlate2ForceArray
 
-force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
-                 'ctria3_force', 'ctria6_force', 'ctriar_force']
-stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
-                  'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
-strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
-                  'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
+force_vectors = ['force.cquad4_force', 'force.cquad8_force', 'force.cquadr_force',
+                 'force.ctria3_force', 'force.ctria6_force', 'force.ctriar_force']
+stress_vectors = ['stress.cquad4_stress', 'stress.cquad8_stress', 'stress.cquadr_stress',
+                  'stress.ctria3_stress', 'stress.ctria6_stress', 'stress.ctriar_stress']
+strain_vectors = ['strain.cquad4_strain', 'strain.cquad8_strain', 'strain.cquadr_strain',
+                  'strain.ctria3_strain', 'strain.ctria6_strain', 'strain.ctriar_strain']
 
 def transf_Mohr(Sxx: np.ndarray,
                 Syy: np.ndarray,
