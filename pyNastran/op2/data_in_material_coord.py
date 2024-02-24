@@ -21,12 +21,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateForceArray, RealPlateBilinearForceArray
     #from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexPlateForceArray, ComplexPlate2ForceArray
 
-force_vectors = ['force.cquad4_force', 'force.cquad8_force', 'force.cquadr_force',
-                 'force.ctria3_force', 'force.ctria6_force', 'force.ctriar_force']
-stress_vectors = ['stress.cquad4_stress', 'stress.cquad8_stress', 'stress.cquadr_stress',
-                  'stress.ctria3_stress', 'stress.ctria6_stress', 'stress.ctriar_stress']
-strain_vectors = ['strain.cquad4_strain', 'strain.cquad8_strain', 'strain.cquadr_strain',
-                  'strain.ctria3_strain', 'strain.ctria6_strain', 'strain.ctriar_strain']
+force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
+                 'ctria3_force', 'ctria6_force', 'ctriar_force']
+stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
+                  'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
+strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
+                  'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
 def transf_Mohr(Sxx: np.ndarray,
                 Syy: np.ndarray,
@@ -224,8 +224,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
         op2_new.log = log
 
     for vec_name in force_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.force, vec_name)
+        new_vectors = getattr(op2_new.op2_results.force, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_force(
@@ -236,8 +236,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
 
     for vec_name in stress_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.stress, vec_name)
+        new_vectors = getattr(op2_new.op2_results.stress, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_stress(
@@ -248,8 +248,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
 
     for vec_name in strain_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.strain, vec_name)
+        new_vectors = getattr(op2_new.op2_results.strain, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_strain(
