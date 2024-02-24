@@ -39,9 +39,10 @@ from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
 IS_SHEAR_MOMENT_TORQUE = False
+IS_CUTTING_PLANE = False
 if IS_MATPLOTLIB:
     from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
-    IS_SHEAR_MOMENT_TORQUE = False
+    IS_SHEAR_MOMENT_TORQUE = True
 if IS_MATPLOTLIB and DEV:
     from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
     IS_CUTTING_PLANE = True
@@ -138,6 +139,8 @@ class GuiAttributes:
             self.cutting_plane_obj = CuttingPlaneObject(self)
         if IS_SHEAR_MOMENT_TORQUE:
             self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
+        else:
+            asdf
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
         self.geometry_obj = GeometryObject(self)
 

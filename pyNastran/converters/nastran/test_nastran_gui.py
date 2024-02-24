@@ -38,8 +38,11 @@ from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
 from pyNastran.converters.nastran.gui.stress import get_composite_sort
 
+from pyNastran.gui.qt_files.gui_attributes import IS_CUTTING_PLANE
+
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult, GridPointForceResult
 from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults, ElementalTableResults
+
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
@@ -408,8 +411,22 @@ class TestNastranGUI(unittest.TestCase):
             nplanes=5, plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
 
-        with self.assertRaises(TypeError):
-            # we need to set the case to a grid point force result
+        if IS_CUTTING_PLANE:
+            with self.assertRaises(TypeError):
+                # we need to set the case to a grid point force result
+                test.cutting_plane_obj.make_cutting_plane(
+                    model_name,
+                    p1, p2, zaxis,
+                    method='Z-Axis Projection',
+                    cid_p1=0, cid_p2=0, cid_zaxis=0,
+                    ytol=1., plane_atol=1e-5,
+                    plane_color=None, plane_opacity=0.5,
+                    csv_filename=None, show=False, stop_on_failure=True)
+
+        # setting the case to a grid point force result
+        test.icase_fringe = icase_gpforce
+        test._cycle_results(icase_gpforce)
+        if IS_CUTTING_PLANE:
             test.cutting_plane_obj.make_cutting_plane(
                 model_name,
                 p1, p2, zaxis,
@@ -419,28 +436,17 @@ class TestNastranGUI(unittest.TestCase):
                 plane_color=None, plane_opacity=0.5,
                 csv_filename=None, show=False, stop_on_failure=True)
 
-        # setting the case to a grid point force result
-        test.icase_fringe = icase_gpforce
-        test._cycle_results(icase_gpforce)
-        test.cutting_plane_obj.make_cutting_plane(
-            model_name,
-            p1, p2, zaxis,
-            method='Z-Axis Projection',
-            cid_p1=0, cid_p2=0, cid_zaxis=0,
-            ytol=1., plane_atol=1e-5,
-            plane_color=None, plane_opacity=0.5,
-            csv_filename=None, show=False, stop_on_failure=True)
-
         test.icase_fringe = 0
         #with self.assertRaises(RuntimeError):
-        test.cutting_plane_obj.make_cutting_plane(
-            model_name,
-            p1, p2, zaxis,
-            method='Z-Axis Projection',
-            cid_p1=0, cid_p2=0, cid_zaxis=0,
-            ytol=1., plane_atol=1e-5,
-            plane_color=None, plane_opacity=0.5,
-            csv_filename=None, show=False, stop_on_failure=True)
+        if IS_CUTTING_PLANE:
+            test.cutting_plane_obj.make_cutting_plane(
+                model_name,
+                p1, p2, zaxis,
+                method='Z-Axis Projection',
+                cid_p1=0, cid_p2=0, cid_zaxis=0,
+                ytol=1., plane_atol=1e-5,
+                plane_color=None, plane_opacity=0.5,
+                csv_filename=None, show=False, stop_on_failure=True)
 
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
