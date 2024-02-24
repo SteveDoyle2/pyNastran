@@ -215,8 +215,13 @@ class BDFAttributes:
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                 filter_properties=filter_properties)
+        # get rid of deprecation warnings
+        backup_level = self.log.level
+        self.log.level = 'error'
+        out = object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                filter_properties=filter_properties)
+        self.log.level = backup_level
+        return out
 
     def object_methods(self, mode: str='public', keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
@@ -258,7 +263,13 @@ class BDFAttributes:
             '_card_parser', '_card_parser_b',
             'object_methods', 'object_attributes',
         ]
-        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        # get rid of deprecation warnings
+        backup_level = self.log.level
+        self.log.level = 'error'
+        out = object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        # get rid of deprecation warnings
+        self.log.level = backup_level
+        return out
 
     def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
         """deprecates methods"""

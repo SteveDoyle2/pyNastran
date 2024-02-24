@@ -81,7 +81,7 @@ class TestMaterialCoordReal(unittest.TestCase):
 
         if IS_PANDAS:
             op2_new.build_dataframe()
-        ctria6_strain = op2_new.ctria6_strain[1]
+        ctria6_strain = op2_new.op2_results.strain.ctria6_strain[1]
         cols = ['ElementID', 'NodeID', 'exx', 'eyy', 'exy']
         if IS_PANDAS:
             df = ctria6_strain.dataframe.reset_index()[cols]
@@ -100,7 +100,7 @@ class TestMaterialCoordReal(unittest.TestCase):
             op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in force_vectors:
-                vector = getattr(op2_new, vecname).get(subcase)
+                vector = getattr(op2_new.op2_results.force, vecname).get(subcase)
                 if vector is None:
                     continue
                 name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
@@ -137,7 +137,7 @@ class TestMaterialCoordReal(unittest.TestCase):
             op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in stress_vectors:
-                vector = getattr(op2_new, vecname).get(subcase)
+                vector = getattr(op2_new.op2_results.stress, vecname).get(subcase)
                 if vector is None:
                     continue
                 name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
@@ -166,7 +166,7 @@ class TestMaterialCoordReal(unittest.TestCase):
             op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in strain_vectors:
-                vector = getattr(op2_new, vecname).get(subcase)
+                vector = getattr(op2_new.op2_results.strain, vecname).get(subcase)
                 if vector is None:
                     continue
                 name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')

@@ -48,7 +48,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
 
             for freq in freqs:
                 for vecname in force_vectors:
-                    vector = getattr(op2_new, vecname).get(1)
+                    vector = getattr(op2_new.op2_results.force, vecname).get(1)
                     if vector is None:
                         continue
                     if 'center' in prefix:
@@ -86,7 +86,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
 
             for freq in freqs:
                 for vecname in stress_vectors:
-                    vector = getattr(op2_new, vecname).get(1)
+                    vector = getattr(op2_new.op2_results.stress, vecname).get(1)
                     if vector is None:
                         continue
                     if 'center' in prefix:
@@ -128,7 +128,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
 
             for freq in freqs:
                 for vecname in strain_vectors:
-                    vector = getattr(op2_new, vecname).get(1)
+                    vector = getattr(op2_new.op2_results.strain, vecname).get(1)
                     if vector is None:
                         continue
                     if 'center' in prefix:

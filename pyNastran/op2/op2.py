@@ -137,8 +137,14 @@ class OP2(OP2_Scalar, OP2Writer):
 
         #my_keys_to_skip = []
         my_keys_to_skip = _get_keys_to_skip(self)
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                 filter_properties=filter_properties)
+
+        # get rid of deprecation warnings
+        backup_level = self.log.level
+        self.log.level = 'error'
+        out = object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                filter_properties=filter_properties)
+        self.log.level = backup_level
+        return out
 
     def object_methods(self, mode: str='public',
                        keys_to_skip: Optional[list[str]]=None) -> list[str]:
@@ -171,7 +177,12 @@ class OP2(OP2_Scalar, OP2Writer):
         #my_keys_to_skip = []
         my_keys_to_skip = _get_keys_to_skip(self)
 
-        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        # get rid of deprecation warnings
+        backup_level = self.log.level
+        self.log.level = 'error'
+        out = object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        self.log.level = backup_level
+        return out
 
     def __eq__(self, op2_model) -> bool:
         """
