@@ -1171,12 +1171,21 @@ class MODTRAK(BaseCard):
     MODTRAK SID LOWRNG HIGHRNG MTFILTER
     MODTRAK 100   1      26      0.80
     """
+    type = 'MODTRAK'
     def __init__(self, sid: int, low_range: int, high_range: int, mt_filter: float, comment: str=''):
         BaseCard.__init__(self)
         self.sid = sid
         self.low_range = low_range
         self.high_range = high_range
         self.mt_filter = mt_filter
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        low_range = 0
+        high_range = 0
+        mt_filter = 0.0
+        return MODTRAK(sid, low_range, high_range, mt_filter, comment='')
 
     @classmethod
     def add_card(cls, card, comment=''):
