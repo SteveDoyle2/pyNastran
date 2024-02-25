@@ -148,12 +148,8 @@ def plot_smt(x: np.ndarray,
     #moment_unit = 'in-kip'
     #force_unit = 'kip'
 
-    moment_unit2 = ''
-    force_unit2 = ''
-    if force_unit:
-        force_unit2 = f' ({force_unit})'
-    if moment_unit:
-        moment_unit2 = f' ({moment_unit})'
+    force_unit2 = f' ({force_unit})' if force_unit else ''
+    moment_unit2 = f' ({moment_unit})' if moment_unit else ''
 
     #f, ax = plt.subplots()
     # ax = fig.subplots()

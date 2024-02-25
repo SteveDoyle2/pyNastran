@@ -65,7 +65,7 @@ def get_element_centroids(model: BDF,
 def get_stations(model: BDF,
                  p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                  zaxis: NDArray3float,
-                 method: str='Z-Axis Projection',
+                 method: str='Vectors',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                  nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
                                            NDArray3float, NDArray3float,
@@ -81,12 +81,19 @@ def get_stations(model: BDF,
     p3: (3,) float ndarray
         defines the end point for the shear, moment, torque plot
     p2: (3,) float ndarray
-        defines the XZ plane for the shears/moments
+        defines the XZ plane for the shears/moments (depends on method)
+        'Vectors':
+           i = p2
+        'Z-Axis Projection':
+           i = p2 - p1
     zaxis: (3,) float ndarray
         the direction of the z-axis
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
+        'Vectors'
+           i is defined by the x-axis
+           k is defined by the z-axis
         'Z-Axis Projection'
            p1-p2 defines the x-axis
            k is defined by the z-axis
@@ -182,8 +189,8 @@ def get_stations(model: BDF,
     #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
     #print(coord_out.get_stats())
 
-    xyz1p = coord_march.transform_node_to_local(xyz1)
-    xyz3p = coord_march.transform_node_to_local(xyz3)
+    xyz1p = coord_march.transform_node_to_local(xyz1) # start
+    xyz3p = coord_march.transform_node_to_local(xyz3) # end
     xaxis = xyz3p - xyz1p
 
     # we want to give the dx the right sign in the coord_out frame
@@ -356,6 +363,45 @@ def _project_z_axis(p1: NDArray3float,
     xzplane = p1 + i
     return i, k, origin, zaxis, xzplane
 
+def _project_vectors(p1: NDArray3float,
+                     p2: NDArray3float,
+                     z_global: NDArray3float) -> tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                       NDArray3float, NDArray3float, NDArray3float]:
+    """
+    p1 defines the origin
+    p2 defines the x-axis
+    k is defined by the z-axis
+    k = z / |z|
+    xz = p2
+    xz /= |xz|
+    j = k × xz
+    j /= |j|
+    i = k × j
+    """
+    x = p2
+    origin = p1
+
+    norm_z =  np.linalg.norm(z_global)
+    if norm_z == 0.:
+        raise RuntimeError(f'p1={p1} is has no length')
+
+    norm_x = np.linalg.norm(x)
+    if norm_x == 0.:
+        raise RuntimeError(f'p2={p2} is has no length')
+
+    iprime = x / norm_x
+    k = z_global / norm_z
+    j = np.cross(k, iprime)
+    jhat = j / np.linalg.norm(j)
+    i = np.cross(jhat, k)
+
+    # we want x to be normal to the plane
+    origin_zaxis = origin + k
+    origin_xzplane = origin + j
+
+    # add the origin
+    xyz2 = origin + i
+    return xyz2, i, k, origin, origin_zaxis, origin_xzplane
 
 def _p1_p2_zaxis_to_cord2r(model: BDF,
                            p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
@@ -399,9 +445,17 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #print('  p2 =', p2)
     #print('  zaxis =', zaxis)
 
-    xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
-    xyz2 = model.coords[cid_p2].transform_node_to_global(p2)
-    z_global = model.coords[cid_zaxis].transform_node_to_global(zaxis)
+    coords = model.coords
+    xyz1 = coords[cid_p1].transform_node_to_global(p1)
+    if method == 'Vectors':
+        origin = xyz1
+        xyz2 = origin + p2
+        z_global = origin + zaxis
+        method = 'CORD2R'
+    else:
+        xyz2 = coords[cid_p2].transform_node_to_global(p2)
+        z_global = coords[cid_zaxis].transform_node_to_global(zaxis)
+
     if method == 'CORD2R':
         origin = xyz1
         xzplane_ = xyz2 - xyz1
@@ -409,10 +463,15 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
         i, k = _determine_cord2r(origin, zaxis_, xzplane_)
         origin_zaxis = z_global # origin + i
         origin_xzplane = xyz2 # origin + k
+    #elif method == 'Vectors':
+        #xyz2, i, k, origin, origin_zaxis, origin_xzplane = _project_vectors(xyz1, xyz2, z_global)
     elif method == 'Z-Axis Projection':
         i, k, origin, origin_zaxis, origin_xzplane = _project_z_axis(xyz1, xyz2, z_global)
     else:
-        raise NotImplementedError("method=%r; valid_methods=['CORD2R', 'Z-Axis Projection']")
+        raise NotImplementedError(f"method={method!r}; valid_methods=['CORD2R', 'Z-Axis Projection']")
+    print(f'origin={origin}')
+    print(f'origin_zaxis={origin_zaxis}')
+    print(f'origin_xzplane={origin_xzplane}')
     return xyz1, xyz2, z_global, i, k, origin, origin_zaxis, origin_xzplane
 
 #def _merge_bodies(local_points_array, global_points_array, result_array):

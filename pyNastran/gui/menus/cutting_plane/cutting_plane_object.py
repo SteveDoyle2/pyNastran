@@ -52,9 +52,10 @@ class CuttingPlaneObject(BaseGui):
 
         #camera = self.gui.GetCamera()
         #min_clip, max_clip = camera.GetClippingRange()
-        settings = self.gui.settings
-        model_name = self.gui.name
-        model = self.gui.models[model_name]
+        gui = self.gui
+        settings = gui.settings
+        model_name = gui.name
+        model = gui.models[model_name]
         if hasattr(model, 'coords'):
             cids = list(model.coords.keys())
             cids.sort()
@@ -62,12 +63,12 @@ class CuttingPlaneObject(BaseGui):
             cids = [0]
 
         data = {
-            'model_name' : model_name,
             'font_size' : settings.font_size,
             'cids' : cids,
             'plane_color' : (1., 0., 1.), # purple
             'name' : model_name,
 
+            'model_name' : model_name,
             'clicked_ok' : False,
             'close' : False,
         }
@@ -83,9 +84,10 @@ class CuttingPlaneObject(BaseGui):
             #if not self._cutting_plane_window._updated_preference:
             #    settings.on_set_font_size(data['font_size'])
             del self._cutting_plane_window
-            if hasattr(self.gui, 'plane_actor'):
-                del self.gui.plane_actor
-            self.gui.clear_actor('smt_plane')
+            gui: MainWindow = self.gui
+            if hasattr(gui, 'plane_actor'):
+                del gui.plane_actor
+            gui.clear_actor('smt_plane')
             self._cutting_plane_window_shown = False
         else:
             self._cutting_plane_window.activateWindow()
@@ -115,20 +117,28 @@ class CuttingPlaneObject(BaseGui):
             plane_color=plane_color,
             plane_opacity=plane_opacity, csv_filename=csv_filename)
 
-    def make_cutting_plane(self, model_name,
-                           p1, p2, zaxis,
-                           method='Z-Axis Projection',
-                           cid_p1=0, cid_p2=0, cid_zaxis=0,
+    def make_cutting_plane(self,
+                           model_name: str,
+                           p1: np.ndarray,
+                           p2: np.ndarray,
+                           zaxis: np.ndarray,
+                           method: str='Z-Axis Projection',
+                           cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                            ytol=1., plane_atol=1e-5,
-                           plane_color=None, plane_opacity=0.5,
-                           csv_filename=None, show=True, stop_on_failure=False):
-        """Creates a cutting plane of the aero_model for the active plot result"""
+                           plane_color=None, plane_opacity: float=0.5,
+                           csv_filename=None,
+                           show=True, stop_on_failure=False):
+        """Creates a cutting plane of the aero_model for the active plot result
+
+        Plane Actor is drawn in the i-k plane
+        """
         if plane_color is None:
             plane_color = PURPLE_FLOAT
         assert len(plane_color) == 3, plane_color
-        log = self.gui.log
+        gui: MainWindow = self.gui
+        log = gui.log
 
-        model = self.gui.models[model_name]
+        model = gui.models[model_name]
         class_name = model.__class__.__name__
         if class_name in ['BDF', 'OP2Geom']:
             out = model.get_displacement_index_xyz_cp_cd()
@@ -138,7 +148,7 @@ class CuttingPlaneObject(BaseGui):
                 xyz_cp, nids, icp_transform,
                 cid=0)
         else:
-            msg = '%r is not supported' % class_name
+            msg = f'{class_name!r} is not supported'
             log.error(msg)
             if stop_on_failure:
                 raise RuntimeError(msg)
@@ -159,14 +169,14 @@ class CuttingPlaneObject(BaseGui):
             cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
             method=method)
 
-        plane_actor = self.gui._create_plane_actor_from_points(
+        plane_actor = gui._create_plane_actor_from_points(
             xyz1, xyz2, i, k, dim_max,
             actor_name='plane')
         prop = plane_actor.GetProperty()
         prop.SetColor(*plane_color)
         prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
 
-        self.gui.rend.Render()
+        gui.rend.Render()
 
         try:
             # i/j/k vector is nan
@@ -183,14 +193,14 @@ class CuttingPlaneObject(BaseGui):
         beta = coord.beta().T
 
         cid = ''
-        self.gui.tool_actions.create_coordinate_system(
+        gui.tool_actions.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type='xyz')
 
         nnodes = xyz_cid0.shape[0]
 
         #case = self.result_cases[self.icase_aero]
-        (obj, (i, name)) = self.gui.result_cases[self.gui.icase_fringe]
+        (obj, (i, name)) = gui.result_cases[gui.icase_fringe]
         fringe, vector = obj.get_fringe_vector_result(i, name)
         res_scalars = vector if vector is not None else fringe
         location = obj.get_location(i, name)
@@ -198,10 +208,10 @@ class CuttingPlaneObject(BaseGui):
         if res_scalars is None:
             if plane_actor is not None:
                 plane_actor.VisibilityOn()
-                #print(self.gui.plane_actor)
-                #print(dir(self.gui.plane_actor))
+                #print(gui.plane_actor)
+                #print(dir(gui.plane_actor))
                 #plane_actor.VisibilityOff()
-            msg = 'No Grid Point Force result is selected.'
+            msg = 'No result is selected.'
             log.error(msg)
             if stop_on_failure:
                 raise RuntimeError(msg)
@@ -215,7 +225,7 @@ class CuttingPlaneObject(BaseGui):
             else:
                 raise NotImplementedError(obj)
         except Exception: # pragma: no cover
-            print(f'icase={self.gui.icase_fringe}\n{obj}')
+            print(f'icase={gui.icase_fringe}\n{obj}')
             raise
 
         plane_actor.VisibilityOn()
@@ -246,3 +256,36 @@ class CuttingPlaneObject(BaseGui):
                            csv_filename=csv_filename,
                            invert_yaxis=invert_yaxis,
                            cut_type='edge', show=show)
+
+    #def create_plane_actor(self,
+                           #xyz1: np.ndarray,
+                           #xyz2: np.ndarray,
+                           #coord: CORD2R,
+                           #i: np.ndarray,
+                           #k: np.ndarray,
+                           #dim_max: float,
+                           #plane_color: tuple[float, float, float],
+                           #plane_opacity: float,
+                           #) -> tuple[vtkActor, vtkProperty]:
+        #"""
+        #The plane is defined in the ik plane
+
+        #Parameters
+        #----------
+        #xyz1 / xyz2 / xyz3 : (3,) float ndarray
+            #the 1=starting 2=ending, 3=normal coordinates of the
+            #coordinate frames to create in the cid=0 frame
+        #i / k : (3,) float ndarray
+            #the i and k vectors of the coordinate system
+
+        #"""
+        #gui: MainWindow = self.gui
+        #plane_actor = gui._create_plane_actor_from_points(
+            #xyz1, xyz2, i, k, dim_max,
+            #actor_name='plane')
+        #prop = plane_actor.GetProperty()
+        #prop.SetColor(*plane_color)
+        #prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+        #plane_actor.VisibilityOn()
+        #gui.rend.Render()
+        #return plane_actor, prop

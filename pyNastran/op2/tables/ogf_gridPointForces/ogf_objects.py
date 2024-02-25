@@ -897,6 +897,7 @@ class RealGridPointForcesArray(GridPointForces):
                              iaxis_march: Optional[NDArray3float]=None,
                              itime: int=0,
                              icoord: int=None,
+                             idir: int=0,
                              nodes_tol: Optional[float]=None,
                              stop_on_nan: bool=False,
                              debug: bool=False,
@@ -1017,7 +1018,6 @@ class RealGridPointForcesArray(GridPointForces):
         # which is similar to the output coordinate frame
         # minus sign because we march into the page for axial
         #
-        idir = 0
         x_elem_centroid = element_centroids_coord[:, idir]
         x_coord = xyz_coord[:, idir]
 
@@ -1037,7 +1037,7 @@ class RealGridPointForcesArray(GridPointForces):
         dstation = dsummation_point_coord[idir]
         if nodes_tol is None:
             nodes_tol = dstation
-        assert nodes_tol >= 0., nodes_tol
+        #assert nodes_tol >= 0., nodes_tol
 
         for istation, station in enumerate(stations):
             # summation point creation
@@ -2112,7 +2112,7 @@ def _check_array(x, dtype, dim: int, msg=''):
             assert x.dtype.name in ['float32', 'float64'], x.dtype.name
         elif dtype == 'int':
             assert x.dtype.name in ['int32', 'int64'], x.dtype.name
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(dtype)
     else:
         assert isinstance(x, (list, tuple)), x
@@ -2126,7 +2126,7 @@ def _check_array(x, dtype, dim: int, msg=''):
             assert isinstance(val, (float, np.float32, np.float64)), x
         elif dtype == 'int':
             assert isinstance(val, (int, np.int32, np.int64)), x
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(dtype)
     return
 
