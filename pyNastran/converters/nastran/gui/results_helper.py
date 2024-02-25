@@ -74,7 +74,10 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[0]
         title = 'Grid Point Forces'
         header = 'Grid Point Forces'
-        nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
+        node_ids = self.node_ids
+        nnodes = len(node_ids)
+        nastran_res = GridPointForceResult(subcase_id, header, title,
+                                           grid_point_forces, nnodes)
 
         itime = 0
 

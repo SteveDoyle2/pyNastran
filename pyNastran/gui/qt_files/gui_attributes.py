@@ -139,8 +139,7 @@ class GuiAttributes:
             self.cutting_plane_obj = CuttingPlaneObject(self)
         if IS_SHEAR_MOMENT_TORQUE:
             self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
-        else:
-            asdf
+
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
         self.geometry_obj = GeometryObject(self)
 
@@ -525,8 +524,13 @@ class GuiAttributes:
             #if name in self.geometry_actors:
             self.geometry_actors[name].Modified()
 
-    def set_quad_grid(self, name, nodes, elements, color,
-                      line_width=5, opacity=1., representation='wire', add=True):
+    def set_quad_grid(self, name: str,
+                      nodes: np.ndarray,
+                      elements: np.ndarray,
+                      color: list[float],
+                      line_width: int=5, opacity: float=1.,
+                      representation: str='wire',
+                      add: bool=True) -> None:
         """Makes a CQUAD4 grid"""
         self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
                                        opacity=opacity, representation=representation)

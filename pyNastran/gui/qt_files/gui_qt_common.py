@@ -1133,8 +1133,9 @@ class GuiQtCommon(GuiAttributes):
                     #print(i, methodi)
                     return self.icase
             else:
-                imini = np.nanargmin(fringe)
-                imaxi = np.nanargmax(fringe)
+                pass  #  true unless it's all nan (grid point forces)
+                #imini = np.nanargmin(fringe)
+                #imaxi = np.nanargmax(fringe)
                 #assert imin == imini
                 #assert imax == imaxi
                 x = 1
@@ -1171,6 +1172,10 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
+        if data_format is None:
+            # RealGridPointForces
+            is_legend_shown = False
+
         # should update this...
         icase_fringe = icase
         icase_disp = self.icase_disp
@@ -1178,6 +1183,7 @@ class GuiQtCommon(GuiAttributes):
         if user_is_checked_fringe:
             if is_legend_shown is None:
                 is_legend_shown = self.scalar_bar.is_shown
+
             self.update_scalar_bar(
                 legend_title, min_value, max_value,
                 data_format,
@@ -1854,16 +1860,24 @@ class GuiQtCommon(GuiAttributes):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
-    def _create_plane_actor_from_points(self, p1, p2, i, k, dim_max,
-                                        actor_name='plane'):
+    def _create_plane_actor_from_points(self, p1: np.ndarray,
+                                        p2: np.ndarray,
+                                        i: np.ndarray,
+                                        k: np.ndarray,
+                                        dim_max: float,
+                                        actor_name: str='plane') -> vtkActor:
         """
         This is used by the cutting plane tool and the shear/moment/torque tool.
+
+            ^ k
+            |
+            |
 
            4+------+3
             |      |
             p1     p2
             |      |
-           1+------+2
+           1+------+2 ----> i
 
         """
         shift = 1.1

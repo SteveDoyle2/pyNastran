@@ -4,7 +4,7 @@ import inspect
 import warnings
 from copy import deepcopy
 from struct import Struct, pack
-from typing import TextIO, TYPE_CHECKING
+from typing import TextIO, Optional, cast, TYPE_CHECKING
 
 import numpy as np
 in1d = np.in1d
@@ -735,6 +735,7 @@ class RealGridPointForcesArray(GridPointForces):
                 self.write_f06_time(f06_file, itime=itime, i=irange)
 
             #log.debug('gpforce_eids =' % gpforce_eids[is_in])
+            log = cast(SimpleLogger, log)
             log.debug('gpforce_nids = %s' % gpforce_nids[irange])
             log.debug('gpforce_eids = %s' % gpforce_eids[irange])
 
@@ -771,12 +772,29 @@ class RealGridPointForcesArray(GridPointForces):
 
         return force_out, moment_out, force_out_sum, moment_out_sum
 
-    def _extract_interface_loads_helper(self, nids: NDArrayNint, eids: NDArrayNint,
-                                        log: SimpleLogger,
-                                        idtype: str,
-                                        fdtype: str,
-                                        itime:int=0,
-                                        debug: bool=False) -> tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
+    def _extract_interface_loads_helper(
+        self, nids: NDArrayNint, eids: NDArrayNint,
+        log: SimpleLogger,
+        idtype: str,
+        fdtype: str,
+        itime:int=0,
+        debug: bool=False) -> tuple[NDArrayNint, NDArrayNint,
+                                    NDArrayN3float, NDArrayN3float]:
+        """
+        Returns
+        -------
+        gpforce_nids : (nnode, ) int array
+            all the nodes
+        gpforce_eids : (nnode, ) int array
+            all the elements
+        irange : (nnode_filtered, ) int array
+            the index into GPFORCE data of the rows to include
+        force_out : (nstations, 3) float array
+            the forces
+        moment_out : (nstations, 3) float array
+            the moments
+
+        """
         force_out = np.full((0, 3), np.nan, dtype=fdtype)
         moment_out = np.full((0, 3), np.nan, dtype=fdtype)
         #force_out_sum = np.full(3, np.nan, dtype=fdtype)

@@ -347,8 +347,10 @@ class ScalarBar:
 
         #self.scalar_bar.SetLookupTable(self.color_function)
         self.update_title(title)
-        self.update_data_format(min_value, max_value, data_format,
-                                nlabels=nlabels, ncolors=ncolors)
+        if data_format is not None:
+            # None is RealGridPointForces
+            self.update_data_format(min_value, max_value, data_format,
+                                    nlabels=nlabels, ncolors=ncolors)
 
         self.min_value = min_value
         self.max_value = max_value

@@ -68,9 +68,9 @@ def get_stations(model: BDF,
                  method: str='Z-Axis Projection',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                  nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
-                                                        NDArray3float, NDArray3float,
-                                                        CORD2R,
-                                                        NDArray3float, NDArrayNfloat]:
+                                           NDArray3float, NDArray3float,
+                                           CORD2R,
+                                           NDArray3float, NDArrayNfloat]:
     """
     Gets the axial stations
 
@@ -144,7 +144,13 @@ def get_stations(model: BDF,
         method=method)
     xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
 
-    coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    try:
+        coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    except Exception:
+        msg = f'Cannot create ouput coordinate system.  origin={origin} zaxis={zaxis} xzplane={xzplane}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
     #coord_march = coord_out
     xaxis_march = xyz3 - xyz1
     xaxis_march_norm = np.linalg.norm(xaxis_march)
@@ -158,7 +164,20 @@ def get_stations(model: BDF,
     # k is length=1
     assert np.allclose(np.linalg.norm(k), 1.0)
     jaxis_march = np.cross(k, iaxis_march)
+    jaxis_march_norm = np.linalg.norm(jaxis_march)
+    if jaxis_march_norm == 0.:
+        msg = f'Equal k axis and iaxis.  k={str(k)} iaxis_march={str(iaxis_march)}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
     kaxis_march = np.cross(iaxis_march, jaxis_march)
+    kaxis_march_norm = np.linalg.norm(kaxis_march)
+    if kaxis_march_norm == 0.:
+        msg = f'Equal iaxis and jaxis.  k={str(k)} iaxis_march={str(iaxis_march)} jaxis_march={str(jaxis_march)}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
+
     coord_march = CORD2R(-1, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
     #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
     #print(coord_out.get_stats())
