@@ -66,10 +66,15 @@ def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
+       'CORD2R' :
+          zaxis: point on the z-axis
+          p2:     point on the xz-plane
+       'Vector'
+          zaxis:  k vector
+          p2:     xz-plane vector
         'Z-Axis Projection'
-           p1-p2 defines the x-axis
-           k is defined by the z-axis
-       'CORD2R' : typical
+          zaxis:  point on the z-axis
+          p2:     p2 is a point on the xz-plane
     nplanes : int; default=11
         the number of planes
 

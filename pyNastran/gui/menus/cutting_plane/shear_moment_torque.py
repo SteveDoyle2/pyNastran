@@ -14,13 +14,17 @@ import os
 from typing import Callable, TYPE_CHECKING
 
 from qtpy.QtCore import Qt
-from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
+    QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox,
+    QFrame)
+
+from qtpy.QtGui import QColor, QFont
+
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
+from pyNastran.gui.utils.qt.resize_qtextedit import AutoResizingTextEdit
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
@@ -69,7 +73,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.plane_opacity = data['plane_opacity']
-        self.methods = ['Vectors', 'CORD2R']
+        self.methods = ['Vector', 'CORD2R']
         #self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
         self.zaxis_methods = ['Manual', 'Global Z']
 
@@ -89,7 +93,7 @@ class ShearMomentTorqueWindow(PyDialog):
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(value)
         self.setFont(font)
 
@@ -139,13 +143,34 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.zaxis_label = QLabel("Z Axis:")
         #self.xz_plane_label = QLabel("XZ Plane:")
 
+        desc = AutoResizingTextEdit(
+            'Creates a shear force/bending moment diagram by creating '
+            'a series of section cuts.')
+        desc.append('')
+        desc.append(' 1. Create a vector to march down (from the origin/start '
+                    'to end) by defining two points.')
+        desc.append('')
+        desc.append(
+            ' 2. Define an output coordinate system about the origin/start.')
+        desc.append(
+            'The goal is to orient the cutting plane in the direction that '
+            'want to expose forces/moments.')
+        desc.append('In other words, point the x-axis roughly down the '
+                    'march axis to define what torque is.')
+        desc.append('')
+        desc.setReadOnly(True)
+        desc.viewport().setAutoFillBackground(False)
+        desc.setFrameStyle(QFrame.NoFrame)
+
+        self.description = desc
+
         # Z-Axis Projection
         self.p1_label = QLabel('Origin:')
         self.p3_label = QLabel('End:')
-        self.p2_label = QLabel('YZ Plane:')
+        self.p2_label = QLabel('XZ Plane:')
         self.p1_label.setToolTip('Defines the starting point for the shear, moment, torque plot')
         self.p3_label.setToolTip('Defines the end point for the shear, moment, torque plot')
-        self.p2_label.setToolTip('Defines the YZ plane for the shears/moments')
+        self.p2_label.setToolTip('Defines the XZ plane for the shears/moments')
 
         self.zaxis_label = QLabel('Z Axis:')
 
@@ -221,7 +246,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.additional_params_label = QLabel('Plane Parameters:')
         self.case_info_label = QLabel('Case Info:')
 
-        self.p2_label = QLabel('YZ Plane:')
+        self.p2_label = QLabel('XZ Plane:')
 
         # Plane Color
         self.plane_color_label = QLabel('Plane Color:')
@@ -299,7 +324,7 @@ class ShearMomentTorqueWindow(PyDialog):
         default_filename = os.path.join(default_dirname, 'shear_moment_torque.csv')
         self.csv_edit.setText(default_filename)
 
-        self.csv_label.setEnabled(False)
+        #self.csv_label.setEnabled(False)
         self.csv_edit.setEnabled(False)
         self.csv_button.setEnabled(False)
         #-----------------------------------------------------------------------
@@ -409,6 +434,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         vbox = QVBoxLayout()
 
+        vbox.addWidget(self.description)
         vbox.addLayout(grid)
         vbox.addLayout(grid2)
         #vbox.addStretch()
@@ -418,7 +444,7 @@ class ShearMomentTorqueWindow(PyDialog):
         #-----------------------
         #vbox.addLayout(add_remove_box)
         vbox.addLayout(ok_cancel_box)
-        self.on_method(self._icord2r)
+        self.on_method(0)  # self._icord2r
         self.on_zaxis_method(self._imanual)
         self.setLayout(vbox)
 
@@ -544,6 +570,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
         self.csv_button.clicked.connect(self.on_browse_csv)
+        #self.csv_label.clicked.connect(self.on_export_checkbox)
 
         self.plot_plane_button.clicked.connect(self.on_plot_plane)
         self.clear_plane_button.clicked.connect(self.on_clear_plane)
@@ -553,6 +580,8 @@ class ShearMomentTorqueWindow(PyDialog):
     def on_method(self, method_int=None):
         method = get_pulldown_text(method_int, self.methods, self.method_pulldown)
 
+        is_p2_cid_enabled = True
+        is_zaxis_cid_enabled = True
         zaxis_method_visible = False
         if method == 'CORD2R':
             self._zaxis_method = self.zaxis_method_pulldown.currentIndex()
@@ -561,25 +590,29 @@ class ShearMomentTorqueWindow(PyDialog):
 
             self.plane_label.setText('Points on Plane:')
             self.zaxis_label.setText('Origin + Z Axis:')
-            self.p2_label.setText('Origin + YZ Plane:')
+            self.p2_label.setText('Origin + XZ Plane:')
 
             #self.zaxis_method_label.setText('Origin + Z-Axis')
             self.zaxis_method_pulldown.setCurrentIndex(self._imanual)
             self.on_zaxis_method()  # update
 
-        elif method == 'Vectors':
+        elif method == 'Vector':
+            is_p2_cid_enabled = False
+            is_zaxis_cid_enabled = False
             self.plane_label.setText('Vectors:')
             self.zaxis_label.setText('Z Axis:')
-            self.p2_label.setText('YZ Plane Axis:')
+            self.p2_label.setText('XZ Plane Axis:')
             #self.zaxis_method_label.setText('Z-Axis')
             self.zaxis_method_pulldown.setCurrentIndex(self._imanual)
             self.on_zaxis_method()  # update
 
         elif method == 'Z-Axis Projection':
+            #is_p2_cid_enabled = False
+            is_zaxis_cid_enabled = False
             zaxis_method_visible = True
             self.plane_label.setText('Point on Plane/Vector:')
             self.zaxis_label.setText('Z Axis:')
-            self.p2_label.setText('Origin + YZ Plane:')
+            self.p2_label.setText('Origin + XZ Plane:')
 
             #self.zaxis_method_label.setText('Z-Axis')
             self.zaxis_method_pulldown.setCurrentIndex(self._zaxis_method)
@@ -587,7 +620,9 @@ class ShearMomentTorqueWindow(PyDialog):
         else:  # pragma: no cover
             raise NotImplementedError(method)
 
-        # works
+        self.p2_cid_pulldown.setEnabled(is_p2_cid_enabled)
+        self.zaxis_cid_pulldown.setEnabled(is_zaxis_cid_enabled)
+
         self.zaxis_method_pulldown.setEnabled(zaxis_method_visible)
         self.zaxis_method_pulldown.setVisible(zaxis_method_visible)
         self.zaxis_method_label.setEnabled(zaxis_method_visible)
@@ -637,7 +672,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
     def on_color(self, color_edit, rgb_color_ints, title):
         """pops a color dialog"""
-        qcolor = QtGui.QColor(*rgb_color_ints)
+        qcolor = QColor(*rgb_color_ints)
         col = QColorDialog.getColor(qcolor, self, title)
         if not col.isValid():
             return False, rgb_color_ints, None
@@ -811,6 +846,7 @@ def main():  # pragma: no cover
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == '__main__':   # pragma: no cover
     main()

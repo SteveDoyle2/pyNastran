@@ -4,7 +4,8 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+import os
+from typing import cast, TYPE_CHECKING
 import numpy as np
 
 import matplotlib
@@ -27,8 +28,9 @@ from pyNastran.gui.qt_files.base_gui import BaseGui
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
+
 class CuttingPlaneObject(BaseGui):
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui: MainWindow = gui
         self._cutting_plane_window_shown = False
         self._cutting_plane_window = None
@@ -134,6 +136,8 @@ class CuttingPlaneObject(BaseGui):
         """
         if plane_color is None:
             plane_color = PURPLE_FLOAT
+
+        plane_color = cast(Color, plane_color)
         assert len(plane_color) == 3, plane_color
         gui: MainWindow = self.gui
         log = gui.log

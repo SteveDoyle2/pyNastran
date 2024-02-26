@@ -65,7 +65,7 @@ def get_element_centroids(model: BDF,
 def get_stations(model: BDF,
                  p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                  zaxis: NDArray3float,
-                 method: str='Vectors',
+                 method: str='Vector',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                  nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
                                            NDArray3float, NDArray3float,
@@ -91,13 +91,15 @@ def get_stations(model: BDF,
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
-        'Vectors'
-           i is defined by the x-axis
-           k is defined by the z-axis
+       'CORD2R' :
+          zaxis: point on the z-axis
+          p2:     point on the xz-plane
+       'Vector'
+          zaxis:  k vector
+          p2:     xz-plane vector
         'Z-Axis Projection'
-           p1-p2 defines the x-axis
-           k is defined by the z-axis
-       'CORD2R' : typical
+          zaxis:  point on the z-axis
+          p2:     p2 is a point on the xz-plane
 
     Returns
     -------
@@ -447,16 +449,17 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
 
     coords = model.coords
     xyz1 = coords[cid_p1].transform_node_to_global(p1)
-    if method == 'Vectors':
+    method_lower = method.lower().strip()
+    if method_lower == 'vector':
         origin = xyz1
         xyz2 = origin + p2
         z_global = origin + zaxis
-        method = 'CORD2R'
+        method_lower = 'cord2r'
     else:
         xyz2 = coords[cid_p2].transform_node_to_global(p2)
         z_global = coords[cid_zaxis].transform_node_to_global(zaxis)
 
-    if method == 'CORD2R':
+    if method_lower == 'cord2r':
         origin = xyz1
         xzplane_ = xyz2 - xyz1
         zaxis_ = z_global - xyz1
@@ -465,13 +468,13 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
         origin_xzplane = xyz2 # origin + k
     #elif method == 'Vectors':
         #xyz2, i, k, origin, origin_zaxis, origin_xzplane = _project_vectors(xyz1, xyz2, z_global)
-    elif method == 'Z-Axis Projection':
+    elif method_lower == 'z-axis projection':
         i, k, origin, origin_zaxis, origin_xzplane = _project_z_axis(xyz1, xyz2, z_global)
     else:
-        raise NotImplementedError(f"method={method!r}; valid_methods=['CORD2R', 'Z-Axis Projection']")
-    print(f'origin={origin}')
-    print(f'origin_zaxis={origin_zaxis}')
-    print(f'origin_xzplane={origin_xzplane}')
+        raise NotImplementedError(f"method={method!r}; valid_methods=['CORD2R', 'Vector', 'Z-Axis Projection']")
+    #print(f'origin={origin}')
+    #print(f'origin_zaxis={origin_zaxis}')
+    #print(f'origin_xzplane={origin_xzplane}')
     return xyz1, xyz2, z_global, i, k, origin, origin_zaxis, origin_xzplane
 
 #def _merge_bodies(local_points_array, global_points_array, result_array):
@@ -823,7 +826,8 @@ def _unique_face_rows(geometry_array: np.ndarray,
 
 def connect_face_rows(geometry_array: np.ndarray,
                       results_array: np.ndarray,
-                      skip_cleanup: bool=True) -> tuple[list[Any], list[np.ndarray], list[np.ndarray]]:
+                      skip_cleanup: bool=True,
+                      ) -> tuple[list[Any], list[np.ndarray], list[np.ndarray]]:
     """
     Connects the faces by taking the count of how many times each node
     is used.  If a node is not used twice, then it is a starting/ending point,
@@ -942,7 +946,8 @@ def connect_face_rows(geometry_array: np.ndarray,
 
 def iedges_to_geometry_results(iedges_all,
                                geometry_array: np.ndarray,
-                               results_array: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                               results_array: np.ndarray,
+                               ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     Takes the iedges and slices the geometry/results to isolate the rings
     or C shapes.
@@ -1233,7 +1238,7 @@ def _interpolate_face_to_bar(nodes,
     nid_new += 2
     return eid_new, nid_new
 
-def _is_dot(ivalues, percent_values, plane_atol):
+def _is_dot(ivalues, percent_values, plane_atol: float) -> np.ndarray:
     """we don't want dots"""
     percent_array = np.array(percent_values)
     if ivalues == [0, 1]:

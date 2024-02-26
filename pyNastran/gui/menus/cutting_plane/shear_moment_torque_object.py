@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
@@ -14,6 +14,7 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
+from pyNastran.gui.typing import Color
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.op2.tables.ogf_gridPointForces.smt import (
@@ -23,6 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.typing import Color
     from vtk import vtkActor
 
 
@@ -198,9 +200,9 @@ class ShearMomentTorqueObject(BaseGui):
                            p2: np.ndarray,
                            p3: np.ndarray,
                            zaxis: np.ndarray,
-                           method: str='Z-Axis Projection',
+                           method: str='Vector',
                            cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                           plane_color=None, plane_opacity: float=0.5,
+                           plane_color: Optional[Color]=None, plane_opacity: float=0.5,
                            csv_filename=None,
                            stop_on_failure: bool=False) -> None:
         """Plane Actor is drawn in the i-k plane"""
@@ -229,9 +231,9 @@ class ShearMomentTorqueObject(BaseGui):
                                  p2: np.ndarray,
                                  p3: np.ndarray,
                                  zaxis: np.ndarray,
-                                 method: str='Z-Axis Projection',
+                                 method: str='Vector',
                                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                                 nplanes: int=20, plane_color=None, plane_opacity: float=0.5,
+                                 nplanes: int=20, plane_color: Optional[Color]=None, plane_opacity: float=0.5,
                                  csv_filename=None,
                                  force_scale: float=1.0, force_unit: str='',
                                  moment_scale: float=1.0, moment_unit: str='',
@@ -257,8 +259,15 @@ class ShearMomentTorqueObject(BaseGui):
         cid_p1 / cid_p2 / cid_p3
             the coordinate systems for p1, p2, and p3
         method : str
-           'CORD2R' : typical CORD2R
-            'Z-Axis Projection' : project p2 on the z-axis
+            'CORD2R' :
+               zaxis: point on the z-axis
+               p2:     point on the xz-plane
+            'Vector'
+               zaxis:  k vector
+               p2:     xz-plane vector
+             'Z-Axis Projection'
+               zaxis:  point on the z-axis
+               p2:     p2 is a point on the xz-plane
         show: bool; default=True
             shows the plots
 
@@ -270,6 +279,8 @@ class ShearMomentTorqueObject(BaseGui):
         """
         if plane_color is None:
             plane_color = PURPLE_FLOAT
+
+        plane_color = cast(Color, plane_color)
         assert len(plane_color) == 3, plane_color
         gui: MainWindow = self.gui
         log = gui.log
@@ -334,12 +345,12 @@ class ShearMomentTorqueObject(BaseGui):
     def plot_plane(self,
                    model: BDF,
                    xyz_cid0: np.ndarray,
-                   plane_color: list[float],
+                   plane_color: Color,
                    p1: np.ndarray,
                    p2: np.ndarray,
                    p3: np.ndarray,
                    zaxis: np.ndarray,
-                   method: str='Z-Axis Projection',
+                   method: str='Vector',
                    cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                    nplanes: int=20, plane_opacity: float=0.5,
                    show: bool=True,
@@ -360,8 +371,16 @@ class ShearMomentTorqueObject(BaseGui):
              - origin + xz-plane
             Z-Axis Projection:
              - see method
-        method : str; default='Z-Axis Projection'
-           ???
+        method : str; default='Vector'
+            'CORD2R' :
+               zaxis: point on the z-axis
+               p2:     point on the xz-plane
+            'Vector'
+               zaxis:  k vector
+               p2:     xz-plane vector
+             'Z-Axis Projection'
+               zaxis:  point on the z-axis
+               p2:     p2 is a point on the xz-plane
 
         Returns
         -------
@@ -437,7 +456,7 @@ class ShearMomentTorqueObject(BaseGui):
                            i: np.ndarray,
                            k: np.ndarray,
                            dim_max: float,
-                           plane_color: tuple[float, float, float],
+                           plane_color: Color,
                            plane_opacity: float,
                            ) -> vtkActor:
         """

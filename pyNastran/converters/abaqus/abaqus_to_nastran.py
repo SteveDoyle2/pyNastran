@@ -6,7 +6,7 @@ import os
 import sys
 from itertools import count
 from collections import defaultdict
-from typing import Callable, Union, cast, TYPE_CHECKING
+from typing import Callable, Union, cast, Optional, TYPE_CHECKING
 
 import numpy as np
 
@@ -282,10 +282,11 @@ def add_bars(add_cbar_cbeam: Callable,
             comment = ''
 
 def _create_nastran_nodes_elements(model: Abaqus,
-                                   nastran_model: BDF) -> None:
+                                   nastran_model: BDF) -> bool:
     log = model.log
     nid_offset = 0
     eid_offset = 0
+    is_mcid = False
 
     pid = 1
     if model.nids is not None and len(model.nids):
@@ -323,13 +324,13 @@ def _create_nastran_nodes_elements(model: Abaqus,
     pid, mid = _create_solid_properties(
         model, nastran_model, log, pid, mid,
         mat_name_to_mid_dict)
-    pid, mid, cid = _create_shell_properties(
+    pid, mid, cid, is_mcid = _create_shell_properties(
         model, nastran_model, log, pid, mid, cid,
         mat_name_to_mid_dict)
     pid, mid = _create_bar_properties(
         model, nastran_model, log, pid, mid, cid,
         mat_name_to_mid_dict)
-
+    return is_mcid
 
 def _build_rigid_ties(model: Abaqus,
                       nastran_model: BDF,
@@ -463,7 +464,6 @@ def _build_face_to_nids(
 
         nids = np.hstack(nids_list)
         face_to_nids_map[(set_type, set_name, face)] = nids
-        x = 1
     return
 
 def _create_solid_properties(model: Abaqus, nastran_model: BDF,
@@ -640,7 +640,8 @@ def _create_bar_properties(model: Abaqus, nastran_model: BDF,
 def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                              log: SimpleLogger,
                              pid: int, mid: int, cid: int,
-                             mat_name_to_mid_dict: dict[str, int]) -> tuple[int, int, int]:
+                             mat_name_to_mid_dict: dict[str, int],
+                             ) -> tuple[int, int, int, bool]:
     """
     Creates a series of PSHELL/PCOMP and associated coordinate systems and
     materials.
@@ -655,10 +656,11 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
      - TODO: no NSM support
 
     """
+    is_mcid = False
     for shell_section in model.shell_sections:
         coord = -1
         #print(shell_section)
-        orientation_name = shell_section.orientation
+        orientation_name: str = shell_section.orientation
         element_set_name = shell_section.elset
         log.debug(f'element_set_name={element_set_name!r}')
 
@@ -666,6 +668,7 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
         if orientation_name:
             build_coord(model, nastran_model,
                         cid, orientation_name)
+            is_mcid = True
             coord = cid
             shell_comment += f'; mcid={cid}'
             cid += 1
@@ -728,7 +731,7 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                                coord=coord, zoffset=zoffset)
         pid += 1
         mid += delta_mid
-    return pid, mid, cid
+    return pid, mid, cid, is_mcid
 
 def map_mass_ids(model: Abaqus, nastran_model: BDF,
                  element_set_name: str,
@@ -930,7 +933,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     nastran_model.add_param('POST', -1, comment=comment)
     for nid, xyz in zip(nids, nodes):
         nastran_model.add_grid(nid, xyz)
-    _create_nastran_nodes_elements(model, nastran_model)
+    is_mcid = _create_nastran_nodes_elements(model, nastran_model)
     #for step in model.steps:
         #print(step)
 
@@ -942,7 +945,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         #print(f'{nastran_model.case_control_deck}')
         nastran_model.case_control_deck = None
 
-    _xform_model(nastran_model, xform)
+    _xform_model(nastran_model, xform, is_mcid)
     nastran_model.write_bdf(
         nastran_filename_out, size=size,
         encoding=None,
@@ -951,8 +954,10 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         enddata=True, write_header=True, close=True)
     return nastran_model
 
-def _xform_model(nastran_model: BDF, xform: bool):
-    if not xform:
+def _xform_model(nastran_model: BDF,
+                 xform: bool,
+                 is_mcid: bool):
+    if not xform or not is_mcid:
         return
     log = nastran_model.log
     log.error('xform is super buggy and largely untested')
@@ -1006,11 +1011,16 @@ def _write_frequency(model: Abaqus,
 def _write_boundary_as_nastran(model: Abaqus,
                                step: Step,
                                nastran_model: BDF,
-                               case_control_deck: CaseControlDeck) -> None:
+                               case_control_deck: CaseControlDeck,
+                               subcase: Subcase,
+                               spc_id: int,
+                               spc_ids: list[int]) -> int:
     if not step.boundaries:
-        return
-    comment_list = []
+        return spc_id
+
+    all_comments_list = []
     for iboundary, boundary in enumerate(step.boundaries):
+        comment_list = []
         fixed_spcs = defaultdict(list)
         for (nid, dof), value in boundary.nid_dof_to_value.items():
             if isinstance(nid, str) and nid not in comment_list:
@@ -1024,16 +1034,28 @@ def _write_boundary_as_nastran(model: Abaqus,
                 else:
                     raise RuntimeError((nid, dof, value))
 
-        subcase_id = iboundary + 1
-        spc_id = iboundary + 1
-        subcase = case_control_deck.create_new_subcase(subcase_id)
-        subcase.add('SPC', spc_id, [], 'STRESS-type')
+        # add the spcs
         for dof, nids in fixed_spcs.items():
             #  spc_id: int, components: str, nodes
             nastran_model.add_spc1(spc_id, str(dof), nids)
-    if comment_list:
-        comment = '\n'.join(comment_list)
-        nastran_model.spcs[spc_id][0].comment = comment
+
+        # apply the comments
+        all_comments_list += comment_list
+        if comment_list:
+            comment = '\n'.join(comment_list)
+            nastran_model.spcs[spc_id][0].comment = comment
+
+        spc_ids.append(spc_id)
+        spc_id += 1
+
+    assert len(spc_ids) > 0, spc_ids
+    if len(spc_ids) > 1:
+        if all_comments_list:
+            comment = '\n'.join(all_comments_list)
+        nastran_model.add_spcadd(spc_id, spc_ids, comment=comment)
+        spc_id += 1
+    subcase.add('SPC', spc_id-1, [], 'STRESS-type')
+    return spc_id
 
 def _create_nastran_loads(model: Abaqus,
                           nastran_model: BDF) -> None:
@@ -1042,7 +1064,10 @@ def _create_nastran_loads(model: Abaqus,
         nastran_model.case_control_deck = CaseControlDeck([], log=nastran_model.log)
 
     case_control_deck = nastran_model.case_control_deck
-    _write_boundary_as_nastran(model, model, nastran_model, case_control_deck)
+    #spc_ids = []
+    #_write_boundary_as_nastran(
+        #model, model, nastran_model, case_control_deck,
+        #subcase_id, spc_id, spc_ids)
 
     output_map = {
         'U': 'DISP',
@@ -1053,16 +1078,21 @@ def _create_nastran_loads(model: Abaqus,
         #'NOD': disables the error estimator; nastran doesn't have one :)
         #'NOE': disables the error estimator; nastran doesn't have one :)
     }
+    spc_id = 1
+    load_id = 1
     for istep, step in enumerate(model.steps):
+        spc_ids = []
         subcase_id = istep + 1
-        load_id = subcase_id
         if subcase_id in nastran_model.subcases:
             subcase = nastran_model.subcases[subcase_id]
         else:
             subcase = case_control_deck.create_new_subcase(subcase_id)
 
         _write_frequency(model, step, nastran_model, case_control_deck)
-        _write_boundary_as_nastran(model, step, nastran_model, case_control_deck)
+        spc_id = _write_boundary_as_nastran(
+            model, step, nastran_model, case_control_deck,
+            subcase, spc_id, spc_ids)
+
         for output in step.node_output + step.element_output:
             output_upper = output.upper()
             if output_upper in {'NOD', 'NOE'}:
@@ -1079,18 +1109,23 @@ def _create_nastran_loads(model: Abaqus,
                 request_flags.append('CENTER')
             subcase.add(base_output, 'ALL', request_flags, 'STRESS-type')
 
-        comment_list = []
-        _write_distributed_loads(model, step, nastran_model, subcase, load_id, comment_list)
-        _write_concentrated_loads(model, step, nastran_model, subcase, load_id, comment_list)
-        if comment_list:
-            comment = '\n'.join(comment_list)
+        load_comment_list = []
+        load_id = _write_distributed_loads(
+            model, step, nastran_model, subcase,
+            load_id, load_comment_list)
+        load_id = _write_concentrated_loads(
+            model, step, nastran_model, subcase,
+            load_id, load_comment_list)
+
+        if load_comment_list:
+            comment = '\n'.join(load_comment_list)
             nastran_model.loads[load_id][0].comment = comment
 
 def _write_concentrated_loads(model: Abaqus,
                               step: Step,
                               nastran_model: BDF, subcase: Subcase,
                               load_id: int,
-                              comment_list: list[str]) -> None:
+                              comment_list: list[str]) -> int:
     def fxyz():
         return np.zeros(3, dtype='float32')
 
@@ -1125,15 +1160,15 @@ def _write_concentrated_loads(model: Abaqus,
             for nid, xyz in moments.items():
                 assert isinstance(nid, integer_types), nid
                 nastran_model.add_moment(load_id, nid, mag, xyz, cid=0, comment='')
-
         #print(step.cloads)
     #step.cloads
+    return load_id
 
 def _write_distributed_loads(model: Abaqus,
                              step: Step,
                              nastran_model: BDF, subcase: Subcase,
                              load_id: int,
-                             comment_list: list[str]) -> None:
+                             comment_list: list[str]) -> int:
     log = model.log
     for dload in step.dloads:
         assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
@@ -1181,6 +1216,7 @@ def _write_distributed_loads(model: Abaqus,
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
+
                         elif element.type == 'CQUAD8':
                             #if face_int != 1:
                             mapped_face = quad_face_map[face_int]
@@ -1195,11 +1231,27 @@ def _write_distributed_loads(model: Abaqus,
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+                        elif element.type == 'CTRIA3':
+                            mapped_face = tri_face_map[face_int]
+                            if isinstance(mapped_face, float):
+                                pressures = [mapped_face*pressure, None, None, None]
+                            elif isinstance(mapped_face, tuple):
+                                log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
+                            else:  # pragma: no cover
+                                raise RuntimeError(mapped_face)
+
+                            #assert face_int == 1, face_int
+                            nastran_model.add_pload4(
+                                load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
+                                surf_or_line='SURF', line_load_dir='NORM', comment='')
+
                         else:
                             raise NotImplementedError(element)
                 else:
                     for eid in eids:
-                        asfd
+                        raise NotImplementedError('tag is not a string.  '
+                                                  f'distributed load eid={eid!r} tag={tag!r}')
                         nastran_model.add_pload2(load_id, pressure, [eid], comment='')
                         #nastran_model.add_pload(load_id, pressure, nodes, comment='')
 
@@ -1210,6 +1262,7 @@ def _write_distributed_loads(model: Abaqus,
                 nastran_model.add_grav(load_id, mag, N, cid=0, mb=0, comment='')
             else:
                 raise RuntimeError(dloadi)
+    return load_id
 
 def _get_nodes(model: Abaqus, nid: Union[int, str]) -> list[int]:
     if isinstance(nid, integer_types):
@@ -1226,7 +1279,7 @@ def _get_elements(model: Abaqus, eid: Union[int, str]) -> list[int]:
     return eids
 
 def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
-                          quiet: str=False) -> None:
+                          quiet: bool=False) -> None:
     """Interface for abaqus_to_nastran"""
     if argv is None:
         argv = sys.argv
@@ -1251,7 +1304,8 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
         '\n'
 
         'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
-        f'  --encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        '  --encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, '
+        f'utf8, utf-8-sig); default={default_encoding!s}\n'
         f'  --debug              Turns on debugging\n'
         '\n'
 
