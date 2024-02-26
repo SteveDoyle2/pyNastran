@@ -279,9 +279,9 @@ class ShearMomentTorqueObject(BaseGui):
         """
         if plane_color is None:
             plane_color = PURPLE_FLOAT
-
         plane_color = cast(Color, plane_color)
         assert len(plane_color) == 3, plane_color
+
         gui: MainWindow = self.gui
         log = gui.log
 
@@ -327,9 +327,10 @@ class ShearMomentTorqueObject(BaseGui):
                 for station, nelem, nnode, coord_id, force_sumi, moment_sumi in zip(
                     stations, nelems, nnodes, new_coords, force_sum, moment_sum):
                     coord: CORD2R = new_coords[coord_id]
+                    origin: np.ndarray = coord.origin
                     csv_file.write(
                         f'{station},{nelem:d},{nnode:d},{coord_id:d},'
-                        f'{coord.origin[0]},{coord.origin[1]},{coord.origin[2]},'
+                        f'{origin[0]},{origin[1]},{origin[2]},'
                         f'{force_sumi[0]},{force_sumi[1]},{force_sumi[2]},'
                         f'{moment_sumi[0]},{moment_sumi[1]},{moment_sumi[2]}\n')
         plot_smt(
