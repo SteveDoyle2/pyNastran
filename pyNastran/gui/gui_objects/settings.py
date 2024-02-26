@@ -688,14 +688,14 @@ class Settings:
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
     def set_annotation_size_color(self, size: Optional[float]=None,
-                                  color: Optional[tuple[float, float, float]]=None) -> None:
+                                  color: Optional[Color]=None) -> None:
         """
         Parameters
         ----------
         size : float
             annotation size
-        color : (float, float, float)
-            RGB values
+        color : Color
+            RGB values as floats
 
         """
         if size is not None:
@@ -748,7 +748,8 @@ class Settings:
         self.coord_scale = coord_scale
         self.update_coord_scale(coord_scale, render=render)
 
-    def set_coord_text_scale(self, coord_text_scale: float, render: bool=True) -> None:
+    def set_coord_text_scale(self, coord_text_scale: float,
+                             render: bool=True) -> None:
         """sets the coordinate system text size"""
         self.coord_text_scale = coord_text_scale
         self.update_coord_text_scale(coord_text_scale, render=render)
@@ -798,7 +799,7 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def set_annotation_color(self, color: tuple[float, float, float],
+    def set_annotation_color(self, color: Color,
                              render: bool=True) -> None:
         """
         Set the annotation color
@@ -858,14 +859,14 @@ class Settings:
         if render:
             self.parent.vtk_interactor.Render()
 
-    def set_background_color(self, color: tuple[float, float, float],
+    def set_background_color(self, color: Color,
                              render: bool=True, quiet: bool=False) -> None:
         """
         Set the background color
 
         Parameters
         ----------
-        color : (float, float, float)
+        color : Color
             RGB values as floats
         """
         self.background_color = color
@@ -875,14 +876,14 @@ class Settings:
         if not quiet:
             self.parent.log_command('self.settings.set_background_color(%s, %s, %s)' % color)
 
-    def set_background_color2(self, color: tuple[float, float, float],
+    def set_background_color2(self, color: Color,
                               render: bool=True, quiet: bool=False):
         """
         Set the background color
 
         Parameters
         ----------
-        color : (float, float, float)
+        color : Color
             RGB values as floats
         """
         self.background_color2 = color
@@ -892,13 +893,13 @@ class Settings:
         if not quiet:
             self.parent.log_command('self.settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color: list[float], render: bool=True) -> None:
+    def set_highlight_color(self, color: Color, render: bool=True) -> None:
         """
         Set the highlight color
 
         Parameters
         ----------
-        color : (float, float, float)
+        color : Color
             RGB values as floats
         """
         self.highlight_color = color
@@ -925,8 +926,8 @@ class Settings:
 
         Parameters
         ----------
-        opacity : float
-            10.0 : default
+        point_size : float
+            the point size
         """
         self.highlight_point_size = point_size
         self.parent.log_command(f'self.settings.set_highlight_point_size({point_size})')
@@ -1032,19 +1033,6 @@ def update_axes_text_size(axes: dict[int, vtkAxes],
             text.SetWidth(coord_text_scale * width)
             text.SetHeight(coord_text_scale * height)
 
-def force_ranged(value, min_value=None, max_value=None):
-    if min_value is not None and max_value is not None:
-        out = max(min(value, max_value), min_value)
-    elif min_value is not None:
-        out = max(value, min_value)
-    elif max_value is not None:
-        out = max(value, min_value)
-    else:  # pragma: no cover
-        raise RuntimeError(value)
-    if out != value:
-        print(out, value)
-    return out
-
 def isfloat(value) -> bool:
     """is the value floatable"""
     try:
@@ -1081,7 +1069,25 @@ def filter_recent_files(recent_files: list[tuple[str, str]]):
                             if os.path.exists(fname) and fmt is not None]
     return recent_files_out
 
+def force_ranged(value, min_value=None, max_value=None):
+    """make sure a value is in the proper range"""
+    if min_value is not None and max_value is not None:
+        out = max(min(value, max_value), min_value)
+    elif min_value is not None:
+        out = max(value, min_value)
+    elif max_value is not None:
+        out = max(value, min_value)
+    else:  # pragma: no cover
+        raise RuntimeError(value)
+    #if out != value:
+        #print(out, value)
+    return out
+
 def force_color_ranged(color: Color, default_color: Color) -> Color:
+    """
+    make sure a color is in the proper range
+    default if it's out of range
+    """
     assert isinstance(color, tuple), color
     if min(color) < 0.0 or max(color) > 1.0:
         return default_color
