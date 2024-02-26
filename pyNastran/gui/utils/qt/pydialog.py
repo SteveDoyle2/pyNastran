@@ -9,17 +9,20 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
 from qtpy.QtWidgets import QDialog, QLineEdit
+from pyNastran.gui.gui_objects.settings import FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.typing import Color
 
 
-def make_font(font_size, is_bold=False):
+def make_font(font_size: int, is_bold=False) -> QFont:
     """creates a QFont"""
     font = QFont()
+    font_size = force_ranged(font_size, min_value=FONT_SIZE_MIN, max_value=FONT_SIZE_MAX)
     font.setPointSize(font_size)
     if is_bold:
         font.setBold(is_bold)
@@ -51,7 +54,7 @@ class PyDialog(QDialog):
         # we set this to 0 to indicate we haven't called on_font yet
         self.font_size = 0 # data['font_size']
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """
         Updates the font size of all objects in the PyDialog
 
@@ -100,7 +103,7 @@ def check_patran_syntax_dict(cell, pound=None):
         cell.setToolTip(str(error))
         return None, False
 
-def check_color(color_float):
+def check_color(color_float: Color) -> tuple[Color, Any]:
     assert len(color_float) == 3, color_float
     assert isinstance(color_float[0], float), color_float
     color_int = [int(colori * 255) for colori in color_float]

@@ -26,7 +26,7 @@ import cpylog
 from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 
 def get_qt_license(qt_name: str) -> str:
     if qt_name == 'PyQt5':
@@ -164,8 +164,7 @@ class AboutWindow(PyDialog):
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
-        font = QtGui.QFont()
-        font.setPointSize(value)
+        font = make_font(value, is_bold=False)
         self.setFont(font)
 
     def on_update(self):

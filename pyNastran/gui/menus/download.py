@@ -65,7 +65,7 @@ class DownloadWindow(QDialog):
         #self.show()
 
     def create_widgets(self):
-        self.name = QLabel("Version %s is now available." % self.version)
+        self.name = QLabel(f'Version {self.version} is now available.')
         if qt_int == 4:
             self.link = ClickableQLabel(self.url)
         else:

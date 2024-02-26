@@ -26,7 +26,7 @@ import pyNastran
 from pyNastran import DEV
 from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.gui_objects.settings import Settings, FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 
 from pyNastran.gui.qt_files.tool_actions import ToolActions
 from pyNastran.gui.qt_files.view_actions import ViewActions
@@ -34,6 +34,7 @@ from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
 from pyNastran.gui.qt_files.mark_actions import MarkActions
+from pyNastran.gui.utils.qt.pydialog import make_font
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
@@ -1193,13 +1194,11 @@ class GuiAttributes:
             self.log_error('font_size=%r must be an integer; type=%s' % (
                 font_size, type(font_size)))
             return is_failed
-        if font_size < 6:
-            font_size = 6
+        font_size = force_ranged(font_size, min_value=FONT_SIZE_MIN, max_value=FONT_SIZE_MAX)
         if self.settings.font_size == font_size:
             return False
         self.settings.font_size = font_size
-        font = QtGui.QFont()
-        font.setPointSize(self.settings.font_size)
+        font = make_font(self.settings.font_size, is_bold=False)
         self.setFont(font)
 
         if isinstance(self, QMainWindow):
@@ -1224,7 +1223,7 @@ class GuiAttributes:
         self.edit_geometry_properties_obj.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.log_command('self.settings.on_set_font_size(%s)' % font_size)
+        self.log_command(f'self.settings.on_set_font_size({font_size})')
         return False
 
     def make_cutting_plane(self, data) -> None:

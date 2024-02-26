@@ -484,7 +484,8 @@ def create_node_labels(point_id_filter: vtkIdFilter,
     points_mapper.ScalarVisibilityOn()
     points_actor = vtkActor()
     points_actor.SetMapper(points_mapper)
-    points_actor.GetProperty().SetPointSize(label_size)
+    prop = points_actor.GetProperty()
+    prop.SetPointSize(label_size)
 
     # point labels
     label_mapper = vtkLabeledDataMapper()

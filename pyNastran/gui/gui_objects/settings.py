@@ -32,6 +32,7 @@ from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
+    from pyNastran.gui.typing import Color
 
 from pyNastran.gui import (
     USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
@@ -55,17 +56,44 @@ HIGHLIGHT_COLOR = ORANGE
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 12.0
 HIGHLIGHT_LINE_THICKNESS = 5.0
-ANNOTATION_COLOR = BLACK
-ANNOTATION_SIZE = 18
-FONT_SIZE = 8
-CORNER_TEXT_SIZE = 14
-CORNER_TEXT_COLOR = BLACK
-COORD_SCALE = 0.05  # in percent of max dimension
-COORD_TEXT_SCALE = 0.5 # percent of nominal
+HIGHLIGHT_LINE_THICKNESS_MIN = 0.1
+HIGHLIGHT_LINE_THICKNESS_MAX = 2000.
+
 USE_PARALLEL_PROJECTION = True
 DEFAULT_COLORMAP = 'jet'
-MAGNIFY = 5
 NFILES_TO_SAVE = 9
+OPACITY_MIN = 0.1
+OPACITY_MAX = 1.0
+
+FONT_SIZE = 8
+FONT_SIZE_MIN = 7
+FONT_SIZE_MAX = 20
+
+ANNOTATION_SIZE = 18
+ANNOTATION_SIZE_MIN = 1
+ANNOTATION_SIZE_MAX = 500
+ANNOTATION_COLOR = BLACK
+
+POINT_SIZE_MIN = 5.0
+POINT_SIZE_MAX = 30.0
+
+COORD_TEXT_SCALE = 0.5 # percent of nominal
+COORD_TEXT_SCALE_MIN = 0.1
+COORD_TEXT_SCALE_MAX = 2000.
+
+CORNER_TEXT_SIZE = 14
+CORNER_TEXT_SIZE_MIN = 7
+CORNER_TEXT_SIZE_MAX = 30
+CORNER_TEXT_COLOR = BLACK
+
+COORD_SCALE = 0.05  # in percent of max dimension
+COORD_SCALE_MIN = 0.1
+COORD_SCALE_MAX = 1000.
+
+MAGNIFY = 5
+MAGNIFY_MIN = 1
+MAGNIFY_MAX = 10
+
 
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
@@ -305,6 +333,8 @@ class Settings:
         self._set_setting(settings, setting_keys, ['font_size'],
                           default=self.font_size,
                           save=True, auto_type=int)
+        self.font_size = force_ranged(
+            self.font_size, min_value=FONT_SIZE_MIN, max_value=None)
 
         # parallel/perspective
         self._set_setting(settings, setting_keys, ['use_parallel_projection'],
@@ -377,24 +407,34 @@ class Settings:
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
                           default=False, save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['background_color'],
-                          default=GREY, save=True, auto_type=float)
+                          default=BACKGROUND_COLOR, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['background_color2'],
-                          default=GREY, save=True, auto_type=float)
+                          default=BACKGROUND_COLOR2, save=True, auto_type=float)
+        self.background_color = force_color_ranged(self.background_color, BACKGROUND_COLOR)
+        self.background_color2 = force_color_ranged(self.background_color2, BACKGROUND_COLOR2)
 
         # scales the coordinate systems
         self._set_setting(settings, setting_keys, ['coord_scale'],
                           default=COORD_SCALE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['coord_text_scale'],
                           default=COORD_TEXT_SCALE, save=True, auto_type=float)
+        self.coord_scale = force_ranged(
+            self.coord_scale,
+            min_value=COORD_SCALE_MIN, max_value=COORD_SCALE_MAX)
+        self.coord_text_scale = force_ranged(
+            self.coord_text_scale,
+            min_value=COORD_TEXT_SCALE_MIN, max_value=COORD_TEXT_SCALE_MAX)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color'],
-                          default=BLACK, save=True, auto_type=float)
+                          default=ANNOTATION_COLOR, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['annotation_size'],
                           default=ANNOTATION_SIZE, save=True, auto_type=int) # int
-        if isinstance(self.annotation_size, float):
-            # throw the float in the trash as it's from an old version of vtk
-            self.annotation_size = ANNOTATION_SIZE
+        self.annotation_color = force_color_ranged(self.annotation_color, ANNOTATION_COLOR)
+        self.annotation_size = force_ranged(
+            self.annotation_size,
+            min_value=ANNOTATION_SIZE_MIN, max_value=ANNOTATION_SIZE_MAX)
+
         #elif isinstance(self.annotation_size, int):
             #pass
         #else:
@@ -402,22 +442,37 @@ class Settings:
 
         self._set_setting(settings, setting_keys, ['magnify'],
                           default=self.magnify, save=True, auto_type=int)
+        self.magnify = force_ranged(
+            self.magnify, min_value=MAGNIFY_MIN, max_value=MAGNIFY_MAX)
 
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['corner_text_color'],
-                          default=BLACK, save=True, auto_type=float)
+                          default=CORNER_TEXT_COLOR, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['corner_text_size'],
                           default=CORNER_TEXT_SIZE, save=True, auto_type=int)
+        self.corner_text_color = force_color_ranged(self.corner_text_color, CORNER_TEXT_COLOR)
+        self.corner_text_size = force_ranged(
+            self.corner_text_size, min_value=CORNER_TEXT_SIZE_MIN, max_value=CORNER_TEXT_SIZE_MAX)
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
                           default=ORANGE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_opacity'],
                           default=HIGHLIGHT_OPACITY, save=True, auto_type=float)
+        self.highlight_color = force_color_ranged(self.highlight_color, HIGHLIGHT_COLOR)
+        self.highlight_opacity = force_ranged(
+            self.highlight_opacity, min_value=OPACITY_MIN, max_value=OPACITY_MAX)
+
         self._set_setting(settings, setting_keys, ['highlight_point_size'],
                           default=HIGHLIGHT_POINT_SIZE, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
                           default=HIGHLIGHT_LINE_THICKNESS, save=True, auto_type=float)
+        self.highlight_point_size = force_ranged(
+            self.highlight_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
+        self.highlight_line_thickness = force_ranged(
+            self.highlight_line_thickness,
+            min_value=HIGHLIGHT_LINE_THICKNESS_MIN, max_value=HIGHLIGHT_LINE_THICKNESS_MAX)
+
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
@@ -686,7 +741,7 @@ class Settings:
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
-            self.parent.log_command('settings.set_annotation_size(%s)' % size)
+            self.parent.log_command(f'self.settings.set_annotation_size({size})')
 
     def set_coord_scale(self, coord_scale: float, render: bool=True) -> None:
         """sets the coordinate system size"""
@@ -785,7 +840,7 @@ class Settings:
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
-        self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
+        self.parent.log_command('self.settings.set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
     def set_background_color_to_white(self, render: bool=True) -> None:
@@ -818,7 +873,7 @@ class Settings:
         if render:
             self.parent.vtk_interactor.Render()
         if not quiet:
-            self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
+            self.parent.log_command('self.settings.set_background_color(%s, %s, %s)' % color)
 
     def set_background_color2(self, color: tuple[float, float, float],
                               render: bool=True, quiet: bool=False):
@@ -835,7 +890,7 @@ class Settings:
         if render:
             self.parent.vtk_interactor.Render()
         if not quiet:
-            self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
+            self.parent.log_command('self.settings.set_background_color2(%s, %s, %s)' % color)
 
     def set_highlight_color(self, color: list[float], render: bool=True) -> None:
         """
@@ -849,7 +904,7 @@ class Settings:
         self.highlight_color = color
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_highlight_color(%s, %s, %s)' % color)
+        self.parent.log_command('self.settings.set_highlight_color(%s, %s, %s)' % color)
 
     def set_highlight_opacity(self, opacity: float) -> None:
         """
@@ -862,7 +917,7 @@ class Settings:
             1.0 : solid
         """
         self.highlight_opacity = opacity
-        self.parent.log_command(f'settings.set_highlight_opacity({opacity})')
+        self.parent.log_command(f'self.settings.set_highlight_opacity({opacity})')
 
     def set_highlight_point_size(self, point_size: int) -> None:
         """
@@ -874,7 +929,7 @@ class Settings:
             10.0 : default
         """
         self.highlight_point_size = point_size
-        self.parent.log_command(f'settings.set_highlight_point_size({point_size})')
+        self.parent.log_command(f'self.settings.set_highlight_point_size({point_size})')
 
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
@@ -895,7 +950,7 @@ class Settings:
             text_actor.GetTextProperty().SetColor(color)
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command('settings.set_corner_text_color(%s, %s, %s)' % color)
+        self.parent.log_command('self.settings.set_corner_text_color(%s, %s, %s)' % color)
 
     def set_corner_text_size(self, corner_text_size: int, render: bool=True) -> None:
         """
@@ -922,7 +977,7 @@ class Settings:
             i -= 1
         if render:
             self.parent.vtk_interactor.Render()
-        self.parent.log_command(f'settings.set_corner_text_size({corner_text_size})')
+        self.parent.log_command(f'self.settings.set_corner_text_size({corner_text_size})')
 
     def update_corner_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
@@ -977,6 +1032,19 @@ def update_axes_text_size(axes: dict[int, vtkAxes],
             text.SetWidth(coord_text_scale * width)
             text.SetHeight(coord_text_scale * height)
 
+def force_ranged(value, min_value=None, max_value=None):
+    if min_value is not None and max_value is not None:
+        out = max(min(value, max_value), min_value)
+    elif min_value is not None:
+        out = max(value, min_value)
+    elif max_value is not None:
+        out = max(value, min_value)
+    else:  # pragma: no cover
+        raise RuntimeError(value)
+    if out != value:
+        print(out, value)
+    return out
+
 def isfloat(value) -> bool:
     """is the value floatable"""
     try:
@@ -1013,5 +1081,8 @@ def filter_recent_files(recent_files: list[tuple[str, str]]):
                             if os.path.exists(fname) and fmt is not None]
     return recent_files_out
 
-
-
+def force_color_ranged(color: Color, default_color: Color) -> Color:
+    assert isinstance(color, tuple), color
+    if min(color) < 0.0 or max(color) > 1.0:
+        return default_color
+    return color

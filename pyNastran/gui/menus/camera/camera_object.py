@@ -17,7 +17,7 @@ class CameraObject(BaseGui):
         self._camera_window_shown = False
         self._camera_window = None
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """sets the font size for the camera window"""
         if self._camera_window_shown:
             self._camera_window.set_font_size(font_size)

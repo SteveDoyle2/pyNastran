@@ -93,8 +93,7 @@ class ShearMomentTorqueWindow(PyDialog):
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
-        font = QFont()
-        font.setPointSize(value)
+        font = make_font(value, is_bold=False)
         self.setFont(font)
 
     def set_font_size(self, font_size):

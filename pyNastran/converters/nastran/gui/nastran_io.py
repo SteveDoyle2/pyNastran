@@ -3008,11 +3008,13 @@ class NastranIO(NastranIO_):
         """
         hides the Nastran toolbar when loading another format
         """
-        self.nastran_tools_menu.setVisible(False)
+        if hasattr(self, 'nastran_tools_menu'):
+            self.nastran_tools_menu.setVisible(False)
 
         #self.menu_help.menuAction().setVisible(True)
         #self.menu_help2.menuAction().setVisible(False)
-        self.nastran_toolbar.setVisible(False)
+        if hasattr(self, 'nastran_toolbar'):
+            self.nastran_toolbar.setVisible(False)
         self.actions['nastran'].setVisible(False)
 
     def _create_nastran_tools_and_menu_items(self):

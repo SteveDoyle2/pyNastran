@@ -20,7 +20,7 @@ from qtpy.QtWidgets import (
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
 from pyNastran.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
@@ -425,8 +425,7 @@ class CuttingPlaneWindow(PyDialog):
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
-        font = QtGui.QFont()
-        font.setPointSize(value)
+        font = make_font(value, is_bold=False)
         self.setFont(font)
 
     #def on_corner_coord(self):
