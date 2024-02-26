@@ -11,6 +11,8 @@ in1d = np.in1d
 #in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
 #from numpy import zeros, unique, array_equal, empty
 
+from cpylog import SimpleLogger
+
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
@@ -22,7 +24,6 @@ from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 
 if TYPE_CHECKING:  # pragma: no cover
-    from cpylog import SimpleLogger
     from pyNastran.nptyping_interface import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
     from pyNastran.bdf.bdf import BDF, CORD, SimpleLogger
@@ -1028,8 +1029,8 @@ class RealGridPointForcesArray(GridPointForces):
 
         offset = np.zeros(3, dtype=fdtype)
         new_coords = {}
-        nelems = []
-        nnodes = []
+        nelems_list = []
+        nnodes_list = []
 
         # calculate the value of dstation_x for the 1st station
         doffset = (stations[1] - stations[0]) * iaxis_march
@@ -1060,7 +1061,7 @@ class RealGridPointForcesArray(GridPointForces):
             #
             ielem = np.where(x_elem_centroid <= station_x)[0]
             nelem = len(ielem)
-            nelems.append(nelem)
+            nelems_list.append(nelem)
 
             # We want to do this similarly for the elements.  Ideally,
             # we want a single line of elements (and not include extra)
@@ -1073,7 +1074,7 @@ class RealGridPointForcesArray(GridPointForces):
             #
             jnode = np.where(x_coord >= (station_x-nodes_tol))[0]
             nnode = len(jnode)
-            nnodes.append(nnode)
+            nnodes_list.append(nnode)
 
             coord_save = deepcopy(coord_out)
             coord_save.cid = icoord
@@ -1123,8 +1124,8 @@ class RealGridPointForcesArray(GridPointForces):
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
             icoord += 1
-        nelems = np.array(nelems, dtype=idtype)
-        nnodes = np.array(nnodes, dtype=idtype)
+        nelems = np.array(nelems_list, dtype=idtype)
+        nnodes = np.array(nnodes_list, dtype=idtype)
         return force_sum, moment_sum, new_coords, nelems, nnodes
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):

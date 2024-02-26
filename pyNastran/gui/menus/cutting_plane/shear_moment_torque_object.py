@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import cast, TYPE_CHECKING
+from typing import cast, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
@@ -259,13 +259,13 @@ class ShearMomentTorqueObject(BaseGui):
         cid_p1 / cid_p2 / cid_p3
             the coordinate systems for p1, p2, and p3
         method : str
-            'CORD2R' :
-               zaxis: point on the z-axis
+            'CORD2R':
+               zaxis:  point on the z-axis
                p2:     point on the xz-plane
-            'Vector'
+            'Vector':
                zaxis:  k vector
                p2:     xz-plane vector
-             'Z-Axis Projection'
+             'Z-Axis Projection':
                zaxis:  point on the z-axis
                p2:     p2 is a point on the xz-plane
         show: bool; default=True
@@ -326,7 +326,7 @@ class ShearMomentTorqueObject(BaseGui):
                 csv_file.write(header)
                 for station, nelem, nnode, coord_id, force_sumi, moment_sumi in zip(
                     stations, nelems, nnodes, new_coords, force_sum, moment_sum):
-                    coord = new_coords[coord_id]
+                    coord: CORD2R = new_coords[coord_id]
                     csv_file.write(
                         f'{station},{nelem:d},{nnode:d},{coord_id:d},'
                         f'{coord.origin[0]},{coord.origin[1]},{coord.origin[2]},'
