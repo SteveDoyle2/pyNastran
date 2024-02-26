@@ -74,7 +74,10 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[0]
         title = 'Grid Point Forces'
         header = 'Grid Point Forces'
-        nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
+        node_ids = self.node_ids
+        nnodes = len(node_ids)
+        nastran_res = GridPointForceResult(subcase_id, header, title,
+                                           grid_point_forces, nnodes)
 
         itime = 0
 
@@ -1171,12 +1174,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise
 
         #o = 'Ïµ' if is_strain else 'Ïƒ'
-        #t = 'Ïµ' if is_strain else 'ğœ'
+        #t = 'Ïµ' if is_strain else 'í µí¼'
         if is_stress:
             word = 'Stress'
             fmt = '%.3f'
             #sigma = 'Ïƒ'
-            #tau = 'ğœ'
+            #tau = 'í µí¼'
         else:
             word = 'Strain'
             fmt = '%.4e'

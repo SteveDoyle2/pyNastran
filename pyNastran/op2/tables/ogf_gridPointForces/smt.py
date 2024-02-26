@@ -18,6 +18,12 @@ from __future__ import annotations
 import numpy as np
 from typing import TYPE_CHECKING
 
+try:
+    import matplotlib.pyplot as plt
+    IS_MATPLOTLIB = True
+except:
+    IS_MATPLOTLIB = False
+
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_nid_cd_xyz_cid0, get_element_centroids, get_stations)
 if TYPE_CHECKING:  # pragma: no cover
@@ -38,7 +44,10 @@ def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
                            zaxis: NDArray3float,
                            method: str='Z-Axis Projection',
                            cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                           nplanes: int=11, ):
+                           nplanes: int=11, ) -> tuple[
+                               np.ndarray, np.ndarray, np.ndarray,
+                               np.ndarray, np.ndarray,
+                               CORD2R, CORD2R, float, np.ndarray]:
     """
     Parameters
     ----------
@@ -57,10 +66,15 @@ def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
-        'Z-Axis Projection'
-           p1-p2 defines the x-axis
-           k is defined by the z-axis
-       'CORD2R' : typical
+       'CORD2R':
+          zaxis: point on the z-axis
+          p2:     point on the xz-plane
+       'Vector':
+          zaxis:  k vector
+          p2:     xz-plane vector
+        'Z-Axis Projection':
+          zaxis:  point on the z-axis
+          p2:     p2 is a point on the xz-plane
     nplanes : int; default=11
         the number of planes
 
@@ -97,7 +111,10 @@ def plot_shear_moment_torque(model: OP2Geom,
                              gpforce: RealGridPointForcesArray,
                              coord: CORD2R,
                              itime: int=0,
-                             nplanes: int=11, show: bool=True):
+                             nplanes: int=11, show: bool=True,
+                             #xtitle: str='x', xlabel: str='xlabel',
+                             #force_unit: str='', moment_unit: str=''
+                             ) -> None:
     nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0 = smt_setup(model)
     element_centroids_coord = coord.transform_node_to_local_array(element_centroids_cid0)
     idir = 0
@@ -113,29 +130,31 @@ def plot_shear_moment_torque(model: OP2Geom,
         model.coords, coord,
         iaxis_march=None,
         itime=itime, debug=False, log=model.log)
-    plot_smt(stations, force_sum, moment_sum, nelems, nnodes, show=show)
+    plot_smt(stations,
+             force_sum,
+             moment_sum,
+             nelems, nnodes, show=show)
+    return
 
-def plot_smt(x, force_sum, moment_sum, nelems, nnodes,
-             plot_force_components=True,
-             plot_moment_components=True,
-             root_filename='',
-             show=True,
-             xtitle='x', xlabel='xlabel',
-             force_unit='', moment_unit=''):
+def plot_smt(x: np.ndarray,
+             force_sum: np.ndarray, moment_sum: np.ndarray,
+             nelems: np.ndarray, nnodes: np.ndarray,
+             plot_force_components: bool=True,
+             plot_moment_components: bool=True,
+             root_filename: str='',
+             show: bool=True,
+             xtitle: str='x', xlabel: str='xlabel',
+             force_unit: str='', moment_unit: str='') -> None:
     """plots the shear, moment, torque plots"""
-    import matplotlib.pyplot as plt
     plt.close()
 
-    xtitle = 'Y'
-    xlabel = 'Spanwise Location, Y (in)'
-    moment_unit = 'in-kip'
-    force_unit = 'kip'
-    moment_unit2 = ''
-    force_unit2 = ''
-    if force_unit:
-        force_unit2 = f' ({force_unit})'
-    if moment_unit:
-        moment_unit2 = f' ({moment_unit})'
+    #xtitle = 'Y'
+    #xlabel = 'Spanwise Location, Y (in)'
+    #moment_unit = 'in-kip'
+    #force_unit = 'kip'
+
+    force_unit2 = f' ({force_unit})' if force_unit else ''
+    moment_unit2 = f' ({moment_unit})' if moment_unit else ''
 
     #f, ax = plt.subplots()
     # ax = fig.subplots()

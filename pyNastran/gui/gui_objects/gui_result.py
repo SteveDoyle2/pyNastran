@@ -4,11 +4,14 @@ defines:
  - GuiResult
 
 """
+from __future__ import annotations
 from abc import abstractmethod
-from typing import Union, Any, Optional
+from typing import Union, Any, Optional, TYPE_CHECKING
 import numpy as np
 in1d = np.in1d
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
+if TYPE_CHECKING:
+    from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForceArray
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
@@ -181,7 +184,8 @@ class NullResult(GuiResultCommon):
 class GridPointForceResult(GuiResultCommon):
     def __init__(self, subcase_id: int,
                  header: str, title: str,
-                 gpforce_array,
+                 gpforce_array: RealGridPointForceArray,
+                 nnodes: int,
                  uname: str='GridPointForceResult'):
         """
         Parameters
@@ -205,8 +209,10 @@ class GridPointForceResult(GuiResultCommon):
         self.location = 'node'
         self.subcase_id = subcase_id
         self.uname = uname
+        assert isinstance(nnodes, int), nnodes
         super(GridPointForceResult, self).__init__()
         self.gpforce_array = gpforce_array
+        self.nnodes = nnodes
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
@@ -221,10 +227,12 @@ class GridPointForceResult(GuiResultCommon):
     #def get_scalar(self, i: int, name: str) -> None:
         #return None
 
-    def get_fringe_result(self, i: int, name: str) -> None:
-        return None
-    def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
-        return None, None
+    def get_fringe_result(self, i: int, name: str) -> np.ndarray:
+        fringe = np.full(self.nnodes, np.nan, dtype='float32')
+        return fringe
+    def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, None]:
+        fringe = self.get_fringe_result(i, name)
+        return fringe, None
     def get_legend_title(self, i: int, name: str) -> str:
         return self.title
     def get_location(self, i: int, name: str) -> str:
@@ -240,7 +248,7 @@ class GridPointForceResult(GuiResultCommon):
     def get_default_data_format(self, i: int, name: str) -> None:
         return None
     def get_default_min_max(self, i: int, name: str) -> tuple[Optional[float], Optional[float]]:
-        return None, None
+        return np.nan, np.nan
     def get_default_legend_title(self, i: int, name: str) -> str:
         return self.title
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
@@ -248,10 +256,10 @@ class GridPointForceResult(GuiResultCommon):
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str,
                                                nlabels, labelsize, ncolors, colormap) -> None:
         return
-    def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
-        return None, None
-    def get_min_max(self, i: int, name: str) -> tuple[None, None]:
-        return None, None
+    def get_imin_imax(self, i: int, name: str) -> tuple[int, int]:
+        return 0, 0
+    def get_min_max(self, i: int, name: str) -> tuple[float, float]:
+        return np.nan, np.nan
 
     #def save_vtk_result(self, used_titles: set[str]) -> None:
 

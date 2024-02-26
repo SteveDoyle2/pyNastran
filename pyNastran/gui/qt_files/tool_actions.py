@@ -38,6 +38,7 @@ from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import update_axis_text_size
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.gui import MainWindow
     from pyNastran.gui.gui_objects.settings import Settings
 

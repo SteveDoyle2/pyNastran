@@ -26,14 +26,23 @@ from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ER
 
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
-    FONT_SIZE, MAGNIFY,
+    FONT_SIZE, FONT_SIZE_MIN, FONT_SIZE_MAX,
+    MAGNIFY,
     COORD_SCALE, COORD_TEXT_SCALE,
     BACKGROUND_COLOR, BACKGROUND_COLOR2,
     ANNOTATION_COLOR, ANNOTATION_SIZE,
     CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
     HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, # HIGHLIGHT_LINE_THICKNESS,
+    OPACITY_MIN, OPACITY_MAX,
     USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
+    POINT_SIZE_MIN, POINT_SIZE_MAX,
+    COORD_TEXT_SCALE_MIN, COORD_TEXT_SCALE_MAX,
+    CORNER_TEXT_SIZE_MIN, CORNER_TEXT_SIZE_MAX,
+
+    COORD_SCALE_MIN, COORD_SCALE_MAX,
+    MAGNIFY_MIN, MAGNIFY_MAX,
+    ANNOTATION_SIZE_MIN, ANNOTATION_SIZE_MAX,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
@@ -161,7 +170,7 @@ class PreferencesWindow(PyDialog):
         self.font_size_label = QLabel('Font Size:')
         self.font_size_edit = QSpinBox(self)
         self.font_size_edit.setValue(self._default_font_size)
-        self.font_size_edit.setRange(7, 20)
+        self.font_size_edit.setRange(FONT_SIZE_MIN, FONT_SIZE_MAX)
 
         #-----------------------------------------------------------------------
         self.startup_directory_label = QLabel('Remember Last Directory:')
@@ -176,7 +185,7 @@ class PreferencesWindow(PyDialog):
         self.corner_text_size_label = QLabel('Corner Text Size:')
         self.corner_text_size_edit = QSpinBox(self)
         self.corner_text_size_edit.setValue(self._default_corner_text_size)
-        self.corner_text_size_edit.setRange(7, 30)
+        self.corner_text_size_edit.setRange(CORNER_TEXT_SIZE_MIN, CORNER_TEXT_SIZE_MAX)
         self.corner_text_size_edit.setToolTip('Sets the lower left corner text size')
         self.corner_text_size_button = QPushButton("Default")
 
@@ -190,7 +199,7 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_label = QLabel("Highlight Opacity:")
         self.highlight_opacity_edit = QDoubleSpinBox(self)
         self.highlight_opacity_edit.setValue(self._highlight_opacity)
-        self.highlight_opacity_edit.setRange(0.1, 1.0)
+        self.highlight_opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
         self.highlight_opacity_edit.setDecimals(2)
         self.highlight_opacity_edit.setSingleStep(0.05)
         self.highlight_opacity_edit.setToolTip('Sets the highlight opacity (0=invisible, 1=solid)')
@@ -199,7 +208,7 @@ class PreferencesWindow(PyDialog):
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
         self.highlight_point_size_edit = QDoubleSpinBox(self)
         self.highlight_point_size_edit.setValue(self._highlight_point_size)
-        self.highlight_point_size_edit.setRange(5.0, 30.0)
+        self.highlight_point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
         self.highlight_point_size_edit.setDecimals(2)
         self.highlight_point_size_edit.setSingleStep(0.25)
         self.highlight_point_size_edit.setToolTip('Sets the highlight node size')
@@ -229,7 +238,7 @@ class PreferencesWindow(PyDialog):
         # Annotation Size
         self.annotation_size_label = QLabel("Annotation Size:")
         self.annotation_size_edit = QSpinBox(self)
-        self.annotation_size_edit.setRange(1, 500)
+        self.annotation_size_edit.setRange(ANNOTATION_SIZE_MIN, ANNOTATION_SIZE_MAX)
         self.annotation_size_edit.setValue(self._annotation_size)
         self.annotation_size_edit.setToolTip('Sets the "Probe" and Min/Max text size')
         #self.annotation_size_edit.setToolTip('Sets the hiannotation text size')
@@ -279,7 +288,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_button = QPushButton("Default")
 
         self.coord_scale_edit = QDoubleSpinBox(self)
-        self.coord_scale_edit.setRange(0.1, 1000.)
+        self.coord_scale_edit.setRange(COORD_SCALE_MIN, COORD_SCALE_MAX)
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
@@ -289,7 +298,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_button = QPushButton("Default")
 
         self.coord_text_scale_edit = QDoubleSpinBox(self)
-        self.coord_text_scale_edit.setRange(0.1, 2000.)
+        self.coord_text_scale_edit.setRange(COORD_TEXT_SCALE_MIN, COORD_TEXT_SCALE_MAX)
         self.coord_text_scale_edit.setDecimals(3)
         self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
@@ -303,8 +312,8 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         self.magnify_label = QLabel('Screenshot Magnify:')
         self.magnify_edit = QSpinBox(self)
-        self.magnify_edit.setMinimum(1)
-        self.magnify_edit.setMaximum(10)
+        self.magnify_edit.setMinimum(MAGNIFY_MIN)
+        self.magnify_edit.setMaximum(MAGNIFY_MAX)
         self.magnify_edit.setValue(self._magnify)
         self.magnify_edit.setToolTip('1: Standard resolution; >1: high quality')
 
@@ -812,10 +821,9 @@ class PreferencesWindow(PyDialog):
 
     def on_font(self, value=None):
         """update the font for the current window"""
-        if value is None:
+        if value in (0, None):
             value = self.font_size_edit.value()
-        font = QtGui.QFont()
-        font.setPointSize(value)
+        font = make_font(value, is_bold=False)
         self.setFont(font)
         bold_font = make_font(value, is_bold=True)
         self.nastran_label.setFont(bold_font)

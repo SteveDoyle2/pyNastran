@@ -65,12 +65,12 @@ def get_element_centroids(model: BDF,
 def get_stations(model: BDF,
                  p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                  zaxis: NDArray3float,
-                 method: str='Z-Axis Projection',
+                 method: str='Vector',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                  nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
-                                                        NDArray3float, NDArray3float,
-                                                        CORD2R,
-                                                        NDArray3float, NDArrayNfloat]:
+                                           NDArray3float, NDArray3float,
+                                           CORD2R,
+                                           NDArray3float, NDArrayNfloat]:
     """
     Gets the axial stations
 
@@ -81,16 +81,25 @@ def get_stations(model: BDF,
     p3: (3,) float ndarray
         defines the end point for the shear, moment, torque plot
     p2: (3,) float ndarray
-        defines the XZ plane for the shears/moments
+        defines the XZ plane for the shears/moments (depends on method)
+        'Vectors':
+           i = p2
+        'Z-Axis Projection':
+           i = p2 - p1
     zaxis: (3,) float ndarray
         the direction of the z-axis
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
-        'Z-Axis Projection'
-           p1-p2 defines the x-axis
-           k is defined by the z-axis
-       'CORD2R' : typical
+       'CORD2R':
+          zaxis: point on the z-axis
+          p2:     point on the xz-plane
+       'Vector':
+          zaxis:  k vector
+          p2:     xz-plane vector
+        'Z-Axis Projection':
+          zaxis:  point on the z-axis
+          p2:     p2 is a point on the xz-plane
 
     Returns
     -------
@@ -144,7 +153,13 @@ def get_stations(model: BDF,
         method=method)
     xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
 
-    coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    try:
+        coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    except Exception:
+        msg = f'Cannot create ouput coordinate system.  origin={origin} zaxis={zaxis} xzplane={xzplane}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
     #coord_march = coord_out
     xaxis_march = xyz3 - xyz1
     xaxis_march_norm = np.linalg.norm(xaxis_march)
@@ -158,13 +173,26 @@ def get_stations(model: BDF,
     # k is length=1
     assert np.allclose(np.linalg.norm(k), 1.0)
     jaxis_march = np.cross(k, iaxis_march)
+    jaxis_march_norm = np.linalg.norm(jaxis_march)
+    if jaxis_march_norm == 0.:
+        msg = f'Equal k axis and iaxis.  k={str(k)} iaxis_march={str(iaxis_march)}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
     kaxis_march = np.cross(iaxis_march, jaxis_march)
+    kaxis_march_norm = np.linalg.norm(kaxis_march)
+    if kaxis_march_norm == 0.:
+        msg = f'Equal iaxis and jaxis.  k={str(k)} iaxis_march={str(iaxis_march)} jaxis_march={str(jaxis_march)}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
+
     coord_march = CORD2R(-1, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
     #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
     #print(coord_out.get_stats())
 
-    xyz1p = coord_march.transform_node_to_local(xyz1)
-    xyz3p = coord_march.transform_node_to_local(xyz3)
+    xyz1p = coord_march.transform_node_to_local(xyz1) # start
+    xyz3p = coord_march.transform_node_to_local(xyz3) # end
     xaxis = xyz3p - xyz1p
 
     # we want to give the dx the right sign in the coord_out frame
@@ -337,6 +365,45 @@ def _project_z_axis(p1: NDArray3float,
     xzplane = p1 + i
     return i, k, origin, zaxis, xzplane
 
+def _project_vectors(p1: NDArray3float,
+                     p2: NDArray3float,
+                     z_global: NDArray3float) -> tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                       NDArray3float, NDArray3float, NDArray3float]:
+    """
+    p1 defines the origin
+    p2 defines the x-axis
+    k is defined by the z-axis
+    k = z / |z|
+    xz = p2
+    xz /= |xz|
+    j = k × xz
+    j /= |j|
+    i = k × j
+    """
+    x = p2
+    origin = p1
+
+    norm_z =  np.linalg.norm(z_global)
+    if norm_z == 0.:
+        raise RuntimeError(f'p1={p1} is has no length')
+
+    norm_x = np.linalg.norm(x)
+    if norm_x == 0.:
+        raise RuntimeError(f'p2={p2} is has no length')
+
+    iprime = x / norm_x
+    k = z_global / norm_z
+    j = np.cross(k, iprime)
+    jhat = j / np.linalg.norm(j)
+    i = np.cross(jhat, k)
+
+    # we want x to be normal to the plane
+    origin_zaxis = origin + k
+    origin_xzplane = origin + j
+
+    # add the origin
+    xyz2 = origin + i
+    return xyz2, i, k, origin, origin_zaxis, origin_xzplane
 
 def _p1_p2_zaxis_to_cord2r(model: BDF,
                            p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
@@ -380,20 +447,34 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #print('  p2 =', p2)
     #print('  zaxis =', zaxis)
 
-    xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
-    xyz2 = model.coords[cid_p2].transform_node_to_global(p2)
-    z_global = model.coords[cid_zaxis].transform_node_to_global(zaxis)
-    if method == 'CORD2R':
+    coords = model.coords
+    xyz1 = coords[cid_p1].transform_node_to_global(p1)
+    method_lower = method.lower().strip()
+    if method_lower == 'vector':
+        origin = xyz1
+        xyz2 = origin + p2
+        z_global = origin + zaxis
+        method_lower = 'cord2r'
+    else:
+        xyz2 = coords[cid_p2].transform_node_to_global(p2)
+        z_global = coords[cid_zaxis].transform_node_to_global(zaxis)
+
+    if method_lower == 'cord2r':
         origin = xyz1
         xzplane_ = xyz2 - xyz1
         zaxis_ = z_global - xyz1
         i, k = _determine_cord2r(origin, zaxis_, xzplane_)
         origin_zaxis = z_global # origin + i
         origin_xzplane = xyz2 # origin + k
-    elif method == 'Z-Axis Projection':
+    #elif method == 'Vectors':
+        #xyz2, i, k, origin, origin_zaxis, origin_xzplane = _project_vectors(xyz1, xyz2, z_global)
+    elif method_lower == 'z-axis projection':
         i, k, origin, origin_zaxis, origin_xzplane = _project_z_axis(xyz1, xyz2, z_global)
     else:
-        raise NotImplementedError("method=%r; valid_methods=['CORD2R', 'Z-Axis Projection']")
+        raise NotImplementedError(f"method={method!r}; valid_methods=['CORD2R', 'Vector', 'Z-Axis Projection']")
+    #print(f'origin={origin}')
+    #print(f'origin_zaxis={origin_zaxis}')
+    #print(f'origin_xzplane={origin_xzplane}')
     return xyz1, xyz2, z_global, i, k, origin, origin_zaxis, origin_xzplane
 
 #def _merge_bodies(local_points_array, global_points_array, result_array):
@@ -745,7 +826,8 @@ def _unique_face_rows(geometry_array: np.ndarray,
 
 def connect_face_rows(geometry_array: np.ndarray,
                       results_array: np.ndarray,
-                      skip_cleanup: bool=True) -> tuple[list[Any], list[np.ndarray], list[np.ndarray]]:
+                      skip_cleanup: bool=True,
+                      ) -> tuple[list[Any], list[np.ndarray], list[np.ndarray]]:
     """
     Connects the faces by taking the count of how many times each node
     is used.  If a node is not used twice, then it is a starting/ending point,
@@ -864,7 +946,8 @@ def connect_face_rows(geometry_array: np.ndarray,
 
 def iedges_to_geometry_results(iedges_all,
                                geometry_array: np.ndarray,
-                               results_array: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                               results_array: np.ndarray,
+                               ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     Takes the iedges and slices the geometry/results to isolate the rings
     or C shapes.
@@ -1155,7 +1238,7 @@ def _interpolate_face_to_bar(nodes,
     nid_new += 2
     return eid_new, nid_new
 
-def _is_dot(ivalues, percent_values, plane_atol):
+def _is_dot(ivalues, percent_values, plane_atol: float) -> np.ndarray:
     """we don't want dots"""
     percent_array = np.array(percent_values)
     if ivalues == [0, 1]:

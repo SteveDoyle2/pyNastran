@@ -6,6 +6,7 @@ This file defines functions related to the result updating that are VTK specific
 """
 # coding: utf-8
 # pylint: disable=C0111
+from __future__ import annotations
 import sys
 from collections import namedtuple
 from typing import Union, Callable, Optional, Any, TYPE_CHECKING
@@ -36,6 +37,7 @@ IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.typing import Color
 
 
 WHITE = (1., 1., 1.)
@@ -1133,8 +1135,9 @@ class GuiQtCommon(GuiAttributes):
                     #print(i, methodi)
                     return self.icase
             else:
-                imini = np.nanargmin(fringe)
-                imaxi = np.nanargmax(fringe)
+                pass  #  true unless it's all nan (grid point forces)
+                #imini = np.nanargmin(fringe)
+                #imaxi = np.nanargmax(fringe)
                 #assert imin == imini
                 #assert imax == imaxi
                 x = 1
@@ -1171,6 +1174,10 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
+        if data_format is None:
+            # RealGridPointForces
+            is_legend_shown = False
+
         # should update this...
         icase_fringe = icase
         icase_disp = self.icase_disp
@@ -1178,6 +1185,7 @@ class GuiQtCommon(GuiAttributes):
         if user_is_checked_fringe:
             if is_legend_shown is None:
                 is_legend_shown = self.scalar_bar.is_shown
+
             self.update_scalar_bar(
                 legend_title, min_value, max_value,
                 data_format,
@@ -1854,18 +1862,31 @@ class GuiQtCommon(GuiAttributes):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
-    def _create_plane_actor_from_points(self, p1, p2, i, k, dim_max,
-                                        actor_name='plane'):
+    def _create_plane_actor_from_points(self, p1: np.ndarray,
+                                        p2: np.ndarray,
+                                        i: np.ndarray,
+                                        k: np.ndarray,
+                                        dim_max: float,
+                                        color: Optional[Color]=None,
+                                        opacity: float=1.0,
+                                        representation: str='surface',
+                                        actor_name: str='plane') -> vtkActor:
         """
         This is used by the cutting plane tool and the shear/moment/torque tool.
+
+            ^ k
+            |
+            |
 
            4+------+3
             |      |
             p1     p2
             |      |
-           1+------+2
+           1+------+2 ----> i
 
         """
+        if color is None:
+            color = RED
         shift = 1.1
         dshift = (shift - 1) / 2.
         half_shift = 0.5 + dshift
@@ -1907,8 +1928,8 @@ class GuiQtCommon(GuiAttributes):
             self.rend.AddActor(plane_actor)
 
         nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        self.set_quad_grid(actor_name, nodes, elements, color=RED,
-                           line_width=1, opacity=1., representation='surface',
+        self.set_quad_grid(actor_name, nodes, elements, color=color,
+                           line_width=1, opacity=opacity, representation=representation,
                            add=add)
         #plane_actor.Modified()
         return plane_actor
