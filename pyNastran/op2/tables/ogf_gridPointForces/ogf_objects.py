@@ -22,6 +22,7 @@ from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.nptyping_interface import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
     from pyNastran.bdf.bdf import BDF, CORD, SimpleLogger
@@ -157,7 +158,7 @@ class RealGridPointForcesArray(GridPointForces):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
-    def finalize(self) -> bool:
+    def finalize(self) -> None:
         """required so the OP2 writer works..."""
         self.format_code = 1
 
@@ -562,7 +563,7 @@ class RealGridPointForcesArray(GridPointForces):
         nids = gpforce_nids[irange]
 
         if debug:
-            log.debug('gpforce_eids =' % gpforce_eids[is_in])
+            log.debug('gpforce_eids = %s' % gpforce_eids[is_in])
             log.debug('nids = %s' % gpforce_nids[irange])
             log.debug('eids = %s' % gpforce_eids[irange])
 
