@@ -1232,7 +1232,7 @@ def _write_distributed_loads(model: Abaqus,
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
-                        else:
+                        else:  # pragma: no cover
                             raise NotImplementedError(element)
                 else:
                     for eid in eids:

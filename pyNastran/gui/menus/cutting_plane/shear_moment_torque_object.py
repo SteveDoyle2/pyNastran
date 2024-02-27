@@ -117,7 +117,6 @@ class ShearMomentTorqueObject(BaseGui):
 
     def on_clear_plane_actors(self, render: bool=True) -> None:
         gui: MainWindow = self.gui
-
         #if hasattr(gui, 'plane_actor'):
             #del gui.plane_actor
         #gui.clear_actor('smt_plane')
@@ -325,7 +324,6 @@ class ShearMomentTorqueObject(BaseGui):
         force_sum *= force_scale
         moment_sum *= moment_scale
         root_filename = os.path.join(gui.last_dir, 'shear_moment_torque')
-
         if csv_filename:
             root_filename = os.path.splitext(csv_filename)[0]
             write_smt_to_csv(

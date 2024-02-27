@@ -452,7 +452,7 @@ The included methods are:
 Solid Stress / Strain
 =====================
 
-There are two main options for solid stress/strain.
+There are two options for solid stress/strain:
  - Centroid
  - Corner (Nodal)
 
@@ -484,7 +484,9 @@ Composite Plate Stress / Strain
 
 .. image:: ../../../pyNastran/gui/images/results_composite_stress.png
 
-Derivation Method "reduces" multiple layer results down into a single value at each element centroid.  The supported methods are:
+Derivation Method "reduces" multiple layer results down into a single value at each element centroid.
+
+The supported methods are:
  - Mean
  - Absolute Max
  - Min
@@ -537,7 +539,7 @@ Hover over the cells for more information.
 Windows preferences are stored in:
  - ``C:\Users\<me>\pyNastranGUI.json``
 
-Or Linux/Mac;
+Or Linux/Mac:
  - ``~/pyNastranGUI.json``
 
 Picking Results
@@ -799,7 +801,8 @@ Frequently Asked Questions
 =======================================
 
 **The legend font is way to big!**
-Legend is tricky cause of the wide range in the number of 
+
+The legend is tricky cause of the wide range in the number of
 title characters preferences.  
 
 It's defined in terms of a percentage of screen size and the font size is
@@ -832,13 +835,13 @@ Right click on the **Case/Results** tree and go to **Clear Results**.
 
 You can use K and L (lowercase) to "cycle" to different results.
 
-** How do I make the gif more responsive/smaller? **
+**How do I make the gif more responsive/smaller?**
 
 The GIF will be the same size as your screen (the part with the grey background), 
 so make your window smaller.  In general, 30 frame/second is going to look nice, 
 but you can even get away with 10 FPS if the picture is small.
 
-** The GUI crashes when I have a model loaded and load a different one**
+**The GUI crashes when I have a model loaded and load a different one**
 
 Yeah...it does that.  It's not really designed around loading differet models.
 There are some objects that aren't deleted and it's tricky to do it right.  If
@@ -848,7 +851,7 @@ If you're just modifying a deck, you can use the "Reload Model" option.
 It'll reload the geometry and be quite a bit faster than going through menus.
 That fails sometimes as well, but is more robust.
 
-** The GUI crashes when loading an OP2? **
+**The GUI crashes when loading an OP2?**
 
 The code is trying to match the IDs in the geometry to the IDs in the results and they don't always match.  There is some handling of this, but it's not great.
 

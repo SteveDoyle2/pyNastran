@@ -163,8 +163,7 @@ class AltGeometry:
         return self._color
 
     @color.setter
-    def color(self, color: Union[ColorInt,
-                                 ColorFloat]) -> None:
+    def color(self, color: Union[ColorInt, ColorFloat]) -> None:
         assert len(color) == 3, color
         if isinstance(color[0], int):
             assert isinstance(color[0], int), color[0]
