@@ -397,7 +397,7 @@ unless you want to use scripting.
 Real Displacement Results
 =========================
 
-.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
+.. image:: ../../../pyNastran/gui/images/results_displacement.png
 
 Select the components from:
 
@@ -419,22 +419,19 @@ Additionally, to determine the fringe/color values, the vector must be reduced u
 
 Real SPC Forces / Load Vector Results
 =====================================
-TODO
 
-Select the components from:
- - Magnitude
- - X
- - Y
- - Z
+.. image:: ../../../pyNastran/gui/images/results_spcforce.png
+
+Other than some arrows, SPC Force and Displacement work the same way.
 
 Plate Stress / Strain
 =====================
 TODO
 
-Derivation Method
------------------
 There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  Additionally, there are likely neighboring elements too.
 
+Derivation Method
+-----------------
 **Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
 
 The included methods are:
@@ -448,10 +445,10 @@ The included methods are:
 
 Nodal Combine
 -------------
-Nodal Combine takes the "reduced" values from "Derivation Method" 
+**Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there a centroidal option.
 
 The included methods are:
-
+ - Centroid
  - Mean
  - Absolute Max
  - Min
@@ -461,11 +458,45 @@ The included methods are:
 
 Solid Stress / Strain
 =====================
-TODO
+
+There are two main options for solid stress/strain.
+ - Centroid
+ - Corner (Nodal)
+
+
+Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_centroid.png
+
+
+The typical way to plot solid stress/strain is with the **Mean** option.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_nodal.png
+
+
+Nodal Combine
+-------------
+Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
 
 Composite Plate Stress / Strain
 ===============================
-TODO
+
+.. image:: ../../../pyNastran/gui/images/results_composite_stress.png
+
+Derivation Method "reduces" multiple layer results down into a single value at each element centroid.  The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
+
 
 Grid Point Forces, Interface Loads, Section Cuts, Shear-Moment-Torque
 =====================================================================
