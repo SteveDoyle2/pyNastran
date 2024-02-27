@@ -40,15 +40,17 @@ Advantages of pyNastranGUI
  - simple scripting
  - nice looking models
  - intuitive rotation
+ - section cuts
  - niche features
    - aero panels
    - aero splines
    - aero spline points
    - control surfaces
  - custom results from a CSV file
- - 64 bit support
+ - modern Nastran support
    - Patran 2005 can't read in models that pyNastranGUI can
    - not an advantage for newer versions
+ - reduction of required licenses
  - animated gifs
 
 
@@ -86,14 +88,15 @@ functionality benefits all formats.
 
 Additional formats include:
 
-   - panair
+   - abaqus
    - cart3d
-   - stl
+   - panair
    - tecplot
    - AFLR
     - bsurf
     - surf
     - ugrid
+   - stl
    - usm3d
 
 
@@ -104,14 +107,6 @@ Download the entire package from Github or just the `GUI
 
 If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
-
-For the GUI, the main **requires**:
- - Python 3.7-3.10
- - any version of numpy
- - any version of scipy
- - ``vtk==7`` or ``vtk==8`` or ``vtk==9`` (best in 7 or 8)
- - ``PyQt5/6`` or ``PySide2/6``
- - other minor packages
 
 
 Running the GUI
@@ -380,12 +375,12 @@ It is now necessary to learn how to set ``iCase``.  In the ``Application log``, 
 
 .. code-block:: console
 
-  COMMAND: fname=gui_qt_common.pyc lineNo=316 cycle_results(case=10)
+  COMMAND: fname=gui_qt_common.pyc lineNo=316 self.cycle_results(case=10)
 
 Check your first (assume 10), second (assume 11), and final time step (assume 40)
-for their ``iCase`` values.
+for their ``icase`` values.
 
-For deflection results loaded from an OP2, the ``iCase Delta`` will be 1, but
+For deflection results loaded from an OP2, the ``icase delta`` will be 1, but
 depending on the frame rate and total time you want, you can skip steps.
 
 .. image:: ../../../pyNastran/gui/images/animation_menu_time.png
@@ -400,7 +395,6 @@ Real Displacement Results
 .. image:: ../../../pyNastran/gui/images/results_displacement.png
 
 Select the components from:
-
  - Magnitude (X, Y, Z)
  - X
  - Y
@@ -435,7 +429,6 @@ Derivation Method
 **Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
 
 The included methods are:
-
  - Absolute Max
  - Min
  - Max
@@ -476,7 +469,9 @@ The typical way to plot solid stress/strain is with the **Mean** option.
 
 Nodal Combine
 -------------
-Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  The supported methods are:
+Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
+
+The supported methods are:
  - Mean
  - Absolute Max
  - Min
@@ -540,10 +535,10 @@ when you load model again.  The menu looks like:
 Hover over the cells for more information.
 
 Windows preferences are stored in:
- - C:\Users\<me>\pyNastranGUI.json
+ - ``C:\Users\<me>\pyNastranGUI.json``
 
 Or Linux/Mac;
- - ~/pyNastranGUI.json
+ - ``~/pyNastranGUI.json``
 
 Picking Results
 ===============
@@ -764,8 +759,7 @@ Using the scripting menu
 ========================
 The scripting menu allows for custom code and experimentation to be written
 without loading a script from a file.  All valid Python is accepted.
-Scripting commands should start with ``self.`` as they're left off from the menu.
-Local variables do not need this.
+Scripting commands should start with ``self.``.  Local variables do not need this.
 
 
 Command line scripting
@@ -818,11 +812,11 @@ to get a robust system.  However, you do have some control:
    - resize the window to be narrower
    - use the legend (View -> Modify Legend; Control+L) and change the number format
 
-**The origin font is waaaay too big!**
+**The coordinate system/origin font is waaaay too big!**
 
-The origin size is dependent on zoom level and model size.  You can customize:
- - Origin size
- - Origin text size
+The coordinate system is dependent on zoom level and model size.  You can customize:
+ - coordinate system size
+ - coordinate system text size
 in the Preferences menu (Control+P).
 
 **I could not visualize the mesh edges within the results**
