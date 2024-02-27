@@ -420,9 +420,20 @@ Other than some arrows, SPC Force and Displacement work the same way.
 
 Plate Stress / Strain
 =====================
-TODO
 
-There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  Additionally, there are likely neighboring elements too.
+There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
+
+Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
+
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_centroid.png
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_zoom.png
+
+
+Additionally, there are likely neighboring elements too, so the **Nodal Combine** option defines how multiple values at a given node are handled (e.g., Mean, Max, Min).  The typical way to plot solid stress/strain is with the **Mean** option.  The other options are most useful for checking how well the model is converged.
+
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal.png
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal_zoom.png
+
 
 Derivation Method
 -----------------
