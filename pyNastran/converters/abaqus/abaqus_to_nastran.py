@@ -1204,7 +1204,8 @@ def _write_distributed_loads(model: Abaqus,
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=n1, g34=n3, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
-                        elif element.type == 'CTRIA6':
+
+                        elif element.type in {'CTRIA6', 'CTRIA3'}:
                             mapped_face = tri_face_map[face_int]
                             if isinstance(mapped_face, float):
                                 pressures = [mapped_face*pressure, None, None, None]
@@ -1217,7 +1218,7 @@ def _write_distributed_loads(model: Abaqus,
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
 
-                        elif element.type == 'CQUAD8':
+                        elif element.type in {'CQUAD4', 'CQUAD8'}:
                             #if face_int != 1:
                             mapped_face = quad_face_map[face_int]
                             if isinstance(mapped_face, float):
@@ -1231,21 +1232,6 @@ def _write_distributed_loads(model: Abaqus,
                             nastran_model.add_pload4(
                                 load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
                                 surf_or_line='SURF', line_load_dir='NORM', comment='')
-
-                        elif element.type == 'CTRIA3':
-                            mapped_face = tri_face_map[face_int]
-                            if isinstance(mapped_face, float):
-                                pressures = [mapped_face*pressure, None, None, None]
-                            elif isinstance(mapped_face, tuple):
-                                log.error(f'DLOAD uses P{face_int} for eid={eid} {element.type}?  Assuming normal')
-                            else:  # pragma: no cover
-                                raise RuntimeError(mapped_face)
-
-                            #assert face_int == 1, face_int
-                            nastran_model.add_pload4(
-                                load_id, [eid], pressures, g1=None, g34=None, cid=None, nvector=None,
-                                surf_or_line='SURF', line_load_dir='NORM', comment='')
-
                         else:
                             raise NotImplementedError(element)
                 else:

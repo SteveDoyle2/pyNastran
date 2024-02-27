@@ -16,7 +16,7 @@ from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.typing import Color
+    from pyNastran.gui.typing import ColorFloat
 
 
 def make_font(font_size: int, is_bold=False) -> QFont:
@@ -103,7 +103,7 @@ def check_patran_syntax_dict(cell, pound=None):
         cell.setToolTip(str(error))
         return None, False
 
-def check_color(color_float: Color) -> tuple[Color, Any]:
+def check_color(color_float: ColorFloat) -> tuple[ColorFloat, Any]:
     assert len(color_float) == 3, color_float
     assert isinstance(color_float[0], float), color_float
     color_int = [int(colori * 255) for colori in color_float]

@@ -27,6 +27,7 @@ from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.typing import ColorFloat
 
 
 class CuttingPlaneObject(BaseGui):
@@ -137,7 +138,7 @@ class CuttingPlaneObject(BaseGui):
         if plane_color is None:
             plane_color = PURPLE_FLOAT
 
-        plane_color = cast(Color, plane_color)
+        plane_color = cast(ColorFloat, plane_color)
         assert len(plane_color) == 3, plane_color
         gui: MainWindow = self.gui
         log = gui.log

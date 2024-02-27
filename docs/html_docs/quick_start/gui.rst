@@ -394,6 +394,111 @@ Note that there is currently no way to plot a transient result other than the de
 unless you want to use scripting.
 
 
+Real Displacement Results
+=========================
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
+
+Select the components from:
+
+ - Magnitude (X, Y, Z)
+ - X
+ - Y
+ - Z
+
+Any combination of terms is allowed.  Note that if no components are selected, all components will be used.  If Magnitude and X are selected, Magnitude will be used.
+
+Derivation Method
+-----------------
+Additionally, to determine the fringe/color values, the vector must be reduced using:
+
+ - **Magnitude** : takes the L2-norm of the vector ``sqrt(x^2 + y^2 + z^2)``; positive
+ - **Value** : returns the signed value of a component.  **Note** that if multiple components are selected, Magnitude will be selected by default.
+
+**Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
+
+Real SPC Forces / Load Vector Results
+=====================================
+TODO
+
+Select the components from:
+ - Magnitude
+ - X
+ - Y
+ - Z
+
+Plate Stress / Strain
+=====================
+TODO
+
+Derivation Method
+-----------------
+There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  Additionally, there are likely neighboring elements too.
+
+**Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
+
+The included methods are:
+
+ - Absolute Max
+ - Min
+ - Max
+ - Mean
+ - Standard Deviation
+ - Difference
+
+Nodal Combine
+-------------
+Nodal Combine takes the "reduced" values from "Derivation Method" 
+
+The included methods are:
+
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
+
+Solid Stress / Strain
+=====================
+TODO
+
+Composite Plate Stress / Strain
+===============================
+TODO
+
+Grid Point Forces, Interface Loads, Section Cuts, Shear-Moment-Torque
+=====================================================================
+
+If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
+
+The goal is to define a starting (blue point) and ending point (red point) to define a vector.  Along that vector a series of cutting planes (num Planes) will be defined.  At the points where the planes and the vector cross, a coordinate system will be created.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
+
+Load the model and select the result from the results sidebar.  Then open the **Shear, Moment, Torque** tool from the **Tools** menu:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces1_select.png
+
+The menu will pop up and you can define the starting/ending points.  The origin of each coordinate system is automatically calculated, so two additional points/vectors are required.  The **CORD2R** option requires two vectors and the **Vector** requires two vectors.
+
+The goal here is to define the cutting plane where the section cut will be.  Note that the direction of axes affects the sign of the force/moment.  Note that the "x-direction" of the vector and the output coordinate system are not the same.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces2_menu.png
+
+You can test the cutting plane by pressing ``Plot Plane``:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces3_plane.png
+
+Once you're happy with the coordinate system and the plane press ``Apply`` to generate a series of plots:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces4_plot.png
+
+Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
+
+The more standard way to present the information using the global y-axis.  That requires doing a post-processing step either in Excel/separate script/Jupyter Notebook.
+
+
 Preferences Menu
 ================
 The preferences menu allows you to change various settings.  These will be remembered

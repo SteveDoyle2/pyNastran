@@ -32,7 +32,7 @@ from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
-    from pyNastran.gui.typing import Color
+    from pyNastran.gui.typing import ColorFloat
 
 from pyNastran.gui import (
     USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
@@ -688,13 +688,13 @@ class Settings:
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
     def set_annotation_size_color(self, size: Optional[float]=None,
-                                  color: Optional[Color]=None) -> None:
+                                  color: Optional[ColorFloat]=None) -> None:
         """
         Parameters
         ----------
         size : float
             annotation size
-        color : Color
+        color : ColorFloat
             RGB values as floats
 
         """
@@ -799,14 +799,14 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def set_annotation_color(self, color: Color,
+    def set_annotation_color(self, color: ColorFloat,
                              render: bool=True) -> None:
         """
         Set the annotation color
 
         Parameters
         ----------
-        color : (float, float, float)
+        color : ColorFloat
             RGB values as floats
         """
         if np.allclose(self.annotation_color, color):
@@ -859,14 +859,14 @@ class Settings:
         if render:
             self.parent.vtk_interactor.Render()
 
-    def set_background_color(self, color: Color,
+    def set_background_color(self, color: ColorFloat,
                              render: bool=True, quiet: bool=False) -> None:
         """
         Set the background color
 
         Parameters
         ----------
-        color : Color
+        color : ColorFloat
             RGB values as floats
         """
         self.background_color = color
@@ -876,14 +876,14 @@ class Settings:
         if not quiet:
             self.parent.log_command('self.settings.set_background_color(%s, %s, %s)' % color)
 
-    def set_background_color2(self, color: Color,
+    def set_background_color2(self, color: ColorFloat,
                               render: bool=True, quiet: bool=False):
         """
         Set the background color
 
         Parameters
         ----------
-        color : Color
+        color : ColorFloat
             RGB values as floats
         """
         self.background_color2 = color
@@ -893,13 +893,13 @@ class Settings:
         if not quiet:
             self.parent.log_command('self.settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color: Color, render: bool=True) -> None:
+    def set_highlight_color(self, color: ColorFloat, render: bool=True) -> None:
         """
         Set the highlight color
 
         Parameters
         ----------
-        color : Color
+        color : ColorFloat
             RGB values as floats
         """
         self.highlight_color = color
@@ -1083,7 +1083,7 @@ def force_ranged(value, min_value=None, max_value=None):
         #print(out, value)
     return out
 
-def force_color_ranged(color: Color, default_color: Color) -> Color:
+def force_color_ranged(color: Color, default_color: ColorFloat) -> ColorFloat:
     """
     make sure a color is in the proper range
     default if it's out of range

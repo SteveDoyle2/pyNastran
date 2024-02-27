@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox,
     QFrame)
 
-from qtpy.QtGui import QColor, QFont
+from qtpy.QtGui import QColor
 
 
 from pyNastran.utils.locale import func_str
@@ -33,9 +33,11 @@ from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.utils.wildcards import wildcard_csv
 if TYPE_CHECKING:  # pragma: no cover
     from .shear_moment_torque_object import ShearMomentTorqueObject
+    from pyNastran.gui.typing import ColorInt, ColorFloat
+    from pyNastran.gui.main_window import MainWindow
 
+IS_DEMO = False
 IS_DEMO = True  # just for testing
-#IS_DEMO = False
 class ShearMomentTorqueWindow(PyDialog):
     """
     +-------------------------+
@@ -89,14 +91,14 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.on_gradient_scale()
         #self.show()
 
-    def on_font(self, value=None):
+    def on_font(self, value=None) -> None:
         """update the font for the current window"""
         if value in (0, None):
             value = self.font_size_edit.value()
         font = make_font(value, is_bold=False)
         self.setFont(font)
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """
         Updates the font size of all objects in the PyDialog
 
@@ -112,7 +114,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.setFont(font)
         self.set_bold_font(font_size)
 
-    def set_bold_font(self, font_size):
+    def set_bold_font(self, font_size: int) -> None:
         """
         Updates the font size of all bolded objects in the dialog
 
@@ -135,7 +137,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         self.plot_info.setFont(bold_font)
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """creates the display window"""
         # CORD2R
         #self.origin_label = QLabel("Origin:")
@@ -389,12 +391,12 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.nplanes_spinner.setValue(5)
 
     @property
-    def gui(self):
+    def gui(self) -> MainWindow:
         if self.win_parent is None:
             return None
         return self.win_parent.parent.gui
 
-    def create_layout(self):
+    def create_layout(self) -> None:
         """sets up the window"""
         grid = self._make_grid_layout()
 
@@ -566,6 +568,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.method_pulldown.currentIndexChanged.connect(self.on_method)
         self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
         self.plane_color_edit.clicked.connect(self.on_plane_color)
+        self.plane_opacity_edit.valueChanged.connect(self.on_plane_opacity)
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
         self.csv_button.clicked.connect(self.on_browse_csv)
@@ -576,7 +579,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.apply_button.clicked.connect(self.on_apply)
         self.cancel_button.clicked.connect(self.on_cancel)
 
-    def on_method(self, method_int=None):
+    def on_method(self, method_int=None) -> None:
         method = get_pulldown_text(method_int, self.methods, self.method_pulldown)
 
         is_p2_cid_enabled = True
@@ -626,8 +629,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_method_pulldown.setVisible(zaxis_method_visible)
         self.zaxis_method_label.setEnabled(zaxis_method_visible)
 
-    def on_zaxis_method(self, method_int=None):
-        method = get_pulldown_text(method_int, self.zaxis_methods, self.zaxis_method_pulldown)
+    def on_zaxis_method(self, method_int=None) -> None:
+        method = get_pulldown_text(method_int, self.zaxis_methods,
+                                   self.zaxis_method_pulldown)
 
         if method == 'Global Z':
             is_visible = False
@@ -643,7 +647,14 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_y_edit.setVisible(is_visible)
         self.zaxis_z_edit.setVisible(is_visible)
 
-    def on_plane_color(self):
+    def on_plane_opacity(self) -> None:
+        """ Sets the plane opacity"""
+        opacity = self.plane_opacity_edit.value()
+        if self.win_parent is not None:
+            obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
+            obj.set_plane_properties(opacity, self.plane_color_float)
+
+    def on_plane_color(self) -> None:
         """ Choose a plane color"""
         title = 'Choose a cutting plane color'
         rgb_color_ints = self.plane_color_int
@@ -654,12 +665,18 @@ class ShearMomentTorqueWindow(PyDialog):
         if passed:
             self.plane_color_int = rgb_color_ints
             self.plane_color_float = rgb_color_floats
+            self.on_plane_opacity()
 
     def _background_color(self, title: str,
                           color_edit: QPushButtonColor,
-                          rgb_color_ints: tuple[int, int, int],
-                          func_name: Callable):
-        """helper method for ``on_background_color`` and ``on_background_color2``"""
+                          rgb_color_ints: ColorInt,
+                          func_name: Callable) -> tuple[bool, ColorInt, ColorFloat]:
+        """
+        helper method for:
+         - ``on_background_color``
+         - ``on_background_color2``
+
+        """
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
             color_edit, rgb_color_ints, title)
         #if passed and 0:
@@ -669,14 +686,16 @@ class ShearMomentTorqueWindow(PyDialog):
                 #func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
 
-    def on_color(self, color_edit, rgb_color_ints, title):
+    def on_color(self, color_edit,
+                 rgb_color_ints: ColorInt,
+                 title: str) -> tuple[bool, ColorInt, ColorFloat]:
         """pops a color dialog"""
         qcolor = QColor(*rgb_color_ints)
         col = QColorDialog.getColor(qcolor, self, title)
         if not col.isValid():
             return False, rgb_color_ints, None
 
-        color_float = col.getRgbF()[:3]  # floats
+        color_float: ColorFloat = col.getRgbF()[:3]  # floats
         color_int = [int(colori * 255) for colori in color_float]
 
         assert isinstance(color_float[0], float), color_float
@@ -692,7 +711,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
     #---------------------------------------------------------------------------
 
-    def on_validate(self):
+    def on_validate(self) -> bool:
         p1_cidi = self.p1_cid_pulldown.currentText()
         p2_cidi = self.p2_cid_pulldown.currentText()
         p3_cidi = self.p3_cid_pulldown.currentText()
@@ -816,7 +835,7 @@ def get_pulldown_text(method_int: int,
         method = methods[method_int]
     return method
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

@@ -91,13 +91,13 @@ def get_stations(model: BDF,
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
-       'CORD2R' :
+       'CORD2R':
           zaxis: point on the z-axis
           p2:     point on the xz-plane
-       'Vector'
+       'Vector':
           zaxis:  k vector
           p2:     xz-plane vector
-        'Z-Axis Projection'
+        'Z-Axis Projection':
           zaxis:  point on the z-axis
           p2:     p2 is a point on the xz-plane
 

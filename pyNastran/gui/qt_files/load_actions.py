@@ -176,7 +176,7 @@ class LoadActions(BaseGui):
             main_str = ', name=%r' % name
         self._add_recent_file(infile_name, geometry_format_out)
 
-        gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+        gui.log_command("self.on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, geometry_format_out, main_str))
 
     def _set_last_dir(self, infile_name: str) -> None:
@@ -331,8 +331,8 @@ class LoadActions(BaseGui):
                     load_function = _resfunc
                     break
             else:
-                msg = ('format=%r is not supported.  '
-                       'Did you load a geometry model?' % geometry_format)
+                msg = (f'format={geometry_format!r} is not supported.  '
+                       'Did you load a geometry model?')
                 self.gui.log_error(msg)
                 raise RuntimeError(msg)
 
@@ -342,7 +342,7 @@ class LoadActions(BaseGui):
             out_filename = [out_filename]
         for out_filenamei in out_filename:
             if not os.path.exists(out_filenamei):
-                msg = 'result file=%r does not exist' % out_filenamei
+                msg = f'result file={out_filenamei!r} does not exist'
                 self.gui.log_error(msg)
                 return
                 #raise IOError(msg)
@@ -369,7 +369,7 @@ class LoadActions(BaseGui):
             self.gui.window_title = msg
             print("self.load_actions.on_load_results(%r)" % out_filenamei)
             self.gui.out_filename = out_filenamei
-            self.gui.log_command("on_load_results(%r)" % out_filenamei)
+            self.gui.log_command("self.on_load_results(%r)" % out_filenamei)
 
     #---------------------------------------------------------------------------
     def on_load_custom_results(self, out_filename=None,

@@ -16,7 +16,7 @@ defines:
 """
 from __future__ import annotations
 import numpy as np
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 try:
     import matplotlib.pyplot as plt
@@ -31,7 +31,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
-from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
+from pyNastran.nptyping_interface import (
+    NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float)
 
 def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
                                    dict[int, NDArrayNint], NDArrayNint, NDArrayN3float]:
@@ -39,7 +40,7 @@ def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
     eids, element_centroids_cid0 = get_element_centroids(model, fdtype='float64')
     return nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0
 
-def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
+def setup_coord_from_plane(model: Union[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
                            p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                            zaxis: NDArray3float,
                            method: str='Z-Axis Projection',
@@ -66,13 +67,13 @@ def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
     cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
-       'CORD2R' :
+       'CORD2R':
           zaxis: point on the z-axis
           p2:     point on the xz-plane
-       'Vector'
+       'Vector':
           zaxis:  k vector
           p2:     xz-plane vector
-        'Z-Axis Projection'
+        'Z-Axis Projection':
           zaxis:  point on the z-axis
           p2:     p2 is a point on the xz-plane
     nplanes : int; default=11
@@ -217,9 +218,9 @@ def plot_smt(x: np.ndarray,
     #-----------------------------------------------
     fig = plt.figure(7)
     ax = fig.gca()
-    ax.plot(x, force_sum[:, 0], '-*', label=f'Force X{force_unit2}')
-    ax.plot(x, force_sum[:, 1], '-*', label=f'Force Y{force_unit2}')
-    ax.plot(x, force_sum[:, 2], '-*', label=f'Force Z{force_unit2}')
+    ax.plot(x, force_sum[:, 0], '-*', label='Force X')
+    ax.plot(x, force_sum[:, 1], '-*', label='Force Y')
+    ax.plot(x, force_sum[:, 2], '-*', label='Force Z')
     #ax.set_title(f'{xtitle} vs. Force')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f'Force{force_unit2}')
@@ -231,9 +232,9 @@ def plot_smt(x: np.ndarray,
 
     fig = plt.figure(8)
     ax = fig.gca()
-    ax.plot(x, moment_sum[:, 0], '-*', label=f'Torque{moment_unit2}')
-    ax.plot(x, moment_sum[:, 1], '-*', label=f'Moment Y{moment_unit2}')
-    ax.plot(x, moment_sum[:, 2], '-*', label=f'Moment Z{moment_unit2}')
+    ax.plot(x, moment_sum[:, 0], '-*', label='Torque')
+    ax.plot(x, moment_sum[:, 1], '-*', label='Moment Y')
+    ax.plot(x, moment_sum[:, 2], '-*', label='Moment Z')
     #ax.set_title(f'{xtitle} vs. Moment')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f'Moment{moment_unit2}')
@@ -258,3 +259,29 @@ def plot_smt(x: np.ndarray,
 
     if show:
         plt.show()
+
+def write_smt_to_csv(csv_filename: str,
+                     stations: np.ndarray,
+                     nelems: np.ndarray, nnodes: np.ndarray,
+                     new_coords: list[CORD2R],
+                     force_sum: np.ndarray,
+                     moment_sum: np.ndarray,
+                     force_unit: str='', moment_unit: str='') -> None:
+    """writes the shear, moment, torque data"""
+    force_label = f'({force_unit})' if force_unit else ''
+    moment_label = f'({moment_unit})' if moment_unit else ''
+    with open(csv_filename, 'w') as csv_file:
+        header = (
+            'Station,nelements,nnodes,coord_id,origin_x,origin_y,origin_z,'
+            f'Fx{force_label},Fy{force_label},Fz{force_label},'
+            f'Mx{moment_label},My{moment_label},Mz{moment_label}\n')
+        csv_file.write(header)
+        for station, nelem, nnode, coord_id, force_sumi, moment_sumi in zip(
+            stations, nelems, nnodes, new_coords, force_sum, moment_sum):
+            coord: CORD2R = new_coords[coord_id]
+            origin: np.ndarray = coord.origin
+            csv_file.write(
+                f'{station},{nelem:d},{nnode:d},{coord_id:d},'
+                f'{origin[0]},{origin[1]},{origin[2]},'
+                f'{force_sumi[0]},{force_sumi[1]},{force_sumi[2]},'
+                f'{moment_sumi[0]},{moment_sumi[1]},{moment_sumi[2]}\n')

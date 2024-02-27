@@ -16,7 +16,8 @@ from numpy.linalg import norm  # type: ignore
 
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonCore import vtkTypeFloat32Array, vtkPoints
-from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import (
+    vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper)
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
@@ -37,7 +38,7 @@ IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
-    from pyNastran.gui.typing import Color
+    from pyNastran.gui.typing import ColorInt, ColorFloat
 
 
 WHITE = (1., 1., 1.)
@@ -1741,7 +1742,7 @@ class GuiQtCommon(GuiAttributes):
         return slot
 
     def create_alternate_vtk_grid(self, name: str,
-                                  color=None,
+                                  color: ColorInt=None,
                                   line_width: int=5,
                                   opacity: float=1.0,
                                   point_size: int=1,
@@ -1760,8 +1761,8 @@ class GuiQtCommon(GuiAttributes):
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
+        color : ColorInt
+            the RGB colors as ints
         opacity : float
             0.0 -> solid
             1.0 -> transparent
@@ -1805,7 +1806,7 @@ class GuiQtCommon(GuiAttributes):
             self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name: str, name_duplicate_from: str,
-                                     color=None,
+                                     color: Optional[ColorInt]=None,
                                      line_width: int=5,
                                      opacity: float=1.0,
                                      point_size: int=1,
@@ -1820,8 +1821,8 @@ class GuiQtCommon(GuiAttributes):
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
+        color : ColorInt
+            the RGB colors as ints
         opacity : float
             0.0 -> solid
             1.0 -> transparent
@@ -1867,7 +1868,7 @@ class GuiQtCommon(GuiAttributes):
                                         i: np.ndarray,
                                         k: np.ndarray,
                                         dim_max: float,
-                                        color: Optional[Color]=None,
+                                        color: Optional[ColorFloat]=None,
                                         opacity: float=1.0,
                                         representation: str='surface',
                                         actor_name: str='plane') -> vtkActor:
@@ -1934,8 +1935,9 @@ class GuiQtCommon(GuiAttributes):
         #plane_actor.Modified()
         return plane_actor
 
-    def _create_point_actor_from_points(self, points, point_size=8,
-                                        actor_name='plane_points'):  # pragma: no cover
+    def _create_point_actor_from_points(self, points: np.ndarray,
+                                        point_size: int=8,
+                                        actor_name: str='plane_points'):  # pragma: no cover
         """
         This is used by the shear/moment/torque tool.
 
@@ -2051,7 +2053,8 @@ class GuiQtCommon(GuiAttributes):
         self.contour_lines_actor = isolines_actor
         self.contour_lines_actor.VisibilityOff()
 
-    def update_contour_filter(self, nlabels: int, location: str, min_value=None, max_value=None) -> None:
+    def update_contour_filter(self, nlabels: int, location: str,
+                              min_value=None, max_value=None) -> None:
         """update the contour lines"""
         if not self.make_contour_filter: # pragma: no cover
             return
@@ -2068,7 +2071,7 @@ class GuiQtCommon(GuiAttributes):
             point_data: vtkPointData = self.grid.GetPointData()
             #self.contour_mapper.SetScalarModeToUsePointData()
             res_data = point_data.GetScalars()
-        else:
+        else:  # pragma: no cover
             raise RuntimeError('location=%r' % location)
 
         self.contour_lines_actor.VisibilityOn()

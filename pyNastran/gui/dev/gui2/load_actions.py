@@ -159,7 +159,7 @@ class LoadActions:
         else:
             main_str = ', name=%r' % name
 
-        self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+        self.gui.log_command("self.on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, self.gui.format, main_str))
 
     def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
