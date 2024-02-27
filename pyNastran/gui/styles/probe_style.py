@@ -49,7 +49,7 @@ class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
             cell_id = picker.GetCellId()
             #ds = picker.GetDataSet()
             #select_point = picker.GetSelectionPoint()
-            gui.log_command("annotate_cell_picker()")
+            gui.log_command("self.annotate_cell_picker()")
             gui.log_info("XYZ Global = %s" % str(world_position))
             #gui.log_info("cell_id = %s" % cell_id)
             #gui.log_info("data_set = %s" % ds)

@@ -133,7 +133,7 @@ class CameraObject(BaseGui):
         camera.Modified()
         self.gui.vtk_interactor.Render()
         if show_log:
-            self.gui.log_command('on_set_camera_data(%s)' % str(camera_data))
+            self.gui.log_command('self.on_set_camera_data(%s)' % str(camera_data))
 
     def on_set_camera(self, name, show_log=True):
         """see ``set_camera_data`` for arguments"""

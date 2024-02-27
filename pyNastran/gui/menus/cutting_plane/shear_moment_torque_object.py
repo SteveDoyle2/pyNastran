@@ -14,17 +14,17 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
-from pyNastran.gui.typing import Color
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.op2.tables.ogf_gridPointForces.smt import (
-    get_nid_cd_xyz_cid0, plot_smt, setup_coord_from_plane)
+    get_nid_cd_xyz_cid0, setup_coord_from_plane,
+    write_smt_to_csv, plot_smt,)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.typing import Color
+    from pyNastran.gui.typing import ColorFloat
     from vtk import vtkActor
 
 
@@ -105,6 +105,16 @@ class ShearMomentTorqueObject(BaseGui):
         else:
             self._smt_window.activateWindow()
 
+    def set_plane_properties(self, opacity: float, color: ColorFloat) -> None:
+        gui: MainWindow = self.gui
+        if hasattr(gui, 'plane_actor'):
+            plane_actor: vtkActor = gui.plane_actor
+            self.set_plane_opacity_color(plane_actor, opacity, color)
+            if plane_actor.GetVisibility() == 0:
+                plane_actor.VisibilityOn()
+                plane_actor.Modified()
+        self.render()
+
     def on_clear_plane_actors(self, render: bool=True) -> None:
         gui: MainWindow = self.gui
         #if hasattr(gui, 'plane_actor'):
@@ -113,7 +123,7 @@ class ShearMomentTorqueObject(BaseGui):
         clear_actors(gui, ['plane_actor', 'smt_plane'])
 
         # clear the coordinate system
-        cid = ''
+        cid = 'smt_axes'
         if cid in gui.axes:
             actor = gui.axes[cid]
             gui.rend.RemoveActor(actor)
@@ -202,7 +212,7 @@ class ShearMomentTorqueObject(BaseGui):
                            zaxis: np.ndarray,
                            method: str='Vector',
                            cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                           plane_color: Optional[Color]=None, plane_opacity: float=0.5,
+                           plane_color: Optional[ColorFloat]=None, plane_opacity: float=0.5,
                            csv_filename=None,
                            stop_on_failure: bool=False) -> None:
         """Plane Actor is drawn in the i-k plane"""
@@ -233,7 +243,7 @@ class ShearMomentTorqueObject(BaseGui):
                                  zaxis: np.ndarray,
                                  method: str='Vector',
                                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                                 nplanes: int=20, plane_color: Optional[Color]=None, plane_opacity: float=0.5,
+                                 nplanes: int=20, plane_color: Optional[ColorFloat]=None, plane_opacity: float=0.5,
                                  csv_filename=None,
                                  force_scale: float=1.0, force_unit: str='',
                                  moment_scale: float=1.0, moment_unit: str='',
@@ -279,7 +289,7 @@ class ShearMomentTorqueObject(BaseGui):
         """
         if plane_color is None:
             plane_color = PURPLE_FLOAT
-        plane_color = cast(Color, plane_color)
+        plane_color = cast(ColorFloat, plane_color)
         assert len(plane_color) == 3, plane_color
 
         gui: MainWindow = self.gui
@@ -300,6 +310,7 @@ class ShearMomentTorqueObject(BaseGui):
             moment_sum = np.zeros((0, 3))
             return force_sum, moment_sum
 
+        coord = cast(CORD2R, coord)
         eids, element_centroids_cid0 = get_element_centroids(model)
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
             nids, xyz_cid0, nid_cd, icd_transform,
@@ -315,24 +326,11 @@ class ShearMomentTorqueObject(BaseGui):
         root_filename = os.path.join(gui.last_dir, 'shear_moment_torque')
         if csv_filename:
             root_filename = os.path.splitext(csv_filename)[0]
-
-            force_label = f'({force_unit})' if force_unit else ''
-            moment_label = f'({moment_unit})' if moment_unit else ''
-            with open(csv_filename, 'w') as csv_file:
-                header = (
-                    'Station,nelements,nnodes,coord_id,origin_x,origin_y,origin_z,'
-                    f'Fx{force_label},Fy{force_label},Fz{force_label},'
-                    f'Mx{moment_label},My{moment_label},Mz{moment_label}\n')
-                csv_file.write(header)
-                for station, nelem, nnode, coord_id, force_sumi, moment_sumi in zip(
-                    stations, nelems, nnodes, new_coords, force_sum, moment_sum):
-                    coord: CORD2R = new_coords[coord_id]
-                    origin: np.ndarray = coord.origin
-                    csv_file.write(
-                        f'{station},{nelem:d},{nnode:d},{coord_id:d},'
-                        f'{origin[0]},{origin[1]},{origin[2]},'
-                        f'{force_sumi[0]},{force_sumi[1]},{force_sumi[2]},'
-                        f'{moment_sumi[0]},{moment_sumi[1]},{moment_sumi[2]}\n')
+            write_smt_to_csv(
+                csv_filename,
+                stations, nelems, nnodes, new_coords,
+                force_sum, moment_sum,
+                force_unit=force_unit, moment_unit=moment_unit)
         plot_smt(
             stations,
             force_sum, moment_sum,
@@ -340,13 +338,15 @@ class ShearMomentTorqueObject(BaseGui):
             xtitle='i Station', xlabel='i Station',
             force_unit=force_unit, moment_unit=moment_unit,
             root_filename=root_filename,
+            plot_force_components=False,
+            plot_moment_components=False,
         )
         return force_sum, moment_sum
 
     def plot_plane(self,
                    model: BDF,
                    xyz_cid0: np.ndarray,
-                   plane_color: Color,
+                   plane_color: ColorFloat,
                    p1: np.ndarray,
                    p2: np.ndarray,
                    p3: np.ndarray,
@@ -414,6 +414,7 @@ class ShearMomentTorqueObject(BaseGui):
             iaxis_march = np.array([0., 0., 0.])
             return is_failed, stations, coord, iaxis_march
         coord = coord_out
+        origins = np.vstack([coord.origin for coord in coords_out])
 
         #debug = True
         #if debug or 1:
@@ -422,21 +423,11 @@ class ShearMomentTorqueObject(BaseGui):
             #print(f'  zaxis:  {coord_out.e2}')
             #print(f'  xzplane: {coord_out.e3}')
             #print(f'  method: {method!r}')
-        #try:
-            ## i/j/k vector is nan
-            #coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                           #comment='')
-        #except Exception:
-            #log.error('The coordinate system is invalid; check your cutting plane.')
-            #if stop_on_failure:
-                #raise
-            #return None, None
 
         # the plane actor defines the plane of the output results,
         # not the plane of the march direction
         # xyz1: origin
         # xyz2: xzplane
-        #j = np.cross(k, i)
         unused_plane_actor = self.create_plane_actor(
             xyz1, xyz2,
             coord, i, k, dim_max,
@@ -457,7 +448,7 @@ class ShearMomentTorqueObject(BaseGui):
                            i: np.ndarray,
                            k: np.ndarray,
                            dim_max: float,
-                           plane_color: Color,
+                           plane_color: ColorFloat,
                            plane_opacity: float,
                            ) -> vtkActor:
         """
@@ -475,10 +466,12 @@ class ShearMomentTorqueObject(BaseGui):
         origin = coord.origin
         beta = coord.beta().T
 
-        cid = ''
+        cid = 'smt_axes'
         gui: MainWindow = self.gui
+        # TODO: make coord show up in EditGeometryProperties
+        #       label !='' makes it show up, but it messes up the coord text
         gui.tool_actions.create_coordinate_system(
-            cid, dim_max, label='%s' % cid, origin=origin,
+            cid, dim_max, label='', origin=origin,
             matrix_3x3=beta, coord_type='xyz')
 
         j = np.cross(k, i)
@@ -488,19 +481,28 @@ class ShearMomentTorqueObject(BaseGui):
             color=plane_color,  # floats
             opacity=plane_opacity, # 0=transparent, 1=solid
             actor_name='smt_plane')
-        props = self.gui.geometry_properties['smt_plane']
-        props.set_color(plane_color)
-        props.opacity = plane_opacity
-        prop = plane_actor.GetProperty()
-        prop.SetColor(*plane_color)
-        prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+        self.set_plane_opacity_color(plane_actor, plane_opacity, plane_color)
         plane_actor.VisibilityOn()
         return plane_actor
+
+    def set_plane_opacity_color(self, plane_actor: vtkActor,
+                                opacity: float, color: ColorFloat) -> None:
+        """sets the opacity and color of the plane"""
+        props = self.gui.geometry_properties['smt_plane']
+        props.set_color(color)
+        props.opacity = opacity
+        prop = plane_actor.GetProperty()
+        prop.SetColor(*color)  # floats
+        prop.SetDiffuseColor(*color)
+        prop.SetOpacity(opacity) # 0=transparent, 1=solid
+        prop.Modified()
 
 def clear_actors(gui: MainWindow, names: list[str]) -> None:
     """clears the gui actors"""
     for name in names:
-        # del gui.plane_actor
         if hasattr(gui, name):
+            # del gui.plane_actor
             delattr(gui, name)
         gui.clear_actor(name)
+        if hasattr(gui.geometry_properties, name):
+            del gui.geometry_properties[name]

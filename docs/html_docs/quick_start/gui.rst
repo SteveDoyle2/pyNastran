@@ -40,15 +40,17 @@ Advantages of pyNastranGUI
  - simple scripting
  - nice looking models
  - intuitive rotation
+ - section cuts
  - niche features
    - aero panels
    - aero splines
    - aero spline points
    - control surfaces
  - custom results from a CSV file
- - 64 bit support
+ - modern Nastran support
    - Patran 2005 can't read in models that pyNastranGUI can
    - not an advantage for newer versions
+ - reduction of required licenses
  - animated gifs
 
 
@@ -86,14 +88,15 @@ functionality benefits all formats.
 
 Additional formats include:
 
-   - panair
+   - abaqus
    - cart3d
-   - stl
+   - panair
    - tecplot
    - AFLR
     - bsurf
     - surf
     - ugrid
+   - stl
    - usm3d
 
 
@@ -104,14 +107,6 @@ Download the entire package from Github or just the `GUI
 
 If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
-
-For the GUI, the main **requires**:
- - Python 3.7-3.10
- - any version of numpy
- - any version of scipy
- - ``vtk==7`` or ``vtk==8`` or ``vtk==9`` (best in 7 or 8)
- - ``PyQt5/6`` or ``PySide2/6``
- - other minor packages
 
 
 Running the GUI
@@ -380,18 +375,156 @@ It is now necessary to learn how to set ``iCase``.  In the ``Application log``, 
 
 .. code-block:: console
 
-  COMMAND: fname=gui_qt_common.pyc lineNo=316 cycle_results(case=10)
+  COMMAND: fname=gui_qt_common.pyc lineNo=316 self.cycle_results(case=10)
 
 Check your first (assume 10), second (assume 11), and final time step (assume 40)
-for their ``iCase`` values.
+for their ``icase`` values.
 
-For deflection results loaded from an OP2, the ``iCase Delta`` will be 1, but
+For deflection results loaded from an OP2, the ``icase delta`` will be 1, but
 depending on the frame rate and total time you want, you can skip steps.
 
 .. image:: ../../../pyNastran/gui/images/animation_menu_time.png
 
 Note that there is currently no way to plot a transient result other than the deflection
 unless you want to use scripting.
+
+
+Real Displacement Results
+=========================
+
+.. image:: ../../../pyNastran/gui/images/results_displacement.png
+
+Select the components from:
+ - Magnitude (X, Y, Z)
+ - X
+ - Y
+ - Z
+
+Any combination of terms is allowed.  Note that if no components are selected, all components will be used.  If Magnitude and X are selected, Magnitude will be used.
+
+Derivation Method
+-----------------
+Additionally, to determine the fringe/color values, the vector must be reduced using:
+
+ - **Magnitude** : takes the L2-norm of the vector ``sqrt(x^2 + y^2 + z^2)``; positive
+ - **Value** : returns the signed value of a component.  **Note** that if multiple components are selected, Magnitude will be selected by default.
+
+**Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
+
+Real SPC Forces / Load Vector Results
+=====================================
+
+.. image:: ../../../pyNastran/gui/images/results_spcforce.png
+
+Other than some arrows, SPC Force and Displacement work the same way.
+
+Plate Stress / Strain
+=====================
+TODO
+
+There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  Additionally, there are likely neighboring elements too.
+
+Derivation Method
+-----------------
+**Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
+
+The included methods are:
+ - Absolute Max
+ - Min
+ - Max
+ - Mean
+ - Standard Deviation
+ - Difference
+
+Nodal Combine
+-------------
+**Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there a centroidal option.
+
+The included methods are:
+ - Centroid
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
+
+Solid Stress / Strain
+=====================
+
+There are two options for solid stress/strain:
+ - Centroid
+ - Corner (Nodal)
+
+
+Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_centroid.png
+
+
+The typical way to plot solid stress/strain is with the **Mean** option.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_nodal.png
+
+
+Nodal Combine
+-------------
+Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
+
+The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
+
+Composite Plate Stress / Strain
+===============================
+
+.. image:: ../../../pyNastran/gui/images/results_composite_stress.png
+
+Derivation Method "reduces" multiple layer results down into a single value at each element centroid.
+
+The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference
+
+
+Grid Point Forces, Interface Loads, Section Cuts, Shear-Moment-Torque
+=====================================================================
+
+If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
+
+The goal is to define a starting (blue point) and ending point (red point) to define a vector.  Along that vector a series of cutting planes (num Planes) will be defined.  At the points where the planes and the vector cross, a coordinate system will be created.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
+
+Load the model and select the result from the results sidebar.  Then open the **Shear, Moment, Torque** tool from the **Tools** menu:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces1_select.png
+
+The menu will pop up and you can define the starting/ending points.  The origin of each coordinate system is automatically calculated, so two additional points/vectors are required.  The **CORD2R** option requires two vectors and the **Vector** requires two vectors.
+
+The goal here is to define the cutting plane where the section cut will be.  Note that the direction of axes affects the sign of the force/moment.  Note that the "x-direction" of the vector and the output coordinate system are not the same.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces2_menu.png
+
+You can test the cutting plane by pressing ``Plot Plane``:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces3_plane.png
+
+Once you're happy with the coordinate system and the plane press ``Apply`` to generate a series of plots:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces4_plot.png
+
+Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
+
+The more standard way to present the information using the global y-axis.  That requires doing a post-processing step either in Excel/separate script/Jupyter Notebook.
 
 
 Preferences Menu
@@ -404,10 +537,10 @@ when you load model again.  The menu looks like:
 Hover over the cells for more information.
 
 Windows preferences are stored in:
- - C:\Users\<me>\pyNastranGUI.json
+ - ``C:\Users\<me>\pyNastranGUI.json``
 
-Or Linux/Mac;
- - ~/pyNastranGUI.json
+Or Linux/Mac:
+ - ``~/pyNastranGUI.json``
 
 Picking Results
 ===============
@@ -628,8 +761,7 @@ Using the scripting menu
 ========================
 The scripting menu allows for custom code and experimentation to be written
 without loading a script from a file.  All valid Python is accepted.
-Scripting commands should start with ``self.`` as they're left off from the menu.
-Local variables do not need this.
+Scripting commands should start with ``self.``.  Local variables do not need this.
 
 
 Command line scripting
@@ -669,7 +801,8 @@ Frequently Asked Questions
 =======================================
 
 **The legend font is way to big!**
-Legend is tricky cause of the wide range in the number of 
+
+The legend is tricky cause of the wide range in the number of
 title characters preferences.  
 
 It's defined in terms of a percentage of screen size and the font size is
@@ -682,11 +815,11 @@ to get a robust system.  However, you do have some control:
    - resize the window to be narrower
    - use the legend (View -> Modify Legend; Control+L) and change the number format
 
-**The origin font is waaaay too big!**
+**The coordinate system/origin font is waaaay too big!**
 
-The origin size is dependent on zoom level and model size.  You can customize:
- - Origin size
- - Origin text size
+The coordinate system is dependent on zoom level and model size.  You can customize:
+ - coordinate system size
+ - coordinate system text size
 in the Preferences menu (Control+P).
 
 **I could not visualize the mesh edges within the results**
@@ -702,13 +835,13 @@ Right click on the **Case/Results** tree and go to **Clear Results**.
 
 You can use K and L (lowercase) to "cycle" to different results.
 
-** How do I make the gif more responsive/smaller? **
+**How do I make the gif more responsive/smaller?**
 
 The GIF will be the same size as your screen (the part with the grey background), 
 so make your window smaller.  In general, 30 frame/second is going to look nice, 
 but you can even get away with 10 FPS if the picture is small.
 
-** The GUI crashes when I have a model loaded and load a different one**
+**The GUI crashes when I have a model loaded and load a different one**
 
 Yeah...it does that.  It's not really designed around loading differet models.
 There are some objects that aren't deleted and it's tricky to do it right.  If
@@ -718,7 +851,7 @@ If you're just modifying a deck, you can use the "Reload Model" option.
 It'll reload the geometry and be quite a bit faster than going through menus.
 That fails sometimes as well, but is more robust.
 
-** The GUI crashes when loading an OP2? **
+**The GUI crashes when loading an OP2?**
 
 The code is trying to match the IDs in the geometry to the IDs in the results and they don't always match.  There is some handling of this, but it's not great.
 

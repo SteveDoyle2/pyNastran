@@ -55,12 +55,12 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
 def _get_nodes(nastran_model: BDF, fdtype: str='float32') -> tuple[np.ndarray, np.ndarray]:
     """creates nodes"""
     nids = []
-    nodes = []
+    nodes_list = []
     for nid, node in nastran_model.nodes.items():
         xyz = node.get_position()
         nids.append(nid)
-        nodes.append(xyz)
-    nodes = np.array(nodes, dtype=fdtype)
+        nodes_list.append(xyz)
+    nodes = np.array(nodes_list, dtype=fdtype)
     return nids, nodes
 
 def _get_properties(nastran_model: BDF) -> tuple[Any, Any, list[ShellSection], list[SolidSection]]:

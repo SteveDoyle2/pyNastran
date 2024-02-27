@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Union, Optional
 from copy import deepcopy
-
+from pyNastran.gui.typing import ColorFloat, ColorInt
 
 class AltGeometry:
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
@@ -15,7 +15,7 @@ class AltGeometry:
                   self.is_pickable, self.label_actors))
         return msg
 
-    def __init__(self, parent, name: str, color=None,
+    def __init__(self, parent, name: str, color: Optional[ColorInt]=None,
                  line_width: int=1,
                  opacity: float=0.0,
                  point_size: int=1,
@@ -30,7 +30,7 @@ class AltGeometry:
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
+        color : ColorInt
             the RGB colors (0-255)
         opacity : float
             0.0 -> solid
@@ -157,14 +157,13 @@ class AltGeometry:
         self._opacity = 1.0 - transparency
 
     @property
-    def color(self) -> tuple[int, int, int]:
+    def color(self) -> ColorInt:
         if self._color is None:
             return (255, 0, 0)  # the default color; red
         return self._color
 
     @color.setter
-    def color(self, color: Union[tuple[int, int, int],
-                                 tuple[float, float, float]]) -> None:
+    def color(self, color: Union[ColorInt, ColorFloat]) -> None:
         assert len(color) == 3, color
         if isinstance(color[0], int):
             assert isinstance(color[0], int), color[0]
@@ -178,11 +177,13 @@ class AltGeometry:
             self._color = (int(color[0] * 255), int(color[1] * 255), int(color[2] * 255))
 
     @property
-    def color_float(self) -> tuple[float, float, float]:
+    def color_float(self) -> ColorFloat:
         return tuple([i/255. for i in self._color])
+    @property
+    def color_int(self) -> ColorInt:
+        return self._color
 
-    def set_color(self, color: Union[tuple[int, int, int],
-                                     tuple[float, float, float]],
+    def set_color(self, color: Union[ColorInt, ColorFloat],
                   mode: str='rgb') -> None:
         assert mode == 'rgb', 'mode=%r' % mode
         self.color = color

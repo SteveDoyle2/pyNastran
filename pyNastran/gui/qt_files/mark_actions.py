@@ -170,7 +170,7 @@ class MarkActions:
             xi, yi, zi = centroid
             label_actors.append(self.create_annotation(texti, xi, yi, zi))
         if show_command:
-            self.gui.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
+            self.gui.log_command('self.mark_elements_by_different_case(%s, %s, %s)' % (
                 eids, icase_result, icase_to_apply))
         self.gui.vtk_interactor.Render()
 
