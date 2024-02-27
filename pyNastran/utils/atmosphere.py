@@ -594,7 +594,7 @@ def atm_kinematic_viscosity_nu(alt: float,
         factor = 1.
     elif visc_units == 'm^2/s':
         factor = _feet_to_alt_units(alt_units) ** 2
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'visc_units={visc_units!r}; use [m^2/s, ft^2/s]')
     return nu * factor
 
@@ -630,7 +630,7 @@ def atm_dynamic_viscosity_mu(alt: float,
         factor = 1.
     elif visc_units in ['(N*s)/m^2', 'Pa*s']:
         factor = 47.88026
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'visc_units={visc_units!r}; use [(N*s)/m^2, Pa*s, (lbf*s)/ft^2]')
     return mu * factor
 

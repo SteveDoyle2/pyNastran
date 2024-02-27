@@ -20,11 +20,11 @@ from pyNastran.op2.tables.ogf_gridPointForces.smt import (
     get_nid_cd_xyz_cid0, setup_coord_from_plane,
     write_smt_to_csv, plot_smt,)
 
+from pyNastran.gui.typing import ColorFloat
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.typing import ColorFloat
     from vtk import vtkActor
 
 
@@ -414,7 +414,6 @@ class ShearMomentTorqueObject(BaseGui):
             iaxis_march = np.array([0., 0., 0.])
             return is_failed, stations, coord, iaxis_march
         coord = coord_out
-        origins = np.vstack([coord.origin for coord in coords_out])
 
         #debug = True
         #if debug or 1:

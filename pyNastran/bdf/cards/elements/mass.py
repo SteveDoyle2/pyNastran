@@ -1364,12 +1364,12 @@ class CONM2(PointMassElement):
         mass = self.Mass()
         c = self.Centroid()
 
-        assert isinstance(eid, integer_types), 'eid=%r' % eid
-        assert isinstance(nid, integer_types), 'nid=%r' % nid
-        assert isinstance(cid, integer_types), 'cid=%r' % cid
-        assert isinstance(mass, float), 'mass=%r' % mass
+        assert isinstance(eid, integer_types), 'CONM2: eid=%r' % eid
+        assert isinstance(nid, integer_types), 'CONM2: nid=%r' % nid
+        assert isinstance(cid, integer_types), 'CONM2: cid=%r' % cid
+        assert isinstance(mass, float), 'CONM2: mass=%r' % mass
         for i in range(3):
-            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
+            assert isinstance(c[i], float), 'CONM2: centroid[%i]=%r' % (i, c[i])
 
     def Mass(self):
         return self.mass

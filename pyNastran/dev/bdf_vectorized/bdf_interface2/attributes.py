@@ -826,7 +826,7 @@ class BDFAttributes:
             self.float_fmt = 'float64'
         elif precision == ('single', 'float32'):
             self.float_fmt = 'float32'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('precision=%r' % precision)
 
     @property

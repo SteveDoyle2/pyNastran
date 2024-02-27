@@ -179,6 +179,8 @@ class vtkRenderer:
         pass
     def AddActor(self, actor):
         pass
+    def RemoveActor(self, actor):
+        pass
     def GetActiveCamera(self):
         return vtkCamera()
     def ResetCameraClippingRange(self):

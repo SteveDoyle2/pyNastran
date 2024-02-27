@@ -218,7 +218,7 @@ class BAROR(BaseCard):
                           double_or_blank(card, 6, 'x2', 0.),
                           double_or_blank(card, 7, 'x3', 0.)],
                          dtype='float64')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 9, f'len(BAROR card) = {len(card):d}\ncard={card}'

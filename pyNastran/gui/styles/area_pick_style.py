@@ -359,7 +359,7 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         point_data: vtkPointData = grid.GetPointData()
         ids.SetCellIds(cell_data)
         ids.SetPointIds(point_data)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(ids)
 
     #self.is_eids = False

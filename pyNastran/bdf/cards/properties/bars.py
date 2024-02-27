@@ -141,7 +141,7 @@ def _IAreaL(prop, dim):
         Izz = 1 / 12. * h1 * w1 ** 3
         Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
-    else:
+    else:  # pragma: no cover
         msg = 'beam_type=%r is not supported for %s class...' % (
             beam_type, prop.type)
         raise NotImplementedError(msg)
@@ -1310,16 +1310,16 @@ class PBAR(LineProperty):
         A = self.Area()
         J = self.J()
         #c = self.c
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'pid=%r' % A
-        assert isinstance(J, float), 'cid=%r' % J
+        assert isinstance(pid, int), 'PBAR: pid=%r' % pid
+        assert isinstance(mid, int), 'PBAR: mid=%r' % mid
+        assert isinstance(A, float), 'PBAR: pid=%r' % A
+        assert isinstance(J, float), 'PBAR: cid=%r' % J
         #assert isinstance(c, float), 'c=%r' % c
         if xref:
             nsm = self.Nsm()
             mpa = self.MassPerLength()
-            assert isinstance(nsm, float), 'nsm=%r' % nsm
-            assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+            assert isinstance(nsm, float), 'PBAR: nsm=%r' % nsm
+            assert isinstance(mpa, float), 'PBAR: mass_per_length=%r' % mpa
 
     def MassPerLength(self) -> float:
         r"""
@@ -1691,11 +1691,11 @@ class PBARL(LineProperty):
             print(msg)
             J = 0.0
         nsm = self.Nsm()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'pid=%r' % A
-        assert isinstance(J, float), 'cid=%r' % J
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(pid, int), 'PBARL: pid=%r' % pid
+        assert isinstance(mid, int), 'PBARL: mid=%r' % mid
+        assert isinstance(A, float), 'PBARL: pid=%r' % A
+        assert isinstance(J, float), 'PBARL: J=%r' % J
+        assert isinstance(nsm, float), 'PBARL: nsm=%r' % nsm
         if xref:
             mpl = self.MassPerLength()
             assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
@@ -2209,12 +2209,12 @@ class PBRSECT(LineProperty):
         #J = self.J()
         #nsm = self.Nsm()
         #mpl = self.MassPerLength()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        #assert isinstance(A, float), 'pid=%r' % A
-        #assert isinstance(J, float), 'cid=%r' % J
-        #assert isinstance(nsm, float), 'nsm=%r' % nsm
-        #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+        assert isinstance(pid, int), 'PBARL: pid=%r' % pid
+        assert isinstance(mid, int), 'PBARL: mid=%r' % mid
+        #assert isinstance(A, float), 'PBARL: pid=%r' % A
+        #assert isinstance(J, float), 'PBARL: cid=%r' % J
+        #assert isinstance(nsm, float), 'PBARL: nsm=%r' % nsm
+        #assert isinstance(mpl, float), 'PBARL: mass_per_length=%r' % mpl
 
     def Area(self) -> float:
         """Gets the area :math:`A` of the CBAR."""

@@ -10,7 +10,7 @@ from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from vtkmodules.vtkRenderingCore import (
-    vtkColorTransferFunction, vtkDataSetMapper, vtkTextActor)
+    vtkColorTransferFunction, vtkDataSetMapper, vtkTextActor, vtkRenderer)
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 from qtpy import QtGui
@@ -410,9 +410,11 @@ class GuiAttributes:
     def clear_actor(self, actor_name: str) -> None:
         if actor_name in self.gui.alt_grids:
             del self.alt_grids[actor_name]
+
+        rend: vtkRenderer = self.rend
         if actor_name in self.geometry_actors:
             actor = self.geometry_actors[actor_name]
-            self.rend.RemoveActor(actor)
+            rend.RemoveActor(actor)
             del self.geometry_actors[actor_name]
 
     @property

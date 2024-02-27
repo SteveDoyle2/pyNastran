@@ -43,7 +43,7 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version_release__ = '1.4.0'
+    __version_release__ = '1.5.0'
 
     # only for release; 1.4.0
     __version__ = __version_release__

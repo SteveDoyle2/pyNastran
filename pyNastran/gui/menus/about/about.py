@@ -43,7 +43,7 @@ def get_qt_license(qt_name: str) -> str:
     elif qt_name == 'PySide6':
         qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PySide6 Python bindings for Qt6, by Qt for Python.'
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(qt_name)
     return qt
 

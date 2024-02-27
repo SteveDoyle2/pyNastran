@@ -25,9 +25,9 @@ from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
 from pyNastran.gui.menus.cutting_plane.cutting_plane import CuttingPlaneWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
+from pyNastran.gui.typing import ColorFloat
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.typing import ColorFloat
 
 
 class CuttingPlaneObject(BaseGui):

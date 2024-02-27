@@ -1743,7 +1743,7 @@ class CAERO1(BaseCard):
             y41 = p4[2] - p1[2]
             y32 = p3[2] - p2[2]
             dspan = max(y41, y32)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
         dx = max(x12, x43)
@@ -3542,7 +3542,7 @@ class FLUTTER(BaseCard):
             nvalue = integer_or_blank(card, 7, 'nvalue')
             omax = None
             imethod = None
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('FLUTTER method=%r' % method)
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
@@ -3559,7 +3559,7 @@ class FLUTTER(BaseCard):
             headers.append('velocity')
         elif self.method in ['K', 'KE']:
             headers.append('reduced_frequency')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('FLUTTER method=%r' % self.method)
         return headers
 

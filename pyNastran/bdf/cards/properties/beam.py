@@ -895,11 +895,11 @@ class PBEAM(IntegratedLineProperty):
             print(msg)
             J = 0.0
         nsm = self.Nsm()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'pid=%r' % A
-        assert isinstance(J, float), 'cid=%r' % J
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(pid, int), 'PBEAM: pid=%r' % pid
+        assert isinstance(mid, int), 'PBEAM: mid=%r' % mid
+        assert isinstance(A, float), 'PBEAM: pid=%r' % A
+        assert isinstance(J, float), 'PBEAM: cid=%r' % J
+        assert isinstance(nsm, float), 'PBEAM: nsm=%r' % nsm
         if xref:
             assert self.mid_ref.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid_ref.type=%s' % (
                 self.type, self.mid_ref.type)
@@ -2046,12 +2046,12 @@ class PBMSECT(LineProperty):
         #J = self.J()
         #nsm = self.Nsm()
         #mpl = self.MassPerLength()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        #assert isinstance(A, float), 'pid=%r' % A
-        #assert isinstance(J, float), 'cid=%r' % J
-        #assert isinstance(nsm, float), 'nsm=%r' % nsm
-        #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+        assert isinstance(pid, int), 'PBMSECT: pid=%r' % pid
+        assert isinstance(mid, int), 'PBMSECT: mid=%r' % mid
+        #assert isinstance(A, float), 'PBMSECT: pid=%r' % A
+        #assert isinstance(J, float), 'PBMSECT: cid=%r' % J
+        #assert isinstance(nsm, float), 'PBMSECT: nsm=%r' % nsm
+        #assert isinstance(mpl, float), 'PBMSECT: mass_per_length=%r' % mpl
 
     def Area(self):
         """
