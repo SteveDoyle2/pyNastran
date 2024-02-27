@@ -64,31 +64,3 @@ def integrate_positive_unit_line(x, y, min_value=0.):
     except Exception:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
-
-def integrate_unit_line(x, y):
-    """
-    Integrates a line of length 1.0 by spline interpolation
-
-    Parameters
-    ----------
-    x : list[float]
-        the independent variable
-    y : list[float]
-        the dependent variable
-
-    Returns
-    -------
-    integrated_value : float
-        the area under the curve
-    """
-    if len(set(y)) == 1:
-        return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
-    try:
-        assert len(x) == len(y), 'x=%s y=%s' % (x, y)
-        # integrate the area; y=f(x); A=integral(y*dx,x)
-
-        out = quad(splev, 0., 1., args=(build_spline(x, y)))
-    except Exception:
-        # print('spline Error x=%s y=%s' % (x, y))
-        raise
-    return out[0]

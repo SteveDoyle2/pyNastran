@@ -29,6 +29,7 @@ BUILD_COLLECT = False
 print('sys.version_info.major =', sys.version_info.major)
 pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
 
+base_pkg_path = r'C:\pyNastran\d'
 site_packages_path = os.path.join(pkg_path, '..', 'env', 'Lib', 'site-packages')
 #vtk_path = os.path.join(site_packages_path, 'vtkmodules')
 vtk_lib_path = os.path.join(site_packages_path, 'vtk.libs')
@@ -84,6 +85,9 @@ for line in lines:
         line = 'is_pynastrangui_exe = True\n'
     elif '__version__ = ' in line:
         # __version__ = '1.1.0+%s' % revision
+        if "'" not in line:
+            assert IS_RELEASE
+            continue
         version_fmt = line.split("'")[1]  # '1.1.0+%s'
     elif 'import' not in line and '__releaseDate2__' in line:
         __releaseDate2__ = line.split("'")[1]
