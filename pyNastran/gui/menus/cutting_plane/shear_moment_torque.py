@@ -36,8 +36,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.typing import ColorInt, ColorFloat
     from pyNastran.gui.main_window import MainWindow
 
-IS_DEMO = False  # just for testing
-#IS_DEMO = False
+IS_DEMO = False
+#IS_DEMO = True  # just for testing
 class ShearMomentTorqueWindow(PyDialog):
     """
     +-------------------------+
