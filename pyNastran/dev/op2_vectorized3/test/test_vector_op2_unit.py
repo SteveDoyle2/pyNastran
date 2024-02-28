@@ -1790,17 +1790,19 @@ class TestOP2(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.set_results('stress')
         op2.read_op2(op2_filename)
-        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
-        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
-        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        stress = op2.op2_results.stress
+        self.assertEqual(len(stress.cpenta_stress), 0, len(stress.cpenta_stress))
+        self.assertEqual(len(stress.chexa_stress), 0, len(stress.chexa_stress))
+        self.assertEqual(len(stress.ctetra_stress), 1, len(stress.ctetra_stress))
         self.assertEqual(len(op2.displacements), 0, len(op2.displacements))
 
         op2 = OP2(debug=False, log=log)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename)
-        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
-        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
-        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        stress = op2.op2_results.stress
+        self.assertEqual(len(stress.cpenta_stress), 0, len(stress.cpenta_stress))
+        self.assertEqual(len(stress.chexa_stress), 0, len(stress.chexa_stress))
+        self.assertEqual(len(stress.ctetra_stress), 1, len(stress.ctetra_stress))
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -2450,7 +2452,7 @@ class TestOP2(unittest.TestCase):
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
         assert cbeam_stress.data.shape == (3, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (3, 20, 8), cquad4_stress.data.shape
 

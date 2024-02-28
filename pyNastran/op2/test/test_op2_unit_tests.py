@@ -381,7 +381,12 @@ class TestOptistructOP2(Tester):
             write_f06=write_f06,
             log=log, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
-        # rod_force = op2.crod_force[isubcase]
+
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        force = op2.op2_results.force
+
+        # rod_force = force.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
@@ -389,9 +394,6 @@ class TestOptistructOP2(Tester):
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
 
-        stress = op2.op2_results.stress
-        strain = op2.op2_results.strain
-        force = op2.op2_results.force
         #assert len(op2.rod_force) == 0
         assert len(stress.crod_stress) == 0
 
@@ -2641,18 +2643,20 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
             load_as_h5=False, log=log)
 
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+        #strain = op2.op2_results.strain
+
         isubcase = 1
-        rod_force = op2.crod_force[isubcase]
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (1, 2, 2), rod_force.data.shape
 
-        stress = op2.op2_results.stress
-        #strain = op2.op2_results.strain
         rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (1, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (1, 1, 8), cbar_force.data.shape
 
@@ -2660,7 +2664,7 @@ class TestOP2Main(Tester):
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
-        cbeam_force = op2.cbeam_force[isubcase]
+        cbeam_force = force.cbeam_force[isubcase]
         assert cbeam_force.nelements == 1, cbeam_force.nelements
         assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
@@ -2668,7 +2672,7 @@ class TestOP2Main(Tester):
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
         assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
-        cquad4_force = op2.cquad4_force[isubcase]
+        cquad4_force = force.cquad4_force[isubcase]
         assert cquad4_force.nelements == 4, cquad4_force.nelements
         assert cquad4_force.data.shape == (1, 20, 8), cquad4_force.data.shape
 
@@ -2679,7 +2683,7 @@ class TestOP2Main(Tester):
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
-        ctria3_force = op2.ctria3_force[isubcase]
+        ctria3_force = force.ctria3_force[isubcase]
         assert ctria3_force.nelements == 8, ctria3_force.nelements
         assert ctria3_force.data.shape == (1, 8, 8), ctria3_force.data.shape
 
@@ -3015,47 +3019,50 @@ class TestOP2Main(Tester):
         isubcases = [(1, 1, 1, 0, 0, '', ''), (1, 8, 1, 0, 0, '', '')]
         isubcase = isubcases[1]
 
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+
         try:
-            rod_force = op2.crod_force[isubcase]
+            rod_force = force.crod_force[isubcase]
         except KeyError:
-            msg = 'isubcase=%s was not found\nkeys=%s' % (isubcase, op2.crod_force.keys())
+            msg = 'isubcase=%s was not found\nkeys=%s' % (isubcase, force.crod_force.keys())
             raise KeyError(msg)
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (4, 2, 2), rod_force.data.shape
 
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (4, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 4, cbar_stress.nelements  # TODO: wrong
         assert cbar_stress.data.shape == (4, 1, 15), cbar_stress.data.shape
 
-        cbeam_stress = op2.cbeam_stress[isubcase]
+        cbeam_stress = stress.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
         assert cbeam_stress.data.shape == (4, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (4, 20, 8), cquad4_stress.data.shape
 
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (4, 8, 8), ctria3_stress.data.shape
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (4, 10, 10), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (4, 14, 10), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (4, 9, 10), chexa_stress.data.shape
 
@@ -3087,55 +3094,58 @@ class TestOP2Main(Tester):
             write_f06=write_f06,
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
         isubcase = 1
+
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
-
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
 
-        rod_force = op2.crod_force[isubcase]
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
         #if op2.is_nx:
             #return
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (7, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
-        #print(op2.cbeam_stress.keys())
+        #print(stress.cbeam_stress.keys())
         #cbeam_stress = op2.cbeam_stress[isubcase]
         #assert cbeam_stress.nelements == 2, cbeam_stress.nelements
         #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
         assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: wrong?
 
-        #print(op2.ctria3_stress.keys())
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        #print(stress.ctria3_stress.keys())
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (7, 10, 6), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (7, 14, 6), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (7, 9, 6), chexa_stress.data.shape
 
@@ -3202,9 +3212,9 @@ class TestOP2Main(Tester):
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
 
+        force = op2.op2_results.force
         stress = op2.op2_results.stress
         #strain = op2.op2_results.strain
-        force = op2.op2_results.force
 
         rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements

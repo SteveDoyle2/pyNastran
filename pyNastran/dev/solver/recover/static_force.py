@@ -196,7 +196,8 @@ def _recover_force_cbar(f06_file, op2,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
-    op2.cbar_force[isubcase] = force_obj
+    force = op2.op2_results.force
+    force.cbar_force[isubcase] = force_obj
 
     force_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
                         page_num=page_num, is_mag_phase=False, is_sort1=True)
