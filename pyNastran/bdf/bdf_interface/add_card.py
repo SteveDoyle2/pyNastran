@@ -8576,7 +8576,7 @@ class AddCards:
         elif str_form == 'rectangular':
             assert nrows >= 1
             assert ncols >= 1
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(str_form)
 
         GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols)

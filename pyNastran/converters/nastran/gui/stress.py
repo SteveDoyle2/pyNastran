@@ -1515,13 +1515,14 @@ def get_solid_stress_strains(cases: CasesDict,
         return icase
     #print("***stress eids=", eids)
     subcase_id = key[0]
-    results = model
     if is_stress:
+        results = model.op2_results.stress
         solids = [
             results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
         ]
         word = 'Stress (centroid)'
     else:
+        results = model.op2_results.strain
         solids = [
             results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
         ]

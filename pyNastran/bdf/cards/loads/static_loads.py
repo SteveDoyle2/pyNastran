@@ -744,9 +744,9 @@ class ACCEL1(BaseCard):
     def validate(self):
         assert len(self.N) == 3, 'N=%r' % self.N
         # self.N = np.asarray(self.N)
-        assert isinstance(self.cid, integer_types), 'cid=%r' % self.cid
-        assert isinstance(self.scale, float_types), 'scale=%r' % self.scale
-        assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes
+        assert isinstance(self.cid, integer_types), 'ACCEL1: cid=%r' % self.cid
+        assert isinstance(self.scale, float_types), 'ACCEL1: scale=%r' % self.scale
+        assert isinstance(self.nodes, list), 'ACCEL1: nodes=%r' % self.nodes
 
     @classmethod
     def add_card(cls, card: BDFCard, comment=''):

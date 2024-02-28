@@ -637,8 +637,8 @@ class AnimationWindow(PyDialog):
             self.on_animate_phase()
         elif animation_type == 'Animate Time':
             self.on_animate_time()
-        else:
-            raise NotImplementedError('value = ', value)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'value = {value}')
 
     def on_animate_time(self, force=False):
         """enables the secondary input"""
@@ -1188,7 +1188,7 @@ class AnimationWindow(PyDialog):
             animate_phase = True
         elif self._animate_type == 'time':
             animate_time = True
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self._animate_type)
 
         if animate_time:
