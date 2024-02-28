@@ -185,7 +185,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.clear_nastran()
         self.make_spc_mpc_supports = True
         self.create_secondary_actors = True
-        self.stop_on_failure = True
+        self.stop_on_failure = False
 
     def clear_nastran(self):
         """cleans up variables specific to Nastran"""
