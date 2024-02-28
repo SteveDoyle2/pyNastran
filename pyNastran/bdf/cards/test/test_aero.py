@@ -2354,10 +2354,11 @@ class TestAero(unittest.TestCase):
         flutter = model.add_flutter(sid, method, density, mach, reduced_freq_velocity)
         alt = 10000.
         machs = np.arange(0.1, 0.8)
-        flutter.make_flfacts_mach_sweep(model, alt, machs, eas_limit=1000., alt_units='m',
-                                        velocity_units='m/s',
-                                        density_units='kg/m^3',
-                                        eas_units='m/s')
+        flutter.make_flfacts_mach_sweep_constant_alt(
+            model, alt, machs, eas_limit=1000., alt_units='m',
+            velocity_units='m/s',
+            density_units='kg/m^3',
+            eas_units='m/s')
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""
