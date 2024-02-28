@@ -110,12 +110,13 @@ def _recover_force_rod(f06_file, op2,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
+    force = op2.op2_results.force
     if element_name == 'CONROD':
-        op2.conrod_force[isubcase] = force_obj
+        force.conrod_force[isubcase] = force_obj
     elif element_name == 'CROD':
-        op2.crod_force[isubcase] = force_obj
+        force.crod_force[isubcase] = force_obj
     elif element_name == 'CTUBE':
-        op2.ctube_force[isubcase] = force_obj
+        force.ctube_force[isubcase] = force_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 

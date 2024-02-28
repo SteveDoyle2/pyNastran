@@ -144,12 +144,13 @@ def _recover_strain_rod(f06_file, op2,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
+    strain = op2.op2_results.strain
     if element_name == 'CONROD':
-        op2.conrod_strain[isubcase] = strain_obj
+        strain.conrod_strain[isubcase] = strain_obj
     elif element_name == 'CROD':
-        op2.crod_strain[isubcase] = strain_obj
+        strain.crod_strain[isubcase] = strain_obj
     elif element_name == 'CTUBE':
-        op2.ctube_strain[isubcase] = strain_obj
+        strain.ctube_strain[isubcase] = strain_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 
@@ -261,8 +262,9 @@ def _recover_strain_bar(f06_file, op2,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
+    strain = op2.op2_results.strain
     if element_name == 'CBAR':
-        op2.cbar_strain[isubcase] = strain_obj
+        strain.cbar_strain[isubcase] = strain_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 

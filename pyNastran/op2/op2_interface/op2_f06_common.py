@@ -119,24 +119,6 @@ class OP2_F06_Common:
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     # ------------------------------------------------------------------
-    # Coordinate transformation - Getter
-    @property
-    def cstm(self):
-        return self.op2_results.cstm
-    @property
-    def trmbd(self):
-        return self.op2_results.trmbd
-    @property
-    def trmbu(self):
-        return self.op2_results.trmbu
-
-    # ------------------------------------------------------------------
-    # Coordinate transformation - Setter
-    @cstm.setter
-    def cstm(self, cstm):
-        self.op2_results.cstm = cstm
-
-    # ------------------------------------------------------------------
     # stress
     @property
     def celas1_stress(self):
