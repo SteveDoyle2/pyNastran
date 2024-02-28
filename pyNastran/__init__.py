@@ -28,12 +28,10 @@ __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 
 DEV = 'dev' in __version__
-if DEV:
-    __docs__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
-else:
-    # 1.3
-    # we don't do separate doc releases for 1.3 vs 1.3.1
-    __docs__ = f'https://pynastran-git.readthedocs.io/en/{__version__[:3]}/quick_start/index.html'
+
+# 1.3
+# we don't do separate doc releases for 1.3 vs 1.3.1
+__docs__ = f'https://pynastran-git.readthedocs.io/en/{__version__[:3]}/quick_start/index.html'
 
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
