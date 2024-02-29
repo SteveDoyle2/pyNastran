@@ -14,7 +14,7 @@ for instructions on installing pyNastran.
 .. _DiscourseBadge: https://discourse.matplotlib.org
 --->
 
-### v1.3.4
+### v1.4.0
 
 [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/1/14)
 
@@ -42,6 +42,8 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
+<!---
+
 
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
@@ -51,7 +53,7 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/main.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=main)	|
 ### v1.4
 
-It's been a while since the the update, but I've had a bit more time lately.
+It's been a while since the the update, but I've had a more time lately.
 I yet again went down a bit of rabbit hole to improve the speed of the BDF, 
 but this time I'm much happier with the results.  Still, getting back to parity
 takes a lot of time and it's not quite there.  It does simplify MSC HDF5 
@@ -64,26 +66,25 @@ MSC also provided a copy of MSC Nastran free of charge to help support the proje
 Since then, modern MSC Nastran support has been added.
 
 Finally, the GUI has receieved a lot of work including:
- - A proper results selector.  There's still more work, but individual displacment
-   components are selectable.  For solid, plate, and composite stress/strain, 
-   nodal or centroidal stress may be shown and various blending methods including
-   nodal averaging is now supported.
+ - Better results selector.  Individual displacment components are selectable.
+   For solid, plate, and composite stress/strain, nodal or centroidal stress 
+   may be shown and various blending methods including nodal averaging is now supported.
+ - [Grid Point Forces](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#results/)
+   are supported in the GUI.  They take some getting used to but you can make
+   plots of shear, moment, and torque down an axis.
  - Preferences are also now exposed in a json file (vs the registry) and if you find
    a bug in the new results, you can flip a flag to use the old objects.
- - Grid Point Forces are supported in the GUI.  They take some getting used to but
-   you can make plots of shear, moment, and torque down an axis.
  - A recent files history to speed up model loading and a whole bunch of other bug fixes.
 
 Programmatics:
  - Supports Python 3.9 - 3.12 (later versions of Python requires downloading from github)
- - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 9+
+ - GUI is compatible with VTK 9 and PyQt5/PySide2
  - improved testing of old versions of packages
-  - much improve NX 64-bit and OptiStruct support
+ - much improve NX 64-bit and OptiStruct support
 
 BDF:
  - fixed CAERO1 paneling bug
- - 409? -> 429? cards
- - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
+ - 427 cards supported  (up from 405)
 
 OP2:
  - 20 new results
@@ -105,7 +106,7 @@ field formatting.  Many checks are also performed to verify that your model is c
 Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
-  * [Features](https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview)
+  * [Features](https://pynastran-git.readthedocs.io/en/1.4/quick_start/features.html#overview)
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
@@ -122,7 +123,7 @@ This should be hidden...
 --->
 
 ### v1.3.4 has been released (2022/5/30)
-This is a a bug fix release mainly to address dependency changes:
+This is a bug fix release mainly to address dependency changes:
 
 Programmatics:
  - supports Python 3.7-3.10

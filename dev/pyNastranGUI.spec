@@ -16,7 +16,7 @@ INCLUDE_BDFV = False
 INCLUDE_PANDAS = False
 INCLUDE_MATPLOTLIB = False
 
-DEBUG = True
+DEBUG = False
 IS_RELEASE = True
 USE_TODAY = True
 IS_ONEDIR = False # True=onedir; False=onefile
@@ -30,6 +30,7 @@ print('sys.version_info.major =', sys.version_info.major)
 pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
 
 base_pkg_path = r'C:\pyNastran\d'
+base_pkg_path = r'C:\NASA\m4\formats\git\pyNastran\d'
 site_packages_path = os.path.join(base_pkg_path, '..', 'env', 'Lib', 'site-packages')
 #vtk_path = os.path.join(site_packages_path, 'vtkmodules')
 vtk_lib_path = os.path.join(site_packages_path, 'vtk.libs')
@@ -246,7 +247,7 @@ if INCLUDE_VTK_DLLS:
         if len(mod_name_split) == 1:
             continue
         mod_name = mod_name_split[-1]
-        
+
         print('mod', mod_name_all, mod_name)
         #vtkFiltersProgrammable.cp39-win_amd64.pyd
         #vtkCommonPython-9.2.dll
@@ -522,7 +523,7 @@ excludes = [
     'libsodium', 'markupsafe', 'mistune', 'multipledispatch',
     'nbformat', 'nltk', 'node-webkit', 'nose', 'patsy', 'pickleshare',
     'ply', 'pyasn1', 'pycosat', 'pycparser', 'pycrypto', 'pycurl',
-    'pyflakes', 'pyopenssl', 'pyparsing', 'pyreadline', 
+    'pyflakes', 'pyopenssl', 'pyparsing', 'pyreadline',
     'python-dateutil', 'rope', 'scikit-image', 'simplegeneric',
     'singledispatch', 'sockjs-tornado', 'ssl_match_hostname',
     'statsmodels', 'sympy', 'tk', 'toolz', 'ujson', 'unicodecsv',
@@ -635,7 +636,7 @@ qt_imports = [
 vtk_imports_all = [  # 9.3
     'vtk',
     'vtkmodules', 'vtkmodules.all',
-    'vtkmodules.qt', 'vtkmodules.util', 'vtkmodules.util.misc', 'vtkmodules.util.numpy_support', 
+    'vtkmodules.qt', 'vtkmodules.util', 'vtkmodules.util.misc', 'vtkmodules.util.numpy_support',
     'vtkmodules.util.vtkConstants', 'vtkmodules.util.vtkVariant', 'vtkmodules.vtkAcceleratorsVTKmCore',
     'vtkmodules.vtkAcceleratorsVTKmDataModel', 'vtkmodules.vtkAcceleratorsVTKmFilters',
     'vtkmodules.vtkChartsCore', 'vtkmodules.vtkCommonColor', 'vtkmodules.vtkCommonComputationalGeometry',
@@ -686,13 +687,13 @@ vtk_imports_all = [  # 9.3
 # can we get rid of scipy.optimize?
 hiddenimports = [
     #'vtk', 'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
-    #'vtk.vtkRenderingPythonSIP', 
+    #'vtk.vtkRenderingPythonSIP',
     'scipy._lib.messagestream', # 'scipy',
     'pygments',
 ] + qt_imports + vtk_imports_all
 if INCLUDE_BDFV:
     hiddenimports += ['pytables'] + pandas_imports
-    
+
 
 if not IS_H5PY:
     excludes += h5py_imports

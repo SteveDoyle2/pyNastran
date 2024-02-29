@@ -34,7 +34,7 @@ def main():
             print(f'*failed to delete folder: {folder0}')
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
-        if os.path.exists(folder) and not delete:
+        if os.path.exists(fname) and not delete:
             print(f'deleting file: {fname0}')
             #os.remove(fname)
         else:

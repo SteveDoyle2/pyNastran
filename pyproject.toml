@@ -66,8 +66,11 @@ license = {file = "LICENSE.md"}
 #readme = "pyNastran project"   # it's looking for a file
 #readme = "README.md"           # doesn't work
 
-#readme = {file="README.md", content-type="text/markdown"}
-readme = {file="README.rst", content-type="text/x-rst"}
+# rst has issues with rendering on pypi
+#
+readme = {file="README.md", content-type="text/markdown"}
+#readme = {file="README.rst", content-type="text/x-rst"}
+#readme = "README.rst"
 
 requires-python = '>=3.9'
 
@@ -81,7 +84,6 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Visualization',
     'Intended Audience :: Science/Research',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: BSD-3',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3 :: Only',
