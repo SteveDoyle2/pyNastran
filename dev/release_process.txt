@@ -16,7 +16,10 @@
     --no-deps just speeds this up
     >>> pip wheel . --no-deps
 
-6. per https://pypi.org/project/twine/
- >>> twine upload *.whl
+6. test the package
+>>> twine upload --repository testpypi pyNastran-1.4.0-py3-none-any.whl
 
-7. fix website version
+7. per https://pypi.org/project/twine/
+>>> twine upload --repository pypi pyNastran-1.4.0-py3-none-any.whl
+
+8. fix website version
