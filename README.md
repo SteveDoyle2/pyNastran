@@ -3,7 +3,8 @@ Main/dev:
 [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=1.4)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
+
+See the [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
 
@@ -124,7 +125,8 @@ GUI:
  - greatly expanded preferences menu; many more preferences are saved
  - new icons
 
-See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
+
+See pyNastran `release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
 
 
 ### v1.3.4 has been released (2022/5/30)
@@ -138,7 +140,9 @@ Programmatics:
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
-See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
+[release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4)
+
+See pyNastran `release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
 
 
 ### v1.3.3 (2020/6/28)
