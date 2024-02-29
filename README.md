@@ -140,9 +140,9 @@ Programmatics:
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
-[release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4)
 
-See pyNastran `release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
+
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.4) for details on the other changes.
 
 
 ### v1.3.3 (2020/6/28)
@@ -161,7 +161,7 @@ Programmatics:
  - updated nptyping requirements
  - support for NX 2019.0, 2019.1
 
-See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.3) for details on the 54 bug fixes.  Not too bad for 2.5 months!
 
 
 ### pyNastran v1.3.2 has been released (2020/4/8)
@@ -345,17 +345,15 @@ GUI:
  - options for Nastran in preferences menu to speed up loading/limit memory usage
  - pyNastran BDF pickle reading
  - pyNastran OP2 HDF5 reading (not MSC's format)
- - visualization when pickling nodes/elements
+ - visualization when picking nodes/elements
  - min/max labels
  - highlight menu
  - Patran-style colors
  - custom force vectors
  - AVL support
 
-
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 ### v1.2.0 (2019/5/21)
 
