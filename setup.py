@@ -28,7 +28,7 @@ for icon_file in icon_files:
 # for exclude_word in EXCLUDE_WORDS:
 #    packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
-update_version_file()
+#update_version_file()
 
 setup(
     name='pyNastran',

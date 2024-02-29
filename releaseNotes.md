@@ -8,7 +8,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
-v1.4.0 (2022/8/??)
+v1.4.0 (2024/2/29)
 ------------------
 Programmatics:
  - Supports Python 3.8-3.10
@@ -19,7 +19,8 @@ Programmatics:
 
 BDF:
  - new cards:
-   - BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
+   - BGSET, BGADD, BCTPARM, BCBODY, BCPARA, TOPVAR, MATEV, PCOMPLS
+   - TABDMP1, PBUSH_OPTISTRUCT
  - convert:
    - messages should be clearer (only the relevant conversions to your model are written)
  - mirror:
@@ -53,6 +54,10 @@ BDF:
    - RBE3.get_field now works
    - better NLPARM checks
    - PBUSH1D parsing is more lax
+   - fixing DOPTPRM OPTCOD bug
+   - fixing subcase=0 bug
+   - PLOAD2 may have 6 eids (not 5)
+   - MAT8 is allowed for a DVMREL2
  - changes:
    - more use of warnings.warn instead of print when log doesn't exist
    - CONM2 positive semi-definite check is relaxed as it's the sum of masses on a node
@@ -60,6 +65,8 @@ BDF:
    - test_bdf now has volume > 0 requirement for solids
 
 OP2:
+ - MSC 2020 support
+ - support for load_geometry in read_op2
  - reworked OES/OEF table reading to more robustly handle sort/format codes
  - grid point forces
    - fixed crash in GPFORCE shear_moment_diagram (shear/moment/torque plotter)
@@ -67,8 +74,16 @@ OP2:
      - see _extract_interface_loads if you want the old behavior
  - vectorized real cbeam_stress/strain
  - improved NX 64-bit support
+ - MATPOOL objects are now stored in a Matrix object
    - matrices should work much better in 64 bit
+ - reorganized op2 to limit function bleedover into OP2 class
  - new results:
+   - modal shock
+   - RealSolidArrayNx
+   - adding ONMD: op2.op2_results.responses.normalized_mass_density
+     - topology optimization result
+   - RealCompositePlateStrengthRatioArray
+   - RealSolidCompositeArray
    - random sort2
      - CTRIA3/6
      - CQUAD4/8
@@ -86,10 +101,16 @@ OP2:
    - model.grid_point_strains_volume_principal
    - model.grid_point_strain_discontinuities
    - model.op2_results.responses.normalized_mass_density
+ - deprecated results
+   - op2.crod_stress is now op2.op2_results.stress.crod_stress
+   - op2.crod_strain is now op2.op2_results.strain.crod_strain
+   - op2.crod_strain_energy is now op2.op2_results.strain_energy.crod_strain_energy
+   
  - removed:
    - VU elements (MSC/NX recently removed these)
  - vectorized most op2 writing
  - bug fixes:
+   - fixed pandas 1.1 issue
    - GPL bug
    - improved regex support for including/excluding results
    - GPDT/S and BGPDT/S tables bugs fixed
@@ -122,20 +143,33 @@ OP2 Geom:
      - aero: CAERO3, CAERO4, PAERO5, DIVERG, SET1, AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1
      - mixed single/double precision for defining CORD2R/CORD2C
      - DTI,UNITS
+     - MATT8
  - bug fixes:
    - NLRSFD bug
    - SPLINE3 bug
    - PBUSH1D parsing bug (swapped equations for tables)
+   - RBAR writing bug
+   - RSPINT bug fix
+   - better PBEAM-PBCOMP identification
 
 OP2 writer:
  - SET1
- - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx
- - fixed: 64-bit ints before writing ids (to avoid improperly sized arrays)
+ - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx, AEFORCE, AEPRESS,  DVPREL1, DVMREL1
+ - vectorized op2 writing for most objects
+ - support for downcasting of ids (op2 requires 32-bit ids)
+ - fixed:
+   - 64-bit ints before writing ids (to avoid improperly sized arrays)
+   - BSET1 was written as CSET1 and vice-versa
  
+OP4:
+ - MATPOOL objects are now stored in a Matrix object
 
 GUI:
+ - removed PyQt6/PySide6 support (they're buggy)
  - nastran:
-   - adding nastran_to_vtk
+   - reworked results, so displacement, solid/plate/compostite-plate stress/strain are much nicer
+   - added shear-moment-torque/grid-point-forces menu
+   - adding nastran_to_vtk to export bdf/op2 to Paraview
    - transient/complex fringe only animations now supported
    - MOMENT card supported in gui
    - NX nonlinear solid element supported
@@ -148,15 +182,27 @@ GUI:
  - AVL support:
    - sine/cosine/equal spacing
    - proper classes
+ - Tecplot support:
+   - binary Tecplot support
  - general gui support:
+   - new icons
+   - "Probe All" support to probe values across all results
    - GUI now supports localization based on system configuration
      (e.g., 1,0 is 1.0 in some countries)
-   - highlight point size option in settings
+   - many new preferences (e.,g. highlight point size)
+   - json file used for preferences instead of registry (stored in C:\Users\<me>\pyNastranGUI.json or ~/pyNastranGUI.json)
  - fixing:
    - fixed bug in gif writing for profile='0 to scale to -scale to 0'
    - better validation of floats
+   - various underflow bugs
 
-v1.3.4 (2022/5/xx)
+Other:
+ - switching to pip instead of setup.py
+   - see pyproject.toml or the installation section of the docs for more info
+ - testing migrated to GithubActions
+ - modern vtk, h5py, numpy, imageio, and pandas upgrade
+
+v1.3.4 (2022/5/30)
 ------------------
 This is a bug fix release with the key reason being API dependency changes:
  - numpy
