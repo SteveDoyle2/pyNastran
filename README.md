@@ -1,8 +1,9 @@
 
 Main/dev:
-[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=1.4)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
+
 See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
@@ -44,8 +45,6 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
-<!---
-
 
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
