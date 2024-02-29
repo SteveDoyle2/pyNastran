@@ -105,82 +105,7 @@ Setup Note
 Download the entire package from Github or just the `GUI
 <https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
 
-If you download the source, make sure you follow the :doc:`installation` and use
-**setup.py develop** and not **setup.py install**.
-
-
-Running the GUI
-===============
-On the command line:
-
-.. code-block:: console
-
-  >>> pyNastranGUI
-
-To view the options:
-
-.. code-block:: console
-
-  >>> pyNastranGUI --help
-
-    Usage:
-      pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
-                   [-s SHOT] [-m MAGNIFY]
-                   [-g GSCRIPT] [-p PSCRIPT]
-                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                   [-q] [--groups]
-      pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
-                   [-s SHOT] [-m MAGNIFY]
-                   [-g GSCRIPT] [-p PSCRIPT]
-                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                   [-q] [--groups]
-      pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                   [-s SHOT] [-m MAGNIFY]
-                   [-g GSCRIPT] [-p PSCRIPT]
-                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                   [-q] [--groups]
-      pyNastranGUI -h | --help
-      pyNastranGUI -v | --version
-
-    Primary Options:
-      -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair,
-                                               plot3d, stl, surf, tetgen, ugrid, usm3d)
-      -i INPUT, --input INPUT     path to input file
-      -o OUTPUT, --output OUTPUT  path to output file
-
-    Secondary Options:
-      -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
-      -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
-      -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
-      -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
-      --groups                        enables groups
-      --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
-      -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
-
-    Info:
-      -q, --quiet    prints debug messages (default=True)
-      -h, --help     show this help message and exit
-      -v, --version  show program's version number and exit
-
-
-The standard way to run the code is simply by launching the exe.
-Alternatively, you can call it from the command line, which can directly
-load a model:
-
-.. code-block:: console
-
-  >>> pyNastranGUI -f nastran -i model.bdf -o model1.op2 -o model2.op2
-
-The **solid_bending.bdf** and **solid_bending.op2** files have been included
-as examples that work in the GUI.  They are inside the "models" folder
-(at the same level as ``setup.py``).
-
-You can also run it like:
-
-  >>> pyNastranGUI model.bdf model1.op2
-
-Here the code will guess based on your file extension what your file format is.
-If you want to load a second OP2, you must use ``-o model2.op2``.
+If you download the source, make sure you follow the :doc:`installation`.
 
 Features
 ========
@@ -301,12 +226,9 @@ Some of the results include:
      * Cp, Mach, T, U, V, W, p, rhoU
 
 
-*****************
-Features Overview
-*****************
-
-Edit Geometry Properties
-========================
+*****************************
+Edit Geometry Properties Menu
+*****************************
 The View -> "Edit Geometry Properties" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/edit_geometry_properties.png
@@ -314,9 +236,9 @@ The View -> "Edit Geometry Properties" menu brings up:
 This menu allows you to edit the opacity, line width, point size, show/hide various
 things associated with the model.  The geometry auto-updates when changes are made.
 
-
-Modify Legend
-=============
+******************
+Modify Legend Menu
+******************
 The View -> "Modify Legend" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/legend.png
@@ -326,14 +248,15 @@ number format (e.g. float precision) and deflection scale.  Defaults are stored,
 they may always be gone back to.  The geometry will update when Apply/OK is clicked.
 OK/Cancel will close the window.
 
+**************
 Animation Menu
-==============
+**************
 
 The animation menu is a sub-menu found on the ``legend menu``.
 Hover over the cells for more information.
 
 Animation of Displacment/Mode Shapes (Animate Scale)
-----------------------------------------------------
+====================================================
 You must load the animation menu when a displacement-like result is active.
 You may then change to a scalar result to show during the animation.  For the
 following SOL 101 static deflection result, **Animate Scale** is used to scale
@@ -359,7 +282,7 @@ the image fill the screen.  Leave minimal whitespace.
 
 
 Animation of Complex Mode Shapes (Animate Phase)
-------------------------------------------------
+================================================
 
 Complex Mode Shapes are simple and similar to the ``Animate Scale`` option.
 Here, the phase angle sweeps from 0 to 360 degrees.  Note that this option only
@@ -369,13 +292,13 @@ shows up when you have a complex result for ``iCase``.
 
 
 Animation of Time/Frequency/Load Step Results (Animate Time)
-------------------------------------------------------------
+============================================================
 This option is recommended only for constant time/frequency/load step results.
 It is now necessary to learn how to set ``iCase``.  In the ``Application log``, you'll see:
 
 .. code-block:: console
 
-  COMMAND: fname=gui_qt_common.pyc lineNo=316 self.cycle_results(case=10)
+  COMMAND: fname=gui_qt_common.py lineNo=316 self.cycle_results(case=10)
 
 Check your first (assume 10), second (assume 11), and final time step (assume 40)
 for their ``icase`` values.
@@ -389,8 +312,9 @@ Note that there is currently no way to plot a transient result other than the de
 unless you want to use scripting.
 
 
+*************************
 Real Displacement Results
-=========================
+*************************
 
 .. image:: ../../../pyNastran/gui/images/results_displacement.png
 
@@ -403,7 +327,7 @@ Select the components from:
 Any combination of terms is allowed.  Note that if no components are selected, all components will be used.  If Magnitude and X are selected, Magnitude will be used.
 
 Derivation Method
------------------
+=================
 Additionally, to determine the fringe/color values, the vector must be reduced using:
 
  - **Magnitude** : takes the L2-norm of the vector ``sqrt(x^2 + y^2 + z^2)``; positive
@@ -411,15 +335,17 @@ Additionally, to determine the fringe/color values, the vector must be reduced u
 
 **Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
 
+*************************************
 Real SPC Forces / Load Vector Results
-=====================================
+*************************************
 
 .. image:: ../../../pyNastran/gui/images/results_spcforce.png
 
 Other than some arrows, SPC Force and Displacement work the same way.
 
+*********************
 Plate Stress / Strain
-=====================
+*********************
 
 There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
 
@@ -436,7 +362,7 @@ Additionally, there are likely neighboring elements too, so the **Nodal Combine*
 
 
 Derivation Method
------------------
+=================
 **Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
 
 The included methods are:
@@ -448,7 +374,7 @@ The included methods are:
  - Difference
 
 Nodal Combine
--------------
+=============
 **Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there a centroidal option.
 
 The included methods are:
@@ -460,8 +386,9 @@ The included methods are:
  - Standard Deviation
  - Difference
 
+*********************
 Solid Stress / Strain
-=====================
+*********************
 
 There are two options for solid stress/strain:
  - Centroid
@@ -479,7 +406,7 @@ The typical way to plot solid stress/strain is with the **Mean** option.
 
 
 Nodal Combine
--------------
+=============
 Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
 
 The supported methods are:
@@ -490,8 +417,9 @@ The supported methods are:
  - Standard Deviation
  - Difference
 
+*******************************
 Composite Plate Stress / Strain
-===============================
+*******************************
 
 .. image:: ../../../pyNastran/gui/images/results_composite_stress.png
 
@@ -505,9 +433,9 @@ The supported methods are:
  - Standard Deviation
  - Difference
 
-
-Grid Point Forces, Interface Loads, Section Cuts, Shear-Moment-Torque
-=====================================================================
+************************
+Shear-Moment-Torque Plot
+************************
 
 If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
 
@@ -537,9 +465,9 @@ Note that the ``i Station`` of the plot corresponds to the distance along the ve
 
 The more standard way to present the information using the global y-axis.  That requires doing a post-processing step either in Excel/separate script/Jupyter Notebook.
 
-
+****************
 Preferences Menu
-================
+****************
 The preferences menu allows you to change various settings.  These will be remembered
 when you load model again.  The menu looks like:
 
@@ -696,8 +624,8 @@ Custom Scalar Results
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
 length is important.  Results must be in nodal/elemental sorted order.
 The following example has 3 scalar values with 2 locations.  The
-corresponding model must have **ONLY** two nodes.  By default, all results
-must be floatable (e.g., no NaN values).
+first column corresponds to the NodeID or ElementID and missing values are allowed.
+All results must be floatable (e.g., no NaN values).
 
 .. code-block:: console
 
@@ -712,7 +640,7 @@ must be floatable (e.g., no NaN values).
       2             4.0  5  6.0
 
 
-You may also assign result types.
+You may also assign result types with (%i) and (%f).  Formatting works as well, so (%.3f) is valid.
 
 .. code-block:: console
 
@@ -729,7 +657,7 @@ have **only** two nodes.
 
 .. code-block:: console
 
-      # result_name
+      # displacement
       1.0     2     3.0
       2.0     5     6.0
 
@@ -791,25 +719,104 @@ Command line scripting
     >>> pyNastranGUI solid_bending.bdf solid_bending.op2 --postscript take_picture.py
 
 
+******************
+Command Line Usage
+******************
+
+On the command line:
+
+.. code-block:: console
+
+  >>> pyNastranGUI
+
+To view the options:
+
+.. code-block:: console
+
+  >>> pyNastranGUI --help
+
+    Usage:
+      pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI -h | --help
+      pyNastranGUI -v | --version
+
+    Primary Options:
+      -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair,
+                                               plot3d, stl, surf, tetgen, ugrid, usm3d)
+      -i INPUT, --input INPUT     path to input file
+      -o OUTPUT, --output OUTPUT  path to output file
+
+    Secondary Options:
+      -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
+      -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
+      -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
+      -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
+      --groups                        enables groups
+      --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
+      -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
+
+    Info:
+      -q, --quiet    prints debug messages (default=True)
+      -h, --help     show this help message and exit
+      -v, --version  show program's version number and exit
+
+
+The standard way to run the code is simply by launching the exe.
+Alternatively, you can call it from the command line, which can directly
+load a model:
+
+.. code-block:: console
+
+  >>> pyNastranGUI -f nastran -i model.bdf -o model1.op2 -o model2.op2
+
+The **solid_bending.bdf** and **solid_bending.op2** files have been included
+as examples that work in the GUI.  They are inside the "models" folder
+(at the same level as ``setup.py``).
+
+You can also run it like:
+
+  >>> pyNastranGUI model.bdf model1.op2
+
+Here the code will guess based on your file extension what your file format is.
+If you want to load a second OP2, you must use ``-o model2.op2``.
+
 High Resolution Screenshots
 ===========================
 
 Option #1
 ---------
 
-.. code-block:: python
-
-    self.on_take_screenshot('solid_bending.png', magnify=5)
+On the ``View`` -> ``Preferences`` menu, change **Screenshot Magnify** and click **Apply**.
+Now take a screenshot.
 
 Option #2
 ---------
 
-On the ``View`` -> ``Preferences`` menu, change **Screenshot Magnify** and click **Apply**.
-Now take a screenshot.
+After the screenshot from Option 1 was created, the following code was printed out to the log.  Copy and paste it into the ``Python Console``.
+
+.. code-block:: python
+
+    self.on_take_screenshot('solid_bending.png', magnify=5)
 
 
+
+**************************
 Frequently Asked Questions
-=======================================
+**************************
 
 **The legend font is way to big!**
 
@@ -826,12 +833,14 @@ to get a robust system.  However, you do have some control:
    - resize the window to be narrower
    - use the legend (View -> Modify Legend; Control+L) and change the number format
 
+
 **The coordinate system/origin font is waaaay too big!**
 
 The coordinate system is dependent on zoom level and model size.  You can customize:
  - coordinate system size
  - coordinate system text size
-in the Preferences menu (Control+P).
+in the Preferences menu (``Control+P``).
+
 
 **I could not visualize the mesh edges within the results**
 
@@ -842,15 +851,18 @@ There are also pull downs on the view menu and the e option is on the toolbar (t
 
 Right click on the **Case/Results** tree and go to **Clear Results**.
 
+
 **It's not easy to change between results (such as Sxx, Syy, Mises, etc.) using only the arrows**
 
-You can use K and L (lowercase) to "cycle" to different results.
+You can use ``K`` and ``L`` (lowercase) to "cycle" to different results.
+
 
 **How do I make the gif more responsive/smaller?**
 
 The GIF will be the same size as your screen (the part with the grey background), 
 so make your window smaller.  In general, 30 frame/second is going to look nice, 
 but you can even get away with 10 FPS if the picture is small.
+
 
 **The GUI crashes when I have a model loaded and load a different one**
 
@@ -861,6 +873,7 @@ you mess one up, it crashes.
 If you're just modifying a deck, you can use the "Reload Model" option.  
 It'll reload the geometry and be quite a bit faster than going through menus.
 That fails sometimes as well, but is more robust.
+
 
 **The GUI crashes when loading an OP2?**
 
