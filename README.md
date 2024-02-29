@@ -88,7 +88,7 @@ it's not included with the official release, but is found in
 This should be hidden...
 --->
 
-### v1.4.0  has NOT been released (2024/2/29)
+### v1.4.0  has been released (2024/2/29)
 
 It's been a while since the the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
 
