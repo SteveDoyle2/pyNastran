@@ -92,7 +92,7 @@ This should be hidden...
 
 It's been a while since the the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
 
-Finally, the GUI has receieved a lot of work recently including:
+Finally, the GUI has received a lot of work recently including:
  - Better results selector.  Individual [displacment](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-displacement-results) and [SPC/MPC/Load Vector](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-spc-forces-load-vectorresults/) components are selectable.
    For [solid](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#solid-stress-strain/),      [plate](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#plate-stress-strain/), and [composite stress/strain](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#composite-plate-stress-strain/), nodal or centroidal stress 
    may be shown and various blending methods including nodal averaging is now supported.
