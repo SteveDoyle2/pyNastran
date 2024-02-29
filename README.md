@@ -126,7 +126,7 @@ GUI:
  - new icons
 
 
-See pyNastran `release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.4.0) for details on the other changes.
 
 
 ### v1.3.4 has been released (2022/5/30)
