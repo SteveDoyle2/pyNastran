@@ -4,9 +4,18 @@
 Graphical User Interface (GUI)
 ==============================
 
-********
+Download the entire package from Github or just the `GUI
+<https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
+
+If you download the source, make sure you follow the :doc:`installation`.
+
+Versioning Note
+---------------
+The GUI download is typically newer than the latest release version.
+
+========
 Overview
-********
+========
 
 The pyNastran GUI was originally developed to solve a data validation problem.
 It's hard to validate that things like coordinate systems were correct if you
@@ -19,8 +28,9 @@ Since the initial development, the GUI has become significantly more capable
 by adding features such as displacements and forces, so the need for a code like
 Patran has decreased, but will not be eliminated.
 
+************
 Introduction
-============
+************
 
 The Graphical User Interface (GUI) looks like:
 
@@ -65,9 +75,9 @@ Advantages of Patran/FEMAP
  - better use of memory
  - many more...
 
-
+*****************************
 Purpose of additional formats
-=============================
+*****************************
 Over time, pyNastran has also added converter and GUI support for additional
 formats.  Nastran is not the only piece of the analysis puzzle and there is
 a need for niche engineering formats.
@@ -100,15 +110,12 @@ Additional formats include:
    - usm3d
 
 
-Setup Note
-==========
-Download the entire package from Github or just the `GUI
-<https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
-
-If you download the source, make sure you follow the :doc:`installation`.
-
+********
 Features
-========
+********
+
+Major Features
+==============
  * fringe plot support
 
    * elemental/nodal results
@@ -166,10 +173,6 @@ BDF Requirements
    all cross-referenced cards, etc.)
 
 
-Versioning Note
----------------
-The GUI download is typically newer than the latest release version.
-
 Additional Formats
 ==================
 Some of the results include:
@@ -225,6 +228,286 @@ Some of the results include:
      * Node ID
      * Cp, Mach, T, U, V, W, p, rhoU
 
+=======
+Results
+=======
+
+*************************
+Real Displacement Results
+*************************
+
+.. image:: ../../../pyNastran/gui/images/results_displacement.png
+
+Select the components from:
+ - Magnitude (X, Y, Z)
+ - X
+ - Y
+ - Z
+
+Any combination of terms is allowed.  Note that if no components are selected, all components will be used.  If Magnitude and X are selected, Magnitude will be used.
+
+Derivation Method
+=================
+Additionally, to determine the fringe/color values, the vector must be reduced using:
+
+ - **Magnitude** : takes the L2-norm of the vector ``sqrt(x^2 + y^2 + z^2)``; positive
+ - **Value** : returns the signed value of a component.  **Note** that if multiple components are selected, Magnitude will be selected by default.
+
+**Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
+
+*************************************
+Real SPC Forces / Load Vector Results
+*************************************
+
+.. image:: ../../../pyNastran/gui/images/results_spcforce.png
+
+Other than some arrows, SPC Force and Displacement work the same way.
+
+*********************
+Plate Stress / Strain
+*********************
+
+There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
+
+Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
+
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_centroid.png
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_centroid_zoom.png
+
+
+Additionally, there are likely neighboring elements too, so the **Nodal Combine** option defines how multiple values at a given node are handled (e.g., Mean, Max, Min).  The typical way to plot solid stress/strain is with the **Mean** option.  The other options are most useful for checking how well the model is converged.
+
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal.png
+.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal_zoom.png
+
+
+Derivation Method
+=================
+**Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
+
+The included methods are:
+ - Absolute Max
+ - Min
+ - Max
+ - Mean
+ - Standard Deviation
+ - Difference (Max - Min)
+
+Nodal Combine
+=============
+**Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there's a centroidal option.
+
+The included methods are:
+ - Centroid
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference (Max - Min)
+
+*********************
+Solid Stress / Strain
+*********************
+
+There are two options for solid stress/strain:
+ - Centroid
+ - Corner (Nodal)
+
+
+Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_centroid.png
+
+
+The typical way to plot solid stress/strain is with the **Mean** option.
+
+.. image:: ../../../pyNastran/gui/images/results_solid_stress_nodal.png
+
+
+Nodal Combine
+=============
+Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
+
+The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference (Max - Min)
+
+*******************************
+Composite Plate Stress / Strain
+*******************************
+
+.. image:: ../../../pyNastran/gui/images/results_composite_stress.png
+
+Derivation Method "reduces" multiple layer results down into a single value at each element centroid.
+
+The supported methods are:
+ - Mean
+ - Absolute Max
+ - Min
+ - Max
+ - Standard Deviation
+ - Difference (Max - Min)
+
+************************
+Shear-Moment-Torque Plot
+************************
+
+If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
+
+The goal is to define a starting (blue point) and ending point (red point) to define a vector.  Along that vector a series of cutting planes (num Planes) will be defined.  At the points where the planes and the vector cross, a coordinate system will be created.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
+
+Load the model and select the result from the results sidebar.  Then open the **Shear, Moment, Torque** tool from the **Tools** menu:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces1_select.png
+
+The menu will pop up and you can define the starting/ending points.  The origin of each coordinate system is automatically calculated, so two additional points/vectors are required.  The **CORD2R** option requires two vectors and the **Vector** requires two vectors.
+
+The goal here is to define the cutting plane where the section cut will be.  Note that the direction of axes affects the sign of the force/moment.  Note that the "x-direction" of the vector and the output coordinate system are not the same.
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces2_menu.png
+
+You can test the cutting plane by pressing ``Plot Plane``:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces3_plane.png
+
+Once you're happy with the coordinate system and the plane press ``Apply`` to generate a series of plots:
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces4_plot.png
+
+Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
+
+The more standard way to present the information using the global y-axis.  That requires doing a post-processing step either in Excel/separate script/Jupyter Notebook.
+
+
+==============
+Custom Results
+==============
+
+***********
+User Points
+***********
+
+User points allow you to load a CSV of xyz points.
+These may be loaded from within the GUI or from the command line.
+
+.. code-block:: console
+
+    # x, y, z
+    1.0, 2.0, 3.0
+    4.0, 5.0, 6.0
+
+These will show up as points in the GUI with your requested filename.
+
+*************
+User Geometry
+*************
+
+User geometry is an attempt at creating a simple file format for defining geometry.
+This may be loaded from the command line.  The structure will probably change.
+
+The geometry may be modified from the ``Edit Geometry Properties`` menu.
+
+.. code-block:: console
+
+    # all supported cards
+    #  - GRID
+    #  - BAR
+    #  - TRI
+    #  - QUAD
+    #
+    # doesn't support:
+    #  - solid elements
+    #  - element properties
+    #  - custom colors
+    #  - coordinate systems
+    #  - materials
+    #  - loads
+    #  - results
+
+    #    id  x    y    z
+    GRID, 1, 0.2, 0.3, 0.3
+    GRID, 2, 1.2, 0.3, 0.3
+    GRID, 3, 2.2, 0.3, 0.3
+    GRID, 4, 5.2, 0.3, 0.3
+    grid, 5, 5.2, 1.3, 2.3  # case insensitive
+
+    #    ID, nodes
+    BAR,  1, 1, 2
+    TRI,  2, 1, 2, 3
+    # this is a comment
+
+    QUAD, 3, 1, 5, 3, 4
+    QUAD, 4, 1, 2, 3, 4  # this is after a blank line
+
+
+*********************
+Custom Scalar Results
+*********************
+Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
+length is important.  Results must be in nodal/elemental sorted order.
+The following example has 3 scalar values with 2 locations.  The
+first column corresponds to the NodeID or ElementID and missing values are allowed.
+All results must be floatable (e.g., no NaN values).
+
+.. code-block:: console
+
+      # element_id, x,   y, z
+      1,            1.0, 2, 3.0
+      2,            4.0, 5, 6.0
+
+.. code-block:: console
+
+      # element_id  x    y  z
+      1             1.0  2  3.0
+      2             4.0  5  6.0
+
+
+You may also assign result types with (%i) and (%f).  Formatting works as well, so (%.3f) is valid.
+
+.. code-block:: console
+
+      # element_id(%i), x(%f), y(%i), z(%f)
+      1,                1.0,     2,     3.0
+      2,                4.0,     5,     6.0
+
+*************************
+Custom Deflection Results
+*************************
+Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
+length is important.  Results must be in nodal/elemental sorted order.
+The following example has 3 scalar values with 2 locations.  The model must
+have **only** two nodes.
+
+.. code-block:: console
+
+      # displacement
+      1.0     2     3.0
+      2.0     5     6.0
+
+*******************************
+Custom Results Specific Buttons
+*******************************
+Nastran Static/Dynamic Aero solutions require custom cards that create
+difficult to view, difficult to validate geometry.  The pyNastranGUI
+aides in creating models.  The CAERO panels are seen when a model is loaded:
+
+.. image:: ../../../pyNastran/gui/images/caero.png
+
+Additionally, by clicking the ``Toggle CAERO Subpanels`` button,
+the subpanels may be seen:
+
+.. image:: ../../../pyNastran/gui/images/caero_subpanels.png
+
+Additionally, flaps are shown from within the GUI.  SPLINE surfaces
+are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
+menu.
 
 *****************************
 Edit Geometry Properties Menu
@@ -311,160 +594,6 @@ depending on the frame rate and total time you want, you can skip steps.
 Note that there is currently no way to plot a transient result other than the deflection
 unless you want to use scripting.
 
-
-*************************
-Real Displacement Results
-*************************
-
-.. image:: ../../../pyNastran/gui/images/results_displacement.png
-
-Select the components from:
- - Magnitude (X, Y, Z)
- - X
- - Y
- - Z
-
-Any combination of terms is allowed.  Note that if no components are selected, all components will be used.  If Magnitude and X are selected, Magnitude will be used.
-
-Derivation Method
-=================
-Additionally, to determine the fringe/color values, the vector must be reduced using:
-
- - **Magnitude** : takes the L2-norm of the vector ``sqrt(x^2 + y^2 + z^2)``; positive
- - **Value** : returns the signed value of a component.  **Note** that if multiple components are selected, Magnitude will be selected by default.
-
-**Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
-
-*************************************
-Real SPC Forces / Load Vector Results
-*************************************
-
-.. image:: ../../../pyNastran/gui/images/results_spcforce.png
-
-Other than some arrows, SPC Force and Displacement work the same way.
-
-*********************
-Plate Stress / Strain
-*********************
-
-There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
-
-Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
-
-.. image:: ../../../pyNastran/gui/images/results_plate_stress_centroid.png
-.. image:: ../../../pyNastran/gui/images/results_plate_stress_centroid_zoom.png
-
-
-Additionally, there are likely neighboring elements too, so the **Nodal Combine** option defines how multiple values at a given node are handled (e.g., Mean, Max, Min).  The typical way to plot solid stress/strain is with the **Mean** option.  The other options are most useful for checking how well the model is converged.
-
-.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal.png
-.. image:: ../../../pyNastran/gui/images/results_plate_stress_nodal_zoom.png
-
-
-Derivation Method
-=================
-**Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
-
-The included methods are:
- - Absolute Max
- - Min
- - Max
- - Mean
- - Standard Deviation
- - Difference
-
-Nodal Combine
-=============
-**Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there a centroidal option.
-
-The included methods are:
- - Centroid
- - Mean
- - Absolute Max
- - Min
- - Max
- - Standard Deviation
- - Difference
-
-*********************
-Solid Stress / Strain
-*********************
-
-There are two options for solid stress/strain:
- - Centroid
- - Corner (Nodal)
-
-
-Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
-
-.. image:: ../../../pyNastran/gui/images/results_solid_stress_centroid.png
-
-
-The typical way to plot solid stress/strain is with the **Mean** option.
-
-.. image:: ../../../pyNastran/gui/images/results_solid_stress_nodal.png
-
-
-Nodal Combine
-=============
-Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
-
-The supported methods are:
- - Mean
- - Absolute Max
- - Min
- - Max
- - Standard Deviation
- - Difference
-
-*******************************
-Composite Plate Stress / Strain
-*******************************
-
-.. image:: ../../../pyNastran/gui/images/results_composite_stress.png
-
-Derivation Method "reduces" multiple layer results down into a single value at each element centroid.
-
-The supported methods are:
- - Mean
- - Absolute Max
- - Min
- - Max
- - Standard Deviation
- - Difference
-
-************************
-Shear-Moment-Torque Plot
-************************
-
-If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
-
-The goal is to define a starting (blue point) and ending point (red point) to define a vector.  Along that vector a series of cutting planes (num Planes) will be defined.  At the points where the planes and the vector cross, a coordinate system will be created.
-
-.. image:: ../../../pyNastran/gui/images/grid_point_forces_vectors.png
-
-Load the model and select the result from the results sidebar.  Then open the **Shear, Moment, Torque** tool from the **Tools** menu:
-
-.. image:: ../../../pyNastran/gui/images/grid_point_forces1_select.png
-
-The menu will pop up and you can define the starting/ending points.  The origin of each coordinate system is automatically calculated, so two additional points/vectors are required.  The **CORD2R** option requires two vectors and the **Vector** requires two vectors.
-
-The goal here is to define the cutting plane where the section cut will be.  Note that the direction of axes affects the sign of the force/moment.  Note that the "x-direction" of the vector and the output coordinate system are not the same.
-
-.. image:: ../../../pyNastran/gui/images/grid_point_forces2_menu.png
-
-You can test the cutting plane by pressing ``Plot Plane``:
-
-.. image:: ../../../pyNastran/gui/images/grid_point_forces3_plane.png
-
-Once you're happy with the coordinate system and the plane press ``Apply`` to generate a series of plots:
-
-.. image:: ../../../pyNastran/gui/images/grid_point_forces4_plot.png
-
-Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
-
-The more standard way to present the information using the global y-axis.  That requires doing a post-processing step either in Excel/separate script/Jupyter Notebook.
-
 ****************
 Preferences Menu
 ****************
@@ -481,8 +610,9 @@ Windows preferences are stored in:
 Or Linux/Mac:
  - ``~/pyNastranGUI.json``
 
+***************
 Picking Results
-===============
+***************
 Click on the ``Probe`` button to activate probing.  Now click on a node/element.
 A label will appear .  This label will appear at the centroid of an elemental result
 or the closest node to the selected location.  The value for the current result
@@ -498,8 +628,9 @@ Note that for line elements, you need to be very accurate with your picking.
 Zooming in does not help with picking like it does for shells.
 
 
-Focal Point
-===========
+********************************
+Focal Point / Center of Rotation
+********************************
 Click the following button and click on the rotation center point of the model.
 The model will now rotate around that point.
 
@@ -507,9 +638,9 @@ The model will now rotate around that point.
 
 Alternatively, hover over the point and press the ``f`` key.
 
-
+**************
 Model Clipping
-==============
+**************
 Clipping let's you see "into" the model.
 
 .. image:: ../../../pyNastran/gui/images/clipping.png
@@ -522,9 +653,9 @@ Reset the view by clicking the Undo-looking arrow at the top.
 
 **Note that clipping currently doesn't work...**
 
-
+*************
 Modify Groups
-=============
+*************
 The View -> "Modify Groups" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/modify_groups1.png
@@ -553,9 +684,9 @@ The bolded/italicized text indicates the group that will be displayed to the scr
 The defaults will be updated when you click ``Set As Main``.  This will also update
 the bolded/italicided group.
 
-
+************
 Camera Views
-============
+************
 The eyeball icon brings up a camera view.  You can set and save multiple camera views.
 Additionally, views are written out for scripting.
 You can script an external optimization process and take pictures every so many steps.
@@ -563,124 +694,9 @@ You can script an external optimization process and take pictures every so many 
 .. image:: ../../../pyNastran/gui/images/camera_views.png
 
 
-User Points
-===========
-
-User points allow you to load a CSV of xyz points.
-These may be loaded from within the GUI or from the command line.
-
-.. code-block:: console
-
-    # x, y, z
-    1.0, 2.0, 3.0
-    4.0, 5.0, 6.0
-
-These will show up as points in the GUI with your requested filename.
-
-
-User Geometry
-=============
-
-User geometry is an attempt at creating a simple file format for defining geometry.
-This may be loaded from the command line.  The structure will probably change.
-
-The geometry may be modified from the ``Edit Geometry Properties`` menu.
-
-.. code-block:: console
-
-    # all supported cards
-    #  - GRID
-    #  - BAR
-    #  - TRI
-    #  - QUAD
-    #
-    # doesn't support:
-    #  - solid elements
-    #  - element properties
-    #  - custom colors
-    #  - coordinate systems
-    #  - materials
-    #  - loads
-    #  - results
-
-    #    id  x    y    z
-    GRID, 1, 0.2, 0.3, 0.3
-    GRID, 2, 1.2, 0.3, 0.3
-    GRID, 3, 2.2, 0.3, 0.3
-    GRID, 4, 5.2, 0.3, 0.3
-    grid, 5, 5.2, 1.3, 2.3  # case insensitive
-
-    #    ID, nodes
-    BAR,  1, 1, 2
-    TRI,  2, 1, 2, 3
-    # this is a comment
-
-    QUAD, 3, 1, 5, 3, 4
-    QUAD, 4, 1, 2, 3, 4  # this is after a blank line
-
-
-Custom Scalar Results
-=====================
-Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
-length is important.  Results must be in nodal/elemental sorted order.
-The following example has 3 scalar values with 2 locations.  The
-first column corresponds to the NodeID or ElementID and missing values are allowed.
-All results must be floatable (e.g., no NaN values).
-
-.. code-block:: console
-
-      # element_id, x,   y, z
-      1,            1.0, 2, 3.0
-      2,            4.0, 5, 6.0
-
-.. code-block:: console
-
-      # element_id  x    y  z
-      1             1.0  2  3.0
-      2             4.0  5  6.0
-
-
-You may also assign result types with (%i) and (%f).  Formatting works as well, so (%.3f) is valid.
-
-.. code-block:: console
-
-      # element_id(%i), x(%f), y(%i), z(%f)
-      1,                1.0,     2,     3.0
-      2,                4.0,     5,     6.0
-
-Custom Deflection Results
-=========================
-Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
-length is important.  Results must be in nodal/elemental sorted order.
-The following example has 3 scalar values with 2 locations.  The model must
-have **only** two nodes.
-
-.. code-block:: console
-
-      # displacement
-      1.0     2     3.0
-      2.0     5     6.0
-
-Custom Results Specific Buttons
-===============================
-Nastran Static/Dynamic Aero solutions require custom cards that create
-difficult to view, difficult to validate geometry.  The pyNastranGUI
-aides in creating models.  The CAERO panels are seen when a model is loaded:
-
-.. image:: ../../../pyNastran/gui/images/caero.png
-
-Additionally, by clicking the ``Toggle CAERO Subpanels`` button,
-the subpanels may be seen:
-
-.. image:: ../../../pyNastran/gui/images/caero_subpanels.png
-
-Additionally, flaps are shown from within the GUI.  SPLINE surfaces
-are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
-menu.
-
-*********
+=========
 Scripting
-*********
+=========
 GUI commands are logged to the window with their call signature.
 Scripting may be used to call any function in the GUI class.
 Most of these commands are written to the ``COMMAND`` output.
@@ -844,7 +860,7 @@ in the Preferences menu (``Control+P``).
 
 **I could not visualize the mesh edges within the results**
 
-Mesh edges press **e** for edge and **b** if you want to make them black.  
+Mesh edges press ``e`` for edges and ``b`` if you want to make them black.  
 There are also pull downs on the view menu and the e option is on the toolbar (the black wireframe)
 
 **How do I clear a result?**
