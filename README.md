@@ -1,10 +1,10 @@
 
 Main/dev:
-[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=1.4)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
+See the [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
 
@@ -45,6 +45,8 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
+<!---
+
 
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
@@ -86,7 +88,7 @@ it's not included with the official release, but is found in
 This should be hidden...
 --->
 
-### v1.4.0  has NOT been released (2024/2/29)
+### v1.4.0  has been released (2024/2/29)
 
 It's been a while since the the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
 
@@ -123,7 +125,8 @@ GUI:
  - greatly expanded preferences menu; many more preferences are saved
  - new icons
 
-See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
+
+See pyNastran `release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
 
 
 ### v1.3.4 has been released (2022/5/30)
@@ -137,7 +140,7 @@ Programmatics:
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
-See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.4) for details on the other changes.
 
 
 ### v1.3.3 (2020/6/28)
@@ -156,7 +159,7 @@ Programmatics:
  - updated nptyping requirements
  - support for NX 2019.0, 2019.1
 
-See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.3) for details on the 54 bug fixes.  Not too bad for 2.5 months!
 
 
 ### pyNastran v1.3.2 has been released (2020/4/8)
@@ -340,17 +343,15 @@ GUI:
  - options for Nastran in preferences menu to speed up loading/limit memory usage
  - pyNastran BDF pickle reading
  - pyNastran OP2 HDF5 reading (not MSC's format)
- - visualization when pickling nodes/elements
+ - visualization when picking nodes/elements
  - min/max labels
  - highlight menu
  - Patran-style colors
  - custom force vectors
  - AVL support
 
-
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 ### v1.2.0 (2019/5/21)
 
