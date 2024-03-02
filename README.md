@@ -90,7 +90,7 @@ This should be hidden...
 
 ### v1.4.0  has been released (2024/2/29)
 
-It's been a while since the the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
+It's been a while since the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
 
 Finally, the GUI has received a lot of work recently including:
  - Better results selector.  Individual [displacment](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-displacement-results) and [SPC/MPC/Load Vector](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-spc-forces-load-vectorresults/) components are selectable.
