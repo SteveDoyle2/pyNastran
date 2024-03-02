@@ -145,6 +145,7 @@ def plot_smt(x: np.ndarray,
              root_filename: str='',
              show: bool=True,
              xtitle: str='x', xlabel: str='xlabel',
+             length_unit: str='',
              force_unit: str='', moment_unit: str='') -> None:
     """plots the shear, moment, torque plots"""
     plt.close()
@@ -154,6 +155,7 @@ def plot_smt(x: np.ndarray,
     #moment_unit = 'in-kip'
     #force_unit = 'kip'
 
+    length_unit2 = f' ({length_unit})' if length_unit else ''
     force_unit2 = f' ({force_unit})' if force_unit else ''
     moment_unit2 = f' ({moment_unit})' if moment_unit else ''
 
@@ -173,7 +175,7 @@ def plot_smt(x: np.ndarray,
         ax = fig.gca()
         ax.plot(x, force_sum[:, 1], '-*')
         ax.set_title(f'{xtitle} vs. Shear Y')
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(f'{xlabel}{length_unit}')
         ax.set_ylabel(f'Shear Y{force_unit2}')
         ax.grid(True)
         fig.tight_layout()
@@ -182,7 +184,7 @@ def plot_smt(x: np.ndarray,
         ax = fig.gca()
         ax.plot(x, force_sum[:, 2], '-*')
         ax.set_title(f'{xtitle} vs. Shear Z')
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(f'{xlabel}{length_unit}')
         ax.set_ylabel(f'Shear Z{force_unit2}')
         ax.grid(True)
         fig.tight_layout()
@@ -201,7 +203,7 @@ def plot_smt(x: np.ndarray,
         ax = fig.gca()
         ax.plot(x, moment_sum[:, 1], '-*')
         ax.set_title(f'{xtitle} vs. Moment Y')
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(f'{xlabel}{length_unit}')
         ax.set_ylabel(f'Moment Y{moment_unit2}')
         ax.grid(True)
         fig.tight_layout()
@@ -210,7 +212,7 @@ def plot_smt(x: np.ndarray,
         ax = fig.gca()
         ax.plot(x, moment_sum[:, 2], '-*')
         ax.set_title(f'{xtitle} vs. Moment Z')
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(f'{xlabel}{length_unit}')
         ax.set_ylabel(f'Moment Z{moment_unit2}')
         ax.grid(True)
         fig.tight_layout()
@@ -222,7 +224,7 @@ def plot_smt(x: np.ndarray,
     ax.plot(x, force_sum[:, 1], '-*', label='Force Y')
     ax.plot(x, force_sum[:, 2], '-*', label='Force Z')
     #ax.set_title(f'{xtitle} vs. Force')
-    ax.set_xlabel(xlabel)
+    ax.set_xlabel(f'{xlabel}{length_unit}')
     ax.set_ylabel(f'Force{force_unit2}')
     ax.legend()
     ax.grid(True)
@@ -236,7 +238,7 @@ def plot_smt(x: np.ndarray,
     ax.plot(x, moment_sum[:, 1], '-*', label='Moment Y')
     ax.plot(x, moment_sum[:, 2], '-*', label='Moment Z')
     #ax.set_title(f'{xtitle} vs. Moment')
-    ax.set_xlabel(xlabel)
+    ax.set_xlabel(f'{xlabel}{length_unit}')
     ax.set_ylabel(f'Moment{moment_unit2}')
     ax.legend()
     ax.grid(True)
@@ -249,7 +251,7 @@ def plot_smt(x: np.ndarray,
     ax.plot(x, nnodes / nnodes.max(), '-*', label=f'n_nodes (N={nnodes.max()})')
     ax.plot(x, nelems / nelems.max(), '-*', label=f'n_elems (N={nelems.max()})')
     ax.set_title('Monotonic Nodes/Elements')
-    ax.set_xlabel(xlabel)
+    ax.set_xlabel(f'{xlabel}{length_unit}')
     ax.set_ylabel('Fraction of Nodes, Elements')
     ax.legend()
     ax.grid(True)
@@ -260,10 +262,33 @@ def plot_smt(x: np.ndarray,
     if show:
         plt.show()
 
+def get_xyz_stations(stations: np.ndarray,
+                     new_coords: dict[int, CORD2R],
+                     station_location: str='End-Origin') -> tuple[np.ndarray,
+                                                                  np.ndarray, str]:
+    """helper to simplify xlabel on SMT output"""
+    origins = np.vstack([coord.origin for cid, coord in new_coords.items()])
+    station_location_lower = station_location.lower()
+    if station_location_lower == 'end-origin':
+        xyz_stations = stations
+        xlabel = 'i Station'
+    elif station_location_lower == 'x':
+        xyz_stations = origins[:, 0]
+        xlabel = 'X'
+    elif station_location_lower == 'y':
+        xyz_stations = origins[:, 1]
+        xlabel = 'Y'
+    elif station_location_lower == 'z':
+        xyz_stations = origins[:, 2]
+        xlabel = 'Z'
+    else:  # pragma: no cover
+        raise RuntimeError(station_location_lower)
+    return origins, xyz_stations, xlabel
+
 def write_smt_to_csv(csv_filename: str,
                      stations: np.ndarray,
                      nelems: np.ndarray, nnodes: np.ndarray,
-                     new_coords: list[CORD2R],
+                     new_coords: dict[int, CORD2R],
                      force_sum: np.ndarray,
                      moment_sum: np.ndarray,
                      force_unit: str='', moment_unit: str='') -> None:

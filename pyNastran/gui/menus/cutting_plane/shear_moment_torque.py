@@ -13,13 +13,15 @@ from __future__ import annotations
 import os
 from typing import Callable, TYPE_CHECKING
 
+import numpy as np
+
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox,
-    QFrame)
+    QFrame, QTableWidget, QTableWidgetItem, QDialog, QHeaderView)
 
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor# , QHeaderView
 
 
 from pyNastran.utils.locale import func_str
@@ -37,7 +39,41 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 IS_DEMO = False
-#IS_DEMO = True  # just for testing
+IS_DEMO = True  # just for testing
+CID_GLOBAL_STR = '0/Global'
+USE_COMPRESSED_UNIT_SCALE = True
+
+
+class ResultsDialog(QDialog):
+    def __init__(self, win_parent,
+                 data: np.ndarray,
+                 labels: list[str],
+                 title: str='Results'):
+        super().__init__(win_parent)
+
+        self.setWindowTitle(title)
+        nrows, ncolumns = data.shape
+
+        table_widget = QTableWidget(self)
+        table_widget.setRowCount(nrows)
+        table_widget.setColumnCount(ncolumns)
+        table_widget.setHorizontalHeaderLabels(labels)
+        self.table_widget = table_widget
+
+        header = table_widget.horizontalHeader()
+        for irow, row in enumerate(data):
+            for jcol, value in enumerate(row):
+                obj = QTableWidgetItem(str(value))
+                table_widget.setItem(irow, jcol, obj)
+            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+
+        vbox = QVBoxLayout(self)
+        vbox.addWidget(table_widget)
+        self.setLayout(vbox)
+        self.show()
+
+
 class ShearMomentTorqueWindow(PyDialog):
     """
     +-------------------------+
@@ -75,7 +111,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.plane_opacity = data['plane_opacity']
-        self.methods = ['Vector', 'CORD2R']
+        self.methods = ['Vector', 'CORD2R', 'Coord ID']
         #self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
         self.zaxis_methods = ['Manual', 'Global Z']
 
@@ -136,6 +172,11 @@ class ShearMomentTorqueWindow(PyDialog):
         self.z_label.setFont(bold_font)
 
         self.plot_info.setFont(bold_font)
+        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
+            #self.force_label.setFont(bold_font)
+            #self.moment_label.setFont(bold_font)
+            self.unit_label.setFont(bold_font)
+            self.scale_label.setFont(bold_font)
 
     def create_widgets(self) -> None:
         """creates the display window"""
@@ -173,6 +214,10 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p3_label.setToolTip('Defines the end point for the shear, moment, torque plot')
         self.p2_label.setToolTip('Defines the XZ plane for the shears/moments')
 
+        self.station_location_label = QLabel('Station Label')
+        self.station_location_pulldown = QComboBox()
+        self.station_location_pulldown.addItems(['End-Origin', 'X', 'Y', 'Z'])
+
         self.zaxis_label = QLabel('Z Axis:')
 
         self.method_pulldown = QComboBox()
@@ -197,10 +242,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p3_cid_pulldown = QComboBox()
         self.zaxis_cid_pulldown = QComboBox()
 
-        cid_global_str = '0/Global'
         for cid in sorted(self.cids):
             if cid == 0:
-                cid_str = cid_global_str
+                cid_str = CID_GLOBAL_STR
             else:
                 cid_str = str(cid)
             #print('cid_str = %r' % cid_str)
@@ -338,10 +382,16 @@ class ShearMomentTorqueWindow(PyDialog):
         self.remove2_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         self.plot_info = QLabel('Plot Info:')
-        self.force_unit_label = QLabel('Force Unit')
-        self.moment_unit_label = QLabel('Moment Unit')
-        self.force_scale_label = QLabel('Force Scale')
-        self.moment_scale_label = QLabel('Moment Scale')
+        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
+            self.force_label = QLabel('Force')
+            self.moment_label = QLabel('Moment')
+            self.unit_label = QLabel('Unit')
+            self.scale_label = QLabel('Scale')
+        else:
+            self.force_unit_label = QLabel('Force Unit')
+            self.moment_unit_label = QLabel('Moment Unit')
+            self.force_scale_label = QLabel('Force Scale')
+            self.moment_scale_label = QLabel('Moment Scale')
 
         self.force_unit_edit = QLineEdit('')
         self.moment_unit_edit = QLineEdit('')
@@ -361,7 +411,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.set_bold_font(self._default_font_size)
 
         if IS_DEMO:  # pragma: no cover
-            if 1:
+            if 0:
                 # bwb
                 self.p1_x_edit.setText('1389')
                 self.p1_y_edit.setText('1262')
@@ -376,7 +426,7 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.p2_z_edit.setText('0')
                 self.nplanes_spinner.setValue(50)
 
-            elif 0:  # solid_shell_bar
+            elif 1:  # solid_shell_bar
                 self.p1_x_edit.setText('0')
                 self.p1_y_edit.setText('0')
                 self.p1_z_edit.setText('-2')
@@ -494,6 +544,7 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.p3_x_edit, self.p3_y_edit, self.p3_z_edit)
         irow += 1
 
+        # -------------------------------
         grid.addWidget(self.plane_label, irow, 0)
         irow += 1
 
@@ -541,23 +592,43 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.plane_opacity_edit, irow, 1)
         irow += 1
         # -----------------------------------------
-        grid.addWidget(self.plot_info, irow, 0)
-        irow += 1
+        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
+            grid.addWidget(self.plot_info, irow, 0)
+            grid.addWidget(self.unit_label, irow, 1)
+            grid.addWidget(self.scale_label, irow, 2)
+            irow += 1
 
-        grid.addWidget(self.force_unit_label, irow, 0)
-        grid.addWidget(self.force_unit_edit, irow, 1)
-        irow += 1
+            grid.addWidget(self.force_label, irow, 0)
+            grid.addWidget(self.force_unit_edit, irow, 1)
+            grid.addWidget(self.force_scale_edit, irow, 2)
+            irow += 1
 
-        grid.addWidget(self.force_scale_label, irow, 0)
-        grid.addWidget(self.force_scale_edit, irow, 1)
-        irow += 1
+            grid.addWidget(self.moment_label, irow, 0)
+            grid.addWidget(self.moment_unit_edit, irow, 1)
+            grid.addWidget(self.moment_scale_edit, irow, 2)
+            irow += 1
+        else:
+            grid.addWidget(self.plot_info, irow, 0)
+            irow += 1
 
-        grid.addWidget(self.moment_unit_label, irow, 0)
-        grid.addWidget(self.moment_unit_edit, irow, 1)
-        irow += 1
+            grid.addWidget(self.force_unit_label, irow, 0)
+            grid.addWidget(self.force_unit_edit, irow, 1)
+            irow += 1
 
-        grid.addWidget(self.moment_scale_label, irow, 0)
-        grid.addWidget(self.moment_scale_edit, irow, 1)
+            grid.addWidget(self.force_scale_label, irow, 0)
+            grid.addWidget(self.force_scale_edit, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.moment_unit_label, irow, 0)
+            grid.addWidget(self.moment_unit_edit, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.moment_scale_label, irow, 0)
+            grid.addWidget(self.moment_scale_edit, irow, 1)
+            irow += 1
+
+        grid.addWidget(self.station_location_label, irow, 0)
+        grid.addWidget(self.station_location_pulldown, irow, 1)
         irow += 1
 
         #----------------------------------------------
@@ -585,6 +656,8 @@ class ShearMomentTorqueWindow(PyDialog):
         is_p2_cid_enabled = True
         is_zaxis_cid_enabled = True
         zaxis_method_visible = False
+        show_zaxis_xyz = True
+        show_p2_xyz = True
         if method == 'CORD2R':
             self._zaxis_method = self.zaxis_method_pulldown.currentIndex()
             # set to manual
@@ -608,6 +681,21 @@ class ShearMomentTorqueWindow(PyDialog):
             self.zaxis_method_pulldown.setCurrentIndex(self._imanual)
             self.on_zaxis_method()  # update
 
+        elif method == 'Coord ID':
+            is_p2_cid_enabled = True
+            is_zaxis_cid_enabled = False
+            self.zaxis_method_pulldown.setVisible(False)
+            self.zaxis_method_label.setVisible(False)
+
+            self.zaxis_method_pulldown.setVisible(False)
+
+            zaxis_method_visible = False
+            show_zaxis_xyz = False
+            self.zaxis_method_label.setVisible(False)
+
+            show_p2_xyz = False
+            self.p2_label.setText('Output Coord:')
+
         elif method == 'Z-Axis Projection':
             #is_p2_cid_enabled = False
             is_zaxis_cid_enabled = False
@@ -628,6 +716,14 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_method_pulldown.setEnabled(zaxis_method_visible)
         self.zaxis_method_pulldown.setVisible(zaxis_method_visible)
         self.zaxis_method_label.setEnabled(zaxis_method_visible)
+
+        self.p2_x_edit.setVisible(show_p2_xyz)
+        self.p2_y_edit.setVisible(show_p2_xyz)
+        self.p2_z_edit.setVisible(show_p2_xyz)
+
+        self.zaxis_x_edit.setVisible(show_zaxis_xyz)
+        self.zaxis_y_edit.setVisible(show_zaxis_xyz)
+        self.zaxis_z_edit.setVisible(show_zaxis_xyz)
 
     def on_zaxis_method(self, method_int=None) -> None:
         method = get_pulldown_text(method_int, self.zaxis_methods,
@@ -712,40 +808,53 @@ class ShearMomentTorqueWindow(PyDialog):
     #---------------------------------------------------------------------------
 
     def on_validate(self) -> bool:
+        station_location = self.station_location_pulldown.currentText()
+
+        method = self.method_pulldown.currentText()
+        assert method in self.methods, f'method={method!r}'
+
         p1_cidi = self.p1_cid_pulldown.currentText()
         p2_cidi = self.p2_cid_pulldown.currentText()
         p3_cidi = self.p3_cid_pulldown.currentText()
         zaxis_cidi = self.zaxis_cid_pulldown.currentText()
-        p1_cid = int(p1_cidi) if 'Global' not in p1_cidi else 0
-        p2_cid = int(p2_cidi) if 'Global' not in p2_cidi else 0
-        p3_cid = int(p3_cidi) if 'Global' not in p3_cidi else 0
-        zaxis_cid = int(zaxis_cidi) if 'Global' not in zaxis_cidi else 0
+        p1_cid = int(p1_cidi) if CID_GLOBAL_STR not in p1_cidi else 0
+        p2_cid = int(p2_cidi) if CID_GLOBAL_STR not in p2_cidi else 0
+        p3_cid = int(p3_cidi) if CID_GLOBAL_STR not in p3_cidi else 0
+        zaxis_cid = int(zaxis_cidi) if CID_GLOBAL_STR not in zaxis_cidi else 0
         #print('p1_cidi=%r p2_cidi=%r p3_cidi=%r' % (p1_cidi, p2_cidi, zaxis_cidi))
         #print('p2_cid=%r p2_cid=%r p3_cidi=%r' % (p2_cid, p2_cid, zaxis_cid))
 
         p1_x, flag1 = check_float(self.p1_x_edit)
         p1_y, flag2 = check_float(self.p1_y_edit)
         p1_z, flag3 = check_float(self.p1_z_edit)
-
-        p2_x, flag4 = check_float(self.p2_x_edit)
-        p2_y, flag5 = check_float(self.p2_y_edit)
-        p2_z, flag6 = check_float(self.p2_z_edit)
+        p1_flag = all([flag1, flag2, flag3])
+        p1 = [p1_x, p1_y, p1_z]
 
         p3_x, flag7 = check_float(self.p3_x_edit)
         p3_y, flag8 = check_float(self.p3_y_edit)
         p3_z, flag9 = check_float(self.p3_z_edit)
-        p1 = [p1_x, p1_y, p1_z]
-        p2 = [p2_x, p2_y, p2_z]
+        p3_flag = all([flag7, flag8, flag9])
         p3 = [p3_x, p3_y, p3_z]
 
-        flag10, flag11, flag12, zaxis_cid, zaxis = get_zaxis(
-            self.win_parent, # for camera
-            self.zaxis_method_pulldown,
-            self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
+        if method == 'Coord ID':
+            p2_flag = True
+            p2 = [0., 0., 0.]
 
-        method = self.method_pulldown.currentText()
-        assert method in self.methods, f'method={method!r}'
-        flag13 = True
+            zaxis_cid = -1
+            zaxis = np.full(3, np.nan)
+            zaxis_flag = True
+        else:
+            p2_x, flag4 = check_float(self.p2_x_edit)
+            p2_y, flag5 = check_float(self.p2_y_edit)
+            p2_z, flag6 = check_float(self.p2_z_edit)
+            p2 = [p2_x, p2_y, p2_z]
+            p2_flag = all([flag4, flag5, flag6])
+
+            flag10, flag11, flag12, zaxis_cid, zaxis = get_zaxis(
+                self.win_parent, # for camera
+                self.zaxis_method_pulldown,
+                self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
+            zaxis_flag = all([flag10, flag11, flag12])
 
         plane_opacity = self.plane_opacity_edit.value()
         nplanes = self.nplanes_spinner.value()
@@ -758,21 +867,20 @@ class ShearMomentTorqueWindow(PyDialog):
         force_scale, force_flag = check_float(self.force_scale_edit)
         moment_scale, moment_flag = check_float(self.moment_scale_edit)
         flags = [
-            flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8, flag9,
-            flag10, flag11, flag12,
-            flag13, csv_flag,
+            p1_flag, p2_flag, p3_flag,
+            zaxis_flag,
+            csv_flag,
             force_flag, moment_flag]
 
         force_unit = self.force_unit_edit.text()
         moment_unit = self.moment_unit_edit.text()
-        #force_scale = 1.
-        #moment_scale = 1.
         if all(flags):
             # Z-Axis Method
             # p1: origin
             # p2: xz_plane
             # p3: end
             self.out_data['method'] = method
+            self.out_data['station_location'] = station_location
             self.out_data['p1'] = [p1_cid, p1]  # origin
             self.out_data['p2'] = [p2_cid, p2]  # xzplane
             self.out_data['p3'] = [p3_cid, p3]  # end

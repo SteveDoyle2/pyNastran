@@ -23,11 +23,11 @@ from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
+from pyNastran.gui.qt_files.colors import RED_FLOAT, WHITE_FLOAT, BLUE_FLOAT
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -38,12 +38,8 @@ IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
-    from pyNastran.gui.typing import ColorInt, ColorFloat
+    from pyNastran.gui.typing import ColorInt
 
-
-WHITE = (1., 1., 1.)
-BLUE = (0., 0., 1.)
-RED = (1., 0., 0.)
 
 FringeData = namedtuple(
     'FringeData',
@@ -244,11 +240,11 @@ class GuiQtCommon(GuiAttributes):
         self.arrow_actor_centroid.SetVisibility(False)
 
         prop = self.geom_actor.GetProperty()
-        prop.SetColor(WHITE)
+        prop.SetColor(WHITE_FLOAT)
 
         # the backface property could be null
         back_prop = vtkProperty()
-        back_prop.SetColor(WHITE)
+        back_prop.SetColor(WHITE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
 
@@ -1237,12 +1233,12 @@ class GuiQtCommon(GuiAttributes):
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
 
-        prop.SetColor(RED)
+        prop.SetColor(RED_FLOAT)
 
         # the backface property is null
         #back_prop = self.geom_actor.GetBackfaceProperty()
         back_prop = vtkProperty()
-        back_prop.SetColor(BLUE)
+        back_prop.SetColor(BLUE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
 
         grid = self.grid
@@ -1862,78 +1858,6 @@ class GuiQtCommon(GuiAttributes):
 
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
-
-    def _create_plane_actor_from_points(self, p1: np.ndarray,
-                                        p2: np.ndarray,
-                                        i: np.ndarray,
-                                        k: np.ndarray,
-                                        dim_max: float,
-                                        color: Optional[ColorFloat]=None,
-                                        opacity: float=1.0,
-                                        representation: str='surface',
-                                        actor_name: str='plane') -> vtkActor:
-        """
-        This is used by the cutting plane tool and the shear/moment/torque tool.
-
-            ^ k
-            |
-            |
-
-           4+------+3
-            |      |
-            p1     p2
-            |      |
-           1+------+2 ----> i
-
-        """
-        if color is None:
-            color = RED
-        shift = 1.1
-        dshift = (shift - 1) / 2.
-        half_shift = 0.5 + dshift
-        delta = half_shift * dim_max
-        #dim_xy = shift * dim_max
-
-        #n1 = 1 - dim_max * (dshift * i + half_shift * k)
-        #n2 = n1 + shift * dim_max * i
-        #n3 = n2 + shift * dim_max * k
-        #n4 = n1 + shift * dim_max * k
-        pcenter = (p1 + p2) / 2
-        n1 = pcenter - delta * i - delta * k
-        n2 = pcenter + delta * i - delta * k
-        n3 = pcenter + delta * i + delta * k
-        n4 = pcenter - delta * i + delta * k
-
-        x = np.linspace(0., 1., num=10)
-        y = x
-        if actor_name in self.alt_grids:
-            plane_actor = self.plane_actor
-            add = False
-            #alt_grid =
-            #plane_source = vtkPlaneSource()
-            #self.rend.AddActor(plane_actor)
-            #self.plane_actor = plane_actor
-        else:
-            add = True
-            alt_grid = vtkUnstructuredGrid()
-            self.alt_grids[actor_name] = alt_grid
-
-            mapper = vtkDataSetMapper()
-            mapper.SetInputData(alt_grid)
-            plane_actor = vtkActor()
-            plane_actor.SetMapper(mapper)
-
-            #plane_source = self.plane_source
-            #plane_actor = self.plane_actor
-            self.plane_actor = plane_actor
-            self.rend.AddActor(plane_actor)
-
-        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        self.set_quad_grid(actor_name, nodes, elements, color=color,
-                           line_width=1, opacity=opacity, representation=representation,
-                           add=add)
-        #plane_actor.Modified()
-        return plane_actor
 
     def _create_point_actor_from_points(self, points: np.ndarray,
                                         point_size: int=8,

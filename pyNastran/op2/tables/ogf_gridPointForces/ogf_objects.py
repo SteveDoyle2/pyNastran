@@ -1086,6 +1086,7 @@ class RealGridPointForcesArray(GridPointForces):
 
             # we'd break if we knew the user was traveling in the
             # "correct" direction, but we don't
+            icoord += 1
             if nelem == 0:
                 continue
             if nnode == 0:
@@ -1123,7 +1124,6 @@ class RealGridPointForcesArray(GridPointForces):
                     continue
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
-            icoord += 1
         nelems = np.array(nelems_list, dtype=idtype)
         nnodes = np.array(nnodes_list, dtype=idtype)
         return force_sum, moment_sum, new_coords, nelems, nnodes

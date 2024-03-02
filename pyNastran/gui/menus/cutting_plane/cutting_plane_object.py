@@ -4,7 +4,6 @@ defines:
 
 """
 from __future__ import annotations
-import os
 from typing import cast, TYPE_CHECKING
 import numpy as np
 
@@ -174,8 +173,10 @@ class CuttingPlaneObject(BaseGui):
             cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
             method=method)
 
-        plane_actor = gui._create_plane_actor_from_points(
-            xyz1, xyz2, i, k, dim_max,
+        center = (xyz1 + xyz2) / 2.
+        vtk_actor_actions = gui.vtk_actor_actions
+        plane_actor = vtk_actor_actions.create_plane_actor_from_points(
+            center, i, k, dim_max,
             actor_name='plane')
         prop = plane_actor.GetProperty()
         prop.SetColor(*plane_color)
@@ -285,8 +286,9 @@ class CuttingPlaneObject(BaseGui):
 
         #"""
         #gui: MainWindow = self.gui
+        #center=(xyz1 + xyz2) / 2
         #plane_actor = gui._create_plane_actor_from_points(
-            #xyz1, xyz2, i, k, dim_max,
+            #center, i, k, dim_max,
             #actor_name='plane')
         #prop = plane_actor.GetProperty()
         #prop.SetColor(*plane_color)

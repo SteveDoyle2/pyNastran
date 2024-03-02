@@ -174,7 +174,7 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
             assert nnodes_per_element == nnodes, elements.shape
         except KeyError:
             warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(etype)
 
 
@@ -192,6 +192,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
         the elements to add
     etype : int
         VTK cell type
+        etype = 9  # vtkQuad().GetCellType()
 
     Notes
     -----
@@ -241,11 +242,12 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
 def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
-                                               elements_list, etypes_list):
+                                               elements_list: list[np.ndarray],
+                                               etypes_list: list[int]) -> None:
     """
     Adding constant type elements is overly complicated enough as in
     ``create_vtk_cells_of_constant_element_type``.  Now we extend
-    this to multiple element types.
+    this to multiple element types.  They're all stacked in order.
 
     grid : vtkUnstructuredGrid()
         the unstructured grid
@@ -344,7 +346,7 @@ def extract_selection_node_from_grid_to_ugrid(grid: vtkUnstructuredGrid,
     return ugrid
 
 
-def create_vtk_selection_node_by_point_ids(point_ids):
+def create_vtk_selection_node_by_point_ids(point_ids) -> vtkSelectionNode:
     id_type_array = _convert_ids_to_vtk_idtypearray(point_ids)
     selection_node = vtkSelectionNode()
     #selection_node.SetContainingCellsOn()
@@ -354,7 +356,7 @@ def create_vtk_selection_node_by_point_ids(point_ids):
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def create_vtk_selection_node_by_cell_ids(cell_ids):
+def create_vtk_selection_node_by_cell_ids(cell_ids) -> vtkSelectionNode:
     id_type_array = _convert_ids_to_vtk_idtypearray(cell_ids)
     selection_node = vtkSelectionNode()
     selection_node.SetFieldType(vtkSelectionNode.CELL)
@@ -378,6 +380,7 @@ def _convert_ids_to_vtk_idtypearray(ids):
 def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
                                  cell_id: int,
                                  node_xyz: np.ndarray) -> Optional[int]:
+    """TODO: verify type of node_xyz"""
     cell = grid.GetCell(cell_id)
     if cell is None:
         return None
@@ -495,7 +498,7 @@ def map_element_centroid_to_node_fringe_result(
 
 def update_axis_text_size(axis: vtkAxes,
                           coord_text_scale: float,
-                          width: float=1.0, height: float=0.25):
+                          width: float=1.0, height: float=0.25) -> None:
     """updates the coordinate system text size"""
     # width doesn't set the width
     # it being very large (old=0.1) makes the width constraint inactive
@@ -528,4 +531,3 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
     else:
         raise RuntimeError(point_cell_type)
     return
-

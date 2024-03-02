@@ -127,7 +127,7 @@ class GuiResultCommon:
     def set_data_format(self, i: int, name: str, data_format):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def set_min_max(self, i: int, name: str, min_value, max_value):  # pragma: no cover
+    def set_min_max(self, i: int, name: str, min_value: float, max_value: float):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
     def set_legend_title(self, i: int, name: str, title):  # pragma: no cover

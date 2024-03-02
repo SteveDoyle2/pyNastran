@@ -6,7 +6,6 @@ from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, # vtkRenderWindow, vtkRenderWindowInteractor,
     #vtkActor, vtkCamera,
     #vtkDataSetMapper,
-    vtkColorTransferFunction,
     vtkPolyDataMapper)
 #from vtk import (vtkLODActor,
                  #vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper,
@@ -15,23 +14,18 @@ from pyNastran.gui.vtk_rendering_core import (
                  #vtkGlyph3D, vtkExtractEdges,
 #)
 from vtkmodules.vtkRenderingLOD import vtkLODActor
-from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper, vtkColorTransferFunction
+from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandPick
-from vtkmodules.vtkFiltersSources import vtkArrowSource
 
 from vtkmodules.vtkFiltersCore import vtkGlyph3D
-import vtkmodules.vtkFiltersCore
-if hasattr(vtkmodules.vtkFiltersCore, 'vtkExtractEdges'):
-    from vtkmodules.vtkFiltersCore import vtkExtractEdges # 9.3.0+
-else:
-    from vtkmodules.vtkFiltersExtraction import vtkExtractEdges # 9.0.3 - 9.2.6
-
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.mark_actions import create_annotation
+from pyNastran.gui.utils.vtk.vtk_vector import build_glyph
+from pyNastran.gui.utils.vtk.vtk_edges import create_edges_from_grid
 from pyNastran.gui.utils.vtk.vtk_utils import map_element_centroid_to_node_fringe_result
 from pyNastran.gui.menus.menus import Group
 
@@ -69,7 +63,7 @@ class GuiVTKCommon(GuiQtCommon):
         else:  #: pragma: no cover
             raise NotImplementedError(qt_version)
 
-    def fake_init(self):
+    def fake_init(self) -> None:
         """vtk setup"""
         self.create_vtk_actors(create_rend=False)
         #self._create_vtk_objects()
@@ -79,7 +73,7 @@ class GuiVTKCommon(GuiQtCommon):
         self._build_vtk_frame_post(build_lookup_table=False)
     #---------------------------------------------------------------------------
     # basic init
-    def create_vtk_actors(self, create_rend=True):
+    def create_vtk_actors(self, create_rend: bool=True) -> False:
         """creates the vtk actors used by the GUI"""
         if create_rend:
             self.rend = vtkRenderer()
@@ -100,7 +94,7 @@ class GuiVTKCommon(GuiQtCommon):
 
         self.create_cell_picker()
 
-    def create_cell_picker(self):
+    def create_cell_picker(self) -> None:
         """creates the vtk picker objects"""
         self.cell_picker = vtkCellPicker()
         self.node_picker = vtkPointPicker()
@@ -128,7 +122,7 @@ class GuiVTKCommon(GuiQtCommon):
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
 
-    def add_geometry(self):
+    def add_geometry(self) -> None:
         """
         #(N,)  for stress, x-disp
         #(N,3) for warp vectors/glyphs
@@ -223,7 +217,7 @@ class GuiVTKCommon(GuiQtCommon):
         self.rend.AddActor(self.geom_actor)
         self.build_glyph()
 
-    def build_glyph(self):
+    def build_glyph(self) -> None:
         """builds the glyph actor"""
         glyph_source, glyphs, glyph_mapper, arrow_actor = build_glyph(self.grid)
         self.rend.AddActor(arrow_actor)
@@ -252,7 +246,7 @@ class GuiVTKCommon(GuiQtCommon):
         self.glyph_mapper_centroid = glyph_mapper_centroid
         self.arrow_actor_centroid = arrow_actor_centroid
 
-    def _build_vtk_frame_post(self, build_lookup_table: bool=True):
+    def _build_vtk_frame_post(self, build_lookup_table: bool=True) -> None:
         if build_lookup_table:
             self.build_lookup_table()
 
@@ -274,7 +268,7 @@ class GuiVTKCommon(GuiQtCommon):
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
 
-    def get_edges(self):
+    def get_edges(self) -> None:
         """Create the edge actor"""
         edge_mapper = self.edge_mapper
         edge_actor = self.edge_actor
@@ -291,17 +285,17 @@ class GuiVTKCommon(GuiQtCommon):
     # properties
 
     @property
-    def logo(self):
+    def logo(self) -> str:
         """Gets the pyNastran icon path, which can be overwritten"""
         return self._logo
 
     @logo.setter
-    def logo(self, logo):
+    def logo(self, logo: str) -> None:
         """Sets the pyNastran icon path, which can be overwritten"""
         self._logo = logo
 
     @property
-    def legend_shown(self):
+    def legend_shown(self) -> bool:
         """determines if the legend is shown"""
         return self.scalar_bar.is_shown
 
@@ -316,7 +310,7 @@ class GuiVTKCommon(GuiQtCommon):
         return self.scalar_bar.color_function
 
     @property
-    def result_name(self):
+    def result_name(self) -> str:
         """
         creates the self.result_name variable
         """
@@ -328,27 +322,27 @@ class GuiVTKCommon(GuiQtCommon):
 
     #---------------------------------------------------------------------------
     # basic interaction
-    def on_show_debug(self):
+    def on_show_debug(self) -> bool:
         """sets a flag for showing/hiding DEBUG messages"""
         self.settings.show_debug = not self.settings.show_debug
 
-    def on_show_info(self):
+    def on_show_info(self) -> bool:
         """sets a flag for showing/hiding INFO messages"""
         self.settings.show_info = not self.settings.show_info
 
-    def on_show_command(self):
+    def on_show_command(self) -> bool:
         """sets a flag for showing/hiding COMMAND messages"""
         self.settings.show_command = not self.settings.show_command
 
-    def on_show_warning(self):
+    def on_show_warning(self) -> bool:
         """sets a flag for showing/hiding WARNING messages"""
         self.settings.show_warning = not self.settings.show_warning
 
-    def on_show_error(self):
+    def on_show_error(self) -> bool:
         """sets a flag for showing/hiding ERROR messages"""
         self.settings.show_error = not self.settings.show_error
 
-    def hide_axes(self, cids=None):
+    def hide_axes(self, cids=None) -> None:
         """
         Show a set of coordinate systems
 
@@ -361,7 +355,7 @@ class GuiVTKCommon(GuiQtCommon):
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
-    def show_axes(self, cids=None):
+    def show_axes(self, cids=None) -> None:
         """
         Show a set of coordinate systems
 
@@ -374,7 +368,7 @@ class GuiVTKCommon(GuiQtCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def delete_actor(self, name):
+    def delete_actor(self, name: str) -> None:
         """deletes an actor and associated properties"""
         if name != 'main':
             if name in self.geometry_actors:
@@ -387,7 +381,7 @@ class GuiVTKCommon(GuiQtCommon):
                 del self.geometry_properties[name]
             self.Render()
 
-    def show_only(self, names):
+    def show_only(self, names: list[str]) -> None:
         """
         Show these actors only
 
@@ -400,7 +394,7 @@ class GuiVTKCommon(GuiQtCommon):
         """
         raise NotImplementedError('show_only')
 
-    def hide_actors(self, except_names=None):
+    def hide_actors(self, except_names=None, hide_legend: bool=True) -> None:
         """
         Hide all the actors
 
@@ -422,16 +416,18 @@ class GuiVTKCommon(GuiQtCommon):
                 actor.VisibilityOff()
 
         self.hide_axes()
-        self.hide_legend()
+        if hide_legend:
+            self.hide_legend()
         #self.settings.set_background_color_to_white()
 
     #---------------------------------------------------------------------------
-    def Render(self):
+    def Render(self) -> None:
         """Renders the GUI"""
         #self.vtk_interactor.Render()
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def cell_centroid_grid(self, grid, cell_id: int, dtype: int='float32') -> Optional[np.ndarray]:
+    def cell_centroid_grid(self, grid, cell_id: int,
+                           dtype: int='float32') -> Optional[np.ndarray]:
         """gets the cell centroid"""
         if not self.is_gui:
             centroid = np.zeros(3, dtype=dtype)
@@ -446,7 +442,7 @@ class GuiVTKCommon(GuiQtCommon):
         except AttributeError:
             return None
         points = cell.GetPoints()
-        assert nnodes > 0, 'nnodes=%s cell_id=%s cell=%s' % (nnodes, cell_id, cell)
+        assert nnodes > 0, f'nnodes={nnodes:d} cell_id={cell_id:d} cell={cell}'
         centroid = np.zeros(3, dtype=dtype)
         for ipoint in range(nnodes):
             point = np.array(points.GetPoint(ipoint), dtype=dtype)
@@ -454,18 +450,18 @@ class GuiVTKCommon(GuiQtCommon):
         centroid /= nnodes
         return centroid
 
-    def cell_centroid(self, cell_id, dtype='float32'):
+    def cell_centroid(self, cell_id: int, dtype: str='float32') -> None:
         """gets the cell centroid"""
         return self.cell_centroid_grid(self.grid_selected, cell_id, dtype=dtype)
 
-    def build_lookup_table(self):
+    def build_lookup_table(self) -> None:
         """build the nominal lookup table for the scalar bar"""
         scalar_range = self.grid_selected.GetScalarRange()
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalar_bar_actor)
 
-    def _set_results(self, form, cases):
+    def _set_results(self, form, cases) -> None:
         assert len(cases) > 0, cases
         self.case_keys = list(cases.keys())
         #self.case_keys = sorted(cases.keys())
@@ -490,7 +486,7 @@ class GuiVTKCommon(GuiQtCommon):
     #===========================================================================
     # groups
     # fake functions
-    def show_eids(self, eids):
+    def show_eids(self, eids) -> None:
         pass
 
     # fake functions
@@ -520,7 +516,9 @@ class GuiVTKCommon(GuiQtCommon):
         assert isinstance(name, str), name
         self.group_active = name
 
-    def create_group_with_name(self, name, eids, model_name='main'):
+    def create_group_with_name(self, name: str,
+                               eids: np.ndarray,
+                               model_name: str='main') -> Group:
         """
         Creates a group from the root model (model_name)
 
@@ -532,6 +530,12 @@ class GuiVTKCommon(GuiQtCommon):
             the elements in the group
         model_name : str; default='main'
             the name of the parent model
+
+        Returns
+        -------
+        group : Group
+            the corresponding group
+
         """
         elements_pound = self.groups[model_name].elements_pound
         element_str = ''
@@ -543,9 +547,10 @@ class GuiVTKCommon(GuiQtCommon):
         group.element_ids = eids
         self.log_command('self.create_group_with_name(%r, %r)' % (name, eids))
         self.groups[name] = group
+        return group
 
     def map_element_centroid_to_node_fringe_result(self, update_limits: bool=True,
-                                                   show_msg: bool=True):
+                                                   show_msg: bool=True) -> bool:
         """
         Maps elemental fringe results to nodal fringe results.
 
@@ -612,66 +617,3 @@ class GuiVTKCommon(GuiQtCommon):
         self.log_command(f'self.map_element_centroid_to_node_fringe_result('
                          f'update_limits={update_limits}, show_msg={show_msg})')
         return is_passed
-
-
-def create_edges_from_grid(grid_selected: vtkUnstructuredGrid,
-                           edge_mapper: vtkPolyDataMapper,
-                           edge_actor: vtkLODActor,
-                           color_function: vtkColorTransferFunction,
-                           is_edges_visible: bool) -> None:
-    """helper method to create vtk edges"""
-    edges = vtkExtractEdges()
-    edges.SetInputData(grid_selected)
-    edge_mapper.SetInputConnection(edges.GetOutputPort())
-
-    #is_edges_visible
-    edge_actor.SetMapper(edge_mapper)
-    edge_actor.GetProperty().SetColor(0., 0., 0.)
-
-    edge_mapper.SetLookupTable(color_function)
-    edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-
-    prop = edge_actor.GetProperty()
-    prop.SetColor(0., 0., 0.)
-    edge_actor.SetVisibility(is_edges_visible)
-
-def build_glyph(grid):
-    """builds the glyph actor"""
-    glyphs = vtkGlyph3D()
-    #if filter_small_forces:
-        #glyphs.SetRange(0.5, 1.)
-
-    glyphs.SetVectorModeToUseVector()
-    #apply_color_to_glyph = False
-    #if apply_color_to_glyph:
-    #glyphs.SetScaleModeToScaleByScalar()
-    glyphs.SetScaleModeToScaleByVector()
-    glyphs.SetColorModeToColorByScale()
-    #glyphs.SetColorModeToColorByScalar()  # super tiny
-    #glyphs.SetColorModeToColorByVector()  # super tiny
-
-    glyphs.ScalingOn()
-    glyphs.ClampingOn()
-    #glyphs.Update()
-
-    glyph_source = vtkArrowSource()
-    #glyph_source.InvertOn()  # flip this arrow direction
-    glyphs.SetInputData(grid)
-
-
-    glyphs.SetSourceConnection(glyph_source.GetOutputPort())
-    #glyphs.SetScaleModeToDataScalingOff()
-    #glyphs.SetScaleFactor(10.0)  # bwb
-    #glyphs.SetScaleFactor(1.0)  # solid-bending
-    glyph_mapper = vtkPolyDataMapper()
-    glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
-    glyph_mapper.ScalarVisibilityOff()
-
-    arrow_actor = vtkLODActor()
-    arrow_actor.SetMapper(glyph_mapper)
-
-    prop = arrow_actor.GetProperty()
-    prop.SetColor(1., 0., 0.)
-    #self.grid.GetPointData().SetActiveVectors(None)
-    arrow_actor.SetVisibility(False)
-    return glyph_source, glyphs, glyph_mapper, arrow_actor

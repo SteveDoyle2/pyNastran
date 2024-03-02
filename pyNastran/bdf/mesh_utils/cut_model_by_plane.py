@@ -43,17 +43,26 @@ def get_element_centroids(model: BDF,
     """gets the element ids and their centroids"""
     eids_list = []
     element_centroids_cid0_list = []
-    springs = {
+    springs = (
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
-    }
+    )
     for eid, elem in sorted(model.elements.items()):
         eids_list.append(eid)
         if elem.type in springs:
             centroid = np.zeros(3)
+            nnodes = 0
             for node_ref in elem.nodes_ref:
-                centroid += node_ref.get_position()
-            centroid /= len(elem.nodes_ref)
+                try:
+                    centroid += node_ref.get_position()
+                    nnodes += 1
+                except AttributeError:
+                    # spoint hack
+                    pass
+            if nnodes:
+                centroid /= nnodes
+        elif elem.type in {'CVISC'}:
+            centroid = np.zeros(3)
         else:
             centroid = elem.Centroid()
         element_centroids_cid0_list.append(centroid)
@@ -454,6 +463,12 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
         origin = xyz1
         xyz2 = origin + p2
         z_global = origin + zaxis
+        method_lower = 'cord2r'
+    elif method_lower == 'coord id':
+        coord = coords[cid_p2]
+        origin = xyz1
+        xyz2 = origin + coord.i
+        z_global = origin + coord.k
         method_lower = 'cord2r'
     else:
         xyz2 = coords[cid_p2].transform_node_to_global(p2)

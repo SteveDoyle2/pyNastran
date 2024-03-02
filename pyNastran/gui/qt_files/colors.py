@@ -3,6 +3,7 @@ GREEN_FLOAT = (0., 1., 0.)
 BLUE_FLOAT = (0., 0., 1.)
 LIGHT_GREEN_FLOAT = (0.5, 1., 0.5)
 PINK_FLOAT = (0.98, 0.4, 0.93)
+WHITE_FLOAT = (1., 1., 1.)
 
 ORANGE_FLOAT = (219/255., 168/255., 13/255.)
 YELLOW_FLOAT = (1., 1., 0.)
