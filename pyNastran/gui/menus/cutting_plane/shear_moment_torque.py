@@ -31,9 +31,11 @@ from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
-from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.utils.wildcards import wildcard_csv
+from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
+
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.gui_objects.settings import Settings
     from .shear_moment_torque_object import ShearMomentTorqueObject
     from pyNastran.gui.typing import ColorInt, ColorFloat
     from pyNastran.gui.main_window import MainWindow
@@ -747,6 +749,8 @@ class ShearMomentTorqueWindow(PyDialog):
         """ Sets the plane opacity"""
         opacity = self.plane_opacity_edit.value()
         if self.win_parent is not None:
+            settings: Settings = self.win_parent.settings
+            settings.shear_moment_torque_opacity = opacity
             obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
             obj.set_plane_properties(opacity, self.plane_color_float)
 
@@ -759,6 +763,8 @@ class ShearMomentTorqueWindow(PyDialog):
         passed, rgb_color_ints, rgb_color_floats = self._background_color(
             title, color_edit, rgb_color_ints, func_name)
         if passed:
+            settings: Settings = self.win_parent.settings
+            settings.shear_moment_torque_color = rgb_color_floats
             self.plane_color_int = rgb_color_ints
             self.plane_color_float = rgb_color_floats
             self.on_plane_opacity()

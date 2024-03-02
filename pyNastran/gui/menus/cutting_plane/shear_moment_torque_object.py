@@ -85,8 +85,8 @@ class ShearMomentTorqueObject(BaseGui):
         data = {
             'font_size' : settings.font_size,
             'cids' : cids,
-            'plane_color' : (1., 0., 1.), # purple
-            'plane_opacity' : 0.9,
+            'plane_color' : settings.shear_moment_torque_color,
+            'plane_opacity' : settings.shear_moment_torque_opacity,
 
             'gpforce' : gpforce,
             'model_name' : model_name,
@@ -477,7 +477,23 @@ class ShearMomentTorqueObject(BaseGui):
             coord, i, k, dim_max,
             plane_color, plane_opacity,
         )
+        self._create_vector_points(
+            xyz1, iaxis_march, stations,
+            plane_color, plane_opacity)
 
+        is_failed = False
+        self.render()
+        return is_failed, stations, coord, iaxis_march
+
+    def _create_vector_points(self, xyz1: np.ndarray,
+                              iaxis_march: np.ndarray,
+                              stations: np.ndarray,
+                              plane_color: ColorFloat,
+                              plane_opacity: float) -> None:
+        """
+        Creates additional actors to represent the location of
+        the cutting planes
+        """
         gui = self.gui
         nodes = xyz1[np.newaxis, :] + iaxis_march[np.newaxis, :] * stations[:, np.newaxis]
         irange = np.arange(len(stations)-1, dtype='int32')
@@ -487,24 +503,26 @@ class ShearMomentTorqueObject(BaseGui):
         opacity = plane_opacity
         vtk_actor_actions = gui.vtk_actor_actions
 
-        settings: Settings = self.gui.settings
-        line_width = settings.highlight_line_thickness
-        point_size = settings.highlight_point_size
+        # define defaults
+        settings: Settings = gui.settings
+        line_width_default = settings.shear_moment_torque_line_thickness
+        point_size_default = settings.shear_moment_torque_point_size
+
+        # pull from the EditGeometryProperties (if possible)
         line_width: int = gui._get_geometry_property_items(
             LINE_NAME,
-            'line_width', 5)[0]
+            'line_width', line_width_default)[0]
         point_size: int = gui._get_geometry_property_items(
             POINT_NAME,
-            'point_size', 5)[0]
-        #if LINE_NAME in gui.geometry_properties:
-            #prop = gui.geometry_properties[LINE_NAME]
-            #line_width = prop.line_width
+            'point_size', point_size_default)[0]
 
-        #point_size = 5
-        #if POINT_NAME in gui.geometry_properties:
-            #prop = gui.geometry_properties[POINT_NAME]
-            #point_size = prop.point_size
+        # update the settings
+        if line_width != line_width_default:
+            settings.shear_moment_torque_line_thickness = line_width
+        if point_size != line_width_default:
+            settings.shear_moment_torque_point_size = point_size
 
+        # plot line and points to indicate plane locations
         unused_ugrid1 = vtk_actor_actions.set_line_grid(
             LINE_NAME, nodes, elements,
             color, line_width=line_width, opacity=opacity,
@@ -518,10 +536,6 @@ class ShearMomentTorqueObject(BaseGui):
             #glyph_source, glyphs, glyph_mapper, arrow_actor = build_glyph(ugrid2)
             #gui.alt_grids[ARROW_NAME] = arrow_actor
             #gui.rend.AddActor(arrow_actor)
-
-        is_failed = False
-        self.render()
-        return is_failed, stations, coord, iaxis_march
 
     def render(self) -> None:
         self.gui.rend.Render()
