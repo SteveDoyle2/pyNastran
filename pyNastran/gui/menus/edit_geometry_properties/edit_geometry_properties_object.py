@@ -56,7 +56,13 @@ class EditGeometryPropertiesObject(BaseGui):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        data = deepcopy(gui.geometry_properties)
+        # remove smt_plane, etc. from visible list, so the menu handles it
+        data = {}
+        for key, value in gui.geometry_properties.items():
+            if isinstance(value, AltGeometry) and not value.visible_in_geometry_properties:
+                continue
+            data[key] = deepcopy(value)
+
         data['font_size'] = gui.settings.font_size
         if not self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties = EditGeometryProperties(data, win_parent=gui)
@@ -186,6 +192,7 @@ class EditGeometryPropertiesObject(BaseGui):
         actor: vtkActor = gui.geometry_actors[namei]
         if isinstance(actor, vtkActor):
             alt_prop = gui.geometry_properties[namei]
+            #if alt_prop.is_v
             label_actors = alt_prop.label_actors
             lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
         elif isinstance(actor, vtkAxesActor):

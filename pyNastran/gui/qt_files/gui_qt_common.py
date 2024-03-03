@@ -1749,7 +1749,9 @@ class GuiQtCommon(GuiAttributes):
                                   follower_nodes=None,
                                   follower_function: Optional[Callable]=None,
                                   is_pickable: bool=False,
-                                  ugrid: vtkUnstructuredGrid=None) -> None:
+                                  ugrid: vtkUnstructuredGrid=None,
+                                  visible_in_geometry_properties: bool=True,
+                                  ) -> None:
         """
         Creates an AltGeometry object
 
@@ -1783,6 +1785,9 @@ class GuiQtCommon(GuiAttributes):
         ugrid : vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         if ugrid is None:
@@ -1795,7 +1800,9 @@ class GuiQtCommon(GuiAttributes):
                 line_width=line_width, opacity=opacity,
                 point_size=point_size, bar_scale=bar_scale,
                 representation=representation, display=display,
-                is_visible=is_visible, is_pickable=is_pickable)
+                is_visible=is_visible, is_pickable=is_pickable,
+                visible_in_geometry_properties=visible_in_geometry_properties,
+            )
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
         if follower_function is not None:

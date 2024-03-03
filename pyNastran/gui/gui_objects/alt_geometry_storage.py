@@ -25,7 +25,9 @@ class AltGeometry:
                  representation: str='main',
                  display=None,
                  is_visible: bool=True,
-                 is_pickable: bool=False, label_actors=None):
+                 is_pickable: bool=False, label_actors=None,
+                 visible_in_geometry_properties: bool=True,
+                 ):
         """
         Creates an AltGeometry object
 
@@ -61,6 +63,9 @@ class AltGeometry:
             can you pick a node/cell on this actor
         label_actors : list[annotation]; None -> []
             stores annotations (e.g., for a control surface)
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         representation_map = {
@@ -116,10 +121,13 @@ class AltGeometry:
             raise RuntimeError(msg)
         self.representation = representation
 
+        self.visible_in_geometry_properties = visible_in_geometry_properties
+
     def __deepcopy__(self, memo):
         """doesn't copy the label_actors to speed things up?"""
         keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
-                '_representation', 'is_visible', 'bar_scale', 'is_pickable']
+                '_representation', 'is_visible', 'bar_scale', 'is_pickable',
+                'visible_in_geometry_properties']
         cls = self.__class__
         result = cls.__new__(cls)
         idi = id(self)

@@ -14,6 +14,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 #from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
 
 #from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
@@ -38,14 +39,18 @@ class VtkActorActions:
                       point_size: int=5, line_width: int=5,
                       opacity: float=1.,
                       representation: str='wire',
-                      add: bool=True) -> Optional[vtkUnstructuredGrid]:
+                      add: bool=True,
+                      visible_in_geometry_properties: bool=True,
+                      ) -> Optional[vtkUnstructuredGrid]:
         """Makes a line grid"""
         etype = 3  # vtkLine().GetCellType()
         grid = self.create_grid_from_nodes_elements_etype(
             name, nodes, elements,  etype, color,
             point_size=point_size, line_width=line_width,
             opacity=opacity,
-            representation=representation, add=add)
+            representation=representation, add=add,
+            visible_in_geometry_properties=visible_in_geometry_properties,
+        )
         return grid
 
     def create_grid_from_nodes_elements_etype(
@@ -56,13 +61,17 @@ class VtkActorActions:
         color: ColorFloat,
         point_size: int=5, line_width: int=5, opacity: float=1.,
         representation: str='wire',
-        add: bool=True) -> Optional[vtkUnstructuredGrid]:
+        add: bool=True,
+        visible_in_geometry_properties: bool=True,
+        ) -> Optional[vtkUnstructuredGrid]:
         """Makes a generic grid of constant type"""
-        gui = self.gui
+        gui: MainWindow = self.gui
         gui.create_alternate_vtk_grid(
             name, color=color,
             point_size=point_size, line_width=line_width,
-            opacity=opacity, representation=representation)
+            opacity=opacity, representation=representation,
+            visible_in_geometry_properties=visible_in_geometry_properties,
+        )
 
         nnodes = nodes.shape[0]
         nelements = elements.shape[0]
@@ -91,6 +100,7 @@ class VtkActorActions:
                                        color: Optional[ColorFloat]=None,
                                        opacity: float=1.0,
                                        representation: str='surface',
+                                       visible_in_geometry_properties: bool=True,
                                        actor_name: str='plane') -> vtkActor:
         """
         This is used by the cutting plane tool and the shear/moment/torque tool.
@@ -125,7 +135,7 @@ class VtkActorActions:
 
         x = np.linspace(0., 1., num=10)
         y = x
-        gui = self.gui
+        gui: MainWindow = self.gui
         if actor_name in gui.alt_grids:
             plane_actor = gui.plane_actor
             add = False
@@ -151,6 +161,6 @@ class VtkActorActions:
         nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
         gui.set_quad_grid(actor_name, nodes, elements, color=color,
                           line_width=1, opacity=opacity, representation=representation,
-                          add=add)
+                          add=add, visible_in_geometry_properties=visible_in_geometry_properties)
         #plane_actor.Modified()
         return plane_actor

@@ -91,7 +91,7 @@ class HighlightWindow(PyDialog):
             self._highlight_opacity = settings.highlight_opacity
 
             self._point_size = settings.highlight_point_size
-            self._line_thickness = settings.highlight_line_thickness
+            self._line_width = settings.highlight_line_width
 
             self._point_size = 10
             self._annotation_size = settings.annotation_size

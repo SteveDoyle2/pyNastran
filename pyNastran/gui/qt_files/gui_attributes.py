@@ -538,14 +538,18 @@ class GuiAttributes:
                       point_size: int=5, line_width: int=5,
                       opacity: float=1.,
                       representation: str='wire',
-                      add: bool=True) -> Optional[vtkUnstructuredGrid]:
+                      add: bool=True,
+                      visible_in_geometry_properties: bool=True) -> Optional[vtkUnstructuredGrid]:
         """Makes a quad grid"""
         etype = 9
         grid = self.vtk_actor_actions.create_grid_from_nodes_elements_etype(
             name, nodes, elements, etype, color,
             point_size=point_size, line_width=line_width,
             opacity=opacity,
-            representation=representation, add=add)
+            representation=representation,
+            add=add,
+            visible_in_geometry_properties=visible_in_geometry_properties,
+        )
         return grid
 
     def _add_alt_actors(self, grids_dict: dict[str, vtkUnstructuredGrid],
@@ -599,7 +603,7 @@ class GuiAttributes:
         out = []
         for i in range(0, length, 2):
             prop_name = property_name_defaults[i]
-            assert prop_name in ['line_width', 'point_size', 'color', 'opacity', 'bar_scale']
+            assert prop_name in ['line_width', 'point_size', 'color', 'opacity'], prop_name
             if name in self.geometry_properties:
                 prop = self.geometry_properties[name]
                 outi = getattr(prop, prop_name)

@@ -56,15 +56,15 @@ BACKGROUND_COLOR2 = GREY_FLOAT
 HIGHLIGHT_COLOR = ORANGE_FLOAT
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 12.0
-HIGHLIGHT_LINE_THICKNESS = 5.0
+HIGHLIGHT_LINE_WIDTH = 5.0
 
 SHEAR_MOMENT_TORQUE_COLOR = HOT_PINK_FLOAT
 SHEAR_MOMENT_TORQUE_OPACITY = 0.9
 SHEAR_MOMENT_TORQUE_POINT_SIZE = 12.0
-SHEAR_MOMENT_TORQUE_LINE_THICKNESS = 5.0
+SHEAR_MOMENT_TORQUE_LINE_WIDTH = 5.0
 
-LINE_THICKNESS_MIN = 0.1
-LINE_THICKNESS_MAX = 2000.
+LINE_WIDTH_MIN = 0.1
+LINE_WIDTH_MAX = 2000.
 
 USE_PARALLEL_PROJECTION = True
 DEFAULT_COLORMAP = 'jet'
@@ -271,13 +271,15 @@ class Settings:
         self.corner_text_size = CORNER_TEXT_SIZE    # int
         self.corner_text_color = CORNER_TEXT_COLOR  # rgb floats
 
-        self.highlight_color = HIGHLIGHT_COLOR                    # rgb floats
-        self.highlight_opacity = HIGHLIGHT_OPACITY                # float
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE          # int
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS  # float
+        self.highlight_color = HIGHLIGHT_COLOR            # rgb floats
+        self.highlight_opacity = HIGHLIGHT_OPACITY        # float
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE  # int
+        self.highlight_line_width = HIGHLIGHT_LINE_WIDTH  # float
 
-        self.shear_moment_torque_color = SHEAR_MOMENT_TORQUE_COLOR     # float
-        self.shear_moment_torque_opacity = SHEAR_MOMENT_TORQUE_OPACITY # rgb floats
+        self.shear_moment_torque_color = SHEAR_MOMENT_TORQUE_COLOR           # float
+        self.shear_moment_torque_opacity = SHEAR_MOMENT_TORQUE_OPACITY       # rgb floats
+        self.shear_moment_torque_point_size = SHEAR_MOMENT_TORQUE_POINT_SIZE # float
+        self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH # float
 
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
@@ -476,13 +478,13 @@ class Settings:
 
         self._set_setting(settings, setting_keys, ['highlight_point_size'],
                           default=HIGHLIGHT_POINT_SIZE, save=True, auto_type=float)
-        self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
-                          default=HIGHLIGHT_LINE_THICKNESS, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['highlight_line_width', 'highlight_line_thickness'],
+                          default=HIGHLIGHT_LINE_WIDTH, save=True, auto_type=float)
         self.highlight_point_size = force_ranged(
             self.highlight_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
-        self.highlight_line_thickness = force_ranged(
-            self.highlight_line_thickness,
-            min_value=LINE_THICKNESS_MIN, max_value=LINE_THICKNESS_MAX)
+        self.highlight_line_width = force_ranged(
+            self.highlight_line_width,
+            min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
@@ -498,13 +500,13 @@ class Settings:
 
         self._set_setting(settings, setting_keys, ['shear_moment_torque_point_size'],
                           default=SHEAR_MOMENT_TORQUE_POINT_SIZE, save=True, auto_type=float)
-        self._set_setting(settings, setting_keys, ['shear_moment_torque_line_thickness'],
-                          default=SHEAR_MOMENT_TORQUE_LINE_THICKNESS, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['shear_moment_torque_line_width'],
+                          default=SHEAR_MOMENT_TORQUE_LINE_WIDTH, save=True, auto_type=float)
         self.shear_moment_torque_point_size = force_ranged(
             self.shear_moment_torque_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
         self.shear_moment_torque_line_thickness = force_ranged(
-            self.shear_moment_torque_line_thickness,
-            min_value=LINE_THICKNESS_MIN, max_value=LINE_THICKNESS_MAX)
+            self.shear_moment_torque_line_width,
+            min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
 
         # default colormap for legend
         self._set_setting(settings, setting_keys, ['colormap'], default=DEFAULT_COLORMAP, save=True)
@@ -642,7 +644,7 @@ class Settings:
         settings.setValue('highlight_color', self.highlight_color)
         settings.setValue('highlight_opacity', self.highlight_opacity)
         settings.setValue('highlight_point_size', self.highlight_point_size)
-        settings.setValue('highlight_line_thickness', self.highlight_line_thickness)
+        settings.setValue('highlight_line_width', self.highlight_line_width)
 
         settings.setValue('shear_moment_torque_color', self.shear_moment_torque_color)
         settings.setValue('shear_moment_torque_opacity', self.shear_moment_torque_opacity)

@@ -34,8 +34,8 @@ from pyNastran.gui.gui_objects.settings import (
     BACKGROUND_COLOR, BACKGROUND_COLOR2,
     ANNOTATION_COLOR, ANNOTATION_SIZE,
     CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
-    HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, # HIGHLIGHT_LINE_THICKNESS,
-    SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY, SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_THICKNESS,
+    HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, HIGHLIGHT_LINE_WIDTH,
+    SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY, SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_WIDTH,
     OPACITY_MIN, OPACITY_MAX,
     USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
@@ -49,10 +49,11 @@ from pyNastran.gui.gui_objects.settings import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
+    from pyNastran.gui.typing import ColorInt
 
 
 USE_TABS = True
-IS_SMT = True
+IS_SMT = False
 class PreferencesWindow(PyDialog):
     """
     +-------------+
@@ -125,6 +126,11 @@ class PreferencesWindow(PyDialog):
             data['corner_text_color'])
         self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
+
+        #self._shear_moment_torque_opacity = data['shear_moment_torque_opacity']
+        #self._shear_moment_torque_point_size = data['shear_moment_torque_point_size']
+        #self._shear_moment_torque_color_int = data['shear_moment_torque_color']
+        #self._shear_moment_torque_line_thickness = data['shear_moment_torque_line_thickness']
 
         self._nastran_is_element_quality = data['nastran_is_element_quality']
         self._nastran_is_properties = data['nastran_is_properties']
@@ -202,20 +208,12 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # Highlight Color
         self.highlight_opacity_label = QLabel("Highlight Opacity:")
-        self.highlight_opacity_edit = QDoubleSpinBox(self)
-        self.highlight_opacity_edit.setValue(self._highlight_opacity)
-        self.highlight_opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
-        self.highlight_opacity_edit.setDecimals(2)
-        self.highlight_opacity_edit.setSingleStep(0.05)
+        self.highlight_opacity_edit = create_opacity_edit(self, self._highlight_opacity)
         self.highlight_opacity_edit.setToolTip('Sets the highlight opacity (0=invisible, 1=solid)')
         self.highlight_opacity_button = QPushButton("Default")
 
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
-        self.highlight_point_size_edit = QDoubleSpinBox(self)
-        self.highlight_point_size_edit.setValue(self._highlight_point_size)
-        self.highlight_point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
-        self.highlight_point_size_edit.setDecimals(2)
-        self.highlight_point_size_edit.setSingleStep(0.25)
+        self.highlight_point_size_edit = create_point_size_edit(self, self._highlight_point_size)
         self.highlight_point_size_edit.setToolTip('Sets the highlight node size')
         self.highlight_point_size_button = QPushButton("Default")
 
@@ -227,45 +225,30 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # shear_moment_torque Color
         if IS_SMT:
-            self._shear_moment_torque_opacity = 0.8
-            self._shear_moment_torque_point_size = 10.0
-            self.shear_moment_torque_color_int = (0, 0, 0)
-            self._shear_moment_torque_line_width = 5.0
-
             self.shear_moment_torque_label = QLabel("Shear-Moment-Torque:")
 
+            opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
+                self,
+                self._shear_moment_torque_opacity,
+                self._shear_moment_torque_point_size,
+                self._shear_moment_torque_line_thickness,
+                self._shear_moment_torque_color_int)
+            self.shear_moment_torque_opacity_edit = opacity_edit
+            self.shear_moment_torque_point_size_edit = point_size_edit
+            self.shear_moment_torque_line_width_edit = line_width_edit
+            self.shear_moment_torque_color_edit = color_edit
+
             self.shear_moment_torque_opacity_label = QLabel("Opacity:")
-            self.shear_moment_torque_opacity_edit = QDoubleSpinBox(self)
-            self.shear_moment_torque_opacity_edit.setValue(self._shear_moment_torque_opacity)
-            self.shear_moment_torque_opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
-            self.shear_moment_torque_opacity_edit.setDecimals(2)
-            self.shear_moment_torque_opacity_edit.setSingleStep(0.05)
-            self.shear_moment_torque_opacity_edit.setToolTip('Sets the shear-moment-torque opacity (0=invisible, 1=solid)')
             self.shear_moment_torque_opacity_button = QPushButton("Default")
 
             self.shear_moment_torque_point_size_label = QLabel("Point Size:")
-            self.shear_moment_torque_point_size_edit = QDoubleSpinBox(self)
-            self.shear_moment_torque_point_size_edit.setValue(self._shear_moment_torque_point_size)
-            self.shear_moment_torque_point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
-            self.shear_moment_torque_point_size_edit.setDecimals(2)
-            self.shear_moment_torque_point_size_edit.setSingleStep(0.25)
-            self.shear_moment_torque_point_size_edit.setToolTip('Sets the shear-moment-torque node size')
             self.shear_moment_torque_point_size_button = QPushButton("Default")
 
             self.shear_moment_torque_line_width_label = QLabel("Line Width:")
-            self.shear_moment_torque_line_width_edit = QDoubleSpinBox(self)
-            self.shear_moment_torque_line_width_edit.setValue(self._shear_moment_torque_line_width)
-            #self.shear_moment_torque_line_width_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
-            #self.shear_moment_torque_line_width_edit.setDecimals(2)
-            #self.shear_moment_torque_line_width_edit.setSingleStep(0.25)
-            self.shear_moment_torque_line_width_edit.setToolTip('Sets the shear-moment-torque line width')
             self.shear_moment_torque_line_width_button = QPushButton("Default")
 
             # Text Color
             self.shear_moment_torque_color_label = QLabel("Color:")
-            self.shear_moment_torque_color_edit = QPushButtonColor(self.shear_moment_torque_color_int)
-            self.shear_moment_torque_color_edit.setToolTip('Sets the shear-moment-torque color')
-
 
         #-----------------------------------------------------------------------
         # Background Color
@@ -851,7 +834,7 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit.setValue(HIGHLIGHT_OPACITY)
         self.highlight_point_size_edit.setValue(HIGHLIGHT_POINT_SIZE)
         self.parallel_projection_edit.setChecked(USE_PARALLEL_PROJECTION)
-        #self.highlight_line_thickness_edit.setValue(HIGHLIGHT_LINE_THICKNESS)
+        #self.highlight_line_width_edit.setValue(HIGHLIGHT_LINE_WIDTH)
 
         self.background_color1_float = BACKGROUND_COLOR
         self.background_color2_float = BACKGROUND_COLOR2
@@ -1169,6 +1152,49 @@ class PreferencesWindow(PyDialog):
     def on_cancel(self):
         self.out_data['close'] = True
         self.close()
+
+
+def create_shear_moment_torque_edits(
+    parent,
+    opacity: float, point_size, line_width,
+    color: ColorInt) -> tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QPushButtonColor]:
+    opacity_edit = create_opacity_edit(parent, opacity)
+    opacity_edit.setToolTip('Sets the shear-moment-torque opacity (0=invisible, 1=solid)')
+
+    point_size_edit = create_point_size_edit(parent, point_size)
+    point_size_edit.setToolTip('Sets the shear-moment-torque node size')
+
+    line_width_edit = create_line_width_edit(parent, line_width)
+    line_width_edit.setToolTip('Sets the shear-moment-torque line width')
+
+    color_edit = QPushButtonColor(color)
+    color_edit.setToolTip('Sets the shear-moment-torque color')
+
+    return opacity_edit, point_size_edit, line_width_edit, color_edit
+
+def create_point_size_edit(parent, value: float) -> QDoubleSpinBox:
+    point_size_edit = QDoubleSpinBox(parent)
+    point_size_edit.setValue(value)
+    point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
+    point_size_edit.setDecimals(2)
+    point_size_edit.setSingleStep(0.25)
+    return point_size_edit
+
+def create_line_width_edit(parent, value: float) -> QDoubleSpinBox:
+    line_width_edit = QDoubleSpinBox(parent)
+    line_width_edit.setValue(value)
+    #line_width_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
+    #line_width_edit.setDecimals(2)
+    #line_width_edit.setSingleStep(0.25)
+    return line_width_edit
+
+def create_opacity_edit(parent, value: float) -> QDoubleSpinBox:
+    opacity_edit = QDoubleSpinBox(parent)
+    opacity_edit.setValue(value)
+    opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
+    opacity_edit.setDecimals(2)
+    opacity_edit.setSingleStep(0.05)
+    return opacity_edit
 
 
 def set_label_color(color_edit: QPushButtonColor,

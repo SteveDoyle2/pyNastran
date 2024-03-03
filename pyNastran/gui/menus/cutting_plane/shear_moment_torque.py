@@ -18,7 +18,7 @@ import numpy as np
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox,
+    QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox,
     QFrame, QTableWidget, QTableWidgetItem, QDialog, QHeaderView)
 
 from qtpy.QtGui import QColor# , QHeaderView
@@ -33,6 +33,8 @@ from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
 from pyNastran.gui.utils.wildcards import wildcard_csv
 from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
+from pyNastran.gui.menus.preferences.preferences import (
+    create_shear_moment_torque_edits)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
@@ -45,6 +47,7 @@ IS_DEMO = True  # just for testing
 CID_GLOBAL_STR = '0/Global'
 USE_COMPRESSED_UNIT_SCALE = True
 
+EXPOSE_SMT_PARAMETERS = True
 
 class ResultsDialog(QDialog):
     def __init__(self, win_parent,
@@ -296,15 +299,30 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p2_label = QLabel('XZ Plane:')
 
         # Plane Color
+
+
+        # ------------------------------------------------
+        self.vector_line_width = 5
+        self.vector_point_size = 5
+        opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
+            self,
+            self.plane_opacity,
+            self.vector_point_size,
+            self.vector_line_width,
+            self.plane_color_int)
+
+        self.point_size_label = QLabel("Point Size:")
+        self.point_size_edit = point_size_edit
+
+        self.line_width_label = QLabel("Line Width:")
+        self.line_width_edit = line_width_edit
+
         self.plane_color_label = QLabel('Plane Color:')
-        self.plane_color_edit = QPushButtonColor(self.plane_color_int)
+        self.plane_color_edit = color_edit
 
         self.plane_opacity_label = QLabel('Plane Opacity:')
-        self.plane_opacity_edit = QDoubleSpinBox()
-        self.plane_opacity_edit.setRange(0.1, 1.0)
-        self.plane_opacity_edit.setDecimals(2)
-        self.plane_opacity_edit.setSingleStep(0.05)
-        self.plane_opacity_edit.setValue(self.plane_opacity)
+        self.plane_opacity_edit = opacity_edit
+
 
         self.flip_coord_label = QLabel('Flip Coordinate System:')
         self.flip_coord_checkbox = QCheckBox()
@@ -438,8 +456,13 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.p3_z_edit.setText('3')
 
                 self.p2_x_edit.setText('0')
-                self.p2_y_edit.setText('1')
-                self.p2_z_edit.setText('0')
+                self.p2_y_edit.setText('0')
+                self.p2_z_edit.setText('1')
+
+                self.zaxis_x_edit.setText('1')
+                self.zaxis_y_edit.setText('0')
+                self.zaxis_z_edit.setText('0')
+
                 self.nplanes_spinner.setValue(5)
 
     @property
@@ -586,13 +609,23 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.additional_params_label, irow, 0)
         irow += 1
 
-        grid.addWidget(self.plane_color_label, irow, 0)
-        grid.addWidget(self.plane_color_edit, irow, 1)
-        irow += 1
+        if EXPOSE_SMT_PARAMETERS:
+            grid.addWidget(self.plane_color_label, irow, 0)
+            grid.addWidget(self.plane_color_edit, irow, 1)
+            irow += 1
 
-        grid.addWidget(self.plane_opacity_label, irow, 0)
-        grid.addWidget(self.plane_opacity_edit, irow, 1)
-        irow += 1
+            grid.addWidget(self.plane_opacity_label, irow, 0)
+            grid.addWidget(self.plane_opacity_edit, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.point_size_label, irow, 0)
+            grid.addWidget(self.point_size_edit, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.line_width_label, irow, 0)
+            grid.addWidget(self.line_width_edit, irow, 1)
+            irow += 1
+
         # -----------------------------------------
         if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
             grid.addWidget(self.plot_info, irow, 0)
@@ -642,6 +675,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
         self.plane_color_edit.clicked.connect(self.on_plane_color)
         self.plane_opacity_edit.valueChanged.connect(self.on_plane_opacity)
+        self.point_size_edit.valueChanged.connect(self.on_plane_point_size)
+        self.line_width_edit.valueChanged.connect(self.on_plane_line_width)
+
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
         self.csv_button.clicked.connect(self.on_browse_csv)
@@ -745,14 +781,34 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_y_edit.setVisible(is_visible)
         self.zaxis_z_edit.setVisible(is_visible)
 
+    def _update_plane_settings(self) -> None:
+        obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
+        obj.set_plane_properties()
+        return
+
     def on_plane_opacity(self) -> None:
         """ Sets the plane opacity"""
         opacity = self.plane_opacity_edit.value()
         if self.win_parent is not None:
             settings: Settings = self.win_parent.settings
             settings.shear_moment_torque_opacity = opacity
-            obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
-            obj.set_plane_properties(opacity, self.plane_color_float)
+            self._update_plane_settings()
+
+    def on_plane_point_size(self) -> None:
+        """ Sets the plane opacity"""
+        point_size = self.point_size_edit.value()
+        if self.win_parent is not None:
+            settings: Settings = self.win_parent.settings
+            settings.shear_moment_torque_point_size = point_size
+            self._update_plane_settings()
+
+    def on_plane_line_width(self) -> None:
+        """ Sets the plane opacity"""
+        line_width = self.point_size_edit.value()
+        if self.win_parent is not None:
+            settings: Settings = self.win_parent.settings
+            settings.shear_moment_torque_line_thickness = line_width
+            self._update_plane_settings()
 
     def on_plane_color(self) -> None:
         """ Choose a plane color"""
@@ -891,8 +947,8 @@ class ShearMomentTorqueWindow(PyDialog):
             self.out_data['p2'] = [p2_cid, p2]  # xzplane
             self.out_data['p3'] = [p3_cid, p3]  # end
             self.out_data['zaxis'] = [zaxis_cid, zaxis]
-            self.out_data['plane_color'] = self.plane_color_float
-            self.out_data['plane_opacity'] = plane_opacity
+            #self.out_data['plane_color'] = self.plane_color_float
+            #self.out_data['plane_opacity'] = plane_opacity
             self.out_data['nplanes'] = nplanes
             self.out_data['csv_filename'] = csv_filename
             self.out_data['force'] = [force_scale, force_unit]

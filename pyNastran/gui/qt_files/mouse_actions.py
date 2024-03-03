@@ -983,7 +983,7 @@ def create_highlighted_actor(gui, ugrid: vtkUnstructuredGrid,
         prop.SetPointSize(settings.highlight_point_size)
     elif representation == 'wire':
         prop.SetRepresentationToWireframe()
-        prop.SetLineWidth(settings.highlight_line_thickness)
+        prop.SetLineWidth(settings.highlight_line_width)
     else:
         raise NotImplementedError('representation=%r and must be [points, wire, surface]' % (
             representation))
