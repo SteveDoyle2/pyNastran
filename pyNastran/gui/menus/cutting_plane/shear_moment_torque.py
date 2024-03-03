@@ -178,8 +178,6 @@ class ShearMomentTorqueWindow(PyDialog):
 
         self.plot_info.setFont(bold_font)
         if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
-            #self.force_label.setFont(bold_font)
-            #self.moment_label.setFont(bold_font)
             self.unit_label.setFont(bold_font)
             self.scale_label.setFont(bold_font)
 
@@ -405,6 +403,7 @@ class ShearMomentTorqueWindow(PyDialog):
         if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
             self.force_label = QLabel('Force')
             self.moment_label = QLabel('Moment')
+            self.length_label = QLabel('Length')
             self.unit_label = QLabel('Unit')
             self.scale_label = QLabel('Scale')
         else:
@@ -413,13 +412,18 @@ class ShearMomentTorqueWindow(PyDialog):
             self.force_scale_label = QLabel('Force Scale')
             self.moment_scale_label = QLabel('Moment Scale')
 
+        self.length_unit_edit = QLineEdit('')
         self.force_unit_edit = QLineEdit('')
         self.moment_unit_edit = QLineEdit('')
+        self.length_scale_edit = QFloatEdit('1.0')
         self.force_scale_edit = QFloatEdit('1.0')
         self.moment_scale_edit = QFloatEdit('1.0')
 
+        self.length_unit_edit.setToolTip('Define the length unit for the output')
         self.force_unit_edit.setToolTip('Define the force unit for the output')
         self.moment_unit_edit.setToolTip('Define the moment unit for the output')
+
+        self.length_scale_edit.setToolTip('Scale the output length by this')
         self.force_scale_edit.setToolTip('Scale the output force by this')
         self.moment_scale_edit.setToolTip('Scale the output moment by this')
         #-----------------------------------------------------------------------
@@ -633,6 +637,11 @@ class ShearMomentTorqueWindow(PyDialog):
             grid.addWidget(self.scale_label, irow, 2)
             irow += 1
 
+            grid.addWidget(self.length_label, irow, 0)
+            grid.addWidget(self.length_unit_edit, irow, 1)
+            grid.addWidget(self.length_scale_edit, irow, 2)
+            irow += 1
+
             grid.addWidget(self.force_label, irow, 0)
             grid.addWidget(self.force_unit_edit, irow, 1)
             grid.addWidget(self.force_scale_edit, irow, 2)
@@ -804,10 +813,10 @@ class ShearMomentTorqueWindow(PyDialog):
 
     def on_plane_line_width(self) -> None:
         """ Sets the plane opacity"""
-        line_width = self.point_size_edit.value()
+        line_width = self.line_width_edit.value()
         if self.win_parent is not None:
             settings: Settings = self.win_parent.settings
-            settings.shear_moment_torque_line_thickness = line_width
+            settings.shear_moment_torque_line_width = line_width
             self._update_plane_settings()
 
     def on_plane_color(self) -> None:
@@ -823,7 +832,7 @@ class ShearMomentTorqueWindow(PyDialog):
             settings.shear_moment_torque_color = rgb_color_floats
             self.plane_color_int = rgb_color_ints
             self.plane_color_float = rgb_color_floats
-            self.on_plane_opacity()
+            self._update_plane_settings()
 
     def _background_color(self, title: str,
                           color_edit: QPushButtonColor,
@@ -844,7 +853,7 @@ class ShearMomentTorqueWindow(PyDialog):
                 #func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
 
-    def on_color(self, color_edit,
+    def on_color(self, color_edit: QPushButtonColor,
                  rgb_color_ints: ColorInt,
                  title: str) -> tuple[bool, ColorInt, ColorFloat]:
         """pops a color dialog"""
@@ -859,11 +868,12 @@ class ShearMomentTorqueWindow(PyDialog):
         assert isinstance(color_float[0], float), color_float
         assert isinstance(color_int[0], int), color_int
 
-        color_edit.setStyleSheet(
-            'QPushButton {'
-            'background-color: rgb(%s, %s, %s);' % tuple(color_int) +
-            #"border:1px solid rgb(255, 170, 255); "
-            '}')
+        color_edit.set_color(color_int)
+        #color_edit.setStyleSheet(
+            #'QPushButton {'
+            #'background-color: rgb(%s, %s, %s);' % tuple(color_int) +
+            ##"border:1px solid rgb(255, 170, 255); "
+            #'}')
         return True, color_int, color_float
 
 
@@ -918,7 +928,6 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
             zaxis_flag = all([flag10, flag11, flag12])
 
-        plane_opacity = self.plane_opacity_edit.value()
         nplanes = self.nplanes_spinner.value()
 
         csv_filename = None
@@ -926,16 +935,19 @@ class ShearMomentTorqueWindow(PyDialog):
         if self.export_checkbox.isChecked():
             csv_filename, csv_flag = check_save_path(self.csv_edit)
 
+        length_scale, length_flag = check_float(self.length_scale_edit)
         force_scale, force_flag = check_float(self.force_scale_edit)
         moment_scale, moment_flag = check_float(self.moment_scale_edit)
         flags = [
             p1_flag, p2_flag, p3_flag,
             zaxis_flag,
             csv_flag,
-            force_flag, moment_flag]
+            length_flag, force_flag, moment_flag]
 
+        length_unit = self.length_unit_edit.text()
         force_unit = self.force_unit_edit.text()
         moment_unit = self.moment_unit_edit.text()
+
         if all(flags):
             # Z-Axis Method
             # p1: origin
@@ -947,10 +959,9 @@ class ShearMomentTorqueWindow(PyDialog):
             self.out_data['p2'] = [p2_cid, p2]  # xzplane
             self.out_data['p3'] = [p3_cid, p3]  # end
             self.out_data['zaxis'] = [zaxis_cid, zaxis]
-            #self.out_data['plane_color'] = self.plane_color_float
-            #self.out_data['plane_opacity'] = plane_opacity
             self.out_data['nplanes'] = nplanes
             self.out_data['csv_filename'] = csv_filename
+            self.out_data['length'] = [length_scale, length_unit]
             self.out_data['force'] = [force_scale, force_unit]
             self.out_data['moment'] = [moment_scale, moment_unit]
             self.out_data['clicked_ok'] = True

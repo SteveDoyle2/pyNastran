@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.qt_files.vtk_actor_actions import VtkActorActions
     from vtk import vtkActor, vtkProperty
 
+PLANE_NAME = 'smt_plane'
 LINE_NAME = 'smt_vector'
 POINT_NAME = 'smt_points'
 ARROW_NAME = 'smt_arrow'
@@ -121,15 +122,12 @@ class ShearMomentTorqueObject(BaseGui):
         color = settings.shear_moment_torque_color
         point_size = settings.shear_moment_torque_point_size
 
-        if hasattr(gui, 'plane_actor'):
-            actor: vtkActor = gui.plane_actor
-            alt_geometry: AltGeometry = gui.geometry_properties['smt_plane']
+        if PLANE_NAME in gui.geometry_actors:
+            actor: vtkActor = gui.geometry_actors[PLANE_NAME]
+            alt_geometry: AltGeometry = gui.geometry_properties[PLANE_NAME]
             set_plane_opacity_color(
                 alt_geometry, actor,
                 opacity=opacity, color=color)
-            if actor.GetVisibility() == 0:
-                actor.VisibilityOn()
-                actor.Modified()
 
         if LINE_NAME in gui.geometry_actors:
             actor: vtkActor = gui.geometry_actors[LINE_NAME]
@@ -149,12 +147,8 @@ class ShearMomentTorqueObject(BaseGui):
 
     def on_clear_plane_actors(self, render: bool=True) -> None:
         gui: MainWindow = self.gui
-        #if hasattr(gui, 'plane_actor'):
-            #del gui.plane_actor
-        #gui.clear_actor('smt_plane')
         names = [
-            'plane_actor', 'smt_plane',
-            LINE_NAME, POINT_NAME, ARROW_NAME,
+            PLANE_NAME, LINE_NAME, POINT_NAME, ARROW_NAME,
         ]
         clear_actors(gui, names)
 
@@ -210,7 +204,6 @@ class ShearMomentTorqueObject(BaseGui):
         model_name = data['model_name']
         gpforce: RealGridPointForcesArray = data['gpforce']
         nplanes = data['nplanes']
-        #model = self.models[model_name]
 
         cid_p1, p1 = data['p1'] # start
         cid_p2, p2 = data['p2'] # xzplane
@@ -218,6 +211,7 @@ class ShearMomentTorqueObject(BaseGui):
         cid_zaxis, zaxis = data['zaxis']
         method = data['method']
         station_location = data['station_location']
+        length_scale, length_unit = data['length']
         force_scale, force_unit = data['force']
         moment_scale, moment_unit = data['moment']
 
@@ -232,6 +226,7 @@ class ShearMomentTorqueObject(BaseGui):
             cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
             nplanes=nplanes,
             csv_filename=csv_filename,
+            length_scale=length_scale, length_unit=length_unit,
             force_scale=force_scale, force_unit=force_unit,
             moment_scale=moment_scale, moment_unit=moment_unit,
             show=show)
@@ -250,7 +245,6 @@ class ShearMomentTorqueObject(BaseGui):
         """Plane Actor is drawn in the i-k plane"""
         model = self.gui.models[model_name]
         nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
-        #xyz1, xyz2, xyz3, i, k, origin, xzplane, dim_max, stations
 
         #nplanes = 1
         unused_out = self.plot_plane(
@@ -275,6 +269,7 @@ class ShearMomentTorqueObject(BaseGui):
                                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                                  nplanes: int=20,
                                  csv_filename=None,
+                                 length_scale: float=1.0, length_unit: str='',
                                  force_scale: float=1.0, force_unit: str='',
                                  moment_scale: float=1.0, moment_unit: str='',
                                  show: bool=True,
@@ -329,11 +324,11 @@ class ShearMomentTorqueObject(BaseGui):
         nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
 
         is_failed, stations, coord, iaxis_march = self.plot_plane(
-            model, xyz_cid0, plane_color,
+            model, xyz_cid0,
             p1, p2, p3,
             zaxis, method=method,
             cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
-            nplanes=nplanes, plane_opacity=plane_opacity,
+            nplanes=nplanes,
             stop_on_failure=stop_on_failure)
         if is_failed:
             force_sum = np.zeros((0, 3))
@@ -355,12 +350,12 @@ class ShearMomentTorqueObject(BaseGui):
         moment_sum *= moment_scale
         root_filename = os.path.join(gui.last_dir, 'shear_moment_torque')
 
-        origins, xyz_stations, xlabel = get_xyz_stations(
-            stations, new_coords,
+        cids, origins, xyz_stations, xlabel = get_xyz_stations(
+            stations*length_scale, new_coords,
             station_location=station_location)
+        origins *= length_scale
 
-        length_unit = ''
-        length_unit2 = f' ({length_unit})' if force_unit else ''
+        length_unit2 = f' ({length_unit})' if length_unit else ''
         force_unit2 = f' ({force_unit})' if force_unit else ''
         moment_unit2 = f' ({moment_unit})' if moment_unit else ''
         labels = [
@@ -377,16 +372,19 @@ class ShearMomentTorqueObject(BaseGui):
             root_filename = os.path.splitext(csv_filename)[0]
             write_smt_to_csv(
                 csv_filename,
-                stations, nelems, nnodes, new_coords,
+                stations, nelems, nnodes, cids, origins,
                 force_sum, moment_sum,
-                force_unit=force_unit, moment_unit=moment_unit)
+                ength_unit=length_unit,
+                force_unit=force_unit,
+                moment_unit=moment_unit)
         plot_smt(
             xyz_stations,
             force_sum, moment_sum,
             nelems, nnodes, show=show,
             xtitle=xlabel, xlabel=xlabel,
             length_unit=length_unit,
-            force_unit=force_unit, moment_unit=moment_unit,
+            force_unit=force_unit,
+            moment_unit=moment_unit,
             root_filename=root_filename,
             plot_force_components=False,
             plot_moment_components=False,
@@ -523,25 +521,7 @@ class ShearMomentTorqueObject(BaseGui):
 
         vtk_actor_actions: VtkActorActions = gui.vtk_actor_actions
 
-        # define defaults
-        #settings: Settings = gui.settings
-        #line_width_default = settings.shear_moment_torque_line_thickness
-        #point_size_default = settings.shear_moment_torque_point_size
-
-        # pull from the EditGeometryProperties (if possible)
-        #line_width: int = gui._get_geometry_property_items(
-            #LINE_NAME,
-            #'line_width', line_width_default)[0]
-        #point_size: int = gui._get_geometry_property_items(
-            #POINT_NAME,
-            #'point_size', point_size_default)[0]
-
         # update the settings
-        #if line_width != line_width_default:
-            #settings.shear_moment_torque_line_thickness = line_width
-        #if point_size != line_width_default:
-            #settings.shear_moment_torque_point_size = point_size
-
         for actor_name in (LINE_NAME, POINT_NAME):
             if actor_name in gui.geometry_properties:
                 alt_geometry: AltGeometry = gui.geometry_properties[actor_name]
@@ -562,6 +542,7 @@ class ShearMomentTorqueObject(BaseGui):
             representation='point', add=True,
             visible_in_geometry_properties=False)
 
+        self.set_plane_properties()
         gui.geometry_actors[LINE_NAME]
         gui.geometry_actors[POINT_NAME]
         #if ugrid2 is not None:
@@ -611,7 +592,7 @@ class ShearMomentTorqueObject(BaseGui):
         j = np.cross(k, i)
         #center = (xyz1 + xyz2) / 2.
 
-        actor_name = 'smt_plane'
+        actor_name = PLANE_NAME
         if actor_name in gui.geometry_properties:
             alt_geometry: AltGeometry = gui.geometry_properties[actor_name]
             alt_geometry.color = color
@@ -627,10 +608,10 @@ class ShearMomentTorqueObject(BaseGui):
             actor_name=actor_name,
             visible_in_geometry_properties=False,
         )
-        alt_geometry = gui.geometry_properties['smt_plane']
-        set_plane_opacity_color(alt_geometry, plane_actor,
-                                opacity=opacity, color=color)
-        plane_actor.VisibilityOn()
+        #alt_geometry = gui.geometry_properties[PLANE_NAME]
+        #set_plane_opacity_color(alt_geometry, plane_actor,
+                                #opacity=opacity, color=color)
+        #plane_actor.VisibilityOn()
         return plane_actor
 
 def set_plane_opacity_color(alt_geom: AltGeometry,

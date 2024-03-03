@@ -1177,7 +1177,7 @@ def create_point_size_edit(parent, value: float) -> QDoubleSpinBox:
     point_size_edit.setValue(value)
     point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
     point_size_edit.setDecimals(2)
-    point_size_edit.setSingleStep(0.25)
+    point_size_edit.setSingleStep(0.5)
     return point_size_edit
 
 def create_line_width_edit(parent, value: float) -> QDoubleSpinBox:
