@@ -26,6 +26,7 @@ from qtpy.QtGui import QColor# , QHeaderView
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
+from pyNastran.gui.utils.qt.qelement_edit import QElementEdit, QNodeEdit
 from pyNastran.gui.utils.qt.resize_qtextedit import AutoResizingTextEdit
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
@@ -45,9 +46,10 @@ if TYPE_CHECKING:  # pragma: no cover
 IS_DEMO = False
 IS_DEMO = True  # just for testing
 CID_GLOBAL_STR = '0/Global'
-USE_COMPRESSED_UNIT_SCALE = True
 
+IS_NODE_ELEMENT = False
 EXPOSE_SMT_PARAMETERS = True
+IS_TIME = False
 
 class ResultsDialog(QDialog):
     def __init__(self, win_parent,
@@ -105,8 +107,10 @@ class ShearMomentTorqueWindow(PyDialog):
 
         #self.dim_max = data['dim_max']
         self.model_name = data['model_name']
+        self.icase = data['icase']
         self.cids = data['cids']
-        self.gpforce = data['gpforce']
+        self.gpforce = None
+        #self.gpforce = data['gpforce']
         #self._origin = data['origin']
         #self._p1 = data['origin']
         #self._p2 = data['origin']
@@ -177,9 +181,8 @@ class ShearMomentTorqueWindow(PyDialog):
         self.z_label.setFont(bold_font)
 
         self.plot_info.setFont(bold_font)
-        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
-            self.unit_label.setFont(bold_font)
-            self.scale_label.setFont(bold_font)
+        self.unit_label.setFont(bold_font)
+        self.scale_label.setFont(bold_font)
 
     def create_widgets(self) -> None:
         """creates the display window"""
@@ -321,34 +324,61 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_opacity_label = QLabel('Plane Opacity:')
         self.plane_opacity_edit = opacity_edit
 
-
-        self.flip_coord_label = QLabel('Flip Coordinate System:')
-        self.flip_coord_checkbox = QCheckBox()
+        if 0:
+            self.flip_coord_label = QLabel('Flip Coordinate System:')
+            self.flip_coord_checkbox = QCheckBox()
 
         #-----------------------------------------------------------------------
-        self.time_label = QLabel('Time:')
-        if self.gpforce is None:  # pragma: no cover
-            # for debugging; not real
-            times = ['0.', '0.5', '1.' , '1.5', '2.']
-            time = '0.'
-        else:
-            times = [func_str(time) for time in self.gpforce._times]
-            time = times[0]
-        self.times_pulldown = make_combo_box(times, time)
-        self.time_label.setEnabled(False)
-        self.times_pulldown.setEnabled(False)
+        self.icase_label = QLabel('iCase:')
+        self.icase_edit = QSpinBox()
+        self.icase_edit.setMinimum(0)
+        self.icase_edit.setMaximum(1000)
+        self.icase_edit.setValue(self.icase)
+        self.icase_edit.setToolTip('Defines the GridPointForces result to be analyzed.\n'
+                                   'Check the log for the case id')
 
-        #self.node_label = QLabel('Nodes:')
-        #self.node_edit = QNodeEdit(self.win_parent, self.model_name, parent=self.gui,
-                                   #pick_style='area', tab_to_next=False)
+        if IS_TIME:
+            self.time_label = QLabel('Time:')
+            if self.gpforce is None:  # pragma: no cover
+                # for debugging; not real
+                times = ['0.', '0.5', '1.' , '1.5', '2.']
+                time = '0.'
+            else:
+                times = [func_str(time) for time in self.gpforce._times]
+                time = times[0]
+            self.times_pulldown = make_combo_box(times, time)
+            self.time_label.setEnabled(False)
+            self.times_pulldown.setEnabled(False)
 
-        #self.element_label = QLabel('Elements:')
-        #self.element_edit = QElementEdit(self.win_parent, self.model_name, parent=self.gui,
-                                         #pick_style='area', tab_to_next=False)
 
-        #self.node_element_label = QLabel('Nodes/Elements:')
-        #self.node_element_edit = QLineEdit()
-        #self.node_element_edit.setReadOnly(True)
+        if IS_NODE_ELEMENT:
+            #name = 'main'
+            #win_parent = self
+            #parent = self.gui
+            #self.element_edit = QElementEdit(
+                #win_parent, name, parent=parent, pick_style='area',
+                #tab_to_next=True, cleanup=True, max_length=32767)
+            #self.node_edit = QNodeEdit(
+                #win_parent, name, parent=parent, pick_style='area',
+                #tab_to_next=True, cleanup=True)
+
+            gui = self.gui
+            max_length = 32767
+            self.element_node_checkbox = QCheckBox('Limit Nodes/ELements:')
+            self.node_label = QLabel('Nodes:')
+            self.node_edit = QNodeEdit(
+                self.win_parent, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False, max_length=max_length)
+
+            self.element_label = QLabel('Elements:')
+            self.element_edit = QElementEdit(
+                self.win_parent, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False, max_length=max_length)
+            self.on_element_node_checkbox()
+
+            #self.node_element_label = QLabel('Nodes/Elements:')
+            #self.node_element_edit = QLineEdit()
+            #self.node_element_edit.setReadOnly(True)
 
         self.nplanes_label = QLabel('Num Planes:')
         self.nplanes_spinner = QSpinBox()
@@ -400,17 +430,11 @@ class ShearMomentTorqueWindow(PyDialog):
         self.remove2_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         self.plot_info = QLabel('Plot Info:')
-        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
-            self.force_label = QLabel('Force')
-            self.moment_label = QLabel('Moment')
-            self.length_label = QLabel('Length')
-            self.unit_label = QLabel('Unit')
-            self.scale_label = QLabel('Scale')
-        else:
-            self.force_unit_label = QLabel('Force Unit')
-            self.moment_unit_label = QLabel('Moment Unit')
-            self.force_scale_label = QLabel('Force Scale')
-            self.moment_scale_label = QLabel('Moment Scale')
+        self.force_label = QLabel('Force')
+        self.moment_label = QLabel('Moment')
+        self.length_label = QLabel('Length')
+        self.unit_label = QLabel('Unit')
+        self.scale_label = QLabel('Scale')
 
         self.length_unit_edit = QLineEdit('')
         self.force_unit_edit = QLineEdit('')
@@ -518,7 +542,24 @@ class ShearMomentTorqueWindow(PyDialog):
         vbox.addLayout(grid)
         vbox.addLayout(grid2)
         #vbox.addStretch()
+
+        if IS_NODE_ELEMENT:
+            grid_node_element = QGridLayout()
+            grid_node_element.addWidget(self.node_label, 0, 0)
+            grid_node_element.addWidget(self.node_edit, 0, 1)
+            grid_node_element.addWidget(self.element_label, 1, 0)
+            grid_node_element.addWidget(self.element_edit, 1, 1)
+
+            element_node_box = QVBoxLayout()
+            element_node_box.addWidget(self.element_node_checkbox)
+            element_node_box.addLayout(grid_node_element)
+            vbox.addLayout(element_node_box)
         vbox.addLayout(hbox_csv)
+
+        #self.element_node_checkbox = QCheckBox('Limit Nodes/ELements:')
+        #self.element_label = QLabel('Elements:')
+        #self.node_label = QLabel('Nodes:')
+
         vbox.addStretch()
 
         #-----------------------
@@ -601,9 +642,14 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.case_info_label, irow, 0)
         irow += 1
 
-        grid.addWidget(self.time_label, irow, 0)
-        grid.addWidget(self.times_pulldown, irow, 1)
+        grid.addWidget(self.icase_label, irow, 0)
+        grid.addWidget(self.icase_edit, irow, 1)
         irow += 1
+
+        if IS_TIME:
+            grid.addWidget(self.time_label, irow, 0)
+            grid.addWidget(self.times_pulldown, irow, 1)
+            irow += 1
 
         grid.addWidget(self.nplanes_label, irow, 0)
         grid.addWidget(self.nplanes_spinner, irow, 1)
@@ -631,45 +677,25 @@ class ShearMomentTorqueWindow(PyDialog):
             irow += 1
 
         # -----------------------------------------
-        if USE_COMPRESSED_UNIT_SCALE:  # pragma: no cover
-            grid.addWidget(self.plot_info, irow, 0)
-            grid.addWidget(self.unit_label, irow, 1)
-            grid.addWidget(self.scale_label, irow, 2)
-            irow += 1
+        grid.addWidget(self.plot_info, irow, 0)
+        grid.addWidget(self.unit_label, irow, 1)
+        grid.addWidget(self.scale_label, irow, 2)
+        irow += 1
 
-            grid.addWidget(self.length_label, irow, 0)
-            grid.addWidget(self.length_unit_edit, irow, 1)
-            grid.addWidget(self.length_scale_edit, irow, 2)
-            irow += 1
+        grid.addWidget(self.length_label, irow, 0)
+        grid.addWidget(self.length_unit_edit, irow, 1)
+        grid.addWidget(self.length_scale_edit, irow, 2)
+        irow += 1
 
-            grid.addWidget(self.force_label, irow, 0)
-            grid.addWidget(self.force_unit_edit, irow, 1)
-            grid.addWidget(self.force_scale_edit, irow, 2)
-            irow += 1
+        grid.addWidget(self.force_label, irow, 0)
+        grid.addWidget(self.force_unit_edit, irow, 1)
+        grid.addWidget(self.force_scale_edit, irow, 2)
+        irow += 1
 
-            grid.addWidget(self.moment_label, irow, 0)
-            grid.addWidget(self.moment_unit_edit, irow, 1)
-            grid.addWidget(self.moment_scale_edit, irow, 2)
-            irow += 1
-        else:
-            grid.addWidget(self.plot_info, irow, 0)
-            irow += 1
-
-            grid.addWidget(self.force_unit_label, irow, 0)
-            grid.addWidget(self.force_unit_edit, irow, 1)
-            irow += 1
-
-            grid.addWidget(self.force_scale_label, irow, 0)
-            grid.addWidget(self.force_scale_edit, irow, 1)
-            irow += 1
-
-            grid.addWidget(self.moment_unit_label, irow, 0)
-            grid.addWidget(self.moment_unit_edit, irow, 1)
-            irow += 1
-
-            grid.addWidget(self.moment_scale_label, irow, 0)
-            grid.addWidget(self.moment_scale_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.moment_label, irow, 0)
+        grid.addWidget(self.moment_unit_edit, irow, 1)
+        grid.addWidget(self.moment_scale_edit, irow, 2)
+        irow += 1
 
         grid.addWidget(self.station_location_label, irow, 0)
         grid.addWidget(self.station_location_pulldown, irow, 1)
@@ -686,6 +712,8 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_opacity_edit.valueChanged.connect(self.on_plane_opacity)
         self.point_size_edit.valueChanged.connect(self.on_plane_point_size)
         self.line_width_edit.valueChanged.connect(self.on_plane_line_width)
+        if IS_NODE_ELEMENT:
+            self.element_node_checkbox.clicked.connect(self.on_element_node_checkbox)
 
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
@@ -818,6 +846,13 @@ class ShearMomentTorqueWindow(PyDialog):
             settings: Settings = self.win_parent.settings
             settings.shear_moment_torque_line_width = line_width
             self._update_plane_settings()
+
+    def on_element_node_checkbox(self) -> None:
+        is_checked = self.element_node_checkbox.isChecked()
+        self.node_label.setEnabled(is_checked)
+        self.node_edit.setEnabled(is_checked)
+        self.element_label.setEnabled(is_checked)
+        self.element_edit.setEnabled(is_checked)
 
     def on_plane_color(self) -> None:
         """ Choose a plane color"""
@@ -1029,14 +1064,15 @@ def main() -> None:  # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
 
-    gpforce = None
+    #gpforce = None
     data = {
         'font_size' : 8,
+        'icase': 42,
         #'cids' : [0, 1, 2, 3],
         'cids' : [0],
         'plane_color' : (1., 0., 1.), # purple
         'plane_opacity' : 0.9,
-        'gpforce' : gpforce,
+        #'gpforce' : gpforce,
         #'itime' : 0,
         'word' : 'Static',
         'model_name' : 'main',

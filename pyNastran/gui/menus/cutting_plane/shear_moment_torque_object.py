@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import cast, Optional, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
@@ -45,10 +45,25 @@ class ShearMomentTorqueObject(BaseGui):
         self._smt_window = None
         self._smt_window_shown = False
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """sets the font size for the preferences window"""
         if self._smt_window_shown:
             self._smt_window.set_font_size(font_size)
+
+    def get_gpforce_from_icase(self, icase: int) -> tuple[bool, Optional[RealGridPointForcesArray]]:
+        is_failed = True
+        gui = self.gui
+        if icase == -1 or len(gui.result_cases) == 0:
+            gui.log.error('Select a Grid Point Forces result.')
+            return is_failed, None
+
+        (obj, (unused_i, unused_name)) = gui.result_cases[icase]
+        if not hasattr(obj, 'gpforce_array'):
+            gui.log.error('Select a Grid Point Forces result.')
+            return is_failed, None
+        is_failed = False
+        gpforce: RealGridPointForcesArray = obj.gpforce_array
+        return icase, gpforce
 
     def set_shear_moment_torque_menu(self):
         """
@@ -75,18 +90,13 @@ class ShearMomentTorqueObject(BaseGui):
             cids = [0]
 
         icase = self.gui.icase
-        if icase == -1 or len(gui.result_cases) == 0:
-            gui.log.error('Select a Grid Point Forces result.')
+        is_failed, gpforce = self.get_gpforce_from_icase(icase)
+        if is_failed:
             return
 
-        (obj, (unused_i, unused_name)) = gui.result_cases[icase]
-        if not hasattr(obj, 'gpforce_array'):
-            gui.log.error('Select a Grid Point Forces result.')
-            return
-
-        gpforce: RealGridPointForcesArray = obj.gpforce_array
         data = {
             'font_size' : settings.font_size,
+            'icase': icase,
             'cids' : cids,
             'plane_color' : settings.shear_moment_torque_color,
             'plane_opacity' : settings.shear_moment_torque_opacity,
@@ -165,7 +175,7 @@ class ShearMomentTorqueObject(BaseGui):
         if render:
             self.render()
 
-    def make_plane_from_data(self, data) -> None:
+    def make_plane_from_data(self, data: dict[str, Any]) -> None:
         """the callback to validate the plane/coordinate system"""
         model_name = data['model_name']
         #gpforce: RealGridPointForcesArray = data['gpforce']
@@ -187,7 +197,7 @@ class ShearMomentTorqueObject(BaseGui):
         )
         return
 
-    def make_smt_from_data(self, data, show: bool=True) -> None:
+    def make_smt_from_data(self, data: dict[str, Any], show: bool=True) -> None:
         """the callback for the shear, moment, torque plotter"""
         #self.out_data['method'] = method
         #self.out_data['p1'] = [p1_cid, p1]
@@ -202,7 +212,8 @@ class ShearMomentTorqueObject(BaseGui):
         #self.out_data['clicked_ok'] = True
 
         model_name = data['model_name']
-        gpforce: RealGridPointForcesArray = data['gpforce']
+        #gpforce: RealGridPointForcesArray = data['gpforce']
+        icase: int = data['icase']
         nplanes = data['nplanes']
 
         cid_p1, p1 = data['p1'] # start
@@ -219,7 +230,7 @@ class ShearMomentTorqueObject(BaseGui):
         if 'csv_filename' in data:
             csv_filename = data['csv_filename']
         self.plot_shear_moment_torque(
-            model_name, gpforce,
+            model_name, icase,
             p1, p2, p3, zaxis,
             method=method,
             station_location=station_location,
@@ -259,7 +270,7 @@ class ShearMomentTorqueObject(BaseGui):
 
     def plot_shear_moment_torque(self,
                                  model_name: str,
-                                 gpforce: RealGridPointForcesArray,
+                                 icase: int,
                                  p1: np.ndarray,
                                  p2: np.ndarray,
                                  p3: np.ndarray,
@@ -283,6 +294,8 @@ class ShearMomentTorqueObject(BaseGui):
         ----------
         model_name : str
             the name of the model
+        icase : int
+            a result case with grid point forces
         p1: (3,) float ndarray
             defines the starting point for the shear, moment, torque plot
         p3: (3,) float ndarray
@@ -299,6 +312,9 @@ class ShearMomentTorqueObject(BaseGui):
         cid_p1 / cid_p2 / cid_p3; default=0
             the coordinate systems for p1, p2, and p3
         method : str
+            'coord id':
+               zaxis:  N/A
+               p2:     use the coord id from p2 as the output frame
             'CORD2R':
                zaxis:  point on the z-axis
                p2:     point on the xz-plane
@@ -317,6 +333,10 @@ class ShearMomentTorqueObject(BaseGui):
             the forces/moments at the station
 
         """
+        is_failed, gpforce = self.get_gpforce_from_icase(icase)
+        if is_failed:
+            return
+
         gui: MainWindow = self.gui
         log = gui.log
 
@@ -389,6 +409,25 @@ class ShearMomentTorqueObject(BaseGui):
             plot_force_components=False,
             plot_moment_components=False,
         )
+        msg = (
+            f'model_name = {model_name!r}\n'
+            f'icase = {icase:d}\n'
+            f'p1 = np.array([{p1[0]}, {p1[1]}, {p1[2]}])\n'
+            f'p2 = np.array([{p2[0]}, {p2[1]}, {p2[2]}])\n'
+            f'p3 = np.array([{p3[0]}, {p3[1]}, {p3[2]}])\n'
+            f'zaxis = np.array([{zaxis[0]}, {zaxis[1]}, {zaxis[2]}])\n'
+            f'force_sum, moment_sum = self.shear_moment_torque_obj.plot_shear_moment_torque(\n'
+            f'    model_name, icase, p1, p2, p3, zaxis, method={method!r},\n'
+            f'    station_location={station_location!r},\n'
+            f'    cid_p1={cid_p1:d}, cid_p2={cid_p2:d}, cid_p3={cid_p3:d}, cid_zaxis={cid_zaxis:d},\n'
+            f'    nplanes={nplanes:d}, csv_filename={csv_filename!r},\n'
+            f'    length_scale={length_scale}, length_unit={length_unit!r},\n'
+            f'    force_scale={force_scale}, force_unit={force_unit!r},\n'
+            f'    moment_scale={moment_scale}, moment_unit={moment_unit!r},\n'
+            f'    show={show}, stop_on_failure={stop_on_failure})'
+        )
+        gui.log_command(msg)
+
         return force_sum, moment_sum
 
     def plot_plane(self,
@@ -420,17 +459,17 @@ class ShearMomentTorqueObject(BaseGui):
             Vector:
              - xz-plane
             Z-Axis Projection:
-             - see method
+             - origin + xz-plane
         method : str; default='Vector'
+            'Vector':
+               zaxis:  k vector
+               p2:     xz-plane vector
             'CORD2R':
                zaxis: point on the z-axis
                p2:     point on the xz-plane
             'Coord ID':
                zaxis: point on the z-axis
-               p2:     coord id defines the axes
-            'Vector':
-               zaxis:  k vector
-               p2:     xz-plane vector
+               p2:    coord id defines the axes
              'Z-Axis Projection':
                zaxis:  point on the z-axis
                p2:     p2 is a point on the xz-plane
@@ -488,7 +527,7 @@ class ShearMomentTorqueObject(BaseGui):
         # not the plane of the march direction
         # xyz1: origin
         # xyz2: xzplane
-        unused_plane_actor = self.create_plane_actor(
+        unused_plane_actor = self._create_plane_actor(
             xyz1, xyz2,
             coord, i, k, dim_max,
             plane_color, plane_opacity,
@@ -554,16 +593,16 @@ class ShearMomentTorqueObject(BaseGui):
         self.gui.rend.Render()
         self.gui.Render()
 
-    def create_plane_actor(self,
-                           xyz1: np.ndarray,
-                           xyz2: np.ndarray,
-                           coord: CORD2R,
-                           i: np.ndarray,
-                           k: np.ndarray,
-                           dim_max: float,
-                           color: ColorFloat,
-                           opacity: float,
-                           ) -> vtkActor:
+    def _create_plane_actor(self,
+                            xyz1: np.ndarray,
+                            xyz2: np.ndarray,
+                            coord: CORD2R,
+                            i: np.ndarray,
+                            k: np.ndarray,
+                            dim_max: float,
+                            color: ColorFloat,
+                            opacity: float,
+                            ) -> vtkActor:
         """
         The plane is defined in the jk plane
 

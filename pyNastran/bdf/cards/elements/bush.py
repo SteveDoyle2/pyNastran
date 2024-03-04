@@ -289,11 +289,12 @@ class CBUSH(BushElement):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', 0.0)
-            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x2 = double_or_blank(card, 6, 'x2', default=0.0)
+            x3 = double_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
             if not isinstance(cid, integer_types):
-                assert max(x) != min(x), 'x=%s' % x
+                x_norm = np.linalg.norm(x)
+                assert x_norm != 0.0, 'x=%s' % x
         else:
             g0 = None
             x = [None, None, None]

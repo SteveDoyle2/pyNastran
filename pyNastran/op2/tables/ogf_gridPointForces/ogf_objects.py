@@ -563,7 +563,7 @@ class RealGridPointForcesArray(GridPointForces):
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in]
         nids = gpforce_nids[irange]
 
-        if debug:
+        if debug and log is not None:
             log.debug('gpforce_eids = %s' % gpforce_eids[is_in])
             log.debug('nids = %s' % gpforce_nids[irange])
             log.debug('eids = %s' % gpforce_eids[irange])
@@ -731,7 +731,7 @@ class RealGridPointForcesArray(GridPointForces):
 
             return force_out, moment_out, force_out_sum, moment_out_sum
 
-        if debug:
+        if debug and log is not None:
             f06_filename = f'grid_point_forcesi_itime={itime}.debug.f06'
             with open(f06_filename, 'w') as f06_file:
                 self.write_f06_time(f06_file, itime=itime, i=irange)
