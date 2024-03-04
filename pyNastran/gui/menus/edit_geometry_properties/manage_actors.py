@@ -9,8 +9,9 @@ from typing import Union
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
 #from pyNastran.gui.qt_version import qt_version #qt_int
 
-from qtpy.QtCore import Qt#, QVariant
+from qtpy.QtCore import Qt, QModelIndex
 from qtpy import QtCore, QtGui
+
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QTableView, QApplication,
     QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
@@ -461,7 +462,7 @@ class EditGeometryProperties(PyDialog):
         #self.out_data = data
         #self.update_active_key(i)
 
-    def update_active_key(self, index):
+    def update_active_key(self, index: QModelIndex) -> None:
         """
         Parameters
         ----------
@@ -480,7 +481,7 @@ class EditGeometryProperties(PyDialog):
         #i = self.keys.index(self.active_key)
         self.update_active_name(name)
 
-    def update_active_name(self, name):
+    def update_active_name(self, name: str) -> None:
         self.active_key = name
         self.name_edit.setText(name)
         obj = self.out_data[name]
@@ -507,7 +508,7 @@ class EditGeometryProperties(PyDialog):
             self.bar_scale_edit.setValue(bar_scale)
             self.force = True
             self.allow_update = True
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(obj)
 
         #allowed_representations = [
@@ -618,7 +619,7 @@ class EditGeometryProperties(PyDialog):
         #self.on_apply(force=True)  # TODO: was turned on...do I want this???
         #self.allow_update = True
 
-    def create_layout(self):
+    def create_layout(self) -> None:
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.cancel_button)
 
@@ -693,7 +694,7 @@ class EditGeometryProperties(PyDialog):
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 
-    def set_connections(self):
+    def set_connections(self) -> None:
         """creates the actions for the menu"""
         self.opacity_edit.valueChanged.connect(self.on_opacity)
         self.line_width_edit.valueChanged.connect(self.on_line_width)
@@ -716,11 +717,11 @@ class EditGeometryProperties(PyDialog):
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event) -> None:
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         self.on_cancel()
 
     def on_color(self):

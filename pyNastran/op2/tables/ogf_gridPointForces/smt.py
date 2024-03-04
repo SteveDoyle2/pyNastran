@@ -16,7 +16,7 @@ defines:
 """
 from __future__ import annotations
 import numpy as np
-from typing import Union, TYPE_CHECKING
+from typing import Union, cast, TYPE_CHECKING
 
 try:
     import matplotlib.pyplot as plt
@@ -33,6 +33,132 @@ if TYPE_CHECKING:  # pragma: no cover
 
 from pyNastran.nptyping_interface import (
     NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float)
+
+def create_shear_moment_torque(model: BDF,
+                               gpforce: RealGridPointForcesArray,
+                               p1: np.ndarray,
+                               p2: np.ndarray,
+                               p3: np.ndarray,
+                               zaxis: np.ndarray,
+                               method: str='Vector',
+                               station_location: str='End-Origin',
+                               cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
+                               nplanes: int=20,
+                               root_filename=None,
+                               csv_filename=None,
+                               length_scale: float=1.0, length_unit: str='',
+                               force_scale: float=1.0, force_unit: str='',
+                               moment_scale: float=1.0, moment_unit: str='',
+                               show: bool=True,
+                               ) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Creates a shear moment torque plot for the active plot result
+    Plane Actor is drawn in the i-k plane
+
+    Parameters
+    ----------
+    model : BDF
+        the model object
+    gpforce : RealGridPointForcesArray
+        the results object
+    p1: (3,) float ndarray
+        defines the starting point for the shear, moment, torque plot
+    p3: (3,) float ndarray
+        defines the end point for the shear, moment, torque plot
+    p2: (3,) float ndarray
+        defines the XZ plane for the shears/moments
+    zaxis: (3,) float ndarray
+        the direction of the z-axis
+    station_location : str; default='End-Origin'
+        'End-Origin': magnitude along p3-p1
+        'X' : Global X location
+        'Y' : Global Y location
+        'Z' : Global Z location
+    cid_p1 / cid_p2 / cid_p3; default=0
+        the coordinate systems for p1, p2, and p3
+    method : str
+        'coord id':
+           zaxis:  N/A
+           p2:     use the coord id from p2 as the output frame
+        'CORD2R':
+           zaxis:  point on the z-axis
+           p2:     point on the xz-plane
+        'Vector':
+           zaxis:  k vector
+           p2:     xz-plane vector
+         'Z-Axis Projection':
+           zaxis:  point on the z-axis
+           p2:     p2 is a point on the xz-plane
+    show: bool; default=True
+        shows the plots
+
+    Returns
+    -------
+    force_sum / moment_sum : (nstations, 3) float ndarray
+        the forces/moments at the station
+
+    """
+    log = model.log
+    nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+    eids, element_centroids_cid0 = get_element_centroids(model)
+
+    xyz1, xyz2, xyz3, i, k, coord, iaxis_march, dim_max, stations = setup_coord_from_plane(
+        model, xyz_cid0,
+        p1, p2, p3, zaxis,
+        method=method,
+        cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
+        nplanes=nplanes,
+    )
+    #is_failed, stations, coord, iaxis_march = self.plot_plane(
+        #model, xyz_cid0,
+        #p1, p2, p3,
+        #zaxis, method=method,
+        #cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
+        #nplanes=nplanes,
+        #stop_on_failure=stop_on_failure)
+    #if is_failed:
+        #force_sum = np.zeros((0, 3))
+        #moment_sum = np.zeros((0, 3))
+        #return force_sum, moment_sum
+
+    coord = cast(CORD2R, coord)
+    force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
+        nids, xyz_cid0, nid_cd, icd_transform,
+        eids, element_centroids_cid0,
+        stations, model.coords, coord,
+        iaxis_march=iaxis_march,
+        itime=0, idir=0,
+        nodes_tol=None, debug=False, log=log)
+
+    force_sum *= force_scale
+    moment_sum *= moment_scale
+
+    cids, origins, xyz_stations, xlabel = get_xyz_stations(
+        stations*length_scale, new_coords,
+        station_location=station_location)
+    origins *= length_scale
+
+    if csv_filename:
+        write_smt_to_csv(
+            csv_filename,
+            stations, nelems, nnodes, cids, origins,
+            force_sum, moment_sum,
+            length_unit=length_unit,
+            force_unit=force_unit,
+            moment_unit=moment_unit)
+    plot_smt(
+        xyz_stations,
+        force_sum, moment_sum,
+        nelems, nnodes, show=show,
+        xtitle=xlabel, xlabel=xlabel,
+        length_unit=length_unit,
+        force_unit=force_unit,
+        moment_unit=moment_unit,
+        root_filename=root_filename,
+        plot_force_components=False,
+        plot_moment_components=False,
+    )
+    return force_sum, moment_sum
 
 def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
                                    dict[int, NDArrayNint], NDArrayNint, NDArrayN3float]:

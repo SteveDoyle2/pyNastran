@@ -4,7 +4,10 @@ from typing import Optional
 ALLOWED_MODEL_GROUP_TERMS = {
     'nodes', 'elements', 'rigid_elements', 'masses',
     'properties', 'materials',
-    'spcs', 'mpcs', 'loads'}
+    'spcs', 'mpcs', 'loads',
+    # gui command
+    'is_visible',
+}
 
 class ModelGroup:
     def __init__(self, name: str,
@@ -17,7 +20,7 @@ class ModelGroup:
                  mpcs: Optional[list[int]]=None,
                  spcs: Optional[list[int]]=None,
                  loads: Optional[list[int]]=None,
-                 ):
+                 is_visible: bool=True):
         self.name = name
         self.nodes = nodes
         self.elements = elements
@@ -28,6 +31,7 @@ class ModelGroup:
         self.spcs = spcs
         self.mpcs = mpcs
         self.loads = loads
+        self.is_visible = is_visible
 
     def union(self, group: ModelGroup) -> None:
         """combines two groups"""
@@ -82,17 +86,13 @@ class ModelGroup:
                 assert value[-1] in {'"', "'"}, f'value={value!r}; expected it to end with a quote'
                 value2 = value[1:-1]
                 group_dict[keyword] = value2
-            else:
-                value_list = []
-                if ',' in value:
-                    values = value.split(',')
-                    for valuei in values:
-                        valuesi = _split_colon_tuple(valuei)
-                        value_list.append(valuesi)
-                else:
-                    valuesi = _split_colon_tuple(value)
-                    value_list.append(valuesi)
-                group_dict[keyword] = value_list
+                continue
+            elif keyword == 'is_visible':
+                assert value in {'True', 'False'}, f'value={value!r}; expected True/False'
+                group_dict[keyword] = (value == 'True')
+                continue
+            value_list = _patran_line_to_array(value)
+            group_dict[keyword] = value_list
 
         group = ModelGroup(**group_dict)
         #group = ModelGroup(name, nodes=nodes, elements=elements,
@@ -121,22 +121,45 @@ class ModelGroup:
 
         for key in ALLOWED_MODEL_GROUP_TERMS:
             value = getattr(self, key)
-            if value is not None:
+            if value is None:
+                continue
+
+            if isinstance(value, bool):
+                msg += f'; {key}={value}'
+            else:
                 _str = self.get_patran_syntax(value)
                 msg += f'; {key}={_str}'
         return msg
 
 
+def _patran_line_to_array(value: str) -> list[tuple[int, int, int]]:
+    value_list = []
+    if ' ' in value:
+        value = value.strip().replace(' ', ',')
+
+    if ',' in value:
+        values = value.split(',')
+        for valuei in values:
+            #print(valuei)
+            valuesi = _split_colon_tuple(valuei)
+            value_list.append(valuesi)
+    else:
+        valuesi = _split_colon_tuple(value)
+        value_list.append(valuesi)
+    return value_list
+
+
 def _split_colon_tuple(value: str) -> tuple[int, int, int]:
     svalue = value.split(':')
     step = 1
+    #print(svalue)
     if len(svalue) == 1:
         value_min = value_max = svalue[0]
     elif len(svalue) == 2:
         value_min, value_max = svalue
     elif len(svalue) == 3:
         value_min, value_max, step = svalue
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(svalue)
     values_tuple = (
         int(value_min),

@@ -356,7 +356,7 @@ def create_vtk_selection_node_by_point_ids(point_ids) -> vtkSelectionNode:
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def create_vtk_selection_node_by_cell_ids(cell_ids) -> vtkSelectionNode:
+def create_vtk_selection_node_by_cell_ids(cell_ids: np.ndarray) -> vtkSelectionNode:
     id_type_array = _convert_ids_to_vtk_idtypearray(cell_ids)
     selection_node = vtkSelectionNode()
     selection_node.SetFieldType(vtkSelectionNode.CELL)
@@ -364,7 +364,8 @@ def create_vtk_selection_node_by_cell_ids(cell_ids) -> vtkSelectionNode:
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def _convert_ids_to_vtk_idtypearray(ids):
+def _convert_ids_to_vtk_idtypearray(ids: np.ndarray) -> vtkIdTypeArray:
+    """TODO: speed this up"""
     if isinstance(ids, int):
         ids = [ids]
     #else:

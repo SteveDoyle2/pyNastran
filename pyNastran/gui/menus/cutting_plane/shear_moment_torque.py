@@ -220,9 +220,10 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p3_label.setToolTip('Defines the end point for the shear, moment, torque plot')
         self.p2_label.setToolTip('Defines the XZ plane for the shears/moments')
 
-        self.station_location_label = QLabel('Station Label')
+        self.station_location_label = QLabel('Station Label:')
         self.station_location_pulldown = QComboBox()
         self.station_location_pulldown.addItems(['End-Origin', 'X', 'Y', 'Z'])
+        self.station_location_pulldown.setToolTip('Sets the x-axis on the 2D plots')
 
         self.zaxis_label = QLabel('Z Axis:')
 
@@ -430,11 +431,14 @@ class ShearMomentTorqueWindow(PyDialog):
         self.remove2_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         self.plot_info = QLabel('Plot Info:')
-        self.force_label = QLabel('Force')
-        self.moment_label = QLabel('Moment')
-        self.length_label = QLabel('Length')
+        self.force_label = QLabel('Force:')
+        self.moment_label = QLabel('Moment:')
+        self.length_label = QLabel('Length:')
         self.unit_label = QLabel('Unit')
         self.scale_label = QLabel('Scale')
+
+        self.unit_label.setAlignment(Qt.AlignCenter)
+        self.scale_label.setAlignment(Qt.AlignCenter)
 
         self.length_unit_edit = QLineEdit('')
         self.force_unit_edit = QLineEdit('')

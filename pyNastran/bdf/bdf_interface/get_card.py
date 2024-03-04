@@ -879,7 +879,8 @@ class GetCard(GetMethods):
                 self.log.error('missing map %r' % key)
         return out
 
-    def get_node_ids_with_elements(self, eids: list[int], msg: str='') -> set[int]:
+    def get_node_ids_with_elements(self, eids: list[int], msg: str='',
+                                   return_array: bool=False) -> Union[set[int], np.ndarray]:
         """
         Get the node IDs associated with a list of element IDs
 
@@ -889,10 +890,13 @@ class GetCard(GetMethods):
             list of element ID
         msg : str
             An additional message to print out if an element is not found
+        return_array: bool; default=False
+            True: returns a numpy array
+            False: returns a set
 
         Returns
         -------
-        node_ids : set[int]
+        node_ids : set[int]; np.ndarray
             set of node IDs
 
         For example::
@@ -905,12 +909,19 @@ class GetCard(GetMethods):
         if isinstance(eids, integer_types):
             eids = [eids]
 
-        nids2 = set()
-        for eid in eids:
-            element = self.Element(eid, msg=msg)
-            self.log.debug("element.pid = %s" % (element.pid))
-            nids = set(element.node_ids)
-            nids2.update(nids)
+        if return_array:
+            nids_list = []
+            for eid in eids:
+                element = self.Element(eid, msg=msg)
+                nids = element.nodes
+                nids_list.extend(nids)
+            nids2 = np.unique(nids_list)
+        else:
+            nids2 = set()
+            for eid in eids:
+                element = self.Element(eid, msg=msg)
+                nids = set(element.node_ids)
+                nids2.update(nids)
         return nids2
 
     def get_elements_nodes_by_property_type(

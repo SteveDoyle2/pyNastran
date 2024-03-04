@@ -12,7 +12,6 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_element_centroids)
 
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow, ResultsDialog
-from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 from pyNastran.gui.qt_files.base_gui import BaseGui
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
@@ -394,7 +393,7 @@ class ShearMomentTorqueObject(BaseGui):
                 csv_filename,
                 stations, nelems, nnodes, cids, origins,
                 force_sum, moment_sum,
-                ength_unit=length_unit,
+                length_unit=length_unit,
                 force_unit=force_unit,
                 moment_unit=moment_unit)
         plot_smt(

@@ -1423,7 +1423,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 depname, indname, linename, idtype)
 
         for grid_name, group in model.model_groups.items():
-            if not len(group.nodes):
+            if group.nodes is None or not len(group.nodes):
                 continue
             nids_colon = []
             for groupi in group.nodes:
@@ -1434,7 +1434,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             msg = f', which is required by {grid_name!r}'
             gui.create_alternate_vtk_grid(
                 grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
-                representation='point', is_visible=True)
+                representation='point', is_visible=group.is_visible)
             self._add_nastran_nodes_to_grid(grid_name, nids, model, msg)
             del nids, nids_colon
 
