@@ -65,7 +65,9 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.menus.groups_modify.groups_modify import Group
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
     from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
@@ -76,7 +78,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class GeometryObject(BaseGui):
     """
     """
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         super().__init__(gui)
         #self.gui = parent
 
@@ -291,7 +293,7 @@ class GuiAttributes:
         self.model_data.geometry_properties = geometry_properties
 
     @property
-    def groups(self):
+    def groups(self) -> dict[str, Any]:
         return self.model_data.groups
     @groups.setter
     def groups(self, groups: dict[str, Any]):
@@ -1676,17 +1678,50 @@ class GuiAttributes:
         xyz = self.xyz_cid0
         return xyz
 
-    def get_element_ids(self, model_name=None, ids=None):
+    def get_element_ids(self, model_name: Optional[str]=None,
+                        ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around element_ids"""
+        #if self.group_active == 'main':
+        eids_all = self.element_ids
         if ids is None:
-            return self.element_ids
-        return self.element_ids[ids]
+            eids = eids_all
+        else:
+            eids = eids_all[ids]
+        # skin_eids=1:1632
+        if self.group_active == 'main':
+            return eids
 
-    def get_node_ids(self, model_name=None, ids=None):
+        group: Group = self.groups[self.group_active]
+        group_eids = group.element_ids
+        eids2 = np.intersect1d(eids, group_eids)
+        return eids2
+
+    def get_node_ids(self, model_name: Optional[str]=None,
+                     ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around node_ids"""
+        nids_all = self.node_ids
         if ids is None:
-            return self.node_ids
-        return self.node_ids[ids]
+            nids = nids_all
+        else:
+            nids = nids_all[ids]
+
+        if self.group_active != 'main':
+            group: Group = self.groups[self.group_active]
+            group_nids = group.node_ids
+            nids = np.intersect1d(nids, group_nids)
+
+        #------------------------------------------------------
+        #if self.group_active == 'main':
+            #nids_all = self.node_ids
+        #else:
+            #group: Group = self.groups[self.group_active]
+            #nids_all = group.node_ids
+
+        #if ids is None:
+            #nids = nids_all
+        #else:
+            #nids = nids_all[ids]
+        return nids
 
     def get_reverse_node_ids(self, model_name=None, ids=None):
         """wrapper around node_ids"""
@@ -1699,32 +1734,32 @@ class GuiAttributes:
 
     #------------------------------
     # these are overwritten
-    def log_debug(self, msg):
+    def log_debug(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('DEBUG:  ', msg)
 
-    def log_info(self, msg):
+    def log_info(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('INFO:  ', msg)
 
-    def log_error(self, msg):
+    def log_error(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         #if self.debug:
         print('ERROR:  ', msg)
 
-    def log_warning(self, msg):
+    def log_warning(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('WARNING:  ', msg)
 
-    def log_command(self, msg):
+    def log_command(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('COMMAND:  ', msg)
 
-    def Render(self):  # pragma: no cover
+    def Render(self) -> None:  # pragma: no cover
         pass
 
 

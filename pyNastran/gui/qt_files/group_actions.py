@@ -100,7 +100,7 @@ class GroupActions:
         for uresi in ures:
             ids = np.where(uresi == result)[0]
             eidsi = eids[ids]
-            nidsi = model.get_node_ids_with_elements(eidsi, msg='', return_set=False)
+            nidsi = model.get_node_ids_with_elements(eidsi, msg='', return_array=True)
 
             name = f'{prefix} {uresi}'
             element_str = ''
@@ -140,6 +140,7 @@ class GroupActions:
 
         #result = gui.find_result_by_name(name, restype='fringe')
         ngroups = 0
+        created_groups = []
         for name, group in model_groups.items():
             if group.elements is None:
                 continue
@@ -167,5 +168,8 @@ class GroupActions:
             group.node_ids = nodes
             gui.log_info(f'creating group={name!r}')
             gui.groups[name] = group
+            created_groups.append(name)
             ngroups += 1
+        gui.log_command(f'# created {ngroups:d} groups = {created_groups}\n'
+                        f'ngroups = self.create_groups_by_model_group()')
         return ngroups

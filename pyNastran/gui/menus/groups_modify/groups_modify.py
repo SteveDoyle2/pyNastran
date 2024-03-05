@@ -371,7 +371,9 @@ class GroupsModify(PyDialog):
         #self.deleted_groups.add(self.imain)
         items = {}
         j = 0
-        for i, key in sorted(self.out_data.items()):
+        keys = [key for key in self.out_data.keys() if isinstance(key, int)]
+        for i in enumerate(keys):
+            key = self.out_data[i]
             if isinstance(i, int):
                 continue
             if i != self.active_key:
@@ -500,7 +502,7 @@ class GroupsModify(PyDialog):
         gui = self.win_parent
         if gui is not None:
             model: BDF = gui.models['main']
-            self.nids = model.get_node_ids_with_elements(self.eids, return_set=False)
+            self.nids = model.get_node_ids_with_elements(self.eids, return_array=True)
 
     def _apply_cids_eids_nids(self) -> None:
         #ctext = _get_collapsed_text(self.cids)

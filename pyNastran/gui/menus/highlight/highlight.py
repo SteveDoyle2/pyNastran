@@ -4,7 +4,8 @@ The highlight menu handles:
  - Preferences
 
 """
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from qtpy import QtGui
@@ -33,7 +34,6 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_patran_sy
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
 from pyNastran.gui.styles.area_pick_style import get_ids_filter
@@ -47,7 +47,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     extract_selection_node_from_grid_to_ugrid,
     create_unstructured_point_grid, numpy_to_vtk_points, numpy_to_vtk)
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
-
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.groups_modify.groups import Group
 
 class HighlightWindow(PyDialog):
     """
@@ -338,8 +339,14 @@ class HighlightWindow(PyDialog):
             self.elements_edit, pound=self._elements_pound)
         if len(nodes) == 0 and len(elements) == 0:
             return False
-        nodes_filtered = np.intersect1d(self.nodes, nodes)
-        elements_filtered = np.intersect1d(self.elements, elements)
+
+        if self.win_parent is not None:
+            gui = self.win_parent
+            group: Group = gui.groups[gui.group_active]
+            all_nodes = group.node_ids
+            all_elements = group.element_ids
+        nodes_filtered = np.intersect1d(all_nodes, nodes)
+        elements_filtered = np.intersect1d(all_elements, elements)
         nnodes = len(nodes_filtered)
         nelements = len(elements_filtered)
         if nnodes == 0 and nelements == 0:
@@ -352,8 +359,8 @@ class HighlightWindow(PyDialog):
 
         actors = create_highlighted_actors(
             gui, grid,
-            all_nodes=self.nodes, nodes=nodes_filtered, set_node_scalars=True,
-            all_elements=self.elements, elements=elements_filtered, set_element_scalars=True,
+            all_nodes=all_nodes, nodes=nodes_filtered, set_node_scalars=True,
+            all_elements=all_elements, elements=elements_filtered, set_element_scalars=True,
             add_actors=False)
 
         #make_highlight = self.menu_type == 'highlight'

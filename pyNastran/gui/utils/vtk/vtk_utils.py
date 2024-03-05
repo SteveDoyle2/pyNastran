@@ -516,7 +516,8 @@ def update_axis_text_size(axis: vtkAxes,
         text.SetHeight(coord_text_scale * height)
 
 def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
-                           point_cell_type: int) -> None:
+                           is_points: bool=False,
+                           is_cells: bool=False) -> None:
     """
     Parameters
     ----------
@@ -525,10 +526,12 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
         1 : cell
 
     """
-    if point_cell_type == 0:
+    xor = (is_points ^ is_cells)
+    assert xor, (is_points, is_cells)
+    if is_points:
         ids.SetPointIdsArrayName(name)
-    elif point_cell_type == 1:
+    elif is_cells:
         ids.SetCellIdsArrayName(name)
-    else:
-        raise RuntimeError(point_cell_type)
+    else:  # pragma: no cover
+        raise RuntimeError(is_points, is_cells)
     return

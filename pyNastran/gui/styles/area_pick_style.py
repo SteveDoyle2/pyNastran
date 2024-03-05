@@ -12,7 +12,8 @@ http://www.vtk.org/Wiki/VTK/Examples/Cxx/Picking/HighlightSelection
 http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
-from typing import Union, Callable, Optional
+from __future__ import annotations
+from typing import Union, Callable, Optional, TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.gui.vtk_interface import
@@ -41,6 +42,10 @@ from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_unstructured_point_grid, numpy_to_vtk_points, set_vtk_id_filter_name)
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
+if TYPE_CHECKING:
+    from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints
+    from vtkmodules.vtkRenderingCore import vtkAreaPicker
+    from pyNastran.gui.main_window import MainWindow
 
 #class AreaPickStyle(vtkInteractorStyleRubberBandPick):
     #"""Custom Rubber Band Picker"""
@@ -76,7 +81,7 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
         self.AddObserver("RightButtonPressEvent", self.right_button_press_event)
         self.parent = parent
         self.area_pick_button = self.parent.actions['area_pick']
-        self.picker_points: list[float] = []
+        self.picker_points: list[int] = []
         self.parent.area_picker.SetRenderer(self.parent.rend)
         self.is_eids = is_eids
         self.is_nids = is_nids
@@ -89,14 +94,14 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
         assert name is not None
         self.actors: list[vtkActor] = []
 
-    def _left_button_press_event(self, obj, event):
+    def _left_button_press_event(self, obj, event) -> None:
         """gets the first point"""
         #print('area_picker - left_button_press_event')
         self.OnLeftButtonDown()
         pixel_x, pixel_y = self.parent.vtk_interactor.GetEventPosition()
         self.picker_points.append((pixel_x, pixel_y))
 
-    def _left_button_release_event(self, obj, event):
+    def _left_button_release_event(self, obj, event) -> None:
         """
         gets the second point and zooms
 
@@ -176,28 +181,28 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
             self.cleanup_observer = self.parent.setup_mouse_buttons(
                 mode='default', left_button_down_cleanup=self.cleanup_callback)
 
-    def remove_actors(self):
+    def remove_actors(self) -> None:
         if len(self.actors) == 0:
             return
         for actor in self.actors:
             self.parent.rend.RemoveActor(actor)
         self.actors = []
 
-    def cleanup_callback(self, obj, event):
+    def cleanup_callback(self, obj, event) -> None:
         """this is the cleanup step to remove the highlighted actor"""
         self.remove_actors()
         #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
         self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
         #cleanup_observer = None
 
-    def right_button_press_event(self, obj, event):
+    def right_button_press_event(self, obj, event) -> None:
         """cancels the button"""
         self.area_pick_button.setChecked(False)
         self.parent.setup_mouse_buttons(mode='default')
         self.parent.vtk_interactor.Render()
 
 
-def get_actors_by_area_picker(gui, area_picker,
+def get_actors_by_area_picker(gui: MainWindow, area_picker: vtkAreaPicker,
                               model_name: str,
                               is_nids: bool=True, is_eids: bool=True,
                               representation: str='points',
@@ -241,7 +246,18 @@ def get_depth_ids(gui, frustum: vtkPlanes,
     Picks the nodes and/or elements.  Only one grid (e.g., the elements)
     is currently returned.
     """
-    grid = gui.get_grid(model_name)
+    #len(gui.node_ids)
+    #2675
+    #len(gui.element_ids)
+    #2657
+
+    #Number Of Points: 2675
+    #Number Of Cells: 2657
+    grid = gui.get_grid_selected(model_name)
+
+    #Number Of Points: 2675
+    #Number Of Cells: 2657
+    #grid = gui.get_grid_selected(model_name)
 
     #extract_ids = vtkExtractSelectedIds()
     #extract_ids.AddInputData(grid)
@@ -249,14 +265,19 @@ def get_depth_ids(gui, frustum: vtkPlanes,
     ids = get_ids_filter(
         grid, idsname='Ids',
         is_nids=is_nids, is_eids=is_eids)
+
+    # TODO: this ugrid includes all elements in the box, including the ones 
+    #       not visible...it's an issue.  The eids/nids  are right tho
     ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
         grid, ids, frustum)
 
     eids = None
     if is_eids:
+        #Number Of Points: 46
+        #Number Of Cells: 31
         cells: vtkCellData = ugrid.GetCellData()
         if cells is not None:
-            ids = cells.GetArray('Ids')
+            ids = cells.GetArray('Ids')  # local ids, not global...
             if ids is not None:
                 cell_ids = vtk_to_numpy(ids)
                 assert len(cell_ids) == len(np.unique(cell_ids))
@@ -309,7 +330,7 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
 
     ids = points.GetArray('Ids')
     if ids is None:
-        return  ugrid, nids
+        return ugrid, nids
 
     # all points associated with the correctly selected cells are returned
     # but we get extra points for the cells that are inside and out
@@ -374,9 +395,9 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
     #ids.FieldDataOn()
 
     if is_nids:
-        set_vtk_id_filter_name(ids, idsname, point_cell_type=0)
+        set_vtk_id_filter_name(ids, idsname, is_points=True)
     if is_eids:
-        set_vtk_id_filter_name(ids, idsname, point_cell_type=1)
+        set_vtk_id_filter_name(ids, idsname, is_cells=True)
     return ids
 
 def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
@@ -424,15 +445,15 @@ def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
     return ugrid, ugrid_flipped
 
 def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
-                                nids, nids2) -> vtkUnstructuredGrid:
+                                nids: np.ndarray, nids2: np.ndarray) -> vtkUnstructuredGrid:
     """
     We need to filter the nodes that were filtered by the
     numpy setdiff1d, so we don't show extra points
 
     """
     #unused_pointsu = ugrid.GetPoints()
-    point_data: vtkPointData = ugrid.GetPoints()
-    output_data = point_data.GetData()
+    point_data: vtkPoints = ugrid.GetPoints()
+    output_data: vtkDataArray = point_data.GetData()
     points_array = vtk_to_numpy(output_data)  # yeah!
 
     isort_nids = np.argsort(nids)
@@ -441,7 +462,7 @@ def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
 
     points_array_sorted = points_array[isort_nids, :]
     point_array2 = points_array_sorted[inids, :]
-    points2 = numpy_to_vtk_points(point_array2)
+    points2: vtkPoints = numpy_to_vtk_points(point_array2)
 
     npoints = len(nids2)
     ugrid = create_unstructured_point_grid(points2, npoints)

@@ -443,6 +443,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         is_visible = True
         recent_file_tools = []
+        ifile = -1
         for ifile, (fname, geometry_format) in enumerate(recent_files):
             if ifile == NFILES_TO_SAVE:
                 break
@@ -454,6 +455,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #print(f'ifile={ifile} shortcut={shortcut}')
             file_tool = (f'file{ifile+1:d}', label, image, shortcut, tooltip, func, is_visible)
             recent_file_tools.append(file_tool)
+
+        # add the tools that are not shown (until you load a new model)
         if len(recent_file_tools) < NFILES_TO_SAVE:
             is_visible = False
             for jfile in range(ifile+1, NFILES_TO_SAVE):
@@ -2267,25 +2270,26 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if self.element_ids is None:  # pragma: no cover
             #raise RuntimeError('implement self.element_ids for this format')
 
+        #eids = np.arange(172)
+        #eids = []
+        #self.hide_elements_mask(eids)
+        elements_pound = self.element_ids[-1]
+        nodes_pound = self.node_ids[-1]
+        main_group = Group(
+            'main',
+            '', elements_pound,
+            '', nodes_pound,
+            editable=False)
+        main_group.element_ids = self.element_ids
+        main_group.node_ids = self.node_ids
+        self.groups['main'] = main_group
         if self.is_groups:
-            #eids = np.arange(172)
-            #eids = []
-            #self.hide_elements_mask(eids)
-            elements_pound = self.element_ids[-1]
-            nodes_pound = self.node_ids[-1]
-            main_group = Group(
-                'main',
-                '', elements_pound,
-                '', nodes_pound,
-                editable=False)
-            main_group.element_ids = self.element_ids
-            main_group.node_ids = self.node_ids
-            self.groups['main'] = main_group
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
+        self.create_groups_by_model_group()
 
     def _set_methods_by_icase(self, icase: Optional[int]) -> bool:
         """
