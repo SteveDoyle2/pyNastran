@@ -124,7 +124,8 @@ ETYPES_EXPECTED_DICT = {
     27: 13, # cpyram13
 }
 
-def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> vtkPoints:
+def numpy_to_vtk_points(nodes: np. ndarray, points=None,
+                        dtype='<f', deep=1) -> vtkPoints:
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
@@ -148,7 +149,8 @@ def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> 
     return points
 
 
-def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> None:
+def _check_shape(etype: int, elements: np.ndarray,
+                 nnodes_per_element: int) -> None:
     """
     The following table lists the supported vtk types
 

@@ -8,6 +8,39 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
+
+v1.4.1 (2024/3/xx)
+------------------
+This is a bug fix release.
+
+BDF:
+ - fixed:
+   - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
+   - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0.
+ - TODO:
+   - modern MSC support for unlimited PLOAD2s (NX doesn't support this)
+
+GUI:
+ - Shear-Moment-Torque menu:
+   - remove unused time box
+   - added icase flag to allow changing case
+   - added line/points to indicate start/end and intermediate plane locations
+   - added length scale/unit
+   - added scripting message
+   - added Station Label to more clearly indicate location for 2D plots
+   - added popup for SMT results
+ - Groups menu:
+   - active element ids are now copyable
+   - added node ids for informational purposes
+   - group delete sorted bug (cant sort int/str)
+ - TODO:
+   - corner text min/max is incorrect (should be default, not legend limited)
+   
+  - Known bugs for groups
+    - node id picking for groups is buggy
+    - legend doesn't limit min/max
+    - extra arrows (e.g., Load_vectors) are shown
+
 v1.4.0 (2024/2/29)
 ------------------
 Programmatics:

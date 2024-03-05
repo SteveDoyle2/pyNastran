@@ -10,7 +10,7 @@ import numpy as np
     #vtkVertexGlyphFilter,
 #)
 
-from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkCommonCore import vtkPoints, vtkDataArray
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData, vtkPolyData
 from vtkmodules.vtkRenderingCore import (
     vtkActor, vtkDataSetMapper, vtkActor2D,
@@ -144,11 +144,99 @@ def create_node_labels(point_id_filter: vtkIdFilter,
     label_actor.SetMapper(label_mapper)
     return label_actor
 
+def create_highlighted_ugrids(gui, grid: vtkUnstructuredGrid,
+                              all_nodes=None, nodes=None, set_node_scalars: bool=True,
+                              all_elements=None, elements=None, set_element_scalars: bool=True,
+                              ) -> tuple[Optional[vtkUnstructuredGrid],
+                                         Optional[vtkUnstructuredGrid]]:
+    """
+    Creates nodes & element highlighted objects
+
+    Parameters
+    ----------
+    all_nodes / all_elements : None / (n,) np.ndarray
+       all the nodes/elements
+    nodes / elements : None / (n,) np.ndarray
+       the subset of nodes/elements
+    set_node_scalars / set_element_scalars : bool; default=True
+        sets the node/element result because ???
+
+
+
+    """
+    ugrids = []
+    nnodes = 0
+    nelements = 0
+    if nodes is not None:
+        nnodes = len(nodes)
+        assert len(all_nodes) >= nnodes
+
+    if elements is not None:
+        nelements = len(elements)
+        assert len(all_elements) >= nelements
+    assert nnodes + nelements > 0
+
+    ugrid_node = None
+    ugrid_element = None
+    if nnodes:
+        point_ids = np.searchsorted(all_nodes, nodes)
+        point_data: vtkPoints = grid.GetPoints()
+        output_data: vtkDataArray = point_data.GetData()
+        points_array = vtk_to_numpy(output_data)  # yeah!
+
+        point_array2 = points_array[point_ids, :]
+        points2: vtkPoints = numpy_to_vtk_points(point_array2)
+
+        ugrid = create_unstructured_point_grid(points2, nnodes)
+        if set_node_scalars:
+            point_ids_array: vtkDataArray = numpy_to_vtk(nodes)
+            point_data2: vtkPointData = ugrid.GetPointData()
+            point_data2.SetScalars(point_ids_array)
+        ugrid_node = ugrid
+
+    if nelements:
+        cell_ids = np.searchsorted(all_elements, elements)
+
+        selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
+        ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
+        if set_element_scalars:
+            element_ids_array: vtkDataArray = numpy_to_vtk(elements)
+            point_data: vtkPointData = ugrid.GetPointData()
+            cell_data: vtkCellData = ugrid.GetCellData()
+            point_data.SetScalars(None)
+            cell_data.SetScalars(element_ids_array)
+        ugrid_element = ugrid
+    return ugrid_node, ugrid_element
+
 def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
                               all_elements=None, elements=None, set_element_scalars: bool=True,
                               add_actors: bool=False) -> list[vtkLODActor]:
-    """creates nodes & element highlighted objects
+    actors = []
+    ugrid_node, ugrid_element = create_highlighted_ugrids(
+        gui, grid,
+        all_nodes=all_nodes, nodes=nodes, set_node_scalars=set_node_scalars,
+        all_elements=all_elements, elements=elements, set_element_scalars=set_element_scalars)
+
+    if nodes is not None:
+        actor = create_highlighted_actor(
+            gui, ugrid_node, representation='points',
+            add_actor=add_actors)
+        actors.append(actor)
+
+    if elements is not None:
+        actor = create_highlighted_actor(
+            gui, ugrid_element, representation='wire',
+            add_actor=add_actors)
+        actors.append(actor)
+    return actors
+
+def create_highlighted_actors_old(gui, grid: vtkUnstructuredGrid,
+                                  all_nodes=None, nodes=None, set_node_scalars: bool=True,
+                                  all_elements=None, elements=None, set_element_scalars: bool=True,
+                                  add_actors: bool=False) -> list[vtkLODActor]:
+    """
+    Creates nodes & element highlighted objects
 
     Parameters
     ----------
@@ -181,11 +269,11 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         points_array = vtk_to_numpy(output_data)  # yeah!
 
         point_array2 = points_array[point_ids, :]
-        points2 = numpy_to_vtk_points(point_array2)
+        points2: vtkPoints = numpy_to_vtk_points(point_array2)
 
         ugrid = create_unstructured_point_grid(points2, nnodes)
         if set_node_scalars:
-            point_ids_array = numpy_to_vtk(nodes)
+            point_ids_array: vtkDataArray = numpy_to_vtk(nodes)
             point_data: vtkPointData = ugrid.GetPointData()
             point_data.SetScalars(point_ids_array)
         actor = create_highlighted_actor(
@@ -199,7 +287,7 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
         if set_element_scalars:
-            element_ids_array = numpy_to_vtk(elements)
+            element_ids_array: vtkDataArray = numpy_to_vtk(elements)
             point_data: vtkPointData = ugrid.GetPointData()
             cell_data: vtkCellData = ugrid.GetCellData()
             point_data.SetScalars(None)

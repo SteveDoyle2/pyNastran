@@ -29,7 +29,8 @@ from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from pyNastran.bdf.cards.elements.rigid import (
+    RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,

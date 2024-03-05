@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.gui.vtk_interface import
@@ -14,24 +14,24 @@ import numpy as np
 #)
 from vtkmodules.vtkCommonDataModel import (
     vtkCellData, vtkPointData, vtkSelection, vtkSelectionNode, vtkPlanes)
-from vtkmodules.vtkFiltersCore import vtkIdFilter
 from vtkmodules.vtkFiltersPoints import vtkExtractPoints
 from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkRenderingCore import vtkActor
 
 from pyNastran.gui.vtk_rendering_core import vtkActor
-from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkPolyData
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_unstructured_point_grid, numpy_to_vtk_points,
 )
 from pyNastran.gui.menus.highlight.vtk_utils import (
+    create_highlighted_ugrids,
     create_highlighted_actors, get_ids_filter)
 
 if TYPE_CHECKING:
-    from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints
+    from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints, vtkIdTypeArray
     from vtkmodules.vtkRenderingCore import vtkAreaPicker
     from pyNastran.gui.main_window import MainWindow
 
@@ -119,21 +119,20 @@ def get_depth_ids(gui: MainWindow,
 
     nids = None
     if is_nids:
+        # TODO: the highlighted node ugrid is a problem for groups
         ugrid_points, nids = get_inside_point_ids(
             gui, ugrid, ugrid_flipped, model_name,
             representation=representation)
         ugrid = ugrid_points
 
-    if is_eids and eids is not None:
-        actors = create_highlighted_actors(
+    if is_eids and eids is not None and len(eids):
+        # the highlighted element ugrid works for groups
+        ugrid_node, ugrid_element = create_highlighted_ugrids(
             gui, grid,
-            all_nodes=None, nodes=None, set_node_scalars=True,
-            all_elements=gui.element_ids, elements=eids, set_element_scalars=True,
-            add_actors=False)
-        element_actor = actors[0]
-        mapper = element_actor.GetMapper()
-        ugrid = mapper.GetInput()
-        x = 1
+            #all_nodes=None, nodes=None, set_node_scalars=True,
+            all_elements=gui.element_ids, elements=eids, set_element_scalars=True)
+        del ugrid_node
+        ugrid = ugrid_element
 
     return ugrid, eids, nids
 
@@ -173,35 +172,31 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
     if points is None:
         return ugrid, nids
 
-    ids = points.GetArray('Ids')
+    ids: vtkIdTypeArray = points.GetArray('Ids')
     if ids is None:
         return ugrid, nids
 
     # all points associated with the correctly selected cells are returned
     # but we get extra points for the cells that are inside and out
     point_ids = vtk_to_numpy(ids)
-    nids = gui.get_node_ids(model_name, point_ids)
 
     # these are the points outside the box/frustum (and also include the bad point)
     points_flipped: vtkPointData = ugrid_flipped.GetPointData()
-    ids_flipped = points_flipped.GetArray('Ids')
+    ids_flipped: vtkIdTypeArray = points_flipped.GetArray('Ids')
     point_ids_flipped = vtk_to_numpy(ids_flipped)
-    nids_flipped = gui.get_node_ids(model_name, point_ids_flipped)
-    #nids = gui.gui.get_reverse_node_ids(model_name, point_ids_flipped)
 
     # setA - setB
-    nids2 = np.setdiff1d(nids, nids_flipped, assume_unique=True)
+    point_ids2 = np.setdiff1d(point_ids, point_ids_flipped)
 
-    #narrays = points.GetNumberOfArrays()
-    #for iarray in range(narrays):
-        #name = points.GetArrayName(iarray)
-        #print('iarray=%s name=%r' % (iarray, name))
+    # convert form point_id to node_id
+    nids2 = gui.get_node_ids(model_name, point_ids2)
 
     #------------------
     if representation == 'points':
         # we need to filter the nodes that were filtered by the
         # numpy setdiff1d, so we don't show extra points
-        ugrid = create_filtered_point_ugrid(ugrid, nids, nids2)
+        nids = gui.get_node_ids(model_name, point_ids)
+        ugrid = create_filtered_point_ugrid_from_nids(ugrid, nids, nids2)
 
     nids = nids2
     return ugrid, nids
@@ -251,8 +246,10 @@ def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
         ugrid_flipped = None
     return ugrid, ugrid_flipped
 
-def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
-                                nids: np.ndarray, nids2: np.ndarray) -> vtkUnstructuredGrid:
+def create_filtered_point_ugrid_from_nids(
+    ugrid: vtkUnstructuredGrid,
+    nids: np.ndarray,
+    nids2: np.ndarray) -> vtkUnstructuredGrid:
     """
     We need to filter the nodes that were filtered by the
     numpy setdiff1d, so we don't show extra points
@@ -274,3 +271,6 @@ def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
     npoints = len(nids2)
     ugrid = create_unstructured_point_grid(points2, npoints)
     return ugrid
+
+#def create_filtered_point_ugrid_from_inids(ugrid: vtkUnstructuredGrid,
+                                           #inids: np.ndarray) -> vtkUnstructuredGrid:

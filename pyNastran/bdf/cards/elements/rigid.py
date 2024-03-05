@@ -1606,7 +1606,9 @@ class RBE3(RigidElement):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        return write_card(self.comment, card, size, is_double)
+        # RBE3s have a bug in MSC Nastran where double precision causes an issue
+        # if there is a single weight that is greater than or equal to 2.0.
+        return write_card(self.comment, card, size, is_double=False)
 
 
 class RSPLINE(RigidElement):
