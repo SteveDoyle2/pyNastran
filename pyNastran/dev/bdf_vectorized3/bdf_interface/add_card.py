@@ -2364,7 +2364,7 @@ class AddRigidElements(BDFAttributes):
         return elem
 
     def add_rbe3(self, eid: int, refgrid: int, refc: str,
-                 weights: list[float], comps: list[str], Gijs: list[int],
+                 weights: list[float], comps: list[str], Gijs: list[list[int]],
                  Gmi=None, Cmi=None,
                  alpha: float=0.0, tref: float=0.0,
                  validate: bool=True,
@@ -2380,12 +2380,19 @@ class AddRigidElements(BDFAttributes):
             dependent node
         refc - str
             dependent components for refgrid???
-        GiJs : list[int, ..., int]
-            independent nodes
-        comps : list[str, ..., str]
-            independent components
-        weights : list[float, ..., float]
+        weights : list[float]
             independent weights for the importance of the DOF
+        comps : list[str]
+            independent components
+            len(comps) = len(weights)
+        GiJs : varies
+            independent nodes
+            list[list[int]]:
+                allows for different nodes for the different weights
+                len(GiJs) = len(weights)
+            list[int, ..., int]:
+                intended for a single weight
+                This will be expanded into list[list[int]]
         Gmi : list[int, ..., int]; default=None -> []
             dependent nodes / UM Set
         Cmi : list[str, ..., str]; default=None -> []
