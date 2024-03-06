@@ -124,6 +124,8 @@ class GroupsModify(PyDialog):
         self.elements_button = QPushButton('Default')
         self.elements_highlight_button = QPushButton('Show')
 
+        self.elements_button.setToolTip('Reverts element ids to the last validated state')
+
         # elements
         self.nodes_label = QLabel('Node IDs:')
         self.nodes_edit = QLineEdit(str(self._default_nodes).strip())
@@ -546,7 +548,7 @@ class GroupsModify(PyDialog):
         node_str = str(self._default_nodes)
 
         self.elements_edit.setText(element_str)
-        self.elements_edit.setStyleSheet(QLINEEDIT_GOOD)
+        #self.elements_edit.setStyleSheet(QLINEEDIT_GOOD)
 
         group = self.out_data[self.active_key]
         group.element_str = element_str
@@ -592,7 +594,7 @@ class GroupsModify(PyDialog):
 
     def on_apply(self, force=False) -> bool:
         passed = self.on_validate()
-        if passed or force:
+        if (passed or force) and self.win_parent is not None:
             self.win_parent._apply_modify_groups(self.out_data)
         return passed
 
@@ -636,7 +638,7 @@ class GroupsModify(PyDialog):
 
         self.set_as_main_button.setEnabled(True)
 
-        if name in ['main', 'anti-main']:
+        if name in ('main', 'anti-main'):
             enabled = False
         #def qlineedit_set_read_only(qlineedit: QLineEdit, color) -> None:
             #self.elements_edit.setEnabled(False)

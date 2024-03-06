@@ -14,14 +14,15 @@ v1.4.1 (2024/3/xx)
 This is a bug fix release.
 
 BDF:
+ - added:
+   - CBUSH centroid to fix grid point forces bug
+   - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
  - fixed:
    - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
    - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0.
- - TODO:
-   - modern MSC support for unlimited PLOAD2s (NX doesn't support this)
 
 GUI:
- - Shear-Moment-Torque menu:
+ - better Shear-Moment-Torque menu:
    - remove unused time box
    - added icase flag to allow changing case
    - added line/points to indicate start/end and intermediate plane locations
@@ -29,24 +30,30 @@ GUI:
    - added scripting message
    - added Station Label to more clearly indicate location for 2D plots
    - added popup for SMT results
- - Groups menu:
+ - Groups / GroupsMenu
    - active element ids are now copyable
-   - added node ids for informational purposes
-   - group delete sorted bug (cant sort int/str)
+   - added node ids to groups for informational purposes
+   - groups menu delete sorted bug (cant sort int/str)
+ - fixed:
+   - fixed corner text min/max bug (should be default, not same as legend)
+   - fixed legend disappearing when previous result is GridPointForces
+   - fixed issue with GUI not loading if json file doesn't exist
  - TODO:
-   - corner text min/max is incorrect (should be default, not legend limited)
-   
-  - Known bugs for groups
-    - node id picking for groups is buggy
-    - legend doesn't limit min/max
-    - extra arrows (e.g., Load_vectors) are shown
+   - 
+  - Known bugs:
+    - area_picker picks all nodes associated with picked elements (not just boxed nodes); it's decent though
+      - highlight menu works though
+    - Groups:
+      - node id picking for active groups is buggy (area_pick, highlight menu)
+      - legend doesn't limit min/max when group is active
+      - extra arrows (e.g., load_vectors) are shown when group is active
 
 v1.4.0 (2024/2/29)
 ------------------
 Programmatics:
  - Supports Python 3.8-3.10
  - much improved MSC 2020/2021 and OptiStruct support
- - support for PyQt5/6 and PySide2/6 (GUI)
+ - support for PyQt5 and PySide2 (GUI)
  - support for latest numpy/h5py
 
 

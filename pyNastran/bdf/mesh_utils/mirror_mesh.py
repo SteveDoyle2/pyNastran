@@ -753,7 +753,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
      - PLOAD4
         - no coordinate systems (assumes cid=0)
      - FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2
-     - PLOAD, PLOAD2
+     - PLOAD, PLOAD2, PLOAD4
      - TEMP, QVOL, QHBDY, QBDY1, QBDY2, QBDY3
 
     """
@@ -888,6 +888,7 @@ def _mirror_aero(model: BDF,
 
     """
     add_methods = model._add_methods
+    log = model.log
     is_aero = False
     aero_cids_set = set([])
     if model.aeros is not None:
@@ -896,7 +897,7 @@ def _mirror_aero(model: BDF,
         # The ACSID must be a rectangular coordinate system.
         # Flow is in the positive x-direction (T1).
         if aeros.acsid > 0:
-            model.log.error('Sideslip coordinate system (ACSID) mirroring is not supported')
+            log.error('Sideslip coordinate system (ACSID) mirroring is not supported')
 
         # REFB should be full span, even on half-span models
         # REFS should be half area on half-span models
@@ -906,7 +907,7 @@ def _mirror_aero(model: BDF,
         elif plane == 'yz':
             aeros.sym_yz = 0
         else:
-            model.log.error('not mirroring plane %r; only xz, yz' % plane)
+            log.error(f'not mirroring plane {plane!r}; only xz, yz')
 
     caero_id_offset = 0
     if len(model.caeros):
@@ -935,7 +936,7 @@ def _mirror_aero(model: BDF,
                     p1[2] *= -1.
                     p4[2] *= -1.
                 else:  # pragma: no cover
-                    raise NotImplementedError('plane=%r not supported in CAERO1' % plane)
+                    raise NotImplementedError(f'plane={plane!r} not supported in CAERO1')
                 eid2 = caero.eid + caero_id_offset
                 caero_new = CAERO1(eid2, caero.pid, caero.igroup,
                                    p1, x12, p4, x43,
@@ -948,7 +949,7 @@ def _mirror_aero(model: BDF,
                 caero_new.flip_normal()
                 caeros.append(caero_new)
             else:  # pragma: no cover
-                model.log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
+                log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
             add_methods._add_caero_object(caero)
@@ -956,9 +957,9 @@ def _mirror_aero(model: BDF,
     nsplines = len(model.splines)
     sets_max = max(model.sets) if len(model.sets) else 0
     if caero_id_offset == 0 and nsplines:
-        model.log.error("cant mirror splines because CAEROs don't exist...")
+        log.error("cant mirror splines because CAEROs don't exist...")
     elif nsplines and sets_max == 0:
-        model.log.error("cant mirror splines because SET1/3 don't exist...")
+        log.error("cant mirror splines because SET1/3 don't exist...")
     elif nsplines:
         is_aero = True
         splines = []
@@ -982,7 +983,7 @@ def _mirror_aero(model: BDF,
                 splines.append(spline_new)
                 spline_sets_to_duplicate.append(spline.setg)
             else:  # pragma: no cover
-                model.log.error('skipping (only support SPLINE1):\n%s' % spline.rstrip())
+                log.error('skipping (only support SPLINE1):\n%s' % spline.rstrip())
 
         #print("spline_sets_to_duplicate =", spline_sets_to_duplicate)
         msg = ', which is required to mirror:\n%s' % spline.rstrip()
@@ -997,7 +998,7 @@ def _mirror_aero(model: BDF,
                 set_card = SET1(sid, ids, is_skin=is_skin, comment='')
                 sets_to_add.append(set_card)
             else:  # pragma: no cover
-                model.log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
+                log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
 
         add_methods = mirror_model._add_methods
         for spline in splines:
@@ -1031,7 +1032,7 @@ def _mirror_aero(model: BDF,
             #cid2 = None
             #alid2 = None
             if aesurf.cid2:
-                model.log.warning(f"skipping aesurf='{aesurf.label}' second cid/aelist")
+                log.warning(f"skipping aesurf='{aesurf.label}' second cid/aelist")
                 # combine this into the first coordinate system
                 #
                 #  don't mirror the coordinate system because it's antisymmetric?
@@ -1071,9 +1072,11 @@ def _asymmetrically_mirror_coords(model: BDF,
                                   mirror_model: BDF,
                                   cids_nominal_set: set[int],
                                   cid_offset: int, plane: str='xz') -> None:
-    """we'll leave i the same, flip j, and invert k"""
-    # doesn't handle CORD1x
+    """
+    leave i the same, flip j, and invert k
 
+    TODO: doesn't handle CORD1x
+    """
     coord_map = {
         'CORD1R': CORD1R,
         'CORD1C': CORD1C,
@@ -1085,14 +1088,15 @@ def _asymmetrically_mirror_coords(model: BDF,
     }
     cids = list(cids_nominal_set)
     cids.sort()
-    model.log.debug('asymmetrically mirroring coordinate systems')
+    log = model.log
+    log.debug('asymmetrically mirroring coordinate systems')
     for cid in cids:
 
         coord = model.Coord(cid)
         if cid == 0:
             continue
         cid_new = cid + cid_offset
-        model.log.debug(f'  cid={cid} -> {cid_new}')
+        log.debug(f'  cid={cid} -> {cid_new}')
 
         if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
             i, j, unused_k = coord.beta().copy()
@@ -1104,14 +1108,14 @@ def _asymmetrically_mirror_coords(model: BDF,
                 origin[2] *= -1
                 j[2] *= -1
             else:
-                model.log.warning(f'skipping coord_id={coord.cid}')
+                log.warning(f'skipping coord_id={coord.cid}')
                 return
             #k = np.cross(i, j)
             coord_obj = coord_map[coord.type]  # CORD2R/C/S
             coord_new = coord_obj.add_ijk(cid_new, origin=origin, i=i, j=j, k=None,
                                           rid=0, comment='')
         else:
-            model.log.warning(f'skipping coord_id={coord.cid}')
+            log.warning(f'skipping coord_id={coord.cid}')
             continue
         mirror_model.coords[cid_new] = coord_new
     return

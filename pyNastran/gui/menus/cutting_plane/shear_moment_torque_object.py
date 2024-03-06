@@ -62,7 +62,7 @@ class ShearMomentTorqueObject(BaseGui):
             return is_failed, None
         is_failed = False
         gpforce: RealGridPointForcesArray = obj.gpforce_array
-        return icase, gpforce
+        return is_failed, gpforce
 
     def set_shear_moment_torque_menu(self):
         """
@@ -99,6 +99,8 @@ class ShearMomentTorqueObject(BaseGui):
             'cids' : cids,
             'plane_color' : settings.shear_moment_torque_color,
             'plane_opacity' : settings.shear_moment_torque_opacity,
+            'vector_line_width' : settings.shear_moment_torque_line_width,
+            'vector_point_size' : settings.shear_moment_torque_point_size,
 
             'gpforce' : gpforce,
             'model_name' : model_name,

@@ -44,11 +44,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 IS_DEMO = False
-IS_DEMO = True  # just for testing
+#IS_DEMO = True  # just for testing
 CID_GLOBAL_STR = '0/Global'
 
 IS_NODE_ELEMENT = False
-EXPOSE_SMT_PARAMETERS = True
 IS_TIME = False
 
 class ResultsDialog(QDialog):
@@ -120,6 +119,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.plane_opacity = data['plane_opacity']
+        self.vector_line_width = data['vector_line_width']
+        self.vector_point_size = data['vector_point_size']
+
         self.methods = ['Vector', 'CORD2R', 'Coord ID']
         #self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
         self.zaxis_methods = ['Manual', 'Global Z']
@@ -304,8 +306,6 @@ class ShearMomentTorqueWindow(PyDialog):
 
 
         # ------------------------------------------------
-        self.vector_line_width = 5
-        self.vector_point_size = 5
         opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
             self,
             self.plane_opacity,
@@ -663,22 +663,21 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.additional_params_label, irow, 0)
         irow += 1
 
-        if EXPOSE_SMT_PARAMETERS:
-            grid.addWidget(self.plane_color_label, irow, 0)
-            grid.addWidget(self.plane_color_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.plane_color_label, irow, 0)
+        grid.addWidget(self.plane_color_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.plane_opacity_label, irow, 0)
-            grid.addWidget(self.plane_opacity_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.plane_opacity_label, irow, 0)
+        grid.addWidget(self.plane_opacity_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.point_size_label, irow, 0)
-            grid.addWidget(self.point_size_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.point_size_label, irow, 0)
+        grid.addWidget(self.point_size_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.line_width_label, irow, 0)
-            grid.addWidget(self.line_width_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.line_width_label, irow, 0)
+        grid.addWidget(self.line_width_edit, irow, 1)
+        irow += 1
 
         # -----------------------------------------
         grid.addWidget(self.plot_info, irow, 0)
@@ -1076,6 +1075,8 @@ def main() -> None:  # pragma: no cover
         'cids' : [0],
         'plane_color' : (1., 0., 1.), # purple
         'plane_opacity' : 0.9,
+        'vector_line_width' : 0.9,
+        'vector_point_size' : 0.9,
         #'gpforce' : gpforce,
         #'itime' : 0,
         'word' : 'Static',

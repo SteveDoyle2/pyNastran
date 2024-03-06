@@ -94,9 +94,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.op2.result_objects.stress_object import StressObject
 
 
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    get_numpy_idtype_for_vtk, numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
+    numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     YELLOW_FLOAT, ORANGE_FLOAT)
@@ -106,6 +105,7 @@ from pyNastran.gui.gui_objects.displacements import ForceTableResults # , Elemen
 from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 
 
+from pyNastran.converters.nastran.gui.types import CasesDict
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .beams3d import get_bar_nids, get_beam_sections_map # , create_3d_beams
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids

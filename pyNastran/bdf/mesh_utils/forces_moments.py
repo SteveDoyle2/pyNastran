@@ -10,7 +10,7 @@ defines methods to access force/moment/pressure/temperature data:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -18,6 +18,7 @@ from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 from pyNastran.bdf.mesh_utils.loads import _mean_pressure_on_pload4
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF, PLOAD4
 
 
@@ -254,12 +255,12 @@ def _get_forces_moments_pload4(model: BDF,
                                centroidal_pressures: np.ndarray,
                                forces: np.ndarray,
                                scale: float,
-                               fail_nids: list[int],
+                               fail_nids: set[int],
                                fail_count: int, fail_count_max: int) -> list[int]:
     # multiple elements
     eids_missing = []
 
-    log = model.log  # type: SimpleLogger
+    log: SimpleLogger = model.log
     debugs_list = []
     warnings_list = []
     for elem in load.eids_ref:
@@ -388,7 +389,8 @@ def _get_forces_moments_pload4(model: BDF,
                 #assert face == face1
             #elif elem.type == 'CPYRAM':
             else:
-                msg = (f'case={load_case_id} eid={eid} etype={elem.type!r} '
+                #case={load_case_id}
+                msg = (f'eid={eid} etype={elem.type!r} '
                        f'loadtype={load.type!r} not supported')
                 debugs_list.append(msg)
                 continue
@@ -423,7 +425,8 @@ def _get_forces_moments_pload4(model: BDF,
         log.warning('\n'.join(warnings_list))
     return eids_missing
 
-def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: bool=True,
+def get_pressure_array(model: BDF, load_case_id: int, eids,
+                       stop_on_failure: bool=True,
                        fdtype: str='float32') -> tuple[bool, np.ndarray]:
     """
     Gets the shell pressures for a load case.
@@ -441,14 +444,13 @@ def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: boo
     -------
     is_pressure : bool
         is there pressure data
-    pressures : (nelements, 1) float ndarray / None
+    pressures : (nelements, 1) float ndarray
         ndarray : the centroidal pressures
-        None : corresponds to is_pressure=False
 
     """
     if not any(['PLOAD' in model.card_count, 'PLOAD2' in model.card_count,
                 'PLOAD4' in model.card_count]):
-        return False, None
+        return False, np.array([])
     cards_ignored = set()
     pressure_loads = {'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4'}
 
@@ -460,7 +462,7 @@ def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: boo
     loads, scale_factors = model.get_reduced_loads(
         load_case_id, stop_on_failure=stop_on_failure)[:2]
     if len(scale_factors) == 0:
-        return False, None
+        return False, np.array([])
     pressures = np.zeros(len(model.elements), dtype=fdtype)
 
     shells = {
@@ -562,7 +564,7 @@ def get_temperatures_array(model: BDF,
 
     """
     if 'TEMP' not in model.card_count and 'TEMPD' not in model.card_count:
-        return False, None
+        return False, np.array([])
     is_temperatures = True
 
     if nid_map is None:
@@ -666,12 +668,12 @@ def get_load_arrays(model: BDF, subcase_id: int,
         'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
         'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
 
-    centroidal_pressures = None
-    forces = None
-    moments = None
-    spcd = None
+    centroidal_pressures = np.array([])
+    forces = np.array([])
+    moments = np.array([])
+    spcd = np.array([])
     temperature_key = None
-    temperatures = None
+    temperatures = np.array([])
     for key in load_keys:
         try:
             load_case_id = subcase.get_parameter(key)[0]
