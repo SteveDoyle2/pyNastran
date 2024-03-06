@@ -1,5 +1,5 @@
 # this variable is automatically set by the .spec file; should be False
-is_pynastrangui_exe = True
+is_pynastrangui_exe = False
 is_installed = False
 
 import sys
@@ -15,7 +15,7 @@ __version_release__ = __version__
 
 # only for release; 1.4.1
 __releaseDate__ = '2024/3/xx'
-__releaseDate2__ = MARCH xx, 2024'
+__releaseDate2__ = 'MARCH xx, 2024'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
