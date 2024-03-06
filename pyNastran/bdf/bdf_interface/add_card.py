@@ -4747,7 +4747,9 @@ class AddCards:
             the pressure to apply to the elements
         eids : int / list[int]
             the elements to apply pressure to
-            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+            For NX Nastran and MSC Nastran < 2018 the list must have no more than 6 ids or it must be
+            a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
+            incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         comment : str; default=''
             a comment for the card
 

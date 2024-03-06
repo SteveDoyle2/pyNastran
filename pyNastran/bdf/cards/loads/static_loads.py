@@ -2193,7 +2193,8 @@ class PLOAD2(Load):
     def __init__(self, sid: int, pressure: float,
                  eids: list[int], comment: str=''):
         """
-        Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
+        Creates a PLOAD2 card, which defines a uniform static pressure load applied to CQUAD4,
+        CSHEAR, or CTRIA3 two-dimensional elements
 
         Parameters
         ----------
@@ -2203,7 +2204,9 @@ class PLOAD2(Load):
             the pressure to apply to the elements
         eids : list[int]
             the elements to apply pressure to
-            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+            For NX Nastran and MSC Nastran < 2018 the list must have no more than 6 ids or it must be
+            a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
+            incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         comment : str; default=''
             a comment for the card
 
@@ -2229,18 +2232,23 @@ class PLOAD2(Load):
         comment : str; default=''
             a comment for the card
 
+        Note: for NX Nastran and MSC Nastran < 2018 the list of element ids must have no more than 6
+        ids or it must be a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow
+        this rule, you'll incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
+
         """
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
 
+        # If keyword THRU is used assign first and last element id and check that number of fields is equal to 6
         if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
             eids = [i for i in range(e1, e2 + 1)]
             assert len(card) == 6, f'len(PLOAD2 card) = {len(card):d}\ncard={card}'
+        # Otherwise just assign the list of element ids
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
-            assert len(eids) <= 6, f'A maximum of 6 eids may be on the PLOAD2; n={len(eids)}\ncard={card}'
         return PLOAD2(sid, pressure, eids, comment=comment)
 
     @classmethod
@@ -2303,20 +2311,23 @@ class PLOAD2(Load):
             cards.append(list_fields)
         return cards
 
-    def raw_fields(self) -> list[Any]:
+    def raw_fields(self) -> list:
         list_fields = ['PLOAD2', self.sid, self.pressure]
+        # For NX Nastran and MSC Nastran < 2018 the element ids must be no more than 6 they must be
+        # a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
+        # incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         eids = self.element_ids
-        if len(eids) <= 6:
-            list_fields += eids
-        else:
-            eids.sort()
-            delta_eid = eids[-1] - eids[0] + 1
-            if delta_eid != len(eids):
-                msg = 'eids=%s len(eids)=%s delta_eid=%s must be continuous' % (
-                    eids, len(eids), delta_eid)
-                raise RuntimeError(msg)
-            #list_fields += eids
+        # Convert list of element ids to numpy array if needed
+        if isinstance(eids, list):
+            eids = np.array(eids)
+        # Sort array of element ids and calculate the differences between consecutive elements
+        eids.sort()
+        diffs = np.diff(eids)
+        # If all differences are equal to 1 use keyword THRU, otherwise just append the list of element ids to the list of fields
+        if np.all(diffs == 1):
             list_fields += [eids[0], 'THRU', eids[-1]]
+        else:
+            list_fields += eids.tolist()
         return list_fields
 
     def repr_fields(self) -> list[Any]:
