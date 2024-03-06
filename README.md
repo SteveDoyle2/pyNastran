@@ -1,28 +1,31 @@
 
 Main/dev:
-[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=1.4)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-[![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release)
+See the [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.4/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
 
 <!---
+
+[![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
+
+
 .. |DiscourseBadge| image:: https://img.shields.io/badge/help_forum-discourse-blue.svg
 .. _DiscourseBadge: https://discourse.matplotlib.org
 --->
 
-### v1.3.4
+### v1.4.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/1/14)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/2/29)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the main branch)
-  * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
+  * [Docs](https://pynastran-git.readthedocs.io/en/1.4/)
   * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/main/code_of_conduct.md)
   * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/main/contributing.rst)
 
@@ -42,6 +45,8 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
+<!---
+
 
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
@@ -49,52 +54,6 @@ Everyone interacting in the setuptools project’s codebase, issue trackers, cha
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
 [![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=main)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/main.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=main)	|
-### v1.4
-
-It's been a while since the the update, but I've had a bit more time lately.
-I yet again went down a bit of rabbit hole to improve the speed of the BDF, 
-but this time I'm much happier with the results.  Still, getting back to parity
-takes a lot of time and it's not quite there.  It does simplify MSC HDF5 
-integration, so once I've added methods for updating more complicated objects
-(e.g., PBARL, PCOMP, RBE3), HDF5 will be next. If you want to test it out, 
-it's not included with the official release, but is found in 
-``pyNastran.dev.bdf_vectorized3``, so not my first attempt :)
-
-MSC also provided a copy of MSC Nastran free of charge to help support the project.
-Since then, modern MSC Nastran support has been added.
-
-Finally, the GUI has receieved a lot of work including:
- - A proper results selector.  There's still more work, but individual displacment
-   components are selectable.  For solid, plate, and composite stress/strain, 
-   nodal or centroidal stress may be shown and various blending methods including
-   nodal averaging is now supported.
- - Preferences are also now exposed in a json file (vs the registry) and if you find
-   a bug in the new results, you can flip a flag to use the old objects.
- - Grid Point Forces are supported in the GUI.  They take some getting used to but
-   you can make plots of shear, moment, and torque down an axis.
- - A recent files history to speed up model loading and a whole bunch of other bug fixes.
-
-Programmatics:
- - Supports Python 3.9 - 3.12 (later versions of Python requires downloading from github)
- - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 9+
- - improved testing of old versions of packages
-  - much improve NX 64-bit and OptiStruct support
-
-BDF:
- - fixed CAERO1 paneling bug
- - 409? -> 429? cards
- - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
-
-OP2:
- - 20 new results
- - vectorized op2 writing
-
-GUI:
- - transient/complex fringe only animations now supported
-
-See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
-
-
 --->
 
 # Overview
@@ -105,7 +64,7 @@ field formatting.  Many checks are also performed to verify that your model is c
 Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
-  * [Features](https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview)
+  * [Features](https://pynastran-git.readthedocs.io/en/1.4/quick_start/features.html#overview)
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
@@ -118,11 +77,60 @@ commercial program.
 
 <!---
 
+I yet again went down a bit of rabbit hole to improve the speed of the BDF, 
+but this time I'm much happier with the results.  Still, getting back to parity
+takes a lot of time and it's not quite there.  It does simplify MSC HDF5 
+integration, so once I've added methods for updating more complicated objects
+(e.g., PBARL, PCOMP, RBE3), HDF5 will be next. If you want to test it out, 
+it's not included with the official release, but is found in 
+``pyNastran.dev.bdf_vectorized3``, so not my first attempt :)
+
 This should be hidden...
 --->
 
+### v1.4.0  has been released (2024/2/29)
+
+It's been a while since the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
+
+Finally, the GUI has received a lot of work recently including:
+ - Better results selector.  Individual [displacment](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-displacement-results) and [SPC/MPC/Load Vector](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#real-spc-forces-load-vectorresults/) components are selectable.
+   For [solid](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#solid-stress-strain/),      [plate](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#plate-stress-strain/), and [composite stress/strain](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#composite-plate-stress-strain/), nodal or centroidal stress 
+   may be shown and various blending methods including nodal averaging is now supported.
+ - [Grid Point Forces](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#shear-moment-torque-plot/)
+   are supported in the GUI.  They take some getting used to but you can march along a vector and output the section loads in any arbitrary coordinate system.
+ - [Preferences](https://pynastran-git.readthedocs.io/en/1.4/quick_start/gui.html#preferences/) are also now exposed in a json file (vs the registry) and if you find
+   a bug in the new results, you can flip a flag to use the old objects.
+ - A recent files history to speed up model loading and a whole bunch of other bug fixes.
+
+Programmatics:
+ - Supports Python 3.9 - 3.12 (later versions of Python requires downloading from github)
+ - GUI is compatible with VTK 9 and PyQt5/PySide2
+ - improved testing of old versions of packages
+ - much improve NX 64-bit and OptiStruct support
+
+BDF:
+ - fixed CAERO1 paneling bug
+ - 427 cards supported  (up from 405)
+
+OP2:
+ - 20 new results
+ - vectorized op2 writing
+ - ``model.cquad4_stress`` is now found in ``model.op2_results.stress.cquad4_stress``.  Same goes for other stress, strain, force, and strain_energy components.  This will hopefully make things a bit easier find.
+
+GUI:
+ - grid point forces / section cuts / shear-moment torque plotter
+ - more dynamic stress/strain results allow for simpler menus
+ - transient/complex fringe only animations now supported
+ - recent files support
+ - greatly expanded preferences menu; many more preferences are saved
+ - new icons
+
+
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.4.0) for details on the other changes.
+
+
 ### v1.3.4 has been released (2022/5/30)
-This is a a bug fix release mainly to address dependency changes:
+This is a bug fix release mainly to address dependency changes:
 
 Programmatics:
  - supports Python 3.7-3.10
@@ -132,7 +140,7 @@ Programmatics:
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
-See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.4) for details on the other changes.
 
 
 ### v1.3.3 (2020/6/28)
@@ -151,7 +159,7 @@ Programmatics:
  - updated nptyping requirements
  - support for NX 2019.0, 2019.1
 
-See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.3) for details on the 54 bug fixes.  Not too bad for 2.5 months!
 
 
 ### pyNastran v1.3.2 has been released (2020/4/8)
@@ -335,17 +343,15 @@ GUI:
  - options for Nastran in preferences menu to speed up loading/limit memory usage
  - pyNastran BDF pickle reading
  - pyNastran OP2 HDF5 reading (not MSC's format)
- - visualization when pickling nodes/elements
+ - visualization when picking nodes/elements
  - min/max labels
  - highlight menu
  - Patran-style colors
  - custom force vectors
  - AVL support
 
-
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 ### v1.2.0 (2019/5/21)
 

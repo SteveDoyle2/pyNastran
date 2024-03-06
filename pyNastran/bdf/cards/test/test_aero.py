@@ -2354,10 +2354,11 @@ class TestAero(unittest.TestCase):
         flutter = model.add_flutter(sid, method, density, mach, reduced_freq_velocity)
         alt = 10000.
         machs = np.arange(0.1, 0.8)
-        flutter.make_flfacts_mach_sweep(model, alt, machs, eas_limit=1000., alt_units='m',
-                                        velocity_units='m/s',
-                                        density_units='kg/m^3',
-                                        eas_units='m/s')
+        flutter.make_flfacts_mach_sweep_constant_alt(
+            model, alt, machs, eas_limit=1000., alt_units='m',
+            velocity_units='m/s',
+            density_units='kg/m^3',
+            eas_units='m/s')
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""
@@ -2818,6 +2819,23 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model._verify_bdf(xref=True)
         model.uncross_reference()
+        save_load_deck(model)
+
+    def test_monpnt3(self):
+        """tests a MONPNT3 with an equals sign"""
+        model = BDF(debug=None)
+        card_lines = [
+            'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
+            '        123456  1       2       225     0.	0.	0.',
+            '        225',
+        ]
+        card_name = 'MONPNT3'
+        model.add_card_lines(card_lines, card_name, comment='', has_none=True)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        cid = 225
+        model.add_cord2r(cid, origin, zaxis, xzplane)
         save_load_deck(model)
 
     def test_bah_plane_bdf(self):

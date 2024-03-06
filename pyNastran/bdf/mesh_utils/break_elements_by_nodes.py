@@ -2,7 +2,7 @@ import copy
 from itertools import combinations
 
 import numpy as np
-#if TYPE_CHECKING:
+#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.bdf import BDF, read_bdf
 
 def break_elements(model: BDF, groups, idtype: str='int32') -> BDF:

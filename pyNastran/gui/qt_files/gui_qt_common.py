@@ -6,6 +6,7 @@ This file defines functions related to the result updating that are VTK specific
 """
 # coding: utf-8
 # pylint: disable=C0111
+from __future__ import annotations
 import sys
 from collections import namedtuple
 from typing import Union, Callable, Optional, Any, TYPE_CHECKING
@@ -15,18 +16,18 @@ from numpy.linalg import norm  # type: ignore
 
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonCore import vtkTypeFloat32Array, vtkPoints
-from vtkmodules.vtkRenderingCore import vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import (
+    vtkProperty, vtkActor, vtkDataSetMapper, vtkActor2D, vtkPolyDataMapper)
 from vtkmodules.vtkFiltersCore import vtkContourFilter, vtkStripper
 from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
-#import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
+from pyNastran.gui.qt_files.colors import RED_FLOAT, WHITE_FLOAT, BLUE_FLOAT
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -35,13 +36,10 @@ from pyNastran.gui.utils.utils import is_blank
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.typing import ColorInt
 
-
-WHITE = (1., 1., 1.)
-BLUE = (0., 0., 1.)
-RED = (1., 0., 0.)
 
 FringeData = namedtuple(
     'FringeData',
@@ -242,11 +240,11 @@ class GuiQtCommon(GuiAttributes):
         self.arrow_actor_centroid.SetVisibility(False)
 
         prop = self.geom_actor.GetProperty()
-        prop.SetColor(WHITE)
+        prop.SetColor(WHITE_FLOAT)
 
         # the backface property could be null
         back_prop = vtkProperty()
-        back_prop.SetColor(WHITE)
+        back_prop.SetColor(WHITE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
 
@@ -1134,8 +1132,9 @@ class GuiQtCommon(GuiAttributes):
                     #print(i, methodi)
                     return self.icase
             else:
-                imini = np.nanargmin(fringe)
-                imaxi = np.nanargmax(fringe)
+                pass  #  true unless it's all nan (grid point forces)
+                #imini = np.nanargmin(fringe)
+                #imaxi = np.nanargmax(fringe)
                 #assert imin == imini
                 #assert imax == imaxi
                 x = 1
@@ -1172,6 +1171,10 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
+        if data_format is None:
+            # RealGridPointForces
+            is_legend_shown = False
+
         # should update this...
         icase_fringe = icase
         icase_disp = self.icase_disp
@@ -1179,6 +1182,7 @@ class GuiQtCommon(GuiAttributes):
         if user_is_checked_fringe:
             if is_legend_shown is None:
                 is_legend_shown = self.scalar_bar.is_shown
+
             self.update_scalar_bar(
                 legend_title, min_value, max_value,
                 data_format,
@@ -1229,12 +1233,12 @@ class GuiQtCommon(GuiAttributes):
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
 
-        prop.SetColor(RED)
+        prop.SetColor(RED_FLOAT)
 
         # the backface property is null
         #back_prop = self.geom_actor.GetBackfaceProperty()
         back_prop = vtkProperty()
-        back_prop.SetColor(BLUE)
+        back_prop.SetColor(BLUE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
 
         grid = self.grid
@@ -1734,7 +1738,7 @@ class GuiQtCommon(GuiAttributes):
         return slot
 
     def create_alternate_vtk_grid(self, name: str,
-                                  color=None,
+                                  color: ColorInt=None,
                                   line_width: int=5,
                                   opacity: float=1.0,
                                   point_size: int=1,
@@ -1745,7 +1749,9 @@ class GuiQtCommon(GuiAttributes):
                                   follower_nodes=None,
                                   follower_function: Optional[Callable]=None,
                                   is_pickable: bool=False,
-                                  ugrid: vtkUnstructuredGrid=None) -> None:
+                                  ugrid: vtkUnstructuredGrid=None,
+                                  visible_in_geometry_properties: bool=True,
+                                  ) -> None:
         """
         Creates an AltGeometry object
 
@@ -1753,8 +1759,8 @@ class GuiQtCommon(GuiAttributes):
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
+        color : ColorInt
+            the RGB colors as ints
         opacity : float
             0.0 -> solid
             1.0 -> transparent
@@ -1779,6 +1785,9 @@ class GuiQtCommon(GuiAttributes):
         ugrid : vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         if ugrid is None:
@@ -1791,14 +1800,16 @@ class GuiQtCommon(GuiAttributes):
                 line_width=line_width, opacity=opacity,
                 point_size=point_size, bar_scale=bar_scale,
                 representation=representation, display=display,
-                is_visible=is_visible, is_pickable=is_pickable)
+                is_visible=is_visible, is_pickable=is_pickable,
+                visible_in_geometry_properties=visible_in_geometry_properties,
+            )
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
         if follower_function is not None:
             self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name: str, name_duplicate_from: str,
-                                     color=None,
+                                     color: Optional[ColorInt]=None,
                                      line_width: int=5,
                                      opacity: float=1.0,
                                      point_size: int=1,
@@ -1813,8 +1824,8 @@ class GuiQtCommon(GuiAttributes):
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
+        color : ColorInt
+            the RGB colors as ints
         opacity : float
             0.0 -> solid
             1.0 -> transparent
@@ -1855,67 +1866,9 @@ class GuiQtCommon(GuiAttributes):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
-    def _create_plane_actor_from_points(self, p1, p2, i, k, dim_max,
-                                        actor_name='plane'):
-        """
-        This is used by the cutting plane tool and the shear/moment/torque tool.
-
-           4+------+3
-            |      |
-            p1     p2
-            |      |
-           1+------+2
-
-        """
-        shift = 1.1
-        dshift = (shift - 1) / 2.
-        half_shift = 0.5 + dshift
-        delta = half_shift * dim_max
-        #dim_xy = shift * dim_max
-
-        #n1 = 1 - dim_max * (dshift * i + half_shift * k)
-        #n2 = n1 + shift * dim_max * i
-        #n3 = n2 + shift * dim_max * k
-        #n4 = n1 + shift * dim_max * k
-        pcenter = (p1 + p2) / 2
-        n1 = pcenter - delta * i - delta * k
-        n2 = pcenter + delta * i - delta * k
-        n3 = pcenter + delta * i + delta * k
-        n4 = pcenter - delta * i + delta * k
-
-        x = np.linspace(0., 1., num=10)
-        y = x
-        if actor_name in self.alt_grids:
-            plane_actor = self.plane_actor
-            add = False
-            #alt_grid =
-            #plane_source = vtkPlaneSource()
-            #self.rend.AddActor(plane_actor)
-            #self.plane_actor = plane_actor
-        else:
-            add = True
-            alt_grid = vtkUnstructuredGrid()
-            self.alt_grids[actor_name] = alt_grid
-
-            mapper = vtkDataSetMapper()
-            mapper.SetInputData(alt_grid)
-            plane_actor = vtkActor()
-            plane_actor.SetMapper(mapper)
-
-            #plane_source = self.plane_source
-            #plane_actor = self.plane_actor
-            self.plane_actor = plane_actor
-            self.rend.AddActor(plane_actor)
-
-        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        self.set_quad_grid(actor_name, nodes, elements, color=RED,
-                           line_width=1, opacity=1., representation='surface',
-                           add=add)
-        #plane_actor.Modified()
-        return plane_actor
-
-    def _create_point_actor_from_points(self, points, point_size=8,
-                                        actor_name='plane_points'):  # pragma: no cover
+    def _create_point_actor_from_points(self, points: np.ndarray,
+                                        point_size: int=8,
+                                        actor_name: str='plane_points'):  # pragma: no cover
         """
         This is used by the shear/moment/torque tool.
 
@@ -2031,7 +1984,8 @@ class GuiQtCommon(GuiAttributes):
         self.contour_lines_actor = isolines_actor
         self.contour_lines_actor.VisibilityOff()
 
-    def update_contour_filter(self, nlabels: int, location: str, min_value=None, max_value=None) -> None:
+    def update_contour_filter(self, nlabels: int, location: str,
+                              min_value=None, max_value=None) -> None:
         """update the contour lines"""
         if not self.make_contour_filter: # pragma: no cover
             return
@@ -2048,7 +2002,7 @@ class GuiQtCommon(GuiAttributes):
             point_data: vtkPointData = self.grid.GetPointData()
             #self.contour_mapper.SetScalarModeToUsePointData()
             res_data = point_data.GetScalars()
-        else:
+        else:  # pragma: no cover
             raise RuntimeError('location=%r' % location)
 
         self.contour_lines_actor.VisibilityOn()

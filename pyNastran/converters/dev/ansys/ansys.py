@@ -89,7 +89,7 @@ class Ansys:
                             assert e == f, 'e=%r f=%r g=%r h=%r' % (e, f, g, h)
 
                             #asdf
-                    else:
+                    else:  # pragma: no cover
                         raise NotImplementedError(fmt_line)
                     print(line)
                     asdf

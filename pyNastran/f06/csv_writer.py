@@ -17,7 +17,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 #from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 #from pyNastran.op2.op2_interface.result_set import ResultSet
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 def make_csv_header() -> str:

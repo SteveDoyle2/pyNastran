@@ -1,5 +1,6 @@
-from typing import Union
+from typing import Union, Optional
 from copy import deepcopy
+from pyNastran.gui.typing import ColorFloat, ColorInt
 
 
 class AltGeometry:
@@ -15,14 +16,18 @@ class AltGeometry:
                   self.is_pickable, self.label_actors))
         return msg
 
-    def __init__(self, parent, name: str, color=None,
+    def __init__(self, parent, name: str,
+                 color: Optional[ColorInt]=None,
                  line_width: int=1,
                  opacity: float=0.0,
                  point_size: int=1,
                  bar_scale: float=1.0,
-                 representation: str='main', display=None,
+                 representation: str='main',
+                 display=None,
                  is_visible: bool=True,
-                 is_pickable: bool=False, label_actors=None):
+                 is_pickable: bool=False, label_actors=None,
+                 visible_in_geometry_properties: bool=True,
+                 ):
         """
         Creates an AltGeometry object
 
@@ -30,7 +35,7 @@ class AltGeometry:
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        color : [int, int, int]
+        color : ColorInt
             the RGB colors (0-255)
         opacity : float
             0.0 -> solid
@@ -51,12 +56,16 @@ class AltGeometry:
         display : str
             only relevant to wire+surf
             the active state of the mesh
+            'Surface', 'Wireframe', 'point'
         is_visible : bool; default=True
             is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         label_actors : list[annotation]; None -> []
             stores annotations (e.g., for a control surface)
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         representation_map = {
@@ -112,10 +121,13 @@ class AltGeometry:
             raise RuntimeError(msg)
         self.representation = representation
 
+        self.visible_in_geometry_properties = visible_in_geometry_properties
+
     def __deepcopy__(self, memo):
         """doesn't copy the label_actors to speed things up?"""
         keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
-                '_representation', 'is_visible', 'bar_scale', 'is_pickable']
+                '_representation', 'is_visible', 'bar_scale', 'is_pickable',
+                'visible_in_geometry_properties']
         cls = self.__class__
         result = cls.__new__(cls)
         idi = id(self)
@@ -127,7 +139,7 @@ class AltGeometry:
         return result
 
     @property
-    def opacity(self):
+    def opacity(self) -> float:
         """
         0 -> transparent
         1 -> solid
@@ -137,12 +149,12 @@ class AltGeometry:
         return self._opacity
 
     @opacity.setter
-    def opacity(self, opacity):
+    def opacity(self, opacity: float) -> None:
         assert 0.0 <= opacity <= 1.0, opacity
         self._opacity = opacity
 
     @property
-    def transparency(self):
+    def transparency(self) -> float:
         """
         0 -> solid
         1 -> transparent
@@ -152,19 +164,18 @@ class AltGeometry:
         return 1.0 - self._opacity
 
     @transparency.setter
-    def transparency(self, transparency):
+    def transparency(self, transparency: float) -> None:
         assert 0.0 <= transparency <= 1.0, transparency
         self._opacity = 1.0 - transparency
 
     @property
-    def color(self) -> tuple[int, int, int]:
+    def color(self) -> ColorInt:
         if self._color is None:
             return (255, 0, 0)  # the default color; red
         return self._color
 
     @color.setter
-    def color(self, color: Union[tuple[int, int, int],
-                                 tuple[float, float, float]]) -> None:
+    def color(self, color: Union[ColorInt, ColorFloat]) -> None:
         assert len(color) == 3, color
         if isinstance(color[0], int):
             assert isinstance(color[0], int), color[0]
@@ -178,11 +189,13 @@ class AltGeometry:
             self._color = (int(color[0] * 255), int(color[1] * 255), int(color[2] * 255))
 
     @property
-    def color_float(self) -> tuple[float, float, float]:
+    def color_float(self) -> ColorFloat:
         return tuple([i/255. for i in self._color])
+    @property
+    def color_int(self) -> ColorInt:
+        return self._color
 
-    def set_color(self, color: Union[tuple[int, int, int],
-                                     tuple[float, float, float]],
+    def set_color(self, color: Union[ColorInt, ColorFloat],
                   mode: str='rgb') -> None:
         assert mode == 'rgb', 'mode=%r' % mode
         self.color = color

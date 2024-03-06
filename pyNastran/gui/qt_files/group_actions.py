@@ -51,7 +51,7 @@ class GroupActions:
         create_groups_by_visible_result exists as well.
         """
         self._create_groups_by_name('PropertyID', 'property', nlimit=nlimit)
-        self.gui.log_command('create_groups_by_property_id()')
+        self.gui.log_command('self.create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name: str, prefix: str,
                                nlimit: int=500) -> int:

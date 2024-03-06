@@ -35,7 +35,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LoadCombination
 #from .static_loads import get_loads_by_load_id, get_reduced_loads
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard

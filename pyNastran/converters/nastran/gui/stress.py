@@ -37,7 +37,7 @@ def nocrash_log(func):
     @wraps(func)
     def wrapper(log: SimpleLogger, stop_on_failure: bool,
                 cases, *args, **kwargs):
-        assert isinstance(cases, dict), case
+        assert isinstance(cases, dict), cases
         ncases = len(cases)
         try:
             icase = func(cases, *args, **kwargs)
@@ -70,13 +70,15 @@ def get_rod_stress_strains(cases: CasesDict,
     """
     subcase_id = key[0]
     if is_stress:
+        stress = model.op2_results.stress
         rods = [
-            model.crod_stress, model.conrod_stress, model.ctube_stress,
+            stress.crod_stress, stress.conrod_stress, stress.ctube_stress,
         ]
         word = 'Stress'
     else:
+        strain = model.op2_results.strain
         rods = [
-            model.crod_strain, model.conrod_strain, model.ctube_strain,
+            strain.crod_strain, strain.conrod_strain, strain.ctube_strain,
         ]
         word = 'Strain'
 
@@ -123,8 +125,8 @@ def get_rod_stress_strains(cases: CasesDict,
     if is_stress:
         #sigma = 'σ'
         method_map = {
-            'axial' : 'Stress XX',
-            'torsion' : 'Shear XY',
+            'axial' : 'Axial',
+            'torsion' : 'Torsion',
             'SMa' : 'MS_axial',
             'SMt' : 'MS_torsion',
             #'omax' : 'σmax',
@@ -135,8 +137,8 @@ def get_rod_stress_strains(cases: CasesDict,
     else:
         #sigma = 'ϵ'
         method_map = {
-            'axial' : 'Strain XX',
-            'torsion' : 'Shear XY',
+            'axial' : 'Axial',
+            'torsion' : 'Torsion',
             'SMa' : 'MS_axial',
             'SMt' : 'MS_torsion',
             #'emax' : 'ϵmax',
@@ -195,7 +197,8 @@ def get_bar_stress_strains(cases: CasesDict,
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
-        result = model.cbar_stress
+        stress = model.op2_results.stress
+        result = stress.cbar_stress
         word = 'Stress'
         method_map = {
              's1a' : 'Stress 1A',
@@ -219,7 +222,8 @@ def get_bar_stress_strains(cases: CasesDict,
         }
         data_format = '%.3f'
     else:
-        result = model.cbar_strain
+        strain = model.op2_results.strain
+        result = strain.cbar_strain
         word = 'Strain'
         method_map = {
             'e1a' : 'Strain 1A',
@@ -390,10 +394,12 @@ def get_beam_stress_strains(cases: CasesDict,
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
-        beams = [model.cbeam_stress]
+        stress = model.op2_results.stress
+        beams = [stress.cbeam_stress]
         word = 'Stress'
     else:
-        beams = [model.cbeam_strain]
+        strain = model.op2_results.strain
+        beams = [strain.cbeam_strain]
         word = 'Strain'
 
     #titles = []
@@ -491,7 +497,7 @@ def get_beam_stress_strains(cases: CasesDict,
     #headersi = case.get_headers()
     #print('headersi =', headersi)
 
-    scalars_array = []
+    scalars_list: list[np.ndarray]= []
     for case in beam_cases:
         if case.is_complex:
             log.warning(f'skipping complex Beam {word}')
@@ -511,12 +517,12 @@ def get_beam_stress_strains(cases: CasesDict,
         #nelements = nelements_nnodes // nnodes_per_element
         #nlayers = 2
         scalars = case.data
-        scalars_array.append(scalars)
+        scalars_list.append(scalars)
 
-    if len(scalars_array) == 0:
+    if len(scalars_list) == 0:
         return icase
 
-    scalars_array = concatenate_scalars(scalars_array)
+    scalars_array = concatenate_scalars(scalars_list)
 
     #titles = []  # legend title
     headers = [] # sidebar word
@@ -665,28 +671,28 @@ def get_plate_stress_strains(cases: CasesDict,
         method_map = {
             'fiber_curvature' : 'FiberCurvature',
             'fiber_distance' : 'FiberDistance',
-            'oxx' : 'σxx',
-            'oyy' : 'σyy',
-            'txy' : 'τxy',
-            'angle' : 'θ',
-            'omax' : 'σmax',
-            'omin' : 'σmin',
-            'von_mises' : 'σ von Mises',
-            'max_shear' : 'τmax',
+            'oxx' : 'Normal XX',
+            'oyy' : 'Normal YY',
+            'txy' : 'Shear XY',
+            'angle' : 'Theta',
+            'omax' : 'Max Principal',
+            'omin' : 'Min Principal',
+            'von_mises' : 'von Mises',
+            'max_shear' : 'Max Shear',
         }
     else:
         method_map = {
             'fiber_curvature' : 'FiberCurvature',
             'fiber_distance' : 'FiberDistance',
-            'exx' : 'ϵxx',
-            'eyy' : 'ϵyy',
-            'exy' : 'ϵxy',
-            'angle' : 'θ',
-            'emax' : 'ϵmax',
-            'emin' : 'ϵmin',
-            'evm' : 'ϵ von Mises',
-            'von_mises' : 'ϵ von Mises',
-            'max_shear' : '𝛾max',
+            'exx' : 'Normal XX',
+            'eyy' : 'Normal YY',
+            'exy' : 'Shear XY',
+            'angle' : 'Theta',
+            'emax' : 'Max Principal',
+            'emin' : 'Min Principal',
+            'evm' : 'von Mises',
+            'von_mises' : 'von Mises',
+            'max_shear' : 'Max Shear',
         }
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:
@@ -842,13 +848,13 @@ def get_plate_stress_strains2(cases: CasesDict,
         iresult_to_title_annotation_map = {
             # iresult: (sidebar_label, annotation)
             0 : ('FiberDistance', 'Fiber Distance'),
-            1 : ('Stress XX', 'XX'),
-            2 : ('Stress YY', 'YY'),
-            3 : ('Stress XY', 'XY'),
+            1 : ('Normal XX', 'XX'),
+            2 : ('Normal YY', 'YY'),
+            3 : ('Shear XY', 'XY'),
             4 : ('Theta', 'Theta'),
-            5 : ('sMax Principal', 'Max Principal'),
-            6 : ('sMin Principal', 'Min Principal'),
-            'abs_principal' : ('sAbs Principal', 'Abs Principal'),
+            5 : ('Max Principal', 'Max Principal'),
+            6 : ('Min Principal', 'Min Principal'),
+            'abs_principal' : ('Abs Principal', 'Abs Principal'),
             von_mises : ('von Mises', 'von Mises'), # the magnitude is large
             max_shear : ('Max Shear', 'Max Shear'), # the magnitude is large
         }
@@ -858,13 +864,13 @@ def get_plate_stress_strains2(cases: CasesDict,
             # iresult: (sidebar_label, annotation)
             #'fiber_curvature' : 'FiberCurvature',
             0 : ('FiberDistance', 'Fiber Distance'),
-            1 : ('Strain XX', 'XX'),
-            2 : ('Strain YY', 'YY'),
-            3 : ('Strain XY', 'XY'),
+            1 : ('Normal XX', 'XX'),
+            2 : ('Normal YY', 'YY'),
+            3 : ('Shear XY', 'XY'),
             4 : ('Theta', 'Theta'),
-            5 : ('eMax Principal', 'Max Principal'),
-            6 : ('eMin Principal', 'Min Principal'),
-            'abs_principal' : ('eAbs Principal', 'Abs Principal'),
+            5 : ('Max Principal', 'Max Principal'),
+            6 : ('Min Principal', 'Min Principal'),
+            'abs_principal' : ('Abs Principal', 'Abs Principal'),
             von_mises : ('von Mises', 'von Mises'),  # the magnitude is small
             max_shear : ('Max Shear', 'Max Shear'),  # the magnitude is small
         }
@@ -919,7 +925,10 @@ def _get_plates(model: OP2,
         results = model.op2_results.modal_contribution
         preword = 'Modal Contribution '
     elif prefix == '':
-        results = model
+        if is_stress:
+            results = model.op2_results.stress
+        else:
+            results = model.op2_results.strain
         preword = ''
     else:  # pragma: no cover
         raise NotImplementedError(prefix)
@@ -946,24 +955,26 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
                              is_stress: bool,
                              key=None):
     if is_stress:
+        stress = model.op2_results.stress
         case_map = {
             # element_name
-            'CTRIA3' : model.ctria3_composite_stress,
-            'CTRIA6' : model.ctria6_composite_stress,
-            'CTRIAR' : model.ctriar_composite_stress,
-            'CQUAD4' : model.cquad4_composite_stress,
-            'CQUAD8' : model.cquad8_composite_stress,
-            'CQUADR' : model.cquadr_composite_stress,
+            'CTRIA3' : stress.ctria3_composite_stress,
+            'CTRIA6' : stress.ctria6_composite_stress,
+            'CTRIAR' : stress.ctriar_composite_stress,
+            'CQUAD4' : stress.cquad4_composite_stress,
+            'CQUAD8' : stress.cquad8_composite_stress,
+            'CQUADR' : stress.cquadr_composite_stress,
         }
     else:
+        strain = model.op2_results.strain
         case_map = {
             # element_name
-            'CTRIA3' : model.ctria3_composite_strain,
-            'CTRIA6' : model.ctria6_composite_strain,
-            'CTRIAR' : model.ctriar_composite_strain,
-            'CQUAD4' : model.cquad4_composite_strain,
-            'CQUAD8' : model.cquad8_composite_strain,
-            'CQUADR' : model.cquadr_composite_strain,
+            'CTRIA3' : strain.ctria3_composite_strain,
+            'CTRIA6' : strain.ctria6_composite_strain,
+            'CTRIAR' : strain.ctriar_composite_strain,
+            'CQUAD4' : strain.cquad4_composite_strain,
+            'CQUAD8' : strain.cquad8_composite_strain,
+            'CQUADR' : strain.cquadr_composite_strain,
         }
 
     keys_map = {}
@@ -1380,16 +1391,16 @@ def get_solid_stress_strains2(cases: CasesDict,
         #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
         iresult_to_title_annotation_map = {
             # iresult: (sidebar_label, annotation)
-            0 : ('Stress XX', 'XX'),
-            1 : ('Stress YY', 'YY'),
-            2 : ('Stress ZZ', 'ZZ'),
+            0 : ('Normal XX', 'XX'),
+            1 : ('Normal YY', 'YY'),
+            2 : ('Normal ZZ', 'ZZ'),
             3 : ('Shear XY', 'XY'),
             4 : ('Shear YZ', 'YZ'),
             5 : ('Shear XZ', 'XZ'),
 
-            6 : ('sMax Principal', 'Max Principal'),
-            8 : ('sMin Principal', 'Min Principal'),
-            7 : ('sMid Principal', 'Mid Principal'),
+            6 : ('Max Principal', 'Max Principal'),
+            8 : ('Min Principal', 'Min Principal'),
+            7 : ('Mid Principal', 'Mid Principal'),
             #'abs_principal' : ('sAbs Principal', 'Abs Principal'),
             von_mises : ('von Mises', 'von Mises'), # the magnitude is large
             max_shear : ('Max Shear', 'Max Shear'), # the magnitude is large
@@ -1398,16 +1409,16 @@ def get_solid_stress_strains2(cases: CasesDict,
     else:
         iresult_to_title_annotation_map = {
             # iresult: (sidebar_label, annotation)
-            0 : ('Strain XX', 'XX'),
-            1 : ('Strain YY', 'YY'),
-            2 : ('Strain ZZ', 'ZZ'),
+            0 : ('Normal XX', 'XX'),
+            1 : ('Normal YY', 'YY'),
+            2 : ('Normal ZZ', 'ZZ'),
             3 : ('Shear XY', 'XY'),
             4 : ('Shear YZ', 'YZ'),
             5 : ('Shear XZ', 'XZ'),
 
-            6 : ('eMax Principal', 'Max Principal'),
-            8 : ('eMin Principal', 'Min Principal'),
-            7 : ('eMid Principal', 'Mid Principal'),
+            6 : ('Max Principal', 'Max Principal'),
+            8 : ('Min Principal', 'Min Principal'),
+            7 : ('Mid Principal', 'Mid Principal'),
             von_mises : ('von Mises', 'von Mises'), # the magnitude is small
             max_shear : ('Max Shear', 'Max Shear'), # the magnitude is small
         }
@@ -1466,13 +1477,15 @@ def _get_solids(results: OP2,
         #raise NotImplementedError(prefix)
 
     if is_stress:
+        stress = results.op2_results.stress
         cards = [
-            results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
+            stress.ctetra_stress, stress.cpenta_stress, stress.chexa_stress, # stress.cpyram_stress,
         ]
         word = 'Stress'
     else:
+        strain = results.op2_results.strain
         cards = [
-            results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
+            strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
         ]
         word = 'Strain'
 
@@ -1502,13 +1515,14 @@ def get_solid_stress_strains(cases: CasesDict,
         return icase
     #print("***stress eids=", eids)
     subcase_id = key[0]
-    results = model
     if is_stress:
+        results = model.op2_results.stress
         solids = [
             results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
         ]
         word = 'Stress (centroid)'
     else:
+        results = model.op2_results.strain
         solids = [
             results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
         ]
@@ -1571,9 +1585,9 @@ def get_solid_stress_strains(cases: CasesDict,
     if is_stress:
         #sigma = 'σ'
         method_map = {
-            'oxx' : 'Stress XX',
-            'oyy' : 'Stress YY',
-            'ozz' : 'Stress ZZ',
+            'oxx' : 'Normal XX',
+            'oyy' : 'Normal YY',
+            'ozz' : 'Normal ZZ',
             'txy' : 'Shear XY',
             'tyz' : 'Shear YZ',
             'txz' : 'Shear XZ',
@@ -1588,9 +1602,9 @@ def get_solid_stress_strains(cases: CasesDict,
     else:
         #sigma = 'ϵ'
         method_map = {
-            'exx' : 'Strain XX',
-            'eyy' : 'Strain YY',
-            'ezz' : 'Strain ZZ',
+            'exx' : 'Normal XX',
+            'eyy' : 'Normal YY',
+            'ezz' : 'Normal ZZ',
             'exy' : 'Shear XY',
             'eyz' : 'Shear YZ',
             'exz' : 'Shear XZ',
@@ -1680,16 +1694,17 @@ def get_spring_stress_strains(cases: CasesDict,
     helper method for _fill_op2_time_centroidal_stress.
     """
     subcase_id = key[0]
-    results = model
     if is_stress:
+        stress = model.op2_results.stress
         springs = [
-            results.celas1_stress, results.celas2_stress,
-            results.celas3_stress, results.celas4_stress]
+            stress.celas1_stress, stress.celas2_stress,
+            stress.celas3_stress, stress.celas4_stress]
         word = 'Stress'
     else:
+        strain = model.op2_results.strain
         springs = [
-            results.celas1_strain, results.celas2_strain,
-            results.celas3_strain, results.celas4_strain]
+            strain.celas1_strain, strain.celas2_strain,
+            strain.celas3_strain, strain.celas4_strain]
         word = 'Strain'
 
     spring_cases = []

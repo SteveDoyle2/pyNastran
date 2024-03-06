@@ -313,14 +313,13 @@ def run_format_converter(fmt1: str, fname1: str,
         process_tecplot(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
-    elif fmt1 == 'abaqus' and DEV:
+    elif fmt1 == 'abaqus':
         process_abaqus(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'vrml' and DEV:
         process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
-        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid']
+        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid', 'abaqus']
         if DEV:
-            format1s.append('abaqus')
             format1s.append('vrml')
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
         raise NotImplementedError(f'fmt1={fmt1} is not supported by run; '

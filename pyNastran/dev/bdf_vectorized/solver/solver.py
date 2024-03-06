@@ -1562,22 +1562,24 @@ class Solver(OP2):
         dtype = 'float32'
         if Type == 'stress':
             result = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
+            stress = self.op2_results.stress
             if element_type == 'CROD':
-                self.crod_stress[isubcase] = result
+                stress.crod_stress[isubcase] = result
             elif element_type == 'CONROD':
-                self.conrod_stress[isubcase] = result
+                stress.conrod_stress[isubcase] = result
             elif element_type == 'CTUBE':
-                self.ctube_stress[isubcase] = result
+                stress.ctube_stress[isubcase] = result
             else:
                 raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         elif Type == 'strain':
             result = RealRodStrainArray(data_code, is_sort1, isubcase, dt=False)
+            strain = self.op2_results.strain
             if element_type == 'CROD':
-                self.crod_strain[isubcase] = result
+                strain.crod_strain[isubcase] = result
             elif element_type == 'CONROD':
-                self.conrod_strain[isubcase] = result
+                strain.conrod_strain[isubcase] = result
             elif element_type == 'CTUBE':
-                self.ctube_strain[isubcase] = result
+                strain.ctube_strain[isubcase] = result
             else:
                 raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         else:

@@ -74,7 +74,10 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[0]
         title = 'Grid Point Forces'
         header = 'Grid Point Forces'
-        nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
+        node_ids = self.node_ids
+        nnodes = len(node_ids)
+        nastran_res = GridPointForceResult(subcase_id, header, title,
+                                           grid_point_forces, nnodes)
 
         itime = 0
 
@@ -352,7 +355,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
         case = None
         found_force = False
-        for res_type in (model.conrod_force, model.crod_force, model.ctube_force):
+        force = model.op2_results.force
+        for res_type in (force.conrod_force, force.crod_force, force.ctube_force):
             if key in res_type:
                 found_force = True
                 case = res_type[key]
@@ -383,9 +387,9 @@ class NastranGuiResults(NastranGuiAttributes):
                 else:
                     continue
 
-        if key in model.cbar_force:
+        if key in force.cbar_force:
             found_force = True
-            case: np.ndarray = model.cbar_force[key]
+            case: np.ndarray = force.cbar_force[key]
             if case.element_type == 34:
                 ## CBAR-34
                 if case.is_real:
@@ -861,6 +865,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                    stop_on_failure: bool) -> int:
         """Creates the time accurate force objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
+        force = model.op2_results.force
         if nastran_settings.force:
             for itime, unused_dt in enumerate(times):
                 try:
@@ -885,8 +890,8 @@ class NastranGuiResults(NastranGuiAttributes):
             #icase = get_beam_force(
                 #eids, cases, model, times, key, icase,
                 #force_dict, header_dict, keys_map)
-            if key in model.cbeam_force:
-                log.warning('skipping nastran beam force')
+            if key in force.cbeam_force:
+                log.info('skipping nastran beam force')
 
         if nastran_settings.plate_force:
             icase = get_plate_force(
@@ -899,13 +904,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict, header_dict, keys_map, log)
 
         if nastran_settings.cbush_force:
-            if key in model.cbush_force:
+            if key in force.cbush_force:
                 log.warning('skipping nastran bush force')
         #if key in model.bush1d_force:
             #log.warning('skipping nastran bush1d force')
 
         if nastran_settings.gap_force:
-            if key in model.cgap_force:
+            if key in force.cgap_force:
                 log.warning('skipping nastran gap force')
 
         return icase

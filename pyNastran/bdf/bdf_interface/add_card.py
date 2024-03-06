@@ -2430,7 +2430,9 @@ class AddCards:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cbeam(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
+    def add_cbeam(self, eid, pid, nids,
+                  x: Optional[list[float]], g0: Optional[int],
+                  offt='GGG', bit=None,
                   pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='') -> CBEAM:
         """
         Adds a CBEAM card
@@ -8574,7 +8576,7 @@ class AddCards:
         elif str_form == 'rectangular':
             assert nrows >= 1
             assert ncols >= 1
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(str_form)
 
         GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols)

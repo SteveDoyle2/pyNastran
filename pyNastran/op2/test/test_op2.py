@@ -769,6 +769,7 @@ def _update_data2(data, is_dev: bool):
         data['--write_xlsx'] = False
         data['--nocombine'] = False
         data['--nasa95'] = False
+        data['--test'] = False
 
     if '--geometry' not in data:
         data['--geometry'] = False

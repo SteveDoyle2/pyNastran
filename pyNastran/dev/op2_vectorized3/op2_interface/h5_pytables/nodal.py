@@ -17,7 +17,7 @@ from .utils import break_domain_by_case, get_name, get_analysis_code_times
 from .stress_strain import get_idomain
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_group_name, get_attributes
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.op2_vectorized3.op2_geom import OP2 # , OP2Geom
     import pandas as pd
 

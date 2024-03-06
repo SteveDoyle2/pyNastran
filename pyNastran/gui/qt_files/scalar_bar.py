@@ -8,7 +8,7 @@ from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
 from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
 from pyNastran.gui import bi_font_file
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
 
 NCOLORS_DEFAULT = 11
@@ -347,8 +347,10 @@ class ScalarBar:
 
         #self.scalar_bar.SetLookupTable(self.color_function)
         self.update_title(title)
-        self.update_data_format(min_value, max_value, data_format,
-                                nlabels=nlabels, ncolors=ncolors)
+        if data_format is not None:
+            # None is RealGridPointForces
+            self.update_data_format(min_value, max_value, data_format,
+                                    nlabels=nlabels, ncolors=ncolors)
 
         self.min_value = min_value
         self.max_value = max_value

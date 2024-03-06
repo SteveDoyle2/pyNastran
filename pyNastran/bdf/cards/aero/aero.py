@@ -165,7 +165,7 @@ class AECOMP(BaseCard):
             self.lists_ref = [model.CAero(key, msg) for key in self.lists]
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.list_type)
 
     def safe_cross_reference(self, model: BDF):
@@ -195,7 +195,7 @@ class AECOMP(BaseCard):
                 lists_ref.append(ref)
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.list_type)
         self.lists_ref = lists_ref
 
@@ -218,7 +218,7 @@ class AECOMP(BaseCard):
                      else caero.eid for caero in self.lists_ref]
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.list_type)
         return lists
 
@@ -1732,7 +1732,7 @@ class CAERO1(BaseCard):
             y41 = p4[2] - p1[2]
             y32 = p3[2] - p2[2]
             dspan = max(y41, y32)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
         dx = max(x12, x43)

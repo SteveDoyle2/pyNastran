@@ -541,14 +541,16 @@ def _save_spring_force(op2, f06_file, page_num, page_stamp,
         table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+
+    force = op2.op2_results.force
     if element_name == 'CELAS1':
-        op2.celas1_force[isubcase] = spring_force
+        force.celas1_force[isubcase] = spring_force
     elif element_name == 'CELAS2':
-        op2.celas2_force[isubcase] = spring_force
+        force.celas2_force[isubcase] = spring_force
     elif element_name == 'CELAS3':
-        op2.celas3_force[isubcase] = spring_force
+        force.celas3_force[isubcase] = spring_force
     elif element_name == 'CELAS4':
-        op2.celas4_force[isubcase] = spring_force
+        force.celas4_force[isubcase] = spring_force
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     if write_f06_force:

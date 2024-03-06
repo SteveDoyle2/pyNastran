@@ -22,11 +22,11 @@ def get_spring_force(eids: np.ndarray,
     helper method for _fill_op2_time_centroidal_stress.
     """
     subcase_id = key[0]
-    results = model
+    force = model.op2_results.force
 
     springs = [
-        results.celas1_force, results.celas2_force,
-        results.celas3_force, results.celas4_force]
+        force.celas1_force, force.celas2_force,
+        force.celas3_force, force.celas4_force]
     word = 'Force'
 
     spring_cases = []
@@ -108,7 +108,7 @@ def get_bar_force(eids: np.ndarray, cases,
     """
     #print("***stress eids=", eids)
     subcase_id = key[0]
-    result = model.cbar_force
+    result = model.op2_results.force.cbar_force
 
     #titles = []
     bar_cases = []
@@ -233,9 +233,10 @@ def get_plate_force(eids: np.ndarray, cases,
     """
     #print("***stress eids=", eids)
     subcase_id = key[0]
+    force = model.op2_results.force
     plates = [
-        model.ctria3_force, model.ctria6_force, model.ctriar_force,
-        model.cquad4_force, model.cquad8_force, model.cquadr_force,
+        force.ctria3_force, force.ctria6_force, force.ctriar_force,
+        force.cquad4_force, force.cquad8_force, force.cquadr_force,
     ]
 
     plate_cases = []

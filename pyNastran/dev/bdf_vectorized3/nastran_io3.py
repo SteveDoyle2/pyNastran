@@ -1067,37 +1067,38 @@ def _load_stress_strain(element_cards: list,
     result_form = []
     if is_stress:
         stress_form = ('Stress', None, result_form)
+        results = op2_model.op2_results.stress
         name_results = {
             # name, result_dicts
-            'CELAS1' : (op2_model.celas1_stress, ),
-            'CELAS2' : (op2_model.celas2_stress, ),
-            'CELAS3' : (op2_model.celas3_stress, ),
-            'CELAS4' : (op2_model.celas4_stress, ),
+            'CELAS1' : (results.celas1_stress, ),
+            'CELAS2' : (results.celas2_stress, ),
+            'CELAS3' : (results.celas3_stress, ),
+            'CELAS4' : (results.celas4_stress, ),
 
-            #('CDAMP1', op2_model.cdamp1_stress),
-            #('CDAMP2', op2_model.cdamp2_stress),
-            #('CDAMP3', op2_model.cdamp3_stress),
-            #('CDAMP4', op2_model.cdamp4_stress),
+            #('CDAMP1', results.cdamp1_stress),
+            #('CDAMP2', results.cdamp2_stress),
+            #('CDAMP3', results.cdamp3_stress),
+            #('CDAMP4', results.cdamp4_stress),
 
-            'CROD' : (op2_model.crod_stress, ),
-            'CTUBE': (op2_model.ctube_stress, ),
-            'CONROD': (op2_model.conrod_stress, ),
+            'CROD' : (results.crod_stress, ),
+            'CTUBE': (results.ctube_stress, ),
+            'CONROD': (results.conrod_stress, ),
 
-            'CBAR': (op2_model.cbar_stress, ),
-            'CBEAM': (op2_model.cbeam_stress, ),
+            'CBAR': (results.cbar_stress, ),
+            'CBEAM': (results.cbeam_stress, ),
 
-            'CTRIA3': (op2_model.ctria3_stress, op2_model.ctria3_composite_stress),
-            'CTRIA6': (op2_model.ctria6_stress, op2_model.ctria6_composite_stress),
-            'CTRIAR': (op2_model.ctriar_stress, op2_model.ctriar_composite_stress),
+            'CTRIA3': (results.ctria3_stress, results.ctria3_composite_stress),
+            'CTRIA6': (results.ctria6_stress, results.ctria6_composite_stress),
+            'CTRIAR': (results.ctriar_stress, results.ctriar_composite_stress),
 
-            'CQUAD4': (op2_model.cquad4_stress, op2_model.cquad4_composite_stress),
-            'CQUAD8': (op2_model.cquad8_stress, op2_model.cquad8_composite_stress),
-            'CQUADR': (op2_model.cquadr_stress, op2_model.cquadr_composite_stress),
+            'CQUAD4': (results.cquad4_stress, results.cquad4_composite_stress),
+            'CQUAD8': (results.cquad8_stress, results.cquad8_composite_stress),
+            'CQUADR': (results.cquadr_stress, results.cquadr_composite_stress),
 
-            'CTETRA': (op2_model.ctetra_stress, ),
-            'CPENTA': (op2_model.cpenta_stress, ),
-            'CPYRAM': (op2_model.cpyram_stress, ),
-            'CHEXA': (op2_model.chexa_stress, ),
+            'CTETRA': (results.ctetra_stress, ),
+            'CPENTA': (results.cpenta_stress, ),
+            'CPYRAM': (results.cpyram_stress, ),
+            'CHEXA': (results.chexa_stress, ),
 
             #('cplstn3', self.cplstn3_stress),
             #('cplstn4', self.cplstn4_stress),
@@ -1109,38 +1110,39 @@ def _load_stress_strain(element_cards: list,
             #('cplsts8', self.cplsts8_stress),
         }
     else:
+        results = op2_model.op2_results.strain
         stress_form = ('Strain', None, result_form)
         name_results = {
             # name, result_dicts
-            'CELAS1' : (op2_model.celas1_strain, ),
-            'CELAS2' : (op2_model.celas2_strain, ),
-            'CELAS3' : (op2_model.celas3_strain, ),
-            'CELAS4' : (op2_model.celas4_strain, ),
+            'CELAS1' : (results.celas1_strain, ),
+            'CELAS2' : (results.celas2_strain, ),
+            'CELAS3' : (results.celas3_strain, ),
+            'CELAS4' : (results.celas4_strain, ),
 
-            #('CDAMP1', op2_model.cdamp1_strain),
-            #('CDAMP2', op2_model.cdamp2_strain),
-            #('CDAMP3', op2_model.cdamp3_strain),
-            #('CDAMP4', op2_model.cdamp4_strain),
+            #('CDAMP1', results.cdamp1_strain),
+            #('CDAMP2', results.cdamp2_strain),
+            #('CDAMP3', results.cdamp3_strain),
+            #('CDAMP4', results.cdamp4_strain),
 
-            'CROD' : (op2_model.crod_strain, ),
-            'CTUBE': (op2_model.ctube_strain, ),
-            'CONROD': (op2_model.conrod_strain, ),
+            'CROD' : (results.crod_strain, ),
+            'CTUBE': (results.ctube_strain, ),
+            'CONROD': (results.conrod_strain, ),
 
-            'CBAR': (op2_model.cbar_strain, ),
-            'CBEAM': (op2_model.cbeam_strain, ),
+            'CBAR': (results.cbar_strain, ),
+            'CBEAM': (results.cbeam_strain, ),
 
-            'CTRIA3': (op2_model.ctria3_strain, op2_model.ctria3_composite_strain),
-            'CTRIA6': (op2_model.ctria6_strain, op2_model.ctria6_composite_strain),
-            'CTRIAR': (op2_model.ctriar_strain, op2_model.ctriar_composite_strain),
+            'CTRIA3': (results.ctria3_strain, results.ctria3_composite_strain),
+            'CTRIA6': (results.ctria6_strain, results.ctria6_composite_strain),
+            'CTRIAR': (results.ctriar_strain, results.ctriar_composite_strain),
 
-            'CQUAD4': (op2_model.cquad4_strain, op2_model.cquad4_composite_strain),
-            'CQUAD8': (op2_model.cquad8_strain, op2_model.cquad8_composite_strain),
-            'CQUADR': (op2_model.cquadr_strain, op2_model.cquadr_composite_strain),
+            'CQUAD4': (results.cquad4_strain, results.cquad4_composite_strain),
+            'CQUAD8': (results.cquad8_strain, results.cquad8_composite_strain),
+            'CQUADR': (results.cquadr_strain, results.cquadr_composite_strain),
 
-            'CTETRA': (op2_model.ctetra_strain, ),
-            'CPENTA': (op2_model.cpenta_strain, ),
-            'CPYRAM': (op2_model.cpyram_strain, ),
-            'CHEXA': (op2_model.chexa_strain, ),
+            'CTETRA': (results.ctetra_strain, ),
+            'CPENTA': (results.cpenta_strain, ),
+            'CPYRAM': (results.cpyram_strain, ),
+            'CHEXA': (results.chexa_strain, ),
 
             #('cplstn3', self.cplstn3_strain),
             #('cplstn4', self.cplstn4_strain),

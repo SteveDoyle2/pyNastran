@@ -29,7 +29,7 @@ from vtkmodules.vtkFiltersGeneral import vtkVertexGlyphFilter
 from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
 from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
@@ -91,7 +91,7 @@ class HighlightWindow(PyDialog):
             self._highlight_opacity = settings.highlight_opacity
 
             self._point_size = settings.highlight_point_size
-            self._line_thickness = settings.highlight_line_thickness
+            self._line_width = settings.highlight_line_width
 
             self._point_size = 10
             self._annotation_size = settings.annotation_size
@@ -282,10 +282,9 @@ class HighlightWindow(PyDialog):
 
     def on_font(self, value=None) -> None:
         """update the font for the current window"""
-        if value is None:
+        if value in (0, None):
             value = self.font_size_edit.value()
-        font = QtGui.QFont()
-        font.setPointSize(value)
+        font = make_font(value, is_bold=False)
         self.setFont(font)
 
     def on_highlight_color(self) -> None:
@@ -484,7 +483,8 @@ def create_node_labels(point_id_filter: vtkIdFilter,
     points_mapper.ScalarVisibilityOn()
     points_actor = vtkActor()
     points_actor.SetMapper(points_mapper)
-    points_actor.GetProperty().SetPointSize(label_size)
+    prop = points_actor.GetProperty()
+    prop.SetPointSize(label_size)
 
     # point labels
     label_mapper = vtkLabeledDataMapper()

@@ -224,8 +224,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
         op2_new.log = log
 
     for vec_name in force_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.force, vec_name)
+        new_vectors = getattr(op2_new.op2_results.force, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_force(
@@ -236,8 +236,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
 
     for vec_name in stress_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.stress, vec_name)
+        new_vectors = getattr(op2_new.op2_results.stress, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_stress(
@@ -248,8 +248,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
 
     for vec_name in strain_vectors:
-        op2_vectors = getattr(op2, vec_name)
-        new_vectors = getattr(op2_new, vec_name)
+        op2_vectors = getattr(op2.op2_results.strain, vec_name)
+        new_vectors = getattr(op2_new.op2_results.strain, vec_name)
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             _transform_shell_strain(

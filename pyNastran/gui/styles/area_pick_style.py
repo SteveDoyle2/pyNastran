@@ -134,7 +134,9 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
             self.parent.vtk_interactor.Render()
         self.picker_points = []
 
-    def _pick_visible_ids(self, xmin, ymin, xmax, ymax):
+    def _pick_visible_ids(self,
+                          xmin: float, ymin: float,
+                          xmax: float, ymax: float) -> None:
         """Does an area pick of all the visible ids inside the box"""
         #vtkSelectVisiblePoints()
         #vcs = vtkVisibleCellSelector()
@@ -142,7 +144,9 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
         #area_picker.Pick()
 
-    def _pick_depth_ids(self, xmin, ymin, xmax, ymax):
+    def _pick_depth_ids(self,
+                        xmin: float, ymin: float,
+                        xmax: float, ymax: float) -> None:
         """
         Does an area pick of all the ids inside the box, even the ones
         behind the front elements
@@ -355,7 +359,7 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         point_data: vtkPointData = grid.GetPointData()
         ids.SetCellIds(cell_data)
         ids.SetPointIds(point_data)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(ids)
 
     #self.is_eids = False

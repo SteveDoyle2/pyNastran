@@ -197,6 +197,28 @@ class TestAbaqus(unittest.TestCase):
         argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
         cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         os.remove(bdf_filename)
+    def test_b31h(self):
+        """
+        B31H - 3d euler-bernoulli beam element
+        -> CBAR/PBARL
+        """
+        abaqus_filename = os.path.join(MODEL_PATH, 'b31h.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'b31h.bdf')
+        log = get_logger(level='warning', encoding='utf-8')
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
+        #os.remove(bdf_filename)
+
+    def _test_beam_freq(self):
+        """
+        B31H - 3d euler-bernoulli beam element
+        -> CBAR/PBARL
+        """
+        abaqus_filename = os.path.join(MODEL_PATH, 'beam_frequency_attached.inp')
+        bdf_filename = os.path.join(MODEL_PATH, 'beam_frequency_attached.bdf')
+        log = get_logger(level='debug', encoding='utf-8')
+        argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_abaqus_to_nastran(argv, log=log, quiet=True)
 
 def make_model():
     """makes a test model"""
@@ -267,6 +289,18 @@ def _make_part(part_name):
         '8,1,2,3,4',
         '*element, type=coh2d4',
         '9,1,2,3,4',
+        '*element, type=mass',
+        '10,3',
+        '11,3',
+        '*element, type=b31',
+        '12,3,4',
+        '13,4,5',
+        '*element, type=b31h',
+        '14,3,4',
+        '15,4,5',
+        '*element, type=b31r',
+        '16,3,4',
+        '17,4,5',
 
         '*ELEMENT, TYPE=C3D8R, ELSET=Part-1-1-C3D8R-ALL',
         '    1,      1,      2,      3,      4,       5,       6,       7,       8,',
@@ -275,14 +309,14 @@ def _make_part(part_name):
         #165,     164,     163,     167,     168,     169,     170,     172,     171,
         #173,     174,
         #C3D20
-        '*mass',
-        'mass_str',
+        '*mass,elset=mass_set1',
+        '0.1',
         '*rotary inertia',
         'rotary_inertia_str',
         '*elset,elset=eset',
         '1',
-        '*mass',
-        'mass_str',
+        '*mass,elset=mass_set2',
+        '0.2',
         '*solid section,material=steel',
         '42',
         #''

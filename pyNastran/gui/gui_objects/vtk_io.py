@@ -27,7 +27,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     #numpy_to_vtk_points,
     vtk_to_numpy, numpy_to_vtk)
 #from pyNastran.gui.qt_files.colors import YELLOW_FLOAT
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 cell_type_to_nnodes = {

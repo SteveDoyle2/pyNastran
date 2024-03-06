@@ -10,7 +10,7 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 

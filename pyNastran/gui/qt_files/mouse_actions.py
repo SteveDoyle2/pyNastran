@@ -26,7 +26,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 
@@ -350,7 +350,7 @@ class MouseActions:
 
     def on_area_pick(self, is_eids: bool=True,
                      is_nids: bool=True,
-                     representation: str='wire',
+                     representation: str='wire+points',
                      name=None,
                      callback: Optional[Callable]=None,
                      cleanup: bool=True,
@@ -683,7 +683,7 @@ class MouseActions:
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
                 #select_point = picker.GetSelectionPoint()
-                gui.log_command("annotate_cell_picker()")
+                gui.log_command("self.annotate_cell_picker()")
                 gui.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
@@ -983,7 +983,7 @@ def create_highlighted_actor(gui, ugrid: vtkUnstructuredGrid,
         prop.SetPointSize(settings.highlight_point_size)
     elif representation == 'wire':
         prop.SetRepresentationToWireframe()
-        prop.SetLineWidth(settings.highlight_line_thickness)
+        prop.SetLineWidth(settings.highlight_line_width)
     else:
         raise NotImplementedError('representation=%r and must be [points, wire, surface]' % (
             representation))

@@ -199,7 +199,7 @@ class AECOMP(VectorizedBaseCard):
                 aelist_ids.append(lists)
             elif list_type == 'CAERO':
                 caero_ids.append(lists)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(list_type)
 
         if set1_ids:
@@ -604,7 +604,7 @@ class CAERO1(VectorizedBaseCard):
             y41 = p4[2] - p1[2]
             y32 = p3[2] - p2[2]
             dspan = max(y41, y32)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
         dx = max(x12, x43)

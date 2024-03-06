@@ -279,14 +279,16 @@ def _save_spring_stress(op2, f06_file, page_num, page_stamp,
         table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+
+    stress = op2.op2_results.stress
     if element_name == 'CELAS1':
-        op2.celas1_stress[isubcase] = spring_stress
+        stress.celas1_stress[isubcase] = spring_stress
     elif element_name == 'CELAS2':
-        op2.celas2_stress[isubcase] = spring_stress
+        stress.celas2_stress[isubcase] = spring_stress
     elif element_name == 'CELAS3':
-        op2.celas3_stress[isubcase] = spring_stress
+        stress.celas3_stress[isubcase] = spring_stress
     elif element_name == 'CELAS4':
-        op2.celas4_stress[isubcase] = spring_stress
+        stress.celas4_stress[isubcase] = spring_stress
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     if write_f06_stress:
@@ -305,14 +307,16 @@ def _save_spring_strain(op2, f06_file, page_num, page_stamp,
         table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+
+    strain = op2.op2_results.strain
     if element_name == 'CELAS1':
-        op2.celas1_strain[isubcase] = spring_strain
+        strain.celas1_strain[isubcase] = spring_strain
     elif element_name == 'CELAS2':
-        op2.celas2_strain[isubcase] = spring_strain
+        strain.celas2_strain[isubcase] = spring_strain
     elif element_name == 'CELAS3':
-        op2.celas3_strain[isubcase] = spring_strain
+        strain.celas3_strain[isubcase] = spring_strain
     elif element_name == 'CELAS4':
-        op2.celas4_strain[isubcase] = spring_strain
+        strain.celas4_strain[isubcase] = spring_strain
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     if write_f06_strain:
@@ -541,14 +545,16 @@ def _save_spring_force(op2, f06_file, page_num, page_stamp,
         table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+
+    force = op2.op2_results.force
     if element_name == 'CELAS1':
-        op2.celas1_force[isubcase] = spring_force
+        force.celas1_force[isubcase] = spring_force
     elif element_name == 'CELAS2':
-        op2.celas2_force[isubcase] = spring_force
+        force.celas2_force[isubcase] = spring_force
     elif element_name == 'CELAS3':
-        op2.celas3_force[isubcase] = spring_force
+        force.celas3_force[isubcase] = spring_force
     elif element_name == 'CELAS4':
-        op2.celas4_force[isubcase] = spring_force
+        force.celas4_force[isubcase] = spring_force
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     if write_f06_force:
@@ -567,14 +573,16 @@ def _save_spring_strain_energy(op2, f06_file, page_num, page_stamp,
         table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+
+    strain_energy = op2.op2_results.strain_energy
     if element_name == 'CELAS1':
-        op2.celas1_strain_energy[isubcase] = spring_strain_energy
+        strain_energy.celas1_strain_energy[isubcase] = spring_strain_energy
     elif element_name == 'CELAS2':
-        op2.celas2_strain_energy[isubcase] = spring_strain_energy
+        strain_energy.celas2_strain_energy[isubcase] = spring_strain_energy
     elif element_name == 'CELAS3':
-        op2.celas3_strain_energy[isubcase] = spring_strain_energy
+        strain_energy.celas3_strain_energy[isubcase] = spring_strain_energy
     elif element_name == 'CELAS4':
-        op2.celas4_strain_energy[isubcase] = spring_strain_energy
+        strain_energy.celas4_strain_energy[isubcase] = spring_strain_energy
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     if write_f06_ese:

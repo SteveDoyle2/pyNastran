@@ -290,6 +290,7 @@ class GroupsModify(PyDialog):
         self.table.addItems(self.keys)
         item = self.table.item(self.imain)
 
+        #font = make_font(value, is_bold=True, is_italic=True)
         bold = QtGui.QFont()
         bold.setBold(True)
         bold.setItalic(True)

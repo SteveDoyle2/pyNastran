@@ -30,10 +30,11 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
     del element_sets_temp
     cloads = _process_constraints(nastran_model, node_sets)
 
+    beam_sections = []
     solid_sections = []
     shell_sections = []
     part = Part(name, nids, nodes, element_types, node_sets, element_sets,
-                solid_sections, shell_sections, log=log)
+                beam_sections, solid_sections, shell_sections, log=log)
     model.parts = {
         'model': part,
     }
@@ -45,19 +46,21 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str,
     node_output = []
     element_output = []
     static_step = Step(name, boundaries, node_output, element_output,
-                       cloads=cloads, dloads=[], surfaces=[], is_nlgeom=False)
+                       cloads=cloads, dloads=[], surfaces=[],
+                       frequencies=[],
+                       is_nlgeom=False)
     model.steps = [static_step]
     model.write(abaqus_inp_filename, is_2d=False)
 
 def _get_nodes(nastran_model: BDF, fdtype: str='float32') -> tuple[np.ndarray, np.ndarray]:
     """creates nodes"""
     nids = []
-    nodes = []
+    nodes_list = []
     for nid, node in nastran_model.nodes.items():
         xyz = node.get_position()
         nids.append(nid)
-        nodes.append(xyz)
-    nodes = np.array(nodes, dtype=fdtype)
+        nodes_list.append(xyz)
+    nodes = np.array(nodes_list, dtype=fdtype)
     return nids, nodes
 
 def _get_properties(nastran_model: BDF) -> tuple[Any, Any, list[ShellSection], list[SolidSection]]:

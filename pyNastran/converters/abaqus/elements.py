@@ -47,9 +47,12 @@ from cpylog import SimpleLogger
 allowed_element_types = [
     # rigid
     'r2d2',
+    'mass',
 
     # lines
-    'b31h', #2-node linear beam
+    'b31', # 3d, 2-node, linear beam
+    'b31h', #3d 2-node linear beam; hybrid
+    'b31r', #3d 2-node linear beam; reduced
 
     # springs?
     'conn2d2', 'springa',
@@ -76,7 +79,7 @@ allowed_element_types = [
 
 class Elements:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, element_types: dict[str, tuple[np.ndarray, str]],
+    def __init__(self, element_types: dict[str, tuple[list[int], str]],
                  log: SimpleLogger):
         """
         creates a Part object
@@ -88,9 +91,12 @@ class Elements:
                 the element type
             rigid:
                 r2d2 : (nelements, 2) int ndarray
+                mass : (mass, 1) int ndarray
             bars:
             beams:
+                b31  : (nelements, 3) int ndarray - 2 nodes and g0
                 b31h : (nelements, 3) int ndarray - 2 nodes and g0
+                b31r : (nelements, 3) int ndarray - 2 nodes and g0
             shells:
                 s3 : (nelements, 3) int ndarray
                 s4 : (nelements, 4) int ndarray
@@ -133,14 +139,20 @@ class Elements:
         self.log = log
         #-----------------------------------
         # elements
+        self.mass = None
+        self.mass_eids = None
 
         # rigid elements
         self.r2d2 = None
         self.r2d2_eids = None
 
         # bars/beams
+        self.b31 = None
         self.b31h = None
+        self.b31r = None
+        self.b31_eids = None
         self.b31h_eids = None
+        self.b31r_eids = None
 
         # -----shells-----
         # plane strain
@@ -223,72 +235,19 @@ class Elements:
         self.c3d10h_eids = None  # tet10 hybrid hydrostatic
         self._store_elements(element_types)
 
-    def _etypes_nnodes(self):
-        """internal helper method"""
-        etypes_nnodes = [
-            # rigid
-            ('r2d2', 2),  #  similar to a RBAR
-
-            # bar/beam
-            ('b31h', 3),  #  similar to a CBEAM?  TODO: why is this 3 nodes?
-
-            #  shells
-            ('cpe3', 3),
-            ('cpe4', 4),
-            ('cpe4r', 4),  # quad plane strain, reduced
-
-            ('cps3', 3),
-            ('cps4', 4),
-            ('cps3r', 3),
-            ('cps4r', 4), # quad, plane stress, reduced
-
-            ('coh2d4', 4), #  cohesive zone
-            ('cohax4', 4), #  cohesive zone
-            ('cax3', 3),
-            ('cax4r', 4), # reduced
-
-            ('s3', 3),
-            ('s4', 4),
-            ('s6', 6),
-            ('s8', 8),
-
-            ('s3r', 3),
-            ('s4r', 4),
-            ('s6r', 6),
-            ('s8r', 8), # CQUAD8 reduced
-
-            #  solids
-            ('c3d4', 4),    # tet4
-            ('c3d6', 6),    # penta6
-            ('c3d8', 8),    # hexa8
-            ('c3d10', 10),  # tet10
-            ('c3d15', 15),  # penta15
-            ('c3d20', 20),  # hexa20
-
-            ('c3d4r', 4),    # tet4 reduced
-            ('c3d6r', 6),    # penta6 reduced
-            ('c3d8r', 8),    # hexa8 reduced
-            ('c3d10r', 10),  # tet10 reduced
-            ('c3d15r', 15),  # penta15 reduced
-            ('c3d20r', 20),  # hexa20 reduced
-
-            ('c3d10h', 10),  # tet10 hybrid hydrostatic
-        ]
-        return etypes_nnodes
-
-    def _store_elements(self, element_types: dict[str, list[int]]) -> None:
+    def _store_elements(self, element_types: dict[str, tuple[list[int], str]]) -> None:
         """helper method for the init"""
         if len(element_types) == 0:
             return
-        etypes_nnodes = self._etypes_nnodes()
+        etypes_nnodes = _etypes_nnodes()
         is_elements = False
         etypes_used = set()
-        element_type_to_elset_name = {}
+        element_type_to_elset_name: dict[str, str] = {}
         element_types_all = set(list(element_types.keys()))
-        for etype, nnodes in etypes_nnodes:
 
+        for etype, nnodes in etypes_nnodes:
             if etype in element_types:
-                etype_eids = '%s_eids' % etype
+                etype_eids = f'{etype}_eids'
                 elements, elset = element_types[etype]
                 etypes_used.add(etype)
                 if len(elements) == 0:
@@ -311,7 +270,8 @@ class Elements:
                 #print(f'eids[{etype}] = {eids}')
                 setattr(self, etype, node_ids)  # r2d2
                 setattr(self, etype_eids, eids) #  r2d2_eids
-                assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
+                if isinstance(nnodes, int):
+                    assert eids_elements.shape[1] == nnodes + 1, f'etype={etype} eids_elements.shape={str(eids_elements.shape)}'
             #else:
                 #self.log.warning(f'skipping etype={etype!r}')
                 #raise RuntimeError(etype)
@@ -321,10 +281,10 @@ class Elements:
         assert is_elements, element_types
         self.element_type_to_elset_name = element_type_to_elset_name
 
-    def element(self, eid):
+    def element(self, eid: int):
         """gets a specific element of the part"""
         elem = None
-        etypes_nnodes = self._etypes_nnodes()
+        etypes_nnodes = _etypes_nnodes()
         for etype, nnodes in etypes_nnodes:
             etype_eids = '%s_eids' % etype
             eids = getattr(self, etype_eids)  # r2d2_eids
@@ -338,13 +298,17 @@ class Elements:
         return None, None, None
 
     @property
-    def nelements(self):
+    def nelements(self) -> int:
         """Gets the total number of elements"""
+        n_mass = self.mass.shape[0] if self.mass is not None else 0
+
         # rigid elements
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
 
         # bar/beam
+        n_b31 = self.b31.shape[0] if self.b31 is not None else 0  #  beam
         n_b31h = self.b31h.shape[0] if self.b31h is not None else 0  #  beam
+        n_b31r = self.b31r.shape[0] if self.b31r is not None else 0  #  beam
 
         # plane strain
         n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
@@ -389,8 +353,9 @@ class Elements:
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0     # hexa8 reduced
         n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0  # hexa20 reduced
 
-        neids = (n_r2d2 +  # rigid elements
-                 n_b31h +  # bar/beam
+        neids = (n_mass +
+                 n_r2d2 +  # rigid elements
+                 n_b31 + n_b31h + n_b31r +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
@@ -411,11 +376,15 @@ class Elements:
 
     def __repr__(self):
         """prints a summary for the part"""
+        n_mass = self.mass.shape[0] if self.mass is not None else 0
+
         # rigid elements
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
 
         # bar/beam
+        n_b31 = self.b31.shape[0] if self.b31 is not None else 0
         n_b31h = self.b31h.shape[0] if self.b31h is not None else 0
+        n_b31r = self.b31r.shape[0] if self.b31r is not None else 0
 
         # plane strain
         n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
@@ -460,8 +429,9 @@ class Elements:
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0     # hexa8 reduced
         n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0  # hexa20 reduced
 
-        neids = (n_r2d2 +  # rigid
-                 n_b31h +  # bar/beam
+        neids = (n_mass +
+                 n_r2d2 +  # rigid
+                 n_b31 + n_b31h + n_b31r +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
@@ -483,7 +453,10 @@ class Elements:
         elset_str = '{' + elset_join + '}'
         msg = (
             f'Element(neids={neids:d}, element_type_to_elset_name={elset_str},\n'
-            f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n' # bar/beam
+            f'        n_mass={n_mass}, \n'
+            f'        n_r2d2={n_r2d2}, \n'
+            f'        n_b31={n_b31}, n_b31h={n_b31h}, n_b31r={n_b31r},\n' # bar/beam
+            # shells
             f'        n_cpe3={n_cpe3}, n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r},\n' # plane strain
             f'        n_cps3={n_cps3}, n_cps4={n_cps4}, n_cps4r={n_cps4r},\n' # plane stress
             f'        n_s3={n_s3}, n_s4={n_s4}, n_s8={n_s8},\n'
@@ -504,11 +477,15 @@ class Elements:
     def element_types(self) -> dict[str, tuple[np.ndarray, np.ndarray]]:
         """simplified way to access all the elements as a dictionary"""
         element_types = {}
+        element_types['mass'] = (self.mass_eids, self.mass)
+
         # rigid
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
 
         # bar/beam
+        element_types['b31'] = (self.b31_eids, self.b31)
         element_types['b31h'] = (self.b31h_eids, self.b31h)
+        element_types['b31r'] = (self.b31r_eids, self.b31r)
 
         # plane strain
         element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
@@ -567,3 +544,62 @@ class Elements:
             fmt = '%d,\t' * (nnodes) + '%d\n'
             for eid_elem in eids_elems:
                 abq_file.write(fmt % tuple(eid_elem))
+
+
+def _etypes_nnodes() -> list[tuple[str, int]]:
+    """internal helper method"""
+    etypes_nnodes = [
+        ('mass', 1),  #  similar to a CONM2
+
+        # rigid
+        ('r2d2', 2),  #  similar to a RBAR
+
+        # bar/beam
+        # 2 required nodes, but 3rd orientation node (g0) is possible
+        ('b31',  (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+        ('b31h', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+        ('b31r', (2, 3)),  #  similar to a CBEAM?  3=3d, 1d beam
+
+        #  shells
+        ('cpe3', 3),
+        ('cpe4', 4),
+        ('cpe4r', 4),  # quad plane strain, reduced
+
+        ('cps3', 3),
+        ('cps4', 4),
+        ('cps3r', 3),
+        ('cps4r', 4), # quad, plane stress, reduced
+
+        ('coh2d4', 4), #  cohesive zone
+        ('cohax4', 4), #  cohesive zone
+        ('cax3', 3),
+        ('cax4r', 4), # reduced
+
+        ('s3', 3),
+        ('s4', 4),
+        ('s6', 6),
+        ('s8', 8),
+
+        ('s3r', 3),
+        ('s4r', 4),
+        ('s6r', 6),
+        ('s8r', 8), # CQUAD8 reduced
+
+        #  solids
+        ('c3d4', 4),    # tet4
+        ('c3d6', 6),    # penta6
+        ('c3d8', 8),    # hexa8
+        ('c3d10', 10),  # tet10
+        ('c3d15', 15),  # penta15
+        ('c3d20', 20),  # hexa20
+
+        ('c3d4r', 4),    # tet4 reduced
+        ('c3d6r', 6),    # penta6 reduced
+        ('c3d8r', 8),    # hexa8 reduced
+        ('c3d10r', 10),  # tet10 reduced
+        ('c3d15r', 15),  # penta15 reduced
+        ('c3d20r', 20),  # hexa20 reduced
+
+        ('c3d10h', 10),  # tet10 hybrid hydrostatic
+    ]
+    return etypes_nnodes

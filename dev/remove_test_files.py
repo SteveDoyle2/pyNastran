@@ -16,6 +16,8 @@ def main():
     files_folders = [line.rstrip() for line in lines if line.rstrip()]
     for folder_fname0 in files_folders:
         folder_fname = os.path.abspath(os.path.join(BASE, folder_fname0))
+        if not os.path.exists(folder_fname):
+            continue
         assert os.path.exists(folder_fname), folder_fname0
         if os.path.isdir(folder_fname):
             folders.append(folder_fname0)
@@ -32,7 +34,7 @@ def main():
             print(f'*failed to delete folder: {folder0}')
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
-        if os.path.exists(folder) and not delete:
+        if os.path.exists(fname) and not delete:
             print(f'deleting file: {fname0}')
             os.remove(fname)
         else:

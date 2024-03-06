@@ -34,6 +34,22 @@ class TestBeams(unittest.TestCase):
       - CBEAM3, PBEAM3
 
     """
+    def test_pbeam_continuation(self):
+        """a buggy PBEAM unless you add a trailing +"""
+        nastran_model = BDF()
+        pbeam = nastran_model.add_pbeam(
+            1001, 1,
+            [0., 1.],
+            ['YES', 'YES'],
+            [10., 10.],
+            [50., 50.],
+            [55., 55.],
+            [0., 0.],
+            [30., 30.])
+        print(pbeam)
+        #print(pbeam.write_card_16())
+        x = 1
+
     def test_pbeam_01(self):
         """tests a nasty PBEAM"""
         lines = [
@@ -460,6 +476,63 @@ class TestBeams(unittest.TestCase):
         model.pop_parse_errors()
         str(model.properties[622])
         str(model.properties[623])
+
+    def test_pbeaml_02(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        xxb = [0.]
+        so = 'YES'
+        area = 1.0
+        i1 = 1.0
+        i2 = 1.0
+        i12 = 0.0
+        j = 1.0
+        pbeam = model.add_pbeam(
+            pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+            c1=None, c2=None, d1=None, d2=None,
+            e1=None, e2=None, f1=None, f2=None,
+            k1=1., k2=1., s1=0., s2=0.,
+            nsia=0., nsib=None,
+            cwa=0., cwb=None,
+            m1a=0., m2a=0.,
+            m1b=None, m2b=None,
+            n1a=0., n2a=0.,
+            n1b=None, n2b=3.0, comment='')
+        str(pbeam)
+        #'PBEAM          1       1      1.      1.      1.              1.'
+        #'+'
+        #'+'
+        #'                                                                      3.'
+
+        pid += 1
+        pbeam = model.add_pbeam(
+            pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+            c1=None, c2=None, d1=None, d2=None,
+            e1=None, e2=None, f1=None, f2=None,
+            k1=1., k2=1., s1=0., s2=0.,
+            nsia=0., nsib=None,
+            cwa=0., cwb=None,
+            m1a=0., m2a=0.,
+            m1b=None, m2b=None,
+            n1a=0., n2a=0.,
+            n1b=2.0, n2b=None, comment='')
+        str(pbeam)
+
+        pid += 1
+        pbeam = model.add_pbeam(
+            pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+            c1=None, c2=None, d1=None, d2=None,
+            e1=None, e2=None, f1=None, f2=None,
+            k1=1., k2=1., s1=0., s2=0.,
+            nsia=0., nsib=None,
+            cwa=0., cwb=None,
+            m1a=0., m2a=0.,
+            m1b=1.1, m2b=2.2,
+            n1a=0., n2a=0.,
+            n1b=None, n2b=None, comment='')
+        str(pbeam)
+        x = 1
 
     def test_cbeam_01(self):
         """modification of test_pbeam_05"""

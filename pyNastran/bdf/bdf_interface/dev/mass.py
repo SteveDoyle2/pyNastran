@@ -23,7 +23,7 @@ import numpy as np
 import scipy as sp
 
 from pyNastran.bdf.mesh_utils.mass_properties import get_sub_eids
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CONM2, CMASS2
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from cpylog import SimpleLogger

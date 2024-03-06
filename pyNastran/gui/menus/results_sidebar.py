@@ -25,7 +25,7 @@ from pyNastran.gui.utils.qt.qcombobox import (
     update_combo_box,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 SHOW_NAME_MAIN = False

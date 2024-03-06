@@ -186,7 +186,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.clear_nastran()
         self.make_spc_mpc_supports = True
         self.create_secondary_actors = True
-        self.stop_on_failure = True
+        self.stop_on_failure = False
 
     def clear_nastran(self):
         """cleans up variables specific to Nastran"""
@@ -3008,11 +3008,13 @@ class NastranIO(NastranIO_):
         """
         hides the Nastran toolbar when loading another format
         """
-        self.nastran_tools_menu.setVisible(False)
+        if hasattr(self, 'nastran_tools_menu'):
+            self.nastran_tools_menu.setVisible(False)
 
         #self.menu_help.menuAction().setVisible(True)
         #self.menu_help2.menuAction().setVisible(False)
-        self.nastran_toolbar.setVisible(False)
+        if hasattr(self, 'nastran_toolbar'):
+            self.nastran_toolbar.setVisible(False)
         self.actions['nastran'].setVisible(False)
 
     def _create_nastran_tools_and_menu_items(self):
@@ -3065,7 +3067,7 @@ class NastranIO(NastranIO_):
         is_visible = True
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', '',
+            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', 'Ctrl+T',
              'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu, is_visible),
             ('create_coord', 'Create Coordinate System...', 'coord.png', '', 'Creates a Coordinate System', self.on_create_coord, is_visible),
         ]

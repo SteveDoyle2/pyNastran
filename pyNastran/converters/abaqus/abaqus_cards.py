@@ -8,12 +8,21 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Union, TextIO, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.abaqus.elements import Elements
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
+
+class Frequency:
+    def __init__(self, solver: str, nmodes: int):
+        self.solver = solver
+        self.nmodes = nmodes
+
+    def __repr__(self) -> str:
+        msg = f'Frequency(solver={self.solver} nmodes={self.nmodes})'
+        return msg
 
 class Boundary:
     def __init__(self, nid_dof_to_value: dict[tuple[int, int], float]):
@@ -76,6 +85,55 @@ class Boundary:
     def __repr__(self) -> str:
         msg = f'Boundary(nid_dof_to_value={str(self.nid_dof_to_value)})'
         return msg
+
+
+class Mass:
+    def __init__(self, elset: str,
+                 value: float):
+        self.elset = elset
+        self.value = value
+
+    def __repr__(self):
+        """prints a summary for the solid section"""
+        msg = 'BeamSection(\n'
+        #msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    elset = {self.elset},\n'
+        msg += f'    value = {self.value},\n'
+        msg += ')\n'
+        return msg
+
+
+class BeamSection:
+    section_name_to_npoints = {
+        'RECT': 2,  # consistent with PBARL
+        'PIPE': 2,  #  r (outside radius), t (wall thickness)
+    }
+    def __init__(self, elset: str,
+                 material_name: str,
+                 section: str,
+                 dimensions: np.ndarray,
+                 x_vector: np.ndarray):
+        self.elset = elset
+        self.material_name = material_name
+        self.section = section
+        self.dimensions = dimensions
+        self.x_vector = x_vector
+
+        npoints = self.section_name_to_npoints[section]
+        assert len(dimensions) == npoints, dimensions
+
+    def __repr__(self):
+        """prints a summary for the solid section"""
+        msg = 'BeamSection(\n'
+        #msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    elset = {self.elset},\n'
+        msg += f'    material_name = {self.material_name},\n'
+        msg += f'    section = {self.section},\n'
+        msg += f'    dimensions = {self.dimensions},\n'
+        msg += f'    x_vector = {self.x_vector},\n'
+        msg += ')\n'
+        return msg
+
 
 class ShellSection:
     """
@@ -343,6 +401,7 @@ class Part:
                  element_types: dict[str, np.ndarray],
                  node_sets: dict[str, np.ndarray],
                  element_sets: dict[str, tuple[np.ndarray, str]],
+                 beam_sections: list[BeamSection],
                  solid_sections: list[SolidSection],
                  shell_sections: list[ShellSection],
                  log: SimpleLogger):
@@ -358,6 +417,8 @@ class Part:
                 the element type
             bars:
                 r2d2 : (nelements, 2) int ndarray
+                b31 : (nelements, 2) int ndarray
+                b31h : (nelements, 2) int ndarray
             shells:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
@@ -379,11 +440,14 @@ class Part:
         self.element_sets = element_sets
 
         self.elements = Elements(element_types, self.log)
+        if beam_sections is None:
+            beam_sections = []
         if solid_sections is None:
             solid_sections = []
         if shell_sections is None:
             shell_sections = []
 
+        self.beam_sections = beam_sections
         self.solid_sections = solid_sections
         self.shell_sections = shell_sections
 
@@ -458,6 +522,7 @@ class Step:
                  cloads: dict[str, Any],
                  dloads: dict[str, Any],
                  surfaces: list[Any],
+                 frequencies: list[Frequency],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -479,8 +544,9 @@ class Step:
         self.boundaries: list[Boundary] = boundaries
         self.node_output = node_output
         self.element_output = element_output
-        self.cloads = cloads
+        self.cloads: list[tuple[Union[int, str], int, float]] = cloads
         self.dloads = dloads
+        self.frequencies = frequencies
         assert isinstance(cloads, list), cloads
         assert isinstance(dloads, list), dloads
 
@@ -493,6 +559,7 @@ class Step:
             f'  node_output={self.node_output}\n'
             f'  element_output={self.element_output}\n'
             f'  cloads={self.cloads}\n'
+            f'  frequencies={self.frequencies}\n'
         )
         return msg
 
@@ -523,29 +590,31 @@ class Step:
         abq_file.write(f'*End Step\n')
 
 
-def cast_nodes(nids: list[Any], nodes: list[Any],
-               log: SimpleLogger, require: bool=True) -> tuple[np.ndarray, np.ndarray]:
-    if len(nids) == 0 and require == False:
-        assert len(nodes) == 0, len(nodes)
+def cast_nodes(nids_list: list[Any],
+               nodes_list: list[Any],
+               log: SimpleLogger,
+               require: bool=True) -> tuple[np.ndarray, np.ndarray]:
+    if len(nids_list) == 0 and require is False:
+        assert len(nodes_list) == 0, len(nodes_list)
         return None, None
 
     try:
-        nids = np.array(nids, dtype='int32')
+        nids = np.array(nids_list, dtype='int32')
     except ValueError:
         msg = f'nids={nids} are not integers'
         raise ValueError(msg)
     nnodes = len(nids)
 
-    node0 = nodes[0]
+    node0 = nodes_list[0]
     node_shape = len(node0)
 
     if node_shape == 3:
-        nodes = np.array(nodes, dtype='float32')
+        nodes = np.array(nodes_list, dtype='float32')
         log.info(f'3d model found; nodes.shape={nodes.shape}')
     elif node_shape == 2:
         # abaqus can have only x/y coordinates, so we fake the z coordinate
         nodes = np.zeros((nnodes, 3), dtype='float32')
-        nodes2 = np.array(nodes, dtype='float32')
+        nodes2 = np.array(nodes_list, dtype='float32')
         #print(nodes2.shape, self.nodes.shape)
         nodes[:, :2] = nodes2
         log.info(f'2d model found; nodes.shape={nodes.shape}')

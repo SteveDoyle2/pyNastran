@@ -2839,7 +2839,7 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 

@@ -49,11 +49,11 @@ def run_map_deflections(node_list, bdf_filename, out_filename,
 
     """
     ext = os.path.splitext(out_filename)[1]
-    if ext == ".op2":
+    if ext == '.op2':
         deflections = read_op2(out_filename, log=log)
     # elif ext == '.f06':
     # deflections = read_f06(out_filename)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError("out_filename = %r" % out_filename)
 
     model = read_bdf(bdf_filename, xref=True, punch=False, log=log, debug=True)

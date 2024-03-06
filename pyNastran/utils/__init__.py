@@ -169,8 +169,8 @@ def __object_attr(obj: Any,
         'all':  lambda k: (k not in keys_to_skip),
     }
 
-    if not mode in test:
-        raise ValueError('Wrong mode! Accepted modes: public, private, both, all.')
+    if not mode in test:  # pragma: no cover
+        raise ValueError(f'Wrong mode={mode!r}! Accepted modes: public, private, both, all.')
     check = test[mode]
 
     out = []
@@ -363,7 +363,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
 
     for level in levels:
         # jump to get out of the inspection code
-        frame = sys._getframe(3 + level)
+        frame = sys._getframe(4 + level)
         line_no = frame.f_lineno
         code = frame.f_code
         try:
@@ -385,5 +385,5 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
     if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
-    elif user_name not in ['sdoyle', 'travis']:
+    elif user_name not in ['travis']:
         warnings.warn(msg, DeprecationWarning)

@@ -10,7 +10,7 @@ from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from vtkmodules.vtkRenderingCore import (
-    vtkColorTransferFunction, vtkDataSetMapper, vtkTextActor)
+    vtkColorTransferFunction, vtkDataSetMapper, vtkTextActor, vtkRenderer)
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 
 from qtpy import QtGui
@@ -24,25 +24,32 @@ except ModuleNotFoundError:
 
 import pyNastran
 from pyNastran import DEV
+from pyNastran.gui.typing import ColorFloat, Format
 from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.gui_objects.settings import Settings, FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 
+from pyNastran.gui.qt_files.vtk_actor_actions import VtkActorActions
 from pyNastran.gui.qt_files.tool_actions import ToolActions
 from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
 from pyNastran.gui.qt_files.mark_actions import MarkActions
+from pyNastran.gui.utils.qt.pydialog import make_font
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
+IS_SHEAR_MOMENT_TORQUE = False
 IS_CUTTING_PLANE = False
+if IS_MATPLOTLIB:
+    from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
+    IS_SHEAR_MOMENT_TORQUE = True
 if IS_MATPLOTLIB and DEV:
     from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
-    from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
     IS_CUTTING_PLANE = True
+
 from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
@@ -57,12 +64,11 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
-    from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid
-    from vtkmodules.vtkCommonDataModel import vtkPointData
+    from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
 
@@ -117,6 +123,7 @@ class GuiAttributes:
         self.make_contour_filter = False
 
         self.settings = Settings(self)
+        self.vtk_actor_actions = VtkActorActions(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)
         self.group_actions = GroupActions(self)
@@ -132,7 +139,9 @@ class GuiAttributes:
         self.preferences_obj = PreferencesObject(self)
         if IS_CUTTING_PLANE:
             self.cutting_plane_obj = CuttingPlaneObject(self)
+        if IS_SHEAR_MOMENT_TORQUE:
             self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
+
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
         self.geometry_obj = GeometryObject(self)
 
@@ -402,9 +411,11 @@ class GuiAttributes:
     def clear_actor(self, actor_name: str) -> None:
         if actor_name in self.gui.alt_grids:
             del self.alt_grids[actor_name]
+
+        rend: vtkRenderer = self.rend
         if actor_name in self.geometry_actors:
             actor = self.geometry_actors[actor_name]
-            self.rend.RemoveActor(actor)
+            rend.RemoveActor(actor)
             del self.geometry_actors[actor_name]
 
     @property
@@ -492,8 +503,11 @@ class GuiAttributes:
         self.eid_maps[self.name] = eid_map
 
     #-------------------------------------------------------------------
-    def set_point_grid(self, name: str, nodes, elements, color,
-                       point_size: int=5, opacity: int=1., add: bool=True) -> None:
+    def set_point_grid(self, name: str,
+                       nodes: np.ndarray, elements: np.ndarray,
+                       color: ColorFloat,
+                       point_size: int=5, opacity: int=1.,
+                       add: bool=True) -> vtkUnstructuredGrid:
         """Makes a POINT grid"""
         self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
                                        opacity=opacity, representation='point')
@@ -517,34 +531,26 @@ class GuiAttributes:
             #if name in self.geometry_actors:
             self.geometry_actors[name].Modified()
 
-    def set_quad_grid(self, name, nodes, elements, color,
-                      line_width=5, opacity=1., representation='wire', add=True):
-        """Makes a CQUAD4 grid"""
-        self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
-                                       opacity=opacity, representation=representation)
-
-        nnodes = nodes.shape[0]
-        nquads = elements.shape[0]
-        if nnodes == 0:
-            return
-        if nquads == 0:
-            return
-
-        #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
-        assert isinstance(nodes, np.ndarray), type(nodes)
-
-        points = numpy_to_vtk_points(nodes)
-        grid = self.alt_grids[name]
-        grid.SetPoints(points)
-
-        etype = 9  # vtkQuad().GetCellType()
-        create_vtk_cells_of_constant_element_type(grid, elements, etype)
-
-        if add:
-            self._add_alt_actors({name : self.alt_grids[name]})
-
-            #if name in self.geometry_actors:
-        self.geometry_actors[name].Modified()
+    def set_quad_grid(self, name: str,
+                      nodes: np.ndarray,
+                      elements: np.ndarray,
+                      color: ColorFloat,
+                      point_size: int=5, line_width: int=5,
+                      opacity: float=1.,
+                      representation: str='wire',
+                      add: bool=True,
+                      visible_in_geometry_properties: bool=True) -> Optional[vtkUnstructuredGrid]:
+        """Makes a quad grid"""
+        etype = 9
+        grid = self.vtk_actor_actions.create_grid_from_nodes_elements_etype(
+            name, nodes, elements, etype, color,
+            point_size=point_size, line_width=line_width,
+            opacity=opacity,
+            representation=representation,
+            add=add,
+            visible_in_geometry_properties=visible_in_geometry_properties,
+        )
+        return grid
 
     def _add_alt_actors(self, grids_dict: dict[str, vtkUnstructuredGrid],
                         names_to_ignore=None):
@@ -578,6 +584,33 @@ class GuiAttributes:
             actor = self.geometry_actors[name]
             self.rend.RemoveActor(actor)
             del actor
+
+    def _get_geometry_property_items(self, name: str,
+                                     *property_name_defaults) -> list[Any]:
+        """
+        Matlab-esque way of accessing properties
+
+        line_width = gui.get_geometry_property_items(
+            LINE_NAME,
+            'line_width', 5)
+        line_width, opacity = gui.get_geometry_property_items(
+            LINE_NAME,
+            'line_width', 5,
+            'opacity', 1.0)
+        """
+        length = len(property_name_defaults)
+        assert length % 2 == 0, property_name_defaults
+        out = []
+        for i in range(0, length, 2):
+            prop_name = property_name_defaults[i]
+            assert prop_name in ['line_width', 'point_size', 'color', 'opacity'], prop_name
+            if name in self.geometry_properties:
+                prop = self.geometry_properties[name]
+                outi = getattr(prop, prop_name)
+            else:
+                outi = property_name_defaults[i+1]
+            out.append(outi)
+        return out
 
     @property
     def displacement_scale_factor(self) -> float:
@@ -804,13 +837,19 @@ class GuiAttributes:
         self.legend_obj._set_legend_fringe(is_fringe)
 
     def on_update_legend(self,
-                         title='Title', min_value=0., max_value=1.,
-                         scale=0.0, phase=0.0,
-                         arrow_scale=1.,
-                         data_format='%.0f',
-                         is_low_to_high=True, is_discrete=True, is_horizontal=True,
-                         nlabels=None, labelsize=None, ncolors=None, colormap=None,
-                         is_shown=True, render=True) -> None:
+                         title: str='Title',
+                         min_value: float=0., max_value: float=1.,
+                         scale: float=0.0, phase: float=0.0,
+                         arrow_scale: float=1.,
+                         data_format: str='%.0f',
+                         is_low_to_high: bool=True,
+                         is_discrete: bool=True,
+                         is_horizontal: bool=True,
+                         nlabels: Optional[int]=None,
+                         labelsize: Optional[int]=None,
+                         ncolors: Optional[int]=None,
+                         colormap: Optional[str]=None,
+                         is_shown: bool=True, render: bool=True) -> None:
         """
         Updates the legend/model
 
@@ -941,7 +980,7 @@ class GuiAttributes:
 
     def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False) -> None:
         """populates the formats that will be supported"""
-        fmts: list[str] = []
+        fmts: list[Format] = []
         self.supported_formats = []
         #assert 'h5nastran' in fmt_order
         for fmt in fmt_order:
@@ -965,7 +1004,7 @@ class GuiAttributes:
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
-        self.fmts = fmts
+        self.fmts: list[Format] = fmts
         #print("fmts =", fmts)
 
         if not IS_TESTING:  # pragma: no cover
@@ -1181,13 +1220,11 @@ class GuiAttributes:
             self.log_error('font_size=%r must be an integer; type=%s' % (
                 font_size, type(font_size)))
             return is_failed
-        if font_size < 6:
-            font_size = 6
+        font_size = force_ranged(font_size, min_value=FONT_SIZE_MIN, max_value=FONT_SIZE_MAX)
         if self.settings.font_size == font_size:
             return False
         self.settings.font_size = font_size
-        font = QtGui.QFont()
-        font.setPointSize(self.settings.font_size)
+        font = make_font(self.settings.font_size, is_bold=False)
         self.setFont(font)
 
         if isinstance(self, QMainWindow):
@@ -1212,7 +1249,7 @@ class GuiAttributes:
         self.edit_geometry_properties_obj.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.log_command('self.settings.on_set_font_size(%s)' % font_size)
+        self.log_command(f'self.settings.on_set_font_size({font_size})')
         return False
 
     def make_cutting_plane(self, data) -> None:
@@ -1359,7 +1396,8 @@ class GuiAttributes:
             geometry_properties)
 
     @start_stop_performance_mode
-    def on_update_geometry_properties(self, out_data, name=None, write_log=True) -> None:
+    def on_update_geometry_properties(self, out_data, name=None,
+                                      write_log: bool=True) -> None:
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -1712,7 +1750,7 @@ class ModelData:
         return msg
 
 def _add_fmt(supported_fmts: list[str],
-             fmts: list[str], fmt: str,
+             fmts: list[Format], fmt: str,
              geom_results_funcs: str, data: Callable) -> None:
     """
     Adds a format

@@ -108,12 +108,13 @@ def _recover_stress_rod(f06_file, op2,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
+    stress = op2.op2_results.stress
     if element_name == 'CONROD':
-        op2.conrod_stress[isubcase] = stress_obj
+        stress.conrod_stress[isubcase] = stress_obj
     elif element_name == 'CROD':
-        op2.crod_stress[isubcase] = stress_obj
+        stress.crod_stress[isubcase] = stress_obj
     elif element_name == 'CTUBE':
-        op2.ctube_stress[isubcase] = stress_obj
+        stress.ctube_stress[isubcase] = stress_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 

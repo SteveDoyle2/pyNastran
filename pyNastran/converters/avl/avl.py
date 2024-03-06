@@ -152,7 +152,7 @@ class AVL:
                     self.log.debug('name=%s nchord=%s chord_spacing=%s' % (
                         name, nchord, chord_spacing))
                     #surface['span'] = (None, None)
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(sline2)
                 nchord = int(nchord)
                 chord_spacing = float(chord_spacing)

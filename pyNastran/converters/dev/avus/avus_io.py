@@ -211,7 +211,7 @@ class AvusIO:
                         epoints.SetId(7, node_ids[7])
                         #elem.GetCellType() = 8  # vtkHexa
                         grid.InsertNextCell(8, elem.GetPointIds())
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError()
 
         grid.SetPoints(points)

@@ -1,5 +1,6 @@
 from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.menus.highlight.highlight import HighlightWindow
+from pyNastran.gui.gui_objects.settings import Settings
 
 
 class HighlightObject(BaseGui):
@@ -69,7 +70,7 @@ class MarkObject(BaseGui):
         self._mark_window_shown = False
         self._mark_window = None
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """sets the font size for the preferences window"""
         if self._mark_window_shown:
             self._mark_window.set_font_size(font_size)
@@ -86,7 +87,7 @@ class MarkObject(BaseGui):
             #self.log_error('No model has been loaded.')
             #return
 
-        settings = self.gui.settings
+        settings: Settings = self.gui.settings
         if not hasattr(self.gui, 'case_keys'):
             self.gui.log_error('No model has been loaded.')
             return

@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 #import traceback
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 
 import numpy as np
 
@@ -27,8 +27,6 @@ from pyNastran.gui.vtk_rendering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
     vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
 
-from qtpy.compat import getsavefilename
-
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
@@ -40,6 +38,7 @@ from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import update_axis_text_size
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.gui import MainWindow
     from pyNastran.gui.gui_objects.settings import Settings
 
@@ -61,6 +60,7 @@ class ToolActions:
     def export_case_data(self, icases: Optional[list[int]]=None) -> None:
         """exports CSVs of the requested cases"""
         gui = self.gui
+        log = self.gui.log
         icases2 = self.get_icases(icases)
 
         csv_filename = 'None'
@@ -78,12 +78,15 @@ class ToolActions:
             label2 = obj.get_annotation(i, name)
             data_format = obj.get_data_format(i, name)
             unused_vector_size = obj.get_vector_size(i, name)
-            print(subtitle, label, label2, location, name)
+            title = obj.get_legend_title(i, name)
+            print(subtitle, label, label2, location, name, title)
 
             word, eids_nids = gui.get_mapping_for_location(location)
-            csv_filename = _export_case(
-                name, eids_nids, case, icase,
-                word, label2, data_format)
+            is_failed, csv_filename = _export_case(
+                title, eids_nids, case, icase,
+                word, label2, data_format, log)
+            if not is_failed:
+                print(csv_filename)
 
         if icases:
             gui.log_command(f'self.export_case_data(icases={icases})\n'
@@ -332,52 +335,64 @@ class ToolActions:
 
         #self.log_info("Saved screenshot: " + fname)
         if show_msg:
-            self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+            self.gui.log_command(f'self.on_take_screenshot({fname!r}, magnify={magnify})')
         self._screenshot_teardown(line_widths0, point_sizes0,
                                   coord_scale0, coord_text_scale0, line_width0, axes_actor)
 
     def _get_screenshot_filename(self, fname: Optional[str]) -> tuple[str, str]:
         """helper method for ``on_take_screenshot``"""
-        if fname is None or fname is False:
-            filt = ''
-            default_filename = ''
-
-            title = ''
-            gui = self.gui
-            if gui.title is not None:
-                title = self.gui.title
-
-            if gui.out_filename is None:
-                default_filename = ''
-                if self.gui.infile_name is not None:
-                    base, ext = os.path.splitext(os.path.basename(gui.infile_name))
-                    default_filename = gui.infile_name
-                    default_filename = base + '.png'
-            else:
-                base, ext = os.path.splitext(os.path.basename(gui.out_filename))
-                default_filename = title + '_' + base + '.png'
-
-            file_types = (
-                'PNG Image *.png (*.png);; '
-                'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
-                'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
-                'BMP Image *.bmp (*.bmp);; '
-                'PostScript Document *.ps (*.ps)')
-
-            title = 'Choose a filename and type'
-            fname, flt = getsavefilename(parent=gui, caption=title, basedir='',
-                                         filters=file_types, selectedfilter=filt,
-                                         options=None)
-            if fname in {None, ''}:
-                return '', ''
-            #print("fname=%r" % fname)
-            #print("flt=%r" % flt)
-        else:
+        if fname not in {None, False}:
             unused_base, ext = os.path.splitext(os.path.basename(fname))
             if ext.lower() in ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp', 'ps']:
                 flt = ext.lower()
             else:
                 flt = 'png'
+            return fname, flt
+
+        #filt = ''
+        #default_png_filename = ''
+
+        title = ''
+        gui = self.gui
+        if gui.title is not None:
+            title = self.gui.title
+
+        #dirname_file = os.path.splitext(self.gui.infile_name)[0]
+        #default_vtk_filename = f'{dirname_file}.vtu'
+        base = ''
+        if gui.out_filename is None:
+            if self.gui.infile_name is not None:
+                base, ext = os.path.splitext(os.path.basename(gui.infile_name))
+                #default_png_filename = gui.infile_name
+        else:
+            base, ext = os.path.splitext(os.path.basename(gui.out_filename))
+
+        default_png_filename = ''
+        if base:
+            if title:
+                default_png_filename = f'{title}_{base}.png'
+            else:
+                default_png_filename = f'{base}.png'
+
+        file_types = (
+            'PNG Image *.png (*.png);; '
+            'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
+            'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
+            'BMP Image *.bmp (*.bmp);; '
+            'PostScript Document *.ps (*.ps)')
+
+        title = 'Choose a filename and type'
+        fname, flt = save_file_dialog(
+            gui, title,
+            default_png_filename, file_types)
+        #fname, flt = getsavefilename(parent=gui, caption=title, basedir='',
+                                     #filters=file_types, selectedfilter=filt,
+                                     #options=None)
+        if fname in {None, ''}:
+            return '', ''
+        self.gui.load_actions._set_last_dir(fname)
+        #print("fname=%r" % fname)
+        #print("flt=%r" % flt)
         return fname, flt
 
     def _screenshot_setup(self, magnify: Optional[int],
@@ -483,13 +498,15 @@ class ToolActions:
         if vtk_filename in {None, False}:
             title = 'Select the VTK file name for export'
             wildcard_delimited = 'VTK (*.vtu)'
-            default_dirname = os.getcwd()
+            dirname_file = os.path.splitext(self.gui.infile_name)[0]
+            default_vtk_filename = f'{dirname_file}.vtu'
             vtk_filename, wildcard = save_file_dialog(
                 gui, title,
-                default_dirname, wildcard_delimited)
+                default_vtk_filename, wildcard_delimited)
             #assert wildcard == 'VTK (*.vtu; *.vtk)', wildcard 'VTK (*.vtu; *.vtk)'
             if not vtk_filename:
                 return is_failed
+            self.gui.load_actions._set_last_dir(vtk_filename)
 
         vtk_ugrid = self._get_vtk_ugrid()
         writer = vtkXMLUnstructuredGridWriter()
@@ -742,17 +759,29 @@ def _export_case(name: str,
                  eids_nids: np.ndarray,
                  case: np.ndarray,
                  icase: int,
-                 word: str, label2: str, data_format: str) -> str:
+                 word: str, label2: str,
+                 data_format: str,
+                 log: SimpleLogger) -> tuple[bool, str]:
     """
     Writes a csv of a gui result in a form that you can load back in.
     """
+    # handles 'Force\nIsElementOn', which would mess up the csv_filename
+    name = name.replace('\n', '_')
+
+    is_failed = True
     # fixing cast int data
-    header = '%s(%%i),%s(%s)' % (word, label2, data_format)
+    header = '%s(%%i),"%s(%s)"' % (word, label2, data_format)
     if 'i' in data_format and isinstance(case.dtype, np.floating):
-        header = '%s(%%i),%s' % (word, label2)
+        header = '%s(%%i),"%s"' % (word, label2)
 
     fname = '%s_%s.csv' % (icase, remove_invalid_filename_characters(name))
-    out_data = np.column_stack([eids_nids, case])
+    try:
+        out_data = np.column_stack([eids_nids, case])
+    except ValueError:
+        log.error(f'nodes/elements.shape={str(eids_nids.shape)} and '
+                  f'case.shape={str(case.shape)} are not the same '
+                  f'for {fname!r}')
+        return is_failed, ''
     try:
         np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
     except UnicodeEncodeError:  # pragma: no cover
@@ -761,4 +790,5 @@ def _export_case(name: str,
         except UnicodeEncodeError:  # pragma: no cover
             header = 'word,unicode_strikes_again'
             np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
-    return fname
+    is_failed = False
+    return is_failed, fname

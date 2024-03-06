@@ -7,7 +7,7 @@ from typing import DefaultDict, Union, Optional, Any # , TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import safe_norm
-#if TYPE_CHECKING:
+#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.op2.result_objects.table_object import (
     RealTableArray, ComplexTableArray)
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
@@ -24,7 +24,7 @@ IDX_IMAG = (3, 4, 5)
 #IDX_IMAG = (10, 11, 12)
 COMPLEX_DEFAULT_INDICES = tuple(list(IDX_REAL) + list(IDX_IMAG))
 
-#if TYPE_CHECKING:
+#if TYPE_CHECKING:  # pragma: no cover
     #from typing import TypedDict
     #class SidebarArgs(TypedDict):
         #label: str

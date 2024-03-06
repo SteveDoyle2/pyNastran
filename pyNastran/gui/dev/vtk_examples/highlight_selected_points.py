@@ -57,8 +57,9 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
         for i in range(ids.GetNumberOfTuples()):
             print("Id %s : %s" % (i, ids.GetValue(i)))
 
-        self.SelectedActor.GetProperty().SetColor(1.0, 0.0, 0.0) #(R,G,B)
-        self.SelectedActor.GetProperty().SetPointSize(3)
+        prop = self.SelectedActor.GetProperty()
+        prop.SetColor(1.0, 0.0, 0.0) #(R,G,B)
+        prop.SetPointSize(3)
 
         self.CurrentRenderer.AddActor(selected_actor)
         self.GetInteractor().GetRenderWindow().Render()

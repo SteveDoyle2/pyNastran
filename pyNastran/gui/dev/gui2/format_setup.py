@@ -5,6 +5,7 @@ from pyNastran.gui.dev.gui2 import IS_TESTING, IS_OFFICIAL_RELEASE
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
+    from pyNastran.gui.typing import Format
 
 CLASS_MAP = {}
 try:
@@ -24,7 +25,7 @@ def build_fmts(gui: MainWindow2,
                fmt_order: list[str],
                log: SimpleLogger,
                stop_on_failure: bool=False,
-               ) -> Any:
+               ) -> tuple[list[Format], list[str]]:
     """populates the formats that will be supported"""
     fmts = []
     supported_formats = []
@@ -59,7 +60,7 @@ def build_fmts(gui: MainWindow2,
         raise RuntimeError('no modules were loaded...')
     return fmts, supported_formats
 
-def _add_fmt(fmts: list[str], fmt: str, geom_results_funcs, data):
+def _add_fmt(fmts: list[Format], fmt: str, geom_results_funcs, data):
     """
     Adds a format
 

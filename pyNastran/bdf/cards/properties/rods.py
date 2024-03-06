@@ -146,12 +146,12 @@ class PROD(Property):
         J = self.J()
         c = self.c
         nsm = self.Nsm()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'pid=%r' % A
-        assert isinstance(J, float), 'cid=%r' % J
-        assert isinstance(c, float), 'c=%r' % c
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(pid, int), 'PROD: pid=%r' % pid
+        assert isinstance(mid, int), 'PROD: mid=%r' % mid
+        assert isinstance(A, float), 'PROD: pid=%r' % A
+        assert isinstance(J, float), 'PROD: J=%r' % J
+        assert isinstance(c, float), 'PROD: c=%r' % c
+        assert isinstance(nsm, float), 'PROD: nsm=%r' % nsm
 
     def Area(self):
         return self.A

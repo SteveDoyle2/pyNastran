@@ -211,7 +211,6 @@ class EditGeometryProperties(PyDialog):
         #self.win_parent = win_parent
         #self.out_data = data
 
-        self.keys = sorted(data.keys())
         self.keys = data.keys()
         keys = self.keys
         items = list(keys)
@@ -934,7 +933,7 @@ def main():  # pragma: no cover
         'toggle' : AltGeometry(parent, 'toggle', color=green, line_width=3, opacity=0.2, representation='toggle'),
         'wire' : AltGeometry(parent, 'wire', color=purple, line_width=4, opacity=0.3, representation='wire'),
         'wire+point' : AltGeometry(parent, 'wire+point', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+point'),
-        'wire+surf' : AltGeometry(parent, 'wire+surf', display='surface', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+surf'),
+        'wire+surf' : AltGeometry(parent, 'wire+surf', display='Surface', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+surf'),
         'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0, representation='main'),
         'point' : AltGeometry(parent, 'point', color=blue, opacity=0.1, representation='point'),
         'surface' : AltGeometry(parent, 'surface', color=blue, opacity=0.1, representation='surface'),

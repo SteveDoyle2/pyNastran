@@ -255,7 +255,7 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
-            'force.cvisc_force', 'cshear_stress', '*strain_energy',
+            'force.cvisc_force', 'stress.cshear_stress', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -279,7 +279,7 @@ class TestOP2Writer(unittest.TestCase):
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
             'force.cvisc_force',
-            'cshear_stress',
+            'stress.cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)

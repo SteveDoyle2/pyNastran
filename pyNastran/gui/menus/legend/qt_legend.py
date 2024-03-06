@@ -16,13 +16,13 @@ from qtpy.QtWidgets import (
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.colormaps import colormap_keys
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QIntEdit, QFloatEdit
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QIntEdit, QFloatEdit, make_font
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_float, check_format, check_name_str,
     check_positive_int_or_blank, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.gui.qt_version import qt_int as qt_version
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.legend.legend_object import LegendObject
 
 
@@ -677,8 +677,7 @@ class LegendPropertiesWindow(PyDialog):
         if self.font_size == font_size:
             return
         self.font_size = font_size
-        font = QFont()
-        font.setPointSize(font_size)
+        font = make_font(font_size, is_bold=False)
         self.setFont(font)
         self.title_edit.setFont(font)
         self.min_edit.setFont(font)

@@ -6,7 +6,6 @@ from typing import Optional, Any, cast, Callable, TYPE_CHECKING
 
 import numpy as np
 from qtpy.compat import getopenfilename
-#from qtpy.QtWidgets import QFileDialog
 
 from pyNastran.utils import check_path, print_bad_path
 from pyNastran.femutils.io import loadtxt_nice
@@ -24,7 +23,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 from pyNastran.gui.gui_objects.settings import Settings, filter_recent_files
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -177,7 +176,7 @@ class LoadActions(BaseGui):
             main_str = ', name=%r' % name
         self._add_recent_file(infile_name, geometry_format_out)
 
-        gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+        gui.log_command("self.on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, geometry_format_out, main_str))
 
     def _set_last_dir(self, infile_name: str) -> None:
@@ -187,7 +186,7 @@ class LoadActions(BaseGui):
         the script, that doesn't count.
         """
         gui: MainWindow = self.gui
-        last_dir = os.path.split(infile_name)[0]
+        last_dir = os.path.dirname(infile_name)
         gui.last_dir = last_dir
         gui.settings.startup_directory = last_dir
 
@@ -332,8 +331,8 @@ class LoadActions(BaseGui):
                     load_function = _resfunc
                     break
             else:
-                msg = ('format=%r is not supported.  '
-                       'Did you load a geometry model?' % geometry_format)
+                msg = (f'format={geometry_format!r} is not supported.  '
+                       'Did you load a geometry model?')
                 self.gui.log_error(msg)
                 raise RuntimeError(msg)
 
@@ -343,7 +342,7 @@ class LoadActions(BaseGui):
             out_filename = [out_filename]
         for out_filenamei in out_filename:
             if not os.path.exists(out_filenamei):
-                msg = 'result file=%r does not exist' % out_filenamei
+                msg = f'result file={out_filenamei!r} does not exist'
                 self.gui.log_error(msg)
                 return
                 #raise IOError(msg)
@@ -370,7 +369,7 @@ class LoadActions(BaseGui):
             self.gui.window_title = msg
             print("self.load_actions.on_load_results(%r)" % out_filenamei)
             self.gui.out_filename = out_filenamei
-            self.gui.log_command("on_load_results(%r)" % out_filenamei)
+            self.gui.log_command("self.on_load_results(%r)" % out_filenamei)
 
     #---------------------------------------------------------------------------
     def on_load_custom_results(self, out_filename=None,
@@ -698,6 +697,7 @@ class LoadActions(BaseGui):
                 gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
+            self._set_last_dir(csv_filename)
         assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
@@ -981,7 +981,7 @@ class LoadActions(BaseGui):
 
     #---------------------------------------------------------------------------
     def create_load_file_dialog(self, qt_wildcard: str, title: str,
-                                default_filename: Optional[str]=None) -> tuple[str, str]:
+                                default_filename: str='') -> tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(
@@ -1045,7 +1045,7 @@ class LoadActions(BaseGui):
             self._set_last_dir(python_file)
 
         if not os.path.exists(python_file):
-            msg = 'python_file = %r does not exist' % python_file
+            msg = f'python_file = {python_file!r} does not exist'
             gui.log_error(msg)
             return is_passed
 

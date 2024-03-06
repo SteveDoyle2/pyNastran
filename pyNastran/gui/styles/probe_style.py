@@ -4,7 +4,7 @@ defines the ProbeResultStyle class
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
 
@@ -49,7 +49,7 @@ class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
             cell_id = picker.GetCellId()
             #ds = picker.GetDataSet()
             #select_point = picker.GetSelectionPoint()
-            gui.log_command("annotate_cell_picker()")
+            gui.log_command("self.annotate_cell_picker()")
             gui.log_info("XYZ Global = %s" % str(world_position))
             #gui.log_info("cell_id = %s" % cell_id)
             #gui.log_info("data_set = %s" % ds)

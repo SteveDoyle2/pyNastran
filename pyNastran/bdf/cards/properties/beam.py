@@ -298,6 +298,19 @@ class PBEAM(IntegratedLineProperty):
         if f2 is None:
             f2 = [None] * nxxb
 
+        if isinstance(so, str):
+            so = [so] * nxxb
+        if isinstance(area, float):
+            area = [area] * nxxb
+        if isinstance(i1, float):
+            i1 = [i1] * nxxb
+        if isinstance(i2, float):
+            i2 = [i2] * nxxb
+        if isinstance(i12, float):
+            i12 = [i12] * nxxb
+        if isinstance(j, float):
+            j = [j] * nxxb
+
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -882,11 +895,11 @@ class PBEAM(IntegratedLineProperty):
             print(msg)
             J = 0.0
         nsm = self.Nsm()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'pid=%r' % A
-        assert isinstance(J, float), 'cid=%r' % J
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(pid, int), 'PBEAM: pid=%r' % pid
+        assert isinstance(mid, int), 'PBEAM: mid=%r' % mid
+        assert isinstance(A, float), 'PBEAM: pid=%r' % A
+        assert isinstance(J, float), 'PBEAM: cid=%r' % J
+        assert isinstance(nsm, float), 'PBEAM: nsm=%r' % nsm
         if xref:
             assert self.mid_ref.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid_ref.type=%s' % (
                 self.type, self.mid_ref.type)
@@ -937,6 +950,7 @@ class PBEAM(IntegratedLineProperty):
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
         #print('i12 = %r' % self.i12)
+        nxxb = len(self.xxb)
         for (i, so, xxb, A, i1, i2, i12, j, nsm,
              c1, c2, d1, d2, e1, e2, f1, f2) in zip(
                  count(),
@@ -964,8 +978,12 @@ class PBEAM(IntegratedLineProperty):
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
                 if so in ['YES']:
+                    yes_footer = [c1, c2, d1, d2, e1, e2, f1, f2]
+                    if yes_footer == [None] * len(yes_footer):
+                        c1 = c2 = 0.0
                     list_fields += ['YES', xxb, A, i1, i2, i12, j, nsm,
                                     c1, c2, d1, d2, e1, e2, f1, f2]
+
                 elif so in ['NO']:
                     list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
                 elif so in ['YESA']:
@@ -1003,7 +1021,7 @@ class PBEAM(IntegratedLineProperty):
         n1a = set_blank_if_default(self.n1a, 0.0)
         n2a = set_blank_if_default(self.n2a, 0.0)
         n1b = set_blank_if_default(self.n1b, self.n1a)
-        n2b = set_blank_if_default(self.n2b, self.n2b)
+        n2b = set_blank_if_default(self.n2b, self.n2a)
 
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
@@ -1019,7 +1037,7 @@ class PBEAM(IntegratedLineProperty):
         return self.comment + print_card_16(card)
 
     def write_card_16(self, is_double=False):
-        card = self.raw_fields()
+        card = self.repr_fields()
         return self.comment + print_card_16(card)
 
 def pbeam_op2_data_to_init(data):
@@ -2028,12 +2046,12 @@ class PBMSECT(LineProperty):
         #J = self.J()
         #nsm = self.Nsm()
         #mpl = self.MassPerLength()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        #assert isinstance(A, float), 'pid=%r' % A
-        #assert isinstance(J, float), 'cid=%r' % J
-        #assert isinstance(nsm, float), 'nsm=%r' % nsm
-        #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+        assert isinstance(pid, int), 'PBMSECT: pid=%r' % pid
+        assert isinstance(mid, int), 'PBMSECT: mid=%r' % mid
+        #assert isinstance(A, float), 'PBMSECT: pid=%r' % A
+        #assert isinstance(J, float), 'PBMSECT: cid=%r' % J
+        #assert isinstance(nsm, float), 'PBMSECT: nsm=%r' % nsm
+        #assert isinstance(mpl, float), 'PBMSECT: mass_per_length=%r' % mpl
 
     def Area(self):
         """

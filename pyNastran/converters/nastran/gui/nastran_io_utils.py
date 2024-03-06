@@ -64,7 +64,7 @@ from pyNastran.gui.qt_files.colors import (
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import ElementalTableResults # ForceTableResults,
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
 
@@ -2012,49 +2012,49 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
         exclude_results.add('element_forces')
 
     if not nastran_settings.spring_force:
-        names = {f'{name}_{flag}' for name in spring_types}
+        names = {f'force.{name}_{flag}' for name in spring_types}
         exclude_results.add(names)
     #if not nastran_settings.rod_force:
-        #names = {f'{name}_{flag}' for name in rod_types}
+        #names = {f'force.{name}_{flag}' for name in rod_types}
         #exclude_results.add(names)
     if not nastran_settings.bar_force:
-        names = {f'{name}_{flag}' for name in bar_types}
+        names = {f'force.{name}_{flag}' for name in bar_types}
         exclude_results.add(names)
     if not nastran_settings.beam_force:
-        names = {f'{name}_{flag}' for name in beam_types}
+        names = {f'force.{name}_{flag}' for name in beam_types}
         exclude_results.add(names)
 
     if not nastran_settings.plate_force:
-        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        names = {f'force.{name}_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
 
     if not nastran_settings.gap_force:
-        exclude_results.add(['cgap_force'])
+        exclude_results.add(['force.cgap_force'])
     if not nastran_settings.cbush_force:
-        exclude_results.add(['cbush_force'])
+        exclude_results.add(['force.cbush_force'])
 
     #---------------------------------------------------------------------------
     flag = 'stress'
     if not nastran_settings.stress:
         exclude_results.add(flag)
     if not nastran_settings.composite_plate_stress:
-        names = {f'{name}_composite_plate_{flag}' for name in plate_etypes}
+        names = {f'{flag}.{name}_composite_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
     if not nastran_settings.plate_stress:
-        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        names = {f'{flag}.{name}_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
 
     if not nastran_settings.spring_stress:
-        names = {f'{name}_{flag}' for name in spring_types}
+        names = {f'{flag}.{name}_{flag}' for name in spring_types}
         exclude_results.add(names)
     if not nastran_settings.rod_stress:
-        names = {f'{name}_{flag}' for name in rod_types}
+        names = {f'{flag}.{name}_{flag}' for name in rod_types}
         exclude_results.add(names)
     if not nastran_settings.bar_stress:
-        names = {f'{name}_{flag}' for name in bar_types}
+        names = {f'{flag}.{name}_{flag}' for name in bar_types}
         exclude_results.add(names)
     if not nastran_settings.beam_stress:
-        names = {f'{name}_{flag}' for name in beam_types}
+        names = {f'{flag}.{name}_{flag}' for name in beam_types}
         exclude_results.add(names)
 
     #---------------------------------------------------------------------------
@@ -2062,23 +2062,23 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     if not nastran_settings.strain:
         exclude_results.add(flag)
     if not nastran_settings.composite_plate_strain:
-        names = {f'{name}_composite_plate_{flag}' for name in plate_etypes}
+        names = {f'{flag}.{name}_composite_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
     if not nastran_settings.plate_strain:
-        names = {f'{name}_plate_{flag}' for name in plate_etypes}
+        names = {f'{flag}.{name}_plate_{flag}' for name in plate_etypes}
         exclude_results.add(names)
 
     if not nastran_settings.spring_strain:
-        names = {f'{name}_{flag}' for name in spring_types}
+        names = {f'{flag}.{name}_{flag}' for name in spring_types}
         exclude_results.add(names)
     if not nastran_settings.rod_strain:
-        names = {f'{name}_{flag}' for name in rod_types}
+        names = {f'{flag}.{name}_{flag}' for name in rod_types}
         exclude_results.add(names)
     if not nastran_settings.bar_strain:
-        names = {f'{name}_{flag}' for name in bar_types}
+        names = {f'{flag}.{name}_{flag}' for name in bar_types}
         exclude_results.add(names)
     if not nastran_settings.beam_strain:
-        names = {f'{name}_{flag}' for name in beam_types}
+        names = {f'{flag}.{name}_{flag}' for name in beam_types}
         exclude_results.add(names)
     #---------------------------------------------------------------------------
 

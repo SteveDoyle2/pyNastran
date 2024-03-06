@@ -10,7 +10,7 @@ from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_2d, max_shear
 from .nodal_averaging import nodal_average, nodal_combine_map, derivation_map
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
 

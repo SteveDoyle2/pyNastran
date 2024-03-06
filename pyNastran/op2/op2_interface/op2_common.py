@@ -27,7 +27,7 @@ from pyNastran.op2.op2_interface.oug_reader import (
     read_complex_table_sort1_imag, read_complex_table_sort1_mag,
     read_complex_table_sort2_imag, read_complex_table_sort2_mag)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 NX_TABLES = [

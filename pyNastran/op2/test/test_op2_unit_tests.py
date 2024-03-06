@@ -309,21 +309,23 @@ class TestAutodeskOP2(Tester):
             log=log, stop_on_failure=True, binary_debug=True, quiet=True,
             is_autodesk=True, post=-4)
 
+        stress = op2.op2_results.stress
+        strain_energy = op2.op2_results.strain_energy
         assert len(op2.displacements) == 4, len(op2.displacements)
         assert len(op2.spc_forces) == 4, len(op2.spc_forces)
-        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
-        assert len(op2.ctetra_strain_energy) == 4, len(op2.ctetra_strain_energy)
+        assert len(stress.ctetra_stress) == 4, len(stress.ctetra_stress)
+        assert len(strain_energy.ctetra_strain_energy) == 4, len(strain_energy.ctetra_strain_energy)
 
         isubcase = 1
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         if IS_PANDAS:
             ctetra_stress.build_dataframe()
         nelements = 36
         assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
 
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
+        assert len(stress.cpenta_stress) == 0
+        assert len(stress.chexa_stress) == 0
         assert len(op2.grid_point_forces) == 0
 
     def test_op2_autodesk_3(self):
@@ -335,9 +337,11 @@ class TestAutodeskOP2(Tester):
             log=log, stop_on_failure=True, binary_debug=True, quiet=True,
             is_autodesk=True, post=-4)
 
+        stress = op2.op2_results.stress
+        strain_energy = op2.op2_results.strain_energy
         assert len(op2.displacements) == 4, len(op2.displacements)
         assert len(op2.spc_forces) == 4, len(op2.spc_forces)
-        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
+        assert len(stress.ctetra_stress) == 4, len(stress.ctetra_stress)
         assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
 
         #isubcase = 1
@@ -348,9 +352,9 @@ class TestAutodeskOP2(Tester):
         #assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
         #assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
 
-        assert len(op2.ctetra_strain_energy) == 0, len(op2.ctetra_strain_energy)
-        assert len(op2.cpenta_stress) == 0, len(op2.cpenta_stress)
-        assert len(op2.chexa_stress) == 0, len(op2.chexa_stress)
+        assert len(strain_energy.ctetra_strain_energy) == 0, len(strain_energy.ctetra_strain_energy)
+        assert len(stress.cpenta_stress) == 0, len(stress.cpenta_stress)
+        assert len(stress.chexa_stress) == 0, len(stress.chexa_stress)
         assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
 
 class TestOptistructOP2(Tester):
@@ -377,7 +381,12 @@ class TestOptistructOP2(Tester):
             write_f06=write_f06,
             log=log, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
-        # rod_force = op2.crod_force[isubcase]
+
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        force = op2.op2_results.force
+
+        # rod_force = force.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
@@ -386,23 +395,23 @@ class TestOptistructOP2(Tester):
         # isubcase = isubcases[1]
 
         #assert len(op2.rod_force) == 0
-        assert len(op2.crod_stress) == 0
+        assert len(stress.crod_stress) == 0
 
-        assert len(op2.cbar_force) == 0
-        assert len(op2.cbar_stress) == 0
-        assert len(op2.cbeam_stress) == 0
+        assert len(force.cbar_force) == 0
+        assert len(stress.cbar_stress) == 0
+        assert len(stress.cbeam_stress) == 0
 
-        assert len(op2.cquad4_stress) == 0
-        assert len(op2.ctria3_stress) == 0
+        assert len(stress.cquad4_stress) == 0
+        assert len(stress.ctria3_stress) == 0
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         if IS_PANDAS:
             ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
 
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
+        assert len(stress.cpenta_stress) == 0
+        assert len(stress.chexa_stress) == 0
 
         assert len(op2.grid_point_forces) == 0
         os.remove(debug_file)
@@ -1212,7 +1221,7 @@ class TestOP2Main(Tester):
             stop_on_failure=True, dev=False,
             build_pandas=False, log=log)  # TODO: enable pandas...
         if IS_PANDAS:
-            op2.cbush_stress[1].build_dataframe()
+            op2.op2_results.stress.cbush_stress[1].build_dataframe()
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -1874,7 +1883,7 @@ class TestOP2Main(Tester):
         #save_load_deck(model, run_renumber=False)
 
         log = get_logger(level='warning')
-        exclude_results = 'cbend_stress'
+        exclude_results = '*cbend_stress'
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -2304,17 +2313,19 @@ class TestOP2Main(Tester):
         op2 = OP2(debug=False, log=log)
         op2.set_results('stress')
         op2.read_op2(op2_filename)
-        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
-        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
-        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        stress = op2.op2_results.stress
+        self.assertEqual(len(stress.cpenta_stress), 0, len(stress.cpenta_stress))
+        self.assertEqual(len(stress.chexa_stress), 0, len(stress.chexa_stress))
+        self.assertEqual(len(stress.ctetra_stress), 1, len(stress.ctetra_stress))
         self.assertEqual(len(op2.displacements), 0, len(op2.displacements))
 
         op2 = OP2(debug=False, log=log)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename)
-        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
-        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
-        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        stress = op2.op2_results.stress
+        self.assertEqual(len(stress.cpenta_stress), 0, len(stress.cpenta_stress))
+        self.assertEqual(len(stress.chexa_stress), 0, len(stress.chexa_stress))
+        self.assertEqual(len(stress.ctetra_stress), 1, len(stress.ctetra_stress))
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -2632,63 +2643,67 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
             load_as_h5=False, log=log)
 
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+        #strain = op2.op2_results.strain
+
         isubcase = 1
-        rod_force = op2.crod_force[isubcase]
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (1, 2, 2), rod_force.data.shape
 
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (1, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (1, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
-        cbeam_force = op2.cbeam_force[isubcase]
+        cbeam_force = force.cbeam_force[isubcase]
         assert cbeam_force.nelements == 1, cbeam_force.nelements
         assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
-        cbeam_stress = op2.cbeam_stress[isubcase]
+        cbeam_stress = stress.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
         assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
-        cquad4_force = op2.cquad4_force[isubcase]
+        cquad4_force = force.cquad4_force[isubcase]
         assert cquad4_force.nelements == 4, cquad4_force.nelements
         assert cquad4_force.data.shape == (1, 20, 8), cquad4_force.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
-        ctria3_force = op2.ctria3_force[isubcase]
+        ctria3_force = force.ctria3_force[isubcase]
         assert ctria3_force.nelements == 8, ctria3_force.nelements
         assert ctria3_force.data.shape == (1, 8, 8), ctria3_force.data.shape
 
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
         assert ctetra_stress.is_von_mises, ctetra_stress
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
         assert cpenta_stress.is_von_mises, cpenta_stress
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
         assert chexa_stress.is_von_mises, chexa_stress
@@ -2734,26 +2749,28 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
 
         isubcase = 1
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
-        ctria3_strain = op2.ctria3_strain[isubcase]
+        ctria3_strain = strain.ctria3_strain[isubcase]
         sword = get_scode_word(ctria3_strain.s_code, ctria3_strain.stress_bits)
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert not ctria3_strain.is_fiber_distance, '%s\n%s' % (ctria3_strain, sword)
         assert ctria3_strain.is_von_mises, '%s\n%s' % (ctria3_strain, sword)
 
-        cquad4_strain = op2.cquad4_strain[isubcase]
+        cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
@@ -2783,25 +2800,27 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
 
         isubcase = 1
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
-        ctria3_strain = op2.ctria3_stress[isubcase]
+        ctria3_strain = strain.ctria3_strain[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert ctria3_strain.is_fiber_distance, ctria3_strain
         assert ctria3_strain.is_von_mises, ctria3_strain
 
-        cquad4_strain = op2.cquad4_stress[isubcase]
+        cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), '%s\n%s' % (cquad4_strain.data.shape, sword)
@@ -2831,25 +2850,27 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
 
         isubcase = 1
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert not ctria3_stress.is_von_mises, ctria3_stress
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert not cquad4_stress.is_von_mises, cquad4_stress
 
-        ctria3_strain = op2.ctria3_strain[isubcase]
+        ctria3_strain = strain.ctria3_strain[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert not ctria3_strain.is_fiber_distance, ctria3_strain
         assert not ctria3_strain.is_von_mises, ctria3_strain
 
-        cquad4_strain = op2.cquad4_strain[isubcase]
+        cquad4_strain = strain.cquad4_strain[isubcase]
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert not cquad4_strain.is_fiber_distance, cquad4_strain
@@ -2878,25 +2899,27 @@ class TestOP2Main(Tester):
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
 
         isubcase = 1
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises is False, ctria3_stress
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises is False, cquad4_stress
 
-        ctria3_strain = op2.ctria3_stress[isubcase]
+        ctria3_strain = strain.ctria3_strain[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert ctria3_strain.is_fiber_distance, ctria3_strain
         assert ctria3_strain.is_von_mises is False, ctria3_strain
 
-        cquad4_strain = op2.cquad4_stress[isubcase]
+        cquad4_strain = strain.cquad4_strain[isubcase]
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert cquad4_strain.is_fiber_distance, cquad4_strain
@@ -2923,45 +2946,47 @@ class TestOP2Main(Tester):
             write_f06=write_f06,
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
 
+        stress = op2.op2_results.stress
+        force = op2.op2_results.force
         isubcase = 1
-        rod_force = op2.crod_force[isubcase]
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (3, 2, 2), rod_force.data.shape
 
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (3, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         str(cbar_force.data_frame)
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (3, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 3, cbar_stress.nelements  # TODO: wrong
         assert cbar_stress.data.shape == (3, 1, 15), cbar_stress.data.shape
 
-        cbeam_stress = op2.cbeam_stress[isubcase]
+        cbeam_stress = stress.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
         assert cbeam_stress.data.shape == (3, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (3, 20, 8), cquad4_stress.data.shape
 
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (3, 8, 8), ctria3_stress.data.shape
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (3, 10, 10), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (3, 14, 10), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (3, 9, 10), chexa_stress.data.shape
 
@@ -2994,47 +3019,50 @@ class TestOP2Main(Tester):
         isubcases = [(1, 1, 1, 0, 0, '', ''), (1, 8, 1, 0, 0, '', '')]
         isubcase = isubcases[1]
 
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+
         try:
-            rod_force = op2.crod_force[isubcase]
+            rod_force = force.crod_force[isubcase]
         except KeyError:
-            msg = 'isubcase=%s was not found\nkeys=%s' % (isubcase, op2.crod_force.keys())
+            msg = 'isubcase=%s was not found\nkeys=%s' % (isubcase, force.crod_force.keys())
             raise KeyError(msg)
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (4, 2, 2), rod_force.data.shape
 
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (4, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 4, cbar_stress.nelements  # TODO: wrong
         assert cbar_stress.data.shape == (4, 1, 15), cbar_stress.data.shape
 
-        cbeam_stress = op2.cbeam_stress[isubcase]
+        cbeam_stress = stress.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
         assert cbeam_stress.data.shape == (4, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (4, 20, 8), cquad4_stress.data.shape
 
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (4, 8, 8), ctria3_stress.data.shape
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (4, 10, 10), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (4, 14, 10), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (4, 9, 10), chexa_stress.data.shape
 
@@ -3066,55 +3094,58 @@ class TestOP2Main(Tester):
             write_f06=write_f06,
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True, log=log)
         isubcase = 1
+
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
-
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
 
-        rod_force = op2.crod_force[isubcase]
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
         #if op2.is_nx:
             #return
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (7, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
-        #print(op2.cbeam_stress.keys())
+        #print(stress.cbeam_stress.keys())
         #cbeam_stress = op2.cbeam_stress[isubcase]
         #assert cbeam_stress.nelements == 2, cbeam_stress.nelements
         #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
         assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: wrong?
 
-        #print(op2.ctria3_stress.keys())
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        #print(stress.ctria3_stress.keys())
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
 
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (7, 10, 6), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (7, 14, 6), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (7, 9, 6), chexa_stress.data.shape
 
@@ -3181,19 +3212,23 @@ class TestOP2Main(Tester):
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
 
-        rod_force = op2.crod_force[isubcase]
+        force = op2.op2_results.force
+        stress = op2.op2_results.stress
+        #strain = op2.op2_results.strain
+
+        rod_force = force.crod_force[isubcase]
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (21, 2, 2), rod_force.data.shape
 
-        rod_stress = op2.crod_stress[isubcase]
+        rod_stress = stress.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (21, 2, 4), rod_stress.data.shape
 
-        cbar_force = op2.cbar_force[isubcase]
+        cbar_force = force.cbar_force[isubcase]
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (21, 1, 8), cbar_force.data.shape
 
-        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress = stress.cbar_stress[isubcase]
         assert cbar_stress.nelements == 21, cbar_stress.nelements # 1-wrong
         assert cbar_stress.data.shape == (21, 1, 15), cbar_stress.data.shape
 
@@ -3202,25 +3237,25 @@ class TestOP2Main(Tester):
         # assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
         # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
 
-        cquad4_stress = op2.cquad4_stress[isubcase]
+        cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 40, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (21, 40, 8), cquad4_stress.data.shape
 
         #print(op2.ctria3_stress.keys())
-        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 16, ctria3_stress.nelements  # TODO: 8-wrong
         assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
 
-        assert len(op2.ctetra_stress) == 1, op2.ctetra_stress
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        assert len(stress.ctetra_stress) == 1, stress.ctetra_stress
+        ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (21, 10, 10), ctetra_stress.data.shape
 
-        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress = stress.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (21, 14, 10), cpenta_stress.data.shape
 
-        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress = stress.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (21, 9, 10), chexa_stress.data.shape
 
@@ -3432,11 +3467,11 @@ class TestOP2Main(Tester):
             post=None, load_as_h5=True)
         isubcase = 1
 
-        cbush_stress = op2.cbush_stress[isubcase]
+        cbush_stress = op2.op2_results.stress.cbush_stress[isubcase]
         assert cbush_stress.nelements == 1, cbush_stress.nelements
         assert cbush_stress.data.shape == (1, 1, 6), cbush_stress.data.shape
 
-        cbush_strain = op2.cbush_strain[isubcase]
+        cbush_strain = op2.op2_results.strain.cbush_strain[isubcase]
         assert cbush_strain.nelements == 1, cbush_strain.nelements
         assert cbush_strain.data.shape == (1, 1, 6), cbush_strain.data.shape
 
@@ -3805,52 +3840,56 @@ class TestOP2Main(Tester):
                 #build_pandas=True, log=log)
 
 
-def _verify_ids(bdf, op2, isubcase=1):
+def _verify_ids(bdf, op2: OP2, isubcase=1):
     """helper function for tests"""
     types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
     out = bdf.get_card_ids_by_card_types(types)
 
+    stress = op2.op2_results.stress
+    strain = op2.op2_results.strain
+    force = op2.op2_results.force
+
     card_type = 'CQUAD4'
-    if op2.cquad4_stress:
+    if stress.cquad4_stress:
         try:
-            case = op2.cquad4_stress[isubcase]
+            case = stress.cquad4_stress[isubcase]
         except KeyError:
             raise KeyError('getting cquad4_stress; isubcase=%s; keys=%s' % (
-                isubcase, op2.cquad4_stress.keys()))
+                isubcase, stress.cquad4_stress.keys()))
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.cquad4_strain:
+    if strain.cquad4_strain:
         try:
-            case = op2.cquad4_strain[isubcase]
+            case = strain.cquad4_strain[isubcase]
         except KeyError:
             raise KeyError('getting cquad4_strain; isubcase=%s; keys=%s' % (
-                isubcase, op2.cquad4_strain.keys()))
+                isubcase, strain.cquad4_strain.keys()))
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.cquad4_composite_strain:
+    if strain.cquad4_composite_strain:
         try:
-            case = op2.cquad4_composite_strain[isubcase]
+            case = strain.cquad4_composite_strain[isubcase]
         except KeyError:
             raise KeyError('getting cquad4_composite_strain; isubcase=%s; keys=%s' % (
-                isubcase, op2.cquad4_composite_strain.keys()))
+                isubcase, strain.cquad4_composite_strain.keys()))
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.cquad4_composite_stress:
+    if stress.cquad4_composite_stress:
         try:
-            case = op2.cquad4_composite_stress[isubcase]
+            case = stress.cquad4_composite_stress[isubcase]
         except KeyError:
             raise KeyError('getting cquad4_composite_stress; isubcase=%s; keys=%s' % (
-                isubcase, op2.cquad4_composite_stress.keys()))
+                isubcase, stress.cquad4_composite_stress.keys()))
 
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.cquad4_force:
+    if force.cquad4_force:
         try:
-            case = op2.cquad4_force[isubcase]
+            case = force.cquad4_force[isubcase]
         except KeyError:
             raise KeyError('getting cquad4_force; isubcase=%s; keys=%s' % (
                 isubcase, op2.cquad4_force.keys()))
@@ -3861,28 +3900,28 @@ def _verify_ids(bdf, op2, isubcase=1):
 
 
     card_type = 'CTRIA3'
-    if op2.ctria3_stress:
-        case = op2.ctria3_stress[isubcase]
+    if stress.ctria3_stress:
+        case = stress.ctria3_stress[isubcase]
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.ctria3_strain:
-        case = op2.ctria3_strain[isubcase]
+    if strain.ctria3_strain:
+        case = strain.ctria3_strain[isubcase]
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.ctria3_composite_strain:
-        case = op2.ctria3_composite_strain[isubcase]
+    if strain.ctria3_composite_strain:
+        case = strain.ctria3_composite_strain[isubcase]
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.ctria3_composite_stress:
-        case = op2.ctria3_composite_stress[isubcase]
+    if stress.ctria3_composite_stress:
+        case = stress.ctria3_composite_stress[isubcase]
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-    if op2.ctria3_force:
-        case = op2.ctria3_force[isubcase]
+    if force.ctria3_force:
+        case = force.ctria3_force[isubcase]
         eids = np.unique(case.element)
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)

@@ -289,11 +289,12 @@ class CBUSH(BushElement):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', 0.0)
-            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x2 = double_or_blank(card, 6, 'x2', default=0.0)
+            x3 = double_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
             if not isinstance(cid, integer_types):
-                assert max(x) != min(x), 'x=%s' % x
+                x_norm = np.linalg.norm(x)
+                assert x_norm != 0.0, 'x=%s' % x
         else:
             g0 = None
             x = [None, None, None]
@@ -342,11 +343,11 @@ class CBUSH(BushElement):
         ocid = self.OCid()
         pid = self.Pid()
         #si = self.si
-        assert isinstance(ga, integer_types), 'ga=%r' % ga
-        assert isinstance(gb, integer_types) or gb is None, 'gb=%r' % gb
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
-        assert isinstance(cid, integer_types) or cid is None, 'cid=%r' % cid
-        assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
+        assert isinstance(ga, integer_types), 'CBUSH: ga=%r' % ga
+        assert isinstance(gb, integer_types) or gb is None, 'CBUSH: gb=%r' % gb
+        assert isinstance(pid, integer_types), 'CBUSH: pid=%r' % pid
+        assert isinstance(cid, integer_types) or cid is None, 'CBUSH: cid=%r' % cid
+        assert isinstance(ocid, integer_types), 'CBUSH: ocid=%r' % ocid
 
     def Ga(self):
         if self.nodes_ref is not None:
@@ -573,10 +574,10 @@ class CBUSH1D(BushElement):
         gb = self.Gb()
         cid = self.Cid()
         pid = self.Pid()
-        assert isinstance(ga, integer_types), 'ga=%r' % ga
-        assert isinstance(gb, integer_types) or gb is None, 'gb=%r' % gb
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
-        assert isinstance(cid, integer_types) or cid is None, 'cid=%r' % cid
+        assert isinstance(ga, integer_types), 'CBUSH1D: ga=%r' % ga
+        assert isinstance(gb, integer_types) or gb is None, 'CBUSH1D: gb=%r' % gb
+        assert isinstance(pid, integer_types), 'CBUSH1D: pid=%r' % pid
+        assert isinstance(cid, integer_types) or cid is None, 'CBUSH1D: cid=%r' % cid
 
     def Ga(self):
         if self.ga_ref is not None:
@@ -708,11 +709,11 @@ class CBUSH2D(BushElement):
         cid = self.Cid()
         pid = self.Pid()
         plane = self.plane
-        assert isinstance(ga, integer_types), 'ga=%r' % ga
-        assert isinstance(gb, integer_types), 'gb=%r' % gb
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
-        assert isinstance(cid, integer_types), 'cid=%r' % cid
-        assert self.plane in ['XY', 'YZ', 'ZX'], 'plane=%r' % plane
+        assert isinstance(ga, integer_types), 'CBUSH2D: ga=%r' % ga
+        assert isinstance(gb, integer_types), 'CBUSH2D: gb=%r' % gb
+        assert isinstance(pid, integer_types), 'CBUSH2D: pid=%r' % pid
+        assert isinstance(cid, integer_types), 'CBUSH2D: cid=%r' % cid
+        assert self.plane in ['XY', 'YZ', 'ZX'], 'CBUSH2D: plane=%r' % plane
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
