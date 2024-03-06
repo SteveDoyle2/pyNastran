@@ -563,7 +563,7 @@ class RealGridPointForcesArray(GridPointForces):
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in]
         nids = gpforce_nids[irange]
 
-        if debug:
+        if debug and log is not None:
             log.debug('gpforce_eids = %s' % gpforce_eids[is_in])
             log.debug('nids = %s' % gpforce_nids[irange])
             log.debug('eids = %s' % gpforce_eids[irange])
@@ -731,7 +731,7 @@ class RealGridPointForcesArray(GridPointForces):
 
             return force_out, moment_out, force_out_sum, moment_out_sum
 
-        if debug:
+        if debug and log is not None:
             f06_filename = f'grid_point_forcesi_itime={itime}.debug.f06'
             with open(f06_filename, 'w') as f06_file:
                 self.write_f06_time(f06_file, itime=itime, i=irange)
@@ -1086,6 +1086,7 @@ class RealGridPointForcesArray(GridPointForces):
 
             # we'd break if we knew the user was traveling in the
             # "correct" direction, but we don't
+            icoord += 1
             if nelem == 0:
                 continue
             if nnode == 0:
@@ -1123,7 +1124,6 @@ class RealGridPointForcesArray(GridPointForces):
                     continue
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
-            icoord += 1
         nelems = np.array(nelems_list, dtype=idtype)
         nnodes = np.array(nnodes_list, dtype=idtype)
         return force_sum, moment_sum, new_coords, nelems, nnodes

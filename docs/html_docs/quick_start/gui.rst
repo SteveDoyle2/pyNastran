@@ -75,9 +75,8 @@ Advantages of Patran/FEMAP
  - better use of memory
  - many more...
 
-*****************************
 Purpose of additional formats
-*****************************
+=============================
 Over time, pyNastran has also added converter and GUI support for additional
 formats.  Nastran is not the only piece of the analysis puzzle and there is
 a need for niche engineering formats.
@@ -110,12 +109,11 @@ Additional formats include:
    - usm3d
 
 
-********
 Features
-********
+========
 
 Major Features
-==============
+--------------
  * fringe plot support
 
    * elemental/nodal results
@@ -137,7 +135,7 @@ Major Features
  * save/load view menu
 
 Minor Features
-==============
+--------------
  * snap to axis
  * clipping customization menu
  * edges flippable from menu
@@ -232,9 +230,8 @@ Some of the results include:
 Results
 =======
 
-*************************
 Real Displacement Results
-*************************
+=========================
 
 .. image:: ../../../pyNastran/gui/images/results_displacement.png
 
@@ -255,17 +252,15 @@ Additionally, to determine the fringe/color values, the vector must be reduced u
 
 **Note** that the animation scale factor is tied to the magnitude, so if you select Z displacment and it doesn't dominate the response, you will need to adjust the scale factor.
 
-*************************************
 Real SPC Forces / Load Vector Results
-*************************************
+=====================================
 
 .. image:: ../../../pyNastran/gui/images/results_spcforce.png
 
 Other than some arrows, SPC Force and Displacement work the same way.
 
-*********************
 Plate Stress / Strain
-*********************
+=====================
 
 There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
 
@@ -282,7 +277,7 @@ Additionally, there are likely neighboring elements too, so the **Nodal Combine*
 
 
 Derivation Method
-=================
+-----------------
 **Derivation Method** looks at a single given node/centroid (both layers) and "reduces" it down to a single value/layer.  Min/Max are common, but "Absolute Max" provides the "worst" value by looking at the min/max of each node and taking the biggest value and then using the sign to indicate tension or compression.
 
 The included methods are:
@@ -294,7 +289,7 @@ The included methods are:
  - Difference (Max - Min)
 
 Nodal Combine
-=============
+-------------
 **Nodal Combine** takes the "reduced" values from "Derivation Method" and does a similar combination.  Additionally, there's a centroidal option.
 
 The included methods are:
@@ -306,9 +301,9 @@ The included methods are:
  - Standard Deviation
  - Difference (Max - Min)
 
-*********************
+
 Solid Stress / Strain
-*********************
+=====================
 
 There are two options for solid stress/strain:
  - Centroid
@@ -326,7 +321,7 @@ The typical way to plot solid stress/strain is with the **Mean** option.
 
 
 Nodal Combine
-=============
+-------------
 Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
 
 The supported methods are:
@@ -337,9 +332,9 @@ The supported methods are:
  - Standard Deviation
  - Difference (Max - Min)
 
-*******************************
+
 Composite Plate Stress / Strain
-*******************************
+===============================
 
 .. image:: ../../../pyNastran/gui/images/results_composite_stress.png
 
@@ -353,9 +348,9 @@ The supported methods are:
  - Standard Deviation
  - Difference (Max - Min)
 
-************************
+
 Shear-Moment-Torque Plot
-************************
+========================
 
 If you included ``GPFORCE(PLOT) = ALL`` in your BDF, you can create a shear force diagram/bending moment diagram.
 
@@ -390,9 +385,8 @@ The more standard way to present the information using the global y-axis.  That 
 Custom Results
 ==============
 
-***********
 User Points
-***********
+===========
 
 User points allow you to load a CSV of xyz points.
 These may be loaded from within the GUI or from the command line.
@@ -405,9 +399,9 @@ These may be loaded from within the GUI or from the command line.
 
 These will show up as points in the GUI with your requested filename.
 
-*************
+
 User Geometry
-*************
+=============
 
 User geometry is an attempt at creating a simple file format for defining geometry.
 This may be loaded from the command line.  The structure will probably change.
@@ -447,9 +441,9 @@ The geometry may be modified from the ``Edit Geometry Properties`` menu.
     QUAD, 4, 1, 2, 3, 4  # this is after a blank line
 
 
-*********************
 Custom Scalar Results
-*********************
+=====================
+
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
 length is important.  Results must be in nodal/elemental sorted order.
 The following example has 3 scalar values with 2 locations.  The
@@ -477,9 +471,9 @@ You may also assign result types with (%i) and (%f).  Formatting works as well, 
       1,                1.0,     2,     3.0
       2,                4.0,     5,     6.0
 
-*************************
+
 Custom Deflection Results
-*************************
+=========================
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
 length is important.  Results must be in nodal/elemental sorted order.
 The following example has 3 scalar values with 2 locations.  The model must
@@ -491,9 +485,9 @@ have **only** two nodes.
       1.0     2     3.0
       2.0     5     6.0
 
-*******************************
+
 Custom Results Specific Buttons
-*******************************
+===============================
 Nastran Static/Dynamic Aero solutions require custom cards that create
 difficult to view, difficult to validate geometry.  The pyNastranGUI
 aides in creating models.  The CAERO panels are seen when a model is loaded:
@@ -509,9 +503,10 @@ Additionally, flaps are shown from within the GUI.  SPLINE surfaces
 are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
 menu.
 
-*****************************
+
+=============================
 Edit Geometry Properties Menu
-*****************************
+=============================
 The View -> "Edit Geometry Properties" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/edit_geometry_properties.png
@@ -519,9 +514,9 @@ The View -> "Edit Geometry Properties" menu brings up:
 This menu allows you to edit the opacity, line width, point size, show/hide various
 things associated with the model.  The geometry auto-updates when changes are made.
 
-******************
+==================
 Modify Legend Menu
-******************
+==================
 The View -> "Modify Legend" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/legend.png
@@ -531,9 +526,9 @@ number format (e.g. float precision) and deflection scale.  Defaults are stored,
 they may always be gone back to.  The geometry will update when Apply/OK is clicked.
 OK/Cancel will close the window.
 
-**************
+==============
 Animation Menu
-**************
+==============
 
 The animation menu is a sub-menu found on the ``legend menu``.
 Hover over the cells for more information.
@@ -594,9 +589,9 @@ depending on the frame rate and total time you want, you can skip steps.
 Note that there is currently no way to plot a transient result other than the deflection
 unless you want to use scripting.
 
-****************
+================
 Preferences Menu
-****************
+================
 The preferences menu allows you to change various settings.  These will be remembered
 when you load model again.  The menu looks like:
 
@@ -610,9 +605,9 @@ Windows preferences are stored in:
 Or Linux/Mac:
  - ``~/pyNastranGUI.json``
 
-***************
+===============
 Picking Results
-***************
+===============
 Click on the ``Probe`` button to activate probing.  Now click on a node/element.
 A label will appear .  This label will appear at the centroid of an elemental result
 or the closest node to the selected location.  The value for the current result
@@ -628,9 +623,9 @@ Note that for line elements, you need to be very accurate with your picking.
 Zooming in does not help with picking like it does for shells.
 
 
-********************************
-Focal Point / Center of Rotation
-********************************
+==================
+Center of Rotation
+==================
 Click the following button and click on the rotation center point of the model.
 The model will now rotate around that point.
 
@@ -638,9 +633,9 @@ The model will now rotate around that point.
 
 Alternatively, hover over the point and press the ``f`` key.
 
-**************
+==============
 Model Clipping
-**************
+==============
 Clipping let's you see "into" the model.
 
 .. image:: ../../../pyNastran/gui/images/clipping.png
@@ -653,9 +648,9 @@ Reset the view by clicking the Undo-looking arrow at the top.
 
 **Note that clipping currently doesn't work...**
 
-*************
+=============
 Modify Groups
-*************
+=============
 The View -> "Modify Groups" menu brings up:
 
 .. image:: ../../../pyNastran/gui/images/modify_groups1.png
@@ -684,9 +679,34 @@ The bolded/italicized text indicates the group that will be displayed to the scr
 The defaults will be updated when you click ``Set As Main``.  This will also update
 the bolded/italicided group.
 
-************
+You can also define groups in your BDF:
+
+.. code-block::
+
+    Correct:
+    $ group: name='RLongeron MainFuseStruct Gridpoint'; nodes=167:205
+    $ group: name='Skin MainFuseStruc'; elements=6001:15017
+    $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints, 123"; spcs=3
+
+    Incorrect:
+    $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints; 123"; spcs=3    (semicolon in name)
+
+    Unioned Groups (spcs becomes [1,2,3] internally):
+    $ group: name="spcs"; spcs=1
+    $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints, all"; spcs=1
+    SPC1           1  123456      13
+    $ group: name="spcs"; spcs=2
+    $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints, 123456"; spcs=2
+    SPC1           2  123456      13
+    $ group: name="spcs"; spcs=3
+    $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints, 123"; spcs=3
+    SPC1           3  123         13
+
+Node groups will show up in the EditGeometryProperties menu, while element groups will show up in the Groups menu.  Other group types are not supported in the gui.
+
+============
 Camera Views
-************
+============
 The eyeball icon brings up a camera view.  You can set and save multiple camera views.
 Additionally, views are written out for scripting.
 You can script an external optimization process and take pictures every so many steps.
@@ -827,7 +847,6 @@ After the screenshot from Option 1 was created, the following code was printed o
 .. code-block:: python
 
     self.on_take_screenshot('solid_bending.png', magnify=5)
-
 
 
 **************************

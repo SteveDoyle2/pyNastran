@@ -5,6 +5,7 @@ defines:
  - QNodeElementEdit
 
 """
+import numpy as np
 from qtpy import QtCore
 from qtpy.QtGui import QFocusEvent
 from qtpy.QtWidgets import QLineEdit
@@ -62,7 +63,7 @@ class QNodeElementEdit(QLineEdit):
         self.on_focus()
         QLineEdit.focusInEvent(self, QFocusEvent(QtCore.QEvent.FocusIn))
 
-    def on_focus_callback(self, eids, nids, name):
+    def on_focus_callback(self, eids: np.ndarray, nids: np.ndarray, name: str):
         """the callback method for ``on_focus``"""
         raise NotImplementedError('write_patran_syntax_dict callback')
         #eids_str = write_patran_syntax_dict({'' : eids})
@@ -94,8 +95,8 @@ class QNodeElementEdit(QLineEdit):
                 callback=self.on_focus_callback,
                 cleanup=self.cleanup,
                 force=True)
-        else:
-            raise NotImplementedError('pick_style=%r and must be [area, single]' % self.pick_style)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'pick_style={self.pick_style!r} and must be [area, single]')
 
         # if style has updated the gui
         if self._is_updated and 0:
@@ -136,7 +137,8 @@ class QElementEdit(QNodeElementEdit):
                                            representation='wire', pick_style=pick_style,
                                            max_length=max_length, cleanup=cleanup, *args, **kwargs)
 
-    def on_focus_callback(self, eids, nids, name: str) -> None:
+    def on_focus_callback(self, eids: np.ndarray, nids: np.ndarray,
+                          name: str) -> None:
         """the callback method for ``on_focus``"""
         if eids is None:
             return
@@ -155,7 +157,7 @@ class QNodeEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick node ids"""
     def __init__(self, win_parent, name: str, parent=None,
                  pick_style: str='area', tab_to_next: bool=False,
-                 max_length: int=32767, cleanup: bool=True, *args, **kwargs):
+                 cleanup: bool=True, max_length: int=32767, *args, **kwargs):
         """
         A node picker
 
@@ -179,7 +181,8 @@ class QNodeEdit(QNodeElementEdit):
                                         representation='points', pick_style=pick_style,
                                         cleanup=cleanup, max_length=max_length, *args, **kwargs)
 
-    def on_focus_callback(self, eids, nids, name: str) -> None:
+    def on_focus_callback(self, eids: np.ndarray, nids: np.ndarray,
+                          name: str) -> None:
         """the callback method for ``on_focus``"""
         if nids is None:
             return

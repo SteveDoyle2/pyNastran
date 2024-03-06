@@ -26,7 +26,7 @@ MenuTuple = tuple[QMenu, tuple[str, ...]]
                  #vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
-from vtkmodules.vtkRenderingCore import vtkImageActor
+from vtkmodules.vtkRenderingCore import vtkImageActor, vtkProperty
 from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike
@@ -76,9 +76,10 @@ Tool = tuple[str, str, str, str, str, Callable[..., Any], bool]
 BANNED_SHORTCUTS: set[str] = set([])
 
 from pyNastran.gui.gui_objects.settings import Settings, NFILES_TO_SAVE
-from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult # , NormalResult
 from pyNastran.gui.gui_objects.displacements import (
-    DisplacementResults, ForceTableResults, ElementalTableResults)
+    DisplacementResults, # ForceTableResults, ElementalTableResults,
+)
 
 #if qt_version == 'pyqt6':
     #def _update_shortcut(shortcut: str):
@@ -442,6 +443,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         is_visible = True
         recent_file_tools = []
+        ifile = -1
         for ifile, (fname, geometry_format) in enumerate(recent_files):
             if ifile == NFILES_TO_SAVE:
                 break
@@ -453,6 +455,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #print(f'ifile={ifile} shortcut={shortcut}')
             file_tool = (f'file{ifile+1:d}', label, image, shortcut, tooltip, func, is_visible)
             recent_file_tools.append(file_tool)
+
+        # add the tools that are not shown (until you load a new model)
         if len(recent_file_tools) < NFILES_TO_SAVE:
             is_visible = False
             for jfile in range(ifile+1, NFILES_TO_SAVE):
@@ -1102,7 +1106,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
     #---------------------------------------------------------------------
     # groups
 
-    def get_all_eids(self):
+    def get_all_eids(self) -> np.ndarray:
         """get the list of all the element IDs"""
         return self.element_ids
         #name, result = self.get_name_result_data(0)
@@ -1111,7 +1115,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #assert name == 'ElementID', name
         #return result
 
-    def show_eids(self, eids):
+    def show_eids(self, eids: np.ndarray) -> None:
         """shows the specified element IDs"""
         all_eids = self.get_all_eids()
 
@@ -1126,7 +1130,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         self.show_ids_mask(ishow)
 
-    def hide_eids(self, eids):
+    def hide_eids(self, eids: np.ndarray) -> None:
         """hides the specified element IDs"""
         all_eids = self.get_all_eids()
 
@@ -1140,10 +1144,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ishow = np.searchsorted(all_eids, eids)
         self.show_ids_mask(ishow)
 
-    def show_ids_mask(self, ids_to_show):
+    def show_ids_mask(self, ids_to_show: np.ndarray) -> None:
         """masks the specific 0-based element ids"""
         #print('ids_to_show = ', ids_to_show)
-        prop = self.geom_actor.GetProperty()
+        prop: vtkProperty = self.geom_actor.GetProperty()
         if len(ids_to_show) == self.nelements:
             #prop.BackfaceCullingOn()
             pass
@@ -1172,10 +1176,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
             self._show_flag = True
 
-    def hide_ids_mask(self, ids_to_hide):
+    def hide_ids_mask(self, ids_to_hide: np.ndarray):
         """masks the specific 0-based element ids"""
         #print('hide_ids_mask = ', hide_ids_mask)
-        prop = self.geom_actor.GetProperty()
+        prop: vtkProperty = self.geom_actor.GetProperty()
         if len(self.ids_to_hide) == 0:
             prop.BackfaceCullingOn()
         else:
@@ -1254,7 +1258,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
         self.update_all(render=render)
 
-    def _update_ids_mask_show(self, ids_to_show):
+    def _update_ids_mask_show(self, ids_to_show: np.ndarray) -> None:
         """helper method for ``show_ids_mask``"""
         ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
@@ -1338,7 +1342,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #self.extract_selection.Update()
         self.update_all(render=render)
 
-    def update_all_2(self, render=True):  # pragma: no cover
+    def update_all_2(self, render: bool=True) -> None:  # pragma: no cover
         self.grid_selected.Modified()
 
         self.selection_node.Modified()
@@ -1361,7 +1365,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             render_window = self.vtk_interactor.GetRenderWindow()
             render_window.Render()
 
-    def update_all(self, render: bool=True):
+    def update_all(self, render: bool=True) -> None:
         self.grid_selected.Modified()
 
         #selection_node.Update()
@@ -1432,7 +1436,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
 
-    def start_logging(self):
+    def start_logging(self) -> None:
         if self.log is not None:
             return
         if self.html_logging is True:
@@ -1451,7 +1455,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None,
                                 name: str='main',
-                                stop_on_failure: bool=False):
+                                stop_on_failure: bool=False) -> None:
         """action version of ``on_load_geometry``"""
         self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
                               name=name, plot=True, stop_on_failure=stop_on_failure)
@@ -1463,7 +1467,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         unused_actions = self._prepare_actions(self._icon_path, tools, self.checkables)
         self._update_menu(menu_items)
 
-    def update_menu_bar(self):
+    def update_menu_bar(self) -> None:
         # the format we're switching to
         method_new = f'_create_{self.format}_tools_and_menu_items'
         method_cleanup = f'_cleanup_{self.menu_bar_format}_tools_and_menu_items'
@@ -1540,7 +1544,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if is_gui:
             self.show()
 
-    def setup_post(self, inputs):
+    def setup_post(self, inputs) -> None:
         """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
@@ -1553,7 +1557,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 self.on_load_user_geom(fname)
         #self.set_anti_aliasing(16)
 
-    def init_cell_picker(self):
+    def init_cell_picker(self) -> None:
         self.is_pick = False
         if not self.run_vtk:
             return
@@ -1562,19 +1566,22 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.mouse_actions.setup_mouse_buttons(mode='probe_result')
         self.mouse_actions.setup_mouse_buttons(mode='default')
 
-    def convert_units(self, unused_result_name, result_value, xyz):
+    def convert_units(self, unused_result_name: str,
+                      result_value: np.ndarray,
+                      xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """not 100% on types"""
         #self.input_units
         #self.display_units
         return result_value, xyz
 
-    def _on_multi_pick(self, unused_a):
+    def _on_multi_pick(self, unused_a) -> None:
         """
         vtkFrustumExtractor
         vtkAreaPicker
         """
         pass
 
-    def _on_cell_picker(self, unused_a):
+    def _on_cell_picker(self, unused_a) -> None:
         self.vtk_interactor.SetPicker(self.cell_picker)
         picker = self.cell_picker
         world_position = picker.GetPickPosition()
@@ -1585,7 +1592,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.log_info(f'cell_id = {cell_id}')
         self.log_info('select_point = %s' % str(select_point))
 
-    def _on_node_picker(self, unused_a):
+    def _on_node_picker(self, unused_a) -> None:
         self.vtk_interactor.SetPicker(self.node_picker)
         picker = self.node_picker
         world_position = picker.GetPickPosition()
@@ -2263,16 +2270,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if self.element_ids is None:  # pragma: no cover
             #raise RuntimeError('implement self.element_ids for this format')
 
+        #eids = np.arange(172)
+        #eids = []
+        #self.hide_elements_mask(eids)
+        elements_pound = self.element_ids[-1]
+        nodes_pound = self.node_ids[-1]
+        main_group = Group(
+            'main',
+            '', elements_pound,
+            '', nodes_pound,
+            editable=False)
+        main_group.element_ids = self.element_ids
+        main_group.node_ids = self.node_ids
+        self.groups['main'] = main_group
         if self.is_groups:
-            #eids = np.arange(172)
-            #eids = []
-            #self.hide_elements_mask(eids)
-            elements_pound = self.element_ids[-1]
-            main_group = Group(
-                'main', '', elements_pound,
-                editable=False)
-            main_group.element_ids = self.element_ids
-            self.groups['main'] = main_group
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
@@ -2317,8 +2328,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         #self.res_widget.set_displacement_scale_visible(is_visible)
 
-        x = 1
-        pass
         return True
 
 

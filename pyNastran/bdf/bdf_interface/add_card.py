@@ -29,7 +29,8 @@ from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from pyNastran.bdf.cards.elements.rigid import (
+    RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
@@ -4746,7 +4747,9 @@ class AddCards:
             the pressure to apply to the elements
         eids : int / list[int]
             the elements to apply pressure to
-            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+            For NX Nastran and MSC Nastran < 2018 the list must have no more than 6 ids or it must be
+            a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
+            incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         comment : str; default=''
             a comment for the card
 
@@ -6818,7 +6821,7 @@ class AddCards:
         return elem
 
     def add_rbe3(self, eid: int, refgrid: int, refc: str,
-                 weights: list[float], comps: list[str], Gijs: list[int],
+                 weights: list[float], comps: list[str], Gijs: list[list[int]],
                  Gmi=None, Cmi=None,
                  alpha: float=0.0, tref: float=0.0,
                  comment: str='') -> RBE3:
@@ -6833,12 +6836,19 @@ class AddCards:
             dependent node
         refc - str
             dependent components for refgrid???
-        GiJs : list[int, ..., int]
-            independent nodes
-        comps : list[str, ..., str]
-            independent components
-        weights : list[float, ..., float]
+        weights : list[float]
             independent weights for the importance of the DOF
+        comps : list[str]
+            independent components
+            len(comps) = len(weights)
+        GiJs : varies
+            independent nodes
+            list[list[int]]:
+                allows for different nodes for the different weights
+                len(GiJs) = len(weights)
+            list[int, ..., int]:
+                intended for a single weight
+                This will be expanded into list[list[int]]
         Gmi : list[int, ..., int]; default=None -> []
             dependent nodes / UM Set
         Cmi : list[str, ..., str]; default=None -> []

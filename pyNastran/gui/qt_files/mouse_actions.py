@@ -13,10 +13,15 @@ from vtkmodules.vtkRenderingLOD import vtkLODActor
 from vtkmodules.vtkCommonDataModel import vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 
-from pyNastran.gui.vtk_common_core import vtkIdTypeArray
-from pyNastran.gui.vtk_rendering_core import vtkDataSetMapper, vtkRenderer
-from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.bdf.utils import write_patran_syntax_dict
+
+from pyNastran.gui.vtk_common_core import vtkIdTypeArray
+from pyNastran.gui.vtk_rendering_core import vtkRenderer
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
+
+from pyNastran.gui.gui_objects.settings import Settings
+
+from pyNastran.gui.menus.highlight.vtk_utils import create_highlighted_actor
 
 from pyNastran.gui.styles.highlight_style import HighlightStyle
 from pyNastran.gui.styles.area_pick_style import AreaPickStyle
@@ -26,6 +31,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
@@ -587,7 +593,8 @@ class MouseActions:
                                  add_actor: bool=True) -> list[vtkLODActor]:
         """creates a highlighted actor given a vtkUnstructuredGrid"""
         actor = create_highlighted_actor(
-            self.gui, ugrid, representation=representation, add_actor=add_actor)
+            self.gui, ugrid, representation=representation,
+            add_actor=add_actor)
         return actor
 
     def _highlight_picker(self, unused_obj, unused_event) -> None:
@@ -957,37 +964,6 @@ class MouseActions:
         """wrapper around node_ids"""
         return self.gui.get_element_ids(model_name, ids)
 
-
-def create_highlighted_actor(gui, ugrid: vtkUnstructuredGrid,
-                             representation: str='wire',
-                             add_actor: bool=True) -> vtkLODActor:
-    """creates a highlighted actor given a vtkUnstructuredGrid"""
-    actor = vtkLODActor()
-    mapper = vtkDataSetMapper()
-    mapper.SetInputData(ugrid)
-    # don't use a single color; makes setting prop values work
-    mapper.ScalarVisibilityOff()
-    actor.SetMapper(mapper)
-
-    settings = gui.settings
-    prop = actor.GetProperty()
-    prop.SetColor(settings.highlight_color)
-    prop.SetOpacity(settings.highlight_opacity)
-    if representation == 'surface':
-        pass
-    elif representation == 'points':
-        prop.SetRepresentationToPoints()
-        prop.RenderPointsAsSpheresOn()
-        prop.SetLighting(False)
-        #prop.SetInterpolationToFlat()
-        prop.SetPointSize(settings.highlight_point_size)
-    elif representation == 'wire':
-        prop.SetRepresentationToWireframe()
-        prop.SetLineWidth(settings.highlight_line_thickness)
-    else:
-        raise NotImplementedError('representation=%r and must be [points, wire, surface]' % (
-            representation))
-
-    if add_actor:
-        gui.rend.AddActor(actor)
-    return actor
+    @property
+    def settings(self) -> Settings:
+        return self.gui.settings

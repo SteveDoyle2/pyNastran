@@ -24,10 +24,12 @@ except ModuleNotFoundError:
 
 import pyNastran
 from pyNastran import DEV
+from pyNastran.gui.typing import ColorFloat, Format
 from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings, FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 
+from pyNastran.gui.qt_files.vtk_actor_actions import VtkActorActions
 from pyNastran.gui.qt_files.tool_actions import ToolActions
 from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
@@ -63,20 +65,20 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.menus.groups_modify.groups_modify import Group
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
-    from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid
-    from vtkmodules.vtkCommonDataModel import vtkPointData
+    from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
-    from pyNastran.gui.typing import Format
 
 
 class GeometryObject(BaseGui):
     """
     """
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         super().__init__(gui)
         #self.gui = parent
 
@@ -123,6 +125,7 @@ class GuiAttributes:
         self.make_contour_filter = False
 
         self.settings = Settings(self)
+        self.vtk_actor_actions = VtkActorActions(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)
         self.group_actions = GroupActions(self)
@@ -290,7 +293,7 @@ class GuiAttributes:
         self.model_data.geometry_properties = geometry_properties
 
     @property
-    def groups(self):
+    def groups(self) -> dict[str, Any]:
         return self.model_data.groups
     @groups.setter
     def groups(self, groups: dict[str, Any]):
@@ -502,8 +505,11 @@ class GuiAttributes:
         self.eid_maps[self.name] = eid_map
 
     #-------------------------------------------------------------------
-    def set_point_grid(self, name: str, nodes, elements, color,
-                       point_size: int=5, opacity: int=1., add: bool=True) -> None:
+    def set_point_grid(self, name: str,
+                       nodes: np.ndarray, elements: np.ndarray,
+                       color: ColorFloat,
+                       point_size: int=5, opacity: int=1.,
+                       add: bool=True) -> vtkUnstructuredGrid:
         """Makes a POINT grid"""
         self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
                                        opacity=opacity, representation='point')
@@ -530,36 +536,23 @@ class GuiAttributes:
     def set_quad_grid(self, name: str,
                       nodes: np.ndarray,
                       elements: np.ndarray,
-                      color: list[float],
-                      line_width: int=5, opacity: float=1.,
+                      color: ColorFloat,
+                      point_size: int=5, line_width: int=5,
+                      opacity: float=1.,
                       representation: str='wire',
-                      add: bool=True) -> None:
-        """Makes a CQUAD4 grid"""
-        self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
-                                       opacity=opacity, representation=representation)
-
-        nnodes = nodes.shape[0]
-        nquads = elements.shape[0]
-        if nnodes == 0:
-            return
-        if nquads == 0:
-            return
-
-        #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
-        assert isinstance(nodes, np.ndarray), type(nodes)
-
-        points = numpy_to_vtk_points(nodes)
-        grid = self.alt_grids[name]
-        grid.SetPoints(points)
-
-        etype = 9  # vtkQuad().GetCellType()
-        create_vtk_cells_of_constant_element_type(grid, elements, etype)
-
-        if add:
-            self._add_alt_actors({name : self.alt_grids[name]})
-
-            #if name in self.geometry_actors:
-        self.geometry_actors[name].Modified()
+                      add: bool=True,
+                      visible_in_geometry_properties: bool=True) -> Optional[vtkUnstructuredGrid]:
+        """Makes a quad grid"""
+        etype = 9
+        grid = self.vtk_actor_actions.create_grid_from_nodes_elements_etype(
+            name, nodes, elements, etype, color,
+            point_size=point_size, line_width=line_width,
+            opacity=opacity,
+            representation=representation,
+            add=add,
+            visible_in_geometry_properties=visible_in_geometry_properties,
+        )
+        return grid
 
     def _add_alt_actors(self, grids_dict: dict[str, vtkUnstructuredGrid],
                         names_to_ignore=None):
@@ -593,6 +586,33 @@ class GuiAttributes:
             actor = self.geometry_actors[name]
             self.rend.RemoveActor(actor)
             del actor
+
+    def _get_geometry_property_items(self, name: str,
+                                     *property_name_defaults) -> list[Any]:
+        """
+        Matlab-esque way of accessing properties
+
+        line_width = gui.get_geometry_property_items(
+            LINE_NAME,
+            'line_width', 5)
+        line_width, opacity = gui.get_geometry_property_items(
+            LINE_NAME,
+            'line_width', 5,
+            'opacity', 1.0)
+        """
+        length = len(property_name_defaults)
+        assert length % 2 == 0, property_name_defaults
+        out = []
+        for i in range(0, length, 2):
+            prop_name = property_name_defaults[i]
+            assert prop_name in ['line_width', 'point_size', 'color', 'opacity'], prop_name
+            if name in self.geometry_properties:
+                prop = self.geometry_properties[name]
+                outi = getattr(prop, prop_name)
+            else:
+                outi = property_name_defaults[i+1]
+            out.append(outi)
+        return out
 
     @property
     def displacement_scale_factor(self) -> float:
@@ -819,13 +839,19 @@ class GuiAttributes:
         self.legend_obj._set_legend_fringe(is_fringe)
 
     def on_update_legend(self,
-                         title='Title', min_value=0., max_value=1.,
-                         scale=0.0, phase=0.0,
-                         arrow_scale=1.,
-                         data_format='%.0f',
-                         is_low_to_high=True, is_discrete=True, is_horizontal=True,
-                         nlabels=None, labelsize=None, ncolors=None, colormap=None,
-                         is_shown=True, render=True) -> None:
+                         title: str='Title',
+                         min_value: float=0., max_value: float=1.,
+                         scale: float=0.0, phase: float=0.0,
+                         arrow_scale: float=1.,
+                         data_format: str='%.0f',
+                         is_low_to_high: bool=True,
+                         is_discrete: bool=True,
+                         is_horizontal: bool=True,
+                         nlabels: Optional[int]=None,
+                         labelsize: Optional[int]=None,
+                         ncolors: Optional[int]=None,
+                         colormap: Optional[str]=None,
+                         is_shown: bool=True, render: bool=True) -> None:
         """
         Updates the legend/model
 
@@ -1372,7 +1398,8 @@ class GuiAttributes:
             geometry_properties)
 
     @start_stop_performance_mode
-    def on_update_geometry_properties(self, out_data, name=None, write_log=True) -> None:
+    def on_update_geometry_properties(self, out_data, name=None,
+                                      write_log: bool=True) -> None:
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -1595,11 +1622,11 @@ class GuiAttributes:
         """see ``set_camera_data`` for arguments"""
         return self.camera_obj.get_camera_data()
 
-    def on_set_camera(self, name, show_log=True):
+    def on_set_camera(self, name: str, show_log=True):
         """see ``set_camera_data`` for arguments"""
         self.camera_obj.on_set_camera(name, show_log=show_log)
 
-    def on_set_camera_data(self, camera_data, show_log=True):
+    def on_set_camera_data(self, camera_data, show_log: bool=True) -> None:
         """
         Sets the current camera
 
@@ -1637,7 +1664,7 @@ class GuiAttributes:
         self.camera_obj.on_set_camera_data(camera_data, show_log=show_log)
 
     @property
-    def IS_GUI_TESTING(self):
+    def IS_GUI_TESTING(self) -> bool:
         return 'test_' in sys.argv[0]
     @property
     def iren(self):
@@ -1647,21 +1674,44 @@ class GuiAttributes:
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
-    def get_xyz_cid0(self, model_name=None):
+    def get_xyz_cid0(self, model_name=None) -> np.ndarray:
         xyz = self.xyz_cid0
         return xyz
 
-    def get_element_ids(self, model_name=None, ids=None):
+    def get_element_ids(self, model_name: Optional[str]=None,
+                        ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around element_ids"""
+        #if self.group_active == 'main':
+        eids_all = self.element_ids
         if ids is None:
-            return self.element_ids
-        return self.element_ids[ids]
+            eids = eids_all
+        else:
+            eids = eids_all[ids]
+        # skin_eids=1:1632
+        if self.group_active == 'main':
+            return eids
 
-    def get_node_ids(self, model_name=None, ids=None):
+        group: Group = self.groups[self.group_active]
+        group_eids = group.element_ids
+        eids2 = np.intersect1d(eids, group_eids)
+        return eids2
+
+    def get_node_ids(self, model_name: Optional[str]=None,
+                     ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around node_ids"""
+        nids_all = self.node_ids
         if ids is None:
-            return self.node_ids
-        return self.node_ids[ids]
+            nids = nids_all
+        else:
+            nids = nids_all[ids]
+
+        if self.group_active == 'main':
+            return nids
+
+        group: Group = self.groups[self.group_active]
+        group_nids = group.node_ids
+        nids2 = np.intersect1d(nids, group_nids)
+        return nids2
 
     def get_reverse_node_ids(self, model_name=None, ids=None):
         """wrapper around node_ids"""
@@ -1674,32 +1724,32 @@ class GuiAttributes:
 
     #------------------------------
     # these are overwritten
-    def log_debug(self, msg):
+    def log_debug(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('DEBUG:  ', msg)
 
-    def log_info(self, msg):
+    def log_info(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('INFO:  ', msg)
 
-    def log_error(self, msg):
+    def log_error(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         #if self.debug:
         print('ERROR:  ', msg)
 
-    def log_warning(self, msg):
+    def log_warning(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('WARNING:  ', msg)
 
-    def log_command(self, msg):
+    def log_command(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('COMMAND:  ', msg)
 
-    def Render(self):  # pragma: no cover
+    def Render(self) -> None:  # pragma: no cover
         pass
 
 
@@ -1770,5 +1820,5 @@ def _add_fmt(supported_fmts: list[str],
             fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
             if fmt not in supported_fmts:
                 supported_fmts.append(fmt)
-    else:
+    else:  # pragma: no cover
         raise TypeError(data)

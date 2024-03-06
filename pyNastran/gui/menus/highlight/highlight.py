@@ -4,7 +4,8 @@ The highlight menu handles:
  - Preferences
 
 """
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from qtpy import QtGui
@@ -19,34 +20,21 @@ from qtpy.QtWidgets import (
     #vtkUnstructuredGridGeometryFilter,
     #vtkVertexGlyphFilter,
 #)
-from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 from vtkmodules.vtkRenderingLOD import vtkLODActor
-from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
-from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
-from vtkmodules.vtkFiltersGeometry import vtkUnstructuredGridGeometryFilter
-from vtkmodules.vtkFiltersGeneral import vtkVertexGlyphFilter
 
-from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
-from pyNastran.gui.vtk_util import vtk_to_numpy
-from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_rendering_core import vtkActor2D, vtkRenderer
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
-from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
-from pyNastran.gui.styles.area_pick_style import get_ids_filter
-from pyNastran.gui.styles.highlight_style import (
-    create_vtk_selection_node_by_cell_ids,
-    #create_vtk_selection_node_by_point_ids,
-    #create_surface_actor_from_grid_and_cell_ids,
-)
 from pyNastran.gui.gui_objects.settings import Settings, ANNOTATION_SIZE
-from pyNastran.gui.utils.vtk.vtk_utils import (
-    extract_selection_node_from_grid_to_ugrid,
-    create_unstructured_point_grid, numpy_to_vtk_points, numpy_to_vtk)
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
+from pyNastran.gui.menus.highlight.vtk_utils import (
+    create_highlighted_actors, create_node_label_actor, create_cell_label_actor,
+    get_ids_filter)
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.groups_modify.groups import Group
 
 
 class HighlightWindow(PyDialog):
@@ -91,7 +79,7 @@ class HighlightWindow(PyDialog):
             self._highlight_opacity = settings.highlight_opacity
 
             self._point_size = settings.highlight_point_size
-            self._line_thickness = settings.highlight_line_thickness
+            self._line_width = settings.highlight_line_width
 
             self._point_size = 10
             self._annotation_size = settings.annotation_size
@@ -338,8 +326,14 @@ class HighlightWindow(PyDialog):
             self.elements_edit, pound=self._elements_pound)
         if len(nodes) == 0 and len(elements) == 0:
             return False
-        nodes_filtered = np.intersect1d(self.nodes, nodes)
-        elements_filtered = np.intersect1d(self.elements, elements)
+
+        if self.win_parent is not None:
+            gui = self.win_parent
+            group: Group = gui.groups[gui.group_active]
+            all_nodes = group.node_ids
+            all_elements = group.element_ids
+        nodes_filtered = np.intersect1d(all_nodes, nodes)
+        elements_filtered = np.intersect1d(all_elements, elements)
         nnodes = len(nodes_filtered)
         nelements = len(elements_filtered)
         if nnodes == 0 and nelements == 0:
@@ -352,8 +346,8 @@ class HighlightWindow(PyDialog):
 
         actors = create_highlighted_actors(
             gui, grid,
-            all_nodes=self.nodes, nodes=nodes_filtered, set_node_scalars=True,
-            all_elements=self.elements, elements=elements_filtered, set_element_scalars=True,
+            all_nodes=all_nodes, nodes=nodes_filtered, set_node_scalars=True,
+            all_elements=all_elements, elements=elements_filtered, set_element_scalars=True,
             add_actors=False)
 
         #make_highlight = self.menu_type == 'highlight'
@@ -424,127 +418,6 @@ def create_mark_actors(rend: vtkRenderer,
         actors2.append(label_actor)
         iactor += 1
     return actors2
-
-def create_cell_label_actor(actor: vtkLODActor, rend: vtkRenderer,
-                            label_size: float) -> vtkActor2D:
-    mapper = actor.GetMapper()
-    mygrid = mapper.GetInput()
-
-    element_id_filter = get_ids_filter(
-        mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
-    element_id_filter.SetFieldData(1)
-    element_id_filter.SetCellIds(0)
-    element_id_filter.FieldDataOn()
-
-    # Create labels for cells
-    cell_centers = vtkCellCenters()
-    cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
-
-    cell_mapper = vtkLabeledDataMapper()
-    cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
-    cell_mapper.SetLabelModeToLabelScalars()
-
-    label_actor = vtkActor2D()
-    label_actor.SetMapper(cell_mapper)
-    return label_actor
-
-
-def create_node_label_actor(actor: vtkLODActor, rend: vtkRenderer,
-                            label_size: float) -> vtkActor2D:
-    mapper = actor.GetMapper()
-    mygrid = mapper.GetInput()
-
-    point_id_filter = get_ids_filter(
-        mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
-    point_id_filter.SetFieldData(1)
-    point_id_filter.SetPointIds(0)
-    point_id_filter.FieldDataOn()
-
-    label_actor = create_node_labels(
-        point_id_filter, mygrid, rend, label_size=label_size)
-    return label_actor
-
-def create_node_labels(point_id_filter: vtkIdFilter,
-                       grid: vtkUnstructuredGrid,
-                       rend: vtkRenderer,
-                       label_size: float=10.0) -> vtkActor2D:
-    """creates the node labels"""
-    # filter inner points, so only surface points will be available
-    geo = vtkUnstructuredGridGeometryFilter()
-    geo.SetInputData(grid)
-
-    # points
-    vertex_filter = vtkVertexGlyphFilter()
-    vertex_filter.SetInputConnection(geo.GetOutputPort())
-    vertex_filter.Update()
-
-    points_mapper = vtkPolyDataMapper()
-    points_mapper.SetInputConnection(vertex_filter.GetOutputPort())
-    points_mapper.ScalarVisibilityOn()
-    points_actor = vtkActor()
-    points_actor.SetMapper(points_mapper)
-    prop = points_actor.GetProperty()
-    prop.SetPointSize(label_size)
-
-    # point labels
-    label_mapper = vtkLabeledDataMapper()
-    label_mapper.SetInputConnection(point_id_filter.GetOutputPort())
-    label_mapper.SetLabelModeToLabelFieldData()
-    label_actor = vtkActor2D()
-    label_actor.SetMapper(label_mapper)
-    return label_actor
-
-def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
-                              all_nodes=None, nodes=None, set_node_scalars: bool=True,
-                              all_elements=None, elements=None, set_element_scalars: bool=True,
-                              add_actors: bool=False) -> list[vtkLODActor]:
-    """creates nodes & element highlighted objects"""
-    actors = []
-    nnodes = 0
-    nelements = 0
-    if nodes is not None:
-        nnodes = len(nodes)
-        assert len(all_nodes) >= nnodes
-
-    if elements is not None:
-        nelements = len(elements)
-        assert len(all_elements) >= nelements
-    assert nnodes + nelements > 0
-
-    if nnodes:
-        point_ids = np.searchsorted(all_nodes, nodes)
-        point_data = grid.GetPoints()
-        output_data = point_data.GetData()
-        points_array = vtk_to_numpy(output_data)  # yeah!
-
-        point_array2 = points_array[point_ids, :]
-        points2 = numpy_to_vtk_points(point_array2)
-
-        ugrid = create_unstructured_point_grid(points2, nnodes)
-        if set_node_scalars:
-            point_ids_array = numpy_to_vtk(nodes)
-            point_data: vtkPointData = ugrid.GetPointData()
-            point_data.SetScalars(point_ids_array)
-        actor = create_highlighted_actor(
-            gui, ugrid, representation='points',
-            add_actor=add_actors)
-        actors.append(actor)
-
-    if nelements:
-        cell_ids = np.searchsorted(all_elements, elements)
-
-        selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
-        ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-        if set_element_scalars:
-            element_ids_array = numpy_to_vtk(elements)
-            point_data: vtkPointData = ugrid.GetPointData()
-            cell_data: vtkCellData = ugrid.GetCellData()
-            point_data.SetScalars(None)
-            cell_data.SetScalars(element_ids_array)
-        actor = create_highlighted_actor(gui, ugrid, representation='wire',
-                                         add_actor=add_actors)
-        actors.append(actor)
-    return actors
 
 def check_float(cell) -> tuple[float, bool]:
     """validate the value is floatable"""

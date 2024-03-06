@@ -13,7 +13,8 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 class QSettingsLike2:
     _tuples = {
         'background_color', 'background_color2',
-        'highlight_color', 'corner_text_color', 'annotation_color',
+        'highlight_color', 'shear_moment_torque_color',
+        'corner_text_color', 'annotation_color',
         'screen_shape', 'screen_position',
     }
     def __init__(self):
@@ -91,7 +92,7 @@ class QSettingsLike2:
             elif key in self._tuples:
                 assert isinstance(value, tuple), (key, value)
                 data[key] = value
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(key)
 
         with open(self._filename, 'w') as json_file:

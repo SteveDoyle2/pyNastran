@@ -13,7 +13,7 @@ v1.4.0 (2024/2/29)
 Programmatics:
  - Supports Python 3.8-3.10
  - much improved MSC 2020/2021 and OptiStruct support
- - support for PyQt5/6 and PySide2/6 (GUI)
+ - support for PyQt5 and PySide2 (GUI)
  - support for latest numpy/h5py
 
 

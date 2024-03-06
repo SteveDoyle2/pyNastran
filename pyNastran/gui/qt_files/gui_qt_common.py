@@ -23,11 +23,11 @@ from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
+from pyNastran.gui.qt_files.colors import RED_FLOAT, WHITE_FLOAT, BLUE_FLOAT
 #from pyNastran.gui.vtk_common_core import VTK_VERSION
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -37,17 +37,16 @@ from pyNastran.gui.utils.utils import is_blank
 IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:  # pragma: no cover
+    from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
-    from pyNastran.gui.typing import ColorInt, ColorFloat
+    from pyNastran.gui.typing import ColorInt
 
-
-WHITE = (1., 1., 1.)
-BLUE = (0., 0., 1.)
-RED = (1., 0., 0.)
 
 FringeData = namedtuple(
     'FringeData',
-    'icase, legend_title, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location,'
+    'min_value, max_value, norm_value,'
+    'default_min_value, default_max_value,'
     'data_format, scale, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -55,7 +54,8 @@ FringeData = namedtuple(
 
 DispData = namedtuple(
     'DispData',
-    'icase, legend_title, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location,'
+    'min_value, max_value, norm_value,'
     'data_format, scale, phase, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -244,11 +244,11 @@ class GuiQtCommon(GuiAttributes):
         self.arrow_actor_centroid.SetVisibility(False)
 
         prop = self.geom_actor.GetProperty()
-        prop.SetColor(WHITE)
+        prop.SetColor(WHITE_FLOAT)
 
         # the backface property could be null
         back_prop = vtkProperty()
-        back_prop.SetColor(WHITE)
+        back_prop.SetColor(WHITE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
 
@@ -350,6 +350,7 @@ class GuiQtCommon(GuiAttributes):
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, resname)
+        default_min_value, default_max_value = obj.get_default_min_max(i, resname)
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
@@ -366,7 +367,9 @@ class GuiQtCommon(GuiAttributes):
 
         vtk_fringe = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
         data = FringeData(
-            icase, legend_title, location, min_value, max_value, norm_value,
+            icase, legend_title, location,
+            min_value, max_value, norm_value,
+            default_min_value, default_max_value,
             data_format, scale, methods,
             subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
@@ -643,8 +646,8 @@ class GuiQtCommon(GuiAttributes):
 
         icase = data.icase
         location = data.location
-        min_value = data.min_value
-        max_value = data.max_value
+        default_min_value = data.default_min_value
+        default_max_value = data.default_max_value
         imin = data.imin
         imax = data.imax
         subcase_id = data.subcase_id
@@ -684,8 +687,8 @@ class GuiQtCommon(GuiAttributes):
             subcase_id=subcase_id,
             subtitle=subtitle,
             label=label,
-            imin=imin, min_value=min_value,
-            imax=imax, max_value=max_value,
+            imin=imin, min_value=default_min_value,
+            imax=imax, max_value=default_max_value,
         )
         is_valid = True
         return is_valid, data
@@ -1175,9 +1178,7 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
-        if data_format is None:
-            # RealGridPointForces
-            is_legend_shown = False
+        scalar_bar = self.scalar_bar
 
         # should update this...
         icase_fringe = icase
@@ -1185,7 +1186,7 @@ class GuiQtCommon(GuiAttributes):
         icase_vector = self.icase_vector
         if user_is_checked_fringe:
             if is_legend_shown is None:
-                is_legend_shown = self.scalar_bar.is_shown
+                is_legend_shown = scalar_bar.is_shown
 
             self.update_scalar_bar(
                 legend_title, min_value, max_value,
@@ -1215,6 +1216,19 @@ class GuiQtCommon(GuiAttributes):
             use_fringe_internal=True,
             external_call=False)
 
+        is_grid_point_forces = (data_format is None)
+        if is_grid_point_forces:
+            # RealGridPointForces
+            scalar_bar.scalar_bar.VisibilityOff()
+            scalar_bar.scalar_bar.Modified()
+        else:
+            # there might be a difference between the expected state and
+            # the actual state of the scalar bar
+            scalar_bar_actor: vtkScalarBarActor = scalar_bar.scalar_bar
+            is_visible = scalar_bar_actor.GetVisibility()
+            if is_visible != scalar_bar.is_shown:
+                scalar_bar_actor.SetVisibility(scalar_bar.is_shown)
+
         # updates the type of the result that is displayed
         # method:
         #     for a nodeID, the method is [node]
@@ -1237,12 +1251,12 @@ class GuiQtCommon(GuiAttributes):
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
 
-        prop.SetColor(RED)
+        prop.SetColor(RED_FLOAT)
 
         # the backface property is null
         #back_prop = self.geom_actor.GetBackfaceProperty()
         back_prop = vtkProperty()
-        back_prop.SetColor(BLUE)
+        back_prop.SetColor(BLUE_FLOAT)
         self.geom_actor.SetBackfaceProperty(back_prop)
 
         grid = self.grid
@@ -1753,7 +1767,9 @@ class GuiQtCommon(GuiAttributes):
                                   follower_nodes=None,
                                   follower_function: Optional[Callable]=None,
                                   is_pickable: bool=False,
-                                  ugrid: vtkUnstructuredGrid=None) -> None:
+                                  ugrid: vtkUnstructuredGrid=None,
+                                  visible_in_geometry_properties: bool=True,
+                                  ) -> None:
         """
         Creates an AltGeometry object
 
@@ -1787,6 +1803,9 @@ class GuiQtCommon(GuiAttributes):
         ugrid : vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         if ugrid is None:
@@ -1799,7 +1818,9 @@ class GuiQtCommon(GuiAttributes):
                 line_width=line_width, opacity=opacity,
                 point_size=point_size, bar_scale=bar_scale,
                 representation=representation, display=display,
-                is_visible=is_visible, is_pickable=is_pickable)
+                is_visible=is_visible, is_pickable=is_pickable,
+                visible_in_geometry_properties=visible_in_geometry_properties,
+            )
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
         if follower_function is not None:
@@ -1862,78 +1883,6 @@ class GuiQtCommon(GuiAttributes):
 
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
-
-    def _create_plane_actor_from_points(self, p1: np.ndarray,
-                                        p2: np.ndarray,
-                                        i: np.ndarray,
-                                        k: np.ndarray,
-                                        dim_max: float,
-                                        color: Optional[ColorFloat]=None,
-                                        opacity: float=1.0,
-                                        representation: str='surface',
-                                        actor_name: str='plane') -> vtkActor:
-        """
-        This is used by the cutting plane tool and the shear/moment/torque tool.
-
-            ^ k
-            |
-            |
-
-           4+------+3
-            |      |
-            p1     p2
-            |      |
-           1+------+2 ----> i
-
-        """
-        if color is None:
-            color = RED
-        shift = 1.1
-        dshift = (shift - 1) / 2.
-        half_shift = 0.5 + dshift
-        delta = half_shift * dim_max
-        #dim_xy = shift * dim_max
-
-        #n1 = 1 - dim_max * (dshift * i + half_shift * k)
-        #n2 = n1 + shift * dim_max * i
-        #n3 = n2 + shift * dim_max * k
-        #n4 = n1 + shift * dim_max * k
-        pcenter = (p1 + p2) / 2
-        n1 = pcenter - delta * i - delta * k
-        n2 = pcenter + delta * i - delta * k
-        n3 = pcenter + delta * i + delta * k
-        n4 = pcenter - delta * i + delta * k
-
-        x = np.linspace(0., 1., num=10)
-        y = x
-        if actor_name in self.alt_grids:
-            plane_actor = self.plane_actor
-            add = False
-            #alt_grid =
-            #plane_source = vtkPlaneSource()
-            #self.rend.AddActor(plane_actor)
-            #self.plane_actor = plane_actor
-        else:
-            add = True
-            alt_grid = vtkUnstructuredGrid()
-            self.alt_grids[actor_name] = alt_grid
-
-            mapper = vtkDataSetMapper()
-            mapper.SetInputData(alt_grid)
-            plane_actor = vtkActor()
-            plane_actor.SetMapper(mapper)
-
-            #plane_source = self.plane_source
-            #plane_actor = self.plane_actor
-            self.plane_actor = plane_actor
-            self.rend.AddActor(plane_actor)
-
-        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        self.set_quad_grid(actor_name, nodes, elements, color=color,
-                           line_width=1, opacity=opacity, representation=representation,
-                           add=add)
-        #plane_actor.Modified()
-        return plane_actor
 
     def _create_point_actor_from_points(self, points: np.ndarray,
                                         point_size: int=8,

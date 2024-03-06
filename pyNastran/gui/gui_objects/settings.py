@@ -29,6 +29,10 @@ from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
 from pyNastran.gui.utils.colormaps import colormap_keys as COLORMAPS
 from pyNastran.utils import object_attributes #, object_stats
+
+from pyNastran.gui.qt_files.colors import (
+    BLACK_FLOAT, WHITE_FLOAT, GREY_FLOAT, ORANGE_FLOAT, HOT_PINK_FLOAT,
+)
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
@@ -45,19 +49,22 @@ if USE_NEW_SIDEBAR_OBJECTS:
 
 
 IS_WINDOWS = 'nt' in os.name
-BLACK = (0.0, 0.0, 0.0)
-WHITE = (1., 1., 1.)
-GREY = (119/255., 136/255., 153/255.)
-ORANGE = (229/255., 92/255., 0.)
 
-BACKGROUND_COLOR = GREY
-BACKGROUND_COLOR2 = GREY
-HIGHLIGHT_COLOR = ORANGE
+BACKGROUND_COLOR = GREY_FLOAT
+BACKGROUND_COLOR2 = GREY_FLOAT
+
+HIGHLIGHT_COLOR = ORANGE_FLOAT
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 12.0
-HIGHLIGHT_LINE_THICKNESS = 5.0
-HIGHLIGHT_LINE_THICKNESS_MIN = 0.1
-HIGHLIGHT_LINE_THICKNESS_MAX = 2000.
+HIGHLIGHT_LINE_WIDTH = 5.0
+
+SHEAR_MOMENT_TORQUE_COLOR = HOT_PINK_FLOAT
+SHEAR_MOMENT_TORQUE_OPACITY = 0.9
+SHEAR_MOMENT_TORQUE_POINT_SIZE = 12.0
+SHEAR_MOMENT_TORQUE_LINE_WIDTH = 5.0
+
+LINE_WIDTH_MIN = 0.1
+LINE_WIDTH_MAX = 2000.
 
 USE_PARALLEL_PROJECTION = True
 DEFAULT_COLORMAP = 'jet'
@@ -72,7 +79,7 @@ FONT_SIZE_MAX = 20
 ANNOTATION_SIZE = 18
 ANNOTATION_SIZE_MIN = 1
 ANNOTATION_SIZE_MAX = 500
-ANNOTATION_COLOR = BLACK
+ANNOTATION_COLOR = BLACK_FLOAT
 
 POINT_SIZE_MIN = 5.0
 POINT_SIZE_MAX = 30.0
@@ -84,7 +91,7 @@ COORD_TEXT_SCALE_MAX = 2000.
 CORNER_TEXT_SIZE = 14
 CORNER_TEXT_SIZE_MIN = 7
 CORNER_TEXT_SIZE_MAX = 30
-CORNER_TEXT_COLOR = BLACK
+CORNER_TEXT_COLOR = BLACK_FLOAT
 
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_SCALE_MIN = 0.1
@@ -228,7 +235,8 @@ class Settings:
         self.reset_settings(resize=True, reset_dim_max=True)
         self.nastran_settings = NastranSettings()
 
-    def reset_settings(self, resize: bool=True, reset_dim_max: bool=True) -> None:
+    def reset_settings(self, resize: bool=True,
+                       reset_dim_max: bool=True) -> None:
         """helper method for ``setup_gui``"""
         # rgb tuple
         self.use_gradient_background = True
@@ -263,10 +271,15 @@ class Settings:
         self.corner_text_size = CORNER_TEXT_SIZE    # int
         self.corner_text_color = CORNER_TEXT_COLOR  # rgb floats
 
-        self.highlight_color = HIGHLIGHT_COLOR                    # rgb floats
-        self.highlight_opacity = HIGHLIGHT_OPACITY                # float
-        self.highlight_point_size = HIGHLIGHT_POINT_SIZE          # int
-        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS  # float
+        self.highlight_color = HIGHLIGHT_COLOR            # rgb floats
+        self.highlight_opacity = HIGHLIGHT_OPACITY        # float
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE  # int
+        self.highlight_line_width = HIGHLIGHT_LINE_WIDTH  # float
+
+        self.shear_moment_torque_color = SHEAR_MOMENT_TORQUE_COLOR           # float
+        self.shear_moment_torque_opacity = SHEAR_MOMENT_TORQUE_OPACITY       # rgb floats
+        self.shear_moment_torque_point_size = SHEAR_MOMENT_TORQUE_POINT_SIZE # float
+        self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH # float
 
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.show_info = True
@@ -456,7 +469,7 @@ class Settings:
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
-                          default=ORANGE, save=True, auto_type=float)
+                          default=HIGHLIGHT_COLOR, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_opacity'],
                           default=HIGHLIGHT_OPACITY, save=True, auto_type=float)
         self.highlight_color = force_color_ranged(self.highlight_color, HIGHLIGHT_COLOR)
@@ -465,16 +478,35 @@ class Settings:
 
         self._set_setting(settings, setting_keys, ['highlight_point_size'],
                           default=HIGHLIGHT_POINT_SIZE, save=True, auto_type=float)
-        self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
-                          default=HIGHLIGHT_LINE_THICKNESS, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['highlight_line_width', 'highlight_line_thickness'],
+                          default=HIGHLIGHT_LINE_WIDTH, save=True, auto_type=float)
         self.highlight_point_size = force_ranged(
             self.highlight_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
-        self.highlight_line_thickness = force_ranged(
-            self.highlight_line_thickness,
-            min_value=HIGHLIGHT_LINE_THICKNESS_MIN, max_value=HIGHLIGHT_LINE_THICKNESS_MAX)
-
+        self.highlight_line_width = force_ranged(
+            self.highlight_line_width,
+            min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
+
+        # shear moment torque
+        self._set_setting(settings, setting_keys, ['shear_moment_torque_color'],
+                          default=SHEAR_MOMENT_TORQUE_COLOR, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['shear_moment_torque_opacity'],
+                          default=SHEAR_MOMENT_TORQUE_OPACITY, save=True, auto_type=float)
+        self.shear_moment_torque_color = force_color_ranged(
+            self.shear_moment_torque_color, SHEAR_MOMENT_TORQUE_COLOR)
+        self.shear_moment_torque_opacity = force_ranged(
+            self.shear_moment_torque_opacity, min_value=OPACITY_MIN, max_value=OPACITY_MAX)
+
+        self._set_setting(settings, setting_keys, ['shear_moment_torque_point_size'],
+                          default=SHEAR_MOMENT_TORQUE_POINT_SIZE, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['shear_moment_torque_line_width'],
+                          default=SHEAR_MOMENT_TORQUE_LINE_WIDTH, save=True, auto_type=float)
+        self.shear_moment_torque_point_size = force_ranged(
+            self.shear_moment_torque_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
+        self.shear_moment_torque_line_width = force_ranged(
+            self.shear_moment_torque_line_width,
+            min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
 
         # default colormap for legend
         self._set_setting(settings, setting_keys, ['colormap'], default=DEFAULT_COLORMAP, save=True)
@@ -612,6 +644,12 @@ class Settings:
         settings.setValue('highlight_color', self.highlight_color)
         settings.setValue('highlight_opacity', self.highlight_opacity)
         settings.setValue('highlight_point_size', self.highlight_point_size)
+        settings.setValue('highlight_line_width', self.highlight_line_width)
+
+        settings.setValue('shear_moment_torque_color', self.shear_moment_torque_color)
+        settings.setValue('shear_moment_torque_opacity', self.shear_moment_torque_opacity)
+        settings.setValue('shear_moment_torque_point_size', self.shear_moment_torque_point_size)
+        settings.setValue('shear_moment_torque_line_width', self.shear_moment_torque_line_width)
 
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
@@ -847,7 +885,7 @@ class Settings:
     def set_background_color_to_white(self, render: bool=True) -> None:
         """sets the background color to white; used by gif writing?"""
         self.set_gradient_background(use_gradient_background=False, render=False)
-        self.set_background_color(WHITE, render=render)
+        self.set_background_color(WHITE_FLOAT, render=render)
 
     def set_gradient_background(self,
                                 use_gradient_background: bool=False,
@@ -1083,7 +1121,8 @@ def force_ranged(value, min_value=None, max_value=None):
         #print(out, value)
     return out
 
-def force_color_ranged(color: Color, default_color: ColorFloat) -> ColorFloat:
+def force_color_ranged(color: ColorFloat,
+                       default_color: ColorFloat) -> ColorFloat:
     """
     make sure a color is in the proper range
     default if it's out of range

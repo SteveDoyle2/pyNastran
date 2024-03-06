@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.gui.vtk_rendering_core import vtkActor, vtkAxesActor
+from pyNastran.gui.vtk_rendering_core import vtkActor, vtkAxesActor, vtkProperty
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -19,19 +19,19 @@ if TYPE_CHECKING:  # pragma: no cover
 # EDIT ACTOR PROPERTIES
 class EditGeometryPropertiesObject(BaseGui):
     """defines EditGeometryPropertiesObject"""
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         """creates EditGeometryPropertiesObject"""
         #self.gui = gui
         super().__init__(gui)
         self._edit_geometry_properties_window_shown = False
         self._edit_geometry_properties = None
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """sets the font size for the edit geometry properties window"""
         if self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties.set_font_size(font_size)
 
-    def edit_geometry_properties(self):
+    def edit_geometry_properties(self) -> None:
         """
         Opens a dialog box to set:
 
@@ -45,20 +45,27 @@ class EditGeometryPropertiesObject(BaseGui):
         | Format | pyString |
         +--------+----------+
         """
-        if not hasattr(self.gui, 'case_keys'):
-            self.gui.log_error('No model has been loaded.')
+        gui = self.gui
+        if not hasattr(gui, 'case_keys'):
+            gui.log_error('No model has been loaded.')
             return
-        if not len(self.gui.geometry_properties):
-            self.gui.log_error('No secondary geometries to edit.')
+        if not len(gui.geometry_properties):
+            gui.log_error('No secondary geometries to edit.')
             return
         #print('geometry_properties.keys() =', self.geometry_properties.keys())
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        data = deepcopy(self.gui.geometry_properties)
-        data['font_size'] = self.gui.settings.font_size
+        # remove smt_plane, etc. from visible list, so the menu handles it
+        data = {}
+        for key, value in gui.geometry_properties.items():
+            if isinstance(value, AltGeometry) and not value.visible_in_geometry_properties:
+                continue
+            data[key] = deepcopy(value)
+
+        data['font_size'] = gui.settings.font_size
         if not self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self.gui)
+            self._edit_geometry_properties = EditGeometryProperties(data, win_parent=gui)
             self._edit_geometry_properties.show()
             self._edit_geometry_properties_window_shown = True
             self._edit_geometry_properties.exec_()
@@ -75,7 +82,7 @@ class EditGeometryPropertiesObject(BaseGui):
             del self._edit_geometry_properties
             self._edit_geometry_properties_window_shown = False
         elif data['clicked_cancel']:
-            self.on_update_geometry_properties(self.gui.geometry_properties)
+            self.on_update_geometry_properties(gui.geometry_properties)
             del self._edit_geometry_properties
             self._edit_geometry_properties_window_shown = False
 
@@ -83,12 +90,12 @@ class EditGeometryPropertiesObject(BaseGui):
         for name, group in out_data.items():
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
-
-            if name not in self.gui.geometry_properties:
+            gui = self.gui
+            if name not in gui.geometry_properties:
                 # we've deleted the actor
                 continue
 
-            geom_prop = self.gui.geometry_properties[name]
+            geom_prop = gui.geometry_properties[name]
             if isinstance(geom_prop, CoordProperties):
                 pass
             elif isinstance(geom_prop, AltGeometry):
@@ -96,10 +103,11 @@ class EditGeometryPropertiesObject(BaseGui):
                 geom_prop.line_width = group.line_width
                 geom_prop.opacity = group.opacity
                 geom_prop.point_size = group.point_size
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(geom_prop)
 
-    def on_update_geometry_properties_override_dialog(self, geometry_properties):
+    def on_update_geometry_properties_override_dialog(
+        self, geometry_properties: dict[str, AltGeometry]) -> None:
         """
         Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
@@ -107,8 +115,8 @@ class EditGeometryPropertiesObject(BaseGui):
         Parameters
         -----------
         geometry_properties : dict {str : CoordProperties or AltGeometry}
-            Dictionary from name to properties object. Only the names included in
-            ``geometry_properties`` are modified.
+            Dictionary from name to properties object. Only the names included
+            in ``geometry_properties`` are modified.
         """
         if self._edit_geometry_properties_window_shown:
             # Override the output state in the edit geometry properties diaglog
@@ -122,13 +130,15 @@ class EditGeometryPropertiesObject(BaseGui):
                     self._edit_geometry_properties.update_active_key(index)
         self.on_update_geometry_properties(geometry_properties)
 
-    def on_update_geometry_properties_window(self, geometry_properties):
+    def on_update_geometry_properties_window(
+        self, geometry_properties: dict[str, AltGeometry]) -> None:
         """updates the EditGeometryProperties window"""
         if self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties.on_update_geometry_properties_window(
                 geometry_properties)
 
-    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
+    def on_update_geometry_properties(self, out_data, name=None,
+                                      write_log: bool=True) -> None:
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -138,34 +148,51 @@ class EditGeometryPropertiesObject(BaseGui):
         actually "hidden" at the same time.  This prevents confusion
         when you try to show the actor and it's not visible.
         """
-        lines = []
+        lines1 = []
+        lines2 = []
+        gui = self.gui
+        geometry_properties = gui.geometry_properties
         if name is None:
-            for namei, group in out_data.items():
+            for namei, group1 in out_data.items():
                 if namei in ['clicked_ok', 'clicked_cancel']:
                     continue
-                self._update_ith_geometry_properties(namei, group, lines, render=False)
+                group2 = geometry_properties.get(namei, None)
+                update_group2 = map_group1_results_to_group2(group1, group2)
+                self._update_ith_geometry_properties(namei, group1, lines1, render=False)
+                if update_group2:
+                    self._update_ith_geometry_properties(namei, group2, lines2, render=False)
         else:
-            group = out_data[name]
-            self._update_ith_geometry_properties(name, group, lines, render=False)
+            group1 = out_data[name]
+            group2 = geometry_properties.get(name, None)
+            update_group2 = map_group1_results_to_group2(group1, group2)
+            self._update_ith_geometry_properties(name, group1, lines1, render=False)
+            if update_group2:
+                self._update_ith_geometry_properties(name, group2, lines2, render=False)
 
-        self.gui.vtk_interactor.Render()
-        if write_log and lines:
+        gui.vtk_interactor.Render()
+        if write_log and lines1:
             msg = 'out_data = {\n'
-            msg += ''.join(lines)
+            msg += ''.join(lines1)
             msg += '}\n'
             msg += 'self.on_update_geometry_properties(out_data)'
-            self.gui.log_command(msg)
+            gui.log_command(msg)
 
-    def _update_ith_geometry_properties(self, namei, group, lines, render=True):
+    def _update_ith_geometry_properties(
+        self, namei: str,
+        group: Union[AltGeometry, CoordProperties],
+        lines: list[str],
+        render: bool=True) -> None:
         """updates a geometry"""
-        if namei not in self.gui.geometry_actors:
+        gui = self.gui
+        if namei not in gui.geometry_actors:
             #print('cant find %r' % namei)
             # we've deleted the actor
             return
 
-        actor = self.gui.geometry_actors[namei]
+        actor: vtkActor = gui.geometry_actors[namei]
         if isinstance(actor, vtkActor):
-            alt_prop = self.gui.geometry_properties[namei]
+            alt_prop = gui.geometry_properties[namei]
+            #if alt_prop.is_v
             label_actors = alt_prop.label_actors
             lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
         elif isinstance(actor, vtkAxesActor):
@@ -174,22 +201,26 @@ class EditGeometryPropertiesObject(BaseGui):
             is_visible2 = group.is_visible
             if is_visible1 != is_visible2:
                 actor.SetVisibility(is_visible2)
-                alt_prop = self.gui.geometry_properties[namei]
+                alt_prop = gui.geometry_properties[namei]
                 alt_prop.is_visible = is_visible2
                 actor.Modified()
                 changed = True
 
             if changed:
-                lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
-                    namei, is_visible2))
-        else:
+                lines.append(f'    {namei!r} : CoordProperties(is_visible={is_visible2}),\n')
+        else:  # pragma: no cover
             raise NotImplementedError(actor)
         if render:
-            self.gui.vtk_interactor.Render()
+            gui.vtk_interactor.Render()
 
-    def _update_geometry_properties_actor(self, name, group, actor, label_actors):
+    def _update_geometry_properties_actor(self, name: str,
+                                          group: AltGeometry,
+                                          actor: vtkActor,
+                                          label_actors: list[Any]) -> list[str]:
         """
-        Updates an actor
+        Applies limits to the variables.  Then, checks to see if
+        something in the group has changed.  If it has, updates
+        the actor.
 
         Parameters
         ----------
@@ -199,17 +230,18 @@ class EditGeometryPropertiesObject(BaseGui):
             a storage container for all the actor's properties
         actor : vtkActor()
             the actor where the properties will be applied
-        label_actors : ???
+        label_actors : list[???]
             ???
         linewidth1 : int
             the active linewidth; unused???
         linewidth2 : int
             the new linewidth; unused???
+
         """
         lines = []
         changed = False
         #mapper = actor.GetMapper()
-        prop = actor.GetProperty()
+        prop: vtkProperty = actor.GetProperty()
         backface_prop = actor.GetBackfaceProperty()
 
         if name == 'main' and backface_prop is None:
@@ -284,11 +316,12 @@ class EditGeometryPropertiesObject(BaseGui):
             changed = True
 
         if changed:
-            lines.append('    %r : AltGeometry(self, %r, color=(%s, %s, %s), '
-                         'line_width=%s, opacity=%s, point_size=%s, bar_scale=%s, '
-                         'representation=%r, is_visible=%s),\n' % (
-                             name, name, color2[0], color2[1], color2[2], line_width2,
-                             opacity2, point_size2, bar_scale2, representation, is_visible2))
+            lines.append(
+                f'    {name!r} : AltGeometry(self, {name!r}, '
+                f'color=({color2[0]}, {color2[1]}, {color2[2]}), '
+                f'line_width={line_width2}, opacity={opacity2}, '
+                f'point_size={point_size2}, bar_scale={bar_scale2}, '
+                f'representation={representation!r}, is_visible={is_visible2}),\n')
             prop.Modified()
         return lines
 
@@ -302,8 +335,9 @@ class EditGeometryPropertiesObject(BaseGui):
            the parameter to scale (e.g. TUBE_y, TUBE_z)
         bar_scale : float
            the scaling factor
+
         """
-        #print('set_bar_scale - GuiCommon2; name=%s bar_scale=%s' % (name, bar_scale))
+        print(f'set_bar_scale - GuiCommon2; name={name!r} bar_scale={bar_scale}')
         if bar_scale <= 0.0:
             return
         assert bar_scale > 0.0, 'bar_scale=%r' % bar_scale
@@ -344,3 +378,27 @@ class EditGeometryPropertiesObject(BaseGui):
 
         grid.Modified()
         #print('update2...')
+
+def map_group1_results_to_group2(group1: Union[CoordProperties, AltGeometry],
+                                 group2: Union[CoordProperties, AltGeometry, None]) -> bool:
+    """helper to also update main data instead of just the actors"""
+    update_group2 = False
+    if group2 is None:
+        return update_group2
+    elif isinstance(group1, CoordProperties):
+        #label='Global XYZ', coord_type'xyz', is_visible=False, scale=9.699980926513673
+        keys = ('is_visible', )
+    else:
+        assert isinstance(group1, AltGeometry), group1
+        keys = ('point_size', 'opacity', 'color_float',
+                'is_visible', 'line_width', 'representation', 'bar_scale')
+
+    for key in keys:
+        if not hasattr(group1, key):
+            continue
+        value1 = getattr(group1, key)
+        value2 = getattr(group2, key)
+        if value1 != value2:
+            setattr(group2, key, value1)
+            update_group2 = True
+    return update_group2

@@ -2,6 +2,7 @@ from typing import Union, Optional
 from copy import deepcopy
 from pyNastran.gui.typing import ColorFloat, ColorInt
 
+
 class AltGeometry:
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
                        'bar', 'wire+point', 'wire+surf']
@@ -15,14 +16,18 @@ class AltGeometry:
                   self.is_pickable, self.label_actors))
         return msg
 
-    def __init__(self, parent, name: str, color: Optional[ColorInt]=None,
+    def __init__(self, parent, name: str,
+                 color: Optional[ColorInt]=None,
                  line_width: int=1,
                  opacity: float=0.0,
                  point_size: int=1,
                  bar_scale: float=1.0,
-                 representation: str='main', display=None,
+                 representation: str='main',
+                 display=None,
                  is_visible: bool=True,
-                 is_pickable: bool=False, label_actors=None):
+                 is_pickable: bool=False, label_actors=None,
+                 visible_in_geometry_properties: bool=True,
+                 ):
         """
         Creates an AltGeometry object
 
@@ -51,12 +56,16 @@ class AltGeometry:
         display : str
             only relevant to wire+surf
             the active state of the mesh
+            'Surface', 'Wireframe', 'point'
         is_visible : bool; default=True
             is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         label_actors : list[annotation]; None -> []
             stores annotations (e.g., for a control surface)
+        visible_in_geometry_properties : bool; default=True
+            True: show up in ``Edit Geometry Properties`` menu
+            False: don't show up
 
         """
         representation_map = {
@@ -112,10 +121,13 @@ class AltGeometry:
             raise RuntimeError(msg)
         self.representation = representation
 
+        self.visible_in_geometry_properties = visible_in_geometry_properties
+
     def __deepcopy__(self, memo):
         """doesn't copy the label_actors to speed things up?"""
         keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
-                '_representation', 'is_visible', 'bar_scale', 'is_pickable']
+                '_representation', 'is_visible', 'bar_scale', 'is_pickable',
+                'visible_in_geometry_properties']
         cls = self.__class__
         result = cls.__new__(cls)
         idi = id(self)
@@ -127,7 +139,7 @@ class AltGeometry:
         return result
 
     @property
-    def opacity(self):
+    def opacity(self) -> float:
         """
         0 -> transparent
         1 -> solid
@@ -137,12 +149,12 @@ class AltGeometry:
         return self._opacity
 
     @opacity.setter
-    def opacity(self, opacity):
+    def opacity(self, opacity: float) -> None:
         assert 0.0 <= opacity <= 1.0, opacity
         self._opacity = opacity
 
     @property
-    def transparency(self):
+    def transparency(self) -> float:
         """
         0 -> solid
         1 -> transparent
@@ -152,7 +164,7 @@ class AltGeometry:
         return 1.0 - self._opacity
 
     @transparency.setter
-    def transparency(self, transparency):
+    def transparency(self, transparency: float) -> None:
         assert 0.0 <= transparency <= 1.0, transparency
         self._opacity = 1.0 - transparency
 

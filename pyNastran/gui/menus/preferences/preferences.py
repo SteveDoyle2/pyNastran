@@ -17,7 +17,9 @@ from typing import Optional, Any, TYPE_CHECKING
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
+    QTabWidget, QWidget,
+)
 
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
@@ -32,7 +34,8 @@ from pyNastran.gui.gui_objects.settings import (
     BACKGROUND_COLOR, BACKGROUND_COLOR2,
     ANNOTATION_COLOR, ANNOTATION_SIZE,
     CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
-    HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, # HIGHLIGHT_LINE_THICKNESS,
+    HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, HIGHLIGHT_LINE_WIDTH,
+    SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY, SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_WIDTH,
     OPACITY_MIN, OPACITY_MAX,
     USE_PARALLEL_PROJECTION,
     NASTRAN_BOOL_KEYS,
@@ -46,8 +49,11 @@ from pyNastran.gui.gui_objects.settings import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
+    from pyNastran.gui.typing import ColorInt
 
 
+USE_TABS = True
+IS_SMT = False
 class PreferencesWindow(PyDialog):
     """
     +-------------+
@@ -120,6 +126,11 @@ class PreferencesWindow(PyDialog):
             data['corner_text_color'])
         self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
+
+        #self._shear_moment_torque_opacity = data['shear_moment_torque_opacity']
+        #self._shear_moment_torque_point_size = data['shear_moment_torque_point_size']
+        #self._shear_moment_torque_color_int = data['shear_moment_torque_color']
+        #self._shear_moment_torque_line_thickness = data['shear_moment_torque_line_thickness']
 
         self._nastran_is_element_quality = data['nastran_is_element_quality']
         self._nastran_is_properties = data['nastran_is_properties']
@@ -197,20 +208,12 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # Highlight Color
         self.highlight_opacity_label = QLabel("Highlight Opacity:")
-        self.highlight_opacity_edit = QDoubleSpinBox(self)
-        self.highlight_opacity_edit.setValue(self._highlight_opacity)
-        self.highlight_opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
-        self.highlight_opacity_edit.setDecimals(2)
-        self.highlight_opacity_edit.setSingleStep(0.05)
+        self.highlight_opacity_edit = create_opacity_edit(self, self._highlight_opacity)
         self.highlight_opacity_edit.setToolTip('Sets the highlight opacity (0=invisible, 1=solid)')
         self.highlight_opacity_button = QPushButton("Default")
 
         self.highlight_point_size_label = QLabel("Highlight Point Size:")
-        self.highlight_point_size_edit = QDoubleSpinBox(self)
-        self.highlight_point_size_edit.setValue(self._highlight_point_size)
-        self.highlight_point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
-        self.highlight_point_size_edit.setDecimals(2)
-        self.highlight_point_size_edit.setSingleStep(0.25)
+        self.highlight_point_size_edit = create_point_size_edit(self, self._highlight_point_size)
         self.highlight_point_size_edit.setToolTip('Sets the highlight node size')
         self.highlight_point_size_button = QPushButton("Default")
 
@@ -218,6 +221,34 @@ class PreferencesWindow(PyDialog):
         self.highlight_color_label = QLabel("Highlight Color:")
         self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
         self.highlight_color_edit.setToolTip('Sets the highlight color')
+
+        #-----------------------------------------------------------------------
+        # shear_moment_torque Color
+        if IS_SMT:
+            self.shear_moment_torque_label = QLabel("Shear-Moment-Torque:")
+
+            opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
+                self,
+                self._shear_moment_torque_opacity,
+                self._shear_moment_torque_point_size,
+                self._shear_moment_torque_line_thickness,
+                self._shear_moment_torque_color_int)
+            self.shear_moment_torque_opacity_edit = opacity_edit
+            self.shear_moment_torque_point_size_edit = point_size_edit
+            self.shear_moment_torque_line_width_edit = line_width_edit
+            self.shear_moment_torque_color_edit = color_edit
+
+            self.shear_moment_torque_opacity_label = QLabel("Opacity:")
+            self.shear_moment_torque_opacity_button = QPushButton("Default")
+
+            self.shear_moment_torque_point_size_label = QLabel("Point Size:")
+            self.shear_moment_torque_point_size_button = QPushButton("Default")
+
+            self.shear_moment_torque_line_width_label = QLabel("Line Width:")
+            self.shear_moment_torque_line_width_button = QPushButton("Default")
+
+            # Text Color
+            self.shear_moment_torque_color_label = QLabel("Color:")
 
         #-----------------------------------------------------------------------
         # Background Color
@@ -366,6 +397,7 @@ class PreferencesWindow(PyDialog):
             self.nastran_force_checkbox = QCheckBox('Force')
             self.nastran_grid_point_force_checkbox = QCheckBox('Grid Point Force')
             self.nastran_strain_energy_checkbox = QCheckBox('Strain Energy')
+
             self.nastran_force_checkbox.setChecked(self._nastran_force)
             self.nastran_grid_point_force_checkbox.setChecked(self._nastran_grid_point_force)
             self.nastran_strain_energy_checkbox.setChecked(self._nastran_strain_energy)
@@ -560,7 +592,7 @@ class PreferencesWindow(PyDialog):
 
         #bold_font = make_font(self.font_size, is_bold=True)
         vbox_nastran = QVBoxLayout()
-        self.nastran_label = QLabel('Nastran:')
+        self.nastran_label = QLabel('Nastran Geometry:')
         vbox_nastran.addWidget(self.nastran_label)
         vbox_nastran.addLayout(grid_nastran)
 
@@ -577,10 +609,29 @@ class PreferencesWindow(PyDialog):
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        vbox = QVBoxLayout()
-        vbox.addLayout(grid)
-        vbox.addLayout(vbox_nastran)
-        vbox.addLayout(vbox_nastran_results)
+        if USE_TABS:
+            vbox = QVBoxLayout()
+            tabs = QTabWidget(self)
+            general_tab_widget = QWidget(self)
+            general_tab_widget.setLayout(grid)
+
+            vbox_nastran_tab = QVBoxLayout()
+            vbox_nastran_tab.addLayout(vbox_nastran)
+            vbox_nastran_tab.addLayout(vbox_nastran_results)
+            vbox_nastran_tab.addStretch()
+
+            nastran_tab_widget = QWidget(self)
+            nastran_tab_widget.setLayout(vbox_nastran_tab)
+
+            tabs.addTab(general_tab_widget, 'General')
+            tabs.addTab(nastran_tab_widget, 'Nastran')
+            vbox.addWidget(tabs)
+
+        else:
+            vbox = QVBoxLayout()
+            vbox.addLayout(grid)
+            vbox.addLayout(vbox_nastran)
+            vbox.addLayout(vbox_nastran_results)
         #vbox.addStretch()
         #vbox.addLayout(grid2)
         vbox.addStretch()
@@ -636,7 +687,33 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         grid_nastran.addWidget(self.nastran_strain_energy_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_grid_point_force_checkbox, irow, 1)
         irow += 1
+
+        if IS_SMT:
+            grid_nastran.addWidget(self.shear_moment_torque_label, irow, 0)
+            irow += 1
+
+            grid_nastran.addWidget(self.shear_moment_torque_point_size_label, irow, 0)
+            grid_nastran.addWidget(self.shear_moment_torque_point_size_edit, irow, 1)
+            grid_nastran.addWidget(self.shear_moment_torque_point_size_button, irow, 2)
+            irow += 1
+
+            grid_nastran.addWidget(self.shear_moment_torque_line_width_label, irow, 0)
+            grid_nastran.addWidget(self.shear_moment_torque_line_width_edit, irow, 1)
+            grid_nastran.addWidget(self.shear_moment_torque_line_width_button, irow, 2)
+            irow += 1
+
+            grid_nastran.addWidget(self.shear_moment_torque_opacity_label, irow, 0)
+            grid_nastran.addWidget(self.shear_moment_torque_opacity_edit, irow, 1)
+            grid_nastran.addWidget(self.shear_moment_torque_opacity_button, irow, 2)
+            irow += 1
+
+            grid_nastran.addWidget(self.shear_moment_torque_color_label, irow, 0)
+            grid_nastran.addWidget(self.shear_moment_torque_color_edit, irow, 1)
+            irow += 1
+
+
 
         #self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
         #self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
@@ -757,13 +834,14 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit.setValue(HIGHLIGHT_OPACITY)
         self.highlight_point_size_edit.setValue(HIGHLIGHT_POINT_SIZE)
         self.parallel_projection_edit.setChecked(USE_PARALLEL_PROJECTION)
-        #self.highlight_line_thickness_edit.setValue(HIGHLIGHT_LINE_THICKNESS)
+        #self.highlight_line_width_edit.setValue(HIGHLIGHT_LINE_WIDTH)
 
         self.background_color1_float = BACKGROUND_COLOR
         self.background_color2_float = BACKGROUND_COLOR2
         self.highlight_color_float = HIGHLIGHT_COLOR
         self.corner_text_color_float = CORNER_TEXT_COLOR
         self.annotation_color_float = ANNOTATION_COLOR
+        self.shear_moment_torque_color_float = SHEAR_MOMENT_TORQUE_COLOR
 
         self.gradient_scale_checkbox.setChecked(True)
         self.on_gradient_scale()
@@ -774,12 +852,14 @@ class PreferencesWindow(PyDialog):
         self.highlight_color_int = tuple([round(val * 255) for val in HIGHLIGHT_COLOR])
         self.corner_text_color_int = tuple([round(val * 255) for val in CORNER_TEXT_COLOR])
         self.annotation_color_int = tuple([round(val * 255) for val in ANNOTATION_COLOR])
+        self.shear_moment_torque_color_int = tuple([round(val * 255) for val in SHEAR_MOMENT_TORQUE_COLOR])
 
         set_label_color(self.corner_text_color_edit, self.corner_text_color_int)
         set_label_color(self.highlight_color_edit, self.highlight_color_int)
         set_label_color(self.background_color_edit, self.background_color1_int)
         set_label_color(self.background_color2_edit, self.background_color2_int)
         set_label_color(self.annotation_color_edit, self.annotation_color_int)
+        #set_label_color(self.shear_moment_torque_color_edit, self.shear_moment_torque_color_int)
 
         for key in NASTRAN_BOOL_KEYS:
             checkbox_name = f'{key}_checkbox'
@@ -827,6 +907,10 @@ class PreferencesWindow(PyDialog):
         self.setFont(font)
         bold_font = make_font(value, is_bold=True)
         self.nastran_label.setFont(bold_font)
+        self.nastran_results_label.setFont(bold_font)
+        if IS_SMT:
+            self.shear_moment_torque_label.setFont(bold_font)
+
 
     def on_annotation_size(self, value=None) -> None:
         """update the annotation size"""
@@ -842,7 +926,7 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.settings.set_annotation_size_color(
                 size=self._annotation_size,
-                                                    color=self.annotation_color_float)
+                color=self.annotation_color_float)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
@@ -1068,6 +1152,49 @@ class PreferencesWindow(PyDialog):
     def on_cancel(self):
         self.out_data['close'] = True
         self.close()
+
+
+def create_shear_moment_torque_edits(
+    parent,
+    opacity: float, point_size, line_width,
+    color: ColorInt) -> tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QPushButtonColor]:
+    opacity_edit = create_opacity_edit(parent, opacity)
+    opacity_edit.setToolTip('Sets the shear-moment-torque opacity (0=invisible, 1=solid)')
+
+    point_size_edit = create_point_size_edit(parent, point_size)
+    point_size_edit.setToolTip('Sets the shear-moment-torque node size')
+
+    line_width_edit = create_line_width_edit(parent, line_width)
+    line_width_edit.setToolTip('Sets the shear-moment-torque line width')
+
+    color_edit = QPushButtonColor(color)
+    color_edit.setToolTip('Sets the shear-moment-torque color')
+
+    return opacity_edit, point_size_edit, line_width_edit, color_edit
+
+def create_point_size_edit(parent, value: float) -> QDoubleSpinBox:
+    point_size_edit = QDoubleSpinBox(parent)
+    point_size_edit.setValue(value)
+    point_size_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
+    point_size_edit.setDecimals(2)
+    point_size_edit.setSingleStep(0.5)
+    return point_size_edit
+
+def create_line_width_edit(parent, value: float) -> QDoubleSpinBox:
+    line_width_edit = QDoubleSpinBox(parent)
+    line_width_edit.setValue(value)
+    #line_width_edit.setRange(POINT_SIZE_MIN, POINT_SIZE_MAX)
+    #line_width_edit.setDecimals(2)
+    #line_width_edit.setSingleStep(0.25)
+    return line_width_edit
+
+def create_opacity_edit(parent, value: float) -> QDoubleSpinBox:
+    opacity_edit = QDoubleSpinBox(parent)
+    opacity_edit.setValue(value)
+    opacity_edit.setRange(OPACITY_MIN, OPACITY_MAX)
+    opacity_edit.setDecimals(2)
+    opacity_edit.setSingleStep(0.05)
+    return opacity_edit
 
 
 def set_label_color(color_edit: QPushButtonColor,

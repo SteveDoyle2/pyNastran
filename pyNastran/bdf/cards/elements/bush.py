@@ -289,11 +289,12 @@ class CBUSH(BushElement):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', 0.0)
-            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x2 = double_or_blank(card, 6, 'x2', default=0.0)
+            x3 = double_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
             if not isinstance(cid, integer_types):
-                assert max(x) != min(x), 'x=%s' % x
+                x_norm = np.linalg.norm(x)
+                assert x_norm != 0.0, 'x=%s' % x
         else:
             g0 = None
             x = [None, None, None]
@@ -412,6 +413,19 @@ class CBUSH(BushElement):
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
         if self.ocid is not None and self.ocid != -1:
             self.ocid_ref = model.safe_coord(self.ocid, self.eid, xref_errors, msg=msg)
+
+    def Centroid(self):
+        xyzs_list = []
+        for nid in self.nodes_ref:
+            if nid is None:
+                continue
+            xyzs_list.append(nid.get_position())
+        if len(xyzs_list):
+            xyzs = np.vstack(xyzs_list)
+            centroid = xyzs.sum(axis=0) / xyzs.shape[0]
+        else:
+            centroid = np.zeros(3, dtype='float64')
+        return centroid
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
