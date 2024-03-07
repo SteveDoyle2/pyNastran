@@ -26,7 +26,9 @@ from qtpy.QtGui import QColor# , QHeaderView
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color, check_patran_syntax
-from pyNastran.gui.utils.qt.qelement_edit import QElementEdit # , QNodeEdit
+from pyNastran.gui.utils.qt.qelement_edit import (
+    QElementLineEdit, QElementTextEdit, # QNodeLineEdit
+)
 from pyNastran.gui.utils.qt.resize_qtextedit import AutoResizingTextEdit
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
@@ -49,6 +51,7 @@ CID_GLOBAL_STR = '0/Global'
 
 IS_TIME = False
 MAX_LENGTH = 100_000
+USE_LINE_EDIT = True
 
 class ResultsDialog(QDialog):
     def __init__(self, win_parent,
@@ -365,7 +368,7 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.element_edit = QElementEdit(
             #win_parent, name, parent=parent, pick_style='area',
             #tab_to_next=True, cleanup=True, max_length=32767)
-        #self.node_edit = QNodeEdit(
+        #self.node_edit = QNodeLineEdit(
             #win_parent, name, parent=parent, pick_style='area',
             #tab_to_next=True, cleanup=True)
 
@@ -375,14 +378,19 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.element_node_checkbox = QCheckBox('Limit Nodes/Elements:')
         self.element_node_checkbox = QCheckBox('Limit Elements:')
         #self.node_label = QLabel('Nodes:')
-        #self.node_edit = QNodeEdit(
+        #self.node_edit = QNodeLineEdit(
             #self.win_parent, self.model_name, parent=gui,
             #pick_style='area', tab_to_next=False, max_length=MAX_LENGTH)
 
         self.element_label = QLabel('Elements:')
-        self.element_edit = QElementEdit(
-            self, self.model_name, parent=gui,
-            pick_style='area', tab_to_next=False, max_length=MAX_LENGTH)
+        if USE_LINE_EDIT:
+            self.element_edit = QElementLineEdit(
+                self, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False, max_length=MAX_LENGTH)
+        else:
+            self.element_edit = QElementTextEdit(
+                self, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False)
         self.on_element_node_checkbox()
 
         #self.node_element_label = QLabel('Nodes/Elements:')

@@ -12,7 +12,9 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
 from qtpy.QtWidgets import QDialog, QLineEdit
 from pyNastran.gui.gui_objects.settings import FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+from pyNastran.gui.utils.qt.checks.qlineedit import (
+    QLINEEDIT_GOOD, QLINEEDIT_ERROR,
+    QTEXTEDIT_GOOD, QTEXTEDIT_ERROR, )
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -82,8 +84,33 @@ class PyDialog(QDialog):
             else:
                 self.closeEvent(event)
 
-def check_patran_syntax(cell: QLineEdit,
+
+def check_patran_syntax(cell: Union[QTextEdit, QLineEdit],
                         pound=None) -> tuple[Optional[np.ndarray], bool]:
+    if isinstance(cell, QLineEdit):
+        values, is_passed = check_patran_syntax_qlineedit(cell, pound=pound)
+    else:
+        values, is_passed = check_patran_syntax_qtextedit(cell, pound=pound)
+    return values, is_passed
+
+def check_patran_syntax_qtextedit(
+    cell: QTextEdit, pound=None) -> tuple[Optional[np.ndarray], bool]:
+    # QTextEdit
+    text = cell.toPlainText().strip().replace('\n', ' ')
+
+    try:
+        values = parse_patran_syntax(text, pound=pound)
+        cell.setStyleSheet(QTEXTEDIT_GOOD)
+        is_passed = True
+    except ValueError as error:
+        cell.setStyleSheet(QTEXTEDIT_ERROR)
+        cell.setToolTip(str(error))
+        values = None
+        is_passed = False
+    return values, is_passed
+
+def check_patran_syntax_qlineedit(
+    cell: QLineEdit, pound=None) -> tuple[Optional[np.ndarray], bool]:
     text = cell.text().strip()
 
     try:
