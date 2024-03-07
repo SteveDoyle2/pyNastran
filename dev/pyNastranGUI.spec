@@ -522,7 +522,7 @@ excludes = [
     'libsodium', 'markupsafe', 'mistune', 'multipledispatch',
     'nbformat', 'nltk', 'node-webkit', 'nose', 'patsy', 'pickleshare',
     'ply', 'pyasn1', 'pycosat', 'pycparser', 'pycrypto', 'pycurl',
-    'pyflakes', 'pyopenssl', 'pyparsing', 'pyreadline', 
+    'pyflakes', 'pyopenssl', 'pyparsing', 'pyreadline',
     'python-dateutil', 'rope', 'scikit-image', 'simplegeneric',
     'singledispatch', 'sockjs-tornado', 'ssl_match_hostname',
     'statsmodels', 'sympy', 'tk', 'toolz', 'ujson', 'unicodecsv',
@@ -686,13 +686,13 @@ vtk_imports_all = [  # 9.3
 # can we get rid of scipy.optimize?
 hiddenimports = [
     #'vtk', 'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
-    #'vtk.vtkRenderingPythonSIP', 
+    #'vtk.vtkRenderingPythonSIP',
     'scipy._lib.messagestream', # 'scipy',
     'pygments',
 ] + qt_imports + vtk_imports_all
 if INCLUDE_BDFV:
     hiddenimports += ['pytables'] + pandas_imports
-    
+
 
 if not IS_H5PY:
     excludes += h5py_imports

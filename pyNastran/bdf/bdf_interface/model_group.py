@@ -140,7 +140,6 @@ def _patran_line_to_array(value: str) -> list[tuple[int, int, int]]:
     if ',' in value:
         values = value.split(',')
         for valuei in values:
-            #print(valuei)
             valuesi = _split_colon_tuple(valuei)
             value_list.append(valuesi)
     else:
@@ -152,7 +151,6 @@ def _patran_line_to_array(value: str) -> list[tuple[int, int, int]]:
 def _split_colon_tuple(value: str) -> tuple[int, int, int]:
     svalue = value.split(':')
     step = 1
-    #print(svalue)
     if len(svalue) == 1:
         value_min = value_max = svalue[0]
     elif len(svalue) == 2:

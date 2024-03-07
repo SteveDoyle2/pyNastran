@@ -11,6 +11,7 @@ import numpy as np
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_element_centroids)
 
+from pyNastran.gui.menus.groups_modify.groups import Group
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow, ResultsDialog
 from pyNastran.gui.qt_files.base_gui import BaseGui
 
@@ -43,6 +44,9 @@ class ShearMomentTorqueObject(BaseGui):
         self._smt_shown = False
         self._smt_window = None
         self._smt_window_shown = False
+
+        self.model_name = ''
+        self.model_data = {}
 
     def set_font_size(self, font_size: int) -> None:
         """sets the font size for the preferences window"""
@@ -80,8 +84,10 @@ class ShearMomentTorqueObject(BaseGui):
         #min_clip, max_clip = camera.GetClippingRange()
         gui = self.gui
         settings: Settings = gui.settings
+
+
         model_name = gui.name
-        model = gui.models[model_name]
+        model = self.setup_model_data(model_name)
         if hasattr(model, 'coords'):
             cids = list(model.coords.keys())
             cids.sort()
@@ -93,10 +99,13 @@ class ShearMomentTorqueObject(BaseGui):
         if is_failed:
             return
 
+        group: Group = self.gui.groups[gui.group_active]
+        elements_pound = group.elements_pound
         data = {
             'font_size' : settings.font_size,
             'icase': icase,
             'cids' : cids,
+            'elements_pound': elements_pound,
             'plane_color' : settings.shear_moment_torque_color,
             'plane_opacity' : settings.shear_moment_torque_opacity,
             'vector_line_width' : settings.shear_moment_torque_line_width,
@@ -123,6 +132,26 @@ class ShearMomentTorqueObject(BaseGui):
             self._smt_window_shown = False
         else:
             self._smt_window.activateWindow()
+
+    def get_model(self, model_name: str) -> BDF:
+        model = self.gui.models[model_name]
+        return model
+
+    def setup_model_data(self, model_name: str) -> BDF:
+        model = self.get_model(model_name)
+
+        if model_name != self.model_name:
+            nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+            eids, element_centroids_cid0 = get_element_centroids(model)
+            self.model_data = {
+                'nids': nids,
+                'nid_cd': nid_cd,
+                'icd_transform': icd_transform,
+                'xyz_cid0': xyz_cid0,
+                'eids': eids,
+                'element_centroids_cid0': element_centroids_cid0,
+            }
+            self.model_name = model_name
 
     def set_plane_properties(self) -> None:
         gui: MainWindow = self.gui
@@ -178,7 +207,6 @@ class ShearMomentTorqueObject(BaseGui):
 
     def make_plane_from_data(self, data: dict[str, Any]) -> None:
         """the callback to validate the plane/coordinate system"""
-        model_name = data['model_name']
         #gpforce: RealGridPointForcesArray = data['gpforce']
         nplanes = data['nplanes']
         #model = self.models[model_name]
@@ -190,7 +218,6 @@ class ShearMomentTorqueObject(BaseGui):
         method = data['method']
 
         self.plot_cutting_plane(
-            model_name,
             p1, p2, p3, zaxis,
             method=method,
             cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
@@ -212,7 +239,6 @@ class ShearMomentTorqueObject(BaseGui):
         #self.out_data['csv_filename'] = csv_filename
         #self.out_data['clicked_ok'] = True
 
-        model_name = data['model_name']
         #gpforce: RealGridPointForcesArray = data['gpforce']
         icase: int = data['icase']
         nplanes = data['nplanes']
@@ -223,20 +249,22 @@ class ShearMomentTorqueObject(BaseGui):
         cid_zaxis, zaxis = data['zaxis']
         method = data['method']
         station_location = data['station_location']
+        element_ids = data['element_ids']
+
         length_scale, length_unit = data['length']
         force_scale, force_unit = data['force']
         moment_scale, moment_unit = data['moment']
-
         csv_filename = None
         if 'csv_filename' in data:
             csv_filename = data['csv_filename']
         self.plot_shear_moment_torque(
-            model_name, icase,
+            icase,
             p1, p2, p3, zaxis,
             method=method,
             station_location=station_location,
             cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
             nplanes=nplanes,
+            element_ids=element_ids,
             csv_filename=csv_filename,
             length_scale=length_scale, length_unit=length_unit,
             force_scale=force_scale, force_unit=force_unit,
@@ -245,7 +273,6 @@ class ShearMomentTorqueObject(BaseGui):
         return
 
     def plot_cutting_plane(self,
-                           model_name: str,
                            p1: np.ndarray,
                            p2: np.ndarray,
                            p3: np.ndarray,
@@ -255,8 +282,16 @@ class ShearMomentTorqueObject(BaseGui):
                            nplanes: int=20,
                            stop_on_failure: bool=False) -> None:
         """Plane Actor is drawn in the i-k plane"""
-        model = self.gui.models[model_name]
-        nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+        #model = self.gui.models[self.model_name]
+        #nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+        #self.model_data = {
+            #'nids': nids,
+            #'nid_cd': nid_cd,
+            #'icd_transform': icd_transform,
+            #'xyz_cid0': xyz_cid0,
+        #}
+        model = self.get_model(self.model_name)
+        xyz_cid0 = self.model_data['xyz_cid0']
 
         #nplanes = 1
         unused_out = self.plot_plane(
@@ -270,7 +305,6 @@ class ShearMomentTorqueObject(BaseGui):
         return
 
     def plot_shear_moment_torque(self,
-                                 model_name: str,
                                  icase: int,
                                  p1: np.ndarray,
                                  p2: np.ndarray,
@@ -280,6 +314,7 @@ class ShearMomentTorqueObject(BaseGui):
                                  station_location: str='End-Origin',
                                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                                  nplanes: int=20,
+                                 element_ids: Optional[np.ndarray]=None,
                                  csv_filename=None,
                                  length_scale: float=1.0, length_unit: str='',
                                  force_scale: float=1.0, force_unit: str='',
@@ -332,17 +367,32 @@ class ShearMomentTorqueObject(BaseGui):
         -------
         force_sum / moment_sum : (nstations, 3) float ndarray
             the forces/moments at the station
+            this will be empty if there no case is found
 
         """
         is_failed, gpforce = self.get_gpforce_from_icase(icase)
         if is_failed:
-            return
+            return np.array([]), np.array([])
 
         gui: MainWindow = self.gui
         log = gui.log
 
-        model = gui.models[model_name]
-        nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+        model = self.get_model(self.model_name)
+        nids = self.model_data['nids']
+        nid_cd = self.model_data['nid_cd']
+        icd_transform = self.model_data['icd_transform']
+        xyz_cid0 = self.model_data['xyz_cid0']
+
+        eids = self.model_data['eids']
+        element_centroids_cid0 = self.model_data['element_centroids_cid0']
+
+        if element_ids is not None:
+            element_ids = np.unique(element_ids)
+            ieids = np.searchsorted(eids, element_ids)
+            assert np.array_equal(eids[ieids], element_ids)
+
+            eids = element_ids
+            element_centroids_cid0 = element_centroids_cid0[ieids, :]
 
         is_failed, stations, coord, iaxis_march = self.plot_plane(
             model, xyz_cid0,
@@ -357,7 +407,6 @@ class ShearMomentTorqueObject(BaseGui):
             return force_sum, moment_sum
 
         coord = cast(CORD2R, coord)
-        eids, element_centroids_cid0 = get_element_centroids(model)
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
             nids, xyz_cid0, nid_cd, icd_transform,
             eids, element_centroids_cid0,
@@ -386,7 +435,11 @@ class ShearMomentTorqueObject(BaseGui):
             f'Mx{moment_unit2}', f'My{moment_unit2}', f'Mz{moment_unit2}'
         ]
         data = np.column_stack([xyz_stations, origins, force_sum, moment_sum])
-        dlg = ResultsDialog(self._smt_window.p1_label, data, labels,
+
+        # automatically detroy when the window is closed by referencing
+        # an object in the window
+        parent = self._smt_window.p1_label
+        dlg = ResultsDialog(parent, data, labels,
                             title='Shear, Moment, Torque Results')
 
         if csv_filename:
@@ -411,14 +464,15 @@ class ShearMomentTorqueObject(BaseGui):
             plot_moment_components=False,
         )
         msg = (
-            f'model_name = {model_name!r}\n'
+            f'model_name = {self.model_name!r}\n'
+            f'model = self.shear_moment_torque_obj.setup_model_data(model_name)\n'
             f'icase = {icase:d}\n'
             f'p1 = np.array([{p1[0]}, {p1[1]}, {p1[2]}])\n'
             f'p2 = np.array([{p2[0]}, {p2[1]}, {p2[2]}])\n'
             f'p3 = np.array([{p3[0]}, {p3[1]}, {p3[2]}])\n'
             f'zaxis = np.array([{zaxis[0]}, {zaxis[1]}, {zaxis[2]}])\n'
             f'force_sum, moment_sum = self.shear_moment_torque_obj.plot_shear_moment_torque(\n'
-            f'    model_name, icase, p1, p2, p3, zaxis, method={method!r},\n'
+            f'    icase, p1, p2, p3, zaxis, method={method!r},\n'
             f'    station_location={station_location!r},\n'
             f'    cid_p1={cid_p1:d}, cid_p2={cid_p2:d}, cid_p3={cid_p3:d}, cid_zaxis={cid_zaxis:d},\n'
             f'    nplanes={nplanes:d}, csv_filename={csv_filename!r},\n'
@@ -522,7 +576,7 @@ class ShearMomentTorqueObject(BaseGui):
         plane_color = settings.shear_moment_torque_color
         plane_opacity = settings.shear_moment_torque_opacity
         point_size = settings.shear_moment_torque_point_size
-        line_width = settings.shear_moment_torque_line_thickness
+        line_width = settings.shear_moment_torque_line_width
 
         # the plane actor defines the plane of the output results,
         # not the plane of the march direction

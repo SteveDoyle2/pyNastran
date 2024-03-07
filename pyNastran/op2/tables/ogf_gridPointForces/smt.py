@@ -24,6 +24,7 @@ try:
 except:
     IS_MATPLOTLIB = False
 
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_nid_cd_xyz_cid0, get_element_centroids, get_stations)
 if TYPE_CHECKING:  # pragma: no cover
@@ -44,6 +45,7 @@ def create_shear_moment_torque(model: BDF,
                                station_location: str='End-Origin',
                                cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                                nplanes: int=20,
+                               element_ids: Optional[np.ndarray]=None,
                                root_filename=None,
                                csv_filename=None,
                                length_scale: float=1.0, length_unit: str='',
@@ -89,6 +91,8 @@ def create_shear_moment_torque(model: BDF,
          'Z-Axis Projection':
            zaxis:  point on the z-axis
            p2:     p2 is a point on the xz-plane
+    element_ids : (n,) int array; default=None -> []
+        element_ids to include
     show: bool; default=True
         shows the plots
 
@@ -97,10 +101,55 @@ def create_shear_moment_torque(model: BDF,
     force_sum / moment_sum : (nstations, 3) float ndarray
         the forces/moments at the station
 
+    Example
+    -------
+    bdf_model = read_bdf(bdf_filename)
+    op2_model = read_op2(op2_filename)
+
+
+    gpforce = op2_model.grid_point_forces[1]
+    p1 = np.array([128., 6., 0.])  #  start; 127.95, 6.0, 19.559
+    p3 = np.array([138., 96., 0.]) #  end; 119.95, 96., 21.832
+
+    #method='Vector'
+    method = 'vector'
+    p2    = np.array([0., 1., 0.])  # xz-plane (normal direction)
+    zaxis = np.array([0., 0., 1.])  # z-axis
+
+    station_location = 'End-Origin'
+    forces_sum, moments_sum = create_shear_moment_torque(
+        bdf_model, gpforce, p1, p2, p3, zaxis,
+        method=method, station_location=station_location,
+        cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+        nplanes=20, root_filename=None, csv_filename=None,
+        length_scale=1.0, length_unit='in',
+        force_scale=0.001, force_unit='kip',
+        moment_scale=0.001, moment_unit='in-kip',
+        show=False)
+
+    station_location = 'y'
+    forces_sum, moments_sum = create_shear_moment_torque(
+        bdf_model, gpforce, p1, p2, p3, zaxis,
+        method=method, station_location=station_location,
+        cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+        nplanes=20,
+        root_filename=root_filename,
+        csv_filename=csv_filename,
+        length_scale=1.0, length_unit='in',
+        force_scale=0.001, force_unit='kip',
+        moment_scale=0.001, moment_unit='in-kip',
+        show=True)
+
     """
     log = model.log
     nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
     eids, element_centroids_cid0 = get_element_centroids(model)
+    if element_ids is not None:
+        element_ids = np.unique(element_ids)
+        ieids = np.searchsorted(eids, element_ids)
+        assert np.array_equal(eids[ieids], element_ids)
+        element_centroids_cid0 = element_centroids_cid0[ieids, :]
+        eids = element_ids
 
     xyz1, xyz2, xyz3, i, k, coord, iaxis_march, dim_max, stations = setup_coord_from_plane(
         model, xyz_cid0,
@@ -146,18 +195,19 @@ def create_shear_moment_torque(model: BDF,
             length_unit=length_unit,
             force_unit=force_unit,
             moment_unit=moment_unit)
-    plot_smt(
-        xyz_stations,
-        force_sum, moment_sum,
-        nelems, nnodes, show=show,
-        xtitle=xlabel, xlabel=xlabel,
-        length_unit=length_unit,
-        force_unit=force_unit,
-        moment_unit=moment_unit,
-        root_filename=root_filename,
-        plot_force_components=False,
-        plot_moment_components=False,
-    )
+    if IS_MATPLOTLIB:
+        plot_smt(
+            xyz_stations,
+            force_sum, moment_sum,
+            nelems, nnodes, show=show,
+            xtitle=xlabel, xlabel=xlabel,
+            length_unit=length_unit,
+            force_unit=force_unit,
+            moment_unit=moment_unit,
+            root_filename=root_filename,
+            plot_force_components=False,
+            plot_moment_components=False,
+        )
     return force_sum, moment_sum
 
 def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,

@@ -5,6 +5,8 @@ defines:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import numpy as np
+
 #from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
@@ -80,16 +82,35 @@ class PyDialog(QDialog):
             else:
                 self.closeEvent(event)
 
-def check_patran_syntax(cell, pound=None):
-    text = str(cell.text())
+def check_patran_syntax(cell: QLineEdit,
+                        pound=None) -> tuple[Optional[np.ndarray], bool]:
+    text = cell.text().strip()
+
     try:
         values = parse_patran_syntax(text, pound=pound)
         cell.setStyleSheet(QLINEEDIT_GOOD)
-        return values, True
+        is_passed = True
     except ValueError as error:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
-        return None, False
+        values = None
+        is_passed = False
+    return values, is_passed
+
+#def check_patran_syntax(qlineedit: QLineEdit,
+                        #pound: int) -> tuple[bool, Optional[np.ndarray]]:
+    #is_failed = True
+    #element_str = qlineedit.text().strip()
+    #element_ids = None
+    #if element_str:
+        #try:
+            #element_ids = parse_patran_syntax(element_str, pound=pound)
+        #except:
+            #qlineedit.setStyleSheet(QLINEEDIT_BAD)
+            #return is_failed, element_ids
+    #is_failed = False
+    #qlineedit.setStyleSheet(QLINEEDIT_GOOD)
+    #return is_failed, element_ids
 
 def check_patran_syntax_dict(cell, pound=None):
     text = str(cell.text())
