@@ -1300,13 +1300,41 @@ class TEMP(ThermalLoad):
     def get_loads(self):
         return [self]
 
+    def __repr__(self) -> str:
+        try:
+            return self.write_card(size=8)
+        except Exception:
+            try:
+                return self.write_card(size=16)
+            except Exception:
+                print('problem printing %s card' % self.type)
+                raise
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
         if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+            print_card_ = print_card_8
+        elif is_double:
+            print_card_ = print_card_double
+        else:
+            print_card_ = print_card_16
+
+        list_fields = ['TEMP', self.sid]
+        ntemps = len(self.temperatures) - 1
+        msg = self.comment
+        msgs = []
+        if msg:
+            msgs.append(msg)
+
+        for i, (gid, temp) in enumerate(sorted(self.temperatures.items())):
+            list_fields += [gid, temp]
+            if i % 3 == 2 and ntemps > i:  # start a new TEMP card
+                msgs.append(print_card_(list_fields))
+                list_fields = ['TEMP', self.sid]
+
+        if len(list_fields) > 2:
+            msgs.append(print_card_(list_fields))
+        out = ''.join(msgs)
+        return out
 
 
 class TEMPP1(BaseCard):

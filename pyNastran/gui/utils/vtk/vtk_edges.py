@@ -10,7 +10,7 @@ else:
 
 if TYPE_CHECKING:
     from pyNastran.gui.vtk_rendering_core import (
-        vtkRenderer, # vtkRenderWindow, vtkRenderWindowInteractor,
+        # vtkRenderWindow, vtkRenderWindowInteractor,
         #vtkDataSetMapper,
         vtkColorTransferFunction,
         vtkPolyDataMapper)

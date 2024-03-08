@@ -278,7 +278,7 @@ class QNodeElementTextEdit(QTextEdit):
 
             #m_Validator.setRegularExpression(regex)
             self.setValidator(m_Validator)
-            self.connect
+            #self.connect
 
 
     def focusInEvent(self, event):

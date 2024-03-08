@@ -4,13 +4,13 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
-from qtpy.QtWidgets import QDialog, QLineEdit
+from qtpy.QtWidgets import QDialog, QLineEdit, QTextEdit
 from pyNastran.gui.gui_objects.settings import FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     QLINEEDIT_GOOD, QLINEEDIT_ERROR,
@@ -93,8 +93,8 @@ def check_patran_syntax(cell: Union[QTextEdit, QLineEdit],
         values, is_passed = check_patran_syntax_qtextedit(cell, pound=pound)
     return values, is_passed
 
-def check_patran_syntax_qtextedit(
-    cell: QTextEdit, pound=None) -> tuple[Optional[np.ndarray], bool]:
+def check_patran_syntax_qtextedit(cell: QTextEdit,
+                                  pound=None) -> tuple[Optional[np.ndarray], bool]:
     # QTextEdit
     text = cell.toPlainText().strip().replace('\n', ' ')
 
@@ -109,8 +109,8 @@ def check_patran_syntax_qtextedit(
         is_passed = False
     return values, is_passed
 
-def check_patran_syntax_qlineedit(
-    cell: QLineEdit, pound=None) -> tuple[Optional[np.ndarray], bool]:
+def check_patran_syntax_qlineedit(cell: QLineEdit,
+                                  pound=None) -> tuple[Optional[np.ndarray], bool]:
     text = cell.text().strip()
 
     try:
@@ -139,7 +139,8 @@ def check_patran_syntax_qlineedit(
     #qlineedit.setStyleSheet(QLINEEDIT_GOOD)
     #return is_failed, element_ids
 
-def check_patran_syntax_dict(cell, pound=None):
+def check_patran_syntax_dict(cell: QLineEdit,
+                             pound=None) -> tuple[Optional[dict[str, np.ndarray]], bool]:
     text = str(cell.text())
     try:
         value = parse_patran_syntax_dict(text)

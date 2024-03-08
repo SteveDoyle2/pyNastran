@@ -23,14 +23,14 @@ else:  # pragma: no cover
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
 
 
-def numpy_to_vtk_idtype(ids):
+def numpy_to_vtk_idtype(ids: np.ndarray) -> vtkIdTypeArray:
     #self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
     dtype = get_numpy_idtype_for_vtk()
     ids = np.asarray(ids, dtype=dtype)
     vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
     return vtk_ids
 
-def get_numpy_idtype_for_vtk():
+def get_numpy_idtype_for_vtk() -> str:
     """This gets the numpy dtype that we need to use to make vtk not crash"""
     isize = vtkIdTypeArray().GetDataTypeSize()
     if isize == 4:
@@ -43,7 +43,9 @@ def get_numpy_idtype_for_vtk():
     return dtype
 
 
-def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
+def numpy_to_vtk(num_array: np.ndarray,
+                 deep: int=0,
+                 array_type=None):  # pragma: no cover
     """Converts a contiguous real numpy Array to a VTK array object.
 
     This function only works for real arrays that are contiguous.

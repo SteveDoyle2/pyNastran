@@ -45,7 +45,7 @@ def split_version(version: str, msg: str) -> tuple[int, int, int]:
     tuple_version = (imajor, iminor, irev)
     return tuple_version
 
-def get_latest_version_from_data(data: str) -> tuple[Optional[str], list[str]]:
+def get_latest_version_from_data(data: str) -> Optional[str]:
     """finds the latest released version"""
     version_latest = None
     for line in data: # files are iterable
@@ -102,7 +102,8 @@ def _get_latest_version(version_latest: Optional[str]) -> tuple[bool, str]:
             raise RuntimeError("can't parse website")
     return is_failed, version_latest
 
-def _check_if_version_is_newer(version_latest: str, version_current: str,
+def _check_if_version_is_newer(version_latest: str,
+                               version_current: str,
                                quiet: bool) -> bool:
     """
     Not 100% on this list, but this is the general idea...
@@ -132,7 +133,7 @@ def _check_if_version_is_newer(version_latest: str, version_current: str,
     if is_self_newer:
         pass
     elif is_newer_release_version or is_newer_dev_version:
-        msg = 'pyNastran %s is now available; current=%s' % (version_latest, version_current)
+        msg = f'pyNastran {version_latest} is now available; current={version_current}'
 
         if not quiet:  # pragma: no cover
             print(msg)
