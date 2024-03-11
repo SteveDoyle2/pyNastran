@@ -1369,7 +1369,7 @@ def _export_subcases(hdf5_file, op2_model):
     """exports the subcases to HDF5"""
     subcase_groups = {}
     result_types = op2_model.get_table_types()
-    skip_results = ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds']
+    skip_results = ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'cstm', 'trmbu', 'trmbd']
     for result_type in result_types:
         if result_type in skip_results or result_type.startswith('responses.'):
             #op2_model.log.debug('skipping %s' % result_type)

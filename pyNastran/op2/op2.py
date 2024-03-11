@@ -231,7 +231,7 @@ class OP2(OP2_Scalar, OP2Writer):
             skip_results_set = set(skip_results)
         del skip_results
 
-        skip_results_set.update({'gpdt', 'bgpdt', 'eqexin', 'psds', 'superelement_tables'})
+        skip_results_set.update({'gpdt', 'bgpdt', 'eqexin', 'psds', 'superelement_tables', 'cstm'})
 
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -332,7 +332,7 @@ class OP2(OP2_Scalar, OP2Writer):
             return True
 
         # does this ever hit?
-        if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight']):
+        if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD']):
             msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
             raise NotImplementedError(f'{aname} __eq__')
@@ -630,8 +630,10 @@ class OP2(OP2_Scalar, OP2Writer):
             del self.subcase
 
         result_types = self.get_table_types()
+        skip_results = ('params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
+                        'cstm', 'trmbu', 'trmbd')
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3'] or result_type.startswith('responses.'):
+            if result_type in skip_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             try:
@@ -683,8 +685,10 @@ class OP2(OP2_Scalar, OP2Writer):
                     raise NotImplementedError()
                     #continue
 
-        skip_pandas = ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
-                       'monitor1', 'monitor3', 'superelement_tables']
+        skip_pandas = (
+            'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
+            'monitor1', 'monitor3', 'superelement_tables',
+            'cstm', 'trmbu', 'trmbd')
         for result_type in result_types:
             if result_type in skip_pandas or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)
@@ -833,7 +837,11 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         self.combine = combine
         result_types = self.get_table_types()
-        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', 'grid_point_weight', 'psds', 'monitor1', 'monitor3']
+        results_to_skip = (
+            'bgpdt', 'gpdt', 'eqexin', 'grid_point_weight', 'psds',
+            'monitor1', 'monitor3',
+            'cstm', 'trmbu', 'trmbd',
+        )
 
         # set subcase_key
         for result_type in result_types:
@@ -975,8 +983,12 @@ class OP2(OP2_Scalar, OP2Writer):
         #print('subcase_key =', self.subcase_key)
 
         subcase_key2 = {}
-        not_results = ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt',
-                       'eqexin', 'desvars', 'grid_point_weight', 'psds', 'monitor1', 'monitor3']
+        not_results = (
+            'eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt',
+            'eqexin', 'desvars', 'grid_point_weight', 'psds', 'monitor1', 'monitor3',
+            'cstm',
+            #'trmbu', 'trmbd',
+        )
         for result_type in result_types:
             if result_type in not_results or result_type.startswith('responses.'):
                 continue

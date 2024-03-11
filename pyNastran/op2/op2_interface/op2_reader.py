@@ -57,6 +57,8 @@ from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
+
+from pyNastran.op2.result_objects.op2_results import TRMBD, TRMBU
 from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix
@@ -1645,9 +1647,9 @@ class OP2Reader:
         |  1   | UNDEF(6)   | None  |                                                   |
         +------+------------+-------+---------------------------------------------------+
         """
-
+        trmbd
         op2 = self.op2
-        is_geometry = op2.is_geometry
+        #is_geometry = op2.is_geometry
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -1677,11 +1679,12 @@ class OP2Reader:
         itable = -4
 
         blocks = []
+        read_record = self._read_record if self.read_mode == 2 else self._skip_record
         while 1:
             markers = self.get_nmarkers(1, rewind=True)
             if markers == [0]:
                 break
-            data = self._read_record()
+            data = read_record()
             blocks.append(data)
             self.read_markers([itable, 1, 0])
             itable -= 1
@@ -1694,36 +1697,35 @@ class OP2Reader:
         # Should be even, first block is IDENT, second block is DATA
         assert(nblocks % 2 == 0)
 
+        # Set because time step can be repeated
+        time_steps_set = set([])  # {t1, t2, ...}
+        subcases_set = set([])
+
         # Get time steps per subcase
-        time_steps = {}  # {subcase_id: {t1, t2, ...}
+        size = op2.size
         for i in range(0, nblocks, 2):
-            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+            block0 = blocks[i]
+            identifiers_int = np.frombuffer(block0, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(block0, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
+            int3 = identifiers_int[2]
+
             #eltype = identifiers_int[2]
-            subcase = identifiers_int[3]
+            isubcase = identifiers_int[3]
             time_step = identifiers_float[4]
 
-            if subcase not in time_steps:
-                # Set because time step can be repeated
-                time_steps[subcase] = {time_step, }
-            else:
-                time_steps[subcase].add(time_step)
+            subcases_set.add(isubcase)
+            time_steps_set.add(time_step)
+        assert len(subcases_set) == 1, subcases_set
 
-        # Create time step to tid mapper per subcase
-        for subcase, tsteps in time_steps.items():
-            tsteps = np.array(list(tsteps))
-            # Sort because set does not retain ordering
-            tstep_indices = np.argsort(tsteps)
-            time_steps[subcase] = tsteps[tstep_indices]
+        op2._set_approach_code(approach_code, tCode, int3, isubcase)
+        #-------------------------------------------------------------------
+        time_steps, tstep_to_index_mapper = trmbx_tsteps_to_tstep_index_mapper(time_steps_set)
 
-            ntimes = time_steps[subcase].shape[0]
-            tstep_to_index_mapper = {
-                time_steps[subcase][itime]: itime for itime in range(ntimes)}
-
-        trmbd = op2.op2_results.trmbd
+        trmbds = op2.op2_results.trmbd
+        #------------------------------------------------------------------------
         # Read data
         #print('nblocks =', nblocks)
 
@@ -1754,13 +1756,14 @@ class OP2Reader:
             363: ('CROD', 2),
         }
         for i in range(0, nblocks, 2):
-            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+            block0 = blocks[i]
+            identifiers_int = np.frombuffer(block0, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(block0, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
             element_type = identifiers_int[2]
-            subcase = identifiers_int[3]
+            isubcase = identifiers_int[3]
             time_step = identifiers_float[4]
 
             op2.data_code = {}
@@ -1768,12 +1771,27 @@ class OP2Reader:
             approach_code = acode
             tCode = tcode
             int3 = element_type
-            isubcase = subcase
             op2.element_type = element_type
             op2._set_approach_code(approach_code, tCode, int3, isubcase)
+
+            if isubcase not in trmbds:
+                i0, i1 = 51, 82
+                title = block0[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+
+                i0, i1 = 83, 114
+                subtitle = block0[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+
+                i0, i1 = 115, 146
+                label = block0[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+                op2.data_code['title'] = title
+                op2.data_code['subtitle'] = subtitle
+                op2.data_code['label'] = label
+
+                trmbds[isubcase] = TRMBD(**op2.data_code)
             #------------------------------------------------------------------------
-            int_data = np.frombuffer(blocks[i+1], dtype=op2.idtype8)
-            float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
+            block1 = blocks[i+1]
+            int_data = np.frombuffer(block1, dtype=op2.idtype8)
+            float_data = np.frombuffer(block1, dtype=op2.fdtype8)
 
             #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
             if element_type in element_type_to_str_map:
@@ -1818,16 +1836,12 @@ class OP2Reader:
             eulers_y = float_data[:, index+2]
             eulers_z = float_data[:, index+3]
 
-            if subcase not in trmbd.eulersx:
-                trmbd.eulersx[subcase] = {}
-                trmbd.eulersy[subcase] = {}
-                trmbd.eulersz[subcase] = {}
-            if element not in trmbd.eulersx[subcase]:
+            if element not in trmbd.eulersx:
                 #isubcase = time_steps[subcase]
-                ntimes = time_steps[subcase].shape[0]
-                trmbd.eulersx[subcase][element] = np.empty([ntimes, nelements, eulers_x.shape[1]])
-                trmbd.eulersy[subcase][element] = np.empty([ntimes, nelements, eulers_y.shape[1]])
-                trmbd.eulersz[subcase][element] = np.empty([ntimes, nelements, eulers_z.shape[1]])
+                ntimes = time_steps.shape[0]
+                trmbd.eulersx[element] = np.empty([ntimes, nelements, eulers_x.shape[1]])
+                trmbd.eulersy[element] = np.empty([ntimes, nelements, eulers_y.shape[1]])
+                trmbd.eulersz[element] = np.empty([ntimes, nelements, eulers_z.shape[1]])
             if element not in trmbd.nodes:
                 nodes = np.empty([nelements, grids.shape[1] + 1], dtype='int32')
                 nodes[:, 0] = eids
@@ -1835,9 +1849,9 @@ class OP2Reader:
                 trmbd.nodes[element] = nodes
 
             itime = tstep_to_index_mapper[time_step]
-            trmbd.eulersx[subcase][element][itime, :, :] = eulers_x
-            trmbd.eulersy[subcase][element][itime, :, :] = eulers_y
-            trmbd.eulersz[subcase][element][itime, :, :] = eulers_z
+            trmbd.eulersx[element][itime, :, :] = eulers_x
+            trmbd.eulersy[element][itime, :, :] = eulers_y
+            trmbd.eulersz[element][itime, :, :] = eulers_z
 
         return
 
@@ -1930,12 +1944,13 @@ class OP2Reader:
         self.read_3_markers([-3, 1, 0])
         itable = -4
 
+        read_record = self._read_record if self.read_mode == 2 else self._skip_record
         blocks = []
         while 1:
             markers = self.get_nmarkers(1, rewind=True)
             if markers == [0]:
                 break
-            data = self._read_record()
+            data = read_record()
             blocks.append(data)
             self.read_markers([itable, 1, 0])
             itable -= 1
@@ -1948,35 +1963,31 @@ class OP2Reader:
         assert(nblocks % 2 == 0)  # Should be even, first block is IDENT, second block is DATA
 
         # Get time steps per subcase
-        time_steps = {}  # {subcase_id: {t1, t2, ...}
+
+        # Set because time step can be repeated
+        time_steps_set = set([])  # {t1, t2, ...}
+        subcases_set = set([])
+
+        size = op2.size
         for i in range(0, nblocks, 2):
-            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+            block = blocks[i]
+            identifiers_int = np.frombuffer(block, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(block, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
             #eltype = identifiers_int[2]
-            subcase = identifiers_int[3]
+            isubcase = identifiers_int[3]
             time_step = identifiers_float[4]
 
-            if subcase not in time_steps:
-                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
-            else:
-                time_steps[subcase].add(time_step)
+            subcases_set.add(isubcase)
+            time_steps_set.add(time_step)
 
-        # Create time step to tid mapper per subcase
-        for subcase, tsteps in time_steps.items():
-            tsteps = np.array(list(tsteps))
-            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
-            time_steps[subcase] = tsteps[tstep_indices]
-
-            ntimes = time_steps[subcase].shape[0]
-            tstep_to_index_mapper = {
-                time_steps[subcase][itime]: itime for itime in range(ntimes)
-            }
+        time_steps, tstep_to_index_mapper = trmbx_tsteps_to_tstep_index_mapper(time_steps_set)
+        op2.log.info(f'TRMBU.time_steps = {time_steps_set}')
+        assert len(subcases_set) == 1, subcases_set
 
         # Read data
-        trmbu = op2.trmbu
         element_type_to_str_map = {
             300: 'CHEXA',
             301: 'CPENTA',
@@ -2003,12 +2014,12 @@ class OP2Reader:
 
             363: 'CROD',
         }
-
+        trmbus = op2.op2_results.trmbu
         for i in range(0, nblocks, 2):
-            id_data = blocks[i]
+            block = blocks[i]
+            identifiers_int = np.frombuffer(block, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(block, dtype=op2.fdtype8)
             eid_euler_data = blocks[i+1]
-            identifiers_int = np.frombuffer(id_data, dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(id_data, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
@@ -2026,15 +2037,30 @@ class OP2Reader:
             op2._set_approach_code(approach_code, tCode, int3, isubcase)
             #------------------------------------------------------------------------
 
+            if isubcase not in trmbus:
+                i0, i1 = 51, 82
+                title = block[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+
+                i0, i1 = 83, 114
+                subtitle = block[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+
+                i0, i1 = 115, 146
+                label = block[(i0-1)*size:(i1-1)*size].strip().decode('latin1')
+                op2.data_code['title'] = title
+                op2.data_code['subtitle'] = subtitle
+                op2.data_code['label'] = label
+
+                trmbus[isubcase] = TRMBU(**op2.data_code)
+            trmbu = trmbus[isubcase]
+
+
             int_data = np.frombuffer(eid_euler_data, dtype=op2.idtype8)
             float_data = np.frombuffer(eid_euler_data, dtype=op2.fdtype8)
-            numwide = 4
             numwide = 4
             if element_type in element_type_to_str_map:
                 element = element_type_to_str_map[element_type]
 
             elif element_type == 316:
-                numwide = 4
                 element = 'CPLSTN3'
             #elif element_type == 316:
                 #numwide = 4
@@ -2043,7 +2069,6 @@ class OP2Reader:
                 #nnodes = 6
                 #element = 'CPLSTS6'
             elif element_type == 317:
-                numwide = 4
                 element = 'CPLSTN4'
             elif element_type == 318:
                 element = 'CPLSTN6'
@@ -2051,10 +2076,8 @@ class OP2Reader:
                 element = 'CPLSTN8'
 
             elif element_type == 321:
-                numwide = 4
                 element = 'CPLSTS4'
             elif element_type == 323:
-                numwide = 4
                 element = 'CPLSTS8'
             else:
                 print(int_data[:10])
@@ -2070,15 +2093,13 @@ class OP2Reader:
             eids = (int_data[:, 0] - op2.device_code) // 10
             eulers = float_data[:, 1:]
 
-            if subcase not in trmbu.eulers:
-                trmbu.eulers[subcase] = {}
-            if element not in trmbu.eulers[subcase]:
-                ntimes = time_steps[subcase].shape[0]
-                trmbu.eulers[subcase][element] = np.empty([ntimes, nelements, 4])
+            if element not in trmbu.eulers:
+                ntimes = time_steps.shape[0]
+                trmbu.eulers[element] = np.empty([ntimes, nelements, 4])
 
             itime = tstep_to_index_mapper[time_step]
-            trmbu.eulers[subcase][element][itime, :, 0] = eids
-            trmbu.eulers[subcase][element][itime, :, 1:] = eulers
+            trmbu.eulers[element][itime, :, 0] = eids
+            trmbu.eulers[element][itime, :, 1:] = eulers
         return
 
     def _read_subtable_name(self, table_names: list[str]):
@@ -7877,7 +7898,6 @@ def _cast_matrix_mat(GCi: np.ndarray, GCj: np.ndarray,
     return matrix
 
 
-
 def read_dofs(op2: OP2, size: int=4) -> None:
     op2.log.debug('read_dofs')
     dofs = []
@@ -7901,8 +7921,8 @@ def read_dofs(op2: OP2, size: int=4) -> None:
         #op2.show_data(data, types='if')
         #op2.show_ndata(64, types='if')
         #bbb
-    for dof in dofs:
-        print('dof', dof)
+    #for dof in dofs:
+        #print('dof', dof)
     print()
     return dofs
 
@@ -7948,3 +7968,26 @@ def _get_matrix_row_fmt_nterms_nfloats(nvalues: int, tout: int,
         raise RuntimeError(f'tout = {tout}')
     return fmt, nfloats, nterms
 
+def trmbx_tsteps_to_tstep_index_mapper(tsteps_set: set[float]) -> tuple[np.ndarray, dict[int, np.ndarray]]:
+    # Create time step to tid mapper per subcase
+    tsteps = np.array(list(tsteps_set))
+
+    # Sort because set does not retain ordering
+    tstep_indices = np.argsort(tsteps)
+    time_steps = tsteps[tstep_indices]
+
+    ntimes = time_steps.shape[0]
+    tstep_to_index_mapper = {
+        time_steps[itime]: itime for itime in range(ntimes)}
+
+
+    # Create time step to tid mapper per subcase
+    #tsteps = np.array(list(time_steps))
+    #tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+    #time_steps = tsteps[tstep_indices]
+
+    #ntimes = time_steps.shape[0]
+    #tstep_to_index_mapper = {
+        #time_steps[itime]: itime for itime in range(ntimes)
+    #}
+    return time_steps, tstep_to_index_mapper

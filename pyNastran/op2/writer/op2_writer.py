@@ -296,7 +296,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OEFIT', 'OESRT',
         'OSPDS1', 'OSPDSI1',
     ]
-    skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3'}
+    skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
     for table_type in obj.get_table_types():
         if table_type in skip_results or table_type in skips or table_type.startswith('responses.'):
             continue

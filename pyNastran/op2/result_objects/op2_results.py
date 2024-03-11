@@ -11,7 +11,6 @@ from pyNastran.op2.op2_interface.random_results import (
 )
 from pyNastran.op2.result_objects.design_response import Responses
 
-
 class Results:
     """storage object for even more op2_results (see op2.op2_results)"""
     def __init__(self):
@@ -79,8 +78,8 @@ class Results:
         self.nrl = NRL()
 
         self.cstm = CSTM()
-        self.trmbd = TRMBD()
-        self.trmbu = TRMBU()
+        self.trmbd = {}
+        self.trmbu = {}
         self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
@@ -133,6 +132,7 @@ class Results:
             'separation_initial', 'separation_final',
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'superelement_tables',
+            'cstm', 'trmbu', 'trmbd',
         ]
         base_objs_map = {}
         for base_name in base_names:
@@ -149,6 +149,7 @@ class Results:
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'bolt_results',
             'superelement_tables',
+            'cstm', 'trmbu', 'trmbd',
         ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:
@@ -894,6 +895,9 @@ class CSTM:
                     }
         self.data = None  # type: Optional[np.ndarray]  # Coordinate Transformation Matrices from Native to Global
 
+    def get_stats(self, short=False):
+        return str(self) + '\n'
+
     def __repr__(self) -> str:
         msg = 'CSTM:\n'
         msg += f'  headers_str = {self.headers.keys()}\n'
@@ -905,22 +909,67 @@ class CSTM:
         return msg
 
 class TRMBD:
-    def __init__(self):
+    def __init__(self, **data: dict[str, Any]):
+        self.isubcase = data['isubcase']
+        self.analysis_code = data['analysis_code']
+        self.device_code = data['device_code']
+        self.sort_code = data['sort_code']
+        self.table_name = data['table_name']
+        self.table_code = data['table_code']
+        self.title = data['title']
+        self.subtitle = data['subtitle']
+        self.label = data['label']
+
         self.nodes = {}
         self.eulersx = {}
         self.eulersy = {}
         self.eulersz = {}
 
+    def get_stats(self, short=False):
+        if short:
+            return [f'op2_results.trmbd[{self.isubcase}]: TRMBU(nodes, eulersx, eulersy, eulersz)\n']
+        else:
+            return [f'op2_results.trmbd[{self.isubcase}]: TRMBU(nodes, eulersx, eulersy, eulersz)\n']
+
+    def __eq__(self, trmbd) -> bool:
+        return True
+
     def __repr__(self) -> str:
-        msg = 'TRMBD:\n'
+        msg = 'op2_results.trmbd:\n'
+        msg += f'  isubcase = {self.isubcase}\n'
         msg += f'  nodes, eulersx, eulersy, eulersz'
         return msg
 
 class TRMBU:
-    def __init__(self):
+    def __init__(self, **data: dict[str, Any]):
+        self.isubcase = data['isubcase']
+        self.analysis_code = data['analysis_code']
+        self.device_code = data['device_code']
+        self.sort_code = data['sort_code']
+        self.table_name = data['table_name']
+        self.table_code = data['table_code']
+        self.title = data['title']
+        self.subtitle = data['subtitle']
+        self.label = data['label']
         self.eulers = {}
 
+    def etypes(self) -> list[int]:
+        etypes = list(self.eulers.keys())
+        return etypes
+
+    def get_stats(self, short=False):
+        etypes = self.etypes()
+        if short:
+            return [f'op2_results.trmbu[{self.isubcase}]: TRMBU(eulers); etypes={etypes}\n']
+        else:
+            return [f'op2_results.trmbu[{self.isubcase}]: TRMBU(eulers); etypes={etypes}\n']
+        return str(self)
+
+    def __eq__(self, trmbu) -> bool:
+        return True
+
     def __repr__(self) -> str:
-        msg = 'TRMBD:\n'
+        msg = 'op2_results.trmbu:\n'
+        msg += f'  isubcase = {self.isubcase}\n'
         msg += f'  eulers'
         return msg

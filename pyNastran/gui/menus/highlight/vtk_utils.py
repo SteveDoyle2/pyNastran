@@ -38,7 +38,8 @@ if TYPE_CHECKING:
 
 def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
                    idsname: str='Ids',
-                   is_nids: bool=True, is_eids: bool=True) -> vtkIdFilter:
+                   is_nids: bool=True,
+                   is_eids: bool=True) -> vtkIdFilter:
     """
     get the vtkIdFilter associated with a grid and either
     nodes/elements or both
@@ -58,20 +59,20 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         raise NotImplementedError(ids)
 
     #self.is_eids = False
-    ids.CellIdsOn()
-    ids.PointIdsOn()
-
     #print('is_eids=%s is_nids=%s' % (is_eids, is_nids))
-    if not is_eids:
-        ids.CellIdsOff()
-    if not is_nids:
-        ids.PointIdsOff()
     #ids.FieldDataOn()
 
     if is_nids:
         set_vtk_id_filter_name(ids, idsname, is_points=True)
+        ids.PointIdsOn()
+    else:
+        ids.PointIdsOff()
+
     if is_eids:
         set_vtk_id_filter_name(ids, idsname, is_cells=True)
+        ids.CellIdsOn()
+    else:
+        ids.CellIdsOff()
     return ids
 
 
