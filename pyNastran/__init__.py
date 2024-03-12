@@ -36,10 +36,15 @@ else:
                                                   cwd=os.path.dirname(__file__))
             ghash = ghash_bytes.decode('utf-8').rstrip()
 
+            #git show -s --format=%cd --date=short
+            #Mon Mar 11 23:00:39 2024 -0700
+            #
+            #git show --no-patch --format=%ai
             #2024-03-11 16:37:20 -0700
-            date_time_hour = subprocess.check_output(['git', 'show', '--no-patch', '--format=%ai'],
-                                                     cwd=os.path.dirname(__file__))
-            date = date_time_hour.split()[0].decode('utf-8')
+            date_bytes = subprocess.check_output(
+                ['git', 'show', '-s', '--format=%cd', '--date=short'],
+                cwd=os.path.dirname(__file__))
+            date = date_bytes.decode('utf-8').rstrip()
             year, month, day = date.split('-')
             month = month.lstrip('0')
             day = day.lstrip('0')

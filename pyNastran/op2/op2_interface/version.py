@@ -20,14 +20,16 @@ MSC_LONG_VERSION = [
 
 OPTISTRUCT_VERSIONS = [
     b'OS11XXXX', b'OS12.210', b'OS14.210',
-    b'OS2017.1', b'OS2017.2',
-    b'OS2018.1',
-    b'OS2019.1', b'OS2019.2',
-    b'OS2020', b'OS2020.1',
-    b'OS2021.1', b'OS2021.2',
-    b'OS2022.1', b'OS2022.2',
-    b'OS2023.1', b'OS2023.2',  # not checked
-    b'OS2024.1', b'OS2024.2',  # not checked
+    b'OS2017', b'OS2017.1', b'OS2017.2', # OS2017 not checked
+    b'OS2018', b'OS2018.1', b'OS2018.2', # OS2017, OS2018.2 not checked
+    b'OS2019', b'OS2019.1', b'OS2019.2',  # OS2019 not checked
+    b'OS2020', b'OS2020.1', b'OS2020.2',  # OS2020.2 not checked
+    b'OS2021', b'OS2021.1', b'OS2021.2',  # OS2021 not checked
+    b'OS2022', b'OS2022.1', b'OS2022.2',  # OS2022 not checked
+    b'OS2023', b'OS2023.1', b'OS2023.2',  # OS2023.1, OS2023.2 not checked
+    b'OS2024', b'OS2024.1', b'OS2024.2',  # not checked
+    b'OS2025', b'OS2025.1', b'OS2025.2',  # not checked
+    b'OS2026', b'OS2026.1', b'OS2026.2',  # not checked
 ]
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
