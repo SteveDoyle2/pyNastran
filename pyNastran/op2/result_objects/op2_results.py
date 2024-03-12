@@ -922,10 +922,10 @@ class TRMBD:
         self.label = data['label']
 
         self.times = np.array([], dtype='float64') # default type
-        self.nodes = {}
-        self.eulersx = {}
-        self.eulersy = {}
-        self.eulersz = {}
+        self.nodes: dict[str, np.ndarray] = {}
+        self.eulersx: dict[str, np.ndarray] = {}
+        self.eulersy: dict[str, np.ndarray] = {}
+        self.eulersz: dict[str, np.ndarray] = {}
 
     def etypes(self) -> list[str]:
         etypes = list(self.nodes.keys())
@@ -966,7 +966,7 @@ class TRMBU:
 
         self.ntimes = ntimes
         self.times = np.array([], dtype='float64') # default dtype
-        self.eulers = {}
+        self.eulers: dict[str, np.ndarray] = {}
 
     def etypes(self) -> list[int]:
         etypes = list(self.eulers.keys())
@@ -982,7 +982,6 @@ class TRMBU:
                 f'  time = {self.time}\n'
                 f'  etypes = {etypes}\n'
                 f'  eulers\n']
-        return str(self)
 
     def __eq__(self, trmbu) -> bool:
         return True
