@@ -8,30 +8,6 @@ if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
 
-#def trmbx_tsteps_to_tstep_index_mapper(tsteps_set: set[float]) -> tuple[np.ndarray, dict[int, np.ndarray]]:
-    ## Create time step to tid mapper per subcase
-    #tsteps = np.array(list(tsteps_set))
-
-    ## Sort because set does not retain ordering
-    #tstep_indices = np.argsort(tsteps)
-    #time_steps = tsteps[tstep_indices]
-
-    #ntimes = time_steps.shape[0]
-    #tstep_to_index_mapper = {
-        #time_steps[itime]: itime for itime in range(ntimes)}
-
-
-    ## Create time step to tid mapper per subcase
-    ##tsteps = np.array(list(time_steps))
-    ##tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
-    ##time_steps = tsteps[tstep_indices]
-
-    ##ntimes = time_steps.shape[0]
-    ##tstep_to_index_mapper = {
-        ##time_steps[itime]: itime for itime in range(ntimes)
-    ##}
-    #return time_steps, tstep_to_index_mapper
-
 def read_trmbu(self: OP2Reader) -> None:
     """
     Reads the TRMBU table
@@ -144,7 +120,6 @@ def read_trmbu(self: OP2Reader) -> None:
 
     # Set because time step can be repeated
     #time_steps_set = set([])  # {t1, t2, ...}
-    #subcases_set = set([])
 
     # Read data
     element_type_to_str_map = {
@@ -175,11 +150,8 @@ def read_trmbu(self: OP2Reader) -> None:
     }
     trmbus = op2.op2_results.trmbu
 
-    # Set because time step can be repeated
-    #time_steps_set = set([])  # {t1, t2, ...}
     subcases_set = set([])
 
-    size = op2.size
     ntimes = nblocks // 2
     for i in range(0, nblocks, 2):
         itime = i // 2
@@ -187,20 +159,13 @@ def read_trmbu(self: OP2Reader) -> None:
         identifiers_int = np.frombuffer(block0, dtype=op2.idtype8)
         identifiers_float = np.frombuffer(block0, dtype=op2.fdtype8)
 
-        #acode = identifiers_int[0]
-        #tcode = identifiers_int[1]
-        #eltype = identifiers_int[2]
-        #isubcase = identifiers_int[3]
-        #time_step = identifiers_float[4]
-
         #subcases_set.add(isubcase)
-        #time_steps_set.add(time_step)
 
         identifiers_int = np.frombuffer(block0, dtype=op2.idtype8)
         identifiers_float = np.frombuffer(block0, dtype=op2.fdtype8)
 
         approach_code = identifiers_int[0]
-        tcode = identifiers_int[1]
+        tCode = identifiers_int[1]
         element_type = identifiers_int[2]
         isubcase = identifiers_int[3]
         time_step = identifiers_float[4]
@@ -208,7 +173,6 @@ def read_trmbu(self: OP2Reader) -> None:
 
         op2.data_code = {}
         op2.subtable_name = ''
-        tCode = tcode
         int3 = element_type
         op2.element_type = element_type
         op2._set_approach_code(approach_code, tCode, int3, isubcase)
@@ -220,8 +184,7 @@ def read_trmbu(self: OP2Reader) -> None:
             time = np.zeros(ntimes, dtype=op2.fdtype8)
             trmbus[isubcase].time = time
         trmbu = trmbus[isubcase]
-        time = trmbu.time
-        time[itime] = time_step
+        trmbu.time[itime] = time_step
 
         eid_euler_data = blocks[i+1]
         int_data = np.frombuffer(eid_euler_data, dtype=op2.idtype8)
@@ -266,11 +229,9 @@ def read_trmbu(self: OP2Reader) -> None:
         if element not in trmbu.eulers:
             trmbu.eulers[element] = np.empty([ntimes, nelements, 4])
 
-        #itime = tstep_to_index_mapper[time_step]
         trmbu.eulers[element][itime, :, 0] = eids
         trmbu.eulers[element][itime, :, 1:] = eulers
     assert len(subcases_set) == 1, subcases_set
-    asdf
     return
 
 def read_trmbd(self: OP2Reader) -> None:
@@ -378,14 +339,7 @@ def read_trmbd(self: OP2Reader) -> None:
     #header_float = np.frombuffer(data, dtype=op2.fdtype8)
     ncoords = header_int[2]
     #print('data =', header_int)
-    #print('ncoords =', ncoords)
     factor = self.factor
-    #if self.size == 4:
-        #idtype = 'int32'
-        #fdtype = 'float32'
-    #else:
-        #idtype = 'int64'
-        #fdtype = 'float64'
     assert len(data) == 28 * factor, len(data)
 
     self.read_3_markers([-2, 1, 0])
@@ -442,12 +396,11 @@ def read_trmbd(self: OP2Reader) -> None:
 
         363: ('CROD', 2),
     }
-    # Set because time step can be repeated
-    time_steps_set = set([])  # {t1, t2, ...}
+    # time step can be repeated.  We may drop the duplicated time in the future
+    # using a post-read slice
     subcases_set = set([])
 
     # Get time steps per subcase
-    size = op2.size
     ntimes = nblocks // 2
     trmbds = op2.op2_results.trmbd
 
@@ -466,21 +419,10 @@ def read_trmbd(self: OP2Reader) -> None:
         time_step = identifiers_float[4]
 
         subcases_set.add(isubcase)
-        time_steps_set.add(time_step)
 
 
         #------------------------------------------------------------------------
         # Read data
-    #for i in range(0, nblocks, 2):
-        #block0 = blocks[i]
-        #identifiers_int = np.frombuffer(block0, dtype=op2.idtype8)
-        #identifiers_float = np.frombuffer(block0, dtype=op2.fdtype8)
-
-        #acode = identifiers_int[0]
-        #tcode = identifiers_int[1]
-        #element_type = identifiers_int[2]
-        #isubcase = identifiers_int[3]
-        #time_step = identifiers_float[4]
 
         op2.data_code = {}
         op2.subtable_name = ''
@@ -493,8 +435,7 @@ def read_trmbd(self: OP2Reader) -> None:
             trmbds[isubcase] = TRMBD(**op2.data_code)
             trmbds[isubcase].time = np.zeros(ntimes, dtype=op2.fdtype8)
         trmbd = trmbds[isubcase]
-        time = trmbd.time
-        time[itime] = time_step
+        trmbd.time[itime] = time_step
         #------------------------------------------------------------------------
         block1 = blocks[i+1]
         int_data = np.frombuffer(block1, dtype=op2.idtype8)
@@ -534,9 +475,6 @@ def read_trmbd(self: OP2Reader) -> None:
             element, nnodes, int_data, float_data)
 
         eids = (int_data[:, 0] - op2.device_code) // 10
-        #nelements = len(eids)
-        #print('ndatai =', int_data.size)
-        #print('nelements =', nelements)
         index = np.arange(1, 1+nnodes*4, 4)
         grids = int_data[:, index]
         eulers_x = float_data[:, index+1]
@@ -544,8 +482,6 @@ def read_trmbd(self: OP2Reader) -> None:
         eulers_z = float_data[:, index+3]
 
         if element not in trmbd.eulersx:
-            #isubcase = time_steps[subcase]
-            ntimes = time_steps.shape[0]
             trmbd.eulersx[element] = np.empty([ntimes, nelements, eulers_x.shape[1]])
             trmbd.eulersy[element] = np.empty([ntimes, nelements, eulers_y.shape[1]])
             trmbd.eulersz[element] = np.empty([ntimes, nelements, eulers_z.shape[1]])
@@ -555,13 +491,11 @@ def read_trmbd(self: OP2Reader) -> None:
             nodes[:, 1:] = grids
             trmbd.nodes[element] = nodes
 
-        itime = tstep_to_index_mapper[time_step]
         trmbd.eulersx[element][itime, :, :] = eulers_x
         trmbd.eulersy[element][itime, :, :] = eulers_y
         trmbd.eulersz[element][itime, :, :] = eulers_z
 
     assert len(subcases_set) == 1, subcases_set
-    asdf
     return
 
 def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):

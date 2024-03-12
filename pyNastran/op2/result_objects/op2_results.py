@@ -927,11 +927,21 @@ class TRMBD:
         self.eulersy = {}
         self.eulersz = {}
 
+    def etypes(self) -> list[str]:
+        etypes = list(self.nodes.keys())
+        return etypes
+
     def get_stats(self, short=False):
+        etypes = self.etypes()
         if short:
-            return [f'op2_results.trmbd[{self.isubcase}]: TRMBU(nodes, eulersx, eulersy, eulersz)\n']
+            return [f'op2_results.trmbd[{self.isubcase}]: TRMBD(time, nodes, eulersx, eulersy, eulersz)\n']
         else:
-            return [f'op2_results.trmbd[{self.isubcase}]: TRMBU(nodes, eulersx, eulersy, eulersz)\n']
+            return [
+                f'op2_results.trmbd[{self.isubcase}]: TRMBD\n'
+                f'  time = {self.time}\n'
+                f'  etypes = {etypes}\n'
+                f'  nodes = {self.nodes}\n'
+                f'  eulersx, eulersy, eulersz\n']
 
     def __eq__(self, trmbd) -> bool:
         return True
@@ -965,9 +975,13 @@ class TRMBU:
     def get_stats(self, short=False):
         etypes = self.etypes()
         if short:
-            return [f'op2_results.trmbu[{self.isubcase}]: TRMBU(eulers); etypes={etypes}\n']
+            return [f'op2_results.trmbu[{self.isubcase}]: TRMBU(time, eulers); etypes={etypes}\n']
         else:
-            return [f'op2_results.trmbu[{self.isubcase}]: TRMBU(eulers); etypes={etypes}\n']
+            return [
+                f'op2_results.trmbu[{self.isubcase}]: TRMBU\n'
+                f'  time = {self.time}\n'
+                f'  etypes = {etypes}\n'
+                f'  eulers\n']
         return str(self)
 
     def __eq__(self, trmbu) -> bool:
