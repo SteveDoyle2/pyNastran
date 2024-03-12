@@ -26,7 +26,9 @@ from pyNastran.gui.vtk_rendering_core import vtkActor2D, vtkRenderer
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
-from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
+from pyNastran.gui.utils.qt.qelement_edit import (
+    QNodeLineEdit, QElementLineEdit,
+    QNodeTextEdit, QElementTextEdit)
 
 from pyNastran.gui.gui_objects.settings import Settings, ANNOTATION_SIZE
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
@@ -36,6 +38,7 @@ from pyNastran.gui.menus.highlight.vtk_utils import (
 if TYPE_CHECKING:
     from pyNastran.gui.menus.groups_modify.groups import Group
 
+USE_LINEEDIT = True
 
 class HighlightWindow(PyDialog):
     """
@@ -123,18 +126,33 @@ class HighlightWindow(PyDialog):
         self.on_font(self._default_font_size)
         #self.show()
 
+    def _create_node_element_edits(self, model_name: str) -> None:
+        if USE_LINEEDIT:
+            MAX_LENGTH = 100_000
+            self.nodes_edit = QNodeLineEdit(
+                self, model_name, pick_style='area',
+                cleanup=True, tab_to_next=False, max_length=MAX_LENGTH)
+
+            self.elements_edit = QElementLineEdit(
+                self, model_name, pick_style='area',
+                cleanup=True, tab_to_next=False, max_length=MAX_LENGTH)
+        else:
+            self.nodes_edit = QNodeTextEdit(
+                self, model_name, pick_style='area',
+                cleanup=True, tab_to_next=False)
+
+            self.elements_edit = QElementTextEdit(
+                self, model_name, pick_style='area',
+                cleanup=True, tab_to_next=False)
+
     def create_widgets(self):
         """creates the display window"""
         # Text Size
 
         model_name = self.model_name
         self.nodes_label = QLabel('Nodes:')
-        self.nodes_edit = QNodeEdit(self, model_name, pick_style='area',
-                                    cleanup=True, tab_to_next=False, max_length=100_000)
-
         self.elements_label = QLabel('Elements:')
-        self.elements_edit = QElementEdit(self, model_name, pick_style='area',
-                                          cleanup=True, tab_to_next=False, max_length=100_000)
+        self._create_node_element_edits(model_name)
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -236,7 +254,8 @@ class HighlightWindow(PyDialog):
         vbox.addLayout(grid)
         #vbox.addStretch()
         #vbox.addLayout(grid2)
-        vbox.addStretch()
+        if USE_LINEEDIT:
+            vbox.addStretch()
 
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
@@ -247,7 +266,7 @@ class HighlightWindow(PyDialog):
             self._set_connections_highlight()
         elif self.menu_type == 'mark':
             self._set_connections_mark()
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.menu_type)
         self._set_connections_end()
 
@@ -490,8 +509,10 @@ def main():  # pragma: no cover
         'nodes_pound' : 100,
         'elements_pound' : 200,
     }
-    #main_window = HighlightWindow(data, menu_type='highlight')
-    main_window = HighlightWindow(data, menu_type='mark')
+    if 1:
+        main_window = HighlightWindow(data, menu_type='highlight')
+    else:
+        main_window = HighlightWindow(data, menu_type='mark')
     main_window.show()
     # Enter the main loop
     app.exec_()

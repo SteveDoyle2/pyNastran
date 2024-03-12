@@ -756,7 +756,7 @@ TABLE_OBJ_MAP = {
     'strain.cpyram_strain' : (RealSolidStrainArrayNx, ComplexSolidStrainArray, ),
     'stress.cpyram_stress' : (RealSolidStressArrayNx, ComplexSolidStressArray, ),
 
-    'strain.ctetra_strain' : (RealSolidStrainArray, RealSolidStressArrayNx, ComplexSolidStrainArray),
+    'strain.ctetra_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'ato.ctetra_strain' : (RandomSolidStrainArray, ),
     'crm.ctetra_strain' : (RandomSolidStrainArray, ),
     'psd.ctetra_strain' : (RandomSolidStrainArray, ),
@@ -765,7 +765,7 @@ TABLE_OBJ_MAP = {
     'RAECONS.ctetra_strain' : (RealSolidStrainArray, ),
     'RAEEATC.ctetra_strain' : (RealSolidStrainArray, ),
 
-    'strain.cpenta_strain' : (RealSolidStrainArray, RealSolidStressArrayNx, ComplexSolidStrainArray),
+    'strain.cpenta_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'strain.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
     'ato.cpenta_strain' : (RandomSolidStrainArray, ),
     'crm.cpenta_strain' : (RandomSolidStrainArray, ),
@@ -1369,7 +1369,7 @@ def _export_subcases(hdf5_file, op2_model):
     """exports the subcases to HDF5"""
     subcase_groups = {}
     result_types = op2_model.get_table_types()
-    skip_results = ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds']
+    skip_results = ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'cstm', 'trmbu', 'trmbd']
     for result_type in result_types:
         if result_type in skip_results or result_type.startswith('responses.'):
             #op2_model.log.debug('skipping %s' % result_type)

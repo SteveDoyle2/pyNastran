@@ -4,13 +4,17 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
+import numpy as np
+
 #from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
-from qtpy.QtWidgets import QDialog, QLineEdit
+from qtpy.QtWidgets import QDialog, QLineEdit, QTextEdit
 from pyNastran.gui.gui_objects.settings import FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
+from pyNastran.gui.utils.qt.checks.qlineedit import (
+    QLINEEDIT_GOOD, QLINEEDIT_ERROR,
+    QTEXTEDIT_GOOD, QTEXTEDIT_ERROR, )
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -80,18 +84,63 @@ class PyDialog(QDialog):
             else:
                 self.closeEvent(event)
 
-def check_patran_syntax(cell, pound=None):
-    text = str(cell.text())
+
+def check_patran_syntax(cell: Union[QTextEdit, QLineEdit],
+                        pound=None) -> tuple[Optional[np.ndarray], bool]:
+    if isinstance(cell, QLineEdit):
+        values, is_passed = check_patran_syntax_qlineedit(cell, pound=pound)
+    else:
+        values, is_passed = check_patran_syntax_qtextedit(cell, pound=pound)
+    return values, is_passed
+
+def check_patran_syntax_qtextedit(cell: QTextEdit,
+                                  pound=None) -> tuple[Optional[np.ndarray], bool]:
+    # QTextEdit
+    text = cell.toPlainText().strip().replace('\n', ' ')
+
+    try:
+        values = parse_patran_syntax(text, pound=pound)
+        cell.setStyleSheet(QTEXTEDIT_GOOD)
+        is_passed = True
+    except ValueError as error:
+        cell.setStyleSheet(QTEXTEDIT_ERROR)
+        cell.setToolTip(str(error))
+        values = None
+        is_passed = False
+    return values, is_passed
+
+def check_patran_syntax_qlineedit(cell: QLineEdit,
+                                  pound=None) -> tuple[Optional[np.ndarray], bool]:
+    text = cell.text().strip()
+
     try:
         values = parse_patran_syntax(text, pound=pound)
         cell.setStyleSheet(QLINEEDIT_GOOD)
-        return values, True
+        is_passed = True
     except ValueError as error:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
-        return None, False
+        values = None
+        is_passed = False
+    return values, is_passed
 
-def check_patran_syntax_dict(cell, pound=None):
+#def check_patran_syntax(qlineedit: QLineEdit,
+                        #pound: int) -> tuple[bool, Optional[np.ndarray]]:
+    #is_failed = True
+    #element_str = qlineedit.text().strip()
+    #element_ids = None
+    #if element_str:
+        #try:
+            #element_ids = parse_patran_syntax(element_str, pound=pound)
+        #except:
+            #qlineedit.setStyleSheet(QLINEEDIT_BAD)
+            #return is_failed, element_ids
+    #is_failed = False
+    #qlineedit.setStyleSheet(QLINEEDIT_GOOD)
+    #return is_failed, element_ids
+
+def check_patran_syntax_dict(cell: QLineEdit,
+                             pound=None) -> tuple[Optional[dict[str, np.ndarray]], bool]:
     text = str(cell.text())
     try:
         value = parse_patran_syntax_dict(text)

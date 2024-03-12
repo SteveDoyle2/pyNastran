@@ -13,7 +13,7 @@ http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
 from __future__ import annotations
-from typing import Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 
 #from pyNastran.gui.vtk_interface import
 #from vtk import (
@@ -26,13 +26,14 @@ from typing import Callable, Optional
     #vtkRenderedAreaPicker,
 #)
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleRubberBandZoom
-from vtkmodules.vtkRenderingCore import vtkActor, vtkRenderedAreaPicker
+from vtkmodules.vtkRenderingCore import vtkRenderedAreaPicker
 
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 from pyNastran.gui.styles.area_pick_utils import (
     get_actors_by_area_picker)
 
-#if TYPE_CHECKING:
+if TYPE_CHECKING:
+    from pyNastran.gui.typing import Actor
     #from pyNastran.gui.main_window import MainWindow
 
 #class AreaPickStyle(vtkInteractorStyleRubberBandPick):
@@ -74,13 +75,13 @@ class AreaPickStyle(vtkInteractorStyleRubberBandZoom):  # works
         self.is_eids = is_eids
         self.is_nids = is_nids
         self.representation = representation
-        assert is_eids or is_nids, 'is_eids=%r is_nids=%r, must not both be False' % (is_eids, is_nids)
+        assert is_eids or is_nids, f'is_eids={is_eids!r} is_nids={is_nids!r}, must not both be False'
         self.callback = callback
         self.cleanup = cleanup
         self._pick_visible = False
         self.name = name
         assert name is not None
-        self.actors: list[vtkActor] = []
+        self.actors: list[Actor] = []
 
     def _left_button_press_event(self, obj, event) -> None:
         """gets the first point"""

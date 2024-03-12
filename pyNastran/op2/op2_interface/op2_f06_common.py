@@ -1847,7 +1847,7 @@ def _get_op2_stats_short(model: OP2, table_types: list[str],
                          log: SimpleLogger) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
-    handled_previously = ['params', 'grid_point_weight', 'psds']
+    handled_previously = ['params', 'grid_point_weight', 'psds', 'cstm']
     no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
     for table_type in table_types:
         #table_type_print = ''
@@ -1923,7 +1923,9 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
         table = model.get_result(table_type)
         if table_type in handled_previously:
             continue
-        if table_type in ['gpdt', 'bgpdt', 'eqexin', 'monitor1', 'monitor3'] or table_type.startswith('responses.'):
+
+        skip_results = ('gpdt', 'bgpdt', 'eqexin', 'monitor1', 'monitor3', 'cstm')
+        if table_type in skip_results or table_type.startswith('responses.'):
             obj = model.get_result(table_type)
             if obj is None:
                 continue

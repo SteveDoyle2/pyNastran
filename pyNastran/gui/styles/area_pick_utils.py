@@ -17,9 +17,7 @@ from vtkmodules.vtkCommonDataModel import (
 from vtkmodules.vtkFiltersPoints import vtkExtractPoints
 from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-from vtkmodules.vtkRenderingCore import vtkActor
 
-from pyNastran.gui.vtk_rendering_core import vtkActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from pyNastran.gui.vtk_util import vtk_to_numpy
@@ -32,8 +30,10 @@ from pyNastran.gui.menus.highlight.vtk_utils import (
 
 if TYPE_CHECKING:
     from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints, vtkIdTypeArray
+    from vtkmodules.vtkFiltersCore import vtkIdFilter
     from vtkmodules.vtkRenderingCore import vtkAreaPicker
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.typing import Actor
 
 def get_actors_by_area_picker(gui: MainWindow, area_picker: vtkAreaPicker,
                               model_name: str,
@@ -203,7 +203,7 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
 
 
 def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
-                                            ids,
+                                            ids: vtkIdFilter,
                                             frustum: vtkPlanes):
     if 1:
         selected_frustum = vtkExtractSelectedFrustum()

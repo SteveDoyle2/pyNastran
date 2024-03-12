@@ -8,10 +8,58 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
+
+v1.4.1 (2024/3/xx)
+------------------
+This is a bug fix release.  Some GUI enhancements have been added as well.
+
+The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
+
+BDF:
+ - added:
+   - CBUSH centroid to fix grid point forces bug
+   - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
+ - fixed:
+   - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
+   - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
+   - fixing TEMP writing when ntemperatures > 3
+OP2:
+ - added:
+   - support for more Simcenter and Optistruct versions
+ - fixed:
+   - trmbd/trmbu results read in properly
+   - strain.ctetra/cpenta_strain hdf5 results read in properly
+
+GUI:
+ - Shear-Moment-Torque menu:
+   - remove unused time box
+   - added icase flag to allow changing case
+   - added line/points to indicate start/end and intermediate plane locations
+   - added length scale/unit
+   - added scripting message
+   - added Station Label to more clearly indicate location for 2D plots
+   - added analysis element_ids
+   - added popup for SMT results
+ - Groups / GroupsMenu
+   - active element ids are now copyable
+   - added node ids to groups for informational purposes
+   - groups menu delete sorted bug (can't sort int/str)
+ - fixed:
+   - fixed corner text min/max bug (should be default, not same as legend)
+   - fixed legend disappearing when previous result is GridPointForces
+   - fixed issue with GUI not loading if json file doesn't exist
+
+  - known issues:
+    - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
+    - Groups:
+      - node id picking for active groups is buggy (area_pick, highlight menu)
+      - legend doesn't limit min/max when group is active
+      - extra arrows (e.g., load_vectors) are shown when group is active
+
 v1.4.0 (2024/2/29)
 ------------------
 Programmatics:
- - Supports Python 3.8-3.10
+ - Supports Python 3.8-3.12
  - much improved MSC 2020/2021 and OptiStruct support
  - support for PyQt5 and PySide2 (GUI)
  - support for latest numpy/h5py
@@ -164,6 +212,16 @@ OP2 writer:
 OP4:
  - MATPOOL objects are now stored in a Matrix object
 
+Additional Formats:
+ - AVL:
+   - sine/cosine/equal spacing
+   - proper classes
+ - Abaqus:
+   - many more cards supported and more accurately
+   - halfway decent abaqus_to_nastran converter
+ - Tecplot:
+   - binary Tecplot support
+
 GUI:
  - removed PyQt6/PySide6 support (they're buggy)
  - nastran:
@@ -179,11 +237,6 @@ GUI:
    - minor speedups for loading geometry
    - CPYRAM13 fixed
    - xoffset finite bug
- - AVL support:
-   - sine/cosine/equal spacing
-   - proper classes
- - Tecplot support:
-   - binary Tecplot support
  - general gui support:
    - new icons
    - "Probe All" support to probe values across all results

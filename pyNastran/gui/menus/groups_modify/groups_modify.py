@@ -20,7 +20,7 @@ from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui import ICON_PATH
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
-from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
+from pyNastran.gui.utils.qt.qelement_edit import QElementLineEdit, QElementTextEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR, QLINEEDIT_DISABLED
 
 from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 
 #import pyNastran
 #from pyNastran.gui import ICON_PATH
+USE_LINEEDIT = True
 
 MAX_EDIT_SIZE = 100_000
 class GroupsModify(PyDialog):
@@ -139,7 +140,12 @@ class GroupsModify(PyDialog):
 
         # add
         self.add_label = QLabel('Add Elements:')
-        self.add_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=MAX_EDIT_SIZE)
+        if USE_LINEEDIT:
+            self.add_edit = QElementLineEdit(self, self.model_name, pick_style='area', max_length=MAX_EDIT_SIZE)
+            self.remove_edit = QElementLineEdit(self, self.model_name, pick_style='area', max_length=MAX_EDIT_SIZE)
+        else:
+            self.add_edit = QElementTextEdit(self, self.model_name, pick_style='area')
+            self.remove_edit = QElementTextEdit(self, self.model_name, pick_style='area')
         self.add_button = QPushButton('Add')
         self.add_highlight_button = QPushButton('Show')
 
@@ -149,7 +155,6 @@ class GroupsModify(PyDialog):
 
         # remove
         self.remove_label = QLabel('Remove Elements:')
-        self.remove_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=MAX_EDIT_SIZE)
         self.remove_button = QPushButton('Remove')
         self.remove_highlight_button = QPushButton('Show')
 
@@ -262,7 +267,8 @@ class GroupsModify(PyDialog):
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
         vbox.addLayout(main_create_delete)
-        vbox.addStretch()
+        if USE_LINEEDIT:
+            vbox.addStretch()
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 

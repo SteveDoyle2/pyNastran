@@ -16,7 +16,8 @@ COLORS = {
     'INFO' : 'green',
 }
 
-def str_to_html(log_type, filename, lineno, msg):
+def str_to_html(log_type: str, filename: str,
+                lineno: int, msg: str) -> str:
     """
     Converts the message to html
 
@@ -55,7 +56,8 @@ def str_to_html(log_type, filename, lineno, msg):
     html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
     return html_msg
 
-def get_html_msg(color, tim, log_type, filename, lineno, msg):
+def get_html_msg(color: str, tim: str, log_type: str,
+                 filename: str, lineno: int, msg: str) -> str:
     """
     converts the message to html
 
