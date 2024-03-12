@@ -448,8 +448,13 @@ class TableArray(ScalarObject):  # displacement style table
             #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
             #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
             # 1001   S        0.000859+0.0j  0.000859+0.0j -0.003323+0.0j
-
-            columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+            try:
+                columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+            except ValueError:
+                msg = ''
+                for name, values in zip(column_names, column_values):
+                    msg += f'{name!r}: {values}; n={len(values)}\n'
+                raise ValueError(msg)
 
             gridtype_str = self.gridtype_str
             ugridtype_str = np.unique(gridtype_str)

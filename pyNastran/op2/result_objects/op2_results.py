@@ -1,4 +1,5 @@
 from typing import Any
+import numpy as np
 
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS, RAQCONS,
@@ -920,6 +921,7 @@ class TRMBD:
         self.subtitle = data['subtitle']
         self.label = data['label']
 
+        self.times = np.array([], dtype='float64') # default type
         self.nodes = {}
         self.eulersx = {}
         self.eulersy = {}
@@ -941,7 +943,7 @@ class TRMBD:
         return msg
 
 class TRMBU:
-    def __init__(self, **data: dict[str, Any]):
+    def __init__(self, ntimes: int, **data: dict[str, Any]):
         self.isubcase = data['isubcase']
         self.analysis_code = data['analysis_code']
         self.device_code = data['device_code']
@@ -951,6 +953,9 @@ class TRMBU:
         self.title = data['title']
         self.subtitle = data['subtitle']
         self.label = data['label']
+
+        self.ntimes = ntimes
+        self.times = np.array([], dtype='float64') # default dtype
         self.eulers = {}
 
     def etypes(self) -> list[int]:

@@ -22,7 +22,7 @@ else:
         raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    def get_git_revision_short_hash() -> str:
+    def get_git_revision_short_hash_date() -> tuple[str, tuple[str, str, str]]:
         """determines the git revision; only works if the packages was checked
         out using git"""
         try:
@@ -32,25 +32,42 @@ else:
             #   what about if you use setup_user.py install?
             #   what about if you don't have git?
             # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash = subprocess.check_output(['git', 'describe', '--always'],
-                                            cwd=os.path.dirname(__file__))
+            ghash_bytes = subprocess.check_output(['git', 'describe', '--always'],
+                                                  cwd=os.path.dirname(__file__))
+            ghash = ghash_bytes.decode('utf-8').rstrip()
 
-            ghash = ghash.decode('utf-8').rstrip()
+            #2024-03-11 16:37:20 -0700
+            date_time_hour = subprocess.check_output(['git', 'show', '--no-patch', '--format=%ai'],
+                                                     cwd=os.path.dirname(__file__))
+            date = date_time_hour.split()[0].decode('utf-8')
+            year, month, day = date.split('-')
+            month = month.lstrip('0')
+            day = day.lstrip('0')
+            date_out = (year, month, day)
         except Exception:
             # git isn't installed
             ghash = 'no.checksum.error'
+            date_out = ('2024','8','xx')
         # 1.5.0+dev.0eccfa918
-        return 'dev.%s' % ghash
+        return 'dev.%s' % ghash, date_out
 
-    revision = get_git_revision_short_hash()
+    revision, (year, month, day) = get_git_revision_short_hash_date()
     __version_release__ = '1.5.0'
 
     # only for release; 1.4.0
-    __version__ = __version_release__
+    #__version__ = __version_release__
     # 1.4.0+dev.0eccfa918
     __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2024/8/xx'
-    __releaseDate2__ = 'AUGUST xx, 2024'
+
+    months = {
+        '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
+        '4': 'APRIL','5': 'MAY', '6': 'JUNE',
+        '7': 'JULY', '8': 'AUGUST', '9': 'SEPTEMBER',
+        '10': 'OCTOBER', '11': 'NOVEMBER', '12': 'DECEMBER',
+    }
+    month_str = months[month]
+    __releaseDate__ = f'{year}/{month}/{day}'        # 2024/3/11
+    __releaseDate2__ = f'{month_str} {day}, {year}'  # MARCH 11, 2024
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'

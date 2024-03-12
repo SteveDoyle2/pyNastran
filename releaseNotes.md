@@ -26,6 +26,7 @@ BDF:
 OP2:
  - fixed:
    - trmbd/trmbu results read in properly
+   - strain.ctetra/cpenta_strain hdf5 results read in properly
 GUI:
  - Shear-Moment-Torque menu:
    - remove unused time box

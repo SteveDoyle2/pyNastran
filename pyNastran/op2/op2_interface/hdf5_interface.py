@@ -756,7 +756,7 @@ TABLE_OBJ_MAP = {
     'strain.cpyram_strain' : (RealSolidStrainArrayNx, ComplexSolidStrainArray, ),
     'stress.cpyram_stress' : (RealSolidStressArrayNx, ComplexSolidStressArray, ),
 
-    'strain.ctetra_strain' : (RealSolidStrainArray, RealSolidStressArrayNx, ComplexSolidStrainArray),
+    'strain.ctetra_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'ato.ctetra_strain' : (RandomSolidStrainArray, ),
     'crm.ctetra_strain' : (RandomSolidStrainArray, ),
     'psd.ctetra_strain' : (RandomSolidStrainArray, ),
@@ -765,7 +765,7 @@ TABLE_OBJ_MAP = {
     'RAECONS.ctetra_strain' : (RealSolidStrainArray, ),
     'RAEEATC.ctetra_strain' : (RealSolidStrainArray, ),
 
-    'strain.cpenta_strain' : (RealSolidStrainArray, RealSolidStressArrayNx, ComplexSolidStrainArray),
+    'strain.cpenta_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'strain.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
     'ato.cpenta_strain' : (RandomSolidStrainArray, ),
     'crm.cpenta_strain' : (RandomSolidStrainArray, ),
