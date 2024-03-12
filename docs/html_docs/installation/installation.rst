@@ -54,7 +54,7 @@ pyNastran is tested against a range of package versions (lowest to highest based
    * imageio >= 2.4.1,<3  **(optional for animation support)**
 
 *****************************************************
-Install Procedure - From Sorce
+Install Procedure - From Source
 *****************************************************
 Base functionality:
 

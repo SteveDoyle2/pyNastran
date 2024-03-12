@@ -11,7 +11,7 @@ Release Notes
 
 v1.4.1 (2024/3/xx)
 ------------------
-This is a bug fix release primarily focused on the GUI.
+This is a bug fix release.  Some GUI enhancements have been added as well.
 
 The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
 
@@ -24,9 +24,12 @@ BDF:
    - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
    - fixing TEMP writing when ntemperatures > 3
 OP2:
+ - added:
+   - support for more Simcenter and Optistruct versions
  - fixed:
    - trmbd/trmbu results read in properly
    - strain.ctetra/cpenta_strain hdf5 results read in properly
+
 GUI:
  - Shear-Moment-Torque menu:
    - remove unused time box
@@ -209,6 +212,16 @@ OP2 writer:
 OP4:
  - MATPOOL objects are now stored in a Matrix object
 
+Additional Formats:
+ - AVL:
+   - sine/cosine/equal spacing
+   - proper classes
+ - Abaqus:
+   - many more cards supported and more accurately
+   - halfway decent abaqus_to_nastran converter
+ - Tecplot:
+   - binary Tecplot support
+
 GUI:
  - removed PyQt6/PySide6 support (they're buggy)
  - nastran:
@@ -224,11 +237,6 @@ GUI:
    - minor speedups for loading geometry
    - CPYRAM13 fixed
    - xoffset finite bug
- - AVL support:
-   - sine/cosine/equal spacing
-   - proper classes
- - Tecplot support:
-   - binary Tecplot support
  - general gui support:
    - new icons
    - "Probe All" support to probe values across all results
