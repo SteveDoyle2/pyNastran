@@ -65,7 +65,9 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from pyNastran.gui.menus.groups_modify.groups_modify import Group
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
     from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
@@ -76,7 +78,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class GeometryObject(BaseGui):
     """
     """
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         super().__init__(gui)
         #self.gui = parent
 
@@ -291,7 +293,7 @@ class GuiAttributes:
         self.model_data.geometry_properties = geometry_properties
 
     @property
-    def groups(self):
+    def groups(self) -> dict[str, Any]:
         return self.model_data.groups
     @groups.setter
     def groups(self, groups: dict[str, Any]):
@@ -1620,11 +1622,11 @@ class GuiAttributes:
         """see ``set_camera_data`` for arguments"""
         return self.camera_obj.get_camera_data()
 
-    def on_set_camera(self, name, show_log=True):
+    def on_set_camera(self, name: str, show_log=True):
         """see ``set_camera_data`` for arguments"""
         self.camera_obj.on_set_camera(name, show_log=show_log)
 
-    def on_set_camera_data(self, camera_data, show_log=True):
+    def on_set_camera_data(self, camera_data, show_log: bool=True) -> None:
         """
         Sets the current camera
 
@@ -1662,7 +1664,7 @@ class GuiAttributes:
         self.camera_obj.on_set_camera_data(camera_data, show_log=show_log)
 
     @property
-    def IS_GUI_TESTING(self):
+    def IS_GUI_TESTING(self) -> bool:
         return 'test_' in sys.argv[0]
     @property
     def iren(self):
@@ -1672,21 +1674,44 @@ class GuiAttributes:
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
-    def get_xyz_cid0(self, model_name=None):
+    def get_xyz_cid0(self, model_name=None) -> np.ndarray:
         xyz = self.xyz_cid0
         return xyz
 
-    def get_element_ids(self, model_name=None, ids=None):
+    def get_element_ids(self, model_name: Optional[str]=None,
+                        ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around element_ids"""
+        #if self.group_active == 'main':
+        eids_all = self.element_ids
         if ids is None:
-            return self.element_ids
-        return self.element_ids[ids]
+            eids = eids_all
+        else:
+            eids = eids_all[ids]
+        # skin_eids=1:1632
+        if self.group_active == 'main':
+            return eids
 
-    def get_node_ids(self, model_name=None, ids=None):
+        group: Group = self.groups[self.group_active]
+        group_eids = group.element_ids
+        eids2 = np.intersect1d(eids, group_eids)
+        return eids2
+
+    def get_node_ids(self, model_name: Optional[str]=None,
+                     ids: Optional[np.ndarray]=None) -> np.ndarray:
         """wrapper around node_ids"""
+        nids_all = self.node_ids
         if ids is None:
-            return self.node_ids
-        return self.node_ids[ids]
+            nids = nids_all
+        else:
+            nids = nids_all[ids]
+
+        if self.group_active == 'main':
+            return nids
+
+        group: Group = self.groups[self.group_active]
+        group_nids = group.node_ids
+        nids2 = np.intersect1d(nids, group_nids)
+        return nids2
 
     def get_reverse_node_ids(self, model_name=None, ids=None):
         """wrapper around node_ids"""
@@ -1699,32 +1724,32 @@ class GuiAttributes:
 
     #------------------------------
     # these are overwritten
-    def log_debug(self, msg):
+    def log_debug(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('DEBUG:  ', msg)
 
-    def log_info(self, msg):
+    def log_info(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('INFO:  ', msg)
 
-    def log_error(self, msg):
+    def log_error(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         #if self.debug:
         print('ERROR:  ', msg)
 
-    def log_warning(self, msg):
+    def log_warning(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('WARNING:  ', msg)
 
-    def log_command(self, msg):
+    def log_command(self, msg: str) -> None:
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('COMMAND:  ', msg)
 
-    def Render(self):  # pragma: no cover
+    def Render(self) -> None:  # pragma: no cover
         pass
 
 
@@ -1795,5 +1820,5 @@ def _add_fmt(supported_fmts: list[str],
             fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
             if fmt not in supported_fmts:
                 supported_fmts.append(fmt)
-    else:
+    else:  # pragma: no cover
         raise TypeError(data)

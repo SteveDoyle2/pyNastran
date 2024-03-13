@@ -603,8 +603,11 @@ class F06Writer(OP2_F06_Common):
         header_old = ['     DEFAULT                                                                                                                        \n',
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
-        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin',
-                             'grid_point_weight', 'psds', 'monitor1', 'monitor3']
+        unallowed_results = [
+            'eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin',
+            'grid_point_weight', 'psds', 'monitor1', 'monitor3',
+            'cstm',
+        ]
         res_types = list(model.get_result(table_type) for table_type in sorted(model.get_table_types())
                          if table_type not in unallowed_results and not table_type.startswith('responses.'))
 

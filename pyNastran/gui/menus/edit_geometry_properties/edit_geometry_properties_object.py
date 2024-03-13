@@ -385,8 +385,15 @@ def map_group1_results_to_group2(group1: Union[CoordProperties, AltGeometry],
     update_group2 = False
     if group2 is None:
         return update_group2
-    for key in ('point_size', 'opacity', 'color_float',
-                'is_visible', 'line_width', 'representation', 'bar_scale'):
+    elif isinstance(group1, CoordProperties):
+        #label='Global XYZ', coord_type'xyz', is_visible=False, scale=9.699980926513673
+        keys = ('is_visible', )
+    else:
+        assert isinstance(group1, AltGeometry), group1
+        keys = ('point_size', 'opacity', 'color_float',
+                'is_visible', 'line_width', 'representation', 'bar_scale')
+
+    for key in keys:
         if not hasattr(group1, key):
             continue
         value1 = getattr(group1, key)

@@ -28,7 +28,8 @@ from pyNastran.gui.utils.vtk.base_utils import (
     get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    from vtkmodules.vtkFiltersGeneral import vtkAxes
+    #from vtkmodules.vtkFiltersGeneral import vtkAxes
+    from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 # // Linear cells
 # VTK_EMPTY_CELL = 0
 # VTK_VERTEX = 1
@@ -124,7 +125,9 @@ ETYPES_EXPECTED_DICT = {
     27: 13, # cpyram13
 }
 
-def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> vtkPoints:
+def numpy_to_vtk_points(nodes: np. ndarray,
+                        points: Optional[vtkPoints]=None,
+                        dtype: str='<f', deep: int=1) -> vtkPoints:
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
@@ -148,7 +151,9 @@ def numpy_to_vtk_points(nodes: np. ndarray, points=None, dtype='<f', deep=1) -> 
     return points
 
 
-def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> None:
+def _check_shape(etype: int,
+                 elements: np.ndarray,
+                 nnodes_per_element: int) -> None:
     """
     The following table lists the supported vtk types
 
@@ -346,7 +351,7 @@ def extract_selection_node_from_grid_to_ugrid(grid: vtkUnstructuredGrid,
     return ugrid
 
 
-def create_vtk_selection_node_by_point_ids(point_ids) -> vtkSelectionNode:
+def create_vtk_selection_node_by_point_ids(point_ids: np.ndarray) -> vtkSelectionNode:
     id_type_array = _convert_ids_to_vtk_idtypearray(point_ids)
     selection_node = vtkSelectionNode()
     #selection_node.SetContainingCellsOn()
@@ -356,7 +361,7 @@ def create_vtk_selection_node_by_point_ids(point_ids) -> vtkSelectionNode:
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def create_vtk_selection_node_by_cell_ids(cell_ids) -> vtkSelectionNode:
+def create_vtk_selection_node_by_cell_ids(cell_ids: np.ndarray) -> vtkSelectionNode:
     id_type_array = _convert_ids_to_vtk_idtypearray(cell_ids)
     selection_node = vtkSelectionNode()
     selection_node.SetFieldType(vtkSelectionNode.CELL)
@@ -364,7 +369,8 @@ def create_vtk_selection_node_by_cell_ids(cell_ids) -> vtkSelectionNode:
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def _convert_ids_to_vtk_idtypearray(ids):
+def _convert_ids_to_vtk_idtypearray(ids: np.ndarray) -> vtkIdTypeArray:
+    """TODO: speed this up"""
     if isinstance(ids, int):
         ids = [ids]
     #else:
@@ -496,7 +502,7 @@ def map_element_centroid_to_node_fringe_result(
     is_passed = True
     return is_passed, (imin, imax, min_value, max_value)
 
-def update_axis_text_size(axis: vtkAxes,
+def update_axis_text_size(axis: vtkAxesActor,
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25) -> None:
     """updates the coordinate system text size"""
@@ -515,7 +521,8 @@ def update_axis_text_size(axis: vtkAxes,
         text.SetHeight(coord_text_scale * height)
 
 def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
-                           point_cell_type: int) -> None:
+                           is_points: bool=False,
+                           is_cells: bool=False) -> None:
     """
     Parameters
     ----------
@@ -524,10 +531,12 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
         1 : cell
 
     """
-    if point_cell_type == 0:
+    xor = (is_points ^ is_cells)
+    assert xor, (is_points, is_cells)
+    if is_points:
         ids.SetPointIdsArrayName(name)
-    elif point_cell_type == 1:
+    elif is_cells:
         ids.SetCellIdsArrayName(name)
-    else:
-        raise RuntimeError(point_cell_type)
+    else:  # pragma: no cover
+        raise RuntimeError(is_points, is_cells)
     return

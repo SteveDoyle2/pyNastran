@@ -504,7 +504,7 @@ class Settings:
                           default=SHEAR_MOMENT_TORQUE_LINE_WIDTH, save=True, auto_type=float)
         self.shear_moment_torque_point_size = force_ranged(
             self.shear_moment_torque_point_size, min_value=POINT_SIZE_MIN, max_value=POINT_SIZE_MAX)
-        self.shear_moment_torque_line_thickness = force_ranged(
+        self.shear_moment_torque_line_width = force_ranged(
             self.shear_moment_torque_line_width,
             min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
 
@@ -649,7 +649,7 @@ class Settings:
         settings.setValue('shear_moment_torque_color', self.shear_moment_torque_color)
         settings.setValue('shear_moment_torque_opacity', self.shear_moment_torque_opacity)
         settings.setValue('shear_moment_torque_point_size', self.shear_moment_torque_point_size)
-        settings.setValue('shear_moment_torque_line_thickness', self.shear_moment_torque_line_thickness)
+        settings.setValue('shear_moment_torque_line_width', self.shear_moment_torque_line_width)
 
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)

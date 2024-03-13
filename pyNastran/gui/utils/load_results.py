@@ -16,7 +16,7 @@ import traceback
 from typing import Any
 
 import numpy as np
-import pyNastran
+#import pyNastran
 from pyNastran.utils import _filename
 
 from pyNastran.femutils.io import loadtxt_nice

@@ -5,8 +5,6 @@ Features
 Overview
 ========
  - Python 3.9-3.12
- - BSD-3 license
- - unicode support
  - importable from within Matlab
  - limited package requirements for BDF, OP2, and F06
  - additional features available with more packages
@@ -15,6 +13,7 @@ Overview
 
       - h5py for HDF5 input/output support
       - PyQt5/PyQt6/PySide2/PySide6/tk/wxpython for file loading pop-up
+      - QScintilla & pygments support for scripting code editor
    - OP2:
 
      - pandas for results/matrices for use in the Jupyter Notebook
@@ -23,9 +22,9 @@ Overview
      - matplotlib support for plotting
    - GUI: range of choices
 
-     - PyQt5/PyQt6/PySide2/PySide6
+     - PyQt5/PySide2
      - VTK 9
-   - logging using **cpylog**
+   - logging using ``cpylog``
 
      - colorama for console logging
      - HTML logging for Jupyter Notebook
@@ -36,7 +35,7 @@ BDF Reader/Writer
 =================
  - Input/Output:
 
-   - 402 cards supported including:
+   - 427 cards supported including:
 
      - optimization
      - aero
@@ -461,7 +460,7 @@ OP4 Reader/Writer
  - Types:
 
    - ASCII/binary
-   - SMALL/BIG MAT format
+   - Small/Big MAT format
    - Real/Complex
    - Sparse/Dense
    - Single/Double Precision
@@ -472,7 +471,7 @@ OP2 Reader / OP2 Writer / F06 Writer
 - Supported Nastran versions:
 
   - MSC Nastran
-  - NX Nastran
+  - Simcenter/NX Nastran
   - Optistruct
   - Radioss
   - IMAT
@@ -618,149 +617,149 @@ The main op2 results can be accessed directly from the op2 object
 
   - 0d - CELASx stress/strain
 
-   - celas1_stress
-   - celas2_stress
-   - celas3_stress
-   - celas4_stress
-   - celas1_strain
-   - celas2_strain
-   - celas3_strain
-   - celas4_strain
+   - stress.celas1_stress
+   - stress.celas2_stress
+   - stress.celas3_stress
+   - stress.celas4_stress
+   - strain.celas1_strain
+   - strain.celas2_strain
+   - strain.celas3_strain
+   - strain.celas4_strain
 
   - isotropic CROD/CONROD/CTUBE stress/strain
 
-   - crod_stress
-   - conrod_stress
-   - ctube_stress
-   - crod_strain
-   - conrod_strain
-   - ctube_strain
+   - stress.crod_stress
+   - stress.conrod_stress
+   - stress.ctube_stress
+   - strain.crod_strain
+   - strain.conrod_strain
+   - strain.ctube_strain
 
   - isotropic CBAR stress/strain
 
-   - cbar_stress
-   - cbar_strain
-   - cbar_stress_10nodes
-   - cbar_strain_10nodes
+   - stress.cbar_stress
+   - strain.cbar_strain
+   - stress.cbar_stress_10nodes
+   - strain.cbar_strain_10nodes
 
   - isotropic CBEAM stress/strain
 
-   - cbeam_stress
-   - cbeam_strain
-   - nonlinear_cbeam_stress
+   - stress.cbeam_stress
+   - strain.cbeam_strain
+   - nonlinear.cbeam_stress
 
   - CBEND
 
-   - cbend_stress
-   - cbend_strain
+   - stress.cbend_stress
+   - strain.cbend_strain
 
-  - isotropic CTRIA3/CQUAD4 stress
+  - isotropic Isotropic Shell (PSHELL, CTRIAx/CQUADx) stress
 
-   - ctria3_stress
-   - ctriar_stress
-   - ctria6_stress
-   - cquadr_stress
-   - cquad4_stress
-   - cquad8_stress
+   - stress.ctria3_stress
+   - stress.ctriar_stress
+   - stress.ctria6_stress
+   - stress.cquadr_stress
+   - stress.cquad4_stress
+   - stress.cquad8_stress
 
-  - isotropic CTRIA3/CQUAD4 strain
+  - isotropic Isotropic Shell (PSHELL, CTRIAx/CQUADx) strain
 
-   - ctria3_strain
-   - ctriar_strain
-   - ctria6_strain
-   - cquadr_strain
-   - cquad4_strain
-   - cquad8_strain
+   - strain.ctria3_strain
+   - strain.ctriar_strain
+   - strain.ctria6_strain
+   - strain.cquadr_strain
+   - strain.cquad4_strain
+   - strain.cquad8_strain
 
-  - isotropic CTETRA/CHEXA/CPENTA stress/strain
+  - isotropic Solid (CTETRA/CHEXA/CPENTA) stress/strain
 
-   - ctetra_stress
-   - chexa_stress
-   - cpenta_stress
-   - ctetra_strain
-   - chexa_strain
-   - cpenta_strain
+   - stress.ctetra_stress
+   - stress.chexa_stress
+   - stress.cpenta_stress
+   - strain.ctetra_strain
+   - strain.chexa_strain
+   - strain.cpenta_strain
 
   - CSHEAR stress/strain
 
-   - cshear_stress
-   - cshear_strain
+   - stress.cshear_stress
+   - strain.cshear_strain
 
   - GAPNL 86
 
-   - nonlinear_cgap_stress
+   - nonlinear.cgap_stress
 
   - CBUSH 226
 
-   - nonlinear_cbush_stress
    - cbush1d_stress_strain
-   - nonlinear_cbush1d_stress_strain
-   - cplstn3_stress
-   - cplstn4_stress
-   - cplstn6_stress
-   - cplstn8_stress
-   - cplsts3_stress
-   - cplsts4_stress
-   - cplsts6_stress
-   - cplsts8_stress
-   - cplstn3_strain
-   - cplstn4_strain
-   - cplstn6_strain
-   - cplstn8_strain
-   - cplsts3_strain
-   - cplsts4_strain
-   - cplsts6_strain
-   - cplsts8_strain
+   - nonlinear.cbush_stress
+   - nonlinear.cbush1d_stress_strain
+   - stress.cplstn3_stress
+   - stress.cplstn4_stress
+   - stress.cplstn6_stress
+   - stress.cplstn8_stress
+   - stress.cplsts3_stress
+   - stress.cplsts4_stress
+   - stress.cplsts6_stress
+   - stress.cplsts8_stress
+   - strain.cplstn3_strain
+   - strain.cplstn4_strain
+   - strain.cplstn6_strain
+   - strain.cplstn8_strain
+   - strain.cplsts3_strain
+   - strain.cplsts4_strain
+   - strain.cplsts6_strain
+   - strain.cplsts8_strain
 
   - CTRIAX6
 
-   - ctriax_stress
-   - ctriax_strain
-   - cbush_stress
-   - cbush_strain
+   - stress.ctriax_stress
+   - strain.ctriax_strain
+   - stress.cbush_stress
+   - strain.cbush_strain
 
   - nonlinear CROD/CONROD/CTUBE stress
 
-   - nonlinear_crod_stress
-   - nonlinear_crod_strain
-   - nonlinear_ctube_stress
-   - nonlinear_ctube_strain
-   - nonlinear_conrod_stress
-   - nonlinear_conrod_strain
+   - nonlinear.crod_stress
+   - nonlinear.crod_strain
+   - nonlinear.ctube_stress
+   - nonlinear.ctube_strain
+   - nonlinear.conrod_stress
+   - nonlinear.conrod_strain
 
   - CEALS1 224, CELAS3 225
 
-   - nonlinear_celas1_stress
-   - nonlinear_celas3_stress
+   - nonlinear.celas1_stress
+   - nonlinear.celas3_stress
 
   - composite CTRIA3/CQUAD4 stress
 
-   - cquad4_composite_stress
-   - cquad8_composite_stress
-   - cquadr_composite_stress
-   - ctria3_composite_stress
-   - ctria6_composite_stress
-   - ctriar_composite_stress
-   - cquad4_composite_strain
-   - cquad8_composite_strain
-   - cquadr_composite_strain
-   - ctria3_composite_strain
-   - ctria6_composite_strain
-   - ctriar_composite_strain
+   - stress.cquad4_composite_stress
+   - stress.cquad8_composite_stress
+   - stress.cquadr_composite_stress
+   - stress.ctria3_composite_stress
+   - stress.ctria6_composite_stress
+   - stress.ctriar_composite_stress
+   - strain.cquad4_composite_strain
+   - strain.cquad8_composite_strain
+   - strain.cquadr_composite_strain
+   - strain.ctria3_composite_strain
+   - strain.ctria6_composite_strain
+   - strain.ctriar_composite_strain
 
  - OESNLXR - CTRIA3/CQUAD4 stress
 
-  - nonlinear_cquad4_stress
-  - nonlinear_ctria3_stress
-  - nonlinear_cquad4_strain
-  - nonlinear_ctria3_strain
-  - hyperelastic_cquad4_strain
+  - nonlinear.cquad4_stress
+  - nonlinear.ctria3_stress
+  - nonlinear.cquad4_strain
+  - nonlinear.ctria3_strain
+  - strain.hyperelastic_cquad4_strain
 
  - OESNLXR - solids
 
-   - nonlinear_ctetra_stress_strain
-   - nonlinear_cpenta_stress_strain
-   - nonlinear_chexa_stress_strain
+   - nonlinear.ctetra_stress_strain
+   - nonlinear.cpenta_stress_strain
+   - nonlinear.chexa_stress_strain
 
  - PVT
 
@@ -782,53 +781,53 @@ The main op2 results can be accessed directly from the op2 object
 
   - 0-d
 
-   - celas1_force
-   - celas2_force
-   - celas3_force
-   - celas4_force
-   - cvisc_force
-   - coneax_force
-   - cdamp1_force
-   - cdamp2_force
-   - cdamp3_force
-   - cdamp4_force
-   - cgap_force
+   - force.celas1_force
+   - force.celas2_force
+   - force.celas3_force
+   - force.celas4_force
+   - force.cvisc_force
+   - force.coneax_force
+   - force.cdamp1_force
+   - force.cdamp2_force
+   - force.cdamp3_force
+   - force.cdamp4_force
+   - force.cgap_force
 
   - rod
 
-   - crod_force
-   - conrod_force
-   - ctube_force
+   - force.crod_force
+   - force.conrod_force
+   - force.ctube_force
 
  - bar/beam
 
-  - cbar_force
-  - cbar_force_abs
-  - cbar_force_srss
-  - cbar_force_nrl
-  - cbar_force_10nodes
-  - cbeam_force
-  - cbeam_force_vu
-  - cbush_force
-  - cbend_force
+  - force.cbar_force
+  - abs.cbar_force
+  - srss.cbar_force
+  - nrl.cbar_force
+  - force.cbar_force_10nodes
+  - force.cbeam_force
+  - force.cbeam_force_vu (removed)
+  - force.cbush_force
+  - force.cbend_force
 
  - shell
 
-  - cquad4_force
-  - cquad8_force
-  - cquadr_force
-  - ctria3_force
-  - ctria6_force
-  - ctriar_force
-  - cshear_force
+  - force.cquad4_force
+  - force.cquad8_force
+  - force.cquadr_force
+  - force.ctria3_force
+  - force.ctria6_force
+  - force.ctriar_force
+  - force.cshear_force
 
  - solid
 
-  - chexa_pressure_force
-  - cpenta_pressure_force
-  - ctetra_pressure_force
-  - vu_quad_force
-  - vu_tria_force
+  - force.chexa_pressure_force
+  - force.cpenta_pressure_force
+  - force.ctetra_pressure_force
+  - force.vu_quad_force (removed)
+  - force.vu_tria_force (removed)
 
  - OEF - Fluxes
 
@@ -873,9 +872,9 @@ The main op2 results can be accessed directly from the op2 object
    - chexa_thermal_load_flux
    - cpenta_thermal_load
    - cpenta_thermal_load_flux
-   - thermalLoad_VU
-   - thermalLoad_VU_3D
-   - vu_beam_thermal_load
+   - thermal_load_VU      (removed)
+   - thermal_load_VU_3D   (removed)
+   - vu_beam_thermal_load (removed)
 
  - OEFIT - Failure Indices
 
@@ -893,38 +892,39 @@ The main op2 results can be accessed directly from the op2 object
 
  - OEE - Strain Energy Density
 
-  - cquad4_strain_energy
-  - cquad8_strain_energy
-  - cquadr_strain_energy
-  - cquadx_strain_energy
-  - ctria3_strain_energy
-  - ctria6_strain_energy
-  - ctriar_strain_energy
-  - ctriax_strain_energy
-  - ctriax6_strain_energy
-  - cshear_strain_energy
-  - ctetra_strain_energy
-  - cpenta_strain_energy
-  - chexa_strain_energy
-  - cpyram_strain_energy
-  - crod_strain_energy
-  - ctube_strain_energy
-  - conrod_strain_energy
-  - cbar_strain_energy
-  - cbeam_strain_energy
-  - cgap_strain_energy
-  - cbush_strain_energy
-  - celas1_strain_energy
-  - celas2_strain_energy
-  - celas3_strain_energy
-  - celas4_strain_energy
-  - cdum8_strain_energy
-  - cbend_strain_energy
-  - dmig_strain_energy
-  - genel_strain_energy
-  - conm2_strain_energy
-  - rbe1_strain_energy
-  - rbe3_strain_energy
+  - strain_energy.cquad4_strain_energy
+  - strain_energy.cquad8_strain_energy
+  - strain_energy.cquadr_strain_energy
+  - strain_energy.cquadx_strain_energy
+  - strain_energy.ctria3_strain_energy
+  - strain_energy.ctria6_strain_energy
+  - strain_energy.ctriar_strain_energy
+  - strain_energy.ctriax_strain_energy
+  - strain_energy.ctriax6_strain_energy
+  - strain_energy.cshear_strain_energy
+  - strain_energy.ctetra_strain_energy
+  - strain_energy.cpenta_strain_energy
+  - strain_energy.chexa_strain_energy
+  - strain_energy.cpyram_strain_energy
+  - strain_energy.crod_strain_energy
+  - strain_energy.ctube_strain_energy
+  - strain_energy.conrod_strain_energy
+  - strain_energy.cbar_strain_energy
+  - strain_energy.cbeam_strain_energy
+  - strain_energy.cgap_strain_energy
+  - strain_energy.cbush_strain_energy
+  - strain_energy.celas1_strain_energy
+  - strain_energy.celas2_strain_energy
+  - strain_energy.celas3_strain_energy
+  - strain_energy.celas4_strain_energy
+  - strain_energy.cdum8_strain_energy
+  - strain_energy.cbend_strain_energy
+  - strain_energy.dmig_strain_energy
+  - strain_energy.genel_strain_energy
+  - strain_energy.conm2_strain_energy
+  - strain_energy.rbe1_strain_energy
+  - strain_energy.rbe3_strain_energy
+  - strain_energy.seam_strain_energy
 
  - unused?
 
@@ -949,6 +949,10 @@ The OP2.Results() are accessed using model.results. as a prefix
  - rms # RootMeansSquareObjects()           - see below
  - no  # NumberOfCrossingsObjects()         - see below
  - crm # CumulativeRootMeansSquareObjects() - see below
+ - stress
+ - strain
+ - force
+ - strain_energy
  - modal_contribution
 
    - celas1_stress
@@ -1238,13 +1242,7 @@ GUI
  - buttons for picking, rotation center, distance, min/max
  - GUI Features:
 
-   - Packages:
-
-     - PyQt4/PyQt5
-     - PySide/PySide2
-     - QScintilla & pygments support for scripting code editor
    - color coded logging
-
    - legend menu
 
      - min/max control

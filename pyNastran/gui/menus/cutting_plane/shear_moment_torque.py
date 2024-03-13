@@ -25,13 +25,15 @@ from qtpy.QtGui import QColor# , QHeaderView
 
 
 from pyNastran.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
-from pyNastran.gui.utils.qt.qelement_edit import QElementEdit, QNodeEdit
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color, check_patran_syntax
+from pyNastran.gui.utils.qt.qelement_edit import (
+    QElementLineEdit, QElementTextEdit, # QNodeLineEdit
+)
 from pyNastran.gui.utils.qt.resize_qtextedit import AutoResizingTextEdit
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
-from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
+from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float, QLINEEDIT_GOOD
 from pyNastran.gui.utils.wildcards import wildcard_csv
 from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.menus.preferences.preferences import (
@@ -44,12 +46,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 IS_DEMO = False
-IS_DEMO = True  # just for testing
+#IS_DEMO = True  # just for testing
 CID_GLOBAL_STR = '0/Global'
 
-IS_NODE_ELEMENT = False
-EXPOSE_SMT_PARAMETERS = True
 IS_TIME = False
+MAX_LENGTH = 100_000
+USE_LINE_EDIT = True
 
 class ResultsDialog(QDialog):
     def __init__(self, win_parent,
@@ -109,6 +111,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.model_name = data['model_name']
         self.icase = data['icase']
         self.cids = data['cids']
+        self.elements_pound = data['elements_pound']
         self.gpforce = None
         #self.gpforce = data['gpforce']
         #self._origin = data['origin']
@@ -120,6 +123,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.plane_opacity = data['plane_opacity']
+        self.vector_line_width = data['vector_line_width']
+        self.vector_point_size = data['vector_point_size']
+
         self.methods = ['Vector', 'CORD2R', 'Coord ID']
         #self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
         self.zaxis_methods = ['Manual', 'Global Z']
@@ -220,15 +226,22 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p3_label.setToolTip('Defines the end point for the shear, moment, torque plot')
         self.p2_label.setToolTip('Defines the XZ plane for the shears/moments')
 
-        self.station_location_label = QLabel('Station Label')
+        self.station_location_label = QLabel('Station Label:')
         self.station_location_pulldown = QComboBox()
         self.station_location_pulldown.addItems(['End-Origin', 'X', 'Y', 'Z'])
+        self.station_location_pulldown.setToolTip('Sets the x-axis on the 2D plots')
 
         self.zaxis_label = QLabel('Z Axis:')
 
         self.method_pulldown = QComboBox()
         for method in self.methods:
             self.method_pulldown.addItem(method)
+        self.method_pulldown.setToolTip(
+            'Define the output coordinate system\n'
+            ' - Vector:    Z-axis and xz-axis of plane  (x is normal to plane)\n'
+            ' - CORD2R:    Points on z-axis and xz-axis (x is normal to plane)\n'
+            ' - Coord ID : Direct output coordinate system (x is normal to plane)\n'
+        )
 
         self.zaxis_method_pulldown = QComboBox()
         self.zaxis_method_pulldown.setToolTip(
@@ -303,8 +316,6 @@ class ShearMomentTorqueWindow(PyDialog):
 
 
         # ------------------------------------------------
-        self.vector_line_width = 5
-        self.vector_point_size = 5
         opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
             self,
             self.plane_opacity,
@@ -351,34 +362,40 @@ class ShearMomentTorqueWindow(PyDialog):
             self.times_pulldown.setEnabled(False)
 
 
-        if IS_NODE_ELEMENT:
-            #name = 'main'
-            #win_parent = self
-            #parent = self.gui
-            #self.element_edit = QElementEdit(
-                #win_parent, name, parent=parent, pick_style='area',
-                #tab_to_next=True, cleanup=True, max_length=32767)
-            #self.node_edit = QNodeEdit(
-                #win_parent, name, parent=parent, pick_style='area',
-                #tab_to_next=True, cleanup=True)
+        #name = 'main'
+        #win_parent = self
+        #parent = self.gui
+        #self.element_edit = QElementEdit(
+            #win_parent, name, parent=parent, pick_style='area',
+            #tab_to_next=True, cleanup=True, max_length=32767)
+        #self.node_edit = QNodeLineEdit(
+            #win_parent, name, parent=parent, pick_style='area',
+            #tab_to_next=True, cleanup=True)
 
-            gui = self.gui
-            max_length = 32767
-            self.element_node_checkbox = QCheckBox('Limit Nodes/ELements:')
-            self.node_label = QLabel('Nodes:')
-            self.node_edit = QNodeEdit(
-                self.win_parent, self.model_name, parent=gui,
-                pick_style='area', tab_to_next=False, max_length=max_length)
+        #gui = self.gui
+        gui = self.win_parent
+        #gui = self
+        #self.element_node_checkbox = QCheckBox('Limit Nodes/Elements:')
+        self.element_node_checkbox = QCheckBox('Limit Elements:')
+        #self.node_label = QLabel('Nodes:')
+        #self.node_edit = QNodeLineEdit(
+            #self.win_parent, self.model_name, parent=gui,
+            #pick_style='area', tab_to_next=False, max_length=MAX_LENGTH)
 
-            self.element_label = QLabel('Elements:')
-            self.element_edit = QElementEdit(
-                self.win_parent, self.model_name, parent=gui,
-                pick_style='area', tab_to_next=False, max_length=max_length)
-            self.on_element_node_checkbox()
+        self.element_label = QLabel('Elements:')
+        if USE_LINE_EDIT:
+            self.element_edit = QElementLineEdit(
+                self, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False, max_length=MAX_LENGTH)
+        else:
+            self.element_edit = QElementTextEdit(
+                self, self.model_name, parent=gui,
+                pick_style='area', tab_to_next=False)
+        self.on_element_node_checkbox()
 
-            #self.node_element_label = QLabel('Nodes/Elements:')
-            #self.node_element_edit = QLineEdit()
-            #self.node_element_edit.setReadOnly(True)
+        #self.node_element_label = QLabel('Nodes/Elements:')
+        #self.node_element_edit = QLineEdit()
+        #self.node_element_edit.setReadOnly(True)
 
         self.nplanes_label = QLabel('Num Planes:')
         self.nplanes_spinner = QSpinBox()
@@ -430,11 +447,14 @@ class ShearMomentTorqueWindow(PyDialog):
         self.remove2_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         self.plot_info = QLabel('Plot Info:')
-        self.force_label = QLabel('Force')
-        self.moment_label = QLabel('Moment')
-        self.length_label = QLabel('Length')
+        self.force_label = QLabel('Force:')
+        self.moment_label = QLabel('Moment:')
+        self.length_label = QLabel('Length:')
         self.unit_label = QLabel('Unit')
         self.scale_label = QLabel('Scale')
+
+        self.unit_label.setAlignment(Qt.AlignCenter)
+        self.scale_label.setAlignment(Qt.AlignCenter)
 
         self.length_unit_edit = QLineEdit('')
         self.force_unit_edit = QLineEdit('')
@@ -459,22 +479,24 @@ class ShearMomentTorqueWindow(PyDialog):
         self.set_bold_font(self._default_font_size)
 
         if IS_DEMO:  # pragma: no cover
-            if 0:
-                # bwb
+            if 0:  # bwb
+                # start
                 self.p1_x_edit.setText('1389')
                 self.p1_y_edit.setText('1262')
                 self.p1_z_edit.setText('87')
 
+                # end
                 self.p3_x_edit.setText('911')
                 self.p3_y_edit.setText('0.1')
                 self.p3_z_edit.setText('0.')
 
+                # z-axis
                 self.p2_x_edit.setText('0')
                 self.p2_y_edit.setText('-1')
                 self.p2_z_edit.setText('0')
                 self.nplanes_spinner.setValue(50)
 
-            elif 1:  # solid_shell_bar
+            elif 0:  # solid_shell_bar
                 self.p1_x_edit.setText('0')
                 self.p1_y_edit.setText('0')
                 self.p1_z_edit.setText('-2')
@@ -492,6 +514,28 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.zaxis_z_edit.setText('0')
 
                 self.nplanes_spinner.setValue(5)
+            elif 1:  # wingbox
+                self.p1_x_edit.setText('128')
+                self.p1_y_edit.setText('0.1')
+                self.p1_z_edit.setText('23')
+
+                # end
+                self.p3_x_edit.setText('128')
+                self.p3_y_edit.setText('96')
+                self.p3_z_edit.setText('23')
+
+                # xz-plane
+                self.p2_x_edit.setText('0')
+                self.p2_y_edit.setText('1')
+                self.p2_z_edit.setText('0')
+
+                # z-axis
+                self.zaxis_x_edit.setText('1')
+                self.zaxis_y_edit.setText('0')
+                self.zaxis_z_edit.setText('0')
+
+                self.nplanes_spinner.setValue(20)
+                self.element_edit.setText('1633:1856')
 
     @property
     def gui(self) -> MainWindow:
@@ -543,17 +587,18 @@ class ShearMomentTorqueWindow(PyDialog):
         vbox.addLayout(grid2)
         #vbox.addStretch()
 
-        if IS_NODE_ELEMENT:
-            grid_node_element = QGridLayout()
-            grid_node_element.addWidget(self.node_label, 0, 0)
-            grid_node_element.addWidget(self.node_edit, 0, 1)
-            grid_node_element.addWidget(self.element_label, 1, 0)
-            grid_node_element.addWidget(self.element_edit, 1, 1)
 
-            element_node_box = QVBoxLayout()
-            element_node_box.addWidget(self.element_node_checkbox)
-            element_node_box.addLayout(grid_node_element)
-            vbox.addLayout(element_node_box)
+        grid_node_element = QGridLayout()
+        #grid_node_element.addWidget(self.node_label, 0, 0)
+        #grid_node_element.addWidget(self.node_edit, 0, 1)
+        grid_node_element.addWidget(self.element_label, 1, 0)
+        grid_node_element.addWidget(self.element_edit, 1, 1)
+
+        element_node_box = QVBoxLayout()
+        element_node_box.addWidget(self.element_node_checkbox)
+        element_node_box.addLayout(grid_node_element)
+        vbox.addLayout(element_node_box)
+
         vbox.addLayout(hbox_csv)
 
         #self.element_node_checkbox = QCheckBox('Limit Nodes/ELements:')
@@ -659,22 +704,21 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.additional_params_label, irow, 0)
         irow += 1
 
-        if EXPOSE_SMT_PARAMETERS:
-            grid.addWidget(self.plane_color_label, irow, 0)
-            grid.addWidget(self.plane_color_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.plane_color_label, irow, 0)
+        grid.addWidget(self.plane_color_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.plane_opacity_label, irow, 0)
-            grid.addWidget(self.plane_opacity_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.plane_opacity_label, irow, 0)
+        grid.addWidget(self.plane_opacity_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.point_size_label, irow, 0)
-            grid.addWidget(self.point_size_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.point_size_label, irow, 0)
+        grid.addWidget(self.point_size_edit, irow, 1)
+        irow += 1
 
-            grid.addWidget(self.line_width_label, irow, 0)
-            grid.addWidget(self.line_width_edit, irow, 1)
-            irow += 1
+        grid.addWidget(self.line_width_label, irow, 0)
+        grid.addWidget(self.line_width_edit, irow, 1)
+        irow += 1
 
         # -----------------------------------------
         grid.addWidget(self.plot_info, irow, 0)
@@ -712,8 +756,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_opacity_edit.valueChanged.connect(self.on_plane_opacity)
         self.point_size_edit.valueChanged.connect(self.on_plane_point_size)
         self.line_width_edit.valueChanged.connect(self.on_plane_line_width)
-        if IS_NODE_ELEMENT:
-            self.element_node_checkbox.clicked.connect(self.on_element_node_checkbox)
+        self.element_node_checkbox.clicked.connect(self.on_element_node_checkbox)
 
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
@@ -849,8 +892,8 @@ class ShearMomentTorqueWindow(PyDialog):
 
     def on_element_node_checkbox(self) -> None:
         is_checked = self.element_node_checkbox.isChecked()
-        self.node_label.setEnabled(is_checked)
-        self.node_edit.setEnabled(is_checked)
+        #self.node_label.setEnabled(is_checked)
+        #self.node_edit.setEnabled(is_checked)
         self.element_label.setEnabled(is_checked)
         self.element_edit.setEnabled(is_checked)
 
@@ -973,10 +1016,21 @@ class ShearMomentTorqueWindow(PyDialog):
         length_scale, length_flag = check_float(self.length_scale_edit)
         force_scale, force_flag = check_float(self.force_scale_edit)
         moment_scale, moment_flag = check_float(self.moment_scale_edit)
+
+        element_ids = None
+        eids_flag = True
+        if self.element_node_checkbox.isChecked():
+            element_ids, eids_flag = check_patran_syntax(
+                self.element_edit, self.elements_pound)
+        else:
+            self.element_node_checkbox.setStyleSheet(QLINEEDIT_GOOD)
+
+
         flags = [
             p1_flag, p2_flag, p3_flag,
             zaxis_flag,
             csv_flag,
+            eids_flag,
             length_flag, force_flag, moment_flag]
 
         length_unit = self.length_unit_edit.text()
@@ -999,6 +1053,7 @@ class ShearMomentTorqueWindow(PyDialog):
             self.out_data['length'] = [length_scale, length_unit]
             self.out_data['force'] = [force_scale, force_unit]
             self.out_data['moment'] = [moment_scale, moment_unit]
+            self.out_data['element_ids'] = element_ids
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -1070,8 +1125,11 @@ def main() -> None:  # pragma: no cover
         'icase': 42,
         #'cids' : [0, 1, 2, 3],
         'cids' : [0],
+        'elements_pound': 5000,
         'plane_color' : (1., 0., 1.), # purple
         'plane_opacity' : 0.9,
+        'vector_line_width' : 0.9,
+        'vector_point_size' : 0.9,
         #'gpforce' : gpforce,
         #'itime' : 0,
         'word' : 'Static',

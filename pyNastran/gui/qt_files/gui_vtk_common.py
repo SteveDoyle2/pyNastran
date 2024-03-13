@@ -506,7 +506,7 @@ class GuiVTKCommon(GuiQtCommon):
         group = self.groups[name]
         self.post_group(group, update_groups=False)
 
-    def post_group(self, group, update_groups=False):
+    def post_group(self, group: Group, update_groups: bool=False) -> bool:
         """posts a group object"""
         name = group.name
         if update_groups and name not in self.groups:
@@ -537,14 +537,21 @@ class GuiVTKCommon(GuiQtCommon):
             the corresponding group
 
         """
-        elements_pound = self.groups[model_name].elements_pound
+        nids = np.array([], dtype='int32')
+        group: Group = self.groups[model_name]
+        nodes_pound = group.nodes_pound
+        elements_pound = group.elements_pound
+        node_str = ''
         element_str = ''
         group = Group(
-            name, element_str, elements_pound,
+            name,
+            element_str, elements_pound,
+            node_str, nodes_pound,
             editable=True)
 
         # TODO: make sure all the eids exist
         group.element_ids = eids
+        group.node_ids = nids
         self.log_command('self.create_group_with_name(%r, %r)' % (name, eids))
         self.groups[name] = group
         return group

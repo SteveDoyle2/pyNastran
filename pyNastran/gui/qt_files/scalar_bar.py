@@ -280,7 +280,7 @@ class ScalarBar:
         if ncolors is None:
             ncolors = nvalues
 
-        assert data_format_display is not None, 'data_format is invalid = %r' % data_format_display
+        assert data_format_display is not None, f'data_format is invalid = {data_format_display!r}'
 
         # the code explodes if these are too big
         if nvalues > 100:

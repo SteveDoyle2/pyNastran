@@ -414,6 +414,19 @@ class CBUSH(BushElement):
         if self.ocid is not None and self.ocid != -1:
             self.ocid_ref = model.safe_coord(self.ocid, self.eid, xref_errors, msg=msg)
 
+    def Centroid(self):
+        xyzs_list = []
+        for nid in self.nodes_ref:
+            if nid is None:
+                continue
+            xyzs_list.append(nid.get_position())
+        if len(xyzs_list):
+            xyzs = np.vstack(xyzs_list)
+            centroid = xyzs.sum(axis=0) / xyzs.shape[0]
+        else:
+            centroid = np.zeros(3, dtype='float64')
+        return centroid
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.ga = self.Ga()

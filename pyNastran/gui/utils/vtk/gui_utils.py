@@ -1,28 +1,32 @@
 """
 these are functions not exposed in the GUI that are still useful
 """
+from __future__ import annotations
 from copy import deepcopy
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy import issubdtype
 
 #from vtk import vtkLODActor, vtkDataSetMapper, vtkTypeFloat32Array
-from vtkmodules.vtkRenderingLOD import vtkLODActor
 from vtkmodules.vtkRenderingCore import vtkDataSetMapper
 from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
 
 from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.typing import Actor
 
-
-def flip_actor_visibility(actor: vtkLODActor):
+def flip_actor_visibility(actor: Actor) -> None:
     """flips the visibility for an actor"""
     is_visible = actor.GetVisibility()
     actor.SetVisibility(not is_visible)
     actor.Modified()
 
-def add_actors_to_gui(gui,
-                      actors: list[vtkLODActor],
-                      render: bool=True):
+def add_actors_to_gui(gui: MainWindow,
+                      actors: list[Actor],
+                      render: bool=True) -> None:
     """adds multiple vtk actors"""
     if not len(actors):
         return
@@ -32,10 +36,10 @@ def add_actors_to_gui(gui,
     if render:
         renderer.Render()
 
-def remove_actors_from_gui(gui,
-                           actors: list[vtkLODActor],
+def remove_actors_from_gui(gui: MainWindow,
+                           actors: list[Actor],
                            render: bool=True,
-                           force_render: bool=False):
+                           force_render: bool=False) -> None:
     """removes multiple vtk actors"""
     if not (len(actors) or force_render):
         return

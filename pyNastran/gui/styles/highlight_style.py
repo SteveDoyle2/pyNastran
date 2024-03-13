@@ -93,8 +93,8 @@ class HighlightStyle(vtkInteractorStyleTrackballCamera):  # works
             actor = self._highlight_picker_cell(cell_id, grid)
         elif self.is_nids: # highlight_style = 'node'
             actor, point_ids = self._highlight_picker_node(cell_id, grid, world_position)
-        else:
-            raise RuntimeError('invalid highlight_style=%r' % self.highlight_style)
+        else:  # pragma: no cover
+            raise RuntimeError(f'invalid highlight_style={self.highlight_style!r}')
 
 
         #print('highlight_style  point_id=', point_id)

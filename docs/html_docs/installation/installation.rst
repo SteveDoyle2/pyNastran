@@ -6,33 +6,24 @@ Installation
 Installation From Release
 -------------------------
 
-pyNastran is an easy package to install once you have the required Python
-modules.  It's a pure Python package so you shouldn't have too many problems.
-Just type on the command line:
+pyNastran is an easy package to install once you have the required Python modules.  It's a pure Python package so you shouldn't have too many problems.  On the command line:
 
-``pip install pyNastran``
+``pip install pyNastran -U``
 
-That will install the minimum set of what you need to run pyNastran (so no GUI).
-If you want GUI functionality, chances are you have PyQt5 or PySide2, but don't have vtk.
-Vtk is a bit more challenging on Windows, but there is website to help with that.
+That will install the minimum set of what you need to run pyNastran (so no GUI).  If you want the GUI, there are two options.  On the command line, type:
 
-Additionally, the software can **optionally** use matplotlib, pandas, h5py, colorama,
-but chances are you already have those.  If you don't, they're very easy to install.
+    * ``pip install pyNastran[gui_pyside2] -U``
+    * ``pip install pyNastran[gui_pyqt5]   -U``
 
 Python
 ------
-The software is tested on Windows and Linux against Python 3.10-3.11).  The latest versions support:
+The software is tested on Windows and Linux against Python 3.9 - 3.12.
 
- * Python 3.7
- * Python 3.8
- * Python 3.9
- * Python 3.10
- * Python 3.11 (avaible in dev)
+The latest dev version supports Python 3.9 - 3.12.
 
 Packages
 --------
-pyNastran is tested against a range of package versions (lowest to highest
-based on availbility), so it should work.  The recommended set of packages are:
+pyNastran is tested against a range of package versions (lowest to highest based on availbility), so it should work.  The recommended set of packages are:
 
  * **Required**:
 
@@ -50,74 +41,58 @@ based on availbility), so it should work.  The recommended set of packages are:
 
  * **GUI**:
 
-   * vtk >= 7  (vtk=9 has some warnings)
+   * vtk >= 9.0, <9.4
    * qtpy >= 1.4.0
    * Qt **(pick one)**
 
      * PyQt5 >= 5.9.2
      * PySide2 >= 5.11.2
-     * PyQt6
-     * PySide6
+     * PyQt6   (currently disabled)
+     * PySide6 (currently disabled)
    * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5/6 only)**
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5/6 only)**
    * imageio >= 2.4.1,<3  **(optional for animation support)**
 
 *****************************************************
-Install Procedure - From Regular Python (recommended)
+Install Procedure - From Sorce
 *****************************************************
 Base functionality:
 
  * `64-bit Python <https://www.python.org/downloads/>`_
- * ``pip install numpy``
- * ``pip install scipy``
- * ``pip install pandas<2``     **(optional)**
- * ``pip install h5py``       **(optional for HDF5 support)**
- * ``pip install matplotlib`` **(optional for plotting)**
- * ``pip install colorama``   **(optional for colored logging)**
- * ``pip install docopt-ng``   **(required for command line tools)**
- * ``pip install cpylog``
- * ``pip install pyNastran``
 
-For **optional** GUI support:
+On the command line, navigate to the directory with ``models``.  Then type:
+
+ * ``pip install .``
+
+If you would like to be able to modify the checked out source and have it have an effect, add ``-e`` before the ``.``:
+
+ * ``pip install -e .``
+
+If you would like pandas and hdf5 support to the BDF/OP2, but no gui options.
 
  * On the command line:
 
-    * ``pip install imageio`` **(optional for animation support)**
-    * ``pip install pyside2``
-    * ``pip install vtk``
-    * ``pip install qtpy``
+    * ``pip install .[nogui]``
 
- * Additional source for `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
+For **optional** GUI support, there are two options:
 
-    * ``pip install VTK*.whl``
+ * On the command line:
 
-****************************************************************
-Install Procedure - From Anaconda (not recommended and untested)
-****************************************************************
+    * ``pip install .[gui_pyside2]``
+    * ``pip install .[gui_pyqt5]``
 
-You've been warned, but in general Anaconda doesn't work well with pip.
-You need to be very careful with using ``pip`` instead of ``conda``.
-In general, it's best to always use conda first and pip only if
-conda fails.
+If you want to just install the dependencies yourself:
 
-  - `64-bit Python <https://www.anaconda.com/products/individual>`_
- * ``conda install numpy``
- * ``conda install scipy``
- * ``conda install pandas<2``
- * ``conda install h5py``
- * ``conda install matplotlib``
- * ``conda install colorama``
- * ``conda install vtk``
- * ``conda install PySide2``
- * ``pip install cpylog``
- * ``pip install pyNastran``
+ * On the command line:
+
+    * ``pip install . --no-dependencies``
 
 Documentation
 =============
-Two options for documentation exist.
-
- - https://pynastran-git.readthedocs.io/en/latest/installation/building_docs.html
-
 If you don't want to use build the docs, just use the docs on the web.
 
 See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
+
+If you want to build the docs yourslf:
+ - https://pynastran-git.readthedocs.io/en/latest/installation/building_docs.html
+

@@ -29,6 +29,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 # from pyNastran.bdf.cards.utils import build_table_lines
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 class RigidElement(Element):
     def cross_reference(self, model: BDF) -> None:
@@ -56,7 +57,10 @@ class RROD(RigidElement):
         nids = [1, 2]
         return RROD(eid, nids, cma=None, cmb=None, alpha=0.0, comment='')
 
-    def __init__(self, eid, nids, cma=None, cmb=None, alpha=0.0, comment=''):
+    def __init__(self, eid: int, nids: list[str],
+                 cma: Optional[str]=None,
+                 cmb: Optional[str]=None,
+                 alpha: float=0.0, comment: str=''):
         """
         Creates a RROD element
 
@@ -74,6 +78,7 @@ class RROD(RigidElement):
             coefficient of thermal expansion
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:
@@ -90,7 +95,7 @@ class RROD(RigidElement):
         self.alpha = alpha
         self.nodes_ref = None
 
-    def validate(self):
+    def validate(self) -> None:
         msg = ''
         if self.cma not in [None, '1', '2', '3']:
             msg += "  ga=%r; cma=%r must be in [None, '1', '2', '3']\n" % (
@@ -109,7 +114,7 @@ class RROD(RigidElement):
             raise RuntimeError('Invalid Dependent DOFs\n' + msg.rstrip())
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RROD card from ``BDF.add_card(...)``
 
@@ -130,7 +135,7 @@ class RROD(RigidElement):
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RROD card from the OP2
 
@@ -149,12 +154,12 @@ class RROD(RigidElement):
         alpha = data[5]
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.nodes_ref is None:
             return self.nodes[0]
         return self.nodes_ref[0].nid
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.nodes_ref is None:
             return self.nodes[1]
         return self.nodes_ref[1].nid
@@ -188,14 +193,14 @@ class RROD(RigidElement):
         self.nodes_ref = None
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         if self.cma is None:
             return [self.Ga()]
         return [self.Gb()]
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         if self.cma is not None:
             return [self.Ga()]
@@ -302,7 +307,7 @@ class RBAR(RigidElement):
         self.ga_ref = None
         self.gb_ref = None
 
-    def validate(self):
+    def validate(self) -> None:
         ncna = len(self.cna)
         ncma = len(self.cma)
 
@@ -365,7 +370,7 @@ class RBAR(RigidElement):
                 raise RuntimeError(msg + str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RBAR card from ``BDF.add_card(...)``
 
@@ -390,7 +395,7 @@ class RBAR(RigidElement):
                     alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RBAR card from the OP2
 
@@ -400,6 +405,7 @@ class RBAR(RigidElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         tref = 0.0
         eid = data[0]
@@ -437,18 +443,18 @@ class RBAR(RigidElement):
     #             card += [gm, cm, Ai]
     #     return card
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.ga_ref is not None:
             return self.ga_ref.nid
         return self.ga
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.gb_ref is not None:
             return self.gb_ref.nid
         return self.gb
 
     @property
-    def nodes(self):
+    def nodes(self) -> list[int]:
         return [self.Ga(), self.Gb()]
 
     def cross_reference(self, model: BDF) -> None:
@@ -483,12 +489,12 @@ class RBAR(RigidElement):
         self.gb_ref = None
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         return [self.Ga()]
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         return [self.Gb()]
 
@@ -532,7 +538,10 @@ class RBAR1(RigidElement):
         cb = '123'
         return RBAR1(eid, nids, cb, alpha=0., comment='')
 
-    def __init__(self, eid, nids, cb, alpha=0., comment=''):
+    def __init__(self, eid: int,
+                 nids: list[int],
+                 cb: Optional[str],
+                 alpha: float=0., comment: str=''):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -545,7 +554,7 @@ class RBAR1(RigidElement):
         self.gb_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RBAR1 card from ``BDF.add_card(...)``
 
@@ -560,12 +569,12 @@ class RBAR1(RigidElement):
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
         cb = components_or_blank(card, 4, 'cb')
-        alpha = double_or_blank(card, 5, 'alpha', 0.0)
+        alpha = double_or_blank(card, 5, 'alpha', default=0.0)
         assert len(card) <= 6, f'len(RBAR1 card) = {len(card):d}\ncard={card}'
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RBAR1 card from the OP2
 
@@ -575,6 +584,7 @@ class RBAR1(RigidElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         ga = data[1]
@@ -583,23 +593,23 @@ class RBAR1(RigidElement):
         alpha = data[4]
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.ga_ref is not None:
             return self.ga_ref.nid
         return self.ga
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.gb_ref is not None:
             return self.gb_ref.nid
         return self.gb
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         return [self.Ga()]
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         return [self.Gb()]
 
@@ -682,7 +692,10 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         Cmi = ['4']
         return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=0., comment='')
 
-    def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha=0., comment=''):
+    def __init__(self, eid: int,
+                 Gni: list[int], Cni: list[str],
+                 Gmi: list[int], Cmi: list[str],
+                 alpha: float=0., comment: str=''):
         """
         Creates an RBE1 element
 
@@ -718,7 +731,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RBE1 card from ``BDF.add_card(...)``
 
@@ -728,6 +741,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
@@ -814,7 +828,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi_ref = None
 
     @property
-    def Gni_node_ids(self):
+    def Gni_node_ids(self) -> list[int]:
         if self.Gni_ref is None:
             return self.Gni
         if len(self.Gni_ref) == 0:
@@ -822,7 +836,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         return self._node_ids(nodes=self.Gni_ref, allow_empty_nodes=True)
 
     @property
-    def Gmi_node_ids(self):
+    def Gmi_node_ids(self) -> list[int]:
         if self.Gmi_ref is None:
             return self.Gmi
         if len(self.Gmi_ref) == 0:
@@ -830,13 +844,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         # checked
         return self.Gni_node_ids
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         # checked
         nodes = self.Gmi_node_ids
@@ -904,7 +918,7 @@ class RBE2(RigidElement):
         Gmi = [2, 3]
         return RBE2(eid, gn, cm, Gmi, alpha=0.0, comment='')
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value):
         """
         Updates complicated parameters on the GRID card
 
@@ -914,6 +928,7 @@ class RBE2(RigidElement):
             the field number to update
         value : int/float/str
             the value for the appropriate field
+
         """
         if 3 < n <= 3 + len(self.Gmi):
             self.Gmi[n - 4] = value
@@ -979,7 +994,7 @@ class RBE2(RigidElement):
         self.gn_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RBE2 card from ``BDF.add_card(...)``
 
@@ -989,6 +1004,7 @@ class RBE2(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         gn = integer(card, 2, 'gn')
@@ -1022,7 +1038,7 @@ class RBE2(RigidElement):
         return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RBE2 card from the OP2
 
@@ -1032,6 +1048,7 @@ class RBE2(RigidElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         gn = data[1]
@@ -1061,14 +1078,14 @@ class RBE2(RigidElement):
         self.gn = gn2
         self.Gmi = gm2
 
-    def validate(self):
+    def validate(self) -> None:
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
         assert isinstance(self.alpha, float_types), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
-    def convert_to_mpc(self, mpc_id):
+    def convert_to_mpc(self, mpc_id: int) -> list[Any]:
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
@@ -1132,6 +1149,7 @@ class RBE2(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = f', which is required by RBE2 eid={self.eid:d}'
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
@@ -1144,13 +1162,13 @@ class RBE2(RigidElement):
         self.Gmi_ref = None
         self.gn_ref = None
 
-    def Gn(self):
+    def Gn(self) -> int:
         if self.gn_ref is not None:
             return self.gn_ref.nid
         return self.gn
 
     @property
-    def Gmi_node_ids(self):
+    def Gmi_node_ids(self) -> list[int]:
         if self.Gmi_ref is None or len(self.Gmi) == 0:
             return self.Gmi
         assert self.Gmi_ref is not None, self.Gmi
@@ -1160,13 +1178,13 @@ class RBE2(RigidElement):
         return np.unique(non_unique_gmi_node_ids).tolist()
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         nodes = [self.Gn()]
         return nodes
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         return self.Gmi_node_ids
 
@@ -1238,15 +1256,22 @@ class RBE3(RigidElement):
             dependent node
         refc : str
             dependent components for refgrid???
-        GiJs : list[int, ..., int]
-            independent nodes
-        comps : list[str, ..., str]
+        weights : list[float]
+            independent weights for the importance of the DOF
+        comps : list[str]
             independent components
-        weights : list[float, ..., float]
-            weights for the importance of the DOF
-        Gmi : list[int, ..., int]; default=None -> []
+            len(comps) = len(weights)
+        GiJs : varies
+            independent nodes
+            list[list[int]]:
+                allows for different nodes for the different weights
+                len(GiJs) = len(weights)
+            list[int, ..., int]:
+                intended for a single weight
+                This will be expanded into list[list[int]]
+        Gmi : list[int]; default=None -> []
             dependent nodes / UM Set
-        Cmi : list[str, ..., str]; default=None -> []
+        Cmi : list[str]; default=None -> []
             dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
@@ -1290,8 +1315,7 @@ class RBE3(RigidElement):
             self.Gijs = Gijs
 
         if not len(Gmi) == len(Cmi):
-            msg = 'len(Gmi)=%s len(Cmi)=%s' % (len(Gmi), len(Cmi))
-            raise RuntimeError(msg)
+            raise RuntimeError(f'len(Gmi)={len(Gmi):d} len(Cmi)={len(Cmi):d}')
         self.Gmi = Gmi
         self.Cmi = Cmi
 
@@ -1301,7 +1325,7 @@ class RBE3(RigidElement):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a RBE3 card from ``BDF.add_card(...)``
 
@@ -1403,7 +1427,7 @@ class RBE3(RigidElement):
                     comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RBE3 card from the OP2
 
@@ -1606,7 +1630,9 @@ class RBE3(RigidElement):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        return write_card(self.comment, card, size, is_double)
+        # RBE3s have a bug in MSC Nastran where double precision causes an issue
+        # if there is a single weight that is greater than or equal to 2.0.
+        return write_card(self.comment, card, size, is_double=False)
 
 
 class RSPLINE(RigidElement):
@@ -1633,8 +1659,11 @@ class RSPLINE(RigidElement):
         return RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=0.1, comment='')
 
-    def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
-                 diameter_ratio=0.1, comment=''):
+    def __init__(self, eid: int,
+                 independent_nid: int,
+                 dependent_nids: list[int],
+                 dependent_components: list[str],
+                 diameter_ratio: float=0.1, comment: str=''):
         """
         Creates a RSPLINE card, which uses multipoint constraints for the
         interpolation of displacements at grid points
@@ -1669,11 +1698,11 @@ class RSPLINE(RigidElement):
         # lengths of all segments
         self.diameter_ratio = diameter_ratio
 
-    def validate(self):
+    def validate(self) -> None:
         assert len(self.dependent_nids) == len(self.dependent_components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RSPLINE card from ``BDF.add_card(...)``
 
@@ -1745,13 +1774,13 @@ class RSPLINE(RigidElement):
         #del self.Gni_ref, self.Gmi_ref
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         # TODO: not quite right as it doesn't support blank entries
         return [self.independent_nid]
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         # TODO: not quite right as it doesn't support blank entries
         return self.dependent_nids
@@ -1801,7 +1830,7 @@ class RSSCON(RigidElement):
                       shell_eid=None, solid_eid=None, a_solid_grids=None,
                       b_solid_grids=None, shell_grids=None, comment='')
 
-    def __init__(self, eid, rigid_type,
+    def __init__(self, eid: int, rigid_type: str,
                  shell_eid=None, solid_eid=None,
                  a_solid_grids=None, b_solid_grids=None, shell_grids=None,
                  comment=''):
@@ -1854,7 +1883,7 @@ class RSSCON(RigidElement):
         self.solid_eid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RSSCON card from ``BDF.add_card(...)``
 
@@ -1933,12 +1962,12 @@ class RSSCON(RigidElement):
         """
         self.cross_reference(model)
 
-    def EidShell(self):
+    def EidShell(self) -> Optional[str]:
         if self.shell_eid_ref is not None:
             return self.shell_eid_ref.eid
         return self.shell_eid
 
-    def EidSolid(self):
+    def EidSolid(self) -> Optional[str]:
         if self.solid_eid_ref is not None:
             return self.solid_eid_ref.eid
         return self.solid_eid
@@ -1951,12 +1980,12 @@ class RSSCON(RigidElement):
         self.solid_eid_ref = None
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         return []
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> list[int]:
         """gets the dependent node ids"""
         return []
 

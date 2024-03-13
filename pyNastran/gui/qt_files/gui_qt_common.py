@@ -37,13 +37,16 @@ from pyNastran.gui.utils.utils import is_blank
 IS_TESTING = 'test' in sys.argv[0]
 
 if TYPE_CHECKING:  # pragma: no cover
+    from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.typing import ColorInt
 
 
 FringeData = namedtuple(
     'FringeData',
-    'icase, legend_title, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location,'
+    'min_value, max_value, norm_value,'
+    'default_min_value, default_max_value,'
     'data_format, scale, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -51,7 +54,8 @@ FringeData = namedtuple(
 
 DispData = namedtuple(
     'DispData',
-    'icase, legend_title, location, min_value, max_value, norm_value,'
+    'icase, legend_title, location,'
+    'min_value, max_value, norm_value,'
     'data_format, scale, phase, methods,'
     'subcase_id, subtitle, label,'
     'nlabels, labelsize, ncolors, colormap,'
@@ -346,6 +350,7 @@ class GuiQtCommon(GuiAttributes):
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, resname)
+        default_min_value, default_max_value = obj.get_default_min_max(i, resname)
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
@@ -362,7 +367,9 @@ class GuiQtCommon(GuiAttributes):
 
         vtk_fringe = self.numpy_array_to_vtk_array(name_tuple, fringe, vector_size, phase)
         data = FringeData(
-            icase, legend_title, location, min_value, max_value, norm_value,
+            icase, legend_title, location,
+            min_value, max_value, norm_value,
+            default_min_value, default_max_value,
             data_format, scale, methods,
             subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
@@ -639,8 +646,8 @@ class GuiQtCommon(GuiAttributes):
 
         icase = data.icase
         location = data.location
-        min_value = data.min_value
-        max_value = data.max_value
+        default_min_value = data.default_min_value
+        default_max_value = data.default_max_value
         imin = data.imin
         imax = data.imax
         subcase_id = data.subcase_id
@@ -680,8 +687,8 @@ class GuiQtCommon(GuiAttributes):
             subcase_id=subcase_id,
             subtitle=subtitle,
             label=label,
-            imin=imin, min_value=min_value,
-            imax=imax, max_value=max_value,
+            imin=imin, min_value=default_min_value,
+            imax=imax, max_value=default_max_value,
         )
         is_valid = True
         return is_valid, data
@@ -1171,9 +1178,7 @@ class GuiQtCommon(GuiAttributes):
         if not update:
             return self.icase
 
-        if data_format is None:
-            # RealGridPointForces
-            is_legend_shown = False
+        scalar_bar = self.scalar_bar
 
         # should update this...
         icase_fringe = icase
@@ -1181,7 +1186,7 @@ class GuiQtCommon(GuiAttributes):
         icase_vector = self.icase_vector
         if user_is_checked_fringe:
             if is_legend_shown is None:
-                is_legend_shown = self.scalar_bar.is_shown
+                is_legend_shown = scalar_bar.is_shown
 
             self.update_scalar_bar(
                 legend_title, min_value, max_value,
@@ -1210,6 +1215,19 @@ class GuiQtCommon(GuiAttributes):
             nlabels, labelsize, ncolors, colormap,
             use_fringe_internal=True,
             external_call=False)
+
+        is_grid_point_forces = (data_format is None)
+        if is_grid_point_forces:
+            # RealGridPointForces
+            scalar_bar.scalar_bar.VisibilityOff()
+            scalar_bar.scalar_bar.Modified()
+        else:
+            # there might be a difference between the expected state and
+            # the actual state of the scalar bar
+            scalar_bar_actor: vtkScalarBarActor = scalar_bar.scalar_bar
+            is_visible = scalar_bar_actor.GetVisibility()
+            if is_visible != scalar_bar.is_shown:
+                scalar_bar_actor.SetVisibility(scalar_bar.is_shown)
 
         # updates the type of the result that is displayed
         # method:

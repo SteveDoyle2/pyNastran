@@ -9,6 +9,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 QLINEEDIT_ERROR = "QLineEdit{background: red;}"
 QLINEEDIT_GOOD = "QLineEdit{background: white;}"
+QLINEEDIT_DISABLED = "QLineEdit{background: lightgray;}"
+
+QTEXTEDIT_ERROR = "QTextEdit{background: red;}"
+QTEXTEDIT_GOOD = "QTextEdit{background: white;}"
+QTEXTEDIT_DISABLED = "QTextEdit{background: lightgray;}"
 
 def check_path(cell: QLineEdit) -> tuple[str, bool]:
     """verifies that the path exists"""

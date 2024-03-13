@@ -392,7 +392,7 @@ class CSVWriter:
 
         # subcase name, subcase ID, transient word & value
         unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin',
-                             'grid_point_weight', 'psds', 'monitor1', 'monitor3']
+                             'grid_point_weight', 'psds', 'monitor1', 'monitor3', 'cstm']
         res_types = list(model.get_result(table_type) for table_type in sorted(model.get_table_types())
                          if table_type not in unallowed_results and not table_type.startswith('responses.'))
 
