@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import Union, Optional, Any
+from typing import Union, Optional, Callable, Any
 
 from numpy import array
 import numpy as np
@@ -71,6 +71,7 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_RESULT_TABLES, MSC_MATRIX
 from pyNastran.op2.op2_interface.nx_tables import NX_RESULT_TABLES, NX_MATRIX_TABLES, NX_GEOM_TABLES
 
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.op2_interface.read_matrix import read_matrix
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
@@ -2187,13 +2188,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
             elif table_name in GEOM_TABLES:
                 op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in MATRIX_TABLES:
-                op2_reader.read_matrix(table_name)
+                read_matrix(op2_reader, table_name)
             elif table_name in RESULT_TABLES:
                 op2_reader.read_results_table()
             elif self.skip_undefined_matrices:
-                op2_reader.read_matrix(table_name)
+                read_matrix(op2_reader, table_name)
             elif table_name.strip() in self.additional_matrices:
-                op2_reader.read_matrix(table_name)
+                read_matrix(op2_reader, table_name)
             else:
                 #self.show(1000, types='ifsq')
                 msg = (
@@ -2226,7 +2227,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             table_name = op2_reader._read_table_name(last_table_name=table_name,
                                                      rewind=True, stop_on_failure=False)
 
-    def set_additional_generalized_tables_to_read(self, tables):
+    def set_additional_generalized_tables_to_read(self, tables: dict[bytes, Any]) -> None:
         """
         Adds methods to call a generalized table.
         Everything is left to the user.
@@ -2246,10 +2247,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
           model.set_additional_generalized_tables_to_read(generalized_tables)
 
         """
+        assert isinstance(tables, dict), tables
         self._update_generalized_tables(tables)
         self.generalized_tables = tables
 
-    def set_additional_result_tables_to_read(self, tables):
+    def set_additional_result_tables_to_read(
+        self,
+        tables: dict[bytes,
+                     Union[bool,
+                           tuple[Callable, Callable]]]) -> None:
         """
         Adds methods to read additional result tables.
         This is expected to really only be used for skipping
@@ -2285,7 +2291,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             return table_mapper
         self._get_table_mapper = func
 
-    def _update_generalized_tables(self, tables):
+    def _update_generalized_tables(self, tables: dict[bytes, Any]) -> None:
         """
         helper function for:
          - set_additional_generalized_tables_to_read
@@ -2345,10 +2351,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
         for matrix_name, matrix in matrices.items():
             if isinstance(matrix_name, bytes):
                 self.additional_matrices[matrix_name] = matrix
-            else:
-                self.additional_matrices[matrix_name.encode('latin1')] = matrix
+            elif isinstance(matrix_name, str):
+                matrix_name_bytes = matrix_name.encode('latin1')
+                self.additional_matrices[matrix_name_bytes] = matrix
+            else:  # pragma: no cover
+                raise TypeError('matrix_name={matrix_name} and should be bytes/str')
 
-    def _finish(self):
+    def _finish(self) -> None:
         """
         Clears out the data members contained within the self.words variable.
         This prevents mixups when working on the next table, but otherwise
@@ -2363,7 +2372,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
 
-    def _read_psdf_3(self, data: bytes, ndata: int):
+    def _read_psdf_3(self, data: bytes, ndata: int) -> None:
         """reads the PSDF table"""
         #(50, 2011, 4001, 0, 302130, 3
         # strip off the title
@@ -2469,7 +2478,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #self.show_data(data, types='ifs', endian=None)
         #aaaa
 
-    def _read_psdf_4(self, data: bytes, ndata: int):
+    def _read_psdf_4(self, data: bytes, ndata: int) -> int:
         """reads the PSDF table"""
         if self.read_mode == 1:
             return ndata
@@ -2489,6 +2498,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         del self.node
         del self.dof
         del self.word
+        return ndata
 
 def main():  # pragma: no cover
     """testing pickling"""

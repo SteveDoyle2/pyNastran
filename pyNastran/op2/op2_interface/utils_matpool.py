@@ -72,11 +72,11 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
     #if factor == 2:
         #matrix_name = reshape_bytes_block(matrix_name)
     #matrix_name = matrix_name.strip()
-    #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+    #op2_reader.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
                    #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                        #matrix_name, junk1, matrix_shape, tin, tout,
                        #is_phase, junk2, ncols_gset))
-    #self.show_data(data[48*factor:], types='ifsd')
+    #op2_reader.show_data(data[48*factor:], types='ifsd')
 
     #is_complex = False
     #if tin > 2 or tout > 2:
@@ -102,7 +102,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
                #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                    #matrix_name, junk1, matrix_shape, tin, tout,
                    #is_phase, junk2, ncols_gset))
-        #self.log.warning(msg)
+        #op2_reader.log.warning(msg)
         #raise RuntimeError(msg)
 
     #is_symmetric = matrix_shape == 6
@@ -115,7 +115,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
 
     # find the first index with ()-1,-1)
     iminus1 = np.where(ints == -1)[0]
-    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, op2_reader.size, op2_reader.log)
     size = 4
     istarts, istops, outs, kstarts, kstops = find_all_dmigs_start_stop(
         datai, header_fmt, size, iminus1,
@@ -159,7 +159,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
         matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
         matrix_name = matrix_name.strip()
         matrix_name_str = matrix_name.decode('latin1')
-        #self.show_data(data[48*factor:], types='ifsd')
+        #op2_reader.show_data(data[48*factor:], types='ifsd')
 
         is_complex = False
         if tin > 2 or tout > 2:
@@ -182,7 +182,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             log.info(f'  tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype})')
             log.info(f'  is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
 
-        #if self.size == 4:
+        #if op2_reader.size == 4:
             #if tout == 1:  # float32
                 #nvalues = 3
             #elif tout == 2:  # float64
@@ -199,7 +199,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
         #kstart = np.array(kstart
         kstop = np.array(kstop)
         kstart = np.hstack([ioffset, kstop[:-1] + 2])
-        #self.show_data(data[kstart*4:kstop*4])
+        #op2_reader.show_data(data[kstart*4:kstop*4])
         #kfirst = ioffset
         #klast = kstop[-1]
         if debug:
@@ -208,7 +208,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             #----------------------------------------
             log.info(f'{matrix_name_str}: casting floats')
         #nheader = ioffset * 4
-        #nend = istop * self.size
+        #nend = istop * op2_reader.size
         #floats = get_floats_4(datai[nheader:nend], fdtype, op2, tout)
 
         assert tout in [1, 2, 3, 4]
@@ -290,7 +290,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             # In all cases, we use istart/istop to calculate row/col nid/dof
             # because they are always int32.  Only the real/imag types change.
             #print(datai[nstart2:nend2])
-            #self.show_data(datai[nstart2:nend2], types='ifd')
+            #op2_reader.show_data(datai[nstart2:nend2], types='ifd')
             #print('fdtype =', fdtype)
             #nints = len(ints2)
             #ints2 = ints2.reshape(nints//nvalues, nvalues)
@@ -469,11 +469,11 @@ def read_matpool_dmig(op2: OP2, data: bytes,
     #if factor == 2:
         #matrix_name = reshape_bytes_block(matrix_name)
     #matrix_name = matrix_name.strip()
-    #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+    #op2_reader.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
                    #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                        #matrix_name, junk1, matrix_shape, tin, tout,
                        #is_phase, junk2, ncols_gset))
-    #self.show_data(data[48*factor:], types='ifsd')
+    #op2_reader.show_data(data[48*factor:], types='ifsd')
 
     #is_complex = False
     #if tin > 2 or tout > 2:
@@ -499,7 +499,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
                #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                    #matrix_name, junk1, matrix_shape, tin, tout,
                    #is_phase, junk2, ncols_gset))
-        #self.log.warning(msg)
+        #op2_reader.log.warning(msg)
         #raise RuntimeError(msg)
 
     #is_symmetric = matrix_shape == 6
@@ -512,7 +512,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
 
     # find the first index with ()-1,-1)
     iminus1 = np.where(ints == -1)[0]
-    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, op2_reader.size, op2_reader.log)
     istarts, istops, outs, kstarts, kstops = find_all_dmigs_start_stop(
         datai, header_fmt, size, iminus1,
         debug=debug)
@@ -556,7 +556,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
             matrix_name = reshape_bytes_block(matrix_name)
         matrix_name = matrix_name.strip()
         matrix_name_str = matrix_name.decode('latin1')
-        #self.show_data(data[48*factor:], types='ifsd')
+        #op2_reader.show_data(data[48*factor:], types='ifsd')
 
         is_complex = False
         if tin > 2 or tout > 2:
@@ -584,7 +584,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
         #kstart = np.array(kstart
         kstop = np.array(kstop)
         kstart = np.hstack([ioffset, kstop[:-1] + 2])
-        #self.show_data(data[kstart*4:kstop*4])
+        #op2_reader.show_data(data[kstart*4:kstop*4])
         #kfirst = ioffset
         #klast = kstop[-1]
         log.info(f'kstart = {kstart}')
@@ -592,8 +592,8 @@ def read_matpool_dmig(op2: OP2, data: bytes,
         #----------------------------------------
         log.info('casting floats')
         nheader = ioffset * size
-        #nend = istop * self.size
-        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
+        #nend = istop * op2_reader.size
+        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, op2_reader.size)
 
         assert tout in [1, 2, 3, 4]
         #print(floats.tolist())
@@ -651,7 +651,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
                 nend_float2 = istopi * size
                 #nend_int2 = istopi * size
                 data
-                #self.show_data(data[n:], types='ifsdq')
+                #op2_reader.show_data(data[n:], types='ifsdq')
 
             assert nend_float2 > nstart2
             log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
@@ -672,7 +672,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
             # In all cases, we use istart/istop to calculate row/col nid/dof
             # because they are always int32.  Only the real/imag types change.
             #print(datai[nstart2:nend2])
-            #self.show_data(datai[nstart2:nend2], types='ifd')
+            #op2_reader.show_data(datai[nstart2:nend2], types='ifd')
             #print('fdtype =', fdtype)
             #nints = len(ints2)
             #ints2 = ints2.reshape(nints//nvalues, nvalues)
@@ -768,7 +768,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
 
                 elif dtype == 'float64':
                     datai = data[nheader+(istarti*4) : nheader+(istopi*4)]
-                    #self.show_data(datai)
+                    #op2_reader.show_data(datai)
                     irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
                     log.debug(f'irow float64: irow={irow}')
                     assert len(datai) % 8 == 0, len(datai) / 8
@@ -926,11 +926,11 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
     #if factor == 2:
         #matrix_name = reshape_bytes_block(matrix_name)
     #matrix_name = matrix_name.strip()
-    #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+    #op2_reader.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
                    #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                        #matrix_name, junk1, matrix_shape, tin, tout,
                        #is_phase, junk2, ncols_gset))
-    #self.show_data(data[48*factor:], types='ifsd')
+    #op2_reader.show_data(data[48*factor:], types='ifsd')
 
     #is_complex = False
     #if tin > 2 or tout > 2:
@@ -956,7 +956,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
                #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                    #matrix_name, junk1, matrix_shape, tin, tout,
                    #is_phase, junk2, ncols_gset))
-        #self.log.warning(msg)
+        #op2_reader.log.warning(msg)
         #raise RuntimeError(msg)
 
     #is_symmetric = matrix_shape == 6
@@ -969,7 +969,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
 
     # find the first index with ()-1,-1)
     iminus1 = np.where(ints == -1)[0]
-    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, op2_reader.size, op2_reader.log)
     size = 8
     istarts, istops, outs, kstarts, kstops = find_all_dmigs_start_stop(
         datai, header_fmt, size, iminus1,
@@ -1011,7 +1011,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
         matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
         matrix_name = reshape_bytes_block(matrix_name).strip()
         matrix_name_str = matrix_name.decode('latin1')
-        #self.show_data(data[48*factor:], types='ifsd')
+        #op2_reader.show_data(data[48*factor:], types='ifsd')
 
         is_complex = False
         if tin > 2 or tout > 2:
@@ -1033,7 +1033,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
                  f'tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype}) \n    '
                  f'is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
 
-        #if self.size == 4:
+        #if op2_reader.size == 4:
             #if tout == 1:  # float32
                 #nvalues = 3
             #elif tout == 2:  # float64
@@ -1050,7 +1050,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
         #kstart = np.array(kstart
         kstop = np.array(kstop)
         kstart = np.hstack([ioffset, kstop[:-1] + 2])
-        #self.show_data(data[kstart*4:kstop*4])
+        #op2_reader.show_data(data[kstart*4:kstop*4])
         #kfirst = ioffset
         #klast = kstop[-1]
         log.info(f'kstart = {kstart}')
@@ -1058,8 +1058,8 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
         #----------------------------------------
         log.info('casting floats')
         #nheader = ioffset * size
-        #nend = istop * self.size
-        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
+        #nend = istop * op2_reader.size
+        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, op2_reader.size)
 
         assert tout in [1, 2, 3, 4]
         #print(floats.tolist())
@@ -1111,7 +1111,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
             nend_float2 = istopi * size
             #nend_int2 = istopi * size
             data
-            #self.show_data(data[n:], types='ifsdq')
+            #op2_reader.show_data(data[n:], types='ifsdq')
 
             assert nend_float2 > nstart2
             log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
@@ -1132,7 +1132,7 @@ def read_matpool_dmig_8(op2: OP2, data: bytes,
             # In all cases, we use istart/istop to calculate row/col nid/dof
             # because they are always int32.  Only the real/imag types change.
             #print(datai[nstart2:nend2])
-            #self.show_data(datai[nstart2:nend2], types='ifd')
+            #op2_reader.show_data(datai[nstart2:nend2], types='ifd')
             #print('fdtype =', fdtype)
             #nints = len(ints2)
             #ints2 = ints2.reshape(nints//nvalues, nvalues)
@@ -1264,7 +1264,7 @@ def _cast_matrix_matpool(table_name: str,
                          log: SimpleLogger,
                          apply_symmetry: bool=False) -> Matrix:
     """helper method for _read_matpool_matrix"""
-    #op2 = self.op2
+    #op2 = op2_reader.op2
     make_matrix_symmetric = apply_symmetry and matrix_shape == 'symmetric'
 
     # TODO: this is way slower than it should be
@@ -1578,7 +1578,7 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
     njb : int
         The number of columns of the matrix
     nj_sym : int
-        Number of
+        Number of ???
     """
     #from pyNastran.femutils.utils import unique2d
     ai = np.vstack([grids1, comps1]).T
