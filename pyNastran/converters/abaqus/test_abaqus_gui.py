@@ -1,11 +1,12 @@
 import os
 import unittest
 
+from cpylog import get_logger
+
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
 #from pyNastran.converters.abaqus.abaqus import read_abaqus
-from cpylog import get_logger
 from pyNastran.converters.abaqus.test_unit_abaqus import make_model
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')

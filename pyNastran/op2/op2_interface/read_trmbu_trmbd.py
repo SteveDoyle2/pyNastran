@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
 
-def read_trmbu(self: OP2Reader) -> None:
+def read_trmbu(op2_reader: OP2Reader) -> None:
     """
     Reads the TRMBU table
 
@@ -73,16 +73,17 @@ def read_trmbu(self: OP2Reader) -> None:
     +------+------------+-------+---------------------------------------------------+
     """
     #trmbu
-    op2: OP2 = self.op2
+    op2: OP2 = op2_reader.op2
+    factor = op2_reader.factor
+
     #is_geometry = op2.is_geometry
-    unused_table_name = self._read_table_name(rewind=False)
-    self.read_markers([-1])
-    data = self._read_record()
-    # print(self.show_data(data, types='ifsqd'))
+    unused_table_name = op2_reader._read_table_name(rewind=False)
+    op2_reader.read_markers([-1])
+    data = op2_reader._read_record()
+    # print(op2_reader.show_data(data, types='ifsqd'))
     # 101, 466286, 15,      1, 1, 180, 0
     # 101, 466286, ncoords, 1, 1, 180, 0
-    factor = self.factor
-    #if self.size == 4:
+    #if op2_reader.size == 4:
         #idtype = 'int32'
         #fdtype = 'float32'
     #else:
@@ -90,27 +91,27 @@ def read_trmbu(self: OP2Reader) -> None:
         #fdtype = 'float64'
     assert len(data) == 28 * factor, len(data)
 
-    self.read_3_markers([-2, 1, 0])
-    data = self._read_record() # CSTM
+    op2_reader.read_3_markers([-2, 1, 0])
+    data = op2_reader._read_record() # CSTM
     # print(self.show_data(data, types='s'))
     # assert len(data) == 8 * factor, len(data)
 
-    self.read_3_markers([-3, 1, 0])
+    op2_reader.read_3_markers([-3, 1, 0])
     itable = -4
 
-    read_record = self._read_record if self.read_mode == 2 else self._skip_record
+    read_record = op2_reader._read_record if op2_reader.read_mode == 2 else op2_reader._skip_record
     blocks = []
     while 1:
-        markers = self.get_nmarkers(1, rewind=True)
+        markers = op2_reader.get_nmarkers(1, rewind=True)
         if markers == [0]:
             break
         data = read_record()
         blocks.append(data)
-        self.read_markers([itable, 1, 0])
+        op2_reader.read_markers([itable, 1, 0])
         itable -= 1
-    markers = self.get_nmarkers(1, rewind=False)
+    markers = op2_reader.get_nmarkers(1, rewind=False)
 
-    if self.read_mode == 1:
+    if op2_reader.read_mode == 1:
         return
     nblocks = len(blocks)
 
@@ -234,7 +235,7 @@ def read_trmbu(self: OP2Reader) -> None:
     assert len(subcases_set) == 1, subcases_set
     return
 
-def read_trmbd(self: OP2Reader) -> None:
+def read_trmbd(op2_reader: OP2Reader) -> None:
     """
     Reads the TRMBD table
 
@@ -327,42 +328,43 @@ def read_trmbd(self: OP2Reader) -> None:
     |  1   | UNDEF(6)   | None  |                                                   |
     +------+------------+-------+---------------------------------------------------+
     """
-    op2: OP2 = self.op2
+    op2: OP2 = op2_reader.op2
+    factor = op2_reader.factor
     #is_geometry = op2.is_geometry
-    unused_table_name = self._read_table_name(rewind=False)
-    self.read_markers([-1])
-    data = self._read_record()
-    #print(self.show_data(data, types='ifsqd'))
+
+    unused_table_name = op2_reader._read_table_name(rewind=False)
+    op2_reader.read_markers([-1])
+    data = op2_reader._read_record()
+    #print(op2_reader.show_data(data, types='ifsqd'))
     # 101, 466286, 15,      1, 1, 180, 0
     # 101, 466286, ncoords, 1, 1, 180, 0
     header_int = np.frombuffer(data, dtype=op2.idtype8)
     #header_float = np.frombuffer(data, dtype=op2.fdtype8)
     ncoords = header_int[2]
     #print('data =', header_int)
-    factor = self.factor
     assert len(data) == 28 * factor, len(data)
 
-    self.read_3_markers([-2, 1, 0])
-    data = self._read_record() # CSTM
+    op2_reader.read_3_markers([-2, 1, 0])
+    data = op2_reader._read_record() # CSTM
     #assert len(data) == 8 * factor, len(data)
 
-    self.read_3_markers([-3, 1, 0])
+    op2_reader.read_3_markers([-3, 1, 0])
 
     itable = -4
 
     blocks = []
-    read_record = self._read_record if self.read_mode == 2 else self._skip_record
+    read_record = op2_reader._read_record if op2_reader.read_mode == 2 else op2_reader._skip_record
     while 1:
-        markers = self.get_nmarkers(1, rewind=True)
+        markers = op2_reader.get_nmarkers(1, rewind=True)
         if markers == [0]:
             break
         data = read_record()
         blocks.append(data)
-        self.read_markers([itable, 1, 0])
+        op2_reader.read_markers([itable, 1, 0])
         itable -= 1
-    markers = self.get_nmarkers(1, rewind=False)
+    markers = op2_reader.get_nmarkers(1, rewind=False)
 
-    if self.read_mode == 1:
+    if op2_reader.read_mode == 1:
         return
     nblocks = len(blocks)
 
@@ -494,11 +496,12 @@ def read_trmbd(self: OP2Reader) -> None:
         trmbd.eulersx[element][itime, :, :] = eulers_x
         trmbd.eulersy[element][itime, :, :] = eulers_y
         trmbd.eulersz[element][itime, :, :] = eulers_z
-
     assert len(subcases_set) == 1, subcases_set
     return
 
-def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
+def reshape_trmbd(element_name: str, nnodes: int,
+                  int_data: np.ndarray,
+                  float_data: np.ndarray) -> tuple[int, np.ndarray, np.ndarray]:
     ndata_per_element = 1 + nnodes + 3 * nnodes  # 1+4*(nnnodes) = 1+4*2 = 9
     n_elements = int_data.shape[0] // ndata_per_element  # elid + 2 grid + 3*2 euler angles
     assert int_data.shape[0] % ndata_per_element == 0, f'{element_name}: nnodes={nnodes} int_data.shape={int_data.shape}'
