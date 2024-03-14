@@ -99,7 +99,7 @@ def read_trmbu(op2_reader: OP2Reader) -> None:
     op2_reader.read_3_markers([-3, 1, 0])
     itable = -4
 
-    read_record = op2_reader._read_record if op2_reader.read_mode == 2 else op2_reader._skip_record
+    read_record = op2_reader._read_record if op2.read_mode == 2 else op2_reader._skip_record
     blocks = []
     while 1:
         markers = op2_reader.get_nmarkers(1, rewind=True)
@@ -111,7 +111,7 @@ def read_trmbu(op2_reader: OP2Reader) -> None:
         itable -= 1
     markers = op2_reader.get_nmarkers(1, rewind=False)
 
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         return
     nblocks = len(blocks)
 
@@ -353,7 +353,7 @@ def read_trmbd(op2_reader: OP2Reader) -> None:
     itable = -4
 
     blocks = []
-    read_record = op2_reader._read_record if op2_reader.read_mode == 2 else op2_reader._skip_record
+    read_record = op2_reader._read_record if op2.read_mode == 2 else op2_reader._skip_record
     while 1:
         markers = op2_reader.get_nmarkers(1, rewind=True)
         if markers == [0]:
@@ -364,7 +364,7 @@ def read_trmbd(op2_reader: OP2Reader) -> None:
         itable -= 1
     markers = op2_reader.get_nmarkers(1, rewind=False)
 
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         return
     nblocks = len(blocks)
 

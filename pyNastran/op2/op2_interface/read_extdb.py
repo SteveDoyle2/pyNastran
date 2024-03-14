@@ -12,7 +12,7 @@ from pyNastran.op2.errors import FortranMarkerError
 from pyNastran.op2.op2_interface.utils import (
     mapfmt, reshape_bytes_block,)
 
-from .extdb import _read_extdb_extdb, _read_extdb_geomx, _read_extdb_phip
+from .extdb import read_extdb_extdb, read_extdb_geomx, read_extdb_phip
 
 from pyNastran.op2.op2_interface.read_matrix import (
     read_matrix_mat)
@@ -27,15 +27,15 @@ def read_tug1(op2_reader: OP2Reader) -> None:
     table_name = op2_reader._read_table_name(rewind=False)
     op2.table_name = table_name
     #op2_reader.log.debug('table_name = %r' % op2.table_name)
-    if op2_reader.is_debug_file:
-        op2_reader.binary_debug.write('_read_superelement - %s\n' % table_name)
+    if op2.is_debug_file:
+        op2.binary_debug.write('_read_superelement - %s\n' % table_name)
 
     #data = op2_reader._read_record()
     #op2_reader.show_data(data, types='ifsqd', endian=None, force=False)
     #op2_reader.show(data, types='ifsqd', endian=None, force=False)
 
     op2_reader.read_markers([-1])
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         data0 = op2_reader._read_record()
         out0 = Struct(b'7i').unpack(data0)
         # (101, 240, 34, 32767, 0, 7, 0)
@@ -72,7 +72,7 @@ def read_tug1(op2_reader: OP2Reader) -> None:
         data = op2_reader._skip_record()
 
     op2_reader.read_markers([-2, 1, 0])
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         data = op2_reader._read_record()
         out = Struct('8s i 12s i').unpack(data)
         #print(out)
@@ -100,7 +100,7 @@ def read_tug1(op2_reader: OP2Reader) -> None:
     itable -= 1
     marker = op2_reader.get_marker1(rewind=True)
     while marker != 0:
-        if op2_reader.read_mode == 1:
+        if op2.read_mode == 1:
             data = op2_reader._read_record()
             ints = np.frombuffer(data, dtype='int32')
             if ints.max() > 500_000_000:
@@ -128,7 +128,7 @@ def read_tug1(op2_reader: OP2Reader) -> None:
         if marker == 0:
             break
 
-        if op2_reader.read_mode == 1:
+        if op2.read_mode == 1:
             data = op2_reader._read_record()
 
             #header = b'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW    '
@@ -149,7 +149,7 @@ def read_tug1(op2_reader: OP2Reader) -> None:
         marker = op2_reader.get_marker1(rewind=True)
 
     op2_reader.read_markers([0])
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         table_name_str = table_name.decode(op2_reader._encoding)
         op2.op2_results.superelement_tables[table_name_str] = data_dict
     return
@@ -164,8 +164,8 @@ def read_mef1(op2_reader: OP2Reader) -> None:
 
     op2.table_name = op2_reader._read_table_name(rewind=False)
     #op2_reader.log.debug('table_name = %r' % op2.table_name)
-    if op2_reader.is_debug_file:
-        op2_reader.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+    if op2.is_debug_file:
+        op2.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
     op2_reader.read_markers([-1])
     data = op2_reader._read_record()
     op2_reader.show_data(data, types='i', endian=None, force=False)
@@ -375,23 +375,23 @@ def read_extdb(op2_reader: OP2Reader) -> None:
     log: SimpleLogger = op2.log
     op2.table_name = op2_reader._read_table_name(rewind=False)
     #op2_reader.log.debug('table_name = %r' % op2.table_name)
-    if op2_reader.is_debug_file:
-        op2_reader.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+    if op2.is_debug_file:
+        op2.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
     op2_reader.read_markers([-1])
-    if op2_reader.is_debug_file:
-        op2_reader.binary_debug.write('---markers = [-1]---\n')
+    if op2.is_debug_file:
+        op2.binary_debug.write('---markers = [-1]---\n')
 
     #(101, 1, 0, 8, 0, 0, 0)
     data = op2_reader._read_record()
 
     markers = op2_reader.get_nmarkers(1, rewind=True)
-    if op2_reader.is_debug_file:
-        op2_reader.binary_debug.write('---marker0 = %s---\n' % markers)
+    if op2.is_debug_file:
+        op2.binary_debug.write('---marker0 = %s---\n' % markers)
 
     op2_reader.read_3_markers([-2, 1, 0])
     marker = -3
-    if op2_reader.read_mode == read_mode or op2.make_geom is False:
-        if op2_reader.read_mode == read_mode and op2.make_geom is False:
+    if op2.read_mode == read_mode or op2.make_geom is False:
+        if op2.read_mode == read_mode and op2.make_geom is False:
             log.warning('reading the EXTRN tables requires the read_op2_geom')
         data = op2_reader._skip_record()
         while 1:
@@ -415,7 +415,7 @@ def read_extdb(op2_reader: OP2Reader) -> None:
 
     log.debug('-'*80)
     xsop2dir_name = op2_reader.xsop2dir_names[iextdb]
-    if op2_reader.read_mode == 2:
+    if op2.read_mode == 2:
         data, ndata = op2_reader._read_record_ndata()
         #op2.show_data(data, types='ifsqd', endian=None, force=False)
 
@@ -518,7 +518,7 @@ def read_extdb(op2_reader: OP2Reader) -> None:
         else:
             raise RuntimeError('EXTDB error')
 
-        #if op2_reader.read_mode == 2:
+        #if op2.read_mode == 2:
         if len(ints_):
             ints = np.array(ints_, dtype='int32')
             doubles = np.array(doubles_, dtype='float64')
@@ -530,7 +530,7 @@ def read_extdb(op2_reader: OP2Reader) -> None:
         nfields = op2_reader.get_marker1(rewind=True)
         #print('nfields =', nfields)
         if nfields == 0:
-            #if op2_reader.read_mode == 2:
+            #if op2.read_mode == 2:
                 #op2_reader.log.warning('breaking...')
             #op2_reader.show(200)
             #log.debug(f'ints={ints_} doubles={doubles_}')
@@ -539,7 +539,7 @@ def read_extdb(op2_reader: OP2Reader) -> None:
         # ----------------------------------------------------------------------
 
         data, ndata = op2_reader._read_record_ndata()
-        if op2_reader.read_mode == 2:
+        if op2.read_mode == 2:
             #if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
                 #if ndata != 12:
                     #op2_reader.log.warning(f'--B; ndata={ndata}--')
@@ -575,21 +575,21 @@ def read_extdb(op2_reader: OP2Reader) -> None:
                         ints = Struct(endian + b'3q').unpack(data)
                         assert ints == (65535, 65535, 65535), ints
             elif name == 'GEOM1':
-                _read_extdb_geomx(op2_reader, data, endian, op2.reader_geom1.geom1_map)
+                read_extdb_geomx(op2_reader, data, endian, op2.reader_geom1.geom1_map)
             elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
-                _read_extdb_geomx(op2_reader, data, endian, op2.reader_geom2.geom2_map)
+                read_extdb_geomx(op2_reader, data, endian, op2.reader_geom2.geom2_map)
             elif name == 'GEOM4':
-                _read_extdb_geomx(op2_reader, data, endian, op2.reader_geom4.geom4_map)
+                read_extdb_geomx(op2_reader, data, endian, op2.reader_geom4.geom4_map)
             elif name == 'EXTDB':
-                _read_extdb_extdb(op2_reader, xsop2dir_name, data, endian, numpy_idtype)
+                read_extdb_extdb(op2_reader, xsop2dir_name, data, endian, numpy_idtype)
             elif name1 == 'PHIP':
-                _read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
+                read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
             elif name1 == 'TES':
-                _read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
+                read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
             elif name1 == 'TEF':
-                _read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
+                read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
             elif name1 == 'TQP':
-                _read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
+                read_extdb_phip(op2_reader, xsop2dir_name, name1, marker, data, endian, struct_idtype, op2.idtype8)
             else:
                 #op2_reader.show_data(data, types='sqd')
                 log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
@@ -598,8 +598,7 @@ def read_extdb(op2_reader: OP2Reader) -> None:
         #print('--------------------')
     unused_marker_end = op2_reader.get_marker1(rewind=False)
     #aa
-    #if op2_reader.read_mode == 2:
+    #if op2.read_mode == 2:
         #op2_reader.log.warning('returning...')
     log.debug('-'*80)
     return
-

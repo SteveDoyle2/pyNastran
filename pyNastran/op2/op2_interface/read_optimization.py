@@ -311,7 +311,7 @@ def read_dscmcol(op2_reader: OP2Reader) -> None:
     data = op2_reader._read_record()
 
     responses = {}
-    if op2_reader.read_mode == 2:
+    if op2.read_mode == 2:
         ints = np.frombuffer(data, dtype=op2.idtype8)
         floats = np.frombuffer(data, dtype=op2.fdtype8)
         nresponses_dresp1 = len(ints) // 9
@@ -326,7 +326,7 @@ def read_dscmcol(op2_reader: OP2Reader) -> None:
         return
 
     data = op2_reader._read_record()
-    if op2_reader.read_mode == 2:
+    if op2.read_mode == 2:
         # read the DRESP2 columns
         ints = np.frombuffer(data, dtype=op2.idtype8)
         floats = np.frombuffer(data, dtype=op2.fdtype8)
@@ -338,14 +338,15 @@ def read_dscmcol(op2_reader: OP2Reader) -> None:
 
 def _save_dscmcol_response(op2_reader: OP2Reader, responses):
     """saves the DSCMCOL dictionary"""
-    if op2_reader.read_mode == 2:
+    op2: OP2 = op2_reader.op2
+    if op2.read_mode == 2:
         assert len(responses) > 0
     if responses:
-        if op2_reader.op2.op2_results.responses.dscmcol is not None:
+        if op2.op2_results.responses.dscmcol is not None:
             op2_reader.log.warning('overwriting DSCMCOL')
         respi = DSCMCOL(responses)
         str(respi)
-        op2_reader.op2.op2_results.responses.dscmcol = respi
+        op2.op2_results.responses.dscmcol = respi
 
 def dscmcol_dresp1(responses: dict[int, dict[str, Any]],
                    nresponses_dresp1: int,
@@ -825,7 +826,7 @@ def read_hisadd(op2_reader: OP2Reader) -> None:
     responses = op2.op2_results.responses
     op2.table_name = op2_reader._read_table_name(rewind=False)
 
-    if op2_reader.read_mode == 1 or is_not_saved_result:
+    if op2.read_mode == 1 or is_not_saved_result:
         op2_reader.read_markers([-1])
         op2_reader._skip_record()
         op2_reader.read_3_markers([-2, 1, 0])
@@ -977,7 +978,7 @@ def _read_r1tabrg(op2_reader: OP2Reader, data: bytes, ndata: int) -> int:
     responses = op2.op2_results.responses
 
     # create the result object
-    if op2_reader.read_mode == 1:
+    if op2.read_mode == 1:
         assert data is not None, data
         assert len(data) > 12, len(data)
         if size == 4:

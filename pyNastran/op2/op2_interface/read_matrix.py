@@ -338,7 +338,7 @@ def read_matrix(op2_reader, table_name: bytes) -> None:
 
     return
     #from traceback import format_exc
-    #if op2_reader.read_mode != read_mode_to_read_matrix and not op2_reader.debug_file:
+    #if op2.read_mode != read_mode_to_read_matrix and not op2_reader.debug_file:
         #try:
             #op2_reader._skip_matrix_mat()  # doesn't work for matpools
         #except MemoryError:
