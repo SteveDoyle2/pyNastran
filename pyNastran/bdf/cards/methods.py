@@ -896,10 +896,10 @@ class EIGRL(Method):
             estimate of first flexible mode natural frequency
         norm : str; default=None
             {MAX, MASS, AF}
-        options : ???; default=None -> []
-            ???
-        values : ???; default=None -> []
-            ???
+        options : list[str]; default=None -> []
+            line 2 keys
+        values : list[int | float | str]; default=None -> []
+            line 2 values
         comment : str; default=''
             a comment for the card
 

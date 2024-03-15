@@ -888,6 +888,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # stress
             # OES1C - Table of composite element stresses or strains in SORT1 format
             # OESRT - Table of composite element ply strength ratio. Output by SDRCOMP
+            b'OES1A'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress (???)'], # stress - ???
             b'OES1X1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear stress'], # stress - nonlinear elements
             b'OES1'   : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # stress - linear only
             b'OES1X'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # element stresses at intermediate stations & nonlinear stresses

@@ -1075,6 +1075,12 @@ TABLE_OBJ_MAP = {
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
 }
+keya = ''
+for key, data in list(TABLE_OBJ_MAP.items()):
+    if key.startswith('stress.'):
+       keya = key.replace('stress.', 'stressa.')
+       TABLE_OBJ_MAP[keya] = data
+del keya
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 

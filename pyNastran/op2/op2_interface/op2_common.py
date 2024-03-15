@@ -436,9 +436,9 @@ class OP2Common(Op2Codes, F06Writer):
             assert len(data) == 1168, len(data)
             # title_subtitle_label
             title_bytes, subtitle_bytes, label_bytes = unpack(self._endian + b'256s256s256s', data[400:])
-            title_bytes = reshape_bytes_block(title_bytes)
-            subtitle_bytes = reshape_bytes_block(subtitle_bytes)
-            label_bytes = reshape_bytes_block(label_bytes)
+            title_bytes = reshape_bytes_block(title_bytes, is_interlaced_block=True)
+            subtitle_bytes = reshape_bytes_block(subtitle_bytes, is_interlaced_block=True)
+            label_bytes = reshape_bytes_block(label_bytes, is_interlaced_block=True)
 
         title, subtitle, subtitle_original, label, label2 = read_title_helper(
             title_bytes, subtitle_bytes, label_bytes,
@@ -1495,7 +1495,8 @@ class OP2Common(Op2Codes, F06Writer):
                                               data, nnodes, ntotal)
         return n
 
-    def create_transient_object(self, result_name, storage_obj, class_obj,
+    def create_transient_object(self, result_name: str,
+                                storage_obj: dict[tuple, Any], class_obj,
                                 is_cid=False, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).

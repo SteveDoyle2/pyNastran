@@ -512,7 +512,8 @@ class GuiVTKCommon(GuiQtCommon):
         if update_groups and name not in self.groups:
             self.groups[name] = group
         eids = group.element_ids
-        self.show_eids(eids)
+        if hasattr(self, 'selection'):
+            self.show_eids(eids)
         assert isinstance(name, str), name
         self.group_active = name
 

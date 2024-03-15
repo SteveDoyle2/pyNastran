@@ -267,6 +267,7 @@ class OP2Reader:
         #try:
         version_str = ''
         op2: OP2 = self.op2
+        read_mode = op2.read_mode
         markers = self.get_nmarkers(1, rewind=True)
         #except Exception:
             #self._goto(0)
@@ -276,10 +277,10 @@ class OP2Reader:
                 #raise FatalError("The OP2 is empty.")
             #raise
         if self.is_debug_file:
-            if op2.read_mode == 1:
-                self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % op2.read_mode)
-            elif op2.read_mode == 2:
-                self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % op2.read_mode)
+            if read_mode == 1:
+                self.binary_debug.write(f'read_mode = {read_mode:d} (vectorized; 1st pass)\n')
+            elif read_mode == 2:
+                self.binary_debug.write(f'read_mode = {read_mode:d} (vectorized; 2nd pass)\n')
 
         if markers == [3,]:  # PARAM, POST, -1
             if self.is_debug_file:
@@ -303,8 +304,10 @@ class OP2Reader:
                 assert ndata in [4, 12, 24], f'ndata={ndata} data={data}'
 
             self.read_markers([7])
-            data = self.read_string_block()  # 'NASTRAN FORT TAPE ID CODE - '
+            data = self.read_string_block(is_interlaced_block=True)  # 'NASTRAN FORT TAPE ID CODE - '
             if data == b'NASTRAN FORT TAPE ID CODE - ':
+                macro_version = 'nastran'
+            elif data == b'HAJIF FORT TAPE ID CODE -   ':
                 macro_version = 'nastran'
             elif b'IMAT v' in data:
                 imat_version = data[6:11].encode('utf8')
@@ -332,7 +335,7 @@ class OP2Reader:
 
             if macro_version == 'nastran':
                 mode, version_str = parse_nastran_version(
-                    data, version, self._encoding, self.op2.log)
+                    data, version, self._encoding, op2.log)
                 # don't uncomment this...it breaks tests
                 #op2._nastran_format = mode
             elif macro_version.startswith('IMAT'):
@@ -351,7 +354,7 @@ class OP2Reader:
                 self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
             if op2.post is None:
                 op2.post = -2
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(markers)
 
         #print(f'mode = {mode!r} fmt={op2._nastran_format!r}')
@@ -371,7 +374,7 @@ class OP2Reader:
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
-        if op2.read_mode == 1:
+        if read_mode == 1:
             self.log.debug(f'mode={mode!r} version={version_str!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
@@ -1628,7 +1631,9 @@ class OP2Reader:
             #self.show_data(data[16:], types='ifsq')
             raise SubTableReadError(f'cannot read table_name={table_names}')
 
-        table_name_bytes = reshape_bytes_block(table_name_bytes)
+        is_interlaced_block = self.op2.is_nx
+        table_name_bytes = reshape_bytes_block(table_name_bytes,
+                                               is_interlaced_block=is_interlaced_block)
         table_name_str = table_name_bytes.decode('utf-8').strip()
         assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
         return table_name_str
@@ -2927,7 +2932,9 @@ class OP2Reader:
             the table name
 
         """
-        op2 = self.op2
+        op2: OP2 = self.op2
+        is_interlaced_block = op2.is_nx
+
         table_name = None
         data = None
         if self.is_debug_file:
@@ -2936,18 +2943,19 @@ class OP2Reader:
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
             if self.size == 8:
-                data = reshape_bytes_block(data)
+                data = reshape_bytes_block(data, is_interlaced_block=is_interlaced_block)
             table_name = self.unpack_table_name(data)
 
             if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
-                self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
+                self.binary_debug.write(f'table_header = [8, {table_name!r}, 8]\n\n')
             table_name = table_name.strip()
         else:
             try:
+                #data = self.read_string_block(is_interlaced_block=False)
                 data = self._read_record(macro_rewind=rewind)
                 if self.size == 8:
-                    data = reshape_bytes_block(data)
+                    data = reshape_bytes_block(data, is_interlaced_block=is_interlaced_block)
                 table_name = self.unpack_table_name(data)
             except (NameError, MemoryError):
                 raise
@@ -2993,11 +3001,11 @@ class OP2Reader:
             return self.read_block4()
         return self.read_block8()
 
-    def read_string_block(self) -> bytes:
+    def read_string_block(self, is_interlaced_block: bool) -> bytes:
         block = self._read_block()
         if self.size == 4:
             return block
-        return reshape_bytes_block(block)
+        return reshape_bytes_block(block, is_interlaced_block)
 
     def read_block4(self) -> bytes:
         """
@@ -3538,15 +3546,19 @@ class OP2Reader:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data, ndata = self._read_record_ndata8()
 
+        is_interlaced_block = self.op2.is_nx
         subtable_name = self.get_subtable_name8(op2, data, ndata)
-        subtable_name = reshape_bytes_block(subtable_name)
+        subtable_name = reshape_bytes_block(
+            subtable_name, is_interlaced_block=is_interlaced_block)
         op2.subtable_name = subtable_name
         self._read_subtables()
 
     def get_subtable_name8(self, op2, data: bytes, ndata: int) -> bytes:
+        is_interlaced_block = self.op2.is_nx
         if ndata == 16: # 8*2
-            subtable_name = op2.struct_16s.unpack(data)
-            subtable_name = reshape_bytes_block(subtable_name)
+            subtable_name, = op2.struct_16s.unpack(data)
+            subtable_name = reshape_bytes_block(
+                subtable_name, is_interlaced_block)
             if self.is_debug_file:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
@@ -3554,19 +3566,21 @@ class OP2Reader:
             #(name1, name2, 170, 170)
             subtable_name, = op2.struct_16s.unpack(data[:16])
             assert len(subtable_name) == 16, len(subtable_name)
-            subtable_name = reshape_bytes_block(subtable_name)
+            subtable_name = reshape_bytes_block(
+                subtable_name, is_interlaced_block=is_interlaced_block)
             if self.is_debug_file:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 56: # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
-            subtable_name = reshape_bytes_block(subtable_name)
+            subtable_name = reshape_bytes_block(
+                subtable_name, is_interlaced_block=is_interlaced_block)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
-        else:
+        else:  # pragma: no cover
             self.show_data(data, types='ifsqd', endian=None)
             raise NotImplementedError(len(data))
         return subtable_name
@@ -3604,7 +3618,7 @@ class OP2Reader:
         elif ndata == 24 and op2.table_name == b'ICASE':
             subtable_name = 'CASE CONTROL SECTION'
             #strings = 'CASE CONTROL SECTION\xff\xff\xff\xff'
-        else:
+        else:  # pragma: no cover
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
