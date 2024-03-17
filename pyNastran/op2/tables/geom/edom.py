@@ -1543,13 +1543,13 @@ class EDOM(GeomCommon):
             flag = ints[i0+3]
             #d0 = i0 * size
             d1 = i1 * size + size
-            op2.show_data(data[n:n+d1], types='ifs')
+            #op2.show_data(data[n:n+d1], types='ifs')
             try:
                 response_type = flag_to_resp[flag]
             except KeyError:
                 op2.show_data(data[n:], types='ifs')
                 raise RuntimeError(f'dresp_id={dresp_id} label={label!r}')
-            print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
+            #print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
             if flag == 1:
                 # WEIGHT
                 # 5 UNDEF(2) None

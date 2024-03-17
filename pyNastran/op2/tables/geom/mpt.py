@@ -247,6 +247,9 @@ class MPT:
              #tref, ge, St, Sc, Ss, mcsid) = out
             mid = out[0]
             #print(mid)
+            if mid < 0:
+                n += ntotal
+                continue
             assert mid > 0, mid
             mat = MAT2.add_op2_data(out)
             mats.append(mat)

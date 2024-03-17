@@ -97,6 +97,7 @@ class OP2(OP2_Scalar, OP2Writer):
         if mode is not None:
             self.set_mode(mode)
         make_geom = False
+        self.is_interlaced = True
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False

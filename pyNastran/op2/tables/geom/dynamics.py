@@ -733,12 +733,13 @@ class DYNAMICS(GeomCommon):
         op2 = self.op2
         #op2.show_data(data[n:], types='ifs')
         ndata = len(data)
-        if self.size == 4:
+        size = self.size
+        if size == 4:
             s = Struct('i 2f 3i f 2i 8s f i')
             nbytes = 52
             types = 'if'
         else:
-            s = Struct('q 2d 3q d 2q 16s d i')
+            s = Struct('q 2d 3q d 2q 16s d i') #  TODO: why is there an i?
             nbytes = 100
             types = 'qds'
 
@@ -749,21 +750,30 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+nbytes] # 13*4 = 52
             out = s.unpack(edata)
             sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
+
+            #large: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=0
+            #small: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=538976288
+
+            #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                            #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+
             norm = norm.decode('latin1').rstrip('\x00 ')
             #print('self._nastran_format =', self._nastran_format)
             if nums == 0: # and self._nastran_format == 'nx':
-                op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
-                                f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
-                nums = None
+                #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+                #pass
+                nums = 14
                 is_none = True
 
-            if nums is None:
-                nums = 14
-                nums_total = nums * 4
-                edata2 = data[n+nbytes:n+nbytes+nums_total]
-                op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+            #elif nums is None:
+                #nums = 14
+                #nums_total = nums * 4
+                #assert len(data) == nbytes, f'ndata={len(data)} nbytes={nbytes} size={size}'
+                #edata2 = data[n+nbytes:n+nbytes+nums_total]
+                #op2.show_data(edata2, types=types)
+                #fi = unpack(mapfmt('%if' % nums, size), edata2)
+                #print(out, fi)
                 #nbytes += nums_total
 
             elif nums != 538976288:
@@ -773,14 +783,20 @@ class DYNAMICS(GeomCommon):
                 #edata2 = data[n+46:n+46+nums*4]
                 edata2 = data[n+nbytes:n+nbytes+nums*4]
                 op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+                fi = unpack(mapfmt('%if' % nums, size), edata2)
+                op2.log.warning(f'  frequencies={fi}')
                 raise NotImplementedError(nums)
 
             if op2.is_debug_file:
                 op2.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
+
+            assert flag1 in {-1, 0}, (flag1, flag2)
+            assert flag2 in {-1, 0}, (flag1, flag2)
+            v1 = v1 if flag1 == 0 else None
+            v2 = v2 if flag2 == 0 else None
+
             op2.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
                            maxset=maxset, shfscl=shfscl,
                            norm=norm, options=options, values=values)

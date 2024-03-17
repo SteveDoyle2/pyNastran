@@ -7,6 +7,7 @@ import scipy  # type: ignore
 
 #from pyNastran.utils.numpy_utils import integer_types
 
+from pyNastran.op2.op2_interface.read_matrix_matpool import read_matrix_matpool
 from pyNastran.op2.result_objects.matrix import Matrix
 #from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 
@@ -334,7 +335,7 @@ def read_matrix(op2_reader, table_name: bytes) -> None:
     if mat_type == 'matrix':
         read_matrix_mat(op2_reader)
     else:
-        op2_reader._read_matrix_matpool()
+        read_matrix_matpool(op2_reader)
 
     return
     #from traceback import format_exc
@@ -360,7 +361,7 @@ def read_matrix(op2_reader, table_name: bytes) -> None:
     # read matpool matrix
     #op2_reader._goto(i)
     #try:
-    #    op2_reader._read_matrix_matpool()
+    #    read_matrix_matpool(op2_reader)
     #    return
     #except(RuntimeError, AssertionError, ValueError):
     #    op2_reader.log.error(str(format_exc()))

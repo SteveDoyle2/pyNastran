@@ -26,9 +26,12 @@ BDF:
 OP2:
  - added:
    - support for more Simcenter and Optistruct versions
+   - adding OES1A table; stores results in stressa. for MSC Nastran
  - fixed:
    - trmbd/trmbu results read in properly
    - strain.ctetra/cpenta_strain hdf5 results read in properly
+   - fixing 64-bit MSC version bug by settig is_interlaced = False
+   - fixing 64-bit support for stress/strain-CSHEAR
 
 GUI:
  - Shear-Moment-Torque menu:

@@ -2784,30 +2784,21 @@ class EPT:
 
         should be NX, but also checked MSC...need an example
         related to acoustics
-        """
-        op2 = self.op2
-        op2.show_data(data)
-        asdf
-        ntotal = 32 * self.factor # 8*4
-        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i', self.size))
-        asdf
 
-        ndatai = len(data) - n
-        nentries = ndatai // ntotal
-        assert ndatai % ntotal == 0
-        for unused_i in range(nentries):
-            out = struct1.unpack(data[n:n+ntotal])
-            pid, mid, t, nsm, foropt, csopt = out[:6]
-            #print(out)
-            assert csopt == 0, csopt
-            pplane = op2.add_pplane(pid, mid, t=t, nsm=nsm,
-                                     formulation_option=foropt)
-            pplane.validate()
-            #print(pplane)
-            str(pplane)
-            n += ntotal
-        op2.card_count['PLPLANE'] = nentries
-        return n
+        not AEPARM
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\atv005mat.op2
+
+        it's a PMIC
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acssn100_2.op2
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        for val in ints:
+            op2.add_card(['PMIC', val], 'PMIC')
+            #op2.add_pmic()
+        nentries = len(ints)
+        op2.card_count['PMIC'] = nentries
+        return len(data)
 
     def _read_pplane(self, data: bytes, n: int) -> int:
         """
