@@ -6,19 +6,23 @@ import numpy as np
 from pyNastran.op2.op2_interface.utils import mapfmt
 
 if TYPE_CHECKING:  # pragma: no cover
-    #from cpylog import SimpleLogger
+    from cpylog import SimpleLogger
+    from pyNastran.op2.op2_interface.op2_reader import OP2Reader
     from pyNastran.op2.op2 import OP2
 
 
-def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: str) -> None:
+def read_extdb_extdb(op2_reader: OP2Reader,
+                     name_str: str, data: bytes,
+                     endian: bytes, idtype: str) -> None:
     #TODO: needs work...
     # ints    = (0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1)
     # strings = (b'r\x00\x00\x00\x01\x00\x00\x00x\x00\x00\x00EXTDB   \x00\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfa\x03\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00N\xc76+\x9f\x05\x86A\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xee\x92\x91Z',)
     # ints    = (114, 1, 120, EXTDB, 0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1, 1, 2, 1, 1, 1519489774)
     # floats  = (114, 1, 120, EXTDB, 0.0, 6, 2, 2, 0.0, 0.0, 1.4265218366826638e-42, 1, 1, 1, 1, 6.493597977039189e-13, 16.752744674682617, nan, nan, 1, 2, 1, 1, 2.048771126145843e+16)
-    #self.log.debug('start _read_extdb_extdb')
-    size = self.size
-    factor = self.factor
+    #op2_reader.log.debug('start _read_extdb_extdb')
+    size = op2_reader.size
+    factor = op2_reader.factor
+    endian = op2_reader._endian
     if size == 4:
         struct2i = Struct(b'2i')
         struct2id = Struct(b'2i d')
@@ -33,7 +37,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
     name_bytes = data[12*factor:20*factor]
     unused_name = name_bytes.decode('latin1').rstrip()
     #print(name)
-    #self.show_data(data[20:4000], types='if', force=True)
+    #op2_reader.show_data(data[20:4000], types='if', force=True)
     ints = np.frombuffer(data[20*factor:], dtype=idtype)
     iminus1 = np.where(ints == -1)[0]
     i2 = np.where(iminus1[:-1] + 1 == iminus1[1:])[0]
@@ -51,7 +55,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
             break
 
         n2 = 0
-        flag, niii = Struct(mapfmt(self._endian + b'ii', size)).unpack(edata[:8*factor])
+        flag, niii = Struct(mapfmt(endian + b'ii', size)).unpack(edata[:8*factor])
 
         #print(n, i0, i1)
         # inputs = (0, 6, 2, 2, 0, 0,
@@ -88,7 +92,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
         #          100002, 0, 0, 1.875,
         #          100003, 0, 0, 1.875,
         #          100004, 0, 0, 1.875)
-        #self.show_data(data, types='ifqsd', force=True)
+        #op2_reader.show_data(data, types='ifqsd', force=True)
         #print(len(edata))
 
         # 0, 6, 2, 2, 0, 0,
@@ -103,7 +107,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
         if flag == 0:  #  was counter
             out = struct7i.unpack(edata[:7*size])
             zero_a, ifo, tin, tout, polar, zero_b, ncols = out
-            #self.log.info(f'flag0: ifo={ifo} tin={tin} tout={tout} polar={polar} ncols={ncols}')
+            #op2_reader.log.info(f'flag0: ifo={ifo} tin={tin} tout={tout} polar={polar} ncols={ncols}')
             #, zero_a, ifo, tin, tout, polar, zero_b, ncols
             assert zero_a == 0, out
             assert zero_b == 0, out
@@ -138,7 +142,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
             else:
                 raise NotImplementedError(tin_tout)
         else:
-            #self.log.debug(f'flag = {flag}')
+            #op2_reader.log.debug(f'flag = {flag}')
             assert flag == -1, flag
             n2 = size
             #edata = edata[7*size:]
@@ -185,7 +189,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
             edata2 = edata[n2:n2+ntotal2]
             # (1, 1, 0, 1.875)
             out = struct2id.unpack(edata2)
-            #self.log.debug(' 16: ' + str(out))
+            #op2_reader.log.debug(' 16: ' + str(out))
             gi, ci, real = out
             gci = gi, ci
             GCj.append(gcj)
@@ -193,42 +197,43 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
             reals.append(real)
             n2 += ntotal2
             if ii > 0:
-                #self.log.info(f'  breaking n2={n2}')
+                #op2_reader.log.info(f'  breaking n2={n2}')
                 break
 
-        dmig = self.op2.add_dmig(name_str, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmig = op2_reader.op2.add_dmig(name_str, ifo, tin, tout, polar, ncols, GCj, GCi,
                                  reals, Complex=None, comment='')
         if flag == 0:
             print(dmig)
         #print(dmig)
         str(dmig)
         #n += (i1 - i0 + 1) * 4
-    #self.log.debug('end _read_extdb_extdb')
+    #op2_reader.log.debug('end _read_extdb_extdb')
     return
 
-def _read_extdb_geomx(self, data: bytes, endian: bytes, function_map):
+def read_extdb_geomx(op2_reader, data: bytes,
+                     endian: bytes, function_map):
     """this is literally a GEOMx table, but embedded in a EXTRN table"""
-    size = self.size
+    size = op2_reader.size
 
     struct3i = Struct(mapfmt(endian + b'3i', size))
 
-    factor = self.factor
+    factor = op2_reader.factor
     n = 12 * factor
     code = struct3i.unpack(data[:n])
     if code in function_map:
         name, func = function_map[code]
-        self.log.debug(f'code = {code} -> {name}')
+        op2_reader.log.debug(f'code = {code} -> {name}')
         func(data, n)
     else:
-        self.log.error(f'code = {code}')
+        op2_reader.log.error(f'code = {code}')
         raise RuntimeError(code)
     return
 
 
-def _read_extdb_phip(self, xsop2dir_name: str, name1: str,
-                     marker: int,
-                     data: bytes, endian: bytes,
-                     int_type: str, idtype: str):
+def read_extdb_phip(op2_reader: OP2Reader, xsop2dir_name: str, name1: str,
+                    marker: int,
+                    data: bytes, endian: bytes,
+                    int_type: str, idtype: str):
     """
     Parameters
     -----------
@@ -242,13 +247,13 @@ def _read_extdb_phip(self, xsop2dir_name: str, name1: str,
     #   ints    = (1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0,
     #              10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0,
     #              20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0)
-    log = self.log
+    log: SimpleLogger = op2_reader.log
     log.info(f'    {marker}: xsop2dir_name={xsop2dir_name} name1={name1!r}')
-    factor = self.factor
-    op2: OP2 = self.op2
+    factor = op2_reader.factor
+    op2: OP2 = op2_reader.op2
     if marker == -3:
         log.debug('     showing for marker=-3')
-        #self.show_data(data, types=int_type)
+        #op2_reader.show_data(data, types=int_type)
         ints = np.frombuffer(data, dtype=op2.idtype8)
         floats = np.frombuffer(data, dtype=op2.fdtype8)
         values = ints.tolist()
@@ -288,7 +293,7 @@ def _read_extdb_phip(self, xsop2dir_name: str, name1: str,
             2: ['', '', '', '', '', '',] + split_header + ints3.ravel().tolist(),
         }
         fields[2].append('ENDREC')
-        self.op2.add_dti(xsop2dir_name, fields)
+        op2.add_dti(xsop2dir_name, fields)
     elif marker == -5:
         # 33      1       -2.500002.500000
         # 33      2       -2.500002.500000
@@ -437,15 +442,15 @@ def _read_extdb_phip(self, xsop2dir_name: str, name1: str,
         ndata = len(data)
         ntotali = 32
         nrows = ndata // ntotali
-        #self.show_data(data, types='s', force=True)
+        #op2_reader.show_data(data, types='s', force=True)
         for irow in range(nrows):
             out = data[irow*ntotali:(irow+1)*ntotali]
             if irow > 5:
-                self.log.info(f'  breaking irow={irow}')
+                log.info(f'  breaking irow={irow}')
                 break
             print(out)
     elif marker == -5:
         log.warning('  showing for marker=-5')
-        self.show_data(data, types='ifs', force=True)
+        op2_reader.show_data(data, types='ifs', force=True)
         aaa
     return

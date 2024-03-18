@@ -65,11 +65,11 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = np.zeros(self.nelements, dtype='int32')
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[fx, fy, fz, otx, oty, otz, etx, ety, etz,
         # mx, my, mz, orx, ory, orz, erx, ery, erz]
-        self.data = np.zeros((self.ntimes, self.nelements, 18), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 18), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

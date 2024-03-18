@@ -1220,9 +1220,11 @@ class OES(OP2Common2):
         is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
 
         if table_name_bytes in [b'OES1X1', b'OES1X',
-                               b'OES1C', b'OES1', ]:
+                                b'OES1C', b'OES1']:
             prefix = 'stress.'
             self._set_as_sort1()
+        elif table_name_bytes == b'OES1A':
+            prefix = 'stressa.'
         elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C']:
             prefix = 'strain.'
             self._set_as_sort1()
@@ -2557,7 +2559,7 @@ class OES(OP2Common2):
         reads stress/strain for element type:
          - 4 : CSHEAR
         """
-        op2 = self.op2
+        op2: OP2 = self.op2
         n = 0
         # 4-CSHEAR
         if op2.is_stress:
@@ -2577,15 +2579,14 @@ class OES(OP2Common2):
 
         slot = op2.get_result(result_name)
         if result_type == 0 and op2.num_wide == 4:  # real
-            ntotal = 16  # 4*4
+            ntotal = 16 * self.factor # 4*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj = op2.obj
+            obj: Union[RealShearStressArray, RealShearStrainArray] = op2.obj
             assert obj is not None
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
                 n = nelements * ntotal
@@ -2593,7 +2594,7 @@ class OES(OP2Common2):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 4)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 4)
                 itime = obj.itime
                 obj._times[itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)

@@ -85,11 +85,11 @@ class RandomBeamArray(OES_Object):
             ntotal = self.ntimes
 
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((ntotal, 2), dtype='int32')
+        self.element_node = zeros((ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
-        self.xxb = zeros(ntotal, dtype='float32')
-        self.data = zeros((ntimes, ntotal, 4), dtype='float32')
+        self.xxb = zeros(ntotal, dtype=fdtype)
+        self.data = zeros((ntimes, ntotal, 4), dtype=fdtype)
 
     #def finalize(self):
         #sd = self.data[0, :, 0].real

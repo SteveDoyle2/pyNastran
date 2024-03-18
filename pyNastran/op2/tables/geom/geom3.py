@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 # , PRESAX, TEMPAX, F
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import (
     QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY, QVECT)
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
@@ -27,7 +27,7 @@ class GEOM3:
 
     def _add_op2_rigid_element(self, elem):
         """helper method for op2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntables = op2.table_names.count(b'GEOM4') + op2.table_names.count(b'GEOM4S')
         eid = elem.eid
         allow_overwrites = (
@@ -174,7 +174,7 @@ class GEOM3:
                    10, 11, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
                    10, 12, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         nelements = (len(data) - n) // ntotal
         structi = Struct(mapfmt(op2._endian + b'3i 3f i 4f', self.size))
@@ -232,7 +232,7 @@ class GEOM3:
                    300, 1203, 10.0, 50.0, 30.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.show_data(data[n:], types='ifs')
         sss
 
@@ -249,7 +249,7 @@ class GEOM3:
         8 VALi   RS The load scale factor associated with location LOCi
         Words 7 through 8 repeat until (-1,-1) occurs.
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.show_data(data)
         op2.log.info('geom skipping ACCEL in GEOM3')
         return len(data)
@@ -266,7 +266,7 @@ class GEOM3:
         Words 7 repeats until (-1) occurs.
         NX/MSC
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 28  # 7*4
         ints = np.frombuffer(data[n:], dtype='int32').copy()
         floats = np.frombuffer(data[n:], dtype='float32').copy()
@@ -297,7 +297,7 @@ class GEOM3:
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * op2.factor # 7*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iiiffff')
@@ -316,7 +316,7 @@ class GEOM3:
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iifii')
@@ -336,7 +336,7 @@ class GEOM3:
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         s = Struct(op2._endian + b'iif4i')
         nentries = (len(data) - n) // ntotal
@@ -367,7 +367,7 @@ class GEOM3:
         4 N(3) RS Components of a vector coordinate system defined by CID
         7 MB I Bulk Data Section with CID definition: -1=main, 0=partitioned
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         s = Struct(mapfmt(op2._endian + b'ii4fi', self.size))
         nentries = (len(data) - n) // ntotal
@@ -388,7 +388,7 @@ class GEOM3:
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor # 4*4
         ntotal2 = 8 * self.factor
         #nentries = (len(data) - n) // ntotal
@@ -448,7 +448,7 @@ class GEOM3:
         LSEQ    2000    101     1101
         [2000,  101, 1101,    0,    0]
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor  # 5*4
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nentries = (len(data) - n) // ntotal
@@ -467,7 +467,7 @@ class GEOM3:
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 28
         s = Struct(op2._endian + b'3i4f')
         nentries = (len(data) - n) // 28  # 7*4
@@ -487,7 +487,7 @@ class GEOM3:
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iifii')
@@ -507,7 +507,7 @@ class GEOM3:
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iif4i')
@@ -527,7 +527,7 @@ class GEOM3:
         """
         PLOAD(5101,51,24)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'i f 4i')
@@ -547,7 +547,7 @@ class GEOM3:
         """
         PLOAD1(6909, 69, 198) - the marker for Record 17
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor  # 8*4
         s = Struct(mapfmt(op2._endian + b'4i4f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -567,7 +567,7 @@ class GEOM3:
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor  # 3*4
         nentries = (len(data) - n) // ntotal
         struct_ifi = Struct(op2._endian + b'ifi')
@@ -585,7 +585,7 @@ class GEOM3:
 
     def _read_pload3(self, data: bytes, n: int) -> int:
         """PLOAD3(7109,71,255) - the marker for Record 19"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20  # 5*4
         nloads = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'if3i')
@@ -624,7 +624,7 @@ class GEOM3:
         13 SDRL(2) CHAR4 Load set on element SURF or LINE
         15 LDIR(2) CHAR4 Load direction
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 16*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -673,7 +673,7 @@ class GEOM3:
         9  CID         I Coordinate system identification number
         10 N(3)       RS Components of a vector coordinate system defined by CID
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -707,7 +707,7 @@ class GEOM3:
         2 P(2) RS Pressure
         4 G(3)  I Grid point identification numbers
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nloads = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -739,7 +739,7 @@ class GEOM3:
         5 G(2)   I Corner grid point identification numbers
         7 THETA RS Angle between surface traction and inward normal
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'2i2f iif')
@@ -760,7 +760,7 @@ class GEOM3:
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
         struct_ifi = Struct(op2._endian + b'ifi')
@@ -780,7 +780,7 @@ class GEOM3:
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
         struct_2i8f = Struct(op2._endian + b'ii8f')
@@ -800,7 +800,7 @@ class GEOM3:
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
         struct_if2i = Struct(op2._endian + b'ifii')
@@ -819,7 +819,7 @@ class GEOM3:
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 3*4
         nentries = (len(data) - n) // ntotal
         struct_2if = Struct(mapfmt(op2._endian + b'iif', self.size))
@@ -843,7 +843,7 @@ class GEOM3:
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 8 * self.factor  # 2*4
         nentries = (len(data) - n) // ntotal
         struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
@@ -871,7 +871,7 @@ class GEOM3:
         5 G(8)  I Grid point identification numbers
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48  # 12*4
         nentries = (len(data) - n) // ntotal
         struct_if = Struct(op2._endian + b'2i2f 8i')
@@ -908,7 +908,7 @@ class GEOM3:
         ints    = (200, 442.0, 10400.0, 0,   0,   0,   0,   0,   0,   -1.0, 0,   10)
         floats  = (200, 442.0, 10400.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 10)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -943,7 +943,7 @@ class GEOM3:
         4 EID      I Element identification number
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'if2i')
@@ -960,7 +960,7 @@ class GEOM3:
         return n
 
     def _read_rforce(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'3i 4f ifi', self.size))
@@ -978,7 +978,7 @@ class GEOM3:
 
     def _read_sload(self, data: bytes, n: int) -> int:
         """SLOAD(5401, 54, 25)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor  # 3*4
         nentries = (len(data) - n) // ntotal
         ints = np.frombuffer(data[n:], dtype=self.op2.idtype8).reshape(nentries, 3)[:, [0, 1]]
@@ -1004,7 +1004,7 @@ class GEOM3:
 # TEMP1C
 
     def _read_tempp1(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nloads = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'2i 4f')
@@ -1021,14 +1021,14 @@ class GEOM3:
         return n
 
     def _read_tempp2(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPP2 in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPP2 in GEOM3\n')
         return len(data)
 
     def _read_tempp3(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPP3 in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPP3 in GEOM3\n')
@@ -1042,7 +1042,7 @@ class GEOM3:
         return len(data)
 
     def _read_temprb(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPRB in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPRB in GEOM3\n')

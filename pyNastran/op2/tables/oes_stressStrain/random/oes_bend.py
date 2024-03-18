@@ -79,11 +79,11 @@ class RandomBendArray(OES_Object):
             #self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
-        self.angle = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 4), dtype='float32')
+        self.angle = zeros(self.ntotal, dtype=fdtype)
+        self.data = zeros((self.ntimes, self.ntotal, 4), dtype=fdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0].real

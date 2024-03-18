@@ -691,11 +691,11 @@ class RealNonlinearSpringStressArray(OES_Object):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element = zeros(self.nelements, dtype='int32')
+        element = zeros(self.nelements, dtype=idtype)
 
 
         #[force, stress]
-        data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
+        data = zeros((self.ntimes, self.nelements, 2), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

@@ -1,7 +1,7 @@
 from collections import Counter
 import numpy as np
 
-NX_VERSIONS = [
+NX_VERSIONS: list[str] = [
     '7.0', '7.1',
     '8.0', '8.1', '8.2', '8.3', '8.4', '8.5',
     '9.0', '9.1',
@@ -18,7 +18,7 @@ NX_VERSIONS = [
     '2306', '2312',
 ]
 
-NX_ELEMENTS = {
+NX_ELEMENTS: dict[int, str] = {
     0 : 'GRID',
     1 : 'CROD',
     2 : 'CBEAM',
@@ -399,7 +399,7 @@ NX_ELEMENTS = {
     406 : 'CVISC - Basic System',
 }
 
-NX_GEOM_TABLES = [
+NX_GEOM_TABLES: list[bytes] = [
     b'CASECC',
     b'PVT', b'PVT0', b'PVTS',
     #b'GPLS',
@@ -419,9 +419,9 @@ NX_GEOM_TABLES = [
 
     # ???
     b'GEOM1ATV', b'GEOM2ATV', b'EPTATV', b'PTMIC', b'ATVMAP',
-]  # type: list[bytes]
+]
 
-NX_MATRIX_TABLES = [
+NX_MATRIX_TABLES: list[bytes] = [
     b'ATV',
     b'XSOP2DIR',
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
@@ -464,9 +464,9 @@ NX_MATRIX_TABLES = [
     b'DSCM2',
     b'MEF1', b'MUG1B',
     b'MATK', b'MATM', b'MATV',
-]  # type: list[bytes]
+]
 
-NX_EXTRA_TABLES = [
+NX_EXTRA_TABLES: list[bytes] = [
     # geometry, but buggy in the geometry block...
     b'ICASE',
 
@@ -515,10 +515,11 @@ NX_EXTRA_TABLES = [
     b'OPMPF2M',
     b'OLMPF2M',
     b'OEKE1',
-]  # type: list[bytes]
+]
 
-NX_RESULT_TABLES = [
+NX_RESULT_TABLES: list[bytes] = [
     # ???
+    b'XSOP',
     b'OSTR1THC',
     b'OSTR1PLC',
     b'OSTR1CRC',

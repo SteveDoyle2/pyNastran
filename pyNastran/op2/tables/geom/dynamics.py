@@ -126,7 +126,7 @@ class DYNAMICS(GeomCommon):
 
                   (15, 1, 22, 'FREQ    ', 1, 0.85, 0, 0, 1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert self.size == 4, f'CAMPBLL size={self.size}'
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -154,7 +154,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
                                              'ACSRCE', op2._add_methods._add_dload_entry)
         return n
@@ -176,7 +176,7 @@ class DYNAMICS(GeomCommon):
         8 T     RS Time delay
         9 PH    RS Phase lead
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
@@ -217,7 +217,7 @@ class DYNAMICS(GeomCommon):
         10 TCR    RS If TCI     = 0, constant value for C(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
@@ -252,7 +252,7 @@ class DYNAMICS(GeomCommon):
         4 A   RS Scale factor
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DAREA', nentries)
@@ -276,7 +276,7 @@ class DYNAMICS(GeomCommon):
         4 T   RS Time delay
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DELAY', nentries)
@@ -303,7 +303,7 @@ class DYNAMICS(GeomCommon):
         Words 3 through 4 repeat until (-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ndata = len(data)
         #nfields = (ndata - n) // 4
 
@@ -349,7 +349,7 @@ class DYNAMICS(GeomCommon):
         4 TH  RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DPHASE', nentries)
@@ -378,7 +378,7 @@ class DYNAMICS(GeomCommon):
         6 NQDES I Number of generalized degrees-of-freedom
         7 UNDEF(2 ) none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n2h39.op2
         #DYNRED  202     1000.
 
@@ -429,7 +429,7 @@ class DYNAMICS(GeomCommon):
         13 C            I Component number
         14 UNDEF(5) None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 60 * self.factor  # 4*15
         ntotal = 72 * self.factor  # 4*18
         nentries = (len(data) - n) // ntotal
@@ -484,7 +484,7 @@ class DYNAMICS(GeomCommon):
         data  = (2, CLAN, '', MAX, '', 0,     0, 1e-08, 32, -1,
                  3, HESS, '', MAX, '', 0,     0, 1e-08, 32, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if 0:
             ntotal = 60
             nentries = (len(data) - n) // ntotal
@@ -643,7 +643,7 @@ class DYNAMICS(GeomCommon):
         4 M      I Multiplicity of complex root at pole
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('EIGP', nentries)
@@ -676,7 +676,7 @@ class DYNAMICS(GeomCommon):
         14 UNDEF(5 ) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor
         nentries = (len(data) - n) // ntotal
         if self.size == 4:
@@ -730,15 +730,16 @@ class DYNAMICS(GeomCommon):
             floats  = (5, 0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 907333664768.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:], types='ifs')
         ndata = len(data)
-        if self.size == 4:
+        size = self.size
+        if size == 4:
             s = Struct('i 2f 3i f 2i 8s f i')
             nbytes = 52
             types = 'if'
         else:
-            s = Struct('q 2d 3q d 2q 16s d i')
+            s = Struct('q 2d 3q d 2q 16s d i') #  TODO: why is there an i?
             nbytes = 100
             types = 'qds'
 
@@ -749,21 +750,30 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+nbytes] # 13*4 = 52
             out = s.unpack(edata)
             sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
+
+            #large: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=0
+            #small: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=538976288
+
+            #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                            #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+
             norm = norm.decode('latin1').rstrip('\x00 ')
             #print('self._nastran_format =', self._nastran_format)
             if nums == 0: # and self._nastran_format == 'nx':
-                op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
-                                f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
-                nums = None
+                #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+                #pass
+                nums = 14
                 is_none = True
 
-            if nums is None:
-                nums = 14
-                nums_total = nums * 4
-                edata2 = data[n+nbytes:n+nbytes+nums_total]
-                op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+            #elif nums is None:
+                #nums = 14
+                #nums_total = nums * 4
+                #assert len(data) == nbytes, f'ndata={len(data)} nbytes={nbytes} size={size}'
+                #edata2 = data[n+nbytes:n+nbytes+nums_total]
+                #op2.show_data(edata2, types=types)
+                #fi = unpack(mapfmt('%if' % nums, size), edata2)
+                #print(out, fi)
                 #nbytes += nums_total
 
             elif nums != 538976288:
@@ -773,14 +783,20 @@ class DYNAMICS(GeomCommon):
                 #edata2 = data[n+46:n+46+nums*4]
                 edata2 = data[n+nbytes:n+nbytes+nums*4]
                 op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+                fi = unpack(mapfmt('%if' % nums, size), edata2)
+                op2.log.warning(f'  frequencies={fi}')
                 raise NotImplementedError(nums)
 
             if op2.is_debug_file:
                 op2.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
+
+            assert flag1 in {-1, 0}, (flag1, flag2)
+            assert flag2 in {-1, 0}, (flag1, flag2)
+            v1 = v1 if flag1 == 0 else None
+            v2 = v2 if flag2 == 0 else None
+
             op2.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
                            maxset=maxset, shfscl=shfscl,
                            norm=norm, options=options, values=values)
@@ -797,7 +813,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_epoint(self, data: bytes, n: int) -> int:
         """EPOINT(707,7,124) - Record 12"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         npoints = (len(data) - n) // 4
         fmt = op2._endian + b'%ii' % npoints
         nids = unpack(fmt, data[n:])
@@ -810,7 +826,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_freq(self, data: bytes, n: int) -> int:
         """FREQ(1307,13,126) - Record 13"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
@@ -833,7 +849,7 @@ class DYNAMICS(GeomCommon):
         4 NDF I  Number of frequency increments
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
@@ -859,7 +875,7 @@ class DYNAMICS(GeomCommon):
         3 F2  RS Last frequency
         4 NF   I Number of logarithmic intervals
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
@@ -887,7 +903,7 @@ class DYNAMICS(GeomCommon):
         6 BIAS    RS Clustering bias parameter
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 2f 4s if')
@@ -918,7 +934,7 @@ class DYNAMICS(GeomCommon):
         5 NFM   I Number of evenly spaced frequencies per spread
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 3f i')
@@ -943,7 +959,7 @@ class DYNAMICS(GeomCommon):
         4 FRI RS Fractions of natural frequencies
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data, dtype='int32').copy()
         floats = np.frombuffer(data, dtype='float32').copy()
         i_minus_1s = np.where(ints == -1)[0]
@@ -988,7 +1004,7 @@ class DYNAMICS(GeomCommon):
          500, 1, 2, 200, 501, 520, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 # 4*8
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -1012,7 +1028,7 @@ class DYNAMICS(GeomCommon):
         }
         #try:
         #n = self._read_rgyro_52(RGYRO, data, n)
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.op2.reader_geom3._add_op2_rigid_element,
@@ -1048,7 +1064,7 @@ class DYNAMICS(GeomCommon):
         data = (1, 101, 103, 'XY      ', 6.44, 0.727, 0.003, 'SHORT   ', 7.0e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0)
         """
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 80 * self.factor # 4*20
         struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
@@ -1112,7 +1128,7 @@ class DYNAMICS(GeomCommon):
           floats  = (1, 901, 1600, 'XY      ', 7.6, 0.4, 0.003, 'SHORT   ', 7.e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.401298464324817e-45, 1.4026997627891419e-42, 2.1019476964872256e-42, 1.358208852320992e-19, 1.3563156426940112e-19, 6.400000095367432, 0.7269999980926514, 0.003000000026077032, 222567907328.0, 1.3563223635364882e-19, 6.999999868639861e-07, 0.0, 1.401298464324817e-45, 0.0, 270.0, 0.0, 0.0, 4.344025239406933e-44, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 128 * self.factor # 4*32
         struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8f')
@@ -1168,7 +1184,7 @@ class DYNAMICS(GeomCommon):
         8 UNDEF none
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN1 SID GI CI S GJ CJ TID
         #NOLIN1  115     2               -1.0    2               2
@@ -1204,7 +1220,7 @@ class DYNAMICS(GeomCommon):
         8 CK  I Component number for GK
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n12905b.op2
         #NOLIN2  SID     GI      CI         S    GJ      CJ      GK      CK
         #NOLIN2  400     2       1       -.01    3       0       2       1
@@ -1240,7 +1256,7 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN3  115     4               -3.5+3  4       10      2.
         #NOLIN3  115     11              -3.5+3  11      10      2.
@@ -1274,7 +1290,7 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN4  115     4               -3.5+3  4       10      2.
         #NOLIN4  115     11              -3.5+3  11      10      2.
@@ -1296,7 +1312,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
@@ -1315,7 +1331,7 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
@@ -1359,7 +1375,7 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
@@ -1389,7 +1405,7 @@ class DYNAMICS(GeomCommon):
         4 TMAX RS Maximum time lag
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16  # 4*4
         struct1 = Struct(op2._endian + b'2i 2f')
         nentries = (len(data) - n) // ntotal
@@ -1405,7 +1421,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
@@ -1428,7 +1444,7 @@ class DYNAMICS(GeomCommon):
         11 TDR    RS If TDI = 0, constant value for D(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -1476,7 +1492,7 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -1502,7 +1518,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rload2_nx, self._read_rload2_msc,
@@ -1526,7 +1542,7 @@ class DYNAMICS(GeomCommon):
         11 TPR    RS If TPI = 0, constant value for PHI(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 44 * self.factor
         ndatai = len(data) - n
@@ -1576,7 +1592,7 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 36
         ndatai = len(data) - n
@@ -1608,7 +1624,7 @@ class DYNAMICS(GeomCommon):
         }
         #try:
         #n = self._read_rgyro_52(RGYRO, data, n)
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.op2.reader_geom3._add_op2_rigid_element,
@@ -1633,7 +1649,7 @@ class DYNAMICS(GeomCommon):
               WR3WRL WR4WRL WRHWRL
         RGYRO    1       SYNC      4      RPM                   1000.0
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 # 4*9
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 8s i 8s 3f')
@@ -1676,7 +1692,7 @@ class DYNAMICS(GeomCommon):
         floats  = (1, 206.349, 1.3563e-19, 4, 1.7390e-19, 1.3563e-19, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0, 0.0)
         """
         cards = []
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 # 4*13
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 8s i 8s 3f i3f')
@@ -1725,7 +1741,7 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
 
         # up to EORDER
@@ -1788,7 +1804,7 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
         ints = np.frombuffer(data[12:], dtype=op2.idtype)
         izero = np.where(ints==-1)[0]
@@ -1808,7 +1824,7 @@ class DYNAMICS(GeomCommon):
 #RSPINR
 
     def _read_rspint(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rspint_32, self._read_rspint_56,
@@ -1839,7 +1855,7 @@ class DYNAMICS(GeomCommon):
                    may be floats
                    0, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
@@ -1932,7 +1948,7 @@ class DYNAMICS(GeomCommon):
         floats=['0.1', '0.01', '1e-06']
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
@@ -1978,7 +1994,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tf(self, data: bytes, n: int) -> int:
         """TF"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # subtract of the header (sid, nid, component, b0, b1, b2)
         # divide by 5 (nid1, component1, a0, a1, a2)
         #nrows = (nfields - 6) // 5
@@ -2036,7 +2052,7 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 *self.factor  # 5*4
         struct1 = Struct(mapfmt(op2._endian + b'3i 2f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -2065,7 +2081,7 @@ class DYNAMICS(GeomCommon):
         100000010, 14, 0, 0, 100000003, 0, 0, 0, 0,
         100000011, 16, 0, 0, 100000003, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # NX - 24
         # MSC - 32
         #$       sid excite  delay    type    tid/f us vs
@@ -2074,7 +2090,7 @@ class DYNAMICS(GeomCommon):
         #ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         #floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
 
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'TLOAD1'
         card_obj = TLOAD1
         methods = {
@@ -2121,7 +2137,7 @@ class DYNAMICS(GeomCommon):
         6 DELAYR RS If DELAYI = 0, constant value for delay
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2167,7 +2183,7 @@ class DYNAMICS(GeomCommon):
         ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 8*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2219,7 +2235,7 @@ class DYNAMICS(GeomCommon):
         TLOAD1         2       2             45.       2
         data = (2, 2, 0, 0, 0, 2.0, 0.0, 0.0, f=45.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor # 8*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -2251,7 +2267,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_tload2_nx, self._read_tload2_msc,
@@ -2290,7 +2306,7 @@ class DYNAMICS(GeomCommon):
         12 US0    RS not documented in NX
         13 VS0    RS not documented in NX
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2333,7 +2349,7 @@ class DYNAMICS(GeomCommon):
         12 V0   RS Initial velocity factor for enforced motion
         13 T    RS Time delay
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2368,7 +2384,7 @@ class DYNAMICS(GeomCommon):
         4 NO   I Skip factor for output
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data)
         ndata = len(data)
         nfields = (ndata - n) // self.size
@@ -2419,7 +2435,7 @@ class DYNAMICS(GeomCommon):
         =-3, ALL
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('skipping TSTEP1 in DYNAMICS')
         if op2.is_debug_file:
             op2.binary_debug.write('skipping TSTEP1 in DYNAMICS\n')
@@ -2476,7 +2492,7 @@ class DYNAMICS(GeomCommon):
         #RCROSS  100     SPCF    3305    3       DISP    3306    3       4641306
         #RCROSS  100     DISP    3306    3       SPCF    3305    3       4641308
         #RCROSS  200     SPCF    4444    2       DISP    9999    1       9999999
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         #op2.show_data(data[n:])
         ntotal = 32 # 4*8

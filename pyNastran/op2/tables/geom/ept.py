@@ -140,7 +140,7 @@ class EPT:
 
     def _add_op2_property(self, prop):
         """helper method for op2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         #print(str(prop)[:-1])
@@ -154,7 +154,7 @@ class EPT:
 
     def _add_op2_property_mass(self, prop):
         """helper method for op2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         #print(str(prop)[:-1])
@@ -174,7 +174,7 @@ class EPT:
 # HGSUPPR
 
     def _read_paxsymh(self, data: bytes, n: int) -> None:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info(f'geom skipping PAXSYMH in {op2.table_name}; ndata={len(data)-12}')
         #op2.show_data(data[n:], types='ifs')
         return len(data)
@@ -191,7 +191,7 @@ class EPT:
 
         data = (1, 14, 'FACE CONTACT(1)                                         ')
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert self.size == 4, 'DESC size={self.size} is not supported'
         #op2.show_data(data[n:], types='ifs')
         struct_2i = Struct(op2._endian + b'2i')
@@ -226,7 +226,7 @@ class EPT:
           floats  = (3, ELEMENT, 0.0, 200, 0.7, -1, 4, PSHELL, 0.0, 6401, 4.2, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         #op2.show_data(data[n:])
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
@@ -269,7 +269,7 @@ class EPT:
 
         (1, 2, 3, 4, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -350,7 +350,7 @@ class EPT:
         #           3, 233922, THRU, 235132, -1,
         #           3, 235265, THRU, 236463, -1,
         #           3, 338071, THRU, 341134, -1, -2)
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         #op2.show_data(data[n:])
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
@@ -452,7 +452,7 @@ class EPT:
         data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info(f'geom skipping NSML1 in {op2.table_name}; ndata={len(data)-12}')
         #op2.show_data(data[n:], types='ifs')
         #bbb
@@ -493,7 +493,7 @@ class EPT:
                 4, ELEMENT, 2, 2.1, 1, 3301, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:], types='ifs')
         n0 = n
         #op2.show_data(data[n:])
@@ -560,7 +560,7 @@ class EPT:
 
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_nsm_nx, self._read_nsm_msc,
@@ -591,7 +591,7 @@ class EPT:
                    3, ELEMENT, 2,  200, 1.0, -1,
                    4, PSHELL,  2, 6401, 4.2, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -641,7 +641,7 @@ class EPT:
           Words 5 through 6 repeat until End of Record
         Words 3 through 4 repeat until End of Record
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         properties = []
         struct1 = Struct(op2._endian + b'i 4s if')
         ndelta = 16
@@ -689,7 +689,7 @@ class EPT:
         6 VALUE      RS Nonstructural mass value
         Words 5 through 6 repeat until End of Record
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         properties = []
 
         #NX: C:\Users\sdoyle\Dropbox\move_tpl\nsmlcr2s.op2
@@ -791,7 +791,7 @@ class EPT:
         18 K2  RS Area factor for shear in plane 2
         19 I12 RS Area product of inertia for plane 1 and 2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor  # 19*4
         struct1 = Struct(mapfmt(op2._endian + b'2i17f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -813,7 +813,7 @@ class EPT:
         It's possible to have a PBARL and a PBAR at the same time.
         NSM is at the end of the element.
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         valid_types = {
             'ROD': 1,
             'TUBE': 2,
@@ -920,7 +920,7 @@ class EPT:
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct1 = Struct(mapfmt(op2._endian + b'2i 12f i', self.size))
         struct2 = Struct(mapfmt(op2._endian + b'3f 2i', self.size))
         nproperties = 0
@@ -1009,7 +1009,7 @@ class EPT:
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         cross_section_type_map = {
             0 : 'variable',
             1 : 'constant',
@@ -1155,7 +1155,7 @@ class EPT:
         7 VALUE      RS  Cross section values for XXB, SO, NSM, and dimensions
         Word 7 repeats until (-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
         #ints = np.frombuffer(data[n:], self._uendian + 'i').copy()
         #floats = np.frombuffer(data[n:], self._uendian + 'f').copy()
@@ -1196,7 +1196,7 @@ class EPT:
 
     def _read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_pbend_nx, self._read_pbend_msc,
@@ -1235,7 +1235,7 @@ class EPT:
         26 DELTAN  I Radial offset of the neutral axis from the geometric
                      centroid
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 104  # 26*4
         struct1 = Struct(op2._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
@@ -1314,7 +1314,7 @@ class EPT:
                   in-plane bending moment.
         33 Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.info('geom skipping PBEND in EPT')
         #return len(data)
         ntotal = 132  # 33*4
@@ -1367,7 +1367,7 @@ class EPT:
         MSC has 27 fields in 2021
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'PBUSH'
         card_obj = PBUSH
         methods = {
@@ -1399,7 +1399,7 @@ class EPT:
         PBUSH(1402,14,37) - 18 fields
         legacy MSC/NX format
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor  # 18*4
         struct1 = Struct(mapfmt(op2._endian + b'i17f', self.size))
         ndata = len(data) - n
@@ -1429,7 +1429,7 @@ class EPT:
 
         MSC 2005r2 to <MSC 2016
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 23*4
         struct1 = Struct(mapfmt(op2._endian + b'i22f', self.size))
 
@@ -1456,7 +1456,7 @@ class EPT:
 
         MSC 2016.1? to 2020
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 96 * self.factor # 24*4
         struct1 = Struct(mapfmt(op2._endian + b'i22f f', self.size))
 
@@ -1489,7 +1489,7 @@ class EPT:
                    2, 100000.0, 200000.0, 300000.0, 0.15, 0.25, 0.35, 1000.0, 2000.0, 3000.0, 0.0015, 0.0025, 0.0035, 0.0,
                    -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 108 * self.factor # 27*4
         struct1 = Struct(mapfmt(op2._endian + b'i22f 4f', self.size))
         #op2.show_data(data, types='ifs')
@@ -1562,7 +1562,7 @@ class EPT:
         37 UT     RS Ultimate tension
         38 UC     RS Ultimate compression
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         type_map = {
             0 : None,  # NULL
             1 : 'TABLE',
@@ -1667,7 +1667,7 @@ class EPT:
         14 TGEID    I TABLEDi entry identification number for structural damping
         15 TKNID(6) I TABLEDi entry IDs for force versus deflection
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'PBUSHT'
         card_obj = PBUSHT
         methods = {
@@ -1693,7 +1693,7 @@ class EPT:
         return n
 
     def _read_pbusht_nx_old(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[12:])
         ndata = (len(data) - n) // self.factor
 
@@ -1736,7 +1736,7 @@ class EPT:
         16,17,18,19,20
         ???
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80 * self.factor
         struct1 = Struct(op2._endian + b'20i')
         nentries = (len(data) - n) // ntotal
@@ -1766,7 +1766,7 @@ class EPT:
         return n, props
 
     def _read_pbusht_100(self, card_obj, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         props = []
         ntotal = 100 * self.factor
         struct1 = Struct(mapfmt(op2._endian + b'25i', self.size))
@@ -1823,7 +1823,7 @@ class EPT:
             1, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0,
             7, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         props = []
         ntotal = 136 * self.factor              #  k  b  g  n  fdc
         struct1 = Struct(mapfmt(op2._endian + b'i 6i 6i 6i 6i 4s  2i i 5i', self.size))
@@ -1887,7 +1887,7 @@ class EPT:
           floats  = (2706, 27, 287,
                      5, 3, -2.75, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 6, 5, -3.0, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 9.80908925027372e-45, 9.80908925027372e-45, -3.25, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if self.size == 4:
             n2, props = self._read_pcomp_32_bit(data, n)
             nproperties = len(props)
@@ -1962,7 +1962,7 @@ class EPT:
                 3, 0.5, 0, 1,
                 3, 0.5, 0, 1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because PCOMP-64 was found')
         nproperties = 0
         s1 = Struct(mapfmt(op2._endian + b'2i3fi2f', self.size))
@@ -2031,7 +2031,7 @@ class EPT:
 
     def _read_pcomp_32_bit(self, data: bytes, n: int) -> tuple[int, list[PCOMP]]:  # pragma: no cover
         """PCOMP(2706,27,287) - the marker for Record 22"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nproperties = 0
         s1 = Struct(mapfmt(op2._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
@@ -2136,7 +2136,7 @@ class EPT:
                      -1, -1, -1, -1, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nproperties = 0
         s1 = Struct(mapfmt(op2._endian + b'2i 3f i 2f', self.size))
         s2 = Struct(mapfmt(op2._endian + b'2i 2f i', self.size))
@@ -2262,7 +2262,7 @@ class EPT:
 
     def _read_pconv(self, data: bytes, n: int) -> int:
         """common method for reading PCONVs"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
                                  #'PCONV', self._add_pconv)
 
@@ -2307,7 +2307,7 @@ class EPT:
         """
         (11001,110,411)- NX version
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2329,7 +2329,7 @@ class EPT:
         """
         (11001,110,411)- MSC version - Record 25
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56  # 14*4
         s = Struct(op2._endian + b'3if 4i fii 3f')
         nentries = (len(data) - n) // ntotal
@@ -2359,7 +2359,7 @@ class EPT:
         7 EXPPI RS Prandtl number convection exponent into the working fluid
         8 EXPPO RS Prandtl number convection exponent out of the working fluid
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32  # 8*4
         structi = Struct(op2._endian + b'4i 4f')
         nentries = (len(data) - n) // ntotal
@@ -2379,7 +2379,7 @@ class EPT:
         """
         PDAMP(202,2,45) - the marker for Record ???
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 8 * self.factor # 2*4
         struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
@@ -2412,7 +2412,7 @@ class EPT:
 
     def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor # 4*4
         nproperties = (len(data) - n) // ntotal
         struct_i3f = Struct(mapfmt(op2._endian + b'i3f', self.size))
@@ -2458,7 +2458,7 @@ class EPT:
         ints    = (99, 0,   0.1, 0,   0,   0,   0,   -1, 0.2, 5.0, 0,   0,   7.9, 0,   0,   0,   0,   -1, 0,   471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
         floats  = (99, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, -1, 0.2, 5.0, 0.0, 0.0, 7.9, 0.0, 0.0, 0.0, 0.0, -1, 0.0, 471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:], types='ifs')
         #ntotal = 92 * self.factor # 26*4
         #struct1 = Struct(op2._endian + b'ifii 3f')
@@ -2506,7 +2506,7 @@ class EPT:
         5-7 KT(3)  RS Translational stiffness
         8-10 KR(3) RS Rotational stiffness
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
@@ -2539,7 +2539,7 @@ class EPT:
                   damping
         4 TKNID I TABLEDi entry
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nproperties = (len(data) - n) // ntotal
@@ -2559,7 +2559,7 @@ class EPT:
         """
         PGAP(2102,21,121) - the marker for Record 42
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor
         struct_i10f = Struct(mapfmt(op2._endian + b'i10f', self.size))
         nproperties = (len(data) - n) // ntotal
@@ -2579,7 +2579,7 @@ class EPT:
         """
         PHBDY(2802,28,236) - the marker for Record 43
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nproperties = (len(data) - n) // 16
         struct_i3f = Struct(op2._endian + b'ifff')
         for unused_i in range(nproperties):
@@ -2603,7 +2603,7 @@ class EPT:
         return len(data)
 
     def _read_pbeam3(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'PBUSHT'
         card_obj = PBUSHT
         methods = {
@@ -2639,7 +2639,7 @@ class EPT:
                          2, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                          1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:])
         ntotal = 456 * self.factor # 114*4
         #
@@ -2734,7 +2734,7 @@ class EPT:
         ints    = (2901, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0.5, 0,   0,   0.5, -0.5, 0,   0,   -0.5, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   1.0, 1.0,   0,   0,   0,   0, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   -2,   0,   0)
         floats  = (2901, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.5, 0.0, 0.0, 0.5, -0.5, 0.0, 0.0, -0.5, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, nan, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 264 * self.factor # 66*4
         #                                       p/m ayz ae fj ki  14f i
         struct1 = Struct(mapfmt(op2._endian + b'2i 3f  5f 5f fi  14f i 30f 4i', self.size))
@@ -2772,7 +2772,7 @@ class EPT:
 
     def _read_fake_16502(self, data: bytes, n: int) -> int:
         """(16502, 165, 916)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.show_data(data)
         asdf
 
@@ -2784,30 +2784,21 @@ class EPT:
 
         should be NX, but also checked MSC...need an example
         related to acoustics
-        """
-        op2 = self.op2
-        op2.show_data(data)
-        asdf
-        ntotal = 32 * self.factor # 8*4
-        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i', self.size))
-        asdf
 
-        ndatai = len(data) - n
-        nentries = ndatai // ntotal
-        assert ndatai % ntotal == 0
-        for unused_i in range(nentries):
-            out = struct1.unpack(data[n:n+ntotal])
-            pid, mid, t, nsm, foropt, csopt = out[:6]
-            #print(out)
-            assert csopt == 0, csopt
-            pplane = op2.add_pplane(pid, mid, t=t, nsm=nsm,
-                                     formulation_option=foropt)
-            pplane.validate()
-            #print(pplane)
-            str(pplane)
-            n += ntotal
-        op2.card_count['PLPLANE'] = nentries
-        return n
+        not AEPARM
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\atv005mat.op2
+
+        it's a PMIC
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acssn100_2.op2
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        for val in ints:
+            op2.add_card(['PMIC', val], 'PMIC')
+            #op2.add_pmic()
+        nentries = len(ints)
+        op2.card_count['PMIC'] = nentries
+        return len(data)
 
     def _read_pplane(self, data: bytes, n: int) -> int:
         """
@@ -2824,7 +2815,7 @@ class EPT:
         ints    = (1, 1, 1.0, 0,   0,   0,   0,   0,   2, 2, 1.0, 0, 0, 0, 0, 0)
         floats  = (1, 1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 2, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 8*4
         struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i', self.size))
 
@@ -2867,7 +2858,7 @@ class EPT:
 
         .. warning:: CSOPT ad T are not supported
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 4*11
         if self.size == 4:
             s = Struct(op2._endian + b'3i 4s f 6i')
@@ -2901,7 +2892,7 @@ class EPT:
 
         .. warning:: CSOPT is not supported
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 4*7
         if self.size == 4:
             struct1 = Struct(op2._endian + b'2i 4s 4i')
@@ -2922,7 +2913,7 @@ class EPT:
         """
         PMASS(402,4,44) - the marker for Record 48
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 8 * self.factor # 2*4
         nentries = (len(data) - n) // ntotal
         struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
@@ -2941,7 +2932,7 @@ class EPT:
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
@@ -2961,7 +2952,7 @@ class EPT:
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor
         nproperties = (len(data) - n) // ntotal
         struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
@@ -2981,7 +2972,7 @@ class EPT:
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         nproperties = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'iififi4fi', self.size))
@@ -3067,7 +3058,7 @@ class EPT:
         Words 21 through 56 repeat NPLY times
         End NPLY
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_base = Struct('3i f i 3i 4s4s4s4s4s4s4s4s4s i')
         struct1 = Struct(b'2i 2f 4s i 4f 4s i 4s4s4s4s 4s4s4s4s 4s4s4s4s 4s4s4s4s  4s4s4s4s  4s4s4s4s ')
         nbase = 18 * 4 * self.factor
@@ -3147,7 +3138,7 @@ class EPT:
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #print("reading PSOLID")
         #op2.show_data(data[n:])
         if self.size == 4:
@@ -3193,7 +3184,7 @@ class EPT:
 
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 5*4
         nproperties = (len(data) - n) // ntotal
         struct_2i3f = Struct(op2._endian + b'2i3f')
@@ -3211,7 +3202,7 @@ class EPT:
         return n
 
     def _read_pset(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_5i4si = Struct(op2._endian + b'5i4si')
         nentries = 0
         while  n < len(data):
@@ -3254,7 +3245,7 @@ class EPT:
                      number with this p-value specification.
         Words 1 through 7 repeat until End of Record
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:])
         if self.size == 4:
             struct_5i4si = Struct(op2._endian + b'5i 4s i')
@@ -3291,7 +3282,7 @@ class EPT:
 
     def _read_pvisc(self, data: bytes, n: int) -> int:
         """PVISC(1802,18,31) - the marker for Record 39"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_i2f = Struct(op2._endian + b'i2f')
         nproperties = (len(data) - n) // 12
         for unused_i in range(nproperties):

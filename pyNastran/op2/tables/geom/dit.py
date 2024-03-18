@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABRND1, TABDMP1, TABLES1,
                                             TABLEH1, TABLEHT)
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
@@ -82,7 +82,7 @@ class DIT:
         10 G    RS Damping
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
@@ -123,7 +123,7 @@ class DIT:
         Words 1 through 8 repeat until (-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndata = len(data)# - n
         assert ndata == 52, ndata
         struct_2i2f4i = Struct('2i2f4i')
@@ -145,7 +145,7 @@ class DIT:
 
     def _read_tables1(self, data: bytes, n: int) -> int:
         """TABLES1(3105, 31, 97)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table1(TABLES1, op2.tables,
                               op2._add_methods._add_table_object, data, n, 'TABLES1',
                               add_codes=False)
@@ -155,7 +155,7 @@ class DIT:
         """
         GUST(1005,10,174) - the marker for Record 1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = (len(data) - n) // 20  # 5*4
         struct_2i3f = Struct('ii3f')
         for unused_i in range(nentries):
@@ -174,14 +174,14 @@ class DIT:
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table1(TABLED1, op2.tables_d,
                               op2._add_methods._add_tabled_object, data, n, 'TABLED1')
         return n
 
     def _read_table1(self, cls, slot, add_method, data: bytes, n: int, table_name: str,
                      add_codes: bool=True) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
         ndata = len(data)
         if self.size == 4:
@@ -234,7 +234,7 @@ class DIT:
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table2(TABLED2, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED2')
         return n
 
@@ -248,7 +248,7 @@ class DIT:
         10 Y RS Y  value
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndata = len(data)
         nentries = 0
         if self.size == 4:
@@ -289,7 +289,7 @@ class DIT:
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table3(TABLED3, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED3')
         return n
 
@@ -297,7 +297,7 @@ class DIT:
         """
         TABLED4 - the marker for Record 7
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table4(TABLED4, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED4')
         return n
 
@@ -307,7 +307,7 @@ class DIT:
         """
         TABLEH1(14605, 146, 617)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table1(
             TABLEH1, op2.tables, op2._add_methods._add_table_object,
             data, n, 'TABLEH1')
@@ -317,7 +317,7 @@ class DIT:
         """
         TABLEHT(14705, 147, 618)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table1(
             TABLEHT, op2.tables, op2._add_methods._add_table_object,
             data, n, 'TABLEHT')
@@ -327,7 +327,7 @@ class DIT:
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table1(TABLEM1, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM1')
         return n
 
@@ -335,7 +335,7 @@ class DIT:
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table2(TABLEM2, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM2')
         return n
 
@@ -343,7 +343,7 @@ class DIT:
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table3(TABLEM3, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM3')
         return n
 
@@ -351,12 +351,12 @@ class DIT:
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_table4(TABLEM4, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM4')
         return n
 
     def _read_table3(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
         ndata = len(data)
         if self.size == 4:
@@ -405,7 +405,7 @@ class DIT:
         9 A RS
         Word 9 repeats until End of Record (-1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         nentries = 0
         ndata = len(data)
@@ -459,7 +459,7 @@ class DIT:
         10 G   RS Power spectral density
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #nfields = (ndata - n) // 4
 
         datan = data[n:]

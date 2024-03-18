@@ -101,7 +101,7 @@ class MPT:
         """
         CREEP(1003,10,245) - record 1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor
         nmaterials = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'i2f4ifi7f', self.size))
@@ -122,7 +122,7 @@ class MPT:
         """
         MAT1(103,1,77) - record 2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(mapfmt(op2._endian + b'i10fi', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -143,7 +143,7 @@ class MPT:
         ints    = (100000001, 10101010.0, 1010101.0, 0,   10101010.0, 0,   4545454.5, 0.05, 0.001, 0.001, 0, 0, 0, 0, 0, 0, 0,               -200000001, 0,   0,   0,   0,   0,   0,   0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         floats  = (100000001, 10101010.0, 1010101.0, 0.0, 10101010.0, 0.0, 4545454.5, 0.05, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -200000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MAT2'
         card_obj = MAT2
         methods = {
@@ -158,7 +158,7 @@ class MPT:
             raise
         return n
 
-        #op2 = self.op2
+        #op2: OP2Geom = self.op2
         #ndatai = len(data) - n
         #if ndatai % 68 == 0:
         #    ntotal = 68  # 17*4
@@ -229,7 +229,7 @@ class MPT:
         #return n
 
     def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(op2._endian + mapfmt(b'i15fi', self.size))
         ndatai = len(data) - n
@@ -247,6 +247,9 @@ class MPT:
              #tref, ge, St, Sc, Ss, mcsid) = out
             mid = out[0]
             #print(mid)
+            if mid < 0:
+                n += ntotal
+                continue
             assert mid > 0, mid
             mat = MAT2.add_op2_data(out)
             mats.append(mat)
@@ -294,7 +297,7 @@ class MPT:
         ints    = (1, 1160653210, 1146134036, 1120585646, 1162764288, 1120585646, 1149918413, 814313567, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 100000001, 1161338496, 1146104342, -1029486047, 1162093848, -1029486047, 1149903566, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 200000001, 1161345214, 1146109282, -1024369403, 1162084660, -1024369403, 1149906036, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 400000001, 1069826929, -1472888832, 1064921892, -1077656719, 1064921892, -1491992576, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114)
         floats  = (1.401298464324817e-45, 2786.60009765625, 834.469970703125, 101.38999938964844, 3302.0, 101.38999938964844, 1106.9000244140625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 2.3122342657588655e-35, 2953.90625, 832.6575927734375, -81.64478302001953, 3138.318359375, -81.64478302001953, 1105.087646484375, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 9.081061202086803e-32, 2955.54638671875, 832.9591064453125, -120.68167877197266, 3136.0751953125, -120.68167877197266, 1105.38916015625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 1.3927371822189304e-24, 1.5333081483840942, -1.0075273948473296e-14, 0.9742910861968994, -1.5333081483840942, 0.9742910861968994, -2.0261570199409107e-15, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor  # 23*4
         s = Struct(op2._endian + mapfmt(b'i15fi 6f', self.size))
         ndatai = len(data) - n
@@ -337,7 +340,7 @@ class MPT:
         """
         MAT3(1403,14,122) - record 4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor
         s = Struct(mapfmt(op2._endian + b'i8fi5fi', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -358,7 +361,7 @@ class MPT:
         """
         MAT4(2103,21,234) - record 5
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor
         s = Struct(mapfmt(op2._endian + b'i10f', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -375,7 +378,7 @@ class MPT:
         """
         MAT5(2203,22,235) - record 6
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'i9f')
         nmaterials = (len(data) - n) // 40
         for unused_i in range(nmaterials):
@@ -393,7 +396,7 @@ class MPT:
         """
         MAT8(2503,25,288) - record 7
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor
         s = Struct(mapfmt(op2._endian + b'i18f', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -419,7 +422,7 @@ class MPT:
             224 : self._read_mat9_224,
         }
         #try:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.add_op2_material,
@@ -429,7 +432,7 @@ class MPT:
         return n
 
     def _read_mat9_140(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
@@ -469,7 +472,7 @@ class MPT:
         return n, materials
 
     def _read_mat9_224(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
@@ -535,7 +538,7 @@ class MPT:
         5 GE   RS Structural damping coefficient
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MAT10'
         card_obj = MAT10
         methods = {
@@ -556,7 +559,7 @@ class MPT:
         return n
 
     def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(op2._endian + b'i4f', self.size))
         ndatai = (len(data) - n)
@@ -591,7 +594,7 @@ class MPT:
         data = (25, 1.0, 0.1, 3.16, 0.02, 0)
              = (25, 1.0, 0.1, 3.16, 0.02, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         s = Struct(mapfmt(op2._endian + b'i5f', self.size))
         ndatai = (len(data) - n)
@@ -619,7 +622,7 @@ class MPT:
         """
         MAT11(2903,29,371)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 * self.factor  # 23*4
         struc = Struct(mapfmt(op2._endian + b'i 15f 16i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -642,7 +645,7 @@ class MPT:
         """
         MAT11(2903,29,371)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80  # 20*4
         s = Struct(op2._endian + b'i 15f 4s 4s 4s 4s')
         nmaterials = (len(data) - n) // ntotal
@@ -712,7 +715,7 @@ class MPT:
         CONTFLG =0 Without continuation
         End CONTFLG
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nmaterials = 0
         s1 = Struct(mapfmt(op2._endian + b'i7f3i23fi', self.size))
         s2 = Struct(mapfmt(op2._endian + b'8i', self.size))
@@ -762,7 +765,7 @@ class MPT:
         """
         MATS1(503,5,90) - record 12
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'3ifiiff3i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -787,7 +790,7 @@ class MPT:
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'12i', self.size))
         ntotal = 48 *  self.factor # 12*4
         ncards = (len(data) - n) // ntotal
@@ -811,7 +814,7 @@ class MPT:
             92 : self._read_matt2_92,
         }
         #try:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             op2._add_methods._add_material_dependence_object,
@@ -826,7 +829,7 @@ class MPT:
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 17*4
         s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -859,7 +862,7 @@ class MPT:
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 23*4
         s = Struct(mapfmt(op2._endian + b'17i 6i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -896,7 +899,7 @@ class MPT:
         test_op2 -g C:\MSC.Software\msc_nastran_runs\varmat4c.op2
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\m402mat3_matt3_ex_ey_nuxy_gxy.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 16*4
         s = Struct(mapfmt(op2._endian + b'16i', self.size))
         ndatai = len(data) - n
@@ -955,7 +958,7 @@ class MPT:
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_7i = Struct(mapfmt(op2._endian + b'7i', self.size))
         ntotal = 28 * self.factor # 7*4
         ncards = (len(data) - n) // ntotal
@@ -978,7 +981,7 @@ class MPT:
         checked NX-10.1, MSC-2016
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'10i')
         ntotal = 40 # 10*4
         ncards = (len(data) - n) // ntotal
@@ -997,7 +1000,7 @@ class MPT:
 
     def _read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n, self._read_matt8_18, self._read_matt8_19,
             'MATT8', op2._add_methods._add_material_dependence_object)
@@ -1016,7 +1019,7 @@ class MPT:
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'i18i', self.size))
         ndatai = len(data) - n
@@ -1068,7 +1071,7 @@ class MPT:
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'18i', self.size))
         ndatai = len(data) - n
@@ -1107,7 +1110,7 @@ class MPT:
 
     def _read_matt9(self, data: bytes, n: int) -> int:
         """common method for reading MATT9s"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MATT9'
         card_obj = MATT9
         methods = {
@@ -1168,7 +1171,7 @@ class MPT:
            (1251, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 20, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 224 * self.factor  # 56*4
         s = Struct(mapfmt(op2._endian + b'56i', self.size))
@@ -1227,7 +1230,7 @@ class MPT:
         32 UNDEF(4) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 140 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'35i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -1283,7 +1286,7 @@ class MPT:
         17 UNDEF(16) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 # 32*4
         struct1 = Struct(mapfmt(op2._endian + b'i 15f 4f 12i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -1342,7 +1345,7 @@ class MPT:
         17 UNDEF(16) None
         ints = (1, 10, 20, 20, 30, 30, 30, 40, 40, 50, 60, 70, 70, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 * self.factor # 32*4
         #self.show_data(data[n:], types='if')
         struct1 = Struct(mapfmt(op2._endian + b'32i', self.size))
@@ -1391,7 +1394,7 @@ class MPT:
         RADM(8802,88,413) - record 25
         .. todo:: add object
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_i = op2.struct_i
         nmaterials = 0
         ndata = len(data)
@@ -1461,7 +1464,7 @@ class MPT:
         floats  = (10000001, 1, 0.0, 1, 500, 25, 14, 0.0, 0.01, 0.01, 0.01, 5, 25, 0.0, 0.2, 0.5, 5, 20.0, 20.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndatai = (len(data) - n) // self.factor
         ndata_80 = ndatai % 80
         ndata_76 = ndatai % 76
@@ -1509,7 +1512,7 @@ class MPT:
         19 RTOLB   RS Maximum value of incremental rotation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor  # 19*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff', self.size))
         ndatai = len(data) - n
@@ -1560,7 +1563,7 @@ class MPT:
         19 RTOLB   RS Maximum value of incremental rotation
         20 ZERO  RS/I Dummy field?
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80 * self.factor  # 20*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff i', self.size))
         ndatai = len(data) - n
@@ -1624,7 +1627,7 @@ class MPT:
         27 GAMMA   RS Amplitude decay factor for 2nd order transient integration
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 108 * self.factor  # 27*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f 4if', self.size))
         nentries = (len(data) - n) // ntotal
@@ -1674,7 +1677,7 @@ class MPT:
         22 RTOLB   RS Maximum value of incremental rotation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 88 * self.factor  # 22*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -1752,7 +1755,7 @@ class MPT:
         floats  = (100000000, 1, 1.0, 1, 1, 500, 25, 10, 0.001, 0.001, 1.0e-7, 3, 25, 0.0, 0.2, 5, 5, 20, 0.75, 20.0, 0.1, 20.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor  # 23*4
         #s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
         s = Struct(mapfmt(op2._endian + b'2i f 5i 3f 3i f 3i 4f i', self.size))

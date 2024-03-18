@@ -265,6 +265,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         # stress
         'OESNLXD', 'OESNLXR', 'OESNL1X',
         'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1', 'OESVM1C',
+        'OES1A',
         'OES2', 'OESVM2',
         'OESCP',
         'OESNL1',
