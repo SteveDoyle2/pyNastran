@@ -513,8 +513,7 @@ class TestSATKOP2(Tester):
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
         assert is_passed, is_passed
-        print(op2.get_op2_stats())
-        x = 1
+        str(op2.get_op2_stats())
 
     def test_bdf_op2_satk_3(self):
         """checks pn_mwe_s-sol_111.dat, which tests PSD tables"""
@@ -672,8 +671,7 @@ class TestSATKOP2(Tester):
             #Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
             #Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
 
-        print(op2.get_op2_stats())
-        x = 1
+        str(op2.get_op2_stats())
 
         op2, is_passed = run_op2(
             op2_filename2, make_geom=True, write_bdf=False, read_bdf=False,
@@ -728,7 +726,6 @@ class TestSATKOP2(Tester):
         assert len(op2.op2_results.rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
         assert len(op2.op2_results.rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
         assert len(op2.op2_results.rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        x = 2
 
 
 class TestOP2Main(Tester):
@@ -1983,6 +1980,37 @@ class TestOP2Main(Tester):
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
+
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_64_bit(self):
+        """
+        checks d173.bdf, which tests MSC Nastran 64-bit without the
+        op2.is_interlaced flag
+        """
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'msc', '64_bit', 'd173.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'msc', '64_bit', 'd173.op2')
+
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()

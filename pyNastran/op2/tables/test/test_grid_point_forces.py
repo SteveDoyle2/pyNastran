@@ -8,11 +8,11 @@ import numpy as np
 from cpylog import SimpleLogger, WarningRedirector
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, CORD2R
+from pyNastran.bdf.bdf import BDF, CORD2R, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 
-from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup, plot_smt
+from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup, plot_smt, create_shear_moment_torque
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
@@ -71,6 +71,79 @@ class TestGridPointForcesSMT(unittest.TestCase):
         assert np.array_equal(zaxis2, [1., 1., 2.]), zaxis2
         assert np.array_equal(xzplane, [2., 1., 1.5]), xzplane
 
+    def test_wingbox(self):
+        dirname = MODEL_PATH / 'wingbox'
+        bdf_filename = dirname / 'wingbox_stitched_together-000.bdf'
+        op2_filename = dirname / 'wingbox_stitched_together-000.op2'
+        csv_filename = dirname / 'wingbox_stitched_together-000.csv'
+        root_filename = dirname / 'wingbox'
+
+        log = SimpleLogger(level='warning')
+        include_results = 'grid_point_forces'
+        bdf_model = read_bdf(bdf_filename, log=log)
+        op2_model = read_op2(op2_filename, include_results=include_results, log=log)
+
+        gpforce = op2_model.grid_point_forces[1]
+
+        if 0:
+            p1 = np.array([128., 6., 0.])  #  start; 127.95, 6.0, 19.559
+            p3 = np.array([138., 96., 0.]) #  end; 119.95, 96., 21.832
+
+            #method='Vector'
+            method = 'vector'
+            p2    = np.array([0., 1., 0.])  # xz-plane (normal direction)
+            zaxis = np.array([0., 0., 1.])  # z-axis
+
+            station_location = 'End-Origin'
+            forces_sum, moments_sum = create_shear_moment_torque(
+                bdf_model, gpforce, p1, p2, p3, zaxis,
+                method=method, station_location=station_location,
+                cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+                nplanes=20, root_filename=None, csv_filename=None,
+                length_scale=1.0, length_unit='in',
+                force_scale=0.001, force_unit='kip',
+                moment_scale=0.001, moment_unit='in-kip',
+                show=False)
+
+            station_location = 'y'
+            forces_sum, moments_sum = create_shear_moment_torque(
+                bdf_model, gpforce, p1, p2, p3, zaxis,
+                method=method, station_location=station_location,
+                cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+                nplanes=20,
+                root_filename=root_filename,
+                csv_filename=csv_filename,
+                length_scale=1.0, length_unit='in',
+                force_scale=0.001, force_unit='kip',
+                moment_scale=0.001, moment_unit='in-kip',
+                show=True)
+            plt.close()
+
+        #----------------------------------------------------------
+        # spar 1
+        p1 = np.array([110.95, 0.0, 22.8])
+        p3 = np.array([110.95, 96., 22.8])
+        station_location = 'y'
+
+        method = 'vector'
+        p2    = np.array([0., 1., 0.])  # xz-plane (normal direction)
+        zaxis = np.array([0., 0., 1.])  # z-axis
+
+        #1633:1856
+        spar1_element_ids = np.arange(1633, 1856+1)
+        forces_sum, moments_sum = create_shear_moment_torque(
+            bdf_model, gpforce, p1, p2, p3, zaxis,
+            method=method, station_location=station_location,
+            cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+            nplanes=20,
+            root_filename=root_filename,
+            csv_filename=csv_filename,
+            length_scale=1.0, length_unit='in',
+            force_scale=0.001, force_unit='kip',
+            moment_scale=0.001, moment_unit='in-kip',
+            element_ids=spar1_element_ids,
+            show=True)
+
     def test_cutting_plane_bwb(self):
         model = BDF(debug=False)
         model.cross_reference()
@@ -96,8 +169,9 @@ class TestGridPointForcesSMT(unittest.TestCase):
         model = BDF(debug=False)
         model.cross_reference()
         p1 = np.array([1388.9, 1262.0, 86.3471])
-        p2 = p1 + np.array([1., 0., 0.]) # xz-plane
         p3 = np.array([940.93, 1.7976e-07, 0.0])
+
+        p2 = p1 + np.array([1., 0., 0.]) # xz-plane
         zaxis = np.array([0., 0., 1.])
         #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
             #model, p1, p2, zaxis, method='Z-Axis Projection',
@@ -120,6 +194,32 @@ class TestGridPointForcesSMT(unittest.TestCase):
         #print(coord_out.e1, coord_out.e2, coord_out.e3)
         iaxis_march_expected = [-0.33382509, -0.94043632, -0.06434544]
         assert np.allclose(iaxis_march, iaxis_march_expected), f'iaxis_march={iaxis_march} expected={iaxis_march_expected}'
+        #-----------------------------
+        p1 = np.array([1388.9, 1262.0, 86.3471])
+        p3 = np.array([940.93, 1.7976e-07, 0.0])
+
+        p2 = np.array([1., 0., 0.]) # xz-plane
+        zaxis = np.array([0., 0., 1.])
+        xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method='Vector', cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, nplanes=10)
+        assert np.allclose(iaxis_march, iaxis_march_expected), f'iaxis_march={iaxis_march} expected={iaxis_march_expected}'
+        assert np.allclose(i, p2), f'i={i} expected={p2}'
+        assert np.allclose(k, zaxis), f'k={k} expected={zaxis}'
+        #-----------------------------
+        p1 = np.array([1388.9, 1262.0, 86.3471])
+        p3 = np.array([940.93, 1.7976e-07, 0.0])
+
+        p2 = np.array([1., 0., 0.]) # xz-plane
+        zaxis = np.array([0., 0., 0.])
+        xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method='Coord ID', cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, nplanes=10)
+        assert np.allclose(iaxis_march, iaxis_march_expected), f'iaxis_march={iaxis_march} expected={iaxis_march_expected}'
+        assert np.allclose(i, p2), f'i={i} expected={p2}'
+        assert np.allclose(k, [0., 0., 1.]), f'k={k} expected={[0., 0., 1.]}'
 
     def test_op2_bwb_smt_setup(self):  # pragma: no cover
         """how to plot an shear-moment-torque"""
