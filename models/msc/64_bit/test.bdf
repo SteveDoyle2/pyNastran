@@ -1,0 +1,1599 @@
+$ NASTRAN input file created by the Patran 2016 input file translator on
+$  August    22, 2022 at 19:52:19.
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Direct Text Input for Executive Control
+$ Linear Static Analysis, Database
+SOL 101
+CEND
+$ Direct Text Input for Global Case Control Data
+TITLE = MSC.Nastran job created on 22-Aug-22 at 19:49:21
+SUBTITLE = d173grav
+ECHO = NONE
+MPC = 270002
+SUBCASE 1
+   TITLE=FEM ANALYSIS
+   SUBTITLE=CASE.SC1
+   SPC = 2
+   LOAD = 203
+   DISPLACEMENT(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+   FORCE(SORT1,REAL,BILIN)=ALL
+   GPFORCE=ALL
+   ESE=ALL
+$ Direct Text Input for this Subcase
+SUBCASE 2
+   TITLE=FEM ANALYSIS
+   SUBTITLE=CASE.SC2
+   SPC = 2
+   LOAD = 205
+   DISPLACEMENT(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+   FORCE(SORT1,REAL,BILIN)=ALL
+   GPFORCE=ALL
+   ESE=ALL
+$ Direct Text Input for this Subcase
+BEGIN BULK
+$ Direct Text Input for Bulk Data
+PARAM    POST    0
+PARAM   PRTMAXIM YES
+PARAM   GRDPNT  1
+$ Elements and Element Properties for region : bar123
+PBAR     61      101    254.469 5153.   5153.   10306.
+        9.                      9.      -9.                     -9.
+        .9      .9
+$ Pset: "bar123" will be imported as: "pbar.61"
+CBAR     274     61      25      36     1.      1.       0.
+CBAR     358     61      8       23     1.      1.       0.
+CBAR     360     61      9       24     1.      1.       0.
+CBAR     364     61      11      26     1.      1.       0.
+$ Elements and Element Properties for region : pcomp.1
+$ Composite Property Reference Material: pcomp.1
+$ Composite Material Description :
+PCOMP    1      -1.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.1" will be imported as: "pcomp.1"
+CTRIA3   1       1       8       23      6      -.273258 0.
+CTRIA3   2       1       24      35      23     -.233724 0.
+CQUAD4   3       1       23      8       9       24     -.148584 0.
+$ Elements and Element Properties for region : pcomp.2
+$ Composite Property Reference Material: pcomp.2
+$ Composite Material Description :
+PCOMP    2      -3.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .04     45.      YES
+$ Pset: "pcomp.2" will be imported as: "pcomp.2"
+CQUAD4   8       2       36      25      26      37     .01735   0.
+CQUAD4   9       2       37      26      27      38     .08092   0.
+$ Elements and Element Properties for region : pcomp.3
+$ Composite Property Reference Material: pcomp.3
+$ Composite Material Description :
+PCOMP    3      -1.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.3" will be imported as: "pcomp.3"
+CQUAD4   10      3       27      12      13      28     .06023   0.
+CQUAD4   11      3       28      13      14      29     .04067   0.
+CQUAD4   12      3       38      27      28      39     .0703988 0.
+CQUAD4   13      3       39      28      29      40     .04674   0.
+$ Elements and Element Properties for region : pcomp.4
+$ Composite Property Reference Material: pcomp.4
+$ Composite Material Description :
+PCOMP    4      -1.56           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.4" will be imported as: "pcomp.4"
+CTRIA3   15      4       47      56      46     -.140161 0.
+CQUAD4   16      4       46      36      37      47     -.0583   0.
+CQUAD4   17      4       47      37      38      48     .06089   0.
+CQUAD4   18      4       56      47      48      57      0.      0.
+$ Elements and Element Properties for region : pcomp.5
+$ Composite Property Reference Material: pcomp.5
+$ Composite Material Description :
+PCOMP    5      -1.56           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.5" will be imported as: "pcomp.5"
+CQUAD4   19      5       48      38      39      49     .08389   0.
+CQUAD4   20      5       49      39      40      50     .05549   0.
+CQUAD4   21      5       57      48      49      58     .09346   0.
+CQUAD4   22      5       58      49      50      59     .0692    0.
+$ Elements and Element Properties for region : pcomp.6
+$ Composite Property Reference Material: pcomp.6
+$ Composite Material Description :
+PCOMP    6      -1.32           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.6" will be imported as: "pcomp.6"
+CTRIA3   23      6       57      68      56     -.0869   0.
+CTRIA3   24      6       69      76      68     -.0283   0.
+CQUAD4   25      6       68      57      58      69     .0647    0.
+CQUAD4   26      6       69      58      59      70     .09229   0.
+CQUAD4   27      6       76      69      70      77     .114149  0.
+$ Elements and Element Properties for region : pcomp.7
+$ Composite Property Reference Material: pcomp.7
+$ Composite Material Description :
+PCOMP    7      -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.7" will be imported as: "pcomp.7"
+CTRIA3   28      7       77      84      76     .02004   0.
+CQUAD4   29      7       84      77      78      85     .107461  0.
+CQUAD4   30      7       85      78      79      86     .03158   0.
+CQUAD4   31      7       82      81      80      83     43.5599  0.
+CQUAD4   32      7       83      80      76      84     42.7327  0.
+$ Elements and Element Properties for region : pcomp.8
+$ Composite Property Reference Material: pcomp.8
+$ Composite Material Description :
+PCOMP    8      -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.8" will be imported as: "pcomp.8"
+CTRIA3   33      8       18      5       6      .98636   0.
+CQUAD4   34      8       19      7       5       18     2.15721  0.
+CQUAD4   35      8       31      19      18      30     2.15928  0.
+CQUAD4   36      8       42      31      30      41     2.16432  0.
+CQUAD4   37      8       30      18      6       23     .985128  0.
+CQUAD4   38      8       41      30      23      35     .988058  0.
+$ Elements and Element Properties for region : pcomp.9
+$ Composite Property Reference Material: pcomp.9
+$ Composite Material Description :
+PCOMP    9      -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.9" will be imported as: "pcomp.9"
+CQUAD4   39      9       55      42      41      54     2.17008  0.
+CQUAD4   40      9       64      55      54      63     2.17676  0.
+CQUAD4   41      9       54      41      35      46     .991331  0.
+CQUAD4   42      9       63      54      46      56     .995105  0.
+$ Elements and Element Properties for region : pcomp.10
+$ Composite Property Reference Material: pcomp.10
+$ Composite Material Description :
+PCOMP    10     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.10" will be imported as: "pcomp.10"
+CQUAD4   43      10      72      64      63      71     2.1846   0.
+CQUAD4   44      10      81      72      71      80     2.19315  0.
+CQUAD4   45      10      71      63      56      68     .999985  0.
+CQUAD4   46      10      80      71      68      76     1.00624  0.
+$ Elements and Element Properties for region : pcomp.11
+$ Composite Property Reference Material: pcomp.11
+$ Composite Material Description :
+PCOMP    11     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.11" will be imported as: "pcomp.11"
+CQUAD4   47      11      20      15      16      21     .02694   0.
+CQUAD4   48      11      21      16      17      22     .01908   0.
+CQUAD4   49      11      32      20      21      33     .02852   0.
+CQUAD4   50      11      43      32      33      44     .0311    0.
+CQUAD4   51      11      33      21      22      34     .01896   0.
+CQUAD4   52      11      44      33      34      45     .01904   0.
+$ Elements and Element Properties for region : pcomp.12
+$ Composite Property Reference Material: pcomp.12
+$ Composite Material Description :
+PCOMP    12     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.12" will be imported as: "pcomp.12"
+CQUAD4   53      12      60      51      52      61     .03614   0.
+CQUAD4   54      12      61      52      53      62     .01927   0.
+CQUAD4   55      12      65      60      61      66     .04439   0.
+CQUAD4   56      12      73      65      66      74     .05964   0.
+CQUAD4   57      12      66      61      62      67     .01984   0.
+CQUAD4   58      12      74      66      67      75     .0213961 0.
+$ Elements and Element Properties for region : pcomp.13
+$ Composite Property Reference Material: pcomp.13
+$ Composite Material Description :
+PCOMP    13     -1.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.13" will be imported as: "pcomp.13"
+CTRIA3   59      13      94      109     92     -.044    0.
+CTRIA3   60      13      110     121     109    -.0362   0.
+CQUAD4   61      13      109     94      95      110    -.0179   0.
+CQUAD4*  62              13              110             95
+*        96              111            .006699          0.
+CQUAD4*  63              13              121             110
+*        111             122            -.00954          0.
+$ Elements and Element Properties for region : pcomp.14
+$ Composite Property Reference Material: pcomp.14
+$ Composite Material Description :
+PCOMP    14     -1.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.14" will be imported as: "pcomp.14"
+CQUAD4   64      14      111     96      97      112    .02074   0.
+CQUAD4   65      14      112     97      98      113    .01055   0.
+CQUAD4   66      14      122     111     112     123    .0151963 0.
+CQUAD4   67      14      123     112     113     124    .02059   0.
+$ Elements and Element Properties for region : pcomp.15
+$ Composite Property Reference Material: pcomp.15
+$ Composite Material Description :
+PCOMP    15     -1.8            10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .24     45.      YES
+         201    .24     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .24     -45.     YES
+         201    .24     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.15" will be imported as: "pcomp.15"
+CQUAD4*  68              15              113             98
+*        99              114            -.00595          0.
+CQUAD4   69      15      114     99      100     115    -.0126   0.
+CQUAD4   70      15      124     113     114     125     0.      0.
+CQUAD4   71      15      125     114     115     126    -.0116   0.
+$ Elements and Element Properties for region : pcomp.16
+$ Composite Property Reference Material: pcomp.16
+$ Composite Material Description :
+PCOMP    16     -1.56           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.16" will be imported as: "pcomp.16"
+CTRIA3   72      16      122     132     121    -.0278   0.
+CTRIA3   73      16      133     142     132    -.0183   0.
+CQUAD4   74      16      132     122     123     133    7.074-4  0.
+CQUAD4   75      16      133     123     124     134    .02336   0.
+CQUAD4   76      16      142     133     134     143    .01338   0.
+$ Elements and Element Properties for region : pcomp.17
+$ Composite Property Reference Material: pcomp.17
+$ Composite Material Description :
+PCOMP    17     -1.56           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .24      0.      YES     201    .12     90.      YES
+         201    .24      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .24      0.      YES
+         201    .12     90.      YES     201    .24      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.17" will be imported as: "pcomp.17"
+CQUAD4   77      17      134     124     125     135    .0103411 0.
+CQUAD4*  78              17              135             125
+*        126             136            -.00907          0.
+CQUAD4   79      17      143     134     135     144    .02469   0.
+CQUAD4   80      17      144     135     136     145    -.0034   0.
+$ Elements and Element Properties for region : pcomp.18
+$ Composite Property Reference Material: pcomp.18
+$ Composite Material Description :
+PCOMP    18     -1.32           10000.   HILL
+         201    .24     45.      YES     201    .24     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .24     -45.     YES     201    .24     45.      YES
+$ Pset: "pcomp.18" will be imported as: "pcomp.18"
+CTRIA3*  81              18              143             154
+*        142            -.00819          0.
+CTRIA3*  82              18              155             162
+*        154            .002099          0.
+CQUAD4   83      18      154     143     144     155    .02743   0.
+CQUAD4   84      18      155     144     145     156    .01048   0.
+CQUAD4   85      18      162     155     156     163    .03261   0.
+$ Elements and Element Properties for region : pcomp.19
+$ Composite Property Reference Material: pcomp.19
+$ Composite Material Description :
+PCOMP    19     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.19" will be imported as: "pcomp.19"
+CTRIA3*  86              19              163             170
+*        162            .004903          0.
+CQUAD4   87      19      170     163     164     171    .0137073 0.
+CQUAD4*  88              19              171             164
+*        165             172            -.00181          0.
+CQUAD4   89      19      168     167     166     169    43.9435  0.
+CQUAD4   90      19      169     166     162     170    42.8373  0.
+$ Elements and Element Properties for region : pcomp.20
+$ Composite Property Reference Material: pcomp.20
+$ Composite Material Description :
+PCOMP    20     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.20" will be imported as: "pcomp.20"
+CTRIA3   91      20      104     91      92     1.06971  0.
+CQUAD4   92      20      105     93      91      104    2.24701  0.
+CQUAD4   93      20      117     105     104     116    2.24772  0.
+CQUAD4   94      20      128     117     116     127    2.2495   0.
+CQUAD4   95      20      116     104     92      109    1.06941  0.
+CQUAD4   96      20      127     116     109     121    1.0703   0.
+$ Elements and Element Properties for region : pcomp.21
+$ Composite Property Reference Material: pcomp.21
+$ Composite Material Description :
+PCOMP    21     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.21" will be imported as: "pcomp.21"
+CQUAD4   97      21      141     128     127     140    2.25151  0.
+CQUAD4   98      21      150     141     140     149    2.25382  0.
+CQUAD4   99      21      140     127     121     132    1.07134  0.
+CQUAD4   100     21      149     140     132     142    1.07263  0.
+$ Elements and Element Properties for region : pcomp.22
+$ Composite Property Reference Material: pcomp.22
+$ Composite Material Description :
+PCOMP    22     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.22" will be imported as: "pcomp.22"
+CQUAD4   101     22      158     150     149     157    2.2565   0.
+CQUAD4   102     22      167     158     157     166    2.25932  0.
+CQUAD4   103     22      157     149     142     154    1.07438  0.
+CQUAD4   104     22      166     157     154     162    1.07667  0.
+$ Elements and Element Properties for region : pcomp.23
+$ Composite Property Reference Material: pcomp.23
+$ Composite Material Description :
+PCOMP    23     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.23" will be imported as: "pcomp.23"
+CQUAD4*  105             23              106             101
+*        102             107            -.00946          0.
+CQUAD4*  106             23              107             102
+*        103             108            .002183          0.
+CQUAD4   107     23      118     106     107     119    -.0104   0.
+CQUAD4   108     23      129     118     119     130    -.0112   0.
+CQUAD4*  109             23              119             107
+*        108             120            .001956          0.
+CQUAD4*  110             23              130             119
+*        120             131            .001839          0.
+$ Elements and Element Properties for region : pcomp.24
+$ Composite Property Reference Material: pcomp.24
+$ Composite Material Description :
+PCOMP    24     -1.08           10000.   HILL
+         201    .12     45.      YES     201    .12     -45.     YES
+         201    .12      0.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     45.      YES
+         201    .12     -45.     YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12     90.      YES
+         201    .12      0.      YES     201    .12     -45.     YES
+         201    .12     45.      YES     201    .12      0.      YES
+         201    .12     90.      YES     201    .12      0.      YES
+         201    .12     -45.     YES     201    .12     45.      YES
+$ Pset: "pcomp.24" will be imported as: "pcomp.24"
+CQUAD4   111     24      146     137     138     147    -.0121   0.
+CQUAD4*  112             24              147             138
+*        139             148            .001611          0.
+CQUAD4   113     24      151     146     147     152    -.012    0.
+CQUAD4*  114             24              159             151
+*        152             160            -.00876          0.
+CQUAD4*  115             24              152             147
+*        148             153            .001254          0.
+CQUAD4   116     24      160     152     153     161    6.732-4  0.
+$ Elements and Element Properties for region : prod.41
+PROD     41      101    300.
+$ Pset: "prod.41" will be imported as: "prod.41"
+CROD     258     41      6       23
+CROD     259     41      23      35
+CROD     260     41      35      46
+CROD     261     41      92      109
+CROD     262     41      109     121
+CROD     263     41      121     132
+$ Elements and Element Properties for region : prod.42
+PROD     42      101    170.
+$ Pset: "prod.42" will be imported as: "prod.42"
+CROD     264     42      46      56
+CROD     265     42      56      68
+CROD     266     42      132     142
+CROD     267     42      142     154
+$ Elements and Element Properties for region : prod.43
+PROD     43      101    150.
+$ Pset: "prod.43" will be imported as: "prod.43"
+CROD     268     43      68      76
+CROD     269     43      76      84
+CROD     270     43      154     162
+CROD     271     43      162     170
+$ Elements and Element Properties for region : prod.44
+PROD     44      102    300.
+$ Pset: "prod.44" will be imported as: "prod.44"
+CROD     272     44      10      25
+CROD     273     44      96      111
+$ Elements and Element Properties for region : prod.45
+PROD     45      102    280.
+$ Pset: "prod.45" will be imported as: "prod.45"
+CROD     275     45      111     122
+$ Elements and Element Properties for region : prod.46
+PROD     46      102    250.
+$ Pset: "prod.46" will be imported as: "prod.46"
+CROD     276     46      36      46
+CROD     277     46      122     132
+$ Elements and Element Properties for region : prod.47
+PROD     47      102    300.
+$ Pset: "prod.47" will be imported as: "prod.47"
+CROD     278     47      12      27
+CROD     279     47      98      113
+$ Elements and Element Properties for region : prod.48
+PROD     48      102    280.
+$ Pset: "prod.48" will be imported as: "prod.48"
+CROD     280     48      27      38
+CROD     281     48      113     124
+$ Elements and Element Properties for region : prod.49
+PROD     49      102    250.
+$ Pset: "prod.49" will be imported as: "prod.49"
+CROD     282     49      38      48
+CROD     283     49      124     134
+$ Elements and Element Properties for region : prod.50
+PROD     50      102    200.
+$ Pset: "prod.50" will be imported as: "prod.50"
+CROD     284     50      48      57
+CROD     285     50      57      68
+CROD     286     50      134     143
+CROD     287     50      143     154
+$ Elements and Element Properties for region : prod.51
+PROD     51      101    220.
+$ Pset: "prod.51" will be imported as: "prod.51"
+CROD     288     51      14      29
+CROD     289     51      29      40
+CROD     290     51      40      50
+CROD     291     51      100     115
+CROD     292     51      115     126
+CROD     293     51      126     136
+$ Elements and Element Properties for region : prod.52
+PROD     52      101    180.
+$ Pset: "prod.52" will be imported as: "prod.52"
+CROD     306     52      50      59
+CROD     307     52      59      70
+CROD     308     52      70      77
+CROD     309     52      77      84
+CROD     310     52      136     145
+CROD     311     52      145     156
+CROD     312     52      156     163
+CROD     313     52      163     170
+$ Elements and Element Properties for region : prod.53
+PROD     53      101    160.
+$ Pset: "prod.53" will be imported as: "prod.53"
+CROD     314     53      15      20
+CROD     315     53      20      32
+CROD     316     53      32      43
+CROD     317     53      101     106
+CROD     318     53      106     118
+CROD     319     53      118     129
+$ Elements and Element Properties for region : prod.54
+PROD     54      101    160.
+$ Pset: "prod.54" will be imported as: "prod.54"
+CROD     320     54      51      60
+CROD     321     54      60      65
+CROD     322     54      65      73
+CROD     323     54      137     146
+CROD     324     54      146     151
+CROD     325     54      151     159
+$ Elements and Element Properties for region : prod.55
+PROD     55      101    280.
+$ Pset: "prod.55" will be imported as: "prod.55"
+CROD     420     55      6       8
+CROD     421     55      8       9
+CROD     422     55      9       10
+CROD     423     55      92      94
+CROD     424     55      94      95
+CROD     425     55      95      96
+$ Elements and Element Properties for region : prod.56
+PROD     56      101    300.
+$ Pset: "prod.56" will be imported as: "prod.56"
+CROD     426     56      10      11
+CROD     427     56      11      12
+CROD     428     56      96      97
+CROD     429     56      97      98
+$ Elements and Element Properties for region : prod.57
+PROD     57      101    250.
+$ Pset: "prod.57" will be imported as: "prod.57"
+CROD     430     57      12      13
+CROD     431     57      13      14
+CROD     432     57      98      99
+CROD     433     57      99      100
+$ Elements and Element Properties for region : prod.58
+PROD     58      101    240.
+$ Pset: "prod.58" will be imported as: "prod.58"
+CROD     434     58      46      47
+CROD     435     58      47      48
+CROD     436     58      48      49
+CROD     437     58      49      50
+CROD     438     58      132     133
+CROD     439     58      133     134
+CROD     440     58      134     135
+CROD     441     58      135     136
+$ Elements and Element Properties for region : prod.59
+PROD     59      101    160.
+$ Pset: "prod.59" will be imported as: "prod.59"
+CROD     442     59      76      77
+CROD     443     59      77      78
+CROD     444     59      78      79
+CROD     445     59      162     163
+CROD     446     59      163     164
+CROD     447     59      164     165
+$ Elements and Element Properties for region : prod.60
+PROD     60      101    160.
+$ Pset: "prod.60" will be imported as: "prod.60"
+CROD     448     60      15      16
+CROD     449     60      16      17
+CROD     450     60      101     102
+CROD     451     60      102     103
+CROD     452     60      43      44
+CROD     453     60      44      45
+CROD     454     60      129     130
+CROD     455     60      130     131
+CROD     456     60      51      52
+CROD     457     60      52      53
+CROD     458     60      137     138
+CROD     459     60      138     139
+CROD     460     60      73      74
+CROD     461     60      74      75
+CROD     462     60      159     160
+CROD     463     60      160     161
+$ Elements and Element Properties for region : prod.109
+PROD     109     101    50.
+$ Pset: "prod.109" will be imported as: "prod.109"
+CROD     326     109     7       19
+CROD     327     109     19      31
+CROD     328     109     31      42
+CROD     329     109     42      55
+CROD     330     109     55      64
+CROD     331     109     64      72
+CROD     332     109     72      81
+CROD     333     109     81      82
+CROD     334     109     93      105
+CROD     335     109     105     117
+CROD     336     109     117     128
+CROD     337     109     128     141
+CROD     338     109     141     150
+CROD     339     109     150     158
+CROD     340     109     158     167
+CROD     341     109     167     168
+$ Elements and Element Properties for region : prod.110
+PROD     110     101    70.
+$ Pset: "prod.110" will be imported as: "prod.110"
+CROD     342     110     5       18
+CROD     343     110     18      30
+CROD     344     110     30      41
+CROD     345     110     41      54
+CROD     346     110     54      63
+CROD     347     110     63      71
+CROD     348     110     71      80
+CROD     349     110     80      83
+CROD     350     110     91      104
+CROD     351     110     104     116
+CROD     352     110     116     127
+CROD     353     110     127     140
+CROD     354     110     140     149
+CROD     355     110     149     157
+CROD     356     110     157     166
+CROD     357     110     166     169
+$ Elements and Element Properties for region : prod.111
+PROD     111     101    80.
+$ Pset: "prod.111" will be imported as: "prod.111"
+CROD     359     111     94      109
+CROD     361     111     24      35
+CROD     362     111     95      110
+CROD     363     111     110     121
+CROD     365     111     26      37
+CROD     366     111     37      47
+CROD     367     111     47      56
+CROD     368     111     97      112
+CROD     369     111     112     123
+CROD     370     111     123     133
+CROD     371     111     133     142
+CROD     372     111     13      28
+CROD     373     111     28      39
+CROD     374     111     39      49
+CROD     375     111     49      58
+CROD     376     111     58      69
+CROD     377     111     69      76
+CROD     378     111     99      114
+CROD     379     111     114     125
+CROD     380     111     125     135
+CROD     381     111     135     144
+CROD     382     111     144     155
+CROD     383     111     155     162
+CROD     384     111     78      85
+CROD     385     111     164     171
+$ Elements and Element Properties for region : prod.112
+PROD     112     101    80.
+$ Pset: "prod.112" will be imported as: "prod.112"
+CROD     386     112     16      21
+CROD     387     112     21      33
+CROD     388     112     33      44
+CROD     389     112     102     107
+CROD     390     112     107     119
+CROD     391     112     119     130
+CROD     392     112     52      61
+CROD     393     112     61      66
+CROD     394     112     66      74
+CROD     395     112     138     147
+CROD     396     112     147     152
+CROD     397     112     152     160
+$ Elements and Element Properties for region : prod.113
+PROD     113     101    50.
+$ Pset: "prod.113" will be imported as: "prod.113"
+CROD     398     113     17      22
+CROD     399     113     22      34
+CROD     400     113     34      45
+CROD     401     113     103     108
+CROD     402     113     108     120
+CROD     403     113     120     131
+CROD     404     113     53      62
+CROD     405     113     62      67
+CROD     406     113     67      75
+CROD     407     113     139     148
+CROD     408     113     148     153
+CROD     409     113     153     161
+CROD     410     113     79      86
+CROD     411     113     165     172
+$ Elements and Element Properties for region : prod.114
+PROD     114     101    200.
+$ Pset: "prod.114" will be imported as: "prod.114"
+CROD     412     114     1       6
+CROD     413     114     87      92
+$ Elements and Element Properties for region : prod.115
+PROD     115     102    300.
+$ Pset: "prod.115" will be imported as: "prod.115"
+CROD     414     115     2       10
+CROD     415     115     88      96
+$ Elements and Element Properties for region : prod.116
+PROD     116     102    300.
+$ Pset: "prod.116" will be imported as: "prod.116"
+CROD     416     116     3       12
+CROD     417     116     89      98
+$ Elements and Element Properties for region : prod.117
+PROD     117     101    220.
+$ Pset: "prod.117" will be imported as: "prod.117"
+CROD     418     117     4       14
+CROD     419     117     90      100
+$ Elements and Element Properties for region : prod.118
+PROD     118     101    80.
+$ Pset: "prod.118" will be imported as: "prod.118"
+CROD     464     118     7       5
+CROD     465     118     5       6
+CROD     466     118     93      91
+CROD     467     118     91      92
+CROD     468     118     23      24
+CROD     469     118     24      25
+CROD     470     118     25      26
+CROD     471     118     26      27
+CROD     472     118     27      28
+CROD     473     118     28      29
+CROD     474     118     109     110
+CROD     475     118     110     111
+CROD     476     118     111     112
+CROD     477     118     112     113
+CROD     478     118     113     114
+CROD     479     118     114     115
+CROD     480     118     35      36
+CROD     481     118     36      37
+CROD     482     118     37      38
+CROD     483     118     38      39
+CROD     484     118     39      40
+CROD     485     118     121     122
+CROD     486     118     122     123
+CROD     487     118     123     124
+CROD     488     118     124     125
+CROD     489     118     125     126
+CROD     490     118     56      57
+CROD     491     118     57      58
+CROD     492     118     58      59
+CROD     493     118     142     143
+CROD     494     118     143     144
+CROD     495     118     144     145
+CROD     496     118     68      69
+CROD     497     118     69      70
+CROD     498     118     154     155
+CROD     499     118     155     156
+CROD     500     118     82      83
+CROD     501     118     83      84
+CROD     502     118     84      85
+CROD     503     118     85      86
+CROD     504     118     168     169
+CROD     505     118     169     170
+CROD     506     118     170     171
+CROD     507     118     171     172
+CROD     508     118     20      21
+CROD     509     118     106     107
+CROD     510     118     32      33
+CROD     511     118     118     119
+CROD     512     118     60      61
+CROD     513     118     146     147
+CROD     514     118     65      66
+CROD     515     118     151     152
+$ Elements and Element Properties for region : prod.119
+PROD     119     101    50.
+$ Pset: "prod.119" will be imported as: "prod.119"
+CROD     516     119     18      6
+CROD     517     119     19      18
+CROD     518     119     104     92
+CROD     519     119     105     104
+CROD     520     119     30      23
+CROD     521     119     31      30
+CROD     522     119     116     109
+CROD     523     119     117     116
+CROD     524     119     41      35
+CROD     525     119     42      41
+CROD     526     119     127     121
+CROD     527     119     128     127
+CROD     528     119     54      46
+CROD     529     119     55      54
+CROD     530     119     140     132
+CROD     531     119     141     140
+CROD     532     119     63      56
+CROD     533     119     64      63
+CROD     534     119     149     142
+CROD     535     119     150     149
+CROD     536     119     71      68
+CROD     537     119     72      71
+CROD     538     119     157     154
+CROD     539     119     158     157
+CROD     540     119     80      76
+CROD     541     119     81      80
+CROD     542     119     166     162
+CROD     543     119     167     166
+CROD     544     119     21      22
+CROD     545     119     107     108
+CROD     546     119     33      34
+CROD     547     119     119     120
+CROD     548     119     61      62
+CROD     549     119     147     148
+CROD     550     119     66      67
+CROD     551     119     152     153
+$ Elements and Element Properties for region : prod.120
+PROD     120     101    10.
+$ Pset: "prod.120" will be imported as: "prod.120"
+CROD     552     120     7       93
+CROD     553     120     19      105
+CROD     554     120     31      117
+CROD     555     120     42      128
+CROD     556     120     55      141
+CROD     557     120     64      150
+CROD     558     120     72      158
+CROD     559     120     81      167
+CROD     560     120     82      168
+CROD     561     120     5       91
+CROD     562     120     18      104
+CROD     563     120     30      116
+CROD     564     120     41      127
+CROD     565     120     54      140
+CROD     566     120     63      149
+CROD     567     120     71      157
+CROD     568     120     80      166
+CROD     569     120     83      169
+CROD     570     120     6       92
+CROD     571     120     23      109
+CROD     572     120     35      121
+CROD     573     120     46      132
+CROD     574     120     56      142
+CROD     575     120     68      154
+CROD     576     120     76      162
+CROD     577     120     84      170
+CROD     578     120     8       94
+CROD     579     120     9       95
+CROD     580     120     10      96
+CROD     581     120     11      97
+CROD     582     120     12      98
+CROD     583     120     13      99
+CROD     584     120     14      100
+CROD     585     120     24      110
+CROD     586     120     25      111
+CROD     587     120     26      112
+CROD     588     120     27      113
+CROD     589     120     28      114
+CROD     590     120     29      115
+CROD     591     120     36      122
+CROD     592     120     37      123
+CROD     593     120     38      124
+CROD     594     120     39      125
+CROD     595     120     40      126
+CROD     596     120     47      133
+CROD     597     120     48      134
+CROD     598     120     49      135
+CROD     599     120     50      136
+CROD     600     120     57      143
+CROD     601     120     58      144
+CROD     602     120     59      145
+CROD     603     120     69      155
+CROD     604     120     70      156
+CROD     605     120     77      163
+CROD     606     120     78      164
+CROD     607     120     79      165
+CROD     608     120     85      171
+CROD     609     120     86      172
+CROD     610     120     15      101
+CROD     611     120     20      106
+CROD     612     120     32      118
+CROD     613     120     43      129
+CROD     614     120     16      102
+CROD     615     120     21      107
+CROD     616     120     33      119
+CROD     617     120     44      130
+CROD     618     120     17      103
+CROD     619     120     22      108
+CROD     620     120     34      120
+CROD     621     120     45      131
+CROD     622     120     51      137
+CROD     623     120     60      146
+CROD     624     120     65      151
+CROD     625     120     73      159
+CROD     626     120     52      138
+CROD     627     120     61      147
+CROD     628     120     66      152
+CROD     629     120     74      160
+CROD     630     120     53      139
+CROD     631     120     62      148
+CROD     632     120     67      153
+CROD     633     120     75      161
+$ Elements and Element Properties for region : pshear.25
+PSHEAR   25      101    2.5
+$ Pset: "pshear.25" will be imported as: "pshear.25"
+CSHEAR   117     25      92      109     23      6
+CSHEAR   118     25      109     121     35      23
+CSHEAR   119     25      121     132     46      35
+$ Elements and Element Properties for region : pshear.26
+PSHEAR   26      101    2.
+$ Pset: "pshear.26" will be imported as: "pshear.26"
+CSHEAR   120     26      132     142     56      46
+CSHEAR   121     26      142     154     68      56
+$ Elements and Element Properties for region : pshear.27
+PSHEAR   27      101    1.8
+$ Pset: "pshear.27" will be imported as: "pshear.27"
+CSHEAR   122     27      154     162     76      68
+CSHEAR   123     27      162     170     84      76
+$ Elements and Element Properties for region : pshear.28
+PSHEAR   28      101    3.
+$ Pset: "pshear.28" will be imported as: "pshear.28"
+CSHEAR   124     28      96      111     25      10
+CSHEAR   125     28      111     122     36      25
+CSHEAR   126     28      122     132     46      36
+$ Elements and Element Properties for region : pshear.29
+PSHEAR   29      101    3.
+$ Pset: "pshear.29" will be imported as: "pshear.29"
+CSHEAR   127     29      98      113     27      12
+CSHEAR   128     29      113     124     38      27
+CSHEAR   129     29      124     134     48      38
+$ Elements and Element Properties for region : pshear.30
+PSHEAR   30      101    2.5
+$ Pset: "pshear.30" will be imported as: "pshear.30"
+CSHEAR   130     30      134     143     57      48
+CSHEAR   131     30      143     154     68      57
+$ Elements and Element Properties for region : pshear.31
+PSHEAR   31      101    2.5
+$ Pset: "pshear.31" will be imported as: "pshear.31"
+CSHEAR   132     31      100     115     29      14
+CSHEAR   133     31      115     126     40      29
+CSHEAR   134     31      126     136     50      40
+$ Elements and Element Properties for region : pshear.32
+PSHEAR   32      101    2.
+$ Pset: "pshear.32" will be imported as: "pshear.32"
+CSHEAR   135     32      136     145     59      50
+CSHEAR   136     32      145     156     70      59
+CSHEAR   137     32      156     163     77      70
+CSHEAR   138     32      163     170     84      77
+$ Elements and Element Properties for region : pshear.33
+PSHEAR   33      101    2.
+$ Pset: "pshear.33" will be imported as: "pshear.33"
+CSHEAR   139     33      101     106     20      15
+CSHEAR   140     33      106     118     32      20
+CSHEAR   141     33      118     129     43      32
+$ Elements and Element Properties for region : pshear.34
+PSHEAR   34      101    2.
+$ Pset: "pshear.34" will be imported as: "pshear.34"
+CSHEAR   142     34      137     146     60      51
+CSHEAR   143     34      146     151     65      60
+CSHEAR   144     34      151     159     73      65
+$ Elements and Element Properties for region : pshear.35
+PSHEAR   35      101    3.
+$ Pset: "pshear.35" will be imported as: "pshear.35"
+CSHEAR   192     35      92      94      8       6
+CSHEAR   193     35      94      95      9       8
+CSHEAR   194     35      95      96      10      9
+$ Elements and Element Properties for region : pshear.36
+PSHEAR   36      101    3.
+$ Pset: "pshear.36" will be imported as: "pshear.36"
+CSHEAR   195     36      96      97      11      10
+CSHEAR   196     36      97      98      12      11
+$ Elements and Element Properties for region : pshear.37
+PSHEAR   37      101    3.
+$ Pset: "pshear.37" will be imported as: "pshear.37"
+CSHEAR   197     37      98      99      13      12
+CSHEAR   198     37      99      100     14      13
+$ Elements and Element Properties for region : pshear.38
+PSHEAR   38      101    2.5
+$ Pset: "pshear.38" will be imported as: "pshear.38"
+CSHEAR   199     38      132     133     47      46
+CSHEAR   200     38      133     134     48      47
+CSHEAR   201     38      134     135     49      48
+CSHEAR   202     38      135     136     50      49
+$ Elements and Element Properties for region : pshear.39
+PSHEAR   39      101    2.
+$ Pset: "pshear.39" will be imported as: "pshear.39"
+CSHEAR   203     39      162     163     77      76
+CSHEAR   204     39      163     164     78      77
+CSHEAR   205     39      164     165     79      78
+$ Elements and Element Properties for region : pshear.40
+PSHEAR   40      101    2.
+$ Pset: "pshear.40" will be imported as: "pshear.40"
+CSHEAR   206     40      101     102     16      15
+CSHEAR   207     40      102     103     17      16
+CSHEAR   208     40      129     130     44      43
+CSHEAR   209     40      130     131     45      44
+CSHEAR   210     40      137     138     52      51
+CSHEAR   211     40      138     139     53      52
+CSHEAR   212     40      159     160     74      73
+CSHEAR   213     40      160     161     75      74
+$ Elements and Element Properties for region : pshear.101
+PSHEAR   101     101    1.5
+$ Pset: "pshear.101" will be imported as: "pshear.101"
+CSHEAR   145     101     93      105     19      7
+CSHEAR   146     101     105     117     31      19
+CSHEAR   147     101     117     128     42      31
+CSHEAR   148     101     128     141     55      42
+CSHEAR   149     101     141     150     64      55
+CSHEAR   150     101     150     158     72      64
+CSHEAR   151     101     158     167     81      72
+CSHEAR   152     101     167     168     82      81
+$ Elements and Element Properties for region : pshear.102
+PSHEAR   102     101    1.8
+$ Pset: "pshear.102" will be imported as: "pshear.102"
+CSHEAR   153     102     91      104     18      5
+CSHEAR   154     102     104     116     30      18
+CSHEAR   155     102     116     127     41      30
+CSHEAR   156     102     127     140     54      41
+CSHEAR   157     102     140     149     63      54
+CSHEAR   158     102     149     157     71      63
+CSHEAR   159     102     157     166     80      71
+CSHEAR   160     102     166     169     83      80
+$ Elements and Element Properties for region : pshear.103
+PSHEAR   103     101    1.5
+$ Pset: "pshear.103" will be imported as: "pshear.103"
+CSHEAR   161     103     94      109     23      8
+CSHEAR   162     103     95      110     24      9
+CSHEAR   163     103     110     121     35      24
+CSHEAR   164     103     97      112     26      11
+CSHEAR   165     103     112     123     37      26
+CSHEAR   166     103     123     133     47      37
+CSHEAR   167     103     133     142     56      47
+CSHEAR   168     103     99      114     28      13
+CSHEAR   169     103     114     125     39      28
+CSHEAR   170     103     125     135     49      39
+CSHEAR   171     103     135     144     58      49
+CSHEAR   172     103     144     155     69      58
+CSHEAR   173     103     155     162     76      69
+CSHEAR   174     103     164     171     85      78
+CSHEAR   175     103     102     107     21      16
+CSHEAR   176     103     107     119     33      21
+CSHEAR   177     103     119     130     44      33
+CSHEAR   178     103     138     147     61      52
+CSHEAR   179     103     147     152     66      61
+CSHEAR   180     103     152     160     74      66
+$ Elements and Element Properties for region : pshear.104
+PSHEAR   104     101    1.5
+$ Pset: "pshear.104" will be imported as: "pshear.104"
+CSHEAR   181     104     103     108     22      17
+CSHEAR   182     104     108     120     34      22
+CSHEAR   183     104     120     131     45      34
+CSHEAR   184     104     139     148     62      53
+CSHEAR   185     104     148     153     67      62
+CSHEAR   186     104     153     161     75      67
+CSHEAR   187     104     165     172     86      79
+$ Elements and Element Properties for region : pshear.105
+PSHEAR   105     101    2.5
+$ Pset: "pshear.105" will be imported as: "pshear.105"
+CSHEAR   188     105     87      92      6       1
+CSHEAR   189     105     90      100     14      4
+$ Elements and Element Properties for region : pshear.106
+PSHEAR   106     101    3.
+$ Pset: "pshear.106" will be imported as: "pshear.106"
+CSHEAR   190     106     88      96      10      2
+CSHEAR   191     106     89      98      12      3
+$ Elements and Element Properties for region : pshear.107
+PSHEAR   107     101    1.5
+$ Pset: "pshear.107" will be imported as: "pshear.107"
+CSHEAR   214     107     93      91      5       7
+CSHEAR   215     107     91      92      6       5
+CSHEAR   216     107     109     110     24      23
+CSHEAR   217     107     110     111     25      24
+CSHEAR   218     107     111     112     26      25
+CSHEAR   219     107     112     113     27      26
+CSHEAR   220     107     113     114     28      27
+CSHEAR   221     107     114     115     29      28
+CSHEAR   222     107     121     122     36      35
+CSHEAR   223     107     122     123     37      36
+CSHEAR   224     107     123     124     38      37
+CSHEAR   225     107     124     125     39      38
+CSHEAR   226     107     125     126     40      39
+CSHEAR   227     107     142     143     57      56
+CSHEAR   228     107     143     144     58      57
+CSHEAR   229     107     144     145     59      58
+CSHEAR   230     107     154     155     69      68
+CSHEAR   231     107     155     156     70      69
+CSHEAR   232     107     168     169     83      82
+CSHEAR   233     107     169     170     84      83
+CSHEAR   234     107     170     171     85      84
+CSHEAR   235     107     171     172     86      85
+CSHEAR   236     107     106     107     21      20
+CSHEAR   237     107     118     119     33      32
+CSHEAR   238     107     146     147     61      60
+CSHEAR   239     107     151     152     66      65
+$ Elements and Element Properties for region : pshear.108
+PSHEAR   108     101    1.5
+$ Pset: "pshear.108" will be imported as: "pshear.108"
+CSHEAR   240     108     104     92      6       18
+CSHEAR   241     108     105     104     18      19
+CSHEAR   242     108     116     109     23      30
+CSHEAR   243     108     117     116     30      31
+CSHEAR   244     108     127     121     35      41
+CSHEAR   245     108     128     127     41      42
+CSHEAR   246     108     140     132     46      54
+CSHEAR   247     108     141     140     54      55
+CSHEAR   248     108     149     142     56      63
+CSHEAR   249     108     150     149     63      64
+CSHEAR   250     108     157     154     68      71
+CSHEAR   251     108     158     157     71      72
+CSHEAR   252     108     166     162     76      80
+CSHEAR   253     108     167     166     80      81
+CSHEAR   254     108     107     108     22      21
+CSHEAR   255     108     119     120     34      33
+CSHEAR   256     108     147     148     62      61
+CSHEAR   257     108     152     153     67      66
+$ Elements and Element Properties for region : pshell1
+PSHELL   62      101    6.1      101             101
+$ Pset: "pshell1" will be imported as: "pshell.62"
+CQUAD4   4       62      24      9       10      25      0.      0.
+CQUAD4   5       62      35      24      25      36      0.      0.
+CQUAD4   6       62      25      10      11      26      0.      0.
+CQUAD4   7       62      26      11      12      27      0.      0.
+CTRIA3   14      62      36      46      35      0.      0.
+$ Elements and Element Properties for region : conm2
+CONM2    1255    50      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+CONM2    1256    59      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+CONM2    1257    70      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+CONM2    1258    77      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+CONM2    1259    84      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+CONM2    1260    78      0      10.      0.      0.      0.
+         0.      0.      0.      0.      0.      0.
+$ Referenced Material Records
+$ Material Record : mat1.101
+$ Description of Material :
+MAT1     101    70000.  26315.8 .33     2.8-6
+$ Material Record : mat1.102
+$ Description of Material :
+MAT1     102    110000. 41666.7 .32     4.45-6
+$ Material Record : mat8.201
+$ Description of Material :
+MAT8     201    135000. 8800.   .3      4470.                   1.6-6
+$ Multipoint Constraints of the Entire Model
+MPCADD   270002  10001   20001   30001   40001   50001   60001   70001
+         80001   90001   100001  110001  120001  130001  140001  150001
+         160001  170001  180001  190001  200001  210001  220001  230001
+         240001  250001  260001  270001
+MPC      10001   15      2      -1.      14      2      1.
+MPC      20001   20      1      -1.      29      1      1.
+MPC      30001   20      2      -1.      29      2      1.
+MPC      40001   20      3      -1.      29      3      1.
+MPC      50001   43      1      -1.      50      1      1.
+MPC      60001   43      2      -1.      50      2      1.
+MPC      70001   51      1      -1.      50      1      1.
+MPC      80001   51      2      -1.      50      2      1.
+MPC      90001   60      1      -1.      59      1      1.
+MPC      100001  60      2      -1.      59      2      1.
+MPC      110001  60      3      -1.      59      3      1.
+MPC      120001  73      1      -1.      77      1      1.
+MPC      130001  73      2      -1.      77      2      1.
+MPC      140001  101     1      -1.      100     1      1.
+MPC      150001  101     2      -1.      100     2      1.
+MPC      160001  106     1      -1.      115     1      1.
+MPC      170001  106     2      -1.      115     2      1.
+MPC      180001  106     3      -1.      115     3      1.
+MPC      190001  129     1      -1.      136     1      1.
+MPC      200001  129     2      -1.      136     2      1.
+MPC      210001  137     1      -1.      136     1      1.
+MPC      220001  137     2      -1.      136     2      1.
+MPC      230001  146     1      -1.      145     1      1.
+MPC      240001  146     2      -1.      145     2      1.
+MPC      250001  146     3      -1.      145     3      1.
+MPC      260001  159     1      -1.      163     1      1.
+MPC      270001  159     2      -1.      163     2      1.
+$ Nodes of the Entire Model
+GRID     1              550.    -86.22   0.
+GRID     2              1188.39 -101.506 0.
+GRID     3              1625.89 -81.8092 0.
+GRID     4              2050.   -45.7676 0.
+GRID     5              349.864 -56.5807120.
+GRID     6              550.    -75.7841120.
+GRID     7              125.    -15.8732120.
+GRID     8              762.5   -88.755 120.
+GRID     9              975.    -95.7988120.
+GRID     10             1188.39 -97.2739120.
+GRID     11             1407.14 -92.0617120.
+GRID     12             1625.89 -80.3691120.
+GRID     13             1844.64 -63.9431120.
+GRID     14             2050.   -45.2122120.
+GRID     15             2070.   -43.2601120.
+GRID     16             2241.91 -25.8737120.
+GRID     17             2480.   -5.9175 120.
+GRID     18             447.7   -54.7902225.439
+GRID     19             337.174 -14.6277339.355
+GRID     20             2070.   -42.1619355.
+GRID     21             2241.91 -24.9367355.
+GRID     22             2471.13 -5.8986 355.
+GRID     23             762.5   -70.0673358.
+GRID     24             975.    -81.8275358.
+GRID     25             1188.39 -87.2422358.
+GRID     26             1407.14 -85.9988358.
+GRID     27             1625.89 -77.0274358.
+GRID     28             1844.64 -62.0834358.
+GRID     29             2050.   -44.0627358.
+GRID     30             664.462 -50.7738459.045
+GRID     31             558.541 -13.3287568.215
+GRID     32             2070.   -40.9889590.
+GRID     33             2241.91 -23.9943590.
+GRID     34             2462.27 -5.87965590.
+GRID     35             975.    -64.2086596.
+GRID     36             1188.39 -74.5459596.
+GRID     37             1407.14 -77.7914596.
+GRID     38             1625.89 -72.7362596.
+GRID     39             1844.64 -59.8626596.
+GRID     40             2050.   -42.8203596.
+GRID     41             881.225 -46.6725692.652
+GRID     42             779.909 -12.0295797.075
+GRID     43             2070.   -39.6923825.
+GRID     44             2241.91 -23.0412825.
+GRID     45             2453.4  -5.86059825.
+GRID     46             1188.39 -58.127 835.
+GRID     47             1407.14 -66.781 835.
+GRID     48             1625.89 -66.7798835.
+GRID     49             1844.64 -57.0638835.
+GRID     50             2050.   -41.4156835.
+GRID     51             2070.   -39.5738845.
+GRID     52             2241.55 -22.9959845.
+GRID     53             2452.6  -5.86207845.
+GRID     54             1098.9  -42.4397927.24
+GRID     55             1002.21 -10.72351026.9
+GRID     56             1407.14 -51.59041080.
+GRID     57             1625.89 -57.76691080.
+GRID     58             1844.64 -53.16861080.
+GRID     59             2050.   -39.68641080.
+GRID     60             2070.   -38.03261080.
+GRID     61             2241.55 -22.019 1080.
+GRID     62             2443.73 -5.842881080.
+GRID     63             1322.04 -37.939 1167.72
+GRID     64             1230.09 -9.3797 1262.49
+GRID     65             2070.   -36.07341315.
+GRID     66             2241.55 -20.99571315.
+GRID     67             2434.87 -5.823411315.
+GRID     68             1625.89 -44.58371325.
+GRID     69             1844.64 -47.14281325.
+GRID     70             2050.   -37.42641325.
+GRID     71             1545.17 -33.20791408.2
+GRID     72             1457.96 -8.020631498.08
+GRID     73             2070.   -33.27941550.
+GRID     74             2241.55 -19.87411550.
+GRID     75             2426.   -5.803381550.
+GRID     76             1844.64 -36.80591570.
+GRID     77             2050.   -34.04961570.
+GRID     78             2218.59 -21.88511570.
+GRID     79             2426.   -5.750411570.
+GRID     80             1768.31 -28.09911648.67
+GRID     81             1685.84 -6.6155 1733.67
+GRID     82             1750.   -6.204711800.
+GRID     83             1908.73 -24.55061800.
+GRID     84             2050.   -28.05361800.
+GRID     85             2218.59 -20.25041800.
+GRID     86             2418.   -5.684091800.
+GRID     87             550.    43.7284  0.
+GRID     88             1188.39 46.2631  0.
+GRID     89             1625.89 30.1921  0.
+GRID     90             2050.   8.19791  0.
+GRID     91             349.864 31.3251 120.
+GRID     92             550.    39.1836 120.
+GRID     93             125.    11.84   120.
+GRID     94             762.5   44.0245 120.
+GRID     95             975.    45.9968 120.
+GRID     96             1188.39 44.9629 120.
+GRID     97             1407.14 39.7055 120.
+GRID     98             1625.89 30.5425 120.
+GRID     99             1844.64 19.406  120.
+GRID     100            2050.   8.65598 120.
+GRID     101            2070.   7.65237 120.
+GRID     102            2241.91 .280459 120.
+GRID     103            2480.   4.0825  120.
+GRID     104            447.7   30.2406 225.439
+GRID     105            337.174 10.8804 339.355
+GRID     106            2070.   8.55826 355.
+GRID     107            2241.91 .841268 355.
+GRID     108            2471.13 4.1014  355.
+GRID     109            762.5   35.9936 358.
+GRID     110            975.    40.2513 358.
+GRID     111            1188.39 41.3776 358.
+GRID     112            1407.14 38.6584 358.
+GRID     113            1625.89 31.0283 358.
+GRID     114            1844.64 20.4088 358.
+GRID     115            2050.   9.59994 358.
+GRID     116            664.462 27.8102 459.045
+GRID     117            558.541 9.87788 568.215
+GRID     118            2070.   9.50638 590.
+GRID     119            2241.91 1.42263 590.
+GRID     120            2462.27 4.12035 590.
+GRID     121            975.    32.7311 596.
+GRID     122            1188.39 36.298  596.
+GRID     123            1407.14 36.205  596.
+GRID     124            1625.89 31.0501 596.
+GRID     125            1844.64 21.329  596.
+GRID     126            2050.   10.5754 596.
+GRID     127            881.225 25.3333 692.652
+GRID     128            779.909 8.87372 797.075
+GRID     129            2070.   10.4841 825.
+GRID     130            2241.91 2.0387  825.
+GRID     131            2453.4  4.1394  825.
+GRID     132            1188.39 29.3549 835.
+GRID     133            1407.14 32.064  835.
+GRID     134            1625.89 30.0812 835.
+GRID     135            1844.64 22.0528 835.
+GRID     136            2050.   11.5834 835.
+GRID     137            2070.   10.5687 845.
+GRID     138            2241.55 2.10829 845.
+GRID     139            2452.6  4.13792 845.
+GRID     140            1098.9  22.7863 927.24
+GRID     141            1002.21 7.86256 1026.9
+GRID     142            1407.14 25.7494 1080.
+GRID     143            1625.89 27.2021 1080.
+GRID     144            1844.64 22.338  1080.
+GRID     145            2050.   12.6308 1080.
+GRID     146            2070.   11.5737 1080.
+GRID     147            2241.55 2.79547 1080.
+GRID     148            2443.73 4.15712 1080.
+GRID     149            1322.04 20.0978 1167.72
+GRID     150            1230.09 6.82052 1262.49
+GRID     151            2070.   12.5379 1315.
+GRID     152            2241.55 3.59521 1315.
+GRID     153            2434.87 4.17659 1315.
+GRID     154            1625.89 21.9243 1325.
+GRID     155            1844.64 21.3893 1325.
+GRID     156            2050.   13.5819 1325.
+GRID     157            1545.17 17.3118 1408.2
+GRID     158            1457.96 5.76669 1498.08
+GRID     159            2070.   13.2282 1550.
+GRID     160            2241.55 4.51332 1550.
+GRID     161            2426.   4.19662 1550.
+GRID     162            1844.64 17.7186 1570.
+GRID     163            2050.   14.1036 1570.
+GRID     164            2218.59 5.79842 1570.
+GRID     165            2426.   4.24959 1570.
+GRID     166            1768.31 14.3544 1648.67
+GRID     167            1685.84 4.68283 1733.67
+GRID     168            1750.   4.36675 1800.
+GRID     169            1908.73 12.3268 1800.
+GRID     170            2050.   12.9852 1800.
+GRID     171            2218.59 6.77301 1800.
+GRID     172            2418.   4.31591 1800.
+$ Loads for Load Case : CASE.SC1.SC1
+SPCADD   2       1
+LOAD     203    1.      1.       201
+$ Displacement Constraints of Load Set : spc1.1
+SPC1     1       123456  1
+SPC1     1       123456  2
+SPC1     1       123456  3
+SPC1     1       123456  4
+SPC1     1       1       10
+SPC1     1       123456  87
+SPC1     1       123456  88
+SPC1     1       123456  89
+SPC1     1       123456  90
+SPC1     1       1       96
+$ Loads for Load Case : CASE.SC2.SC2
+LOAD     205    1.      1.       201    1.       206
+$ Nodal Forces of Load Set : force.201
+FORCE    201     5       0      2978.7   0.     -1.      0.
+FORCE    201     6       0      2322.58  0.     -1.      0.
+FORCE    201     7       0      2042.26  0.     -1.      0.
+FORCE    201     8       0      1738.55  0.     -1.      0.
+FORCE    201     9       0      3036.04  0.     -1.      0.
+FORCE    201     10      0      2103.96  0.     -1.      0.
+FORCE    201     11      0      1780.17  0.     -1.      0.
+FORCE    201     12      0      1427.12  0.     -1.      0.
+FORCE    201     13      0      1034.15  0.     -1.      0.
+FORCE    201     14      0      716.032  0.     -1.      0.
+FORCE    201     16      0      366.969  0.     -1.      0.
+FORCE    201     17      0      60.7657  0.     -1.      0.
+FORCE    201     18      0      4480.34  0.     -1.      0.
+FORCE    201     19      0      3101.5   0.     -1.      0.
+FORCE    201     20      0      330.629  0.     -1.      0.
+FORCE    201     21      0      439.493  0.     -1.      0.
+FORCE    201     22      0      110.093  0.     -1.      0.
+FORCE    201     23      0      4071.99  0.     -1.      0.
+FORCE    201     24      0      2699.53  0.     -1.      0.
+FORCE    201     25      0      3310.43  0.     -1.      0.
+FORCE    201     26      0      3036.7   0.     -1.      0.
+FORCE    201     27      0      2220.29  0.     -1.      0.
+FORCE    201     28      0      1602.36  0.     -1.      0.
+FORCE    201     29      0      763.151  0.     -1.      0.
+FORCE    201     30      0      5660.23  0.     -1.      0.
+FORCE    201     31      0      3059.15  0.     -1.      0.
+FORCE    201     32      0      841.331  0.     -1.      0.
+FORCE    201     33      0      481.998  0.     -1.      0.
+FORCE    201     34      0      117.539  0.     -1.      0.
+FORCE    201     35      0      4109.42  0.     -1.      0.
+FORCE    201     36      0      4065.3   0.     -1.      0.
+FORCE    201     37      0      2688.5   0.     -1.      0.
+FORCE    201     38      0      2276.56  0.     -1.      0.
+FORCE    201     39      0      2068.97  0.     -1.      0.
+FORCE    201     40      0      356.069  0.     -1.      0.
+FORCE    201     41      0      4620.63  0.     -1.      0.
+FORCE    201     42      0      3768.77  0.     -1.      0.
+FORCE    201     43      0      369.911  0.     -1.      0.
+FORCE    201     44      0      403.384  0.     -1.      0.
+FORCE    201     45      0      103.618  0.     -1.      0.
+FORCE    201     46      0      2463.2   0.     -1.      0.
+FORCE    201     47      0      3878.53  0.     -1.      0.
+FORCE    201     48      0      3486.49  0.     -1.      0.
+FORCE    201     49      0      1809.58  0.     -1.      0.
+FORCE    201     50      0      668.946  0.     -1.      0.
+FORCE    201     51      0      286.663  0.     -1.      0.
+FORCE    201     52      0      384.25   0.     -1.      0.
+FORCE    201     53      0      63.3401  0.     -1.      0.
+FORCE    201     54      0      5425.96  0.     -1.      0.
+FORCE    201     55      0      3512.52  0.     -1.      0.
+FORCE    201     56      0      3869.71  0.     -1.      0.
+FORCE    201     57      0      3724.84  0.     -1.      0.
+FORCE    201     58      0      2518.91  0.     -1.      0.
+FORCE    201     59      0      1466.33  0.     -1.      0.
+FORCE    201     60      0      520.509  0.     -1.      0.
+FORCE    201     61      0      587.487  0.     -1.      0.
+FORCE    201     62      0      182.142  0.     -1.      0.
+FORCE    201     63      0      4366.13  0.     -1.      0.
+FORCE    201     64      0      3402.54  0.     -1.      0.
+FORCE    201     65      0      871.239  0.     -1.      0.
+FORCE    201     66      0      814.169  0.     -1.      0.
+FORCE    201     67      0      148.102  0.     -1.      0.
+FORCE    201     68      0      2437.31  0.     -1.      0.
+FORCE    201     69      0      3596.48  0.     -1.      0.
+FORCE    201     70      0      1066.5   0.     -1.      0.
+FORCE    201     71      0      4547.96  0.     -1.      0.
+FORCE    201     72      0      3104.5   0.     -1.      0.
+FORCE    201     73      0      650.98   0.     -1.      0.
+FORCE    201     74      0      433.083  0.     -1.      0.
+FORCE    201     75      0      115.508  0.     -1.      0.
+FORCE    201     76      0      2400.24  0.     -1.      0.
+FORCE    201     77      0      1344.8   0.     -1.      0.
+FORCE    201     78      0      831.738  0.     -1.      0.
+FORCE    201     79      0      92.9775  0.     -1.      0.
+FORCE    201     80      0      2643.1   0.     -1.      0.
+FORCE    201     81      0      1713.43  0.     -1.      0.
+FORCE    201     82      0      236.318  0.     -1.      0.
+FORCE    201     83      0      839.977  0.     -1.      0.
+FORCE    201     84      0      534.587  0.     -1.      0.
+FORCE    201     85      0      431.98   0.     -1.      0.
+FORCE    201     86      0      92.2396  0.     -1.      0.
+FORCE    201     91      0      2978.7   0.     -1.      0.
+FORCE    201     92      0      2322.58  0.     -1.      0.
+FORCE    201     93      0      2042.26  0.     -1.      0.
+FORCE    201     94      0      1738.55  0.     -1.      0.
+FORCE    201     95      0      3036.04  0.     -1.      0.
+FORCE    201     96      0      2103.96  0.     -1.      0.
+FORCE    201     97      0      1780.17  0.     -1.      0.
+FORCE    201     98      0      1427.12  0.     -1.      0.
+FORCE    201     99      0      1034.15  0.     -1.      0.
+FORCE    201     100     0      716.032  0.     -1.      0.
+FORCE    201     102     0      366.969  0.     -1.      0.
+FORCE    201     103     0      60.7657  0.     -1.      0.
+FORCE    201     104     0      4480.34  0.     -1.      0.
+FORCE    201     105     0      3101.5   0.     -1.      0.
+FORCE    201     106     0      330.629  0.     -1.      0.
+FORCE    201     107     0      439.493  0.     -1.      0.
+FORCE    201     108     0      110.093  0.     -1.      0.
+FORCE    201     109     0      4071.99  0.     -1.      0.
+FORCE    201     110     0      2699.53  0.     -1.      0.
+FORCE    201     111     0      3310.43  0.     -1.      0.
+FORCE    201     112     0      3036.7   0.     -1.      0.
+FORCE    201     113     0      2220.29  0.     -1.      0.
+FORCE    201     114     0      1602.36  0.     -1.      0.
+FORCE    201     115     0      763.151  0.     -1.      0.
+FORCE    201     116     0      5660.23  0.     -1.      0.
+FORCE    201     117     0      3059.15  0.     -1.      0.
+FORCE    201     118     0      841.331  0.     -1.      0.
+FORCE    201     119     0      481.998  0.     -1.      0.
+FORCE    201     120     0      117.539  0.     -1.      0.
+FORCE    201     121     0      4109.42  0.     -1.      0.
+FORCE    201     122     0      4065.3   0.     -1.      0.
+FORCE    201     123     0      2688.5   0.     -1.      0.
+FORCE    201     124     0      2276.56  0.     -1.      0.
+FORCE    201     125     0      2068.97  0.     -1.      0.
+FORCE    201     126     0      356.069  0.     -1.      0.
+FORCE    201     127     0      4620.63  0.     -1.      0.
+FORCE    201     128     0      3768.77  0.     -1.      0.
+FORCE    201     129     0      369.911  0.     -1.      0.
+FORCE    201     130     0      403.384  0.     -1.      0.
+FORCE    201     131     0      103.618  0.     -1.      0.
+FORCE    201     132     0      2463.2   0.     -1.      0.
+FORCE    201     133     0      3878.53  0.     -1.      0.
+FORCE    201     134     0      3486.49  0.     -1.      0.
+FORCE    201     135     0      1809.58  0.     -1.      0.
+FORCE    201     136     0      668.946  0.     -1.      0.
+FORCE    201     137     0      286.663  0.     -1.      0.
+FORCE    201     138     0      384.25   0.     -1.      0.
+FORCE    201     139     0      63.3401  0.     -1.      0.
+FORCE    201     140     0      5425.96  0.     -1.      0.
+FORCE    201     141     0      3512.52  0.     -1.      0.
+FORCE    201     142     0      3869.71  0.     -1.      0.
+FORCE    201     143     0      3724.84  0.     -1.      0.
+FORCE    201     144     0      2518.91  0.     -1.      0.
+FORCE    201     145     0      1466.33  0.     -1.      0.
+FORCE    201     146     0      520.509  0.     -1.      0.
+FORCE    201     147     0      587.487  0.     -1.      0.
+FORCE    201     148     0      182.142  0.     -1.      0.
+FORCE    201     149     0      4366.13  0.     -1.      0.
+FORCE    201     150     0      3402.54  0.     -1.      0.
+FORCE    201     151     0      871.239  0.     -1.      0.
+FORCE    201     152     0      814.169  0.     -1.      0.
+FORCE    201     153     0      148.102  0.     -1.      0.
+FORCE    201     154     0      2437.31  0.     -1.      0.
+FORCE    201     155     0      3596.48  0.     -1.      0.
+FORCE    201     156     0      1066.5   0.     -1.      0.
+FORCE    201     157     0      4547.96  0.     -1.      0.
+FORCE    201     158     0      3104.5   0.     -1.      0.
+FORCE    201     159     0      650.98   0.     -1.      0.
+FORCE    201     160     0      433.083  0.     -1.      0.
+FORCE    201     161     0      115.508  0.     -1.      0.
+FORCE    201     162     0      2400.24  0.     -1.      0.
+FORCE    201     163     0      1344.8   0.     -1.      0.
+FORCE    201     164     0      831.738  0.     -1.      0.
+FORCE    201     165     0      92.9775  0.     -1.      0.
+FORCE    201     166     0      2643.1   0.     -1.      0.
+FORCE    201     167     0      1713.43  0.     -1.      0.
+FORCE    201     168     0      236.318  0.     -1.      0.
+FORCE    201     169     0      839.977  0.     -1.      0.
+FORCE    201     170     0      534.587  0.     -1.      0.
+FORCE    201     171     0      431.98   0.     -1.      0.
+FORCE    201     172     0      92.2396  0.     -1.      0.
+$ Gravity Loading of Load Set : inertial
+GRAV     206     0      10.      0.     1.       0.
+$ Referenced Coordinate Frames
+ENDDATA 0962aa48
