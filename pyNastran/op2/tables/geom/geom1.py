@@ -155,7 +155,7 @@ class GEOM1:
             68, 682001, 682019, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
         ncards = 0
@@ -202,7 +202,7 @@ class GEOM1:
           45, THRU, 50
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -268,7 +268,7 @@ class GEOM1:
         floats  = (nan, 2.5040420265274087e-35, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'2i 3f')
         ntotal = 20 * op2.factor
         ndatai = len(data) - n
@@ -302,7 +302,7 @@ class GEOM1:
         Words 9 through 10 repeat until (-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #n0 = n
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -350,7 +350,7 @@ class GEOM1:
         #assert len(d)
         #self.op2.show_data(data[n:], types='ifsqd', endian=None, force=False)
         #raise RuntimeError('is this a cord2s?')
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'qqqq 9d')
         ntotal = 52 * op2.factor
         ndatai = len(data) - n
@@ -383,7 +383,7 @@ class GEOM1:
                    0.0, 0.0, 0.0,
                    0.0, 0.0, 1.875)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = self._read_cordx(data, n, cord_type=2, cord_n=2)
         return n
 
@@ -436,7 +436,7 @@ class GEOM1:
                    6, 1, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 88 * op2.factor  # 22*4
         #structi = Struct(mapfmt(op2._endian + b'iiq 9d', op2.size))
         structi = Struct(mapfmt(op2._endian + b'iiii 9d', op2.size))
@@ -472,7 +472,7 @@ class GEOM1:
         """
         (1701,17,6) - the marker for Record 1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * op2.factor  # 6*4
         struct_6i = Struct(mapfmt(op2._endian + b'6i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -495,7 +495,7 @@ class GEOM1:
         """
         (1801,18,5) - the marker for Record 2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * op2.factor  # 6*4
         struct_6i = Struct(mapfmt(op2._endian + b'6i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -518,7 +518,7 @@ class GEOM1:
         """
         (1901,19,7) - the marker for Record 3
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * op2.factor  # 6*4
         struct_6i = Struct(mapfmt(op2._endian + b'6i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -560,7 +560,7 @@ class GEOM1:
 
     def _read_cord2x(self, data: bytes, n: int, card_name: str, card_obj,
                      coord_flag: tuple[int, int]) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.table_name == b'GEOM1N' and op2.factor == 1:
             try:
                 n2, coords = self._read_cord2x_22(data, n, card_name, card_obj, coord_flag)
@@ -585,7 +585,7 @@ class GEOM1:
         (2201,22,10) - CORD2S
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 88 * op2.factor # 22*4
         s = Struct(op2._endian + b'4i9d')
         ndatai = len(data) - n
@@ -609,7 +609,7 @@ class GEOM1:
                         coord_name: str,
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
                         flags: tuple[int, int]) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * op2.factor # 13*4
         s = Struct(mapfmt(op2._endian + b'4i9f', op2.size))
         ndatai = len(data) - n
@@ -633,7 +633,7 @@ class GEOM1:
         (14301,143,651) - the marker for Record 7
         .. todo:: isn't this a CORD3G, not a CORD3R ???
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * op2.factor
         struct_4i = Struct(op2._endian + b'4i')
         nentries = (len(data) - n) // ntotal
@@ -654,7 +654,7 @@ class GEOM1:
         (4501, 45, 1120001) - the marker for Record 17
         this is a GRID card with double vales for xyz
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * op2.factor
         structi = Struct(mapfmt(op2._endian + b'2i 3d 3i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -689,7 +689,7 @@ class GEOM1:
         6 THETAID(3)    I Identification number for DEQATN or TABLE
         9 CIDREF        I Coordinate system identification number
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert op2.size == 4, op2.size
         structi = Struct(op2._endian + b'i 8s 8s 4i')
         ntotal = 36 * op2.factor
@@ -720,7 +720,7 @@ class GEOM1:
 
     def _read_grid(self, data: bytes, n: int) -> int:
         """(4501,45,1) - the marker for Record 17"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.table_name == b'GEOM1N' and op2.factor == 1:
             try:
                 n, grids = self._read_grid_11(data, n)
@@ -740,7 +740,7 @@ class GEOM1:
 
     def _read_grid_8(self, data: bytes, n: int) -> tuple[int, dict[int, GRID]]:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(mapfmt(op2._endian + b'ii 3f 3i', op2.size))
         ntotal = 32 * op2.factor
         ndatai = len(data) - n
@@ -779,7 +779,7 @@ class GEOM1:
 
     def _read_grid_11(self, data: bytes, n: int) -> tuple[int, dict[int, GRID]]:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44
         structi = Struct(op2._endian + b'ii 3d 3i')
 
@@ -825,7 +825,7 @@ class GEOM1:
 
     def _read_seqgp(self, data: bytes, n: int) -> int:
         """(5301,53,4) - the marker for Record 27"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 8 * op2.factor
         struct_2i = Struct(op2._endian + b'2i')
         nentries = (len(data) - n) // ntotal
@@ -845,7 +845,7 @@ class GEOM1:
         """
         POINT(6001,60,377)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'2i3f')
         ntotal = 20 * op2.factor
         nentries = (len(data) - n) // ntotal
@@ -882,7 +882,7 @@ class GEOM1:
 
     def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')
         ntotal = 16 * op2.factor  # 4*4
         nentries = (len(data) - n) // ntotal
@@ -918,7 +918,7 @@ class GEOM1:
          100004, 1,
         -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #Partitioned External Superelement Connection
         #Defines a boundary connection for an external superelement.
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
@@ -956,7 +956,7 @@ class GEOM1:
         6 GEOMID1    I Identification number of a POINT or GMCURV entry
         7 GEOMID2    I Identification number of a POINT or GMCURV entry
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
@@ -1003,7 +1003,7 @@ class GEOM1:
         5 CIDBC        I Coordinate system identification number for the constraints
         6 DATA     CHAR4 Geometry evaluator specific data
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         size = op2.size
         if size == 4:
             struct_i = op2.struct_i
@@ -1074,7 +1074,7 @@ class GEOM1:
         6 CIDBC     I Coordinate system identification number for the constraints
         7 SURFID(2) I Alternate method used to specify the geometry
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * op2.factor
         structi = Struct(mapfmt(op2._endian + b'8i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -1093,12 +1093,12 @@ class GEOM1:
         return n
 
     def _read_gmsurf(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMSURF in GEOM1')
         return len(data)
 
     def _read_gmcord(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMCORD in GEOM1')
         return len(data)
 
@@ -1116,7 +1116,7 @@ class GEOM1:
         7 MEDIA   I Media format of boundary data of external SE
         8 UNIT    I FORTRAN unit number of OP2 and OP4 input of external SE
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * op2.factor # 4*8
         nentries = (len(data) - n) // ntotal
         structi = Struct(mapfmt(op2._endian + b'4if3i', op2.size))
@@ -1177,7 +1177,7 @@ class GEOM1:
         6 GB2  I Grid point 2 identification number in the main Bulk Data
         7 GB3  I Grid point 3 identification number in the main Bulk Data
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * op2.factor
         structi = Struct(op2._endian + b'7i')
         nentries = (len(data) - n) // ntotal # 4*7
@@ -1212,7 +1212,7 @@ class GEOM1:
         6 N2  RS Normal component in direction 2 of CID
         7 N3  RS Normal component in direction 3 of CID
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct2i = Struct(op2._endian + b'2i') # 8
         struct5i = Struct(op2._endian + b'5i') # 20
         #struct2i_3f = Struct(op2._endian + b'2i3f') # 20
@@ -1243,7 +1243,7 @@ class GEOM1:
         2 LABEL(14) CHAR4 Label associated with superelement SEID
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * op2.factor
         structi = Struct(op2._endian + b'i14s') # 18
         structi = Struct(op2._endian + b'i56s') # 60

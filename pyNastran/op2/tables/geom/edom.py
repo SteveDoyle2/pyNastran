@@ -169,7 +169,7 @@ class EDOM(GeomCommon):
         }
 
     def _read_dconadd(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         datai = np.frombuffer(data[n:], op2.idtype8).copy()
         _read_spcadd_mpcadd(op2, 'DCONADD', datai)
         return len(data)
@@ -256,7 +256,7 @@ class EDOM(GeomCommon):
         2, 0, 0, 6,
           0.40, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx('; DMNCON found')
         ntotal0 = 16 * self.factor # 4 * 4
         ntotal6 = 24 * self.factor # 6 * 4
@@ -432,7 +432,7 @@ class EDOM(GeomCommon):
         11 COEF  RS Coefficient in the expression P=COEF*DV (currently inactive)
         12 UNDEF(6) None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx('; DVTREL1 found')
         ntotal = 68 * self.factor # 17 * 4
         if self.size == 4:
@@ -460,7 +460,7 @@ class EDOM(GeomCommon):
         return n
 
     def _read_dconstr(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'DCONSTR'
         card_obj = DCONSTR
         methods = {
@@ -497,7 +497,7 @@ class EDOM(GeomCommon):
         ints    = (70002, 4, -1.0e+20, 1.0e+35, 0,   1.0e+20, 0)
         floats  = (70002, 3, -1.0e+20, 1.0e+35, 0.0, 1.0e+20, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 28 * self.factor # 7 * 4
         struct1 = Struct(mapfmt(op2._endian + b'ii 4f i', self.size))
@@ -553,7 +553,7 @@ class EDOM(GeomCommon):
         data  = (50, 2, 0.0016, 0.0018, 0.0, 1.0e+20, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 8 * 4
         struct1 = Struct(mapfmt(op2._endian + b'ii 4f ii', self.size))
         ndatai = len(data) - n
@@ -592,7 +592,7 @@ class EDOM(GeomCommon):
 
         data = (5, -0.70, 10)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 3*4
         struct1 = Struct(mapfmt(op2._endian + b'ifi', self.size))
         ndatai = len(data) - n
@@ -718,7 +718,7 @@ class EDOM(GeomCommon):
         46 MXCRTRSP I Flag to handle CSV output
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #if self.size == 4:
         ntotal = 184 * self.factor # 46 * 4
         struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i', self.size))
@@ -819,7 +819,7 @@ class EDOM(GeomCommon):
         Words 1 thru 3 repeat until -1 occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if self.size == 4:
             struct1 = Struct(op2._endian + b'8s f')
         else:
@@ -882,7 +882,7 @@ class EDOM(GeomCommon):
         7 N3    RS Component of the vector measured in the coordinate system defined by CID
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor # 7*4
         struct1 = Struct(mapfmt(op2._endian + b'3i 4f', self.size))
 
@@ -920,7 +920,7 @@ class EDOM(GeomCommon):
         12 COEFi RS Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
@@ -987,7 +987,7 @@ class EDOM(GeomCommon):
         12 COEFi    RS    Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1033,7 +1033,7 @@ class EDOM(GeomCommon):
         12 COEFi       RS Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1095,7 +1095,7 @@ class EDOM(GeomCommon):
         data = (2, PROD, 101, 4, -1.0e+35, 1.0e+20, 2, '', 1000, 2, -1000,
                                                            2000, L1, -2000)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #return  self._read_dvxrel2(data, n, DVPREL2)
 
         n0 = n
@@ -1168,7 +1168,7 @@ class EDOM(GeomCommon):
         End flag when -1 occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         cls = DVMREL2
         #return  self._read_dvxrel2(data, n, DVMREL2)
 
@@ -1479,7 +1479,7 @@ class EDOM(GeomCommon):
          32, 538981444, 538976288, 60, 538976288, 538976288, 0, 3, -1, 4, -1,
          33, 1195984215, 538989640, 1, 538976288, 538976288, 0, 33, -9999, -1]
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         is_nx = False
         is_msc = False
         if op2.is_msc:
@@ -2002,7 +2002,7 @@ class EDOM(GeomCommon):
         999, 5402, 54, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
         999, 902, 9, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data[12:50], types='ifs')
         #n0 = n
         size = self.size
@@ -2077,7 +2077,7 @@ class EDOM(GeomCommon):
           11013, 'SPARPNL ', 0.01, 11013, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2106,7 +2106,7 @@ class EDOM(GeomCommon):
 
         DSCONS  110131  SPRCAPS STRESS  11013   2       25000.  MAX
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndatai = len(data) - n
         # !12
         ntotal = 32
@@ -2170,7 +2170,7 @@ class EDOM(GeomCommon):
         ints    = (1, 2, 0,   1.0, 1, 1.0, -1)
         floats  = (1, 2, 0.0, 1.0, 1, 1.0, nan)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -2207,7 +2207,7 @@ class EDOM(GeomCommon):
         8 DDVAL    I     ID of a DDVAL entry that provides a set of allowable
                          discrete values
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if self.size == 4:
             ntotal = 32  # 8*4
             structi = Struct(op2._endian + b'i8s ffff i')

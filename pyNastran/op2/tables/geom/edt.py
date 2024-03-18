@@ -146,7 +146,7 @@ class EDT:
         10 DMIK(2) CHAR4
         12 PERQ(2) CHAR4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 4*13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -187,7 +187,7 @@ class EDT:
         9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
                          interference element downwashes
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor # 4*10
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -242,7 +242,7 @@ class EDT:
         3 M       RS   Mach number
         Word 3 repeats until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -262,7 +262,7 @@ class EDT:
                 2, 1.3, -1,
                 3, 14400.0, 15600.0, 16800.0, 18000.0, 19200.0, 20400.0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -283,7 +283,7 @@ class EDT:
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
                 0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #assert len(data) == 76, len(data)
         nvalues = (len(data) - n) // 4
         nrows = nvalues // 16
@@ -393,7 +393,7 @@ class EDT:
           -4, 14, -1, -1, 2, 6, 2413766, 742102857, 231216032, 23997572, 23192817, 23453545,
           -5, 1, 0,   10, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #print('reading group')
         #assert self.factor == 1, self.factor
         nentries = 0
@@ -573,7 +573,7 @@ class EDT:
         6 SYMXY     I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert len(data) == 36, len(data)
         struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
@@ -593,7 +593,7 @@ class EDT:
         data = (0, 100, 36.0, 360.0, 12960.0, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert len(data) == 40 * self.factor, len(data)
         struct = Struct(mapfmt(op2._endian + b'2i 3f 2i', self.size))
         out = struct.unpack(data[n:])
@@ -615,7 +615,7 @@ class EDT:
         3 D RS Deformation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4*3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -639,7 +639,7 @@ class EDT:
         data = (601, 'PLOAD   ', 'LBS.    ')
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 4*5
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -666,7 +666,7 @@ class EDT:
 
         data  = (5001, 'PLOAD   ', 1.0, 'INTERCPT', 0.0, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal1 = 4 * self.factor # 4*1
         ntotal_end = 8 * self.factor # 4*2
         ntotal2 = 12 * self.factor # 4*3
@@ -735,7 +735,7 @@ class EDT:
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         add_methods = op2._add_methods
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
@@ -783,7 +783,7 @@ class EDT:
 
         data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -827,7 +827,7 @@ class EDT:
         15 Z4   RS Z-coordinate of point 4 in coordinate system CP
         16 X43  RS Edge chord length in aerodynamic coordinate system
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -880,7 +880,7 @@ class EDT:
         15 Z4  RS Z-coordinate of point 4 in coordinate system CP
         16 X43 RS Edge chord length in aerodynamic coordinate system
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -923,7 +923,7 @@ class EDT:
         16 X43      RS
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -969,7 +969,7 @@ class EDT:
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\adb144_2.op2
         PAERO1      1000   74000   74510   84610
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1019,7 +1019,7 @@ class EDT:
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 4 * 15
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1103,7 +1103,7 @@ class EDT:
                    1, 11, 0.0, 4, 0.0, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data, types='ifs', endian=None, force=False)
         #asdf
         #ntotal = 60 * self.factor # 4 * 15
@@ -1192,7 +1192,7 @@ class EDT:
         Word 8 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1220,7 +1220,7 @@ class EDT:
 
         ('PANEL1', 1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -1242,7 +1242,7 @@ class EDT:
 
     def _read_acmodl(self, data: bytes, n: int) -> int:
         """Reads the ACMODL card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'ACMODL'
         card_obj = ACMODL
         methods = {
@@ -1298,7 +1298,7 @@ class EDT:
         ACMODL,IDENT,,,,1.0-4
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1388,7 +1388,7 @@ class EDT:
         |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1462,7 +1462,7 @@ class EDT:
         Word 2 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1486,7 +1486,7 @@ class EDT:
         Word 2 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -1523,7 +1523,7 @@ class EDT:
         data = (3602, 36, 269,
                 200, 101, -0.10, 1.10, -0.10, 1.0, 1.0, -0.10)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data, types='if', endian=None, force=False)
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
@@ -1561,7 +1561,7 @@ class EDT:
                 2, 1, 71, ..., 189, -1,
                 4, 1, 309, ..., ..., 378, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # this is setup for NX
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1603,7 +1603,7 @@ class EDT:
         Words 4 through 6 repeat until (-1,-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct1 = Struct(op2._endian + b'i8s')
         struct2 =Struct(op2._endian + b'8sf')
         struct_end = Struct(op2._endian + b'3i')
@@ -1649,7 +1649,7 @@ class EDT:
         Word 5 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         #floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1681,7 +1681,7 @@ class EDT:
         3 LABEL(2) CHAR4
         Words 3 through 4 repeat until (-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct1 = Struct(op2._endian + b'8s')
         struct2 = Struct(op2._endian + b'8s')
         struct_end = Struct(op2._endian + b'2i')
@@ -1725,7 +1725,7 @@ class EDT:
         12 MELEM I Number of elements for FPS on y-axis
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1775,7 +1775,7 @@ class EDT:
         11 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1817,7 +1817,7 @@ class EDT:
 
     def _read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'SPLINE4'
         card_obj = SPLINE4
         methods = {
@@ -1853,7 +1853,7 @@ class EDT:
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 44 # 4 * 11
@@ -1897,7 +1897,7 @@ class EDT:
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 52 # 4 * 13
@@ -1929,7 +1929,7 @@ class EDT:
 
     def _read_spline5(self, data: bytes, n: int) -> int:
         """reads the SPLINE5 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'SPLINE5'
         card_obj = SPLINE5
         methods = {
@@ -1966,7 +1966,7 @@ class EDT:
         17 RCORE        RS Radius of radial interpolation function     (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2027,7 +2027,7 @@ class EDT:
         17 RCORE        RS Radius of radial interpolation function     (not in NX?)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2066,7 +2066,7 @@ class EDT:
 
     def _read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MONPNT1'
         card_obj = MONPNT1
         methods = {
@@ -2097,7 +2097,7 @@ class EDT:
         23 Z           RS
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 92 # 4 * 23
         ndatai = len(data) - n
@@ -2139,7 +2139,7 @@ class EDT:
         24 CD           I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 96 # 4 * 23
         ndatai = len(data) - n
@@ -2177,7 +2177,7 @@ class EDT:
         23 EID      I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 4 * 23
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2219,7 +2219,7 @@ class EDT:
         25 CD        I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 100 * self.factor # 4 * 25
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2296,7 +2296,7 @@ class EDT:
         24 CD      I
         25 INDDOF  I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 100 * self.factor # 4 * 25
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2331,7 +2331,7 @@ class EDT:
           floats  = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0.0, b'SPBLNDX ', -107374184.0)
           MDLPRM, nsgrds4, 20, pexts4, 50., spblndx, 3.1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4 * 3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2394,7 +2394,7 @@ class EDT:
         2 LABEL(2) CHAR4
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4 * 8
         if self.size == 4:
             structi = Struct(op2._endian + b'i 8s')
@@ -2447,7 +2447,7 @@ class EDT:
         data  = (3, 'PKS     ', 1, 2, 3, 'L       ', 5.0,       0.01,  1, -1,
                  4, 'K       ', 1, 2, 4, 'L       ', 3,         0.001, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -2534,7 +2534,7 @@ class EDT:
         Words 5 through 7 repeat until (-1,-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal1 = 16 * self.factor # 4 * 4
         ntotal2 = 12 * self.factor # 4 * 3
         #ndatai = len(data) - n
@@ -2590,7 +2590,7 @@ class EDT:
         17 TQULIM     RS Upper deflection   Limit for the control surface as fct(q), >0, default=no limit
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 *  self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2664,7 +2664,7 @@ class EDT:
         5 LIST2    I     Identification of a SET1 that contains the grids ids
                          associated with this control surface
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 *  self.factor # 4 * 5
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2700,7 +2700,7 @@ class EDT:
         )
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)

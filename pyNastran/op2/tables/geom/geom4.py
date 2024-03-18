@@ -223,7 +223,7 @@ class GEOM4(GeomCommon):
         1 ID I Grid or scalar point identification number
         2  C I Component numbers
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data, dtype=op2.idtype8)[3:]
         assert len(ints) % 2 == 0, len(ints)
         grids = ints[::2]
@@ -262,7 +262,7 @@ class GEOM4(GeomCommon):
          3, 0, 2001, 2002, -1,
          3, 0, 3001, 3002, -1]
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndata = len(data)
         out = np.frombuffer(data[n:], op2.idtype8).copy()
 
@@ -280,7 +280,7 @@ class GEOM4(GeomCommon):
 
     def _add_superset_card(self, cls, card_name: str, add_method, out):
         """helper method for ``_read_superxset1``"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #print('out =', out)
         seid = out[0]
         components = out[1]
@@ -311,7 +311,7 @@ class GEOM4(GeomCommon):
         [  1   0   1 101 112
            2   0   1 113 124]
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndata = len(data)
         #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
@@ -407,7 +407,7 @@ class GEOM4(GeomCommon):
 
     def _read_mpc(self, data: bytes, n: int) -> int:
         """MPC(4901,49,17) - Record 16"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndata = len(data)
         nfields = (ndata - n) // self.size
         datan = data[n:]
@@ -449,7 +449,7 @@ class GEOM4(GeomCommon):
         """
         MPCADD(4891,60,83) - Record 17
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         datai = np.frombuffer(data[n:], op2.idtype8).copy()
         _read_spcadd_mpcadd(op2, 'MPCADD', datai)
         return len(data)
@@ -501,7 +501,7 @@ class GEOM4(GeomCommon):
         50502, 50002, 52126, 123456, 0, 0, 654321,
         50503, 50003, 52127, 123456, 0, 0, 654321,
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -527,7 +527,7 @@ class GEOM4(GeomCommon):
 
     def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
         """RBAR(6601,66,292) - Record 22 - MSC version"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor  # 8*4
         nelements = (len(data) - n) // ntotal
         if not (len(data) - n) % ntotal == 0:
@@ -553,7 +553,7 @@ class GEOM4(GeomCommon):
         datai  = (392, 757, 758, 123456, 0,   0,   123456, 0,   0)
         dataf  = (392, 757, 758, 123456, 0.0, 0.0, 123456, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         log = op2.log
         ntotal = 36 * self.factor  # 9*4
         nelements = (len(data) - n) // ntotal
@@ -595,7 +595,7 @@ class GEOM4(GeomCommon):
         6 ALPHA RS Thermal expansion coefficient
         7 UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # TODO: neither reader or writer considers alpha; no current examples
         idata = np.frombuffer(data[n:], op2.idtype8).copy()
         i = 0
@@ -639,7 +639,7 @@ class GEOM4(GeomCommon):
         """
         RBE2(6901,69,295) - Record 24
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         idata = np.frombuffer(data, op2.idtype8, offset=n).copy()
         fdata = np.frombuffer(data, op2.fdtype8, offset=n).copy()
         read_rbe2s_from_idata_fdata(op2, idata, fdata)
@@ -648,7 +648,7 @@ class GEOM4(GeomCommon):
     def _read_rbe3(self, data: bytes, n: int) -> int:
         """RBE3(7101,71,187) - Record 25"""
         #self.show_data(data[n+80:], 'ifs')
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         idata = np.frombuffer(data, op2.idtype8, offset=n).copy()
         fdata = np.frombuffer(data, op2.fdtype8, offset=n).copy()
         read_rbe3s_from_idata_fdata(op2, idata, fdata)
@@ -677,7 +677,7 @@ class GEOM4(GeomCommon):
             4 ID1 I First grid or scalar point identification number
             5 ID2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #[1310, 13, 247,
          #10, 456, 0, 10, -1,
          #20, 456, 0, 11, -1]
@@ -723,7 +723,7 @@ class GEOM4(GeomCommon):
 
     def _read_rrod(self, data: bytes, n: int) -> int:
         """common method for reading RROD"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rrod_nx, self._read_rrod_msc,
@@ -732,7 +732,7 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_nx(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_5i = Struct(mapfmt(op2._endian + b'5i', self.size))
         ntotal = 20 * self.factor
         nelements = (len(data) - n) // ntotal
@@ -754,7 +754,7 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_msc(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'5if', self.size))
         ntotal = 24 * self.factor
         nelements = (len(data) - n) // ntotal
@@ -793,7 +793,7 @@ class GEOM4(GeomCommon):
         2 ID I Grid or scalar point identification number
         3 C I Component numbers
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nints = len(ints)
         assert nints % 3 == 0, nints
@@ -803,7 +803,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_sebset(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nints = len(ints)
         assert nints % 3 == 0, nints
@@ -815,7 +815,7 @@ class GEOM4(GeomCommon):
     def _read_sebset1(self, data: bytes, n: int) -> int:
         #asdf
         #self.op2.log.info('geom skipping SEBSET1 in GEOM4')
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         i, cards = ints_to_secset1s('SEBSET1', ints)
         for (seid, comp, values) in cards:
@@ -846,7 +846,7 @@ class GEOM4(GeomCommon):
            5 ID2 I Second grid or scalar point identification number
         End THRUFLAG
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         i, cards = ints_to_secset1s('SECSET1', ints)
         for (seid, comp, values) in cards:
@@ -856,7 +856,7 @@ class GEOM4(GeomCommon):
 
     def _read_seqset(self, data: bytes, n: int) -> int:
         """SEQSET(1110,11,321) - Record 40"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nints = len(ints)
         assert nints % 3 == 0, nints
@@ -906,7 +906,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_seuset1(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         i, cards = ints_to_secset1s('SEUSET1', ints)
         for (seid, comp, values) in cards:
@@ -916,7 +916,7 @@ class GEOM4(GeomCommon):
 
     def _read_spcoff(self, data: bytes, n: int) -> int:
         """SPCOFF(5501,55,16) - Record 44"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struct_3if = Struct(op2._endian + b'iiif')
@@ -932,7 +932,7 @@ class GEOM4(GeomCommon):
 
     def _read_spc(self, data: bytes, n: int) -> int:
         """common method for reading SPCs"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_spc_nx, self._read_spc_msc,
@@ -949,7 +949,7 @@ class GEOM4(GeomCommon):
         5 D     RX   Enforced displacement
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #log = op2.log
         #log.debug('read_spc_mpc')
         ntotal = 20 * self.factor
@@ -982,7 +982,7 @@ class GEOM4(GeomCommon):
         4 D   RS Enforced displacement
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.debug('read_spc_nx')
         msg = ''
         ntotal = 16 * self.factor
@@ -1064,7 +1064,7 @@ class GEOM4(GeomCommon):
 
     def _add_spcoff1_card(self, out):
         """helper method for ``_read_spcoff1``"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         components, thru_flag = out[:2]
         if thru_flag == 0:  # repeat 4 to end
             nids = out[2:].tolist()
@@ -1155,7 +1155,7 @@ class GEOM4(GeomCommon):
 
         """
         assert self.size == 4, self.size
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         idata = np.frombuffer(data[n:], 'int32').copy()
         nints = len(idata)
         nrows = nints // 6
@@ -1169,7 +1169,7 @@ class GEOM4(GeomCommon):
 
     def _add_spc1_card(self, out):
         """helper method for ``_read_spc1``"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         sid, components = out[:2]
         thru_flag = out[2]
         if thru_flag == 0:  # repeat 4 to end
@@ -1202,14 +1202,14 @@ class GEOM4(GeomCommon):
     def _read_spcadd(self, data: bytes, n: int) -> int:
         """SPCADD(5491,59,13) - Record 46"""
         #nentries = (len(data) - n) // 4
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         datai = np.frombuffer(data[n:], op2.idtype8).copy()
         _read_spcadd_mpcadd(op2, 'SPCADD', datai)
         return len(data)
 
     def _read_spcd(self, data: bytes, n: int) -> int:
         """common method for reading SPCDs"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_spcd_nx, self._read_spcd_msc,
@@ -1218,7 +1218,7 @@ class GEOM4(GeomCommon):
 
     def _read_spcd_nx(self, data, n):
         """SPCD(5110,51,256) - NX specific"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_3if = Struct(op2._endian + b'3if')
         ntotal = 16 # 4*4
         nentries = (len(data) - n) // ntotal
@@ -1254,7 +1254,7 @@ class GEOM4(GeomCommon):
         5 D     RX   Enforced displacement
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
@@ -1308,7 +1308,7 @@ class GEOM4(GeomCommon):
 
     def _read_suport(self, data: bytes, n: int) -> int:
         """SUPORT(5601,56, 14) - Record 59"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 8 * self.factor  # 2*4
         nentries = (len(data) - n) // ntotal
         struct_2i = Struct(op2._endian + mapfmt(b'2i', self.size))
@@ -1324,7 +1324,7 @@ class GEOM4(GeomCommon):
 
     def _read_suport1(self, data: bytes, n: int) -> int:
         """SUPORT1(10100,101,472) - Record 60"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nfields = (len(data) - n) // 4 - 2
         out = unpack(op2._endian + b'%ii' % nfields, data[n:n+nfields*4])
 
@@ -1367,7 +1367,7 @@ class GEOM4(GeomCommon):
         (sid, nid, comp), ...
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_3i = Struct(mapfmt(op2._endian + b'3i', self.size))
         ntotal = 12 * self.factor
         #self.show_data(data, types='is')
@@ -1420,7 +1420,7 @@ class GEOM4(GeomCommon):
                2.0, 123456, 0, 44, 45, 48, 49, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert self.factor == 1, self.factor
         nentries = 0
         size = self.size

@@ -576,7 +576,7 @@ class GEOM2:
                    5, 1, [5, 6, 12, 11], [0, 0, 0, 0, 0, 0, -1])
         C:\MSC.Software\msc_nastran_runs\axh101a2.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 16*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'2i 4i 7i', self.size))
@@ -606,7 +606,7 @@ class GEOM2:
 
     def add_op2_element(self, elem):
         """checks that eids are positive and that -1 node ids become None"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if elem.eid <= 0:
             op2.log.debug(str(elem))
             raise ValueError(elem)
@@ -684,7 +684,7 @@ class GEOM2:
         16 W3B RS T3 component of offset vector from GB
         F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sebload1.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 16*4
         fe1 = 28 * self.factor
         fe2 = 32 * self.factor
@@ -765,7 +765,7 @@ class GEOM2:
         8 X6 RS 6th intermediate station for data recovery
         9 UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 36
         s = Struct(op2._endian + b'2i7f')
         for unused_i in range(nelements):
@@ -842,7 +842,7 @@ class GEOM2:
           $       W3C
           +       1.0
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 104 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
@@ -954,7 +954,7 @@ class GEOM2:
         floats  = (2901, 2901, 2901, 2902, 2903, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                    3901, 2901, 3901, 3903, 3904, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.467866607795436e-42, 2901, 3903, 5.467866607795436e-42, 5.4720705031884107e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.867763773655928e-42, 2901, 6.867763773655928e-42, 6.871967669048903e-42, 6.870566370584578e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.869165072120253e-42, 2901, 6.871967669048903e-42, 6.874770265977553e-42, 6.873368967513228e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.870566370584578e-42, 2901, 6.874770265977553e-42, 6.869165072120253e-42, 6.876171564441877e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8078151488254465e-41, 2901, 1.8078151488254465e-41, 1.807955278671879e-41, 1.8080954085183115e-41, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 108 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
@@ -1005,7 +1005,7 @@ class GEOM2:
 
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """CBEAM(5408,54,261) - the marker for Record 10"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor  # 18*4
         fe1 = 40 * self.factor
         fe2 = 44 * self.factor
@@ -1132,7 +1132,7 @@ class GEOM2:
         9 UNDEF(4) None
         13 GEOM I Element geometry option
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 4*13
         nentries = (len(data) - n) // ntotal
         fstruc = Struct(op2._endian + b'4i 3f 6i')
@@ -1176,7 +1176,7 @@ class GEOM2:
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor
         nelements = (len(data) - n) // ntotal
         struct_obj1 = Struct(mapfmt(op2._endian + b'4i iii i ifi3f', self.size))
@@ -1226,7 +1226,7 @@ class GEOM2:
         6 UNDEF(3) none
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 4*8
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
@@ -1247,7 +1247,7 @@ class GEOM2:
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CCONE in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CCONE in GEOM2\n')
@@ -1257,7 +1257,7 @@ class GEOM2:
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -1277,7 +1277,7 @@ class GEOM2:
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'if4i', self.size))
@@ -1297,7 +1297,7 @@ class GEOM2:
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1316,7 +1316,7 @@ class GEOM2:
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'ifii')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1335,7 +1335,7 @@ class GEOM2:
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1373,7 +1373,7 @@ class GEOM2:
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         struct_4i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -1393,7 +1393,7 @@ class GEOM2:
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s1 = Struct(mapfmt(op2._endian + b'if4iff', self.size))
         ntotal = 32 * self.factor # 8*4
         nelements = (len(data) - n) // ntotal
@@ -1413,7 +1413,7 @@ class GEOM2:
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         ndatai = len(data) - n
@@ -1434,7 +1434,7 @@ class GEOM2:
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         s = Struct(mapfmt(op2._endian + b'ifii', self.size))
         ndatai = len(data) - n
@@ -1453,7 +1453,7 @@ class GEOM2:
 
     def _read_cfastp(self, data: bytes, n: int) -> int:
         """MSC 2020"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 328 * self.factor  # 82*4
         s = Struct(mapfmt(op2._endian + b'40i 8f 8i 26i', self.size))
         ndatai = len(data) - n
@@ -1536,7 +1536,7 @@ class GEOM2:
         CFAST        102       3    PROP       1       2     200
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.show_data(data[12:], 'if')
         ntotal = 764 * self.factor  # 191*4
         s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', self.size))
@@ -1623,7 +1623,7 @@ class GEOM2:
         5 B        RS Bulk modulus
         6 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'3i2fi')
         ntotal = 24 * self.factor
         ndatai = len(data) - n
@@ -1651,7 +1651,7 @@ class GEOM2:
         6 B        RS Bulk modulus
         7 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'4i2fi')
         ntotal = 28 * self.factor
         ndatai = len(data) - n
@@ -1680,7 +1680,7 @@ class GEOM2:
         7 B        RS Bulk modulus
         8 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'5i2fi')
         ntotal = 32 * self.factor
         ndatai = len(data) - n
@@ -1725,7 +1725,7 @@ class GEOM2:
         """
         CGAP(1908,19,104) - the marker for Record 39
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         s1 = Struct(mapfmt(op2._endian + b'4i3fii', self.size))
         struct_i = op2.struct_i if self.size == 4 else self.struct_q
@@ -1783,7 +1783,7 @@ class GEOM2:
         2 PID I Property identification number
         3 G(20) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 88
         s = Struct(op2._endian + b'22i')
         #if op2.is_debug_file:
@@ -1814,7 +1814,7 @@ class GEOM2:
         """
         CHBDYE(8308,83,405) - the marker for Record ???
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -1837,7 +1837,7 @@ class GEOM2:
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -1862,7 +1862,7 @@ class GEOM2:
         """
         CHBDYP(10908,109,407)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60  # 16*4
         s = Struct(op2._endian + b'12i 3f')
         ndatai = len(data) - n
@@ -1884,7 +1884,7 @@ class GEOM2:
         return n
 
     def _add_thermal_element_object_safe(self, obj):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if obj.eid in op2.elements:
             op2.reject_lines.append(obj.write_card(size=16))
         else:
@@ -1895,7 +1895,7 @@ class GEOM2:
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'22i', self.size))
         ntotal = 88 * self.factor  # 22*4
         nelements = (len(data) - n) // ntotal
@@ -1923,7 +1923,7 @@ class GEOM2:
         """
         CHEXCZ(11801,118,907)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'22i 2i', self.size))
         ntotal = 96 * self.factor  # 24*4
         nelements = (len(data) - n) // ntotal
@@ -1971,7 +1971,7 @@ class GEOM2:
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -1991,7 +1991,7 @@ class GEOM2:
         """
         CMASS2(1101,11,66) - the marker for Record 52
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'if4i', self.size))
@@ -2011,7 +2011,7 @@ class GEOM2:
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -2030,7 +2030,7 @@ class GEOM2:
         """
         CMASS4(1301,13,68) - the marker for Record 54
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 16
         struct_if2i = Struct(op2._endian + b'ifii')
         for unused_i in range(nelements):
@@ -2053,7 +2053,7 @@ class GEOM2:
         4   Y RS
         5   N  I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert n == 12, n
         nelements = (len(data) - n) // 20
         assert (len(data) - n) % 20 == 0
@@ -2071,7 +2071,7 @@ class GEOM2:
         """
         CONM1(1401,14,63) - the marker for Record 56
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 96 * self.factor   # 24*4
         s = Struct(mapfmt(op2._endian + b'3i21f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2092,7 +2092,7 @@ class GEOM2:
         """
         CONM2(1501,15,64) - the marker for Record 57
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
@@ -2112,7 +2112,7 @@ class GEOM2:
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 *self.factor  # 8*4
         s = Struct(mapfmt(op2._endian + b'4i4f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2135,7 +2135,7 @@ class GEOM2:
         """
         n0 = n
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.is_nx:
             try:
                 n, elements = self._read_conv_nx(data, n)
@@ -2159,7 +2159,7 @@ class GEOM2:
         generalization of multi read methods for different
         versions of MSC Nastran
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         try:
             n, elements = read1(card_obj, data, n)
@@ -2188,7 +2188,7 @@ class GEOM2:
     def _read_dual_card_load(self, data, n,
                              nx_read, msc_read) -> tuple[int, list[Any]]:
         n0 = n
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.is_nx:
             try:
                 n, elements = nx_read(data, n0)
@@ -2208,7 +2208,7 @@ class GEOM2:
         """
         CONV(12701,127,408) - the marker for Record 59
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(op2._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
@@ -2239,7 +2239,7 @@ class GEOM2:
         """
         CONV(12701,127,408) - the marker for Record 60
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80 * self.factor  # 20*4
         s = Struct(op2._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
@@ -2343,7 +2343,7 @@ class GEOM2:
         CONVM EID PCONID FLMND CNTMDOT TA1 TA2
         106, 105, 0,     50003, 99999, 99999, 1.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
         ntotal6 = 24  # 6*4
         ntotal7 = 28  # 7*4
@@ -2377,7 +2377,7 @@ class GEOM2:
         return n
 
     def read_convm6(self, data, nelements, n):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6i')
         elements = []
         for unused_i in range(nelements):
@@ -2399,7 +2399,7 @@ class GEOM2:
         return elements, n
 
     def read_convm7(self, data, nelements, n):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6if')
         elements = []
         for unused_i in range(nelements):
@@ -2434,7 +2434,7 @@ class GEOM2:
         13 T(3) RS Membrane thickness of element at grid points
         16 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data[n:], types='if')
         op2.to_nx(' because CPLSTS3 was found')
         ntotal = 64 * self.factor  # 16*4
@@ -2475,7 +2475,7 @@ class GEOM2:
         12 TFLAG I Flag signifying meaning of T(4) values
         13 T(4) RS Membrane thickness of element at grid points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS4-NX was found')
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(op2._endian + b'6i f 4i i4f', self.size))
@@ -2518,7 +2518,7 @@ class GEOM2:
         """
         #1728 / 4 = 432
         #432 = 16 * 27
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS6-NX was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
@@ -2571,7 +2571,7 @@ class GEOM2:
           ints    = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0, 0,     -1.0, -1.0, -1.0, -1.0)
           floats  = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS8 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
@@ -2614,7 +2614,7 @@ class GEOM2:
         7 UNDEF(10) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN3 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 3i f 10i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2650,7 +2650,7 @@ class GEOM2:
         8 UNDEF(9) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN4 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 4i f 9i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2687,7 +2687,7 @@ class GEOM2:
         10 UNDEF(7) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN6 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 6i f 7i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2724,7 +2724,7 @@ class GEOM2:
         12 UNDEF(5) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN8 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i f 5i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2754,7 +2754,7 @@ class GEOM2:
 
         Specific to NX Nastran
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(op2._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2786,7 +2786,7 @@ class GEOM2:
         CPENT15F(16500,165,9999) - the marker for Record 65
         CPENT6FD(16000,160,9999) - the marker for Record 66
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2813,7 +2813,7 @@ class GEOM2:
         """
         CPENTCZ
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 96 * self.factor  # 19*4
         s = Struct(mapfmt(op2._endian + b'17i 7i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2861,7 +2861,7 @@ class GEOM2:
                    351, 5, 13, 329, 330, 14, 0, 0, 0, 0, 0, 0, 0,
                    352, 5, 14, 330, 331, 15, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 52 * self.factor  # 13*4
         nelements = (len(data) - n) // ntotal
@@ -2953,7 +2953,7 @@ class GEOM2:
 
     def _read_double_card(self, card_name: str, card_obj, add_method,
                           methods, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n, elements = self._read_double_card_load(
             card_name, card_obj,
             methods, data, n)
@@ -2966,7 +2966,7 @@ class GEOM2:
 
     def _read_double_card_load(self, card_name: str, card_obj,
                                methods, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert isinstance(data, bytes), type(data)
         ndatai = (len(data) - n) // self.factor
         keys = np.array(list(methods.keys()))
@@ -3018,7 +3018,7 @@ class GEOM2:
 
     def _run_cquad(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'11i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3041,7 +3041,7 @@ class GEOM2:
 
     def _run_2nodes(self, element, data: bytes, n: int) -> int:
         """common method for VUBEAM"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 16
         s = Struct(op2._endian + b'4i')
         #if op2.is_debug_file:
@@ -3069,7 +3069,7 @@ class GEOM2:
 
     def _run_3nodes(self, element: CTRIA3, data: bytes, n: int) -> int:
         """common method for CTRIA3, VUTRIA3"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 20
         s = Struct(op2._endian + b'5i')
         #if op2.is_debug_file:
@@ -3097,7 +3097,7 @@ class GEOM2:
 
     def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 24
         s = Struct(op2._endian + b'6i')
         #if op2.is_debug_file:
@@ -3148,7 +3148,7 @@ class GEOM2:
             1003, 20, 20002, 20003, 20103, 20102, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, 42,
             1004, 20, 20100, 20101, 20201, 20200, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 60 * self.factor  # 15*4
         nelements = (len(data) - n) // ntotal
@@ -3230,7 +3230,7 @@ class GEOM2:
             3, 1, 3, 4, 10, 9, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
         )
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 56 * self.factor  # 14*4
         nelements = (len(data) - n) // ntotal
@@ -3314,7 +3314,7 @@ class GEOM2:
                     reference plane
         17 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 17*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -3357,7 +3357,7 @@ class GEOM2:
         16 ZOFFS RS Offset from the surface of grid points
                     reference plane
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         #self.show_data(data, types='if')
 
@@ -3402,7 +3402,7 @@ class GEOM2:
             1303, 20, 10200, 10202, 10402, 10400, 10201, 10302, 10401, 10300, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
             1304, 20, 10202, 10204, 10404, 10402, 10203, 10304, 10403, 10302, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         #self.show_data(data, types='if')
         #ss
@@ -3545,7 +3545,7 @@ class GEOM2:
                 101000041, 6, -3,
                 4, 14, 4,  123456, 1.0, 123456, 3, -1, -2, -4, 2.0e-6, -5, 101000004, 6, -3)
           """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
         idata = np.frombuffer(data[n:], op2.idtype8).copy()
         fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -3653,7 +3653,7 @@ class GEOM2:
         """
         CROD(3001,30,48)    - the marker for Record 81
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3684,7 +3684,7 @@ class GEOM2:
         6 CMB    I Component numbers of dependent DOFs at end B
         7 ALPHA RS Thermal expansion cofficient
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6if')
         nelements = (len(data) - n) // 28  # 7*4
         #is_long_ids = False
@@ -3715,7 +3715,7 @@ class GEOM2:
         """
         CSHEAR(3101,31,61)    - the marker for Record 84
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3739,7 +3739,7 @@ class GEOM2:
         CTETP(12201,122,9013)    - the marker for Record 87
         .. todo:: needs work
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('poor reading of CTETRAP in GEOM2')
         nelements = (len(data) - n) // 108  # 27*4
         struct_27i = Struct(op2._endian + b'27i')
@@ -3749,7 +3749,7 @@ class GEOM2:
             if op2.is_debug_file:
                 op2.binary_debug.write('  CTETP=%s\n' % str(out))
 
-            print(out)
+            #print(out)
             eid, pid, n1, n2, n3, n4 = out[:6]
             #(eid, pid, n1, n2, n3, n4,
              #e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
@@ -3776,7 +3776,7 @@ class GEOM2:
         CTETR10F(16600,166,9999) - the marker for Record 90
         CTETR4FD(16100,161,9999) - the marker for Record 91
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(mapfmt(op2._endian + b'12i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3827,7 +3827,7 @@ class GEOM2:
         CTRIA3(5959,59,282) - the marker for Record 94
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n)// ntotal
@@ -3869,7 +3869,7 @@ class GEOM2:
             205, 35, 50002, 50003, 50103, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1, ...)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5i f 4i 3f i', self.size))
         nelements = (len(data) - n)// ntotal
@@ -3975,7 +3975,7 @@ class GEOM2:
         return n
 
     def _read_ctria3fd_40(self, card_obj, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 10*4
         assert (len(data) - n) % ntotal == 0
@@ -4007,7 +4007,7 @@ class GEOM2:
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -4057,7 +4057,7 @@ class GEOM2:
         (331, 111, 331, 332, 333, 0, 0, 0,
          332, 11, 331, 333, 334, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'8i')
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4092,7 +4092,7 @@ class GEOM2:
                    16800, 16801, 16801, 16802, 16803, 0, 0, 0, 0, -1,
                    16801, 16801, 16801, 16803, 16804, 0, 0, 0, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -4147,7 +4147,7 @@ class GEOM2:
                    16700, 16701, 16701, 16702, 16703, 16705, 16706, 16709, 0, -1,
                    16701, 16701, 16701, 16703, 16704, 16709, 16707, 16708, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         s = Struct(op2._endian + b'10i')
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4177,7 +4177,7 @@ class GEOM2:
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor
         s = Struct(op2._endian + b'8i')
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4213,7 +4213,7 @@ class GEOM2:
         14 TFLAG  I Relative thickness flag
         -1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 15*4
         s = Struct(mapfmt(op2._endian + b'8i 5f i i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4255,7 +4255,7 @@ class GEOM2:
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor # 14*4
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4292,7 +4292,7 @@ class GEOM2:
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor
         s = Struct(op2._endian + b'8i 5f')
         nelements = (len(data) - n) // ntotal # 13*4
@@ -4345,7 +4345,7 @@ class GEOM2:
         return n
 
     def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4371,7 +4371,7 @@ class GEOM2:
 
     def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
         """same as ``read_ctriar_13`` but with a -1 to change the format"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor  # 14*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f i', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4446,7 +4446,7 @@ class GEOM2:
 
     def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor  # 9*4
         struc = Struct(op2._endian + b'8i')
 
@@ -4469,7 +4469,7 @@ class GEOM2:
 
     def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         struc = Struct(op2._endian + b'9i')
 
@@ -4499,7 +4499,7 @@ class GEOM2:
         16900, 16901, 16901, 16902, 16903, 16905, 16906, 16909, 0, -1,
         16901, 16901, 16901, 16903, 16904, 16909, 16907, 16908, 0, -1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor  # 10*4
         struc = Struct(op2._endian + b'10i')
 
@@ -4524,7 +4524,7 @@ class GEOM2:
 
     def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4556,7 +4556,7 @@ class GEOM2:
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMBNDC in GEOM2')
         #self.show_data(data)
         #(1, 31, 32, GRID____, -1,
@@ -4587,7 +4587,7 @@ class GEOM2:
         """
         CTUBE(3701,37,49) - the marker for Record 104
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4607,7 +4607,7 @@ class GEOM2:
 
     def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4630,21 +4630,21 @@ class GEOM2:
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELD in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data: bytes, n: int) -> int:  # 107
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELDC in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data: bytes, n: int) -> int:  # 108
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELDG in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELDG in GEOM2\n')
@@ -4789,7 +4789,7 @@ class GEOM2:
 
     def _read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_3i = Struct(op2._endian + b'3i')
         ntotal = 12 * self.factor
         nelements = (len(data) - n) // ntotal
@@ -4817,7 +4817,7 @@ class GEOM2:
         3 CNTRLND  I Control point for radiation boundary condition
         4 NODAMB   I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\ht15339.op2
         #(-99, 1.0, 0, 101)
         #radbc   101     1.0             -99
@@ -4874,7 +4874,7 @@ class GEOM2:
         """
         (5551,49,105)    - the marker for Record 118
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 4 * self.factor
         npoints = (len(data) - n) // ntotal
         nids = np.frombuffer(data[n:], op2.idtype8).tolist()
@@ -4920,7 +4920,7 @@ class GEOM2:
         3 G(3)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         s = Struct(mapfmt(op2._endian + b'5if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4951,7 +4951,7 @@ class GEOM2:
         3 G(6)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         s = Struct(mapfmt(op2._endian + b'8if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4978,7 +4978,7 @@ class GEOM2:
         3 G(8)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'10if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -5043,7 +5043,7 @@ class GEOM2:
         6 GEOMID1    I Identification number of a POINT or GMCURV entry
         7 GEOMID2    I Identification number of a POINT or GMCURV entry
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
@@ -5135,7 +5135,7 @@ class GEOM2:
         8 EID           I Entity identification numbers for boundary of subdomain
         Word 8 repeats until End of Record
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMBNDS in GEOM2')
         #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
         ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
