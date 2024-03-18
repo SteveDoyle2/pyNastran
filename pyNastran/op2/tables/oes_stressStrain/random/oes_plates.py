@@ -145,7 +145,7 @@ class RandomPlateVMArray(OES_Object):
         #ntotal = nelements * 2
         self.ntotal = nlayers
         #_times = zeros(ntimes, dtype=self.analysis_fmt)
-        #element = zeros(nelements, dtype='int32')
+        #element = zeros(nelements, dtype=idtype)
 
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes

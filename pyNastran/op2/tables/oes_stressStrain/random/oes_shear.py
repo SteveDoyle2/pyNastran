@@ -63,10 +63,10 @@ class RandomShearArray(OES_Object):
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         # [max_shear, avg_shear]
-        self.data = zeros((ntimes, nelements, 2), dtype='float32')
+        self.data = zeros((ntimes, nelements, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

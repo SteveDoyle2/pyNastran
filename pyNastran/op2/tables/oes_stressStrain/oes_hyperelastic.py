@@ -92,7 +92,7 @@ class HyperelasticQuadArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
+        self.element_node = np.zeros((self.ntotal, 2), dtype=idtype)
 
         #self.Type[eid] = Type
         #self.oxx[dt] = {eid: [oxx]}
@@ -104,7 +104,7 @@ class HyperelasticQuadArray(OES_Object):
 
 
         #[oxx, oyy, txy, angle, majorp, minorp]
-        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""

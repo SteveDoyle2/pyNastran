@@ -87,11 +87,11 @@ class RandomBarArray(OES_Object):
             #dtype = self._get_analysis_code_dtype()
 
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[s1a, s2a, s3a, s4a, axial,
         # s1b, s2b, s3b, s4b]
-        self.data = zeros((ntimes, nelements, 9), dtype='float32')
+        self.data = zeros((ntimes, nelements, 9), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

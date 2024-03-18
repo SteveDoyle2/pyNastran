@@ -66,10 +66,10 @@ class RealBar10NodesArray(OES_Object):
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element = zeros(self.ntotal, dtype='int32')
+        element = zeros(self.ntotal, dtype=idtype)
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-        data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 9), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

@@ -77,10 +77,10 @@ class RealCPLSTRNPlateArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = np.zeros(self.ntotal, dtype='int32')
+        self.element = np.zeros(self.ntotal, dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype=fdtype)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)

@@ -2090,13 +2090,13 @@ class RealCShearForceArray(RealForceObject):
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[force41, force21, force12, force32, force23, force43,
         # force34, force14,
         # kick_force1, shear12, kick_force2, shear23,
         # kick_force3, shear34, kick_force4, shear41]
-        self.data = zeros((ntimes, ntotal, 16), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 16), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2573,10 +2573,10 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((ntimes, ntotal, 2), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3305,13 +3305,13 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         ntimes, nelements, ntotal = self._get_sort_element_sizes(debug=False)
 
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((ntotal, 2), dtype='int32')
+        self.element_node = zeros((ntotal, 2), dtype=idtype)
 
         # -MEMBRANE FORCES-   -BENDING MOMENTS- -TRANSVERSE SHEAR FORCES -
         #     FX FY FXY           MX MY MXY            QX QY
         #[fx, fy, fxy,  mx,  my,  mxy, qx, qy]
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((ntimes, ntotal, 8), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def _get_sort_element_sizes(self, debug: bool=False):
         if debug:
@@ -4239,10 +4239,10 @@ class RealConeAxForceArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[hopa, bmu, bmv, tm, su, sv]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4434,10 +4434,10 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
     #def finalize(self):
         #sd = self.data[0, :, 0]
@@ -4733,10 +4733,10 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         # [fx, sfy, sfz, u, v, w, sv, sw]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4922,11 +4922,11 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         self.ntimes = ntimes
         self.nelements = nelements
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((nelements, 3), dtype='int32')
+        self.element_node = zeros((nelements, 3), dtype=idtype)
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
-        self.data = zeros((ntimes, ntotal, 12), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 12), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -5422,10 +5422,10 @@ class RealForceMomentArray(RealForceObject):
 
         ntimes, nelements, ntotal = get_sort_element_sizes(self)
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((ntimes, nelements, 6), dtype='float32')
+        self.data = zeros((ntimes, nelements, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

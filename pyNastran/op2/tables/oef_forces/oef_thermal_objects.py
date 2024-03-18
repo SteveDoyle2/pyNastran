@@ -70,11 +70,11 @@ class Real1DHeatFluxArray(BaseElement):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = np.zeros(self.nelements, dtype='int32')
+        self.element = np.zeros(self.nelements, dtype=idtype)
         self.element_data_type = np.empty(self.nelements, dtype='|U8')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -343,10 +343,10 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element_node = np.zeros((self.nelements, 2), dtype='int32')
+        self.element_node = np.zeros((self.nelements, 2), dtype=idtype)
 
         #[free_conv, free_conv_k]
-        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -564,11 +564,11 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = np.zeros(self.nelements, dtype='int32')
+        self.element = np.zeros(self.nelements, dtype=idtype)
         self.element_type = np.empty(self.nelements, dtype='|U8')
 
         #[fapplied, free_conv, force_conv, frad, ftotal]
-        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

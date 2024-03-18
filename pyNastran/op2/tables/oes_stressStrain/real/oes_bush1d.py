@@ -79,11 +79,11 @@ class RealBush1DStressArray(OES_Object):
             #self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.ntotal, dtype='int32')
+        self.element = zeros(self.ntotal, dtype=idtype)
         self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
 
         # [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

@@ -562,7 +562,7 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
 
                 strings = frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 9)
@@ -571,7 +571,7 @@ class OEF:
                 #print('itime = ', obj.itime)
                 #print('---------')
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 9)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -668,10 +668,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 #if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 9)
+                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2] = eids
@@ -715,10 +715,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 10)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 10)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -808,10 +808,10 @@ class OEF:
                     ielement2 = obj.itotal + nelements
                     itotal2 = ielement2
 
-                    floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 8)
+                    floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 8)
+                        ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
@@ -871,10 +871,10 @@ class OEF:
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 4).copy()
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 4).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 4).copy()
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 4).copy()
                     eids = ints[:, 0] // 10
                     nids = ints[:, 2]
                     assert eids.min() > 0, eids.min()
@@ -1382,10 +1382,10 @@ class OEF:
                 #itotal2 = obj.itotal + nelements
                 #ielement2 = obj.ielement + nelements
 
-                #floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)[:, 1:]
+                #floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)[:, 1:]
                 #obj._times[obj.itime] = dt
                 #if obj.itime == 0:
-                    #ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 9)
+                    #ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     #eids = ints[:, 0] // 10
                     #assert eids.min() > 0, eids.min()
                     #assert 0 not in eids, eids
@@ -1604,10 +1604,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 2)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 2)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 2)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 2)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1695,10 +1695,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 3)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 3)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 3)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 3)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1733,10 +1733,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 5).copy()
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 5)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 5)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1883,10 +1883,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 8)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 8)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2324,10 +2324,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 17)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 17)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2421,10 +2421,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 7)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 7)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 7)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2471,10 +2471,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 9)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2520,10 +2520,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 15).copy()
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 15).copy()
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
                     eids = ints[:, 0] // 10
                     nids_a = ints[:, 1]
                     nids_b = ints[:, 8]
@@ -2591,10 +2591,10 @@ class OEF:
                 # 21     22     23     24     25    26
                 # bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
                 # bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 27).copy()
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 27).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 27).copy()
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 27).copy()
                     eids = ints[:, 0] // 10
                     nids_a = ints[:, 1]
                     nids_b = ints[:, 14]
@@ -2719,10 +2719,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 10)
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 10)
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
