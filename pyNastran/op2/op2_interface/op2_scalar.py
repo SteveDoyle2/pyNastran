@@ -1914,7 +1914,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                  combine: bool=False,
                  load_as_h5: bool=False,
                  h5_file=None,
-                 mode: Optional[str]=None) -> None:
+                 mode: Optional[str]=None) -> list[str]:
         """
         Starts the OP2 file reading
 

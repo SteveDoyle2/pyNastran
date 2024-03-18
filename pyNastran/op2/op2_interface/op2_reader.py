@@ -2938,7 +2938,7 @@ class OP2Reader:
 
         """
         op2: OP2 = self.op2
-        #is_interlaced_block = op2.is_interlaced
+        is_interlaced_block = op2.is_interlaced
 
         table_name = None
         data = None
@@ -2948,7 +2948,7 @@ class OP2Reader:
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
             if self.size == 8:
-                data = reshape_bytes_block(data, is_interlaced_block=True)
+                data = reshape_bytes_block(data, is_interlaced_block=is_interlaced_block)
             table_name = self.unpack_table_name(data)
 
             if self.is_debug_file and not rewind:
@@ -2960,7 +2960,7 @@ class OP2Reader:
                 #data = self.read_string_block(is_interlaced_block=False)
                 data = self._read_record(macro_rewind=rewind)
                 if self.size == 8:
-                    data = reshape_bytes_block(data, is_interlaced_block=True)
+                    data = reshape_bytes_block(data, is_interlaced_block=is_interlaced_block)
                 table_name = self.unpack_table_name(data)
             except (NameError, MemoryError):
                 raise
@@ -3504,7 +3504,7 @@ class OP2Reader:
             return False
         return True
 
-    def read_results_table(self):
+    def read_results_table(self) -> None:
         """Reads a results table"""
         if self.size == 4:
             self.read_results_table4()

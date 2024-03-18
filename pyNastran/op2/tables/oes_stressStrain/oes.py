@@ -2559,7 +2559,7 @@ class OES(OP2Common2):
         reads stress/strain for element type:
          - 4 : CSHEAR
         """
-        op2 = self.op2
+        op2: OP2 = self.op2
         n = 0
         # 4-CSHEAR
         if op2.is_stress:
@@ -2586,7 +2586,7 @@ class OES(OP2Common2):
             if auto_return:
                 return nelements * ntotal, None, None
 
-            obj = op2.obj
+            obj: Union[RealShearStressArray, RealShearStrainArray] = op2.obj
             assert obj is not None
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
                 n = nelements * ntotal

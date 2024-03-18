@@ -377,7 +377,7 @@ class Subcase:
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNL2', 'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
                             'OESVM1', 'OESVM1C', 'OESNL1X',
-                            'OESNLXR2', 'RASCONS', 'RASEATC', 'OESNLBR2']:
+                            'OESNLXR2', 'RASCONS', 'RASEATC', 'OESNLBR2', 'OES1A']:
             #assert data_code['is_stress_flag'] == True, data_code
             options.append(sort_str)
             if table_code == 5:
