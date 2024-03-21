@@ -388,12 +388,15 @@ class TestNastranGUI(unittest.TestCase):
 
         p2 = [0., 1., 0.]
         zaxis = [0., 0., 1.]
+
+        test.shear_moment_torque_obj.setup_model_data(model_name)
         force_sum, moment_sum = test.shear_moment_torque_obj.plot_shear_moment_torque(
-            model_name, gpforce,
+            icase_gpforce,
             p1, p2, p3, zaxis,
             method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-            nplanes=5, plane_color=None, plane_opacity=0.5,
+            nplanes=5,
+            #plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
         assert np.allclose(np.abs(force_sum).max(), 0.000732421875), np.abs(force_sum).max()
         assert np.allclose(np.abs(moment_sum).max(), 0.000244140625), np.abs(moment_sum).max()
@@ -404,11 +407,12 @@ class TestNastranGUI(unittest.TestCase):
         zaxis = np.array([0., 0., 1.])
         #idir = 0
         test.shear_moment_torque_obj.plot_shear_moment_torque(
-            model_name, gpforce,
+            icase_gpforce,
             p1, p2, p3, zaxis,
             method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-            nplanes=5, plane_color=None, plane_opacity=0.5,
+            nplanes=5,
+            #plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
 
         if IS_CUTTING_PLANE:

@@ -7,14 +7,6 @@ class AltGeometry:
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
                        'bar', 'wire+point', 'wire+surf']
     displays = ['Wireframe', 'Surface', 'point', None]
-    def __repr__(self):
-        msg = ('AltGeometry(%r, color=%s, line_width=%s, opacity=%s,\n'
-              ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
-              'is_pickable=%s, label_actors=%s)' % (
-                  self.name, str(self.color), self.line_width, self.opacity, self.point_size,
-                  self.bar_scale, self.representation, self.display, self.is_visible,
-                  self.is_pickable, self.label_actors))
-        return msg
 
     def __init__(self, parent, name: str,
                  color: Optional[ColorInt]=None,
@@ -135,7 +127,10 @@ class AltGeometry:
         for key in keys:
             value = self.__dict__[key]
             setattr(result, key, deepcopy(value, memo))
+
+        # gotta set something or the repr will crash
         #result.label_actors = [] #= memo['label_actors']
+        result.label_actors = []
         return result
 
     @property
@@ -227,3 +222,12 @@ class AltGeometry:
                 representation, self.representations)
             raise RuntimeError(msg)
         self._representation = representation
+
+    def __repr__(self):
+        msg = ('AltGeometry(%r, color=%s, line_width=%s, opacity=%s,\n'
+              ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
+              'is_pickable=%s, label_actors=%s)' % (
+                  self.name, str(self.color), self.line_width, self.opacity, self.point_size,
+                  self.bar_scale, self.representation, self.display, self.is_visible,
+                  self.is_pickable, self.label_actors))
+        return msg

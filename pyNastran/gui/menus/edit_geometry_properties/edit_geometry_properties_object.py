@@ -390,7 +390,8 @@ def map_group1_results_to_group2(group1: Union[CoordProperties, AltGeometry],
         keys = ('is_visible', )
     else:
         assert isinstance(group1, AltGeometry), group1
-        keys = ('point_size', 'opacity', 'color_float',
+        keys = ('point_size', 'opacity',
+                '_color', # 'color_float',
                 'is_visible', 'line_width', 'representation', 'bar_scale')
 
     for key in keys:
