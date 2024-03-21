@@ -25,6 +25,7 @@ BDF:
    - fixing TEMP writing when ntemperatures > 3
 OP2:
  - added:
+   - op2_results.stressa (for MSC)
    - support for more Simcenter and Optistruct versions
    - adding OES1A table; stores results in stressa. for MSC Nastran
  - fixed:
@@ -33,7 +34,14 @@ OP2:
    - fixing 64-bit MSC version bug by settig is_interlaced = False
    - fixing 64-bit support for stress/strain-CSHEAR
 
+other:
+ - nastran_to_vtk:
+    - to now supports op2_filename='' to only convert geometry
+    - fixed bug when result names are duplicated
+
 GUI:
+ - Nastran:
+   - fixed bug von mises for plate stress/strain
  - Shear-Moment-Torque menu:
    - remove unused time box
    - added icase flag to allow changing case

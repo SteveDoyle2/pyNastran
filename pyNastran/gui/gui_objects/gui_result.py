@@ -863,5 +863,17 @@ class GuiResultIDs(GuiResult):
 
 
 def check_title(title: str, used_titles: set[str]) -> None:
+    if title in used_titles:
+        # add a counter
+        #
+        # 'axial_subcase 1' -> 'axial_subcase 1-1', 'axial_subcase-2'
+        title += '-'
+        title2 = title + '1'
+        i = 2
+        while title2 in used_titles:
+            title2 = title + str(i)
+            i += 1
+        title = title2
+
     assert title not in used_titles, title
     used_titles.add(title)
