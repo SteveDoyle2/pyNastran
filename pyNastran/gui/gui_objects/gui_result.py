@@ -827,16 +827,10 @@ class GuiResult(GuiResultCommon):
         from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
         vtk_array = numpy_to_vtk(self.scalar, deep=0, array_type=None)
 
-        title_out = titlei
-        i = 1
-        while title_out in used_titles:
-            title_out = f'{titlei}_{i}'
-            i += 1
-
         #if i != 1:
             #log.warning(f'duplicate GuiResult {titlei} because it is already used -> {title_out}')
-        check_title(title_out, used_titles)
-        vtk_array.SetName(title_out)
+        titlei = check_title(titlei, used_titles)
+        vtk_array.SetName(titlei)
         return vtk_array
 
     def __repr__(self) -> str:
@@ -862,7 +856,7 @@ class GuiResultIDs(GuiResult):
             data_format, uname)
 
 
-def check_title(title: str, used_titles: set[str]) -> None:
+def check_title(title: str, used_titles: set[str]) -> str:
     if title in used_titles:
         # add a counter
         #
@@ -877,3 +871,4 @@ def check_title(title: str, used_titles: set[str]) -> None:
 
     assert title not in used_titles, title
     used_titles.add(title)
+    return title

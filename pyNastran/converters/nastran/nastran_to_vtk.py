@@ -87,7 +87,7 @@ def save_nastran_results(gui: NastranGUI,
         elif isinstance(case, (CompositeStrainStressResults2, PlateStrainStressResults2, SolidStrainStressResults2)):
             fringe = case.get_fringe_result(*index_name)
             titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
-            check_title(titlei, used_titles)
+            titlei = check_title(titlei, used_titles)
             vtk_array = numpy_to_vtk(fringe, deep=0, array_type=None)
             vtk_array.SetName(titlei)
             location = case.get_location(*index_name)
@@ -116,9 +116,8 @@ def _save_force_table_results(case: ForceTableResults,
 
     if dxyz.ndim == 2:
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        assert title not in used_titles, title
         titlei =  f'{title}_subcase={case.subcase_id}'
-        check_title(title, used_titles)
+        titlei = check_title(title, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
     elif dxyz.ndim == 3:
@@ -127,7 +126,7 @@ def _save_force_table_results(case: ForceTableResults,
             dxyz = case.dxyz[itime, :, :]
             vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
             titlei =  f'{header}_subcase={case.subcase_id}'
-            check_title(titlei, used_titles)
+            titlei = check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
             add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
@@ -151,7 +150,7 @@ def _save_displacement_results(case: DisplacementResults,
         assert dxyz.ndim == 2, dxyz.shape
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
         titlei =  f'{header}_subcase={case.subcase_id}'
-        check_title(titlei, used_titles)
+        titlei = check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
@@ -187,7 +186,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     res = vector if vector is not None else fringe
 
     # form_name = case.form_names[itime, ilayer, imethod]
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
 
@@ -218,7 +217,7 @@ def _save_layered_table_results(case: LayeredTableResults,
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
     del name, itime, ilayer, imethod
