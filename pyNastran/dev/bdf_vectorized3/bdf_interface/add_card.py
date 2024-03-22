@@ -4167,6 +4167,18 @@ class AddOptimization(BDFAttributes):
         self._add_methods._add_dvtrel_object(dvtrel)
         return dvtrel
 
+    def add_dmncon(self, constraint_id: int, constraint_type: str,
+                   xyz=None, normal=None, size=None,
+                   m=None, d=None, nsections=None,
+                   angle=None, mind=None, off_flag=None,
+                   comment: str='') -> DMNCON:
+        dmncon = DMNCON(constraint_id, constraint_type, xyz=xyz, normal=normal,
+                        size=size, m=m, d=d, nsections=nsections,
+                        angle=angle, mind=mind,
+                        off_flag=off_flag, comment=comment)
+        self._add_methods._add_dmncon_object(dmncon)
+        return dmncon
+
     def add_dscons(self, dscid: int, label: str, constraint_type: str,
                    nid_eid: int, comp: int,
                    limit: float=0.0, opt: str='MAX', layer_id: int=1) -> None:
@@ -5320,9 +5332,103 @@ class AddThermal(BDFAttributes):
         return set_obj
 
 
+class AddAcoustic(BDFAttributes):
+    def add_acmodl(self, infor, fset, sset,
+                   normal=0.5, olvpang=60., search_unit='REL', intol=0.2,
+                   area_op=0, ctype='STRONG', method='BW',
+                   sk_neps=0.5, dsk_neps=0.75, all_set='NO', inter='DIFF',
+                   nastran_version='nx', comment: str='') -> ACMODL:
+        acmodl = ACMODL(infor, fset, sset,
+                        normal=normal, olvpang=olvpang, search_unit=search_unit,
+                        intol=intol, area_op=area_op, ctype=ctype, method=method,
+                        sk_neps=sk_neps, dsk_neps=dsk_neps, all_set=all_set,
+                        inter=inter, nastran_version=nastran_version, comment=comment)
+        self._add_methods._add_acmodl_object(acmodl)
+        return acmodl
+
+    def add_chacab(self, eid, pid, nodes, comment: str='') -> int:
+        chacab = self.chacab.add(eid, pid, nodes, comment=comment)
+        return chacab
+
+    def add_caabsf(self, eid: int, pid: int, nodes: list[int],
+                   comment: str='') -> int:
+        caabsf = self.caabsf.add(eid, pid, nodes, comment=comment)
+        return caabsf
+
+    def add_chacbr(self, eid, pid, nodes, comment: str='') -> int:
+        chacbr = self.chacbr.add(eid, pid, nodes, comment=comment)
+        return chacbr
+
+    def add_paabsf(self, pid: int,
+                   table_reactance_real: int=0,
+                   table_reactance_imag: int=0,
+                   s: float=1.0, a: float=1.0, b: float=0.0,
+                   k: float=0.0, rhoc: float=1.0,
+                   comment: str=''):
+        paabsf = self.paabsf.add(
+            pid, table_reactance_real=table_reactance_real,
+            table_reactance_imag=table_reactance_imag,
+            s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
+        return paabsf
+
+    def add_pacbar(self, pid: int, mback: float, mseptm: float,
+                   freson: float, kreson: float, comment: str='') -> int:
+        """
+        Creates a PACBAR card
+
+        Parameters
+        ----------
+        pid : int
+            Property identification number. (Integer > 0)
+        mback : float
+            Mass per unit area of the backing material
+        mseptm : float
+            Mass per unit area of the septum material
+        freson : float; default=None
+            Resonant frequency of the sandwich construction in hertz.
+        kreson : float; default=None
+            Resonant stiffness of the sandwich construction.
+
+        """
+        pacbar = self.pacbar.add(pid, mback, mseptm, freson, kreson, comment=comment)
+        return pacbar
+
+    def add_pacabs(self, pid, cutfr, b, k, m,
+                   synth=True, tid_resistance=None, tid_reactance=None,
+                   tid_weight=None, comment: str='') -> PACBAR:
+        """
+        Creates a PACABS card
+
+        Parameters
+        ----------
+        pid : int
+            Property identification number.
+        synth : bool; default=True
+            Request the calculation of B, K, and M from the tables TIDi below
+        tid_resistance : int; default=None
+            Identification of the TABLEDi entry that defines the resistance.
+        tid_reactance : int; default=None
+            Identification of the TABLEDi entry that defines the reactance.
+        tid_weight : int; default=None
+            Identification of the TABLEDi entry that defines the weighting function.
+        cutfr : float
+            Cutoff frequency for tables referenced above. (Real > 0.0)
+        B, K, M : float
+            Equivalent damping, stiffness and mass values per unit area. (Real > 0.0)
+
+        ..note:: tables are defined as a function of frequency in cycles/time
+        """
+        pacabs = PACABS(pid, cutfr, b, k, m,
+                        synth=synth, tid_resistance=tid_resistance,
+                        tid_reactance=tid_reactance, tid_weight=tid_weight,
+                        comment=comment)
+        self._add_methods._add_acoustic_property_object(pacabs)
+        return pacabs
+
+
 class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElements,
                AddRigidElements, AddAero, AddOptimization, AddMaterial, AddContact,
-               AddSuperelements, AddThermal, AddBolts):
+               AddSuperelements, AddThermal, AddBolts, AddAcoustic):
     def __init__(self):
         #BDFAttributes.__init__(self)
         super().__init__()
@@ -7883,17 +7989,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         #self._add_methods._add_group_object(group)
         #return group
 
-    def add_dmncon(self, constraint_id: int, constraint_type: str,
-                   xyz=None, normal=None, size=None,
-                   m=None, d=None, nsections=None,
-                   angle=None, mind=None, off_flag=None,
-                   comment: str='') -> DMNCON:
-        dmncon = DMNCON(constraint_id, constraint_type, xyz=xyz, normal=normal,
-                        size=size, m=m, d=d, nsections=nsections,
-                        angle=angle, mind=mind,
-                        off_flag=off_flag, comment=comment)
-        self._add_methods._add_dmncon_object(dmncon)
-        return dmncon
     # ------------------------------------------
     def add_modtrak(self, modtrak_id: int, low_range: int, high_range: int,
                     mt_filter: float, comment: str='') -> int:
@@ -8424,96 +8519,3 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         #cysym = CYSYM(side, coord, nids, comment=comment)
         #self._add_cysym_object(cysym)
         #return cysym
-    # --------------------------------------------------------------------------
-    # acoustic
-    def add_acmodl(self, infor, fset, sset,
-                   normal=0.5, olvpang=60., search_unit='REL', intol=0.2,
-                   area_op=0, ctype='STRONG', method='BW',
-                   sk_neps=0.5, dsk_neps=0.75, all_set='NO', inter='DIFF',
-                   nastran_version='nx', comment: str='') -> ACMODL:
-        acmodl = ACMODL(infor, fset, sset,
-                        normal=normal, olvpang=olvpang, search_unit=search_unit,
-                        intol=intol, area_op=area_op, ctype=ctype, method=method,
-                        sk_neps=sk_neps, dsk_neps=dsk_neps, all_set=all_set,
-                        inter=inter, nastran_version=nastran_version, comment=comment)
-        self._add_methods._add_acmodl_object(acmodl)
-        return acmodl
-
-    def add_chacab(self, eid, pid, nodes, comment: str='') -> int:
-        chacab = self.chacab.add(eid, pid, nodes, comment=comment)
-        return chacab
-
-    def add_caabsf(self, eid: int, pid: int, nodes: list[int],
-                   comment: str='') -> int:
-        caabsf = self.caabsf.add(eid, pid, nodes, comment=comment)
-        return caabsf
-
-    def add_chacbr(self, eid, pid, nodes, comment: str='') -> int:
-        chacbr = self.chacbr.add(eid, pid, nodes, comment=comment)
-        return chacbr
-
-    def add_paabsf(self, pid: int,
-                   table_reactance_real: int=0,
-                   table_reactance_imag: int=0,
-                   s: float=1.0, a: float=1.0, b: float=0.0,
-                   k: float=0.0, rhoc: float=1.0,
-                   comment: str=''):
-        paabsf = self.paabsf.add(
-            pid, table_reactance_real=table_reactance_real,
-            table_reactance_imag=table_reactance_imag,
-            s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
-        return paabsf
-
-    def add_pacbar(self, pid: int, mback: float, mseptm: float,
-                   freson: float, kreson: float, comment: str='') -> int:
-        """
-        Creates a PACBAR card
-
-        Parameters
-        ----------
-        pid : int
-            Property identification number. (Integer > 0)
-        mback : float
-            Mass per unit area of the backing material
-        mseptm : float
-            Mass per unit area of the septum material
-        freson : float; default=None
-            Resonant frequency of the sandwich construction in hertz.
-        kreson : float; default=None
-            Resonant stiffness of the sandwich construction.
-
-        """
-        pacbar = self.pacbar.add(pid, mback, mseptm, freson, kreson, comment=comment)
-        return pacbar
-
-    def add_pacabs(self, pid, cutfr, b, k, m,
-                   synth=True, tid_resistance=None, tid_reactance=None,
-                   tid_weight=None, comment: str='') -> PACBAR:
-        """
-        Creates a PACABS card
-
-        Parameters
-        ----------
-        pid : int
-            Property identification number.
-        synth : bool; default=True
-            Request the calculation of B, K, and M from the tables TIDi below
-        tid_resistance : int; default=None
-            Identification of the TABLEDi entry that defines the resistance.
-        tid_reactance : int; default=None
-            Identification of the TABLEDi entry that defines the reactance.
-        tid_weight : int; default=None
-            Identification of the TABLEDi entry that defines the weighting function.
-        cutfr : float
-            Cutoff frequency for tables referenced above. (Real > 0.0)
-        B, K, M : float
-            Equivalent damping, stiffness and mass values per unit area. (Real > 0.0)
-
-        ..note:: tables are defined as a function of frequency in cycles/time
-        """
-        pacabs = PACABS(pid, cutfr, b, k, m,
-                        synth=synth, tid_resistance=tid_resistance,
-                        tid_reactance=tid_reactance, tid_weight=tid_weight,
-                        comment=comment)
-        self._add_methods._add_acoustic_property_object(pacabs)
-        return pacabs

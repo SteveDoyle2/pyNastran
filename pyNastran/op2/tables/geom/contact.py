@@ -287,8 +287,8 @@ class CONTACT:
             # 4 TYPE           I Parameter data type
             # 5 Value(i)    I/RS Parameter value (See Note 1 below)
             #self.add_bctparm(contact_id, params)
-            print(contact_id, params)
-        op2.log.warning(f'skipping {name}')
+            #print(contact_id, params)
+        op2.log.warning(f'skipping {name}; id={contact_id} params={params}')
         return len(data)
 
     def _read_bsurfs(self, data: bytes, n: int) -> int:

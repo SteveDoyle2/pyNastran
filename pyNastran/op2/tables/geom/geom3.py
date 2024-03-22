@@ -7,6 +7,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, GRAV,
@@ -1048,11 +1049,13 @@ class GEOM3:
             op2.binary_debug.write('geom skipping TEMPRB in GEOM3\n')
         return len(data)
 
-    def _read_pface(self, data: bytes, n: int) -> int:
+    def _read_pface(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PFACE')
         self.op2.log.info('geom skipping PFACE in GEOM3')
         return len(data)
 
-    def _read_pedge(self, data: bytes, n: int) -> int:
+    def _read_pedge(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PEDGE')
         self.op2.log.info('geom skipping PEDGE in GEOM3')
         return len(data)
 

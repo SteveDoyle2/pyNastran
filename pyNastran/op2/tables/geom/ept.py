@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 #from pyNastran import is_release
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
@@ -121,7 +122,7 @@ class EPT:
             (13201, 132, 513): ['PBRSECT', self._read_fake],
 
             (13701, 137, 638): ['PWSEAM', self._read_fake],
-            (7001, 70, 632): ['???7001', self._read_fake_7001],
+            (7001, 70, 632): ['PMIC', self._read_pmic],
             (15106, 151, 953): ['PCOMPG1', self._read_fake],
             (3901, 39, 969): ['PSHL3D', self._read_fake],
             (17006, 170, 901): ['MATCID', self._read_fake],
@@ -2594,11 +2595,13 @@ class EPT:
         op2.card_count['PHBDY'] = nproperties
         return n
 
-    def _read_pintc(self, data: bytes, n: int) -> int:
+    def _read_pintc(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PINTC')
         self.op2.log.info('geom skipping PINTC in EPT')
         return len(data)
 
-    def _read_pints(self, data: bytes, n: int) -> int:
+    def _read_pints(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PINTS')
         self.op2.log.info('geom skipping PINTS in EPT')
         return len(data)
 
@@ -2776,7 +2779,7 @@ class EPT:
         op2.show_data(data)
         asdf
 
-    def _read_fake_7001(self, data: bytes, n: int) -> int:
+    def _read_pmic(self, data: bytes, n: int) -> int:
         """
         (7001, 70, 632)
         What is the type????
@@ -2788,14 +2791,13 @@ class EPT:
         not AEPARM
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\atv005mat.op2
 
-        it's a PMIC
+        it's a PMIC?
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acssn100_2.op2
         """
         op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         for val in ints:
-            op2.add_card(['PMIC', val], 'PMIC')
-            #op2.add_pmic()
+            op2.add_pmic(val)
         nentries = len(ints)
         op2.card_count['PMIC'] = nentries
         return len(data)
@@ -3230,7 +3232,7 @@ class EPT:
         op2.card_count['PSET'] = nentries
         return n
 
-    def _read_pval(self, data: bytes, n: int) -> int:
+    def _read_pval(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         PVAL(10201,102,400)
 
@@ -3245,6 +3247,7 @@ class EPT:
                      number with this p-value specification.
         Words 1 through 7 repeat until End of Record
         """
+        raise UnsupportedCard('PVAL')
         op2: OP2Geom = self.op2
         #op2.show_data(data[n:])
         if self.size == 4:

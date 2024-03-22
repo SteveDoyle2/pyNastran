@@ -8,6 +8,7 @@ from functools import partial
 from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
@@ -305,7 +306,7 @@ class GEOM2:
             (6112, 61, 997): ['CQUADX4', self._read_fake],
             (6114, 61, 999): ['CQUADX8', self._read_cquadx8],
             (3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            (14500, 145, 9909): ['CRODF', self._read_fake],
+            (14500, 145, 9909): ['CRODF', self._read_crod],
             (3501, 35, 1): ['CSBOLT', self._read_fake],
             (3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
             (4408, 44, 227): ['CSLOT3', self._read_fake],
@@ -346,7 +347,7 @@ class GEOM2:
             (12901, 129, 482): ['GMBNDS', self._read_gmbnds],
             (3301, 33, 479): ['GMINTC', self._read_fake],
             (13001, 130, 483): ['GMINTS', self._read_fake],
-            #(2801, 28, 630): ['MICPNT', self._read_fake],
+            (2801, 28, 630): ['MICPNT', self._read_micpnt],
             (5201, 52, 11): ['PLOTEL', self._read_plotel],
             #(5202, 52, 669): ['PLOTEL3', self._read_fake],
             (5203, 52, 670): ['PLOTEL4', self._read_fake],
@@ -544,7 +545,6 @@ class GEOM2:
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
 
-            (2801, 28, 630) : ['MICPNT', self._read_fake],  # record
             (7708, 77, 9944): ['CHEXAL', self._read_fake],  # record
             (7108, 71, 9943): ['CPENTAL', self._read_fake],  # record
             (11001, 110, 8881): ['???', self._read_fake],
@@ -558,7 +558,7 @@ class GEOM2:
             (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
             (7908, 79, 9702): ['CSEAM?', self._read_cseam_maybe],
 
-            (14100, 141, 9905): ['???', self._read_fake],
+            (14100, 141, 9905): ['CHEXA', self._read_chexa20],
             (14700, 147, 9911): ['CTRIAF', self._read_ctria3],
             (9301, 93, 690): ['CJOINT', self._read_fake],
             #(14200, 142, 9906): ['???', self._read_fake],
@@ -566,6 +566,30 @@ class GEOM2:
             #(15801, 158, 9955): ['???', self._read_fake],
 
         }
+
+    def _read_chexa20(self, data: bytes, n: int) -> int:
+        """
+        ints    = (14100, 141, 9905,
+                   8013, 4, 6035, 6034, 6036, 6037, 6039, 6038, 6040, 6041,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        ]
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nfields = len(ints)
+        nelements = nfields // 22
+        ints = ints.reshape(nelements, 22)
+        for eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, *big_nodes in ints:
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ]
+            #big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
+                         #g17, g18, g19, g20]
+            if sum(big_nodes) > 0:
+                elem = CHEXA20.add_op2_data(data_in + big_nodes)
+            else:
+                elem = CHEXA8.add_op2_data(data_in)
+            self.add_op2_element(elem)
+        op2.card_count['CHEXA'] = nelements
+        return len(data)
 
     def _read_cquadx_9508(self, data: bytes, n: int) -> int:
         r"""
@@ -1696,7 +1720,7 @@ class GEOM2:
         op2.card_count['CFLUID4'] = nelements
         return n
 
-    def _read_cint(self, data: bytes, n: int) -> int:
+    def _read_cint(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -1715,6 +1739,7 @@ class GEOM2:
         Words 7 through 13 repeat 6 times
         14 UNDEF(2 ) none
         """
+        raise UnsupportedCard('CINT')
         self.op2.log.info('geom skipping CINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
         # doesn't seem to be a card, more of a general info on the geometry...
@@ -4556,32 +4581,33 @@ class GEOM2:
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
-        op2: OP2Geom = self.op2
-        op2.log.info('geom skipping GMBNDC in GEOM2')
-        #self.show_data(data)
-        #(1, 31, 32, GRID____, -1,
-         #2, 41, 42, GRID____, -1)
+        raise UnsupportedCard('GMNBDC')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDC in GEOM2')
+        ##self.show_data(data)
+        ##(1, 31, 32, GRID____, -1,
+         ##2, 41, 42, GRID____, -1)
 
-        #ints= (3201, 32, 478,
-        # 2, 41, 42, 1145390406, 538985799, 41, -1,
-        # 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
-        ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
-        isplit = np.where(ints == -1)[0]
-        nelements = len(isplit)
+        ##ints= (3201, 32, 478,
+        ## 2, 41, 42, 1145390406, 538985799, 41, -1,
+        ## 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
+        #ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
+        #isplit = np.where(ints == -1)[0]
+        #nelements = len(isplit)
 
-        i0 = 0
-        for ispliti in isplit:
-            eid, gridi, gridf = ints[i0:i0+3]
-            #print(eid, gridi, gridf)
-            s0 = n + (i0 + 3) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            eids = ints[i0+5:ispliti]
-            assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
-            #print(eids)
-            i0 = ispliti + 1
-        op2.card_count['GMBNDC'] = nelements
-        return len(data)
+        #i0 = 0
+        #for ispliti in isplit:
+            #eid, gridi, gridf = ints[i0:i0+3]
+            ##print(eid, gridi, gridf)
+            #s0 = n + (i0 + 3) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #eids = ints[i0+5:ispliti]
+            #assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
+            ##print(eids)
+            #i0 = ispliti + 1
+        #op2.card_count['GMBNDC'] = nelements
+        #return len(data)
 
     def _read_ctube(self, data: bytes, n: int) -> int:
         """
@@ -4786,6 +4812,33 @@ class GEOM2:
 # GMBNDS
 # GMINTC
 # GMINTS
+    def _read_micpnt(self, data: bytes, n: int) -> int:
+        """
+        RECORD – MICPNT(2801,28,630)
+        Word Name Type Description
+        1 EID I Element identification number
+        2 GID I Fluid grid identification number
+        3 DESC(12) CHAR4 Description - 48 characters maximum
+        """
+        op2: OP2Geom = self.op2
+        #size = self.size
+        struc = Struct(op2._endian + b'2i 48s')
+        ntotal = 8 + 48
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = struc.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MICPNT=%s\n' % str(out))
+            #(eid,n1,n2) = out
+            eid, node_id, name_bytes = out
+            name = name_bytes.decode('latin1').rstrip()
+            op2.add_micpnt(eid, node_id, name)
+            n += ntotal
+        op2.card_count['MICPNT'] = nelements
+        return n
 
     def _read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
@@ -5135,34 +5188,36 @@ class GEOM2:
         8 EID           I Entity identification numbers for boundary of subdomain
         Word 8 repeats until End of Record
         """
-        op2: OP2Geom = self.op2
-        op2.log.info('geom skipping GMBNDS in GEOM2')
-        #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
-        ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-        i0 = 0
-        for iminus1i in iminus1:
-            bid, n1, n2, n3, n4 = ints[i0:i0+5]
-            s0 = n + (i0 + 5) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
-            assert bid >= 0, (bid, n1, n2, n3, n4, entity)
-            eids = ints[i0+7:iminus1i]
-            #print(bid, n1, n2, n3, n4)
-            #print('entity = %r' % entity)
-            #print(eid)
-            #print('-----')
-            i0 = iminus1i + 1
-        return len(data)
+        raise UnsupportedCard('GMBNDS')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDS in GEOM2')
+        ##(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
+        #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
+        #iminus1 = np.where(ints == -1)[0]
+        #i0 = 0
+        #for iminus1i in iminus1:
+            #bid, n1, n2, n3, n4 = ints[i0:i0+5]
+            #s0 = n + (i0 + 5) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
+            #assert bid >= 0, (bid, n1, n2, n3, n4, entity)
+            #eids = ints[i0+7:iminus1i]
+            ##print(bid, n1, n2, n3, n4)
+            ##print('entity = %r' % entity)
+            ##print(eid)
+            ##print('-----')
+            #i0 = iminus1i + 1
+        #return len(data)
 
     def _read_cngret(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\bpas101.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\pass8.op2
         return len(data)
 
-    def _read_adapt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping adapt card in GEOM2')
+    def _read_adapt(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMCORD')
+        self.op2.log.info('geom skipping ADAPT card in GEOM2')
         return len(data)
 
     def _read_cseam_maybe(self, data: bytes, n: int) -> int:

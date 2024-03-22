@@ -69,7 +69,7 @@ class MPT:
             (903, 9, 336) : ['MATT8', self._read_matt8],
             (8902, 89, 423) : ['RADMT', self._read_radmt],
             (9002, 90, 410) : ['RADBND', self._read_radbnd],
-            (4801, 48, 961): ['MATPOR', self._read_fake],
+            (4801, 48, 961): ['MATPOR', self._read_matpor],
             (5101, 51, 642): ['MATDMG', self._read_fake],
             (14403, 144, 840): ['NLSTEP', self._read_fake],
             (4603, 46, 623): ['MATCRP', self._read_fake],
@@ -1378,6 +1378,80 @@ class MPT:
         op2.card_count['MATT11'] = nmaterials
         op2.log.warning('geom skipping MATT11 in MPT')
         return n
+
+    def _read_matpor(self, data: bytes, n: int) -> int:
+        """
+        Record – MATPOR(4801,48,961)
+
+        Material properties for porous materials used as acoustic absorbers
+        Word Name Type Description
+        1 MID     I Material identification number
+        2 MODEL   I Absorber model
+        MODEL = 1 Craggs model
+        3 RHO    RS Mass density
+        4 C      RS Speed of sound
+        5 UNDEF(4) None
+        9 RES    RS Flow resistivity
+        10 POR   RS Porosity
+        11 TORT  RS Tortuosity
+        12 UNDEF(5) None
+        MODEL = 2 Delaney-Miki model
+        3 RHO       RS Mass density
+        4 C         RS Speed of sound
+        5 FRAME      I FRAME = 1 for rigid; FRAME = 2 for limp
+        6 UNDEF(3) None
+        9 RES       RS Speed of sound
+        10 POR      RS Porosity
+        11 UNDEF    RS
+        12 DENS     RS Frame density (for limp frames only)
+        13 UNDEF(4) RS
+        MODEL = 3 Johnson-Champoux-Allard model
+        3 RHO       RS Mass density
+        4 C         RS Speed of sound
+        5 FRAME      I FRAME = 1 for rigid; FRAME = 2 for limp
+        6 GAMMA     RS Ratio of constant pressure specific heat to constant volume specific heat
+        7 PR        RS Prandtl number
+        8 MU        RS Dynamic viscosity
+        9 RES       RS Speed of sound
+        10 POR      RS Porosity
+        11 TORT     RS Tortuosity
+        12 DENS     RS Frame density (for limp frames only)
+        13 L1       RS Characteristic viscous length
+        14 L2       RS Characteristic thermal length
+        15 UNDEF(2) None
+        """
+        op2: OP2Geom = self.op2
+        ntotal0 = 2 * self.size # 32*4
+        ntotal = 16 * self.size # 32*4
+        struct0 = Struct(mapfmt(op2._endian + b'2i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i 3f 5i', self.size)) # cragg
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata0 = data[n:n+ntotal0]
+            edata = data[n:n+ntotal]
+            mid, model = struct0.unpack(edata0)
+            if model == 1:
+                out = struct1.unpack(edata)
+                mid, model, rho, c, dummy1, dummy2, dummy3, dummy4, res, por, tort, *dummy = out # cragg
+                assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                assert dummy == [0, 0, 0, 0, 0], dummy
+                op2.add_matpor_cragg(mid, rho, c, res, por, tort)
+            #elif model == 2:
+                #rho, c, frame, dummy1, dummy2, dummy3, res, por, dummy4, density, *dummy = out # Delaney-Miki
+                #assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                #assert dummy == (0, 0, 0), dummy
+            #elif model == 3:
+                #rho, c, frame, gamma, prandtl, dynanmic_viscosity, res, por, tort, densiity, L1, L2, *dummy = johnson
+                #assert dummy == (0, 0, 0), dummy
+            else:
+                raise RuntimeError(model)
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATPOR=%s\n' % str(out))
+            #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
+
+        op2.card_count['MATPOR'] = nmaterials
+        return len(data)
 
 # MBOLT
 # MBOLTUS

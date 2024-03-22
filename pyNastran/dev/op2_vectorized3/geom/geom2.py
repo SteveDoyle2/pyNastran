@@ -15,6 +15,7 @@ import numpy as np
 #from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 #from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     #CQUADX, CTRIAX6, CTRAX3, CTRAX6, CQUADX8, CTRIAX)
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CTRIA3, CQUAD4, CTRIA6,
     CQUADR, CTRIAR,
@@ -5142,7 +5143,7 @@ class GEOM2:
 # CTRIX3FD - 102
 # CTRIX6FD - 103
 
-    def _read_gmbndc(self, data: bytes, n: int) -> int:
+    def _read_gmbndc(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         GMBNDC(3201,32,478)
 
@@ -5154,6 +5155,7 @@ class GEOM2:
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
+        raise UnsupportedCard('GMBNDC')
         op2 = self.op2
         op2.log.info('geom skipping GMBNDC in GEOM2')
         #self.show_data(data)
@@ -5675,7 +5677,7 @@ class GEOM2:
         #self.show_data(data[12:])
         return len(data)
 
-    def _read_feedge2(self, data: bytes, n: int) -> int:
+    def _read_feedge2(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         (2901, 29, 9601)
 
@@ -5688,6 +5690,7 @@ class GEOM2:
         6 GEOMID1    I Identification number of a POINT or GMCURV entry
         7 GEOMID2    I Identification number of a POINT or GMCURV entry
         """
+        raise UnsupportedCard('FEEDGE')
         op2 = self.op2
         if not hasattr(op2, 'feedge'):
             op2.log.warning('skipping FEEDGE')

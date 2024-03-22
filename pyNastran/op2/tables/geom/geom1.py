@@ -9,6 +9,7 @@ from typing import Union, TYPE_CHECKING
 
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 #from pyNastran.bdf.cards.parametric.geometry import FEFACE
 
@@ -994,7 +995,7 @@ class GEOM1:
         op2.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmcurv(self, data: bytes, n: int) -> int:
+    def _read_gmcurv(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 CURVID       I Curve identification number
@@ -1003,6 +1004,7 @@ class GEOM1:
         5 CIDBC        I Coordinate system identification number for the constraints
         6 DATA     CHAR4 Geometry evaluator specific data
         """
+        raise UnsupportedCard('GMCURV')
         op2: OP2Geom = self.op2
         size = op2.size
         if size == 4:
@@ -1063,7 +1065,7 @@ class GEOM1:
         #return len(data)
         return n
 
-    def _read_feface(self, data: bytes, n: int) -> int:
+    def _read_feface(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 FACEID    I Face identification number
@@ -1074,6 +1076,7 @@ class GEOM1:
         6 CIDBC     I Coordinate system identification number for the constraints
         7 SURFID(2) I Alternate method used to specify the geometry
         """
+        raise UnsupportedCard('FEFACE')
         op2: OP2Geom = self.op2
         ntotal = 32 * op2.factor
         structi = Struct(mapfmt(op2._endian + b'8i', op2.size))
@@ -1092,12 +1095,14 @@ class GEOM1:
         op2.increase_card_count('FEFACE', nentries)
         return n
 
-    def _read_gmsurf(self, data: bytes, n: int) -> int:
+    def _read_gmsurf(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMSURF')
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMSURF in GEOM1')
         return len(data)
 
-    def _read_gmcord(self, data: bytes, n: int) -> int:
+    def _read_gmcord(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMCORD')
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMCORD in GEOM1')
         return len(data)

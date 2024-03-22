@@ -784,3 +784,25 @@ class ACMODL(Element):
     def write_card(self, size=8, is_double=False):
         fields = self.raw_fields()
         return print_card_8(fields)
+
+
+class PMIC(Property):
+    type = 'PMIC'
+    def __init__(self, pid: int, comment: str=''):
+        self.pid = pid
+        self.comment = comment
+
+    @classmethod
+    def add_card(self, card: BDFCard, comment: str=''):
+        pid = integer(card, 1, 'property_id')
+        return PMIC(pid, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def raw_fields(self):
+        return ['PMIC', self.pid]
+
+    def write_card(self, size=8, is_double=False):
+        fields = self.raw_fields()
+        return print_card_8(fields)

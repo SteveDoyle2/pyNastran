@@ -178,13 +178,14 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int], nelements: in
                     z0 = prop.z0
                 elif ptype in {'PLPLANE', 'PTRSHL', 'PQUAD1'}: # ? PTRSHL, PQUAD1
                     z0 = 0.
-                elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE'}:
+                elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE', 'PMIC'}:
                     z0 = np.nan
                 else:
-                    raise NotImplementedError(ptype) # PSHEAR, PCOMPG
+                    raise NotImplementedError(f'prop={prop}\n'
+                                              f'ptype={ptype!r}') # PCOMPG
 
             if z0 is None:
-                if etype in ['CTRIA3', 'CTRIAR']:
+                if etype in {'CTRIA3', 'CTRIAR'}:
                     #node_ids = self.nodes[3:]
                     z0 = (element.T1 + element.T2 + element.T3) / 3.
                     nnodesi = 3
@@ -192,7 +193,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int], nelements: in
                     #node_ids = self.nodes[3:]
                     z0 = (element.T1 + element.T2 + element.T3) / 3.
                     nnodesi = 6
-                elif etype in ['CQUAD4', 'CQUADR']:
+                elif etype in {'CQUAD4', 'CQUADR'}:
                     #node_ids = self.nodes[4:]
                     z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                     nnodesi = 4

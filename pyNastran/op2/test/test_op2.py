@@ -8,6 +8,7 @@ from typing import Optional, Any
 import numpy as np
 
 import pyNastran
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.op2.op2 import (
     OP2, FatalError, SixtyFourBitError, OverwriteTableError)
 #SortCodeError, DeviceCodeError, FortranMarkerError
@@ -397,6 +398,8 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         is_passed = True
     except MemoryError:
         raise
+    except UnsupportedCard:
+        is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)

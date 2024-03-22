@@ -940,8 +940,8 @@ class EIGRL(Method):
         self.values = values
 
     def validate(self):
-        assert self.norm in [None, 'MAX', 'MASS', 'AF'], 'norm=%r' % self.norm
-        assert self.msglvl in [0, 1, 2, 3, 4], 'msglvl=%r' % self.msglvl
+        assert self.norm in [None, 'MAX', 'MASS', 'AF'], f'norm={self.norm!r}'
+        assert self.msglvl in [0, 1, 2, 3, 4, -999], f'msglvl={self.msglvl:d}'
         if len(self.options) != len(self.values):
             raise RuntimeError('len(options) != len(values); noptions=%s nvalues=%s\n'
                                'options=%s values=%s' % (len(self.options), len(self.values),

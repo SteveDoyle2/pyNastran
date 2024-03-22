@@ -4125,7 +4125,8 @@ class MONDSP1(BaseCard):
         # assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        comp = str(integer(card, 10, 'comp'))
+        #comp = str(integer(card, 10, 'comp'))
+        comp = str(integer_or_string(card, 10, 'comp'))
         cp = integer_or_blank(card, 11, 'cp', default=0)
         xyz = [
             double_or_blank(card, 12, 'x', default=0.0),

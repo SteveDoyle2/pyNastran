@@ -16,14 +16,21 @@ This is a bug fix release.  Some GUI enhancements have been added as well.
 The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
 
 BDF:
+ - changed:
+   - moving ACMODL writing to dynamics
+   - reorg on AddCard class to make it easier to find cards
  - added:
    - CBUSH centroid to fix grid point forces bug
    - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
+   - PMIC to fix op2 tests
  - fixed:
+   - add_tempbc was named incorrectly (was tempbc)
+   - MONDSP1 comp field can be a string (e.g., PLATE)
    - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
    - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
    - fixing TEMP writing when ntemperatures > 3
    - ACMODL for NX wrote/expected ctype in the wrong field
+
 OP2:
  - added:
    - op2_results.stressa (for MSC)
@@ -35,13 +42,19 @@ OP2:
    - fixing 64-bit MSC version bug by settig is_interlaced = False
    - fixing 64-bit support for stress/strain-CSHEAR
 
+OP2Geom:
+   - added:
+     - NX acoustic: AMLREG, ACPLNW, MATPOR-CRAGG, MICPNT (not supported by BDF other than in add_card)
+     - acoustic CHEXA/CROD
+
 other:
  - nastran_to_vtk:
-    - to now supports op2_filename='' to only convert geometry
-    - fixed bug when result names are duplicated
+   - to now supports op2_filename='' to only convert geometry
+   - fixed bug when result names are duplicated
+
 
 GUI:
- - Nastran:
+ - Nastran results:
    - fixed bug von mises for plate stress/strain
  - Shear-Moment-Torque menu:
    - remove unused time box
@@ -60,8 +73,10 @@ GUI:
    - fixed corner text min/max bug (should be default, not same as legend)
    - fixed legend disappearing when previous result is GridPointForces
    - fixed issue with GUI not loading if json file doesn't exist
+ - nastran reader:
+    - fixed acoustic PMIC crash
 
-  - known issues:
+ - known issues:
     - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
     - Groups:
       - node id picking for active groups is buggy (area_pick, highlight menu)
