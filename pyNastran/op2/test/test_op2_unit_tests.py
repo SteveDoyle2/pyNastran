@@ -2045,6 +2045,36 @@ class TestOP2Main(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_vibroacoustics1(self):
+        """
+        checks test_vba.bdf, which tests NX Nastran vibroacoustics
+        """
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'test_vba', 'test_vba.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nx', 'test_vba', 'test_vba.op2')
+
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=True,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=True, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     def test_op2_superelement_1(self):
         """
         extse04c

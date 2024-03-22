@@ -23,6 +23,7 @@ BDF:
    - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
    - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
    - fixing TEMP writing when ntemperatures > 3
+   - ACMODL for NX wrote/expected ctype in the wrong field
 OP2:
  - added:
    - op2_results.stressa (for MSC)

@@ -499,7 +499,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
     if not write_bdf:
         return
     assert make_geom, f'write_bdf=False, but make_geom={make_geom!r}; expected make_geom=True'
-    op2._nastran_format = 'msc'
+    #op2._nastran_format = 'msc'
     op2.executive_control_lines = ['CEND\n']
     op2.validate()
     op2.write_bdf(bdf_filename, size=8)

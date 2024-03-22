@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     #exact_string_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
 
 
@@ -574,7 +575,7 @@ class ACMODL(Element):
     +--------+-------+---------+----------+------+--------+--------+---------+----------+
     | ACMODL |       |  INFOR  |   FSET   | SSET | NORMAL |        | OVLPANG | SRCHUNIT |
     +--------+-------+---------+----------+------+--------+--------+---------+----------+
-    |        | INTOL | AREAOP  |   CTYPE  |      |        |        |         |          |
+    |        | INTOL | AREAOP  |          |      | CTYPE  |        |         |          |
     +--------+-------+---------+----------+------+--------+--------+---------+----------+
 
 
@@ -697,7 +698,7 @@ class ACMODL(Element):
         self.inter = inter
 
     @classmethod
-    def add_card(cls, card, nastran_version, comment=''):
+    def add_card(cls, card: BDFCard, nastran_version: str, comment: str=''):
         """
         Adds a ACMODL card from ``BDF.add_card(...)``
 
@@ -715,17 +716,17 @@ class ACMODL(Element):
     @classmethod
     def add_card_nx(cls, card, comment=''):
         #
-        infor = string(card, 2, 'infor')
-        fset = integer(card, 3, 'fset')
-        sset = integer(card, 4, 'sset')
-        normal = double_or_blank(card, 5, 'normal', 0.5)
+        infor = string_or_blank(card, 2, 'infor', default='NONE')
+        fset = integer_or_blank(card, 3, 'fset', default=None)
+        sset = integer_or_blank(card, 4, 'sset', default=None)
+        normal = double_or_blank(card, 5, 'normal', default=0.5)
         #
-        olvpang = double_or_blank(card, 7, 'olvpang', 60.0)
-        search_unit = string_or_blank(card, 8, 'search_unit', 'REL')
-        intol = double_or_blank(card, 9, 'intol', 0.2)
-        area_op = integer_or_blank(card, 10, 'area_op', 0)
-        ctype = string_or_blank(card, 11, 'ctype', 'STRONG')
-        assert len(card) <= 8, f'len(ACMODL card) = {len(card):d}\ncard={card}'
+        olvpang = double_or_blank(card, 7, 'olvpang', default=60.0)
+        search_unit = string_or_blank(card, 8, 'search_unit', default='REL')
+        intol = double_or_blank(card, 9, 'intol', default=0.2)
+        area_op = integer_or_blank(card, 10, 'area_op', default=0)
+        ctype = string_or_blank(card, 13, 'ctype', default='STRONG')
+        assert len(card) <= 14, f'len(ACMODL card) = {len(card):d}\ncard={card}'
 
         return ACMODL(infor, fset, sset,
                       normal=normal, olvpang=olvpang,
@@ -736,18 +737,18 @@ class ACMODL(Element):
     @classmethod
     def add_card_msc(cls, card, comment=''):
         #print('MSC...ACMODL')
-        inter = string_or_blank(card, 2, 'infor', 'DIFF')
-        infor = string_or_blank(card, 2, 'infor', 'NONE')
-        fset = integer_or_blank(card, 3, 'fset')
-        sset = integer_or_blank(card, 4, 'sset')
+        inter = string_or_blank(card, 1, 'infor', default='DIFF')
+        infor = string_or_blank(card, 2, 'infor', default='NONE')
+        fset = integer_or_blank(card, 3, 'fset', default=None)
+        sset = integer_or_blank(card, 4, 'sset', default=None)
         normal_default = 0.001 if inter == 'INDENT' else 1.0
-        normal = double_or_blank(card, 5, 'normal', normal_default)
+        normal = double_or_blank(card, 5, 'normal', default=normal_default)
         method = string_or_blank(card, 6, 'method', 'BW') # BW/CP
-        sk_neps = double_or_blank(card, 7, 'sk_neps', 0.5)
-        dsk_neps = double_or_blank(card, 8, 'dsk_neps', 0.75)
-        intol = double_or_blank(card, 9, 'intol', 0.2)
-        all_set = string_or_blank(card, 10, 'all_set', 'NO') #
-        search_unit = string_or_blank(card, 11, 'search_unit', 'REL')
+        sk_neps = double_or_blank(card, 7, 'sk_neps', default=0.5)
+        dsk_neps = double_or_blank(card, 8, 'dsk_neps', default=0.75)
+        intol = double_or_blank(card, 9, 'intol', default=0.2)
+        all_set = string_or_blank(card, 10, 'all_set', default='NO') #
+        search_unit = string_or_blank(card, 11, 'search_unit', default='REL')
         assert len(card) <= 12, f'len(ACMODL card) = {len(card):d}\ncard={card}'
         return ACMODL(infor, fset, sset,
                       inter=inter, normal=normal, method=method,
@@ -764,13 +765,16 @@ class ACMODL(Element):
         pass
 
     def raw_fields(self):
+        infor = self.infor # None if self.infor == 'NONE' else self.infor
+        fset = None if self.fset == 0 else self.fset
+        sset = None if self.sset == 0 else self.sset
         if is_msc(self.nastran_version):
-            list_fields = ['ACMODL', self.inter, self.infor,
-                           self.fset, self.sset, self.normal, self.method,
+            list_fields = ['ACMODL', self.inter, infor,
+                           fset, sset, self.normal, self.method,
                            self.sk_neps, self.dsk_neps, self.intol,
                            self.all_set, self.search_unit, ]
         else:
-            list_fields = ['ACMODL', None, self.infor, self.fset, self.sset, self.normal, None, self.olvpang, self.search_unit,
+            list_fields = ['ACMODL', None, infor, fset, sset, self.normal, None, self.olvpang, self.search_unit,
                            self.intol, self.area_op, None, None, self.ctype]
             #list_fields = [
                 #'ACMODL', self.pid, synth, self.tid_resistance, self.tid_reactance, self.tid_weight,
