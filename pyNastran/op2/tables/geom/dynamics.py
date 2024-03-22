@@ -103,7 +103,7 @@ class DYNAMICS(GeomCommon):
             (9607, 96, 660): ['ACORDER', self._read_fake],
             (2601, 26, 58): ['FRFFLEX', self._read_fake],
             (3501, 35, 56): ['RCROSSC', self._read_fake],
-            (5807, 59, 653): ['ACPLNW', self._read_fake],
+            (5807, 59, 653): ['ACPLNW', self._read_acplnw],
             (2807, 28, 79): ['FRFOMAP', self._read_fake],
             (7307, 73, 647): ['TLOAD3', self._read_fake],
             (5407, 54, 649): ['ALOAD', self._read_fake],
@@ -151,6 +151,66 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         op2.log.warning('skipping CAMPBLL')
         return n
+
+    def _read_acplnw(self, data: bytes, n: int) -> int:
+        """
+        Record – ACPLNW(5807,59,653)
+
+        Acoustic plane wave source
+        Word      Name Type Description
+        1 SID      I Load set identification number
+        2 FORM     I Complex format: 0 for real/imaginary, 1 for magnitude/phase
+        3 A1      RS Scale factor 1
+        4 TRTM    RS Real part or magnitude of plane wave
+        5 TIDTRTM  I TABLEDi bulk entry identification number for real part or magnitude of plane wave
+        6 TITP    RS Imaginary part or phase (in degrees) of plane wave
+        7 TIDTITP  I TABLEDi bulk entry identification number for imaginary part or phase (in degrees) of plane wave
+        8 CID1     I Coordinate system identification number for location of plane wave source
+        9  X      RS X-coordinate of plane wave source
+        10 Y      RS Y-coordinate of plane wave source
+        11 Z      RS Z-coordinate of plane wave source
+        12 CID2    I Coordinate system identification number for direction of plane wave
+        13 NX     RS Direction cosine between plane wave direction and X-axis
+        14 NY     RS Direction cosine between plane wave direction and Y-axis
+        15 NZ     RS Direction cosine between plane wave direction and Z-axis
+        16 UNDEF(3) None
+        """
+        op2: OP2Geom = self.op2
+
+        ntotal = 18 * self.size
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'ACPLNW'
+
+        loads = []
+        struc = Struct(mapfmt(op2._endian + b'2i 2f if 2i 3f i 3f 3i', self.size))
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, form, scale, real_float, tid_real, imag_float, tid_imag,
+             cid1, x, y, z, cid2, nx, ny, nz, dummy1, dummy2, dummy3) = out
+            assert sid > 0, sid
+            assert form in {0, 1}, form
+
+            form_str = 'REAL' if form == 0 else 'PHASE'
+
+            real = real_float if tid_real == 0 else tid_real
+            imag = imag_float if tid_imag == 0 else tid_imag
+
+            assert cid1 >= 0, cid1
+            assert cid2 >= 0, cid2
+            assert cid2 >= 0, cid2
+            assert (dummy1, dummy2, dummy3) == (0, 0, 0), (dummy1, dummy2, dummy3)
+            xyz = [x, y, z]
+            nxyz = [nx, ny, nz]
+
+
+            # ACPLNW SID  FORM A  TR/TM TI/TP
+            #        CID1 X1   X2 X3    CID2 N1 N2 N3
+            op2.add_acplnw(sid, form_str, scale, real, imag, cid1, xyz, cid2, nxyz)
+            #acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            #loads.append(acsrce)
+        return n # , loads
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
