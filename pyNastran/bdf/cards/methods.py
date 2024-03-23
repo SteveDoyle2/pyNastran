@@ -378,6 +378,8 @@ class EIGC(Method):
                 assert nalpha_a == len(self.iblkszs)
                 assert nalpha_a == len(self.ksteps)
                 assert nalpha_a == len(self.NJIs)
+        for kstep in self.ksteps:
+            assert isinstance(kstep, int), self.ksteps
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -470,7 +472,7 @@ class EIGC(Method):
 
     def raw_method(self):
         list_fields = []
-        if self.method in ['HESS', 'INV', 'DET']:
+        if self.method in {'HESS', 'INV', 'DET'}:
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
                     self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                     self.LJs, self.NEJs, self.NDJs):
@@ -509,11 +511,11 @@ class EIGC(Method):
                 for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
                         self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                         self.ksteps, self.NJIs):
-                    alphaA = set_blank_if_default(alphaA, 0.0)
-                    omegaA = set_blank_if_default(omegaA, 0.0)
-                    mblksz = set_blank_if_default(mblksz, 7)
-                    iblksz = set_blank_if_default(iblksz, 2)
-                    kstep = set_blank_if_default(kstep, 5)
+                    alphaA = set_blank_if_default(alphaA, default=0.0)
+                    omegaA = set_blank_if_default(omegaA, default=0.0)
+                    mblksz = set_blank_if_default(mblksz, default=7)
+                    iblksz = set_blank_if_default(iblksz, default=2)
+                    kstep = set_blank_if_default(kstep, default=5)
 
                     list_fields += [alphaA, omegaA, mblksz, iblksz,
                                     kstep, None, Nj, None]
@@ -1108,11 +1110,11 @@ def _load_clan(nrows, card):
             assert is_nej in [False, None], is_nej
             is_nej = False
             # ALPHAAJ OMEGAAJ MBLKSZ IBLKSZ KSTEPS blank NJi
-            mblock_size = double_or_blank(card, i + 2, 'mblock' + str(irow), 7)
+            mblock_size = double_or_blank(card, i + 2, 'mblock' + str(irow), default=7)
 
             # iblkszs is an integer, but entered as a float...
-            iblock_size = double_or_blank(card, i + 3, 'iblksz' + str(irow), 2.0)
-            kstep = integer_or_blank(card, i + 4, 'kstep' + str(irow), 5)
+            iblock_size = double_or_blank(card, i + 3, 'iblksz' + str(irow), default=2.0)
+            kstep = integer_or_blank(card, i + 4, 'kstep' + str(irow), default=5)
             nji = integer(card, i + 6, 'NJI' + str(irow))
 
             mblkszs.append(mblock_size)

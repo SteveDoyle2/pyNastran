@@ -1030,14 +1030,15 @@ class GEOM2:
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """CBEAM(5408,54,261) - the marker for Record 10"""
         op2: OP2Geom = self.op2
-        ntotal = 72 * self.factor  # 18*4
-        fe1 = 40 * self.factor
-        fe2 = 44 * self.factor
+        size = self.size
+        ntotal = 18 * size  # 18*4
+        fe1 = 10 * size
+        fe2 = 11 * size
         nelements = (len(data) - n) // ntotal
-        struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        struct_i = op2.struct_i if size == 4 else self.struct_q
         #print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', size))
+        s3 = Struct(mapfmt(op2._endian + b'12i6f', size))
 
         list_warnings = []
         for unused_i in range(nelements):
@@ -1115,6 +1116,7 @@ class GEOM2:
                 raise
             elem.offt = offt
 
+            elem.validate()
             self.add_op2_element(elem)
             n += ntotal
         if len(list_warnings):
@@ -1502,6 +1504,7 @@ class GEOM2:
     def _read_cfast(self, data: bytes, n: int) -> int:
         r"""
         RECORD – CFAST(13801,138,566) - NX
+
         Word Name Type Description
         1 EID       I Element identification number
         2 PID       I Property identification number
@@ -1521,6 +1524,23 @@ class GEOM2:
         155 GHA(12)   RS Coordinates of 4 GHA points
         167 GHB(12)   RS Coordinates of 4 GHB points
         179 TAVG      RS Average shell thickness
+        FORMAT=9 ELPAT
+        180 EIDUP  I Element ID of upper shell
+        181 EIDLOW I Element ID of lower shell
+        FORMAT=PARTPAT PARTPAT
+        180 PIDUP  I Property ID of upper shell
+        181 PIDLOW I Property ID of lower shell
+        END FORMAT
+        182 TMIN RS Minimum shell thickness
+        183 XS   RS X coordinate of spot weld location
+        184 YS   RS Y coordinate of spot weld location
+        185 ZS   RS Z coordinate of spot weld location
+        186 XGA  RS X coordinate of point ga
+        187 YGA  RS Y coordinate of point ga
+        188 ZGA  RS Z coordinate of point ga
+        189 XGB  RS X coordinate of point gb
+        190 YGB  RS Y coordinate of point gb
+        191 ZGB  RS Z coordinate of point gb
         ints = (
             101, 3, 100, 9, 0,   0,   44,  0,
             9, 14, 13, 8,   0,   0,   0,   0,
@@ -1559,35 +1579,119 @@ class GEOM2:
         CFAST        101       3    PROP       1       2             100     101
         CFAST        102       3    PROP       1       2     200
 
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cfast01.op2
+        ints    = (eid=101, pid3, gs=100, format=9, ga=0, gb=0,
+                   44, 0,
+                   gupper=9, 14,  13, 8,  0, 0, 0, 0,
+                   glower=29, 34, 33, 28, 0, 0, 0, 0,
+                   # guact
+                   5,  10,  9,  4, 15, 20, 19, 14,
+                   18, 17, 12, 13,  8,  7, 2,   3,
+                   0,   0,  0,  0,  0,  0, 0,   0,
+                   0,   0,   0, 0,  0,  0, 0,   0,
+                   # glact
+                   25, 30, 29, 24, 35, 40, 39, 34,
+                   38, 37, 32, 33, 28, 27, 22, 23,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   # nug, nlg
+                   16, 16,
+                   #guele
+                   5,  10,  9,  4, 0, 0, 0, 0,
+                   15, 20, 19, 14, 0, 0, 0, 0,
+                   18, 17, 12, 13, 0, 0, 0, 0,
+                   8,   7,  2,  3, 0, 0, 0, 0,
+                   # glele
+                   25, 30, 29, 24, 0, 0, 0, 0,
+                   35, 40, 39, 34, 0, 0, 0, 0,
+                   38, 37, 32, 33, 0, 0, 0, 0,
+                   28, 27, 22, 23, 0, 0, 0, 0,
+                   # gba/ghb
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0,
+                   1078069239, 1064820772, 1036831949, 1078069239, 1073874935, 1036831949, 1073475602, 1073874935, 1036831949, 1073475602, 1064820772, 1036831949, -1082130432,
+                   upper=7, lower=19,
+                   981668463, 1075838976, 1069547520, 1036831949, 1075838976, 1069547520, 0, 1075838976, 1069547520, 1036831949)
+        floats  = (101, 3, 100, 9, 0, 0,
+                   44, 0, 9, 14, 13, 8, 0, 0, 0, 0,
+                   29, 34, 33, 28, 0, 0, 0, 0,
+                   5, 10, 9, 4, 15, 20, 19, 14, 18, 17, 12, 13, 8, 7, 2,
+                   3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 35, 40, 39, 34, 38,
+                   37, 32, 33, 28, 27, 22, 23,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   16, 16, 5, 10, 9, 4, 0.0, 0.0, 0.0, 0.0,
+                   15, 20, 19, 14, 0.0, 0.0, 0.0, 0.0,
+                   18, 17, 12, 13, 0.0, 0.0, 0.0, 0.0,
+                   8, 7, 2, 3, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 0.0, 0.0, 0.0, 0.0,
+                   35, 40, 39, 34, 0.0, 0.0, 0.0, 0.0,
+                   38, 37, 32, 33, 0.0, 0.0, 0.0, 0.0,
+                   28, 27, 22, 23, 0.0, 0.0, 0.0, 0.0,
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0, 3.031, 0.968, 0.10, 3.031, 2.031, 0.10, 1.968263864517212, 2.031736135482788, 0.10, 1.968263864517212, 0.9682638645172119, 0.10, -1.0,
+                   upper=7, lower=19,
+                   tmin=0.10,
+                   xs=2.5, 1.5, 0.10,
+                   xga=2.5, 1.5, 0.0,
+                   xgb=2.5, 1.5, 0.10)
+        CFAST        101       3    ELEM       7      19     100
+
         """
         op2: OP2Geom = self.op2
-        op2.show_data(data[12:], 'if')
-        ntotal = 764 * self.factor  # 191*4
-        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', self.size))
+        size = self.size
+
+        #op2.show_data(data[n:], 'if')
+        ntotal = 191 * size  # 191*4
+        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', size))
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai}'
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
+            #op2.show_data(edata, 'if')
+
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CFAST=%s\n' % str(out))
             eid, pid, gs, elem_grid_flag, ga, gb, *other = out
+            gupper = out[8:16]
+            glower = out[16:24]
+            guact = out[24:56]
+            glact = out[56:88]
+            nug, nlg = out[88:90]
+
+            guele = out[90:122]
+            glele = out[122:154]
+            gha = out[154:166]
+            ghb = out[166:178]
+            tavg, = out[178:179]
+            upper, lower = out[179:181]
+            tmin, = out[181:182]
+            xs, ys, zs = out[182:185]
+            xga, yga, zga = out[185:188]
+            xgb, ygb, zgb = out[188:191]
+
             if elem_grid_flag == 9:
                 elem_grid_flag = 'ELEM'
             elif elem_grid_flag == 10:
                 elem_grid_flag = 'PROP'
                 #ida, idb
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(elem_grid_flag)
+            ida = upper
+            idb = lower
             #print(out)
-            ida = None
-            idb = None
+            id_gs = None if gs == 0 else gs
     #def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
                   #gs=None, ga=None, gb=None,
                   #xs=None, ys=None, zs=None, comment: str='') -> CFAST:
             assert eid > 0, eid
-            op2.add_cfast(eid, pid, elem_grid_flag, ida, idb)
+            element = op2.add_cfast(
+                eid, pid, elem_grid_flag, ida, idb, gs=id_gs,
+                xs=xs, ys=ys, zs=zs)
+            #print(element)
+            element.validate()
             #elem = CFAST.add_op2_data(out)
             #self.add_op2_element(elem)
             n += ntotal

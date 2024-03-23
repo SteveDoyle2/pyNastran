@@ -1668,6 +1668,7 @@ class GEOM2:
         #other = ints[:, 6:]
         #assert other.max() == 0 and other.min() == 0
         element.set_from_op2(element_id, property_id, gs, elem_grid_flag, nodes)
+        element.validate()
         #for unused_i in range(nelements):
             #edata = data[n:n + ntotal]
             #out = s.unpack(edata)

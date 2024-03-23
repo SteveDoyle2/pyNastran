@@ -152,6 +152,21 @@ class DYNAMICS(GeomCommon):
         op2.log.warning('skipping CAMPBLL')
         return n
 
+    def _read_aload(self, data: bytes, n: int) -> int:
+        """
+        Record – ALOAD(5407,54,649)
+        Combination of acoustic loads
+        Word Name Type Description
+        1 SID         I Load set identification number
+        2 UNDEF(3) None N/A
+        5 LI          I Load set identification number i
+        Word 5 repeats until -1 occurs
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        asdf
+        return len(data)
+
     def _read_acplnw(self, data: bytes, n: int) -> int:
         """
         Record – ACPLNW(5807,59,653)
@@ -671,13 +686,14 @@ class DYNAMICS(GeomCommon):
                 assert component == 0, component
                 component = None
 
-            eigc = op2.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
-                                 mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
-                                 alphaAjs=alphaAjs, omegaAjs=omegaAjs,
-                                 alphaBjs=alphaBjs, omegaBjs=omegaBjs,
-                                 LJs=LJs, NEJs=NEJs, NDJs=NDJs,
-                                 shift_r1=None, shift_i1=None, isrr_flag=None,
-                                 nd1=None, comment='')
+            eigc = op2.add_eigc(
+                sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+                alphaAjs=alphaAjs, omegaAjs=omegaAjs,
+                alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+                LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                shift_r1=None, shift_i1=None, isrr_flag=None,
+                nd1=None, comment='')
             eigc.validate()
 
             #while intsi != (-1, -1, -1):

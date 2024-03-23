@@ -11,12 +11,12 @@ Release Notes
 
 v1.4.1 (2024/3/xx)
 ------------------
-This is a bug fix release.  Some GUI enhancements have been added as well.
+This is a bug fix release.
 
 The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
 
 BDF:
- - changed:
+ - changed (trivial):
    - moving ACMODL writing to dynamics
    - reorg on AddCard class to make it easier to find cards
  - added:
@@ -27,7 +27,7 @@ BDF:
    - add_tempbc was named incorrectly (was tempbc)
    - MONDSP1 comp field can be a string (e.g., PLATE)
    - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
-   - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
+   - RBE3s have a bug in MSC Nastran where double precision causes an issue in MSC Nastran if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
    - fixing TEMP writing when ntemperatures > 3
    - ACMODL for NX wrote/expected ctype in the wrong field
 
@@ -43,9 +43,17 @@ OP2:
    - fixing 64-bit support for stress/strain-CSHEAR
 
 OP2Geom:
+   - changed:
+     - explicitly stopping on mesh adaptation cards
+       (e.g., PVAL, PCURV, PINT, GMSURF, ADAPT, ...)
    - added:
-     - NX acoustic: AMLREG, ACPLNW, MATPOR-CRAGG, MICPNT (not supported by BDF other than in add_card)
-     - acoustic CHEXA/CROD
+     - NX acoustic: AMLREG, ACPLNW, MATPOR-CRAGG, MICPNT
+       (not supported by BDF other than in add_card)
+     - acoustic PMIC, CHEXA/CROD
+   - fixed reading:
+     - CFAST-NX reading should always work now
+       (ida, idb, gs, xyzs added to reader)
+     - FORCE, MOMENT 64-bit support
 
 other:
  - nastran_to_vtk:
@@ -54,27 +62,27 @@ other:
 
 
 GUI:
- - Nastran results:
-   - fixed bug von mises for plate stress/strain
- - Shear-Moment-Torque menu:
-   - remove unused time box
-   - added icase flag to allow changing case
-   - added line/points to indicate start/end and intermediate plane locations
-   - added length scale/unit
-   - added scripting message
-   - added Station Label to more clearly indicate location for 2D plots
-   - added analysis element_ids
-   - added popup for SMT results
- - Groups / GroupsMenu
-   - active element ids are now copyable
-   - added node ids to groups for informational purposes
-   - groups menu delete sorted bug (can't sort int/str)
+ - added:
+   - Shear-Moment-Torque menu:
+     - remove unused time box
+     - added icase flag to allow changing case
+     - added line/points to indicate start/end and intermediate plane locations
+     - added length scale/unit
+     - added scripting message
+     - added Station Label to more clearly indicate location for 2D plots
+     - added analysis element_ids
+     - added popup for SMT results
+   - Groups / GroupsMenu
+     - active element ids are now copyable
+     - added node ids to groups for informational purposes
+     - groups menu delete sorted bug (can't sort int/str)
  - fixed:
+   - fixed Nastran results bug von mises for plate stress/strain
    - fixed corner text min/max bug (should be default, not same as legend)
    - fixed legend disappearing when previous result is GridPointForces
    - fixed issue with GUI not loading if json file doesn't exist
  - nastran reader:
-    - fixed acoustic PMIC crash
+   - fixed acoustic PMIC crash
 
  - known issues:
     - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
