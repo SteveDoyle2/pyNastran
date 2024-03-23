@@ -7,6 +7,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, GRAV,
@@ -298,17 +299,21 @@ class GEOM3:
         FORCE(4201,42,18) - the marker for Record 3
         """
         op2: OP2Geom = self.op2
-        ntotal = 28 * op2.factor # 7*4
+        size = op2.size
+        ntotal = 7 * size # 7*4
         nentries = (len(data) - n) // ntotal
-        s = Struct(op2._endian + b'iiiffff')
+        s = Struct(mapfmt(op2._endian + b'iiiffff', size))
         for unused_i in range(nentries):
-            out = s.unpack(data[n:n + 28])
+            out = s.unpack(data[n:n + ntotal])
             (sid, g, cid, f, n1, n2, n3) = out
             if op2.is_debug_file:
                 op2.binary_debug.write('  FORCE=%s\n' % str(out))
-            force = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
+
+            xyz = np.array([n1, n2, n3])
+            force = FORCE(sid, g, f, cid=cid, xyz=xyz)
+            force.validate()
             op2._add_methods._add_load_object(force)
-            n += 28
+            n += ntotal
         op2.card_count['FORCE'] = nentries
         return n
 
@@ -469,17 +474,19 @@ class GEOM3:
         """
         op2: OP2Geom = self.op2
         #ntotal = 28
-        s = Struct(op2._endian + b'3i4f')
-        nentries = (len(data) - n) // 28  # 7*4
+        size = op2.size
+        s = Struct(mapfmt(op2._endian + b'3i4f', size))
+        ntotal = 7 * size
+        nentries = (len(data) - n) // ntotal # 7*4
         for unused_i in range(nentries):
-            edata = data[n:n + 28]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  MOMENT=%s\n' % str(out))
             #(sid, g, cid, m, n1, n2, n3) = out
             load = MOMENT.add_op2_data(out)
             op2._add_methods._add_load_object(load)
-            n += 28
+            n += ntotal
         op2.card_count['MOMENT'] = nentries
         return n
 
@@ -1048,11 +1055,13 @@ class GEOM3:
             op2.binary_debug.write('geom skipping TEMPRB in GEOM3\n')
         return len(data)
 
-    def _read_pface(self, data: bytes, n: int) -> int:
+    def _read_pface(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PFACE')
         self.op2.log.info('geom skipping PFACE in GEOM3')
         return len(data)
 
-    def _read_pedge(self, data: bytes, n: int) -> int:
+    def _read_pedge(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('PEDGE')
         self.op2.log.info('geom skipping PEDGE in GEOM3')
         return len(data)
 

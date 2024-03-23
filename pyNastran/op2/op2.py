@@ -1073,7 +1073,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         skip_tables = ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
-                       'monitor1', 'monitor3']
+                       'monitor1', 'monitor3', 'cstm']
         for table_type in sorted(table_types):
             if table_type in skip_tables or table_type.startswith('responses.'):
                 continue

@@ -8,6 +8,7 @@ from functools import partial
 from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
@@ -305,7 +306,7 @@ class GEOM2:
             (6112, 61, 997): ['CQUADX4', self._read_fake],
             (6114, 61, 999): ['CQUADX8', self._read_cquadx8],
             (3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            (14500, 145, 9909): ['CRODF', self._read_fake],
+            (14500, 145, 9909): ['CRODF', self._read_crod],
             (3501, 35, 1): ['CSBOLT', self._read_fake],
             (3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
             (4408, 44, 227): ['CSLOT3', self._read_fake],
@@ -346,7 +347,7 @@ class GEOM2:
             (12901, 129, 482): ['GMBNDS', self._read_gmbnds],
             (3301, 33, 479): ['GMINTC', self._read_fake],
             (13001, 130, 483): ['GMINTS', self._read_fake],
-            #(2801, 28, 630): ['MICPNT', self._read_fake],
+            (2801, 28, 630): ['MICPNT', self._read_micpnt],
             (5201, 52, 11): ['PLOTEL', self._read_plotel],
             #(5202, 52, 669): ['PLOTEL3', self._read_fake],
             (5203, 52, 670): ['PLOTEL4', self._read_fake],
@@ -544,7 +545,6 @@ class GEOM2:
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
 
-            (2801, 28, 630) : ['MICPNT', self._read_fake],  # record
             (7708, 77, 9944): ['CHEXAL', self._read_fake],  # record
             (7108, 71, 9943): ['CPENTAL', self._read_fake],  # record
             (11001, 110, 8881): ['???', self._read_fake],
@@ -558,7 +558,7 @@ class GEOM2:
             (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
             (7908, 79, 9702): ['CSEAM?', self._read_cseam_maybe],
 
-            (14100, 141, 9905): ['???', self._read_fake],
+            (14100, 141, 9905): ['CHEXA', self._read_chexa20],
             (14700, 147, 9911): ['CTRIAF', self._read_ctria3],
             (9301, 93, 690): ['CJOINT', self._read_fake],
             #(14200, 142, 9906): ['???', self._read_fake],
@@ -566,6 +566,30 @@ class GEOM2:
             #(15801, 158, 9955): ['???', self._read_fake],
 
         }
+
+    def _read_chexa20(self, data: bytes, n: int) -> int:
+        """
+        ints    = (14100, 141, 9905,
+                   8013, 4, 6035, 6034, 6036, 6037, 6039, 6038, 6040, 6041,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        ]
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nfields = len(ints)
+        nelements = nfields // 22
+        ints = ints.reshape(nelements, 22)
+        for eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, *big_nodes in ints:
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ]
+            #big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
+                         #g17, g18, g19, g20]
+            if sum(big_nodes) > 0:
+                elem = CHEXA20.add_op2_data(data_in + big_nodes)
+            else:
+                elem = CHEXA8.add_op2_data(data_in)
+            self.add_op2_element(elem)
+        op2.card_count['CHEXA'] = nelements
+        return len(data)
 
     def _read_cquadx_9508(self, data: bytes, n: int) -> int:
         r"""
@@ -1006,14 +1030,15 @@ class GEOM2:
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """CBEAM(5408,54,261) - the marker for Record 10"""
         op2: OP2Geom = self.op2
-        ntotal = 72 * self.factor  # 18*4
-        fe1 = 40 * self.factor
-        fe2 = 44 * self.factor
+        size = self.size
+        ntotal = 18 * size  # 18*4
+        fe1 = 10 * size
+        fe2 = 11 * size
         nelements = (len(data) - n) // ntotal
-        struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        struct_i = op2.struct_i if size == 4 else self.struct_q
         #print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', size))
+        s3 = Struct(mapfmt(op2._endian + b'12i6f', size))
 
         list_warnings = []
         for unused_i in range(nelements):
@@ -1091,6 +1116,7 @@ class GEOM2:
                 raise
             elem.offt = offt
 
+            elem.validate()
             self.add_op2_element(elem)
             n += ntotal
         if len(list_warnings):
@@ -1478,6 +1504,7 @@ class GEOM2:
     def _read_cfast(self, data: bytes, n: int) -> int:
         r"""
         RECORD – CFAST(13801,138,566) - NX
+
         Word Name Type Description
         1 EID       I Element identification number
         2 PID       I Property identification number
@@ -1497,6 +1524,23 @@ class GEOM2:
         155 GHA(12)   RS Coordinates of 4 GHA points
         167 GHB(12)   RS Coordinates of 4 GHB points
         179 TAVG      RS Average shell thickness
+        FORMAT=9 ELPAT
+        180 EIDUP  I Element ID of upper shell
+        181 EIDLOW I Element ID of lower shell
+        FORMAT=PARTPAT PARTPAT
+        180 PIDUP  I Property ID of upper shell
+        181 PIDLOW I Property ID of lower shell
+        END FORMAT
+        182 TMIN RS Minimum shell thickness
+        183 XS   RS X coordinate of spot weld location
+        184 YS   RS Y coordinate of spot weld location
+        185 ZS   RS Z coordinate of spot weld location
+        186 XGA  RS X coordinate of point ga
+        187 YGA  RS Y coordinate of point ga
+        188 ZGA  RS Z coordinate of point ga
+        189 XGB  RS X coordinate of point gb
+        190 YGB  RS Y coordinate of point gb
+        191 ZGB  RS Z coordinate of point gb
         ints = (
             101, 3, 100, 9, 0,   0,   44,  0,
             9, 14, 13, 8,   0,   0,   0,   0,
@@ -1535,35 +1579,119 @@ class GEOM2:
         CFAST        101       3    PROP       1       2             100     101
         CFAST        102       3    PROP       1       2     200
 
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cfast01.op2
+        ints    = (eid=101, pid3, gs=100, format=9, ga=0, gb=0,
+                   44, 0,
+                   gupper=9, 14,  13, 8,  0, 0, 0, 0,
+                   glower=29, 34, 33, 28, 0, 0, 0, 0,
+                   # guact
+                   5,  10,  9,  4, 15, 20, 19, 14,
+                   18, 17, 12, 13,  8,  7, 2,   3,
+                   0,   0,  0,  0,  0,  0, 0,   0,
+                   0,   0,   0, 0,  0,  0, 0,   0,
+                   # glact
+                   25, 30, 29, 24, 35, 40, 39, 34,
+                   38, 37, 32, 33, 28, 27, 22, 23,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   # nug, nlg
+                   16, 16,
+                   #guele
+                   5,  10,  9,  4, 0, 0, 0, 0,
+                   15, 20, 19, 14, 0, 0, 0, 0,
+                   18, 17, 12, 13, 0, 0, 0, 0,
+                   8,   7,  2,  3, 0, 0, 0, 0,
+                   # glele
+                   25, 30, 29, 24, 0, 0, 0, 0,
+                   35, 40, 39, 34, 0, 0, 0, 0,
+                   38, 37, 32, 33, 0, 0, 0, 0,
+                   28, 27, 22, 23, 0, 0, 0, 0,
+                   # gba/ghb
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0,
+                   1078069239, 1064820772, 1036831949, 1078069239, 1073874935, 1036831949, 1073475602, 1073874935, 1036831949, 1073475602, 1064820772, 1036831949, -1082130432,
+                   upper=7, lower=19,
+                   981668463, 1075838976, 1069547520, 1036831949, 1075838976, 1069547520, 0, 1075838976, 1069547520, 1036831949)
+        floats  = (101, 3, 100, 9, 0, 0,
+                   44, 0, 9, 14, 13, 8, 0, 0, 0, 0,
+                   29, 34, 33, 28, 0, 0, 0, 0,
+                   5, 10, 9, 4, 15, 20, 19, 14, 18, 17, 12, 13, 8, 7, 2,
+                   3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 35, 40, 39, 34, 38,
+                   37, 32, 33, 28, 27, 22, 23,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   16, 16, 5, 10, 9, 4, 0.0, 0.0, 0.0, 0.0,
+                   15, 20, 19, 14, 0.0, 0.0, 0.0, 0.0,
+                   18, 17, 12, 13, 0.0, 0.0, 0.0, 0.0,
+                   8, 7, 2, 3, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 0.0, 0.0, 0.0, 0.0,
+                   35, 40, 39, 34, 0.0, 0.0, 0.0, 0.0,
+                   38, 37, 32, 33, 0.0, 0.0, 0.0, 0.0,
+                   28, 27, 22, 23, 0.0, 0.0, 0.0, 0.0,
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0, 3.031, 0.968, 0.10, 3.031, 2.031, 0.10, 1.968263864517212, 2.031736135482788, 0.10, 1.968263864517212, 0.9682638645172119, 0.10, -1.0,
+                   upper=7, lower=19,
+                   tmin=0.10,
+                   xs=2.5, 1.5, 0.10,
+                   xga=2.5, 1.5, 0.0,
+                   xgb=2.5, 1.5, 0.10)
+        CFAST        101       3    ELEM       7      19     100
+
         """
         op2: OP2Geom = self.op2
-        op2.show_data(data[12:], 'if')
-        ntotal = 764 * self.factor  # 191*4
-        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', self.size))
+        size = self.size
+
+        #op2.show_data(data[n:], 'if')
+        ntotal = 191 * size  # 191*4
+        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', size))
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai}'
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
+            #op2.show_data(edata, 'if')
+
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CFAST=%s\n' % str(out))
             eid, pid, gs, elem_grid_flag, ga, gb, *other = out
+            gupper = out[8:16]
+            glower = out[16:24]
+            guact = out[24:56]
+            glact = out[56:88]
+            nug, nlg = out[88:90]
+
+            guele = out[90:122]
+            glele = out[122:154]
+            gha = out[154:166]
+            ghb = out[166:178]
+            tavg, = out[178:179]
+            upper, lower = out[179:181]
+            tmin, = out[181:182]
+            xs, ys, zs = out[182:185]
+            xga, yga, zga = out[185:188]
+            xgb, ygb, zgb = out[188:191]
+
             if elem_grid_flag == 9:
                 elem_grid_flag = 'ELEM'
             elif elem_grid_flag == 10:
                 elem_grid_flag = 'PROP'
                 #ida, idb
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(elem_grid_flag)
+            ida = upper
+            idb = lower
             #print(out)
-            ida = None
-            idb = None
+            id_gs = None if gs == 0 else gs
     #def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
                   #gs=None, ga=None, gb=None,
                   #xs=None, ys=None, zs=None, comment: str='') -> CFAST:
             assert eid > 0, eid
-            op2.add_cfast(eid, pid, elem_grid_flag, ida, idb)
+            element = op2.add_cfast(
+                eid, pid, elem_grid_flag, ida, idb, gs=id_gs,
+                xs=xs, ys=ys, zs=zs)
+            #print(element)
+            element.validate()
             #elem = CFAST.add_op2_data(out)
             #self.add_op2_element(elem)
             n += ntotal
@@ -1696,7 +1824,7 @@ class GEOM2:
         op2.card_count['CFLUID4'] = nelements
         return n
 
-    def _read_cint(self, data: bytes, n: int) -> int:
+    def _read_cint(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -1715,6 +1843,7 @@ class GEOM2:
         Words 7 through 13 repeat 6 times
         14 UNDEF(2 ) none
         """
+        raise UnsupportedCard('CINT')
         self.op2.log.info('geom skipping CINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
         # doesn't seem to be a card, more of a general info on the geometry...
@@ -4556,32 +4685,33 @@ class GEOM2:
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
-        op2: OP2Geom = self.op2
-        op2.log.info('geom skipping GMBNDC in GEOM2')
-        #self.show_data(data)
-        #(1, 31, 32, GRID____, -1,
-         #2, 41, 42, GRID____, -1)
+        raise UnsupportedCard('GMNBDC')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDC in GEOM2')
+        ##self.show_data(data)
+        ##(1, 31, 32, GRID____, -1,
+         ##2, 41, 42, GRID____, -1)
 
-        #ints= (3201, 32, 478,
-        # 2, 41, 42, 1145390406, 538985799, 41, -1,
-        # 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
-        ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
-        isplit = np.where(ints == -1)[0]
-        nelements = len(isplit)
+        ##ints= (3201, 32, 478,
+        ## 2, 41, 42, 1145390406, 538985799, 41, -1,
+        ## 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
+        #ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
+        #isplit = np.where(ints == -1)[0]
+        #nelements = len(isplit)
 
-        i0 = 0
-        for ispliti in isplit:
-            eid, gridi, gridf = ints[i0:i0+3]
-            #print(eid, gridi, gridf)
-            s0 = n + (i0 + 3) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            eids = ints[i0+5:ispliti]
-            assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
-            #print(eids)
-            i0 = ispliti + 1
-        op2.card_count['GMBNDC'] = nelements
-        return len(data)
+        #i0 = 0
+        #for ispliti in isplit:
+            #eid, gridi, gridf = ints[i0:i0+3]
+            ##print(eid, gridi, gridf)
+            #s0 = n + (i0 + 3) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #eids = ints[i0+5:ispliti]
+            #assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
+            ##print(eids)
+            #i0 = ispliti + 1
+        #op2.card_count['GMBNDC'] = nelements
+        #return len(data)
 
     def _read_ctube(self, data: bytes, n: int) -> int:
         """
@@ -4786,6 +4916,33 @@ class GEOM2:
 # GMBNDS
 # GMINTC
 # GMINTS
+    def _read_micpnt(self, data: bytes, n: int) -> int:
+        """
+        RECORD – MICPNT(2801,28,630)
+        Word Name Type Description
+        1 EID I Element identification number
+        2 GID I Fluid grid identification number
+        3 DESC(12) CHAR4 Description - 48 characters maximum
+        """
+        op2: OP2Geom = self.op2
+        #size = self.size
+        struc = Struct(op2._endian + b'2i 48s')
+        ntotal = 8 + 48
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = struc.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MICPNT=%s\n' % str(out))
+            #(eid,n1,n2) = out
+            eid, node_id, name_bytes = out
+            name = name_bytes.decode('latin1').rstrip()
+            op2.add_micpnt(eid, node_id, name)
+            n += ntotal
+        op2.card_count['MICPNT'] = nelements
+        return n
 
     def _read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
@@ -5135,34 +5292,36 @@ class GEOM2:
         8 EID           I Entity identification numbers for boundary of subdomain
         Word 8 repeats until End of Record
         """
-        op2: OP2Geom = self.op2
-        op2.log.info('geom skipping GMBNDS in GEOM2')
-        #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
-        ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-        i0 = 0
-        for iminus1i in iminus1:
-            bid, n1, n2, n3, n4 = ints[i0:i0+5]
-            s0 = n + (i0 + 5) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
-            assert bid >= 0, (bid, n1, n2, n3, n4, entity)
-            eids = ints[i0+7:iminus1i]
-            #print(bid, n1, n2, n3, n4)
-            #print('entity = %r' % entity)
-            #print(eid)
-            #print('-----')
-            i0 = iminus1i + 1
-        return len(data)
+        raise UnsupportedCard('GMBNDS')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDS in GEOM2')
+        ##(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
+        #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
+        #iminus1 = np.where(ints == -1)[0]
+        #i0 = 0
+        #for iminus1i in iminus1:
+            #bid, n1, n2, n3, n4 = ints[i0:i0+5]
+            #s0 = n + (i0 + 5) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
+            #assert bid >= 0, (bid, n1, n2, n3, n4, entity)
+            #eids = ints[i0+7:iminus1i]
+            ##print(bid, n1, n2, n3, n4)
+            ##print('entity = %r' % entity)
+            ##print(eid)
+            ##print('-----')
+            #i0 = iminus1i + 1
+        #return len(data)
 
     def _read_cngret(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\bpas101.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\pass8.op2
         return len(data)
 
-    def _read_adapt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping adapt card in GEOM2')
+    def _read_adapt(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMCORD')
+        self.op2.log.info('geom skipping ADAPT card in GEOM2')
         return len(data)
 
     def _read_cseam_maybe(self, data: bytes, n: int) -> int:

@@ -363,12 +363,16 @@ class PlateStrainStressResults2(VectorResultsCommon):
         (itime, iresult, header) = case_tuple
         #method_ = 'Composite Stress Layers:' if self.is_stress else 'Composite Strain Layers:'
         #self.layer_indices
-        results = list(self.result.values())
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #method = method.strip()
         #title = f'{self.title} {method}'
-        title = results[iresult][0]  # sidebar label=legend
+
+        # sidebar label=legend
+        #('Normal XX', 'XX')
+        title_label = self.result[iresult]
+        title = title_label[0]
         return title
+
     def get_legend_tuple(self, itime: int, case_tuple: str) -> int:
         (itime, iresult, header) = case_tuple
         return iresult
@@ -525,7 +529,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         #assert neids == neidsi_nnode
 
         # [itime, ielement, ilayer, iresult]
-        if isinstance(itime, int):
+        if isinstance(iresult, int):
             data = centroid_data[itime, :, ilayer, iresult].copy()
         elif iresult == 'abs_principal': # abs max
             omax = centroid_data[itime, :, ilayer, 5]

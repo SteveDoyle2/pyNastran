@@ -103,7 +103,7 @@ class DYNAMICS(GeomCommon):
             (9607, 96, 660): ['ACORDER', self._read_fake],
             (2601, 26, 58): ['FRFFLEX', self._read_fake],
             (3501, 35, 56): ['RCROSSC', self._read_fake],
-            (5807, 59, 653): ['ACPLNW', self._read_fake],
+            (5807, 59, 653): ['ACPLNW', self._read_acplnw],
             (2807, 28, 79): ['FRFOMAP', self._read_fake],
             (7307, 73, 647): ['TLOAD3', self._read_fake],
             (5407, 54, 649): ['ALOAD', self._read_fake],
@@ -151,6 +151,81 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         op2.log.warning('skipping CAMPBLL')
         return n
+
+    def _read_aload(self, data: bytes, n: int) -> int:
+        """
+        Record – ALOAD(5407,54,649)
+        Combination of acoustic loads
+        Word Name Type Description
+        1 SID         I Load set identification number
+        2 UNDEF(3) None N/A
+        5 LI          I Load set identification number i
+        Word 5 repeats until -1 occurs
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        asdf
+        return len(data)
+
+    def _read_acplnw(self, data: bytes, n: int) -> int:
+        """
+        Record – ACPLNW(5807,59,653)
+
+        Acoustic plane wave source
+        Word      Name Type Description
+        1 SID      I Load set identification number
+        2 FORM     I Complex format: 0 for real/imaginary, 1 for magnitude/phase
+        3 A1      RS Scale factor 1
+        4 TRTM    RS Real part or magnitude of plane wave
+        5 TIDTRTM  I TABLEDi bulk entry identification number for real part or magnitude of plane wave
+        6 TITP    RS Imaginary part or phase (in degrees) of plane wave
+        7 TIDTITP  I TABLEDi bulk entry identification number for imaginary part or phase (in degrees) of plane wave
+        8 CID1     I Coordinate system identification number for location of plane wave source
+        9  X      RS X-coordinate of plane wave source
+        10 Y      RS Y-coordinate of plane wave source
+        11 Z      RS Z-coordinate of plane wave source
+        12 CID2    I Coordinate system identification number for direction of plane wave
+        13 NX     RS Direction cosine between plane wave direction and X-axis
+        14 NY     RS Direction cosine between plane wave direction and Y-axis
+        15 NZ     RS Direction cosine between plane wave direction and Z-axis
+        16 UNDEF(3) None
+        """
+        op2: OP2Geom = self.op2
+
+        ntotal = 18 * self.size
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'ACPLNW'
+
+        loads = []
+        struc = Struct(mapfmt(op2._endian + b'2i 2f if 2i 3f i 3f 3i', self.size))
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, form, scale, real_float, tid_real, imag_float, tid_imag,
+             cid1, x, y, z, cid2, nx, ny, nz, dummy1, dummy2, dummy3) = out
+            assert sid > 0, sid
+            assert form in {0, 1}, form
+
+            form_str = 'REAL' if form == 0 else 'PHASE'
+
+            real = real_float if tid_real == 0 else tid_real
+            imag = imag_float if tid_imag == 0 else tid_imag
+
+            assert cid1 >= 0, cid1
+            assert cid2 >= 0, cid2
+            assert cid2 >= 0, cid2
+            assert (dummy1, dummy2, dummy3) == (0, 0, 0), (dummy1, dummy2, dummy3)
+            xyz = [x, y, z]
+            nxyz = [nx, ny, nz]
+
+
+            # ACPLNW SID  FORM A  TR/TM TI/TP
+            #        CID1 X1   X2 X3    CID2 N1 N2 N3
+            op2.add_acplnw(sid, form_str, scale, real, imag, cid1, xyz, cid2, nxyz)
+            #acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            #loads.append(acsrce)
+        return n # , loads
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
@@ -611,13 +686,14 @@ class DYNAMICS(GeomCommon):
                 assert component == 0, component
                 component = None
 
-            eigc = op2.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
-                                 mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
-                                 alphaAjs=alphaAjs, omegaAjs=omegaAjs,
-                                 alphaBjs=alphaBjs, omegaBjs=omegaBjs,
-                                 LJs=LJs, NEJs=NEJs, NDJs=NDJs,
-                                 shift_r1=None, shift_i1=None, isrr_flag=None,
-                                 nd1=None, comment='')
+            eigc = op2.add_eigc(
+                sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+                alphaAjs=alphaAjs, omegaAjs=omegaAjs,
+                alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+                LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                shift_r1=None, shift_i1=None, isrr_flag=None,
+                nd1=None, comment='')
             eigc.validate()
 
             #while intsi != (-1, -1, -1):
@@ -1729,7 +1805,7 @@ class DYNAMICS(GeomCommon):
         17 SYNC             I Synchronous analysis selection flag
         18 ETYPE            I Excitation type
         19 EORDER          RS Excitation order
-        20â€“21                 (not used)
+        20–21                 (not used)
         22+8*(i-1) RIDi     I Rotor ID for ith rotor
         23+8*(i-1) RSETi    I Set number for rotor speed for multiple rotors
         24+8*(i-1) RSPEEDi RS Relative rotor speed for multiple rotors
@@ -1937,7 +2013,7 @@ class DYNAMICS(GeomCommon):
             Identification number of the superelement in which the rotor specified in the
             ROTORID field is defined.
         WR3R : float; default=0.0
-            Specifies â€œaverageâ€ excitation frequency for calculation of rotor damping and
+            Specifies 'average' excitation frequency for calculation of rotor damping and
             circulation terms for rotor structural damping specified through GR field.
         RSPINT ROTORID GRIDA   GRIDB   SPDUNT SPTID SPDOUT ROTSEID
                GR      ALPHAR1 ALPHAR2 WR3R   WR4R  WRHR
@@ -2126,7 +2202,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         """
-        Record â€“ TLOAD1(7107,71,138)
+        Record – TLOAD1(7107,71,138)
 
         Word Name Type Description
         1 SID     I Load set identification number

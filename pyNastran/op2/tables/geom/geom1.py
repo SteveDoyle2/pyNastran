@@ -5,10 +5,11 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 from __future__ import annotations
 from struct import Struct
 from collections import defaultdict
-from typing import Union, TYPE_CHECKING
+from typing import Union, Callable, TYPE_CHECKING
 
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 #from pyNastran.bdf.cards.parametric.geometry import FEFACE
 
@@ -35,73 +36,74 @@ class GEOM1:
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         geom2 = self.op2.reader_geom2
-        self.geom1_map = {
-            (1701, 17, 6): ['CORD1C', self._read_cord1c],    # record 1
-            (1801, 18, 5): ['CORD1R', self._read_cord1r],    # record 2
-            (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3
+        self.geom1_map: dict[tuple[int, int, int],
+                             tuple[str, Callable[bytes, int]]] = {
+            (1701, 17, 6): ('CORD1C', self._read_cord1c),    # record 1
+            (1801, 18, 5): ('CORD1R', self._read_cord1r),    # record 2
+            (1901, 19, 7): ('CORD1S', self._read_cord1s),    # record 3
 
-            (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
-            (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
-            (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
+            (2001, 20, 9): ('CORD2C', self._read_cord2c),    # record 4
+            (2101, 21, 8): ('CORD2R', self._read_cord2r),    # record 5
+            (2201, 22, 10): ('CORD2S', self._read_cord2s),   # record 6
 
-            (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
+            (14301,143,651): ('CORD3G', self._read_cord3g),  # record 7
 
-            (4501,  45,  1): ['GRID',   self._read_grid],    # record 17
-            (5301,  53,  4): ['SEQGP',  self._read_seqgp],   # record 27
+            (4501,  45,  1): ('GRID',   self._read_grid),    # record 17
+            (5301,  53,  4): ('SEQGP',  self._read_seqgp),   # record 27
 
-            (2301,  23, 304): ['CSUPER',  self._read_fake],  # record 8
-            (5501,  55, 297): ['CSUPEXT', self._read_fake],  # record 9
-            (1627,  16, 463): ['EXTRN',   self._read_extrn],  # record 10
-            (6101,  61, 388): ['FEEDGE',  self._read_feedge],  # record 11
-            (6601,  66, 392): ['GMCURVE', self._read_gmcurv],  # record 12
-            (6201,  62, 389): ['FEFACE',  self._read_feface],  # record 13
-            (6001,  60, 377): ['POINT',   self._read_point],  # record 14
-            (10101,101, 394): ['GMSURF',  self._read_gmsurf],  # record 15
-            (6401,  64, 402): ['GMCORD',  self._read_gmcord],  # record 16
+            (2301,  23, 304): ('CSUPER',  self._read_fake),  # record 8
+            (5501,  55, 297): ('CSUPEXT', self._read_fake),  # record 9
+            (1627,  16, 463): ('EXTRN',   self._read_extrn),  # record 10
+            (6101,  61, 388): ('FEEDGE',  self._read_feedge),  # record 11
+            (6601,  66, 392): ('GMCURVE', self._read_gmcurv),  # record 12
+            (6201,  62, 389): ('FEFACE',  self._read_feface),  # record 13
+            (6001,  60, 377): ('POINT',   self._read_point),  # record 14
+            (10101,101, 394): ('GMSURF',  self._read_gmsurf),  # record 15
+            (6401,  64, 402): ('GMCORD',  self._read_gmcord),  # record 16
             # 17 - GRID  (above)
-            (1527, 15, 466): ['SEBNDRY', self._read_fake],  # record 18
-            (1427, 14, 465): ['SEBULK',  self._read_sebulk],  # record 19 - superelements/see103q4.op2
-            (427,   4, 453): ['SECONCT', self._read_seconct],  # record 20
+            (1527, 15, 466): ('SEBNDRY', self._read_fake),  # record 18
+            (1427, 14, 465): ('SEBULK',  self._read_sebulk),  # record 19 - superelements/see103q4.op2
+            (427,   4, 453): ('SECONCT', self._read_seconct),  # record 20
 
-            (7902, 79, 302): ['SEELT',   self._read_seelt],  # record 21
-            (527,  72, 454): ['SEEXCLD', self._read_fake],  # record 22
-            (1027, 10, 459): ['SELABEL', self._read_selabel],  # record 23 - superelements/see103q4.op2
-            (827,   8, 457): ['SELOC',   self._read_seloc],  # record 24 - superelements/see103q4.op2
-            (927,   9, 458): ['SEMPLN',  self._read_sempln],  # record 25 - superelements/see103q4.op2
-            (1327, 13, 464): ['SENQSET', self._read_fake],  # record 26
+            (7902, 79, 302): ('SEELT',   self._read_seelt),  # record 21
+            (527,  72, 454): ('SEEXCLD', self._read_fake),  # record 22
+            (1027, 10, 459): ('SELABEL', self._read_selabel),  # record 23 - superelements/see103q4.op2
+            (827,   8, 457): ('SELOC',   self._read_seloc),  # record 24 - superelements/see103q4.op2
+            (927,   9, 458): ('SEMPLN',  self._read_sempln),  # record 25 - superelements/see103q4.op2
+            (1327, 13, 464): ('SENQSET', self._read_fake),  # record 26
             # 27 - SEQGP (above)
-            (5401, 54, 305): ['SEQSEP',  self._read_fake],  # record 28
-            (5601, 56, 296): ['SESET',   self._read_seset],  # record 29
-            (1227, 12, 462): ['SETREE',  self._read_fake],  # record 30
-            (5678, 71, 475): ['SNORM',   self._read_snorm],  # record 31
-            (5701, 57, 323): ['CSUPER1', self._read_fake],  # record 32
+            (5401, 54, 305): ('SEQSEP',  self._read_fake),  # record 28
+            (5601, 56, 296): ('SESET',   self._read_seset),  # record 29
+            (1227, 12, 462): ('SETREE',  self._read_fake),  # record 30
+            (5678, 71, 475): ('SNORM',   self._read_snorm),  # record 31
+            (5701, 57, 323): ('CSUPER1', self._read_fake),  # record 32
 
-            (5801,   58, 324): ['SUPUP', self._read_fake],  # record 33 - CSUPUP in NX; SUPUP in MSC
-            (14101, 141, 403): ['SWLDPRM', self._read_fake],  # record 34
+            (5801,   58, 324): ('SUPUP', self._read_fake),  # record 33 - CSUPUP in NX; SUPUP in MSC
+            (14101, 141, 403): ('SWLDPRM', self._read_fake),  # record 34
 
-            (1101,   11,  66): ['CMASS2', geom2._read_cmass2],  # record
-            (3901,   39,  50): ['CVISC', self._read_cvisc],  # record
-            (13301, 133, 509): ['', self._read_fake],  # record
-            (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
-            (4501, 45, 1120001): ['GRID', self._read_grid_maybe],  # record ???; test_ibulk
-            (4501, 45, 810001): ['GRID', self._read_grid],
+            (1101,   11,  66): ('CMASS2', geom2._read_cmass2),  # record
+            (3901,   39,  50): ('CVISC', self._read_cvisc),  # record
+            (13301, 133, 509): ('', self._read_fake),  # record
+            (1127,   11, 461) : ('SELOAD', self._read_fake),  # record NX
+            (4501, 45, 1120001): ('GRID', self._read_grid_maybe),  # record ???; test_ibulk
+            (4501, 45, 810001): ('GRID', self._read_grid),
 
 
             #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
-            (2001, 20, 2220009): ['CORD2C?', self._read_cord2cx],
+            (2001, 20, 2220009): ('CORD2C?', self._read_cord2cx),
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
-            (2101, 21, 2220008) : ['CORD2R?', self._read_cord2rx],
-            (2001, 20, 1310009) : ['CORD2C-NX', self._read_cord2c_nx],
+            (2101, 21, 2220008) : ('CORD2R?', self._read_cord2rx),
+            (2001, 20, 1310009) : ('CORD2C-NX', self._read_cord2c_nx),
 
-            (2101, 21, 1310008) : ['CORD2R?', self._read_fake],
-            (501, 5, 43) : ['CORDx?', self._read_cord3g],
-            (6591, 65, 677) : ['ATVBULK', self._read_fake],
-            (2201, 22, 2220010) : ['CORDx?', self._read_fake],
-            (1209, 96, 665) : ['IMPERF', self._read_fake],
+            (2101, 21, 1310008) : ('CORD2R?', self._read_fake),
+            (501, 5, 43) : ('CORDx?', self._read_cord3g),
+            (6591, 65, 677) : ('ATVBULK', self._read_fake),
+            (2201, 22, 2220010) : ('CORDx?', self._read_fake),
+            (1209, 96, 665) : ('IMPERF', self._read_fake),
 
             # nx
-            #(707, 7, 124) :  ['EPOINT', self._read_epoint],  # record 12
+            #(707, 7, 124) :  ('EPOINT', self._read_epoint],  # record 12
         }
 
     #def _read_fake_c(self, data: bytes, n: int) -> int:
@@ -579,7 +581,7 @@ class GEOM1:
     def _read_cord2x_22(self, data: bytes, n: int,
                         coord_name: str,
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
-                        flags: tuple[int, int]) -> int:
+                        flags: tuple[int, int]) -> tuple[int, list[Union[CORD2R, CORD2C, CORD2S]]]:
         """
         (2101,21,8) - CORD2R
         (2201,22,10) - CORD2S
@@ -608,7 +610,7 @@ class GEOM1:
     def _read_cord2x_13(self, data: bytes, n: int,
                         coord_name: str,
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
-                        flags: tuple[int, int]) -> int:
+                        flags: tuple[int, int]) -> tuple[int, list[Union[CORD2R, CORD2C, CORD2S]]]:
         op2: OP2Geom = self.op2
         ntotal = 52 * op2.factor # 13*4
         s = Struct(mapfmt(op2._endian + b'4i9f', op2.size))
@@ -994,7 +996,7 @@ class GEOM1:
         op2.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmcurv(self, data: bytes, n: int) -> int:
+    def _read_gmcurv(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 CURVID       I Curve identification number
@@ -1003,6 +1005,7 @@ class GEOM1:
         5 CIDBC        I Coordinate system identification number for the constraints
         6 DATA     CHAR4 Geometry evaluator specific data
         """
+        raise UnsupportedCard('GMCURV')
         op2: OP2Geom = self.op2
         size = op2.size
         if size == 4:
@@ -1063,7 +1066,7 @@ class GEOM1:
         #return len(data)
         return n
 
-    def _read_feface(self, data: bytes, n: int) -> int:
+    def _read_feface(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 FACEID    I Face identification number
@@ -1074,6 +1077,7 @@ class GEOM1:
         6 CIDBC     I Coordinate system identification number for the constraints
         7 SURFID(2) I Alternate method used to specify the geometry
         """
+        raise UnsupportedCard('FEFACE')
         op2: OP2Geom = self.op2
         ntotal = 32 * op2.factor
         structi = Struct(mapfmt(op2._endian + b'8i', op2.size))
@@ -1092,12 +1096,14 @@ class GEOM1:
         op2.increase_card_count('FEFACE', nentries)
         return n
 
-    def _read_gmsurf(self, data: bytes, n: int) -> int:
+    def _read_gmsurf(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMSURF')
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMSURF in GEOM1')
         return len(data)
 
-    def _read_gmcord(self, data: bytes, n: int) -> int:
+    def _read_gmcord(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMCORD')
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping GMCORD in GEOM1')
         return len(data)

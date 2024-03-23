@@ -2,6 +2,7 @@
 defines readers for BDF objects in the OP2 CONTACT/CONTACTS table
 """
 from __future__ import annotations
+from struct import Struct
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -90,7 +91,7 @@ class CONTACT:
             (1124, 11, 445) : ['BCPARA', self._read_fake],
             (20029, 29, 493) : ['BCPROP', self._read_fake],
             (1024, 10, 444) : ['BCBODY', self._read_fake],
-            (811, 8, 628) : ['AMLREG', self._read_fake],
+            (811, 8, 628) : ['AMLREG', self._read_amlreg],
 
             (6621, 66, 662) : ['BCTPAR2', self._read_fake],
             (7610, 76, 593) : ['BGPARA', self._read_bgpara],
@@ -116,6 +117,70 @@ class CONTACT:
     #def _read_924(self, data: bytes, n: int) -> int:
         #self.show_data(data[n:])
         #sds
+
+    def _read_amlreg(self, data: bytes, n: int) -> int:
+        """
+        Record – AMLREG(811,8,628)
+
+        Word Name Type Description
+        1 RID          I AML region ID
+        2 SID          I BSURFS ID for surface definition
+        3 DESC(12) CHAR4 Description - 48 character maximum
+        15 NLAY        I Number of layers
+        16 RADTYPE     I Radiation surface type:
+                           0=None
+                           1=AML
+                           2=Physical boundary
+        17 INFID1      I Infinite plane-1 ID
+        18 INFID2      I Infinite plane-2 ID
+        19 INFID3      I Infinite plane-3 ID
+        20 UNDEF(3) None
+
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+
+        ntotal = 22 * size
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'AMLREG'
+
+        #loads = []
+        if size == 4:
+            struc = Struct(op2._endian + b'2i 48s 5i 3i')
+        else:
+            raise RuntimeError('size=8 AMLREG')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (rid, sid, name_bytes, nlayers, radtype,
+             infid1, infid2, infid3,
+             dummy1, dummy2, dummy3) = out
+            assert rid > 0, rid
+            assert sid > 0, sid
+
+            if radtype == 0:
+                radsurf = 'NONE'
+            elif radtype == 1:
+                radsurf = 'AML'
+            elif radtype == 2:
+                radsurf = 'PHYB'
+            else:
+                raise NotImplementedError(radtype)
+
+            name = name_bytes.decode('utf8').rstrip()
+            assert (dummy1, dummy2, dummy3) == (0, 0, 0), (dummy1, dummy2, dummy3)
+
+            infid = [infid1, infid2, infid3]
+            # AMLREG RID SID     Name/Descriptor
+            #        NL  RADSURF INFID1 INFID2 INFID3
+            op2.add_amlreg(rid, sid, name,
+                           infid,
+                           nlayers=nlayers, radsurf=radsurf)
+            #acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            #loads.append(acsrce)
+        return n # , loads
+
 
     #def _read_bcrpara(self, data: bytes, n: int) -> int:
         #return self._read_bc_param(data, n, 'BCRPARA')
@@ -222,8 +287,8 @@ class CONTACT:
             # 4 TYPE           I Parameter data type
             # 5 Value(i)    I/RS Parameter value (See Note 1 below)
             #self.add_bctparm(contact_id, params)
-            print(contact_id, params)
-        op2.log.warning(f'skipping {name}')
+            #print(contact_id, params)
+        op2.log.warning(f'skipping {name}; id={contact_id} params={params}')
         return len(data)
 
     def _read_bsurfs(self, data: bytes, n: int) -> int:

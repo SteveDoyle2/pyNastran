@@ -954,6 +954,9 @@ class Load0(BaseCard):
 
     def validate(self):
         assert isinstance(self.cid, integer_types), self.cid
+        assert isinstance(self.node, integer_types), self.node
+        assert self.cid >= 0, self.cid
+        assert self.node > 0, self.node
         assert isinstance(self.mag, float), self.mag
         assert self.xyz.size == 3, self.xyz.shape
 

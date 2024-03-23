@@ -1,5 +1,7 @@
 """tests the NastranIO class"""
+from __future__ import annotations
 import os
+from typing import TYPE_CHECKING
 
 #from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
@@ -23,6 +25,9 @@ from pyNastran.converters.nastran.gui.result_objects.force_results import ForceR
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2_geom import OP2
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -82,7 +87,7 @@ def save_nastran_results(gui: NastranGUI,
         elif isinstance(case, (CompositeStrainStressResults2, PlateStrainStressResults2, SolidStrainStressResults2)):
             fringe = case.get_fringe_result(*index_name)
             titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
-            check_title(titlei, used_titles)
+            titlei = check_title(titlei, used_titles)
             vtk_array = numpy_to_vtk(fringe, deep=0, array_type=None)
             vtk_array.SetName(titlei)
             location = case.get_location(*index_name)
@@ -111,9 +116,8 @@ def _save_force_table_results(case: ForceTableResults,
 
     if dxyz.ndim == 2:
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        assert title not in used_titles, title
         titlei =  f'{title}_subcase={case.subcase_id}'
-        check_title(title, used_titles)
+        titlei = check_title(title, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
     elif dxyz.ndim == 3:
@@ -122,7 +126,7 @@ def _save_force_table_results(case: ForceTableResults,
             dxyz = case.dxyz[itime, :, :]
             vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
             titlei =  f'{header}_subcase={case.subcase_id}'
-            check_title(titlei, used_titles)
+            titlei = check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
             add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
@@ -146,7 +150,7 @@ def _save_displacement_results(case: DisplacementResults,
         assert dxyz.ndim == 2, dxyz.shape
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
         titlei =  f'{header}_subcase={case.subcase_id}'
-        check_title(titlei, used_titles)
+        titlei = check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
@@ -182,7 +186,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     res = vector if vector is not None else fringe
 
     # form_name = case.form_names[itime, ilayer, imethod]
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
 
@@ -213,16 +217,45 @@ def _save_layered_table_results(case: LayeredTableResults,
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(bdf_filename: str,
-                   op2_filename: str,
+def nastran_to_vtk(bdf_filename: Union[str, BDF],
+                   op2_filename: Union[str, OP2],
                    vtk_filename: str) -> None:
-    """kind of a hack, but it will always work assuming the GUI works"""
+    """
+    Converts a Natsran geometry/results to vtk *.vtu
+
+    Parameters
+    ----------
+    bdf_filename: str, BDF, OP2Geom
+        the geometry
+    op2_filename: str, OP2, OP2Geom
+        the results; can be '' for no op2
+    vtk_filename : str
+        the output filename; expected to be a *.vtu file
+
+    Examples
+    --------
+    bdf_filename = 'fem.bdf'
+    op2_filename = 'fem.op2'
+    vtk_filename = 'fem.vtu'
+
+    bdf_model = read_bdf(bdf_filename)
+    op2_model = read_op2(op2_filename)
+    model = read_op2_geom(op2_filename)
+
+    nastran_to_vtk(bdf_model, op2_model, vtk_filename)
+    nastran_to_vtk(bdf_filename, op2_filename, vtk_filename)
+    nastran_to_vtk(model, model, vtk_filename)
+
+    Note
+    ----
+    Kind of a hack, but it will always work assuming the GUI works
+    """
     gui = NastranGUI()
     gui.create_secondary_actors = False
 
@@ -233,10 +266,12 @@ def nastran_to_vtk(bdf_filename: str,
     #log.set_level('warning')
 
     gui.load_nastran_geometry(bdf_filename)
-    gui.load_nastran_results(op2_filename)
     vtk_ugrid = gui.grid
     if vtk_ugrid is None:
         raise RuntimeError('vtk_ugrid is None')
+
+    if op2_filename:
+        gui.load_nastran_results(op2_filename)
 
     save_nastran_results(gui, vtk_ugrid)
     #root = vtkMultiBlockDataSet()

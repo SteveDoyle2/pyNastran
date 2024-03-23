@@ -7,6 +7,33 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from cpylog import SimpleLogger
 
 class TestThermal(unittest.TestCase):
+    def test_temp(self):
+        """
+        TEMP cards can only have 3 values per line. Because that's annoying, it
+        splits automatically. It had been writing like this:
+        'TEMP         101       1      1.       2      2.       3      3.'
+        '            TEMP     101       4      4.       5      5.       6      6.'
+        '                    TEMP     101       7      7.       8      8.       9'
+        '              9.            TEMP     101      10     1.1'
+
+        instead of:
+        'TEMP         101       1      1.       2      2.       3      3.'
+        'TEMP         101       4      4.       5      5.       6      6.'
+        'TEMP         101       7      7.       8      8.       9      9.'
+        'TEMP         101      10     10.'
+
+        """
+        bdf = BDF()
+        temp_sid = 101
+        temperatures = {}
+
+        #make some entries but more than the 3 that fit on a line
+        for i in range(1,11):
+            temperatures[i] = float(i)
+        temp = bdf.add_temp(temp_sid, temperatures)
+        assert '        TEMP' not in str(temp), temp
+        #print(temp)
+
     def test_thermal_1(self):
         """tests various thermal cards"""
         log = SimpleLogger(level='warning')
