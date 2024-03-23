@@ -154,7 +154,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_aload(self, data: bytes, n: int) -> int:
         """
-        Record – ALOAD(5407,54,649)
+        Record - ALOAD(5407,54,649)
         Combination of acoustic loads
         Word Name Type Description
         1 SID         I Load set identification number
@@ -169,7 +169,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_acplnw(self, data: bytes, n: int) -> int:
         """
-        Record – ACPLNW(5807,59,653)
+        Record - ACPLNW(5807,59,653)
 
         Acoustic plane wave source
         Word      Name Type Description
@@ -1805,7 +1805,7 @@ class DYNAMICS(GeomCommon):
         17 SYNC             I Synchronous analysis selection flag
         18 ETYPE            I Excitation type
         19 EORDER          RS Excitation order
-        20–21                 (not used)
+        20-21                 (not used)
         22+8*(i-1) RIDi     I Rotor ID for ith rotor
         23+8*(i-1) RSETi    I Set number for rotor speed for multiple rotors
         24+8*(i-1) RSPEEDi RS Relative rotor speed for multiple rotors
@@ -2202,7 +2202,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         """
-        Record – TLOAD1(7107,71,138)
+        Record - TLOAD1(7107,71,138)
 
         Word Name Type Description
         1 SID     I Load set identification number
