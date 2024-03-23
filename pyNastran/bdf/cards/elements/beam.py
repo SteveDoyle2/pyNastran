@@ -332,9 +332,9 @@ class CBEAM(LineElement):
 
         if self.x is not None:
             xlen = np.linalg.norm(self.x)
-            #assert xlen > 0, self.x
-            msg = f'Eid={self.eid:d}; X={self.x} has no length'
-            raise RuntimeError(msg)
+            if xlen == 0.0:
+                msg = f'Eid={self.eid:d}; X={self.x} has no length'
+                raise RuntimeError(msg)
 
         #print(f'CBEAM validate: eid={self.eid} g0={self.g0} x={self.x}')
 
