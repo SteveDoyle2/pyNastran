@@ -111,6 +111,28 @@ def _monpnt_line2_to_fields(line2: str) -> list[str]:
         ]
     return fields
 
+def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
+    """splits an AMLREG"""
+    line1 = card_lines[0]
+    line2 = card_lines[1]
+    if '\t' in line1:
+        line1 = line1.expandtabs()
+        assert ',' not in line1[:16], line1
+
+    label = line1[:24]
+    unused_comment = line1[24:]  # len=56 max
+    #assert ',' not in label, f'base={label!r}'
+    #assert '\t' not in label, f'base={label!r}'
+
+    fields = [
+        line1[0:8],
+        line1[8:16], line1[16:24], line1[24:32], line1[32:40], line1[40:48],
+        line1[48:56], line1[56:64], line1[64:72],
+    ]
+
+    fields += _monpnt_line2_to_fields(line2)
+    return fields
+
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
@@ -146,6 +168,8 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
         return _to_fields_mntpnt1(card_lines)
     elif card_name in ['MONPNT3', 'MONSUMT']:
         return _to_fields_mntpnt3(card_lines)
+    elif card_name == 'AMLREG':
+        return _to_fields_amlreg(card_lines)
 
     # first line
     line = card_lines[0].rstrip()

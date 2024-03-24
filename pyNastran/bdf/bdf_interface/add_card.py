@@ -48,7 +48,8 @@ from pyNastran.bdf.cards.elements.shell import (
     SNORM,
 )
 from pyNastran.bdf.cards.elements.acoustic import (
-    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL, PMIC)
+    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
+    ACMODL, ACPLNW, AMLREG, PMIC, MATPOR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
@@ -267,6 +268,9 @@ CARD_MAP = {
     'PAABSF' : PAABSF,
     'PACBAR' : PACBAR,
     'ACMODL' : ACMODL,
+    'ACPLNW': ACPLNW,
+    'AMLREG': AMLREG,
+    'MATPOR': MATPOR,
     #'PANEL' : Crash, None),
 
 
@@ -3208,7 +3212,7 @@ class AddAcoustic:
                    normal=0.5, olvpang=60., search_unit='REL', intol=0.2,
                    area_op=0, ctype='STRONG', method='BW',
                    sk_neps=0.5, dsk_neps=0.75, all_set='NO', inter='DIFF',
-                   nastran_version='nx', comment='') -> ACMODL:
+                   nastran_version='nx', comment: str='') -> ACMODL:
         #acoustic
         acmodl = ACMODL(infor, fset, sset,
                         normal=normal, olvpang=olvpang, search_unit=search_unit,
@@ -3222,20 +3226,24 @@ class AddAcoustic:
                    real: Union[int, float],
                    imag: Union[int, float],
                    cid1: int, xyz: list[float],
-                   cid2: int, nxyz: list[float]) -> None:
+                   cid2: int, nxyz: list[float], comment: str='') -> None:
         #acoustic
-        assert form in {'REAL', 'PHASE'}, form
-        fields = ['ACPLNW', sid, form, scale, real, imag, None, None, None,
-                  cid1] + xyz + [cid2] + nxyz
-        self.reject_card_lines('ACPLNW', print_card_8(fields).split('\n'), show_log=False)
+        acplnw = ACPLNW(sid, form, scale,
+                        real, imag,
+                        cid1, xyz,
+                        cid2, nxyz, comment=comment)
+        self._add_methods._add_acplnw_object(acplnw)
 
     def add_amlreg(self, rid: int, sid: int, name: str,
                    infid: list[int],
                    nlayers: int=5,
-                   radsurf: str='AML') -> None:
+                   radsurf: str='AML', comment: str='') -> AMLREG:
         """
-        AMLREG RID SID     Name/Descriptor
-               NL  RADSURF INFID1 INFID2 INFID3
+        +--------+-----+---------+--------------------------+
+        | AMLREG | RID | SID     | Name/Descriptor          |
+        +--------+-----+---------+--------+--------+--------+
+        |        | NL  | RADSURF | INFID1 | INFID2 | INFID3 |
+        +--------+-----+---------+--------+--------+--------+
 
         Parameters
         ----------
@@ -3262,15 +3270,16 @@ class AddAcoustic:
                      exception of faces on the AML and the infinite
                      planes) are used to compute results in the far field.
              0/NONE: the region does not radiate.
-        """
-        #acoustic
-        lines = [
-            f'AMLREG  {rid:<8d}{sid:<8d}{name:>s}',
-            f'        {nlayers:<8d}{radsurf:8s}{infid[0]:8d}{infid[1]:8d}{infid[2]:8d}',
-        ]
-        self.reject_card_lines('AMLREG', lines, show_log=False)
 
-    def add_micpnt(self, eid: int, node_id: int, name: str) -> None:
+        """
+        amlreg = AMLREG(rid, sid, name, infid,
+                        nlayers=nlayers, radsurf=radsurf,
+                        comment=comment)
+        self._add_methods._add_amlreg_object(amlreg)
+
+    def add_micpnt(self, eid: int, node_id: int, name: str, comment: str='') -> None:
+        #micpnt = MICPNT(eid, node_id, name, comment=comment)
+        #self._add_methods.add_micpnt_object(micpnt)
         #acoustic
         lines = [
             f'MICPNT  {eid:<8d}{node_id:<8d}{name:>s}',
@@ -3282,16 +3291,39 @@ class AddAcoustic:
         self._add_methods._add_property_object(pmic)
         return pmic
 
-    def add_matpor_cragg(self, mid: int, rho: float, c: float, resistivity: float,
-                         porosity: float, tortuosity: float):
+    def add_matpor_jca(mid: int, model: str,
+                       rho: float, c: float, resistivity: float,
+                       porosity: float, tortuosity: float,
+                       frame: str,
+                       gamma: float, prandtl_number: float,
+                       mu: float, L1, L2,
+                       density: float=0.0, comment: str=''):
+        mat = MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
+                     frame, gamma, prandtl_number, mu, L1, L2,
+                     density=density, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
+
+    def add_matpor_craggs(self, mid: int, rho: float, c: float, resistivity: float,
+                          porosity: float, tortuosity: float, comment: str=''):
         """
         MATPOR MID MODEL RHO C
                RES POR   TORT
         """
-        model = 'CRAGGS'
-        fields = ['MATPOR', mid, model, rho, c, None, None, None, None,
-                  resistivity, porosity, tortuosity]
-        self.reject_card_lines('MATPOR', print_card_8(fields).split('\n'), show_log=False)
+        mat = MATPOR.add_craggs(mid, rho, c, resistivity,
+                                porosity, tortuosity, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
+
+    def add_matpor_delmiki(self, mid: int,
+                           rho: float, c: float, resistivity: float,
+                           porosity: float, frame: str,
+                           density: float=0.0, comment: str=''):
+        mat = MATPOR.add_delmiki(
+            mid, rho, c, resistivity, porosity, frame,
+            density=density, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
 
     def add_chacab(self, eid, pid, nodes, comment='') -> CHACAB:
         #acoustic

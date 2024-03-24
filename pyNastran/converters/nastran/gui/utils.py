@@ -303,7 +303,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int], nelements: in
                 element_dimi = -1
                 nnodesi = -1
                 print(f'element.type={element.type} doesnt have a dimension')
-        elif etype == 'CHBDYP':
+        elif etype in {'CHBDYP', 'CAABSF'}:
             continue
         else:
             try:
@@ -386,20 +386,22 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
         'CHEXA1' : (8, 8),
         'CHEXA20' : (20, 20),
     }
+    skip_cards = ['CAABSF']
     #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
     etypes_mixed_nodes = set(list(nnodes_map.keys()))
 
     for eid, elem in sorted(model.elements.items()):
-        if elem.type in etypes_all_nodes:
+        elem_type = elem.type
+        if elem_type in etypes_all_nodes:
             try:
                 node_ids = [nid_map[nid] for nid in elem.nodes]
             except KeyError:  # pragma: no cover
                 print(elem)
                 raise
-        elif elem.type in etypes_mixed_nodes:
+        elif elem_type in etypes_mixed_nodes:
             node_ids = [nid_map[nid] if nid is not None else 0
                         for nid in elem.nodes]
-            nnodes_min, nnodes_max = nnodes_map[elem.type]
+            nnodes_min, nnodes_max = nnodes_map[elem_type]
             nnodesi = len(node_ids)
             if nnodesi == nnodes_min:
                 pass
@@ -408,12 +410,14 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
                 assert len(node_ids) == nnodes_min, f'nnodes={len(node_ids):d} min={nnodes_min:d}\n{elem}'
             else:
                 assert nnodesi == nnodes_max, f'nnodes={nnodesi:d} max={nnodes_max:d}\n{elem}'
-        elif elem.type in springs_dampers:
+        elif elem_type in springs_dampers:
             node_ids = [nid_map[nid] for nid in elem.nodes
                         if nid is not None]
-        elif elem.type in {'CHBDYP', 'CHBDYG'}:
+        elif elem_type in {'CHBDYP', 'CHBDYG'}:
             node_ids = [nid_map[nid] for nid in elem.nodes
                         if nid not in [0, None]]
+        elif elem_type in skip_cards:
+            continue
         else:
             raise NotImplementedError(elem)
         #print(elem.nodes, node_ids)

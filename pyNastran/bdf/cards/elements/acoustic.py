@@ -3,18 +3,24 @@ All superelements are defined in this file.  This includes:
  * CAABSF
  * CHACAB
  * CHACBR
+ * PACBAR
+ * PAABSF
+ * ACMODL
+ * PMIC
+ * ACPLNW
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
-from pyNastran.bdf.cards.base_card import Element, Property
+from pyNastran.bdf.cards.base_card import BaseCard, Element, Property
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     double,
     integer, integer_or_blank, # integer_or_string,
     string,
     string_or_blank, double_or_blank, # integer_string_or_blank,
+    integer_double_or_blank,
     #exact_string_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
@@ -569,6 +575,212 @@ class PACABS(Element):
 def is_msc(nastran_version: str):
     return nastran_version == 'msc'
 
+
+class ACPLNW(BaseCard):
+    type = 'ACPLNW'
+
+    @classmethod
+    def _init_from_empty(cls):
+        infor = 1
+        fset = 1.0
+        sset = 1.
+        return ACMODL(infor, fset, sset)
+
+    def __init__(self, sid: int, form: str, scale: float,
+                 real: Union[int, float],
+                 imag: Union[int, float],
+                 cid1: int, xyz: list[float],
+                 cid2: int, nxyz: list[float], comment: str=''):
+        """
+        Creates a ACMODL card
+
+        Parameters
+        ----------
+
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.form = form
+        self.scale = scale
+        self.real = real
+        self.imag = imag
+        self.cid1 = cid1
+        self.xyz = xyz
+        self.cid2 = cid2
+        self.nxyz = nxyz
+        assert form in {'REAL', 'PHASE'}, form
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a ACPLNW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        form = string_or_blank(card, 2, 'form', default='REAL')
+        scale = double_or_blank(card, 3, 'scale', default=1.0)
+        real = integer_double_or_blank(card, 4, 'real/mag', default=0.0)
+        imag = integer_double_or_blank(card, 5, 'imag/phase', default=0.0)
+        cid1 = integer(card, 9, 'cid1')
+        xyz = [
+            double_or_blank(card, 10, 'x', default=0.0),
+            double_or_blank(card, 11, 'y', default=0.0),
+            double_or_blank(card, 12, 'z', default=0.0),
+        ]
+        cid2 = integer(card, 13, 'cid2')
+        nxyz = [
+            double(card, 14, 'nx'),
+            double(card, 15, 'ny'),
+            double(card, 16, 'nz'),
+        ]
+        assert len(card) <= 17, f'len(ACMODL card) = {len(card):d}\ncard={card}'
+        return ACPLNW(sid, form, scale,
+                      real, imag,
+                      cid1, xyz,
+                      cid2, nxyz, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['ACPLNW', self.sid, self.form, self.scale,
+                       self.real, self.imag, None, None, None,
+                       self.cid1] + self.xyz + [self.cid2] + self.nxyz
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        fields = self.raw_fields()
+        return print_card_8(fields)
+
+
+class AMLREG(BaseCard):
+    """
+    +--------+---------+---------+--------------------------+
+    | AMLREG |   RID   |   SID   | Name/Descriptor          |
+    +--------+---------+---------+--------+--------+--------+
+    |        | NLAYERS | RADSURF | INFID1 | INFID2 | INFID3 |
+    +--------+---------+---------+--------+--------+--------+
+    """
+    type = 'AMLREG'
+
+    @classmethod
+    def _init_from_empty(cls):
+        infor = 1
+        fset = 1.0
+        sset = 1.
+        return AMLREG(infor, fset, sset)
+
+    def __init__(self, rid: int, sid: int, name: str,
+                 infid: list[int],
+                 nlayers: int=5,
+                 radsurf: str='AML', comment: str=''):
+        """
+        Creates a AMLREG card
+
+        Parameters
+        ----------
+        rid: int
+            AML region identification number
+        sid : int
+            Surface identification number
+        name : str
+            The Name/Descriptor is an optional character string
+        infid : list[int]
+            Identification number of an infinite plane.
+            Up to three (3) infinite planes are considered for an AML
+            region. The infinite planes are used when acoustic results
+            are to be computed exterior to the AML region. (Integer
+            >= 0; Default = 0) See Remark 5.
+        nlayers : int; default=5
+            Number of layers of extrusion to be formed by solver
+        radsurf : str; default='AML'
+           Radiation surface type
+             1/AML:  the pressure and velocities on the AML boundary
+                     are used to compute results in the far field.
+             2/PHYB: the pressure and velocities on the physical
+                     boundary (that is, all free fluid faces with the
+                     exception of faces on the AML and the infinite
+                     planes) are used to compute results in the far field.
+             0/NONE: the region does not radiate.
+
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.rid = rid
+        self.name = name
+        self.infid = infid
+        self.nlayers = nlayers
+        self.radsurf = radsurf
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a ACPLNW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        rid = integer(card, 1, 'rid')
+        sid = integer(card, 2, 'sid')
+
+        label_fields = [labeli for labeli in card[3:8] if labeli is not None]
+        name = ''.join(label_fields).strip()
+        assert len(name) <= 48, name
+
+        nlayers = integer_or_blank(card, 9, 'nlayers', default=5)
+        radsurf = string_or_blank(card, 10, 'radsurf', default='AML')
+        infid = [
+            integer_or_blank(card, 11, 'infid1', default=0),
+            integer_or_blank(card, 12, 'infid2', default=0),
+            integer_or_blank(card, 13, 'infid3', default=0),
+        ]
+        assert len(card) <= 14, f'len(AMLREG card) = {len(card):d}\ncard={card}'
+        return AMLREG(rid, sid, name, infid,
+                      nlayers=nlayers, radsurf=radsurf, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['AMLREG', self.rid, self.sid, self.name,
+                       self.nlayers, self.radsurf] + self.infid
+        return list_fields
+
+    def write_card(self, size=8, is_double=False) -> str:
+        infid = self.infid
+        out = (
+            f'AMLREG  {self.rid:<8d}{self.sid:<8d}{self.name:>s}\n'
+            f'        {self.nlayers:<8d}{self.radsurf:8s}{infid[0]:8d}{infid[1]:8d}{infid[2]:8d}\n'
+        )
+        return out
+
+
 class ACMODL(Element):
     """
     NX 2019.2
@@ -788,6 +1000,11 @@ class ACMODL(Element):
 
 class PMIC(Property):
     type = 'PMIC'
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        return PMIC(pid)
+
     def __init__(self, pid: int, comment: str=''):
         self.pid = pid
         self.comment = comment
@@ -799,6 +1016,8 @@ class PMIC(Property):
 
     def cross_reference(self, model: BDF) -> None:
         pass
+    def uncross_reference(self) -> None:
+        return
 
     def raw_fields(self):
         return ['PMIC', self.pid]
@@ -806,3 +1025,200 @@ class PMIC(Property):
     def write_card(self, size=8, is_double=False):
         fields = self.raw_fields()
         return print_card_8(fields)
+
+class MATPOR(BaseCard):
+    """
+
+    model = CRAGG
+
+    +--------+-----+-------+------+------+
+    |   1    |  2  |   3   |   4  |  5   |
+    +========+=====+=======+======+======+
+    | MATPOR | MID | MODEL |  RHO |   C  |
+    +--------+-----+-------+------+------+
+    |        | RES |  POR  | TORT |      |
+    +--------+-----+-------+------+------+
+
+    model = JCA
+
+    +--------+-----+-------+------+------+-------+-------+----+----+
+    |   1    |  2  |   3   |   4  |  5   |   6   |   7   |  8 | 9  |
+    +========+=====+=======+======+======+=======+=======+====+====+
+    | MATPOR | MID | MODEL |  RHO |  C   | FRAME | GAMMA | PR | MU |
+    +--------+-----+-------+------+------+-------+-------+----+----+
+    |        | RES |  POR  | TORT | DENS |  L1   |       |    |    |
+    +--------+-----+-------+------+------+-------+-------+----+----+
+    """
+    type = 'MATPOR'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        rho = 0.0
+        c = 0.0
+        resistivity = 0.0
+        porosity = 0.0
+        tortuosity = 0.0
+        return cls.add_craggs(mid, rho, c, resistivity, porosity, tortuosity)
+
+    def __init__(self, mid: int, model: str,
+                 rho: float, c: float, resistivity: float,
+                 porosity: float, tortuosity: float,
+                 frame: str,
+                 gamma: float, prandtl_number: float,
+                 mu: float, L1, L2,
+                 density: float=0.0, comment: str=''):
+        """
+        Creates a MATPOR card
+
+        Parameters
+        ----------
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self.model = model
+        self.rho = rho
+        self.c = c
+        self.resistivity = resistivity
+        self.porosity = porosity
+        self.tortuosity = tortuosity
+
+        # JCA
+        self.frame = frame
+        self.gamma = gamma
+        self.prandtl_number = prandtl_number
+        self.mu = mu
+        self.density = density
+        self.L1 = L1
+        self.L2 = L2
+
+    @classmethod
+    def add_craggs(self, mid: int,
+                   rho: float, c: float, resistivity: float,
+                   porosity: float, tortuosity: float,
+                   comment: str=''):
+        model = 'CRAGGS'
+        frame = ''
+        gamma = 0.0
+        prandtl_number = 0.0
+        mu = 0.0
+        #density = 0.0
+        L1 = 0.0
+        L2 = 0.0
+        return MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
+                      frame, gamma, prandtl_number, mu, L1, L2,
+                      density=0.0, comment=comment)
+
+    @classmethod
+    def add_delmiki(self, mid: int,
+                    rho: float, c: float, resistivity: float,
+                    porosity: float, frame: str,
+                    density: float=0.0, comment: str=''):
+        model = 'DELMIKI'
+        gamma = 0.0
+        prandtl_number = 0.0
+        mu = 0.0
+        L1 = 0.0
+        L2 = 0.0
+        return MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
+                      frame, gamma, prandtl_number, mu, L1, L2,
+                      density=density, comment=comment)
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a MATPOR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #+--------+-----+-------+------+-----+--------+
+        #| MATPOR | MID | MODEL |  RHO |  C  |        |
+        #|        | RES |  POR  | TORT |     |        |
+        #+--------+-----+-------+------+-----+--------+
+        mid = integer(card, 1, 'material_id')
+        model = string(card, 2, 'model')
+        rho = double(card, 3, 'rho')
+        c = double(card, 4, 'c')
+        resistivity = double(card, 9, 'resistivity')
+        porosity = double(card, 10, 'porosity')
+
+        frame = ''
+        gamma = 0.0
+        prandlt_number = 0.0
+        mu = 0.0
+        density = 0.0
+        L1 = 0.0
+        L2 = 0.0
+        tortuosity = 0.0
+        if model == 'CRAGGS':
+            tortuosity = double(card, 11, 'tortuosity')
+            assert len(card) <= 12, f'len(MATPOR card) = {len(card):d}\ncard={card}'
+        elif model == 'DELMIKI':
+            # MATPOR MID MODEL RHO   C   FRAME
+            #        RES POR        DENS
+            frame = string(card, 5, 'frame')
+            density = double_or_blank(card, 12, 'density', default=0.0)
+            assert len(card) <= 13, f'len(MATPOR card) = {len(card):d}\ncard={card}'
+        elif model == 'JCA':
+            # MATPOR MID MODEL RHO  C    FRAME GAMMA PR MU
+            #        RES  POR  TORT DENS   L1   L2
+            frame = string(card, 5, 'frame')
+            gamma = double(card, 6, 'gamma')
+            prandlt_number = double(card, 7, 'prandlt_number')
+            mu = double(card, 8, 'mu_dynamic_visc')
+            density = double_or_blank(card, 12, 'density', default=0.0)
+            tortuosity = double(card, 11, 'tortuosity')
+            L1 = double(card, 13, 'L1')
+            L2 = double(card, 14, 'L2')
+            assert len(card) <= 15, f'len(MATPOR card) = {len(card):d}\ncard={card}'
+        else:  # pragma: no cover
+            raise RuntimeError(model)
+        return MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
+                      frame, gamma, prandlt_number,
+                      mu, L1, L2, density=density)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        if self.model == 'CRAGGS':
+            list_fields = [
+                'MATPOR', self.mid, self.model, self.rho, self.c,
+                None, None, None, None,
+                self.resistivity, self.porosity, self.tortuosity]
+        elif self.model == 'DELMIKI':
+            list_fields = [
+                'MATPOR', self.mid, self.model, self.rho, self.c,
+                self.frame, self.gamma, None, None,
+                self.resistivity, self.porosity, None,
+                self.density]
+
+        elif self.model == 'JCA':
+            # MATPOR MID MODEL RHO  C    FRAME GAMMA PR MU
+            #        RES  POR  TORT DENS   L1   L2
+            list_fields = [
+                'MATPOR', self.mid, self.model, self.rho, self.c,
+                self.frame, self.gamma, self.prandtl_number, self.mu,
+                self.resistivity, self.porosity, self.tortuosity,
+                self.density, self.L1, self.L2]
+        else:  # pragma: no cover
+            raise NotImplementedError(self.model)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False) -> str:
+        fields = self.raw_fields()
+        return print_card_8(fields)
+

@@ -138,8 +138,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.contact import (
         BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG,
         BFRIC, BCTPARM, BGADD, BGSET, BCBODY)
-    from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
-    from pyNastran.bdf.cards.elements.acoustic import PACABS
+    from pyNastran.bdf.cards.parametric.geometry import (
+        PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF)
+    from pyNastran.bdf.cards.elements.acoustic import (
+        PACABS, CAABSF, CHACAB, CHACBR,
+        ACPLNW, AMLREG, ACMODL, )
+
 
 class AddMethods:
     """defines methods to add card objects to the BDF"""
@@ -530,6 +534,24 @@ class AddMethods:
                     key, model.dequations[key], deqatn)
         model.dequations[key] = deqatn
         model._type_to_id_map[deqatn.type].append(key)
+
+    def _add_acplnw_object(self, acplnw: ACPLNW) -> None:
+        """adds an ACPLNW object"""
+        key = acplnw.sid
+        assert key not in self.model.acplnw, '\nacplnw=\n%s old=\n%s' % (
+            acplnw, self.model.acplnw[key])
+        assert key >= 0
+        self.model.acplnw[key] = acplnw
+        self.model._type_to_id_map[acplnw.type].append(key)
+
+    def _add_amlreg_object(self, amlreg: AMLREG) -> None:
+        """adds an ACPLNW object"""
+        key = amlreg.rid
+        assert key not in self.model.acplnw, '\amlreg=\n%s old=\n%s' % (
+            amlreg, self.model.amlreg[key])
+        assert key >= 0
+        self.model.amlreg[key] = amlreg
+        self.model._type_to_id_map[amlreg.type].append(key)
 
     def _add_acoustic_property_object(self, prop: PACABS) -> None:
         self._add_property_object(prop)
@@ -1169,7 +1191,7 @@ class AddMethods:
         assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
         self.model.axif = axif
 
-    def _add_acmodl_object(self, acmodl) -> None:
+    def _add_acmodl_object(self, acmodl: ACMODL) -> None:
         """adds a ACMODL object"""
         assert self.model.acmodl is None, self.model.acmodl
         self.model.acmodl = acmodl
