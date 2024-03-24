@@ -49,7 +49,7 @@ from pyNastran.bdf.cards.elements.shell import (
 )
 from pyNastran.bdf.cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
-    ACMODL, ACPLNW, AMLREG, PMIC)
+    ACMODL, ACPLNW, AMLREG, PMIC, MATPOR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
@@ -270,6 +270,7 @@ CARD_MAP = {
     'ACMODL' : ACMODL,
     'ACPLNW': ACPLNW,
     'AMLREG': AMLREG,
+    'MATPOR': MATPOR,
     #'PANEL' : Crash, None),
 
 
@@ -3290,16 +3291,39 @@ class AddAcoustic:
         self._add_methods._add_property_object(pmic)
         return pmic
 
-    def add_matpor_cragg(self, mid: int, rho: float, c: float, resistivity: float,
-                         porosity: float, tortuosity: float):
+    def add_matpor_jca(mid: int, model: str,
+                       rho: float, c: float, resistivity: float,
+                       porosity: float, tortuosity: float,
+                       frame: str,
+                       gamma: float, prandtl_number: float,
+                       mu: float, L1, L2,
+                       density: float=0.0, comment: str=''):
+        mat = MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
+                     frame, gamma, prandtl_number, mu, L1, L2,
+                     density=density, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
+
+    def add_matpor_craggs(self, mid: int, rho: float, c: float, resistivity: float,
+                          porosity: float, tortuosity: float, comment: str=''):
         """
         MATPOR MID MODEL RHO C
                RES POR   TORT
         """
-        model = 'CRAGGS'
-        fields = ['MATPOR', mid, model, rho, c, None, None, None, None,
-                  resistivity, porosity, tortuosity]
-        self.reject_card_lines('MATPOR', print_card_8(fields).split('\n'), show_log=False)
+        mat = MATPOR.add_craggs(mid, rho, c, resistivity,
+                                porosity, tortuosity, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
+
+    def add_matpor_delmiki(self, mid: int,
+                           rho: float, c: float, resistivity: float,
+                           porosity: float, frame: str,
+                           density: float=0.0, comment: str=''):
+        mat = MATPOR.add_delmiki(
+            mid, rho, c, resistivity, porosity, frame,
+            density=density, comment=comment)
+        self._add_methods._add_structural_material_object(mat)
+        return mat
 
     def add_chacab(self, eid, pid, nodes, comment='') -> CHACAB:
         #acoustic

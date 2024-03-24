@@ -1022,7 +1022,10 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
             fem.log.error(f'Subcase {isubcase:d} is empty')
             continue
         str(subcase)
-        if sol_base is None:
+
+        if fem.is_acoustic():
+            pass
+        elif sol_base is None:
             raise RuntimeError(f'subcase: {subcase}\n')
         #print('case\n%s' % subcase)
         #if sol_base == 200:
@@ -1188,7 +1191,9 @@ def check_case(sol: int,
 
     msg = f'sol={sol}\n{subcase}'
 
-    if sol == 24:
+    if fem2.is_acoustic():
+        pass
+    elif sol == 24:
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 64:
@@ -1711,7 +1716,8 @@ def _check_case_parameters(subcase: Subcase,
         loadcase_id = subcase.get_int_parameter('TEMPERATURE(MATERIAL)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
 
-    if 'LOAD' in subcase:
+    is_acoustic = fem.is_acoustic()
+    if 'LOAD' in subcase and not is_acoustic:
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
@@ -1736,7 +1742,7 @@ def _check_case_parameters(subcase: Subcase,
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
 
-    if 'FREQUENCY' in subcase:
+    if 'FREQUENCY' in subcase and not is_acoustic:
         # not positive on 107 - complex eigenvalues
         freq_id = subcase.get_int_parameter('FREQUENCY')[0]
         freq = fem.frequencies[freq_id]

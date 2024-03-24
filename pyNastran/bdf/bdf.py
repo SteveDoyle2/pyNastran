@@ -90,7 +90,7 @@ from pyNastran.bdf.cards.elements.shell_nasa95 import (
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
-    ACMODL, PMIC, ACPLNW, AMLREG)
+    ACMODL, PMIC, ACPLNW, AMLREG, MATPOR)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -439,7 +439,7 @@ MISSING_CARDS = {
     'SWLDPRM', 'PLOTOPT', 'PLOTE', 'PLOTG',
     'FTGEVNT', 'RADBND', 'RADMT', 'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',
     'NLFREQ1', 'NLRGAP',
-    'ACADAPT', 'ACORDER', 'AMLREG'
+    'ACADAPT', 'ACORDER', 'AMLREG',
     'NLCNTL', 'NLCNTLG', 'NLCNTL2', 'NLSTRAT', 'NLRSFD', 'NLHARM',
     'DMRLAW',
     'TABLE3D', 'TABL3D0',
@@ -730,7 +730,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPCD', 'DEFORM',
 
             # acoustic
-            'ACPLNW', 'AMLREG',
+            'ACPLNW', 'AMLREG', 'MATPOR',
 
             # msgmesh
             #'GMLOAD',  # loads
@@ -2151,6 +2151,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PMIC': (PMIC, add_methods._add_property_object),
             'ACPLNW': (ACPLNW, add_methods._add_acplnw_object),
             'AMLREG': (AMLREG, add_methods._add_amlreg_object),
+            'MATPOR': (MATPOR, add_methods._add_structural_material_object),
             #'PANEL' : (Crash, None),
 
             'BCONP' : (BCONP, add_methods._add_bconp_object),
@@ -3551,6 +3552,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
+
+    def is_acoustic(self) -> bool:
+        card_names = ['ACPLNW', 'CAABSF', 'PMIC', 'MATPOR']
+        nacoustics = [self.card_count.get(card_name, 0) for card_name in card_names]
+        nacoustic = sum(nacoustics)
+        is_acoustic = nacoustic > 0
+        return is_acoustic
 
     def get_bdf_stats(self, return_type: str='string') -> Union[str, list[str]]:
         """

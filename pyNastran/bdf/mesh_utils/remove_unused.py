@@ -125,7 +125,7 @@ def remove_unused(bdf_filename: str,
         'FORCEAX',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PMIC', 'MATPOR', 'AMLREG', 'CAABSF',
 
         # superelements
         'SELOC', 'SEEXCLD', 'SENQSET',

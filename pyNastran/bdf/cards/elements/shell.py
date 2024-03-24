@@ -2815,8 +2815,8 @@ class CQUAD4(QuadShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-            if not self.pid_ref.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE', 'PMIC'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if not self.pid_ref.type in ['PLPLANE', 'PMIC']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()

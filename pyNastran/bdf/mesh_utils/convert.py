@@ -341,7 +341,7 @@ def _convert_elements(model: BDF,
         'CQUADX4', 'CQUADX8',
 
         # acoustic
-        'CHACAB',
+        'CHACAB', 'CAABSF',
     }
     skip_masses = {'CMASS1', 'CMASS3'}
 
@@ -576,7 +576,7 @@ def _convert_properties(model: BDF,
         'PPLANE',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PMIC',
     }
     damper_tables = set()
     spring_tables = set()
@@ -1125,9 +1125,9 @@ def _convert_materials(model: BDF,
             #mat.a3 = a3
             mat.tref *= temperature_scale
             #mat.ge = ge
-        elif mat.type == 'MAT10':
+        elif mat.type in {'MAT10', 'MATPOR'}:
             model.log.warning('skipping %s convert' % mat.type)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(mat)
 
     scale_map = {

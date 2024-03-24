@@ -1287,7 +1287,7 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
             #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
             #mpa = sum(rho_t) + nsm
             mpa = prop.get_mass_per_area()
-        elif prop.type in ['PLPLANE', 'PPLANE']:
+        elif prop.type in ['PLPLANE', 'PPLANE', 'PMIC']:
             continue
             #raise NotImplementedError(prop.type)
         else:

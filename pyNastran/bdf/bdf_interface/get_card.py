@@ -1489,7 +1489,7 @@ class GetCard(GetMethods):
 
         properties_without_materials = {
             'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D',
-            'PACABS', 'PAABSF', 'PACBAR',
+            'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
         }
 
         for pid in self.property_ids:

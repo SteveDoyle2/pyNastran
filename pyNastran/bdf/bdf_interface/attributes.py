@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Optional, Any, Union, TYPE_CHECKING
 from numpy import array
-from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
+#from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -749,41 +749,41 @@ class BDFAttributes:
         #: stores VIEW3D
         self.view3ds: dict[int, VIEW3D] = {}
         self.radset = None
-        self.radcavs = {}  # type: dict[int, RADCAV]
-        self.radmtx = {}  # type: dict[int, RADMTX]
+        self.radcavs: dict[int, RADCAV] = {}
+        self.radmtx: dict[int, RADMTX] = {}
 
         # -------------------------contact cards-------------------------------
-        self.bcbodys = {}  # type: dict[int, BCBODY]
-        self.bcparas = {}  # type: dict[int, BCPARA]
-        self.bcrparas = {}  # type: dict[int, BCRPARA]
-        self.bctparas = {}  # type: dict[int, BCTPARA]
+        self.bcbodys: dict[int, BCBODY] = {}
+        self.bcparas: dict[int, BCPARA] = {}
+        self.bcrparas: dict[int, BCRPARA] = {}
+        self.bctparas: dict[int, BCTPARA] = {}
 
-        self.bctadds = {}  # type: dict[int, BCTADD]
-        self.bctsets = {}  # type: dict[int, BCTSET]
-        self.bsurf = {}  # type: dict[int, BSURF]
-        self.bsurfs = {}  # type: dict[int, BSURFS]
-        self.bconp = {}  # type: dict[int, BCONP]
-        self.blseg = {}  # type: dict[int, BLSEG]
-        self.bfric = {}  # type: dict[int, BFRIC]
-        self.bgadds = {}  # type: dict[int, BGADD]
-        self.bgsets = {}  # type: dict[int, BGSET]
-        self.bctparms = {}  # type: dict[int, BCTPARAM]
+        self.bctadds: dict[int, BCTADD] = {}
+        self.bctsets: dict[int, BCTSET] = {}
+        self.bsurf: dict[int, BSURF] = {}
+        self.bsurfs: dict[int, BSURFS] = {}
+        self.bconp: dict[int, BCONP] = {}
+        self.blseg: dict[int, BLSEG] = {}
+        self.bfric: dict[int, BFRIC] = {}
+        self.bgadds: dict[int, BGADD] = {}
+        self.bgsets: dict[int, BGSET] = {}
+        self.bctparms: dict[int, BCTPARAM] = {}
 
         #--------------------------superelements------------------------------
-        self.setree = {}  # type: dict[int, SETREE]
-        self.senqset = {}  # type: dict[int, Union[SENQSET, SENQSET1]]
-        self.sebulk = {}  # type: dict[int, SEBULK]
-        self.sebndry = {}  # type: dict[int, SEBNDRY]
-        self.release = {}  # type: dict[int, RELEASE]
-        self.seloc = {}  # type: dict[int, SELOC]
-        self.sempln = {}  # type: dict[int, SEMPLN]
-        self.seconct = {}  # type: dict[int, SECONCT]
-        self.selabel = {}  # type: dict[int, SELABEL]
-        self.seexcld = {}  # type: dict[int, SEEXCLD]
-        self.seelt = {}  # type: dict[int, SEELT]
-        self.seload = {}  # type: dict[int, SELOAD]
-        self.csuper = {}  # type: dict[int, CSUPER]
-        self.csupext = {}  # type: dict[int, CSUPEXT]
+        self.setree: dict[int, SETREE] = {}
+        self.senqset: dict[int, Union[SENQSET, SENQSET1]] = {}
+        self.sebulk: dict[int, SEBULK] = {}
+        self.sebndry: dict[int, SEBNDRY] = {}
+        self.release: dict[int, RELEASE] = {}
+        self.seloc: dict[int, SELOC] = {}
+        self.sempln: dict[int, SEMPLN] = {}
+        self.seconct: dict[int, SECONCT] = {}
+        self.selabel: dict[int, SELABEL] = {}
+        self.seexcld: dict[int, SEEXCLD] = {}
+        self.seelt: dict[int, SEELT] = {}
+        self.seload: dict[int, SELOAD] = {}
+        self.csuper: dict[int, CSUPER] = {}
+        self.csupext: dict[int, CSUPEXT] = {}
 
         self.bolt: dict[int, BOLT] = {}
         self.boltseq: dict[int, BOLTSEQ] = {}
@@ -849,7 +849,7 @@ class BDFAttributes:
             #'properties_acoustic' : ['PACABS'],
             'properties' : [
                 #  acoustic
-                'PACABS', 'PAABSF', 'PACBAR',
+                'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
 
                 # 0d
                 'PELAS', 'PGAP', 'PFAST',
@@ -874,7 +874,9 @@ class BDFAttributes:
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                           'MAT3D', 'MATG'],
+                           'MAT3D', 'MATG',
+                           # acoustic
+                           'MATPOR'],
             'hyperelastic_materials' : ['MATHE', 'MATHP'],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],
