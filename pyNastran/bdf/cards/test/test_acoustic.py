@@ -61,6 +61,16 @@ class TestAcoustic(unittest.TestCase):
         model.add_amlreg(rid, sid, name, infid, nlayers=5, radsurf='AML', comment='amlreg')
         save_load_deck(model)
 
+    def test_micpnt(self):
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        eid = 1
+        nid = 2
+        name = 'micpnt test'
+        infid = [3, 4, 5]
+        model.add_micpnt(eid, nid, name, comment='micpnt')
+        save_load_deck(model)
+
     def test_pmic(self):
         log = get_logger(level='warning')
         model = BDF(debug=False, log=log, mode='msc')

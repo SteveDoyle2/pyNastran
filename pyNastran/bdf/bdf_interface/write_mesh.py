@@ -684,6 +684,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(acplnw.write_card(size, is_double))
             for key, amlreg in self.amlreg.items():
                 bdf_file.write(amlreg.write_card(size, is_double))
+            for key, micpnt in self.micpnt.items():
+                bdf_file.write(micpnt.write_card(size, is_double))
 
     def _write_mesh_long_ids_size(self, size: bool, is_long_ids: bool) -> tuple[int, bool]:
         """helper method"""

@@ -12,6 +12,7 @@ from pyNastran.gui.vtk_interface import (
     vtkQuadraticWedge, vtkQuadraticHexahedron,
     vtkPyramid, vtkQuadraticPyramid,
     vtkQuadraticEdge, vtkBiQuadraticQuad,
+    vtkUnstructuredGrid,
 )
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -65,6 +66,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import ElementalTableResults # ForceTableResults,
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
 
@@ -1917,6 +1919,498 @@ def map_elements1_no_quality_helper(self,
         nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
         material_coord, material_theta,
     )
+    return out
+
+def create_ugrid_from_elements(gui: MainWindow,
+                               grid: vtkUnstructuredGrid,
+                               elements: dict[int, Any],
+                               xyz_cid0: np.ndarray,
+                               nid_cp_cd: np.ndarray,
+                               #model: BDF,
+                               nid_map: dict[int, int],
+                               log: SimpleLogger):
+    nids = nid_cp_cd[:, 0]
+    # :param i: the element id in grid
+    # :param j: the element id in grid2
+    i = 0
+
+    #nids = self.eid_to_nid_map[eid]
+    #self.eid_to_nid_map = {}
+
+    # the list of all pids
+    #pids = []
+
+    #nelements = len(elements)
+    line_type = 3
+    nid_to_pid_map = defaultdict(list)
+    pid = 0
+
+    #print("map_elements...")
+    #eid_to_nid_map = self.eid_to_nid_map
+    #eid_map = self.gui.eid_map
+    for (eid, element) in sorted(elements.items()):
+        #eid_map[eid] = i
+        if i % 5000 == 0 and i > 0:
+            print('  map_elements (no quality) = %i' % i)
+        etype = element.type
+        # if element.Pid() >= 82:
+            # continue
+        # if element.Pid() in pids_to_drop:
+            # continue
+        # if element.Pid() not in pids_to_keep:
+            # continue
+        # if element.pid.type == 'PSOLID':
+            # continue
+
+        pid = np.nan
+
+        if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3, CPLSTS3)):
+            elem = vtkTriangle()
+            node_ids = element.node_ids
+            pid = element.Pid()
+            #eid_to_nid_map[eid] = node_ids
+            _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+
+            n1, n2, n3 = [nid_map[nid] for nid in node_ids]
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+        elif isinstance(element, (CTRIA6, CPLSTN6, CPLSTS6, CTRIAX)):
+            # the CTRIAX is a standard 6-noded element
+            node_ids = element.node_ids
+            pid = element.Pid()
+            _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+            if None not in node_ids:
+                elem = vtkQuadraticTriangle()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkTriangle()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:3]
+
+            n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+        elif isinstance(element, CTRIAX6):
+            # the CTRIAX6 is not a standard second-order triangle
+            #
+            # 5
+            # |\
+            # |  \
+            # 6    4
+            # |     \
+            # |       \
+            # 1----2----3
+            #
+            #material_coord[i] = element.theta # TODO: no mcid
+            # midside nodes are required, nodes out of order
+            node_ids = element.node_ids
+            #pid = element.Pid()
+            #_set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+
+            if None not in node_ids:
+                elem = vtkQuadraticTriangle()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(3, nid_map[node_ids[1]])
+                point_ids.SetId(4, nid_map[node_ids[3]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                #eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4],
+                                       #node_ids[1], node_ids[3], node_ids[5]]
+            else:
+                elem = vtkTriangle()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
+
+            n1 = nid_map[node_ids[0]]
+            n2 = nid_map[node_ids[2]]
+            n3 = nid_map[node_ids[4]]
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4, CQUAD1)):
+            node_ids = element.node_ids
+            #eid_to_nid_map[eid] = node_ids
+
+            try:
+                n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids]
+            except KeyError:  # pragma: no cover
+                print("node_ids =", node_ids)
+                print(str(element))
+                #print('nid_map = %s' % nid_map)
+                raise
+                #continue
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+            #p4 = xyz_cid0[n4, :]
+
+            elem = vtkQuad()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            point_ids.SetId(3, n4)
+            grid.InsertNextCell(9, point_ids)
+
+        elif isinstance(element, (CQUAD8, CPLSTN8, CPLSTS8, CQUADX8)):
+            node_ids = element.node_ids
+            #pid = element.Pid()
+            #_set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+
+            n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+            #p4 = xyz_cid0[n4, :]
+            if None not in node_ids:
+                elem = vtkQuadraticQuad()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkQuad()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:4]
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            point_ids.SetId(3, n4)
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif isinstance(element, (CQUAD, CQUADX)):
+            # CQUAD, CQUADX are 9 noded quads
+            node_ids = element.node_ids
+
+            n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
+            #p1 = xyz_cid0[n1, :]
+            #p2 = xyz_cid0[n2, :]
+            #p3 = xyz_cid0[n3, :]
+            #p4 = xyz_cid0[n4, :]
+            if None not in node_ids:
+                elem = vtkBiQuadraticQuad()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                point_ids.SetId(8, nid_map[node_ids[8]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkQuad()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:4]
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            point_ids.SetId(2, n3)
+            point_ids.SetId(3, n4)
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif isinstance(element, CTETRA4):
+            elem = vtkTetra()
+            node_ids = element.node_ids
+            #eid_to_nid_map[eid] = node_ids[:4]
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            grid.InsertNextCell(10, point_ids)
+            #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
+
+        elif isinstance(element, CTETRA10):
+            node_ids = element.node_ids
+            if None not in node_ids:
+                elem = vtkQuadraticTetra()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                point_ids.SetId(8, nid_map[node_ids[8]])
+                point_ids.SetId(9, nid_map[node_ids[9]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkTetra()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:4]
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif isinstance(element, CPENTA6):
+            elem = vtkWedge()
+            node_ids = element.node_ids
+            #eid_to_nid_map[eid] = node_ids[:6]
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            point_ids.SetId(4, nid_map[node_ids[4]])
+            point_ids.SetId(5, nid_map[node_ids[5]])
+            grid.InsertNextCell(13, point_ids)
+
+        elif isinstance(element, CPENTA15):
+            node_ids = element.node_ids
+            if None not in node_ids:
+                elem = vtkQuadraticWedge()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                point_ids.SetId(8, nid_map[node_ids[8]])
+                point_ids.SetId(9, nid_map[node_ids[9]])
+                point_ids.SetId(10, nid_map[node_ids[10]])
+                point_ids.SetId(11, nid_map[node_ids[11]])
+                point_ids.SetId(12, nid_map[node_ids[12]])
+                point_ids.SetId(13, nid_map[node_ids[13]])
+                point_ids.SetId(14, nid_map[node_ids[14]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkWedge()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:6]
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            point_ids.SetId(4, nid_map[node_ids[4]])
+            point_ids.SetId(5, nid_map[node_ids[5]])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif isinstance(element, CHEXA8):
+            node_ids = element.node_ids
+            #eid_to_nid_map[eid] = node_ids[:8]
+            elem = vtkHexahedron()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            point_ids.SetId(4, nid_map[node_ids[4]])
+            point_ids.SetId(5, nid_map[node_ids[5]])
+            point_ids.SetId(6, nid_map[node_ids[6]])
+            point_ids.SetId(7, nid_map[node_ids[7]])
+            grid.InsertNextCell(12, point_ids)
+
+        elif isinstance(element, CHEXA20):
+            node_ids = element.node_ids
+            if None not in node_ids:
+                elem = vtkQuadraticHexahedron()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(8, nid_map[node_ids[8]])
+                point_ids.SetId(9, nid_map[node_ids[9]])
+                point_ids.SetId(10, nid_map[node_ids[10]])
+                point_ids.SetId(11, nid_map[node_ids[11]])
+
+                # these two blocks are flipped
+                point_ids.SetId(12, nid_map[node_ids[16]])
+                point_ids.SetId(13, nid_map[node_ids[17]])
+                point_ids.SetId(14, nid_map[node_ids[18]])
+                point_ids.SetId(15, nid_map[node_ids[19]])
+
+                point_ids.SetId(16, nid_map[node_ids[12]])
+                point_ids.SetId(17, nid_map[node_ids[13]])
+                point_ids.SetId(18, nid_map[node_ids[14]])
+                point_ids.SetId(19, nid_map[node_ids[15]])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkHexahedron()
+                #eid_to_nid_map[eid] = node_ids[:8]
+
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            point_ids.SetId(4, nid_map[node_ids[4]])
+            point_ids.SetId(5, nid_map[node_ids[5]])
+            point_ids.SetId(6, nid_map[node_ids[6]])
+            point_ids.SetId(7, nid_map[node_ids[7]])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif isinstance(element, CPYRAM5):
+            node_ids = element.node_ids
+            #eid_to_nid_map[eid] = node_ids[:5]
+            elem = vtkPyramid()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            point_ids.SetId(2, nid_map[node_ids[2]])
+            point_ids.SetId(3, nid_map[node_ids[3]])
+            point_ids.SetId(4, nid_map[node_ids[4]])
+            # etype = 14
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+        elif isinstance(element, CPYRAM13):
+            node_ids = element.node_ids
+            if None not in node_ids:
+                elem = vtkQuadraticPyramid()
+                point_ids = elem.GetPointIds()
+                #etype = 27
+                _nids = [nid_map[node_ids[i]] for i in range(13)]
+                point_ids.SetId(0, _nids[0])
+                point_ids.SetId(1, _nids[1])
+                point_ids.SetId(2, _nids[2])
+                point_ids.SetId(3, _nids[3])
+                point_ids.SetId(4, _nids[4])
+
+                point_ids.SetId(5, _nids[5])
+                point_ids.SetId(6, _nids[6])
+                point_ids.SetId(7, _nids[7])
+                point_ids.SetId(8, _nids[8])
+
+                point_ids.SetId(9, _nids[9])
+                point_ids.SetId(10, _nids[10])
+                point_ids.SetId(11, _nids[11])
+                point_ids.SetId(12, _nids[12])
+                #eid_to_nid_map[eid] = node_ids
+            else:
+                elem = vtkPyramid()
+                point_ids = elem.GetPointIds()
+                #eid_to_nid_map[eid] = node_ids[:5]
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+            #print('*node_ids =', node_ids[:5])
+
+            #if min(node_ids) > 0:
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+
+        elif etype in {'CBUSH', 'CBUSH1D', 'CFAST',
+                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                       'CVISC', 'CGAP'}:
+
+            node_ids = element.node_ids
+            _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+
+            if node_ids[0] is None and node_ids[1] is None: # CELAS2
+                log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
+                #del self.eid_map[eid]
+                continue
+            if None in node_ids:  # used to be 0...
+                if node_ids[0] is None:
+                    slot = 1
+                elif node_ids[1] is None:
+                    slot = 0
+                #print('node_ids=%s slot=%s' % (str(node_ids), slot))
+                #eid_to_nid_map[eid] = node_ids[slot]
+                nid = node_ids[slot]
+                if nid not in nid_map:
+                    # SPOINT
+                    log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
+                    continue
+
+                #c = nid_map[nid]
+
+                #if 1:
+                #print(str(element))
+                elem = vtkVertex()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, j)
+                #else:
+                    #elem = vtkSphere()
+                    #elem = vtkSphereSource()
+                    #if d == 0.:
+                    #d = sphere_size
+                    #elem.SetRadius(sphere_size)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
+            else:
+                # 2 points
+                #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
+                #eid_to_nid_map[eid] = node_ids
+                elem = vtkLine()
+                point_ids = elem.GetPointIds()
+                try:
+                    point_ids.SetId(0, nid_map[node_ids[0]])
+                    point_ids.SetId(1, nid_map[node_ids[1]])
+                except KeyError:
+                    print("node_ids =", node_ids)
+                    print(str(element))
+                    continue
+                grid.InsertNextCell(line_type, point_ids)
+
+        elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE'):
+            node_ids = element.node_ids
+
+            # 2 points
+            n1, n2 = np.searchsorted(nids, element.nodes)
+            #xyz1 = xyz_cid0[n1, :]
+            #xyz2 = xyz_cid0[n2, :]
+            #eid_to_nid_map[eid] = node_ids
+            elem = vtkLine()
+            try:
+                n1, n2 = [nid_map[nid] for nid in node_ids]
+            except KeyError:  # pragma: no cover
+                print("node_ids =", node_ids)
+                print(str(element))
+                print('nid_map = %s' % nid_map)
+                raise
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, n1)
+            point_ids.SetId(1, n2)
+            grid.InsertNextCell(line_type, point_ids)
+
+        elif etype == 'CBEND':
+            node_ids = element.node_ids
+
+            # 2 points
+            n1, n2 = np.searchsorted(nids, element.nodes)
+            #xyz1 = xyz_cid0[n1, :]
+            #xyz2 = xyz_cid0[n2, :]
+            #eid_to_nid_map[eid] = node_ids
+
+            point_ids.SetId(0, nid_map[node_ids[0]])
+            point_ids.SetId(1, nid_map[node_ids[1]])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
+        else:
+            log.warning('removing\n%s' % (element))
+            log.warning('removing eid=%s; %s' % (eid, element.type))
+            #del self.eid_map[eid]
+            gui.log_info("skipping %s" % element.type)
+            continue
+        # what about MPCs, RBE2s (rigid elements)?
+        #   are they plotted as elements?
+        #   and thus do they need a property?
+
+        #print(eid, min_thetai, max_thetai, '\n', element)
+        i += 1
+    #assert len(self.eid_map) > 0, self.eid_map
+    #print('mapped elements')
+
+    #nelements = i
+    #print('nelements=%s pids=%s' % (nelements, list(pids)))
+
+    out = grid
+    #(
+        #nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+        #material_coord, material_theta,
+    #)
     return out
 
 def create_monpnt(gui: MainWindow,

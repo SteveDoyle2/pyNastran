@@ -22,7 +22,7 @@ BDF:
  - added:
    - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
    - CBUSH centroid to fix grid point forces bug
-   - acoustic: PMIC, ACPLNW, AMLREG, MATPOR
+   - acoustic: PMIC, ACPLNW, AMLREG, MATPOR, MICPNT
    - is_acoustic() flag
  - fixed:
    - add_tempbc was named incorrectly (was tempbc)
@@ -48,8 +48,7 @@ OP2Geom:
      - explicitly stopping on mesh adaptation cards
        (e.g., PVAL, PCURV, PINT, GMSURF, ADAPT, ...)
    - added:
-     - NX acoustic: MICPNT (not supported by BDF other than in add_card)
-     - acoustic PMIC, AMLREG, ACPLNW, CHEXA/CROD, MATPOR-CRAGGS
+     - acoustic PMIC, AMLREG, ACPLNW, CHEXA/CROD, MICPNT, MATPOR-CRAGGS
    - fixed reading:
      - CFAST-NX reading should always work now
        (ida, idb, gs, xyzs added to reader)

@@ -1722,13 +1722,15 @@ def _check_case_parameters(subcase: Subcase,
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
         if sum_load:
-            force, moment = sum_forces_moments(fem, p0, loadcase_id,
-                                               cid=cid_new, include_grav=False)
+            force, moment = sum_forces_moments(
+                fem, p0, loadcase_id,
+                cid=cid_new, include_grav=False)
             unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
             eids = None
             nids = None
             force2, moment2 = sum_forces_moments_elements(
-                fem, p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
+                fem, p0, loadcase_id, eids, nids,
+                cid=cid_new, include_grav=False)
             assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
             assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
             print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))

@@ -90,7 +90,7 @@ from pyNastran.bdf.cards.elements.shell_nasa95 import (
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
-    ACMODL, PMIC, ACPLNW, AMLREG, MATPOR)
+    ACMODL, PMIC, ACPLNW, AMLREG, MATPOR, MICPNT)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -729,8 +729,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
 
-            # acoustic
-            'ACPLNW', 'AMLREG', 'MATPOR',
+            ## acoustic
+            'ACPLNW', 'AMLREG', 'MATPOR', 'MICPNT',
 
             # msgmesh
             #'GMLOAD',  # loads
@@ -2142,6 +2142,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CSUPEXT' : (CSUPEXT, add_methods._add_csupext_object),
             'SELOAD' : (SELOAD, add_methods._add_seload_object),
 
+            ## acoustic
             'CHACAB': (CHACAB, add_methods._add_element_object),
             'CHACBR': (CHACBR, add_methods._add_element_object),
             'CAABSF': (CAABSF, add_methods._add_element_object),
@@ -2152,6 +2153,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'ACPLNW': (ACPLNW, add_methods._add_acplnw_object),
             'AMLREG': (AMLREG, add_methods._add_amlreg_object),
             'MATPOR': (MATPOR, add_methods._add_structural_material_object),
+            'MICPNT': (MICPNT, add_methods._add_micpnt_object),
             #'PANEL' : (Crash, None),
 
             'BCONP' : (BCONP, add_methods._add_bconp_object),
@@ -3554,7 +3556,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.reject_cards.append(card_obj)
 
     def is_acoustic(self) -> bool:
-        card_names = ['ACPLNW', 'AMLREG', 'CAABSF', 'PMIC', 'MATPOR']
+        card_names = ['ACPLNW', 'AMLREG', 'CAABSF', 'PMIC', 'MATPOR', 'MICPNT']
         nacoustics = [self.card_count.get(card_name, 0) for card_name in card_names]
         nacoustic = sum(nacoustics)
         is_acoustic = nacoustic > 0

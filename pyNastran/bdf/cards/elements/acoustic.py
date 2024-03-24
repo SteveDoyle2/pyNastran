@@ -745,8 +745,9 @@ class AMLREG(BaseCard):
         rid = integer(card, 1, 'rid')
         sid = integer(card, 2, 'sid')
 
-        label_fields = [labeli for labeli in card[3:8] if labeli is not None]
-        name = ''.join(label_fields).strip()
+        name = card[3]
+        #label_fields = [labeli for labeli in card[3:8] if labeli is not None]
+        #name = ''.join(label_fields).strip()
         assert len(name) <= 48, name
 
         nlayers = integer_or_blank(card, 9, 'nlayers', default=5)
@@ -777,6 +778,85 @@ class AMLREG(BaseCard):
         out = (
             f'AMLREG  {self.rid:<8d}{self.sid:<8d}{self.name:>s}\n'
             f'        {self.nlayers:<8d}{self.radsurf:8s}{infid[0]:8d}{infid[1]:8d}{infid[2]:8d}\n'
+        )
+        return out
+
+
+class MICPNT(BaseCard):
+    """
+    +--------+---------+---------+--------------------------+
+    | MICPNT |   EID   |   NID   | Name/Descriptor          |
+    +--------+---------+---------+--------+--------+--------+
+    """
+    type = 'MICPNT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nid = 2
+        name = 'MICPNT'
+        return MICPNT(eid, nid, name)
+
+    def __init__(self, eid: int, nid: int, name: str,
+                 comment: str=''):
+        """
+        Creates a AMLREG card
+
+        Parameters
+        ----------
+        eid: int
+            element id
+        nid : int
+            node id
+        name : str
+            The Name/Descriptor is an optional character string
+
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.eid = eid
+        self.nid = nid
+        self.name = name
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a MICPNT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        nid = integer(card, 2, 'nid')
+        name = card[3]
+        #label_fields = [labeli for labeli in card[3:8] if labeli is not None]
+        #name = ''.join(label_fields).strip()
+
+        assert len(name) <= 48, name
+        assert len(card) <= 4, f'len(MICPNT card) = {len(card):d}\ncard={card}'
+        return MICPNT(eid, nid, name, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['MICPNT', self.eid, self.nid]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False) -> str:
+        out = (
+            f'MICPNT  {self.eid:<8d}{self.nid:<8d}{self.name:>s}\n'
         )
         return out
 

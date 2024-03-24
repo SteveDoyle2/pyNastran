@@ -1041,6 +1041,19 @@ class TestNastranGUI(unittest.TestCase):
             assert len(test.result_cases) == 236, len(test.result_cases)
         #print(test.result_cases)
 
+    def test_vba1(self):
+        """vibroacoustics"""
+        test = NastranGUI()
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'test_vba.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'ac108vatv5tc.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'acssn108presvar.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
     def test_aero(self):
         """tests the bah_plane"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
