@@ -752,9 +752,9 @@ class AMLREG(BaseCard):
         nlayers = integer_or_blank(card, 9, 'nlayers', default=5)
         radsurf = string_or_blank(card, 10, 'radsurf', default='AML')
         infid = [
-            integer(card, 11, 'infid1'),
-            integer(card, 12, 'infid2'),
-            integer(card, 13, 'infid3'),
+            integer_or_blank(card, 11, 'infid1', default=0),
+            integer_or_blank(card, 12, 'infid2', default=0),
+            integer_or_blank(card, 13, 'infid3', default=0),
         ]
         assert len(card) <= 14, f'len(AMLREG card) = {len(card):d}\ncard={card}'
         return AMLREG(rid, sid, name, infid,
@@ -1117,11 +1117,10 @@ class MATPOR(BaseCard):
                     rho: float, c: float, resistivity: float,
                     porosity: float, frame: str,
                     density: float=0.0, comment: str=''):
-        model = 'CRAGGS'
+        model = 'DELMIKI'
         gamma = 0.0
         prandtl_number = 0.0
         mu = 0.0
-        #density = 0.0
         L1 = 0.0
         L2 = 0.0
         return MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,

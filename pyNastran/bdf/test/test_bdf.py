@@ -1716,8 +1716,8 @@ def _check_case_parameters(subcase: Subcase,
         loadcase_id = subcase.get_int_parameter('TEMPERATURE(MATERIAL)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
 
-    is_acoustic = fem.is_acoustic()
-    if 'LOAD' in subcase and not is_acoustic:
+    is_not_acoustic = not fem.is_acoustic()
+    if 'LOAD' in subcase and is_not_acoustic:
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
@@ -1742,7 +1742,7 @@ def _check_case_parameters(subcase: Subcase,
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
 
-    if 'FREQUENCY' in subcase and not is_acoustic:
+    if 'FREQUENCY' in subcase and is_not_acoustic:
         # not positive on 107 - complex eigenvalues
         freq_id = subcase.get_int_parameter('FREQUENCY')[0]
         freq = fem.frequencies[freq_id]
@@ -1791,7 +1791,7 @@ def _check_case_parameters(subcase: Subcase,
         unused_lseq = fem.Load(loadset_id)
         fem.get_reduced_loads(loadset_id)
 
-    if 'DLOAD' in subcase:
+    if 'DLOAD' in subcase and is_not_acoustic:
         allowed_sols = [
             26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
             153, 159, 200, 400, 401, 601, 700,

@@ -3554,7 +3554,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.reject_cards.append(card_obj)
 
     def is_acoustic(self) -> bool:
-        card_names = ['ACPLNW', 'CAABSF', 'PMIC', 'MATPOR']
+        card_names = ['ACPLNW', 'AMLREG', 'CAABSF', 'PMIC', 'MATPOR']
         nacoustics = [self.card_count.get(card_name, 0) for card_name in card_names]
         nacoustic = sum(nacoustics)
         is_acoustic = nacoustic > 0

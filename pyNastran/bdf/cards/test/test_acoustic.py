@@ -23,11 +23,17 @@ class TestAcoustic(unittest.TestCase):
      * AMLREG
 
     """
-    def test_acoustic(self):
+    def test_acoustic1(self):
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'ac108vatv5tc.bdf'
         model = read_bdf(bdf_filename, log=log)
         save_load_deck(model, run_renumber=False)
+
+    def test_acoustic2(self):
+        log = get_logger(level='warning')
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'acssn108presvar.bdf'
+        model = read_bdf(bdf_filename, log=log, mode='nx')
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
     def test_acplnw(self):
         log = get_logger(level='warning')
