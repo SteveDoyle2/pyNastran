@@ -2791,7 +2791,7 @@ class EPT:
         not AEPARM
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\atv005mat.op2
 
-        it's a PMIC?
+        it's a PMIC
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acssn100_2.op2
         """
         op2: OP2Geom = self.op2

@@ -2065,6 +2065,7 @@ class TestOP2Main(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
+        log = get_logger(level='debug')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,

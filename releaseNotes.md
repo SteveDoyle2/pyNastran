@@ -20,9 +20,9 @@ BDF:
    - moving ACMODL writing to dynamics
    - reorg on AddCard class to make it easier to find cards
  - added:
+   - acoustic: PMIC, ACPLNW, AMLREG
    - CBUSH centroid to fix grid point forces bug
    - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
-   - PMIC to fix op2 tests
  - fixed:
    - add_tempbc was named incorrectly (was tempbc)
    - MONDSP1 comp field can be a string (e.g., PLATE)
@@ -47,9 +47,9 @@ OP2Geom:
      - explicitly stopping on mesh adaptation cards
        (e.g., PVAL, PCURV, PINT, GMSURF, ADAPT, ...)
    - added:
-     - NX acoustic: AMLREG, ACPLNW, MATPOR-CRAGG, MICPNT
+     - NX acoustic: AMLREG, MATPOR-CRAGG, MICPNT
        (not supported by BDF other than in add_card)
-     - acoustic PMIC, CHEXA/CROD
+     - acoustic PMIC, ACPLNW, CHEXA/CROD
    - fixed reading:
      - CFAST-NX reading should always work now
        (ida, idb, gs, xyzs added to reader)
@@ -82,7 +82,7 @@ GUI:
    - fixed legend disappearing when previous result is GridPointForces
    - fixed issue with GUI not loading if json file doesn't exist
  - nastran reader:
-   - fixed acoustic PMIC crash
+   - fixed acoustic PMIC crash (property was expected and not found without PMIC)
 
  - known issues:
     - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though

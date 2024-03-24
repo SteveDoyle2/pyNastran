@@ -89,7 +89,8 @@ from pyNastran.bdf.cards.elements.shell_nasa95 import (
 
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
-    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL, PMIC)
+    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
+    ACMODL, PMIC, ACPLNW, AMLREG)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -727,6 +728,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
+
+            # acoustic
+            'ACPLNW', 'AMLREG',
 
             # msgmesh
             #'GMLOAD',  # loads
@@ -2145,6 +2149,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PAABSF': (PAABSF, add_methods._add_acoustic_property_object),
             'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
             'PMIC': (PMIC, add_methods._add_property_object),
+            'ACPLNW': (ACPLNW, add_methods._add_acplnw_object),
+            'AMLREG': (AMLREG, add_methods._add_amlreg_object),
             #'PANEL' : (Crash, None),
 
             'BCONP' : (BCONP, add_methods._add_bconp_object),

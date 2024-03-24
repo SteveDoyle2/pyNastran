@@ -78,12 +78,16 @@ if TYPE_CHECKING:  # pragma: no cover
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
 
+        CREEP,
         MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATDMG,
         NXSTRAT,
         PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
 
-
+        PMIC, ACPLNW, AMLREG, # MATPOR,
+        SUPORT, SUPORT1,
+        BOLT, BOLTFOR, BOLTSEQ,
+        PELAST, PDAMPT, PBUSHT, TIC,
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
@@ -501,15 +505,15 @@ class BDFAttributes:
         self.nxstrats: dict[int, NXSTRAT] = {}
 
         #: stores the CREEP card
-        self.creep_materials: dict[int, Any] = {}
+        self.creep_materials: dict[int, CREEP] = {}
 
-        self.tics = {}  # type: Optional[Any]
+        self.tics: dict[int, TIC] = {}
 
         # stores DLOAD entries.
-        self.dloads = {}    # type: dict[int, Any]
+        self.dloads: dict[int, Any] = {}
         # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
         #        and QVECT entries.
-        self.dload_entries = {}    # type: dict[int, Any]
+        self.dload_entries: dict[int, Any] = {}
 
         #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
@@ -519,36 +523,35 @@ class BDFAttributes:
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords = {0 : coord}   # type: dict[int, Any]
+        self.coords: dict[int, Any] = {0 : coord}
         self.MATCID = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
-        #self.constraints = {} # suport1, anything else???
-        self.suport = []  # type: list[Any]
-        self.suport1 = {}  # type: dict[int, Any]
-        self.se_suport = []  # type: list[Any]
+        self.suport: list[SUPORT] = []
+        self.suport1: dict[int, SUPORT1] = {}
+        self.se_suport: list[Any] = []
 
         #: stores SPC, SPC1, SPCAX, GMSPC
-        self.spcs = {}  # type: dict[int, list[Any]]
+        self.spcs: dict[int, list[Any]] = {}
         #: stores SPCADD
-        self.spcadds = {}  # type: dict[int, list[Any]]
-        self.spcoffs = {}  # type: dict[int, list[Any]]
+        self.spcadds: dict[int, list[SPCADD]] = {}
+        self.spcoffs: dict[int, list[Any]] = {}
 
-        self.mpcs = {}  # type: dict[int, list[Any]]
-        self.mpcadds = {}  # type: dict[int, list[Any]]
+        self.mpcs: dict[int, list[Any]] = {}
+        self.mpcadds: dict[int, list[MPCADD]] = {}
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
-        self.dareas = {}   # type: dict[int, Any]
-        self.dphases = {}  # type: dict[int, Any]
+        self.dareas: dict[int, DAREA] = {}
+        self.dphases: dict[int, DPHASE] = {}
 
-        self.pbusht = {}  # type: dict[int, Any]
-        self.pdampt = {}  # type: dict[int, Any]
-        self.pelast = {}  # type: dict[int, Any]
+        self.pbusht: dict[int, PBUSHT] = {}
+        self.pdampt: dict[int, PDAMPT] = {}
+        self.pelast: dict[int, PELAST] = {}
 
         #: frequencies
-        self.frequencies = {}  # type: dict[int, list[Any]]
+        self.frequencies: dict[int, list[Any]] = {}
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
@@ -563,20 +566,20 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: SETy
-        self.sets = {}  # type: dict[int, Any]
-        self.asets = []  # type: list[Any]
-        self.omits = []  # type: list[Any]
-        self.bsets = []  # type: list[Any]
-        self.csets = []  # type: list[Any]
-        self.qsets = []  # type: list[Any]
-        self.usets = {}  # type: dict[str, Any]
+        self.sets: dict[int, Any] = {}
+        self.asets: list[Any] = []
+        self.omits: list[Any] = []
+        self.bsets: list[Any] = []
+        self.csets: list[Any] = []
+        self.qsets: list[Any] = []
+        self.usets: dict[str, Any] = {}
 
         #: SExSETy
-        self.se_bsets = []  # type: list[Any]
-        self.se_csets = []  # type: list[Any]
-        self.se_qsets = []  # type: list[Any]
-        self.se_usets = {}  # type: dict[str, Any]
-        self.se_sets = {}  # type: dict[str, Any]
+        self.se_bsets: list[Any] = []
+        self.se_csets: list[Any] = []
+        self.se_qsets: list[Any] = []
+        self.se_usets: dict[str, Any] = {}
+        self.se_sets: dict[str, Any] = {}
 
         # ----------------------------------------------------------------
         #: parametric
@@ -637,20 +640,23 @@ class BDFAttributes:
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
-        self.nlpcis = {}  # type: dict[int, NLPCI]
+        self.nlpcis: dict[int, NLPCI] = {}
         #: stores NLPARM
-        self.nlparms = {}  # type: dict[int, NLPARM]
+        self.nlparms: dict[int, NLPARM] = {}
         #: stores TSTEPs, TSTEP1s
-        self.tsteps = {}  # type: dict[int, Union[TSTEP, TSTEP1]]
+        self.tsteps: dict[int, Union[TSTEP, TSTEP1]] = {}
         #: stores TSTEPNL
-        self.tstepnls = {}  # type: dict[int, TSTEPNL]
+        self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
-        self.transfer_functions = {}  # type: dict[int, TF]
+        self.transfer_functions: dict[int, TF] = {}
         #: stores DELAY
-        self.delays = {}  # type: dict[int, DELAY]
+        self.delays: dict[int, DELAY] = {}
 
         #: stores ROTORD, ROTORG
-        self.rotors = {}  # type: dict[int, Union[ROTORD, ROTORG]]
+        self.rotors: dict[int, Union[ROTORD, ROTORG]] = {}
+
+        self.acplnw: dict[int, ACPLNW] = {}
+        self.amlreg: dict[int, AMLREG] = {}
 
         # --------------------------- aero defaults --------------------------
         # aero cards
@@ -724,24 +730,24 @@ class BDFAttributes:
 
         # ------ SOL 146 ------
         #: stores GUST cards
-        self.gusts = {}  # type: dict[int, GUST]
+        self.gusts: dict[int, GUST] = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}  # type: dict[int, Union[CONV, RADBC]]
+        self.bcs: dict[int, Union[CONV, RADBC]] = {}
 
         #: stores PHBDY
-        self.phbdys = {}  # type: dict[int, PHBDY]
+        self.phbdys: dict[int, PHBDY] = {}
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}  # type: dict[int, Union[PCONV, PCONVM]]
+        self.convection_properties: dict[int, Union[PCONV, PCONVM]] = {}
         #: stores TEMPD
-        self.tempds = {}  # type: dict[int, TEMPD]
+        self.tempds: dict[int, TEMPD] = {}
 
         #: stores VIEW
-        self.views = {}  # type: dict[int, VIEW]
+        self.views: dict[int, VIEW] = {}
         #: stores VIEW3D
-        self.view3ds = {}  # type: dict[int, VIEW3D]
+        self.view3ds: dict[int, VIEW3D] = {}
         self.radset = None
         self.radcavs = {}  # type: dict[int, RADCAV]
         self.radmtx = {}  # type: dict[int, RADMTX]
@@ -1047,6 +1053,10 @@ class BDFAttributes:
             'radcavs' : ['RADCAV', 'RADLST'],
             'radmtx' : ['RADMTX'],
             # SEBSEP
+
+            # acoustic
+            'acplnw' : ['ACPLNW'],
+            'amlreg' : ['AMLREG'],
 
             # parametric
             'pset' : ['PSET'],

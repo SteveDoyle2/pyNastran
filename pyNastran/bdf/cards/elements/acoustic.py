@@ -3,18 +3,24 @@ All superelements are defined in this file.  This includes:
  * CAABSF
  * CHACAB
  * CHACBR
+ * PACBAR
+ * PAABSF
+ * ACMODL
+ * PMIC
+ * ACPLNW
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
-from pyNastran.bdf.cards.base_card import Element, Property
+from pyNastran.bdf.cards.base_card import BaseCard, Element, Property
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     double,
     integer, integer_or_blank, # integer_or_string,
     string,
     string_or_blank, double_or_blank, # integer_string_or_blank,
+    integer_double_or_blank,
     #exact_string_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
@@ -568,6 +574,212 @@ class PACABS(Element):
 
 def is_msc(nastran_version: str):
     return nastran_version == 'msc'
+
+
+class ACPLNW(BaseCard):
+    type = 'ACPLNW'
+
+    @classmethod
+    def _init_from_empty(cls):
+        infor = 1
+        fset = 1.0
+        sset = 1.
+        return ACMODL(infor, fset, sset)
+
+    def __init__(self, sid: int, form: str, scale: float,
+                 real: Union[int, float],
+                 imag: Union[int, float],
+                 cid1: int, xyz: list[float],
+                 cid2: int, nxyz: list[float], comment: str=''):
+        """
+        Creates a ACMODL card
+
+        Parameters
+        ----------
+
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.form = form
+        self.scale = scale
+        self.real = real
+        self.imag = imag
+        self.cid1 = cid1
+        self.xyz = xyz
+        self.cid2 = cid2
+        self.nxyz = nxyz
+        assert form in {'REAL', 'PHASE'}, form
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a ACPLNW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        form = string_or_blank(card, 2, 'form', default='REAL')
+        scale = double_or_blank(card, 3, 'scale', default=1.0)
+        real = integer_double_or_blank(card, 4, 'real/mag', default=0.0)
+        imag = integer_double_or_blank(card, 5, 'imag/phase', default=0.0)
+        cid1 = integer(card, 9, 'cid1')
+        xyz = [
+            double_or_blank(card, 10, 'x', default=0.0),
+            double_or_blank(card, 11, 'y', default=0.0),
+            double_or_blank(card, 12, 'z', default=0.0),
+        ]
+        cid2 = integer(card, 13, 'cid2')
+        nxyz = [
+            double(card, 14, 'nx'),
+            double(card, 15, 'ny'),
+            double(card, 16, 'nz'),
+        ]
+        assert len(card) <= 17, f'len(ACMODL card) = {len(card):d}\ncard={card}'
+        return ACPLNW(sid, form, scale,
+                      real, imag,
+                      cid1, xyz,
+                      cid2, nxyz, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['ACPLNW', self.sid, self.form, self.scale,
+                       self.real, self.imag, None, None, None,
+                       self.cid1] + self.xyz + [self.cid2] + self.nxyz
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        fields = self.raw_fields()
+        return print_card_8(fields)
+
+
+class AMLREG(BaseCard):
+    """
+    +--------+---------+---------+--------------------------+
+    | AMLREG |   RID   |   SID   | Name/Descriptor          |
+    +--------+---------+---------+--------+--------+--------+
+    |        | NLAYERS | RADSURF | INFID1 | INFID2 | INFID3 |
+    +--------+---------+---------+--------+--------+--------+
+    """
+    type = 'AMLREG'
+
+    @classmethod
+    def _init_from_empty(cls):
+        infor = 1
+        fset = 1.0
+        sset = 1.
+        return AMLREG(infor, fset, sset)
+
+    def __init__(self, rid: int, sid: int, name: str,
+                 infid: list[int],
+                 nlayers: int=5,
+                 radsurf: str='AML', comment: str=''):
+        """
+        Creates a AMLREG card
+
+        Parameters
+        ----------
+        rid: int
+            AML region identification number
+        sid : int
+            Surface identification number
+        name : str
+            The Name/Descriptor is an optional character string
+        infid : list[int]
+            Identification number of an infinite plane.
+            Up to three (3) infinite planes are considered for an AML
+            region. The infinite planes are used when acoustic results
+            are to be computed exterior to the AML region. (Integer
+            >= 0; Default = 0) See Remark 5.
+        nlayers : int; default=5
+            Number of layers of extrusion to be formed by solver
+        radsurf : str; default='AML'
+           Radiation surface type
+             1/AML:  the pressure and velocities on the AML boundary
+                     are used to compute results in the far field.
+             2/PHYB: the pressure and velocities on the physical
+                     boundary (that is, all free fluid faces with the
+                     exception of faces on the AML and the infinite
+                     planes) are used to compute results in the far field.
+             0/NONE: the region does not radiate.
+
+        """
+        super().__init__()
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.rid = rid
+        self.name = name
+        self.infid = infid
+        self.nlayers = nlayers
+        self.radsurf = radsurf
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a ACPLNW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        rid = integer(card, 1, 'rid')
+        sid = integer(card, 2, 'sid')
+
+        label_fields = [labeli for labeli in card[3:8] if labeli is not None]
+        name = ''.join(label_fields).strip()
+        assert len(name) <= 48, name
+
+        nlayers = integer_or_blank(card, 9, 'nlayers', default=5)
+        radsurf = string_or_blank(card, 10, 'radsurf', default='AML')
+        infid = [
+            integer(card, 11, 'infid1'),
+            integer(card, 12, 'infid2'),
+            integer(card, 13, 'infid3'),
+        ]
+        assert len(card) <= 14, f'len(AMLREG card) = {len(card):d}\ncard={card}'
+        return AMLREG(rid, sid, name, infid,
+                      nlayers=nlayers, radsurf=radsurf, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['AMLREG', self.rid, self.sid, self.name,
+                       self.nlayers, self.radsurf] + self.infid
+        return list_fields
+
+    def write_card(self, size=8, is_double=False) -> str:
+        infid = self.infid
+        out = (
+            f'AMLREG  {self.rid:<8d}{self.sid:<8d}{self.name:>s}\n'
+            f'        {self.nlayers:<8d}{self.radsurf:8s}{infid[0]:8d}{infid[1]:8d}{infid[2]:8d}\n'
+        )
+        return out
+
 
 class ACMODL(Element):
     """
