@@ -58,7 +58,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'tics',
 
         # frequencies - dict[list[FREQ]]
-        'frequencies', 'acplnw', 'amlreg',
+        'frequencies', 'acplnw', 'amlreg', 'micpnt',
 
         # optimization - dict
         'dconadds', 'dconstrs', 'desvars', 'topvar', 'ddvals', 'dlinks', 'dresps',

@@ -23,7 +23,9 @@ if TYPE_CHECKING:  # pragma: no cover
 def isnan(value):
     return value is None or np.isnan(value)
 
-def sum_forces_moments(model: BDF, p0: np.ndarray, loadcase_id: int,
+def sum_forces_moments(model: BDF,
+                       p0: Union[int, np.ndarray],
+                       loadcase_id: int,
                        cid: int=0,
                        include_grav: bool=False,
                        xyz_cid0: Optional[dict[int, NDArray3float]]=None,
@@ -327,7 +329,9 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
                        F, M, p)
     return
 
-def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
+def sum_forces_moments_elements(model: BDF,
+                                p0: Union[int, np.ndarray],
+                                loadcase_id: int,
                                 eids: list[int], nids: list[int],
                                 cid: int=0,
                                 include_grav: bool=False,

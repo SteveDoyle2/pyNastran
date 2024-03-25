@@ -84,7 +84,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
 
-        PMIC, ACPLNW, AMLREG, # MATPOR,
+        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
         SUPORT, SUPORT1,
         BOLT, BOLTFOR, BOLTSEQ,
         PELAST, PDAMPT, PBUSHT, TIC,
@@ -602,15 +602,15 @@ class BDFAttributes:
         self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
 
         #: random_tables
-        self.random_tables = {}  # type: dict[int, Any]
+        self.random_tables: dict[int, Any] = {}
         #: TABDMP1
         self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
-        self.methods = {}  # type: dict[int, Union[EIGR, EIGRL, EIGB]]
+        self.methods: dict[int, Union[EIGR, EIGRL, EIGB]] = {}
         # EIGC, EIGP methods
-        self.cMethods = {}  # type: dict[int, Union[EIGC, EIGP]]
+        self.cMethods: dict[int, Union[EIGC, EIGP]] = {}
 
         # ---------------------------- optimization --------------------------
         # optimization
@@ -657,73 +657,74 @@ class BDFAttributes:
 
         self.acplnw: dict[int, ACPLNW] = {}
         self.amlreg: dict[int, AMLREG] = {}
+        self.micpnt: dict[int, MICPNT] = {}
 
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
-        self.caeros = {}  # type: dict[int, Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]]
+        self.caeros: dict[int, Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]] = {}
         #: stores PAEROx
-        self.paeros = {}  # type: dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]]
+        self.paeros: dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]] = {}
         # stores MONPNT1
-        self.monitor_points = []  # type: list[Union[MONPNT1, MONPNT2, MONPNT3]]
+        self.monitor_points: list[Union[MONPNT1, MONPNT2, MONPNT3]] = []
 
         #: stores AECOMP
-        self.aecomps = {}  # type: dict[int, AECOMP]
+        self.aecomps: dict[int, AECOMP] = {}
         #: stores AEFACT
-        self.aefacts = {}  # type: dict[int, AEFACT]
+        self.aefacts: dict[int, AEFACT] = {}
         #: stores AELINK
-        self.aelinks = {}  # type: dict[int, list[AELINK]]
+        self.aelinks: dict[int, list[AELINK]] = {}
         #: stores AELIST
-        self.aelists = {}  # type: dict[int, AELIST]
+        self.aelists: dict[int, AELIST] = {}
         #: stores AEPARM
-        self.aeparams = {}  # type: dict[int, AEPARM]
+        self.aeparams: dict[int, AEPARM] = {}
         #: stores AESURF
-        self.aesurf = {}  # type: dict[int, AESURF]
+        self.aesurf: dict[int, AESURF] = {}
         #: stores AESURFS
-        self.aesurfs = {}  # type: dict[int, AESURFS]
+        self.aesurfs: dict[int, AESURFS] = {}
         #: stores AESTAT
-        self.aestats = {}  # type: dict[int, AESTAT]
+        self.aestats: dict[int, AESTAT] = {}
         #: stores CSSCHD
-        self.csschds = {}  # type: dict[int, CSSCHD]
+        self.csschds: dict[int, CSSCHD] = {}
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines = {}  # type: dict[int, Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]]
+        self.splines: dict[int, Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]] = {}
         self.zona = ZONA(self)
 
         # axisymmetric
-        self.axic = None  # type: Optional[AXIC]
-        self.axif = None  # type: Optional[AXIF]
-        self.ringfl = {}  # type: dict[int, RINGFL]
+        self.axic: Optional[AXIC] = None
+        self.axif: Optional[AXIF] = None
+        self.ringfl: dict[int, RINGFL] = {}
         self._is_axis_symmetric = False
 
         # cyclic
-        self.cyax = None  # type: Optional[CYAX]
-        self.cyjoin = {}  # type: dict[int, CYJOIN]
+        self.cyax: Optional[CYAX] = None
+        self.cyjoin: dict[int, CYJOIN] = {}
 
-        self.modtrak = None  # type: Optional[MODTRAK]
+        self.modtrak: Optional[MODTRAK] = None
 
         # acoustic
-        self.acmodl = None
+        self.acmodl: Optional[ACMODL] = None
 
         # ------ SOL 144 ------
         #: stores AEROS
-        self.aeros = None  # type: Optional[AEROS]
+        self.aeros: Optional[AEROS] = None
 
         #: stores TRIM, TRIM2
-        self.trims = {}  # type: dict[int, Union[TRIM, TRIM2]]
+        self.trims: dict[int, Union[TRIM, TRIM2]] = {}
 
         #: stores DIVERG
-        self.divergs = {}  # type: dict[int, DIVERG]
+        self.divergs: dict[int, DIVERG] = {}
 
         # ------ SOL 145 ------
         #: stores AERO
         self.aero: Optional[AERO] = None
 
         #: stores FLFACT
-        self.flfacts = {}  # type: dict[int, FLFACT]
+        self.flfacts: dict[int, FLFACT] = {}
 
         #: stores FLUTTER
-        self.flutters = {} # type: dict[int, FLUTTER]
+        self.flutters: dict[int, FLUTTER] = {}
 
         #: mkaeros
         self.mkaeros: list[Union[MKAERO1, MKAERO2]] = []
@@ -1059,6 +1060,7 @@ class BDFAttributes:
             # acoustic
             'acplnw' : ['ACPLNW'],
             'amlreg' : ['AMLREG'],
+            'micpnt' : ['MICPNT'],
 
             # parametric
             'pset' : ['PSET'],

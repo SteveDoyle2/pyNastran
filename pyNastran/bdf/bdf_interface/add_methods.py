@@ -142,7 +142,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF)
     from pyNastran.bdf.cards.elements.acoustic import (
         PACABS, CAABSF, CHACAB, CHACBR,
-        ACPLNW, AMLREG, ACMODL, )
+        ACPLNW, AMLREG, ACMODL, MICPNT)
 
 
 class AddMethods:
@@ -552,6 +552,15 @@ class AddMethods:
         assert key >= 0
         self.model.amlreg[key] = amlreg
         self.model._type_to_id_map[amlreg.type].append(key)
+
+    def _add_micpnt_object(self, micpnt: MICPNT) -> None:
+        """adds an MICPNT object"""
+        key = micpnt.eid
+        assert key not in self.model.micpnt, '\micpnt=\n%s old=\n%s' % (
+            micpnt, self.model.micpnt[key])
+        assert key >= 0
+        self.model.micpnt[key] = micpnt
+        self.model._type_to_id_map[micpnt.type].append(key)
 
     def _add_acoustic_property_object(self, prop: PACABS) -> None:
         self._add_property_object(prop)

@@ -123,6 +123,7 @@ from .nastran_io_utils import (
     map_elements1_no_quality_helper,
     get_caero_control_surface_grid,
     get_model_unvectorized,
+    create_ugrid_from_elements,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -484,7 +485,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         gui.format = 'nastran'
 
-    def _points_to_vtkpoints_coords(self, model, xyz_cid0):
+    def _points_to_vtkpoints_coords(self, model: BDF, xyz_cid0: np.ndarray) -> None:
         """
         helper method for:
          - load_nastran_geometry_unvectorized
@@ -607,7 +608,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         # Allocate grids
         gui.grid.Allocate(self.nelements, 1000)
-        self._create_caero_actors(ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface)
+        _create_caero_actors(gui, ncaeros, ncaeros_sub, ncaeros_cs,
+                             has_control_surface, self.has_caero)
         if nconm2 > 0:
             gui.alt_grids['conm2'].Allocate(nconm2, 1000)
 
@@ -628,13 +630,15 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                           has_control_surface)
 
         if nconm2 > 0 and xref_nodes:
-            self._set_conm_grid(nconm2, model)
+            _set_conm_grid(self.gui, nconm2, model,
+                           self.create_secondary_actors)
 
         geometry_names = []
         if self.create_secondary_actors:
             if self.make_spc_mpc_supports and xref_nodes:
                 geometry_names = self.set_spc_mpc_suport_grid(
                     model, nid_to_pid_map, idtype)
+            set_acoustic_grid(gui, model, xyz_cid0, nid_cp_cd, nid_map)
 
             if xref_nodes and nastran_settings.is_bar_axes:
                 icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
@@ -789,39 +793,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     s = StringIO()
                     traceback.print_exc(file=s)
                     sout = s.getvalue()
-                    self.gui.log_error(sout)
+                    gui.log_error(sout)
                     print(sout)
 
             if len(formii):
                 form0.append(formi)
         return icase
-
-    def _create_caero_actors(self, ncaeros: int,
-                             ncaeros_sub: int,
-                             ncaeros_cs: int,
-                             has_control_surface: bool) -> None:
-        """
-        This just creates the following actors.  It does not fill them.
-        These include:
-         - caero
-         - caero_subpanels
-         - caero_control_surfaces
-        """
-        if not self.has_caero:
-            return
-        gui: MainWindow = self.gui
-        gui.create_alternate_vtk_grid(
-            'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
-            representation='toggle', is_visible=True, is_pickable=False)
-        gui.create_alternate_vtk_grid(
-            'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
-            representation='toggle', is_visible=False, is_pickable=False)
-
-        gui.alt_grids['caero'].Allocate(ncaeros, 1000)
-        gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
-        if has_control_surface:
-            gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
-
 
     def _set_caero_representation(self, has_control_surface: bool) -> None:
         """
@@ -972,7 +949,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             box_id_to_caero_element_map = {}
             cs_box_ids = defaultdict(list)
             all_control_surface_name = ''
-            caero_control_surface_names = []
+            #caero_control_surface_names = []
             out = (
                 has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
                 ncaeros_points, ncaero_sub_points,
@@ -1215,67 +1192,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             slot = gui.reset_label_actors(name)
             annotation = gui.create_annotation(text, x, y, z)
             slot.append(annotation)
-
         return stored_msg
 
-    def _set_conm_grid(self, nconm2, model):
-        """
-        creates the mass secondary actor called:
-         - conm2
-
-        which includes:
-         - CONM2
-         - CMASS1
-         - CMASS2
-
-        because it's really a "mass" actor
-        """
-        if not self.create_secondary_actors:  # pramga: no cover
-            return
-        j = 0
-        gui: MainWindow = self.gui
-        points = vtkPoints()
-        points.SetNumberOfPoints(nconm2)
-
-        #sphere_size = self._get_sphere_size(dim_max)
-        alt_grid = gui.alt_grids['conm2']
-        for unused_eid, element in sorted(model.masses.items()):
-            if isinstance(element, CONM2):
-                xyz_nid = element.nid_ref.get_position()
-                centroid = element.offset(xyz_nid)
-                #centroid_old = element.Centroid()
-                #assert np.all(np.allclose(centroid_old, centroid)), 'centroid_old=%s new=%s' % (centroid_old, centroid)
-                #d = norm(xyz - c)
-                points.InsertPoint(j, *centroid)
-
-                #if 1:
-                elem = vtkVertex()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(0, j)
-                #else:
-                    #elem = vtkSphere()
-                    #elem.SetRadius(sphere_size)
-                    #elem.SetCenter(points.GetPoint(j))
-
-                alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
-                j += 1
-            elif element.type in ('CMASS1', 'CMASS2'):
-                centroid = element.Centroid()
-                #n1 = element.G1()
-                #n2 = element.G2()
-                #print('n1=%s n2=%s centroid=%s' % (n1, n2, centroid))
-                points.InsertPoint(j, *centroid)
-
-                elem = vtkVertex()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(0, j)
-                alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
-                j += 1
-            else:
-                gui.log_info("skipping %s" % element.type)
-        alt_grid.SetPoints(points)
-
-    def set_spc_mpc_suport_grid(self, model, nid_to_pid_map, idtype):
+    def set_spc_mpc_suport_grid(self, model: BDF,
+                                nid_to_pid_map: dict[int, int],
+                                idtype: str):
         """
         for each subcase, make secondary actors including:
          - spc_id=spc_id
@@ -3697,6 +3618,129 @@ def _get_geometry_properties_by_name(gui: MainWindow,
         geometry_properties[name] = prop
     return geometry_properties
 
+def _set_conm_grid(gui: MainWindow,
+                   nconm2: int, model: BDF,
+                   create_secondary_actors: bool=True):
+    """
+    creates the mass secondary actor called:
+     - conm2
+
+    which includes:
+     - CONM2
+     - CMASS1
+     - CMASS2
+
+    because it's really a "mass" actor
+    """
+    if create_secondary_actors:  # pramga: no cover
+        return
+    j = 0
+    points = vtkPoints()
+    points.SetNumberOfPoints(nconm2)
+
+    #sphere_size = self._get_sphere_size(dim_max)
+    alt_grid = gui.alt_grids['conm2']
+    for unused_eid, element in sorted(model.masses.items()):
+        if isinstance(element, CONM2):
+            xyz_nid = element.nid_ref.get_position()
+            centroid = element.offset(xyz_nid)
+            #centroid_old = element.Centroid()
+            #assert np.all(np.allclose(centroid_old, centroid)), 'centroid_old=%s new=%s' % (centroid_old, centroid)
+            #d = norm(xyz - c)
+            points.InsertPoint(j, *centroid)
+
+            #if 1:
+            elem = vtkVertex()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, j)
+            #else:
+                #elem = vtkSphere()
+                #elem.SetRadius(sphere_size)
+                #elem.SetCenter(points.GetPoint(j))
+
+            alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
+            j += 1
+        elif element.type in ('CMASS1', 'CMASS2'):
+            centroid = element.Centroid()
+            #n1 = element.G1()
+            #n2 = element.G2()
+            #print('n1=%s n2=%s centroid=%s' % (n1, n2, centroid))
+            points.InsertPoint(j, *centroid)
+
+            elem = vtkVertex()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, j)
+            alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
+            j += 1
+        else:
+            gui.log_info("skipping %s" % element.type)
+    alt_grid.SetPoints(points)
+
+def _create_caero_actors(gui: MainWindow, ncaeros: int,
+                         ncaeros_sub: int,
+                         ncaeros_cs: int,
+                         has_control_surface: bool,
+                         has_caero: bool) -> None:
+    """
+    This just creates the following actors.  It does not fill them.
+    These include:
+     - caero
+     - caero_subpanels
+     - caero_control_surfaces
+    """
+    if not has_caero:
+        return
+    gui.create_alternate_vtk_grid(
+        'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+        representation='toggle', is_visible=True, is_pickable=False)
+    gui.create_alternate_vtk_grid(
+        'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+        representation='toggle', is_visible=False, is_pickable=False)
+
+    gui.alt_grids['caero'].Allocate(ncaeros, 1000)
+    gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
+    if has_control_surface:
+        gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
+
+def set_acoustic_grid(gui: MainWindow,
+                      model: BDF,
+                      xyz_cid0: np.ndarray, nid_cp_cd: np.ndarray,
+                      nid_map: dict[int, int]) -> None:
+    if len(model.amlreg) == 0:
+        return
+    points = gui.grid.GetPoints()
+
+    for mic in model.micpnt.values():
+        nids = [mic.nid]
+        grid_name = f'MICPNT-{mic.name}'
+        msg = f'which is required by {grid_name}'
+        gui.create_alternate_vtk_grid(
+            grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
+            representation='point', is_visible=False)
+        gui._add_nastran_nodes_to_grid(grid_name, nids, model, msg)
+
+    for am in model.amlreg.values():
+        name = am.name
+        surface_id = am.sid  # BSURFS
+        bsurfs = model.bsurfs[surface_id]
+        eids = bsurfs.eids
+        elements = {eid: model.elements[eid] for eid in eids}
+
+        aml_name = f'AMLREG-{name}'
+        gui.create_alternate_vtk_grid(
+            aml_name, color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+            representation='toggle', is_visible=False, is_pickable=False)
+
+        grid = gui.alt_grids[aml_name]
+        grid.SetPoints(points)
+        create_ugrid_from_elements(
+            gui, grid, elements,
+            xyz_cid0, nid_cp_cd, nid_map, gui.log)
+        gui.alt_grids[aml_name].Modified()
+
+
+    #for ac in model.acplnw.values():
+        #asdf
 
 class Case2D:
     def __init__(self, node_id: np.ndarray, data: np.ndarray):

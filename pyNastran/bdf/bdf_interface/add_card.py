@@ -49,7 +49,7 @@ from pyNastran.bdf.cards.elements.shell import (
 )
 from pyNastran.bdf.cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
-    ACMODL, ACPLNW, AMLREG, PMIC, MATPOR)
+    ACMODL, ACPLNW, AMLREG, PMIC, MICPNT, MATPOR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
@@ -261,6 +261,7 @@ CARD_MAP = {
 
     #acoustic elements
     'PMIC': PMIC,
+    'MICPNT': MICPNT,
     'CHACAB' : CHACAB,
     'CAABSF' : CAABSF,
     'CHACBR' : CHACBR,
@@ -3278,13 +3279,9 @@ class AddAcoustic:
         self._add_methods._add_amlreg_object(amlreg)
 
     def add_micpnt(self, eid: int, node_id: int, name: str, comment: str='') -> None:
-        #micpnt = MICPNT(eid, node_id, name, comment=comment)
-        #self._add_methods.add_micpnt_object(micpnt)
         #acoustic
-        lines = [
-            f'MICPNT  {eid:<8d}{node_id:<8d}{name:>s}',
-        ]
-        self.reject_card_lines('MICPNT', lines, show_log=False)
+        micpnt = MICPNT(eid, node_id, name, comment=comment)
+        self._add_methods._add_micpnt_object(micpnt)
 
     def add_pmic(self, pid: int, comment: str='') -> PMIC:
         pmic = PMIC(pid, comment=comment)
