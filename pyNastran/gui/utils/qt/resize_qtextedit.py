@@ -65,8 +65,9 @@ class AutoResizingTextEdit(QTextEdit):
 
     def sizeHint(self):
         original_hint = super(AutoResizingTextEdit, self).sizeHint()
-        return QSize(original_hint.width(),
-                     self.heightForWidth(original_hint.width()))
+        width = original_hint.width()
+        height = int(self.heightForWidth(width))
+        return QSize(width, height)
 
     def lineCountToWidgetHeight(self, num_lines):
         """
