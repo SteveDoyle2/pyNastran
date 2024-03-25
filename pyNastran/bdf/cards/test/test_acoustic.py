@@ -67,7 +67,6 @@ class TestAcoustic(unittest.TestCase):
         eid = 1
         nid = 2
         name = 'micpnt test'
-        infid = [3, 4, 5]
         model.add_micpnt(eid, nid, name, comment='micpnt')
         save_load_deck(model)
 

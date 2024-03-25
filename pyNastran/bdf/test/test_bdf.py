@@ -1116,7 +1116,7 @@ def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     # mass matrices
     check_subcase_dmig_matrix(fem, subcase, 'M2GG')
     # mass matrices, which are not included in normal modes.
-    check_subcase_dmig_matrix(fem, subcase, 'M2PP')
+    check_subcase_dmig_matrix(fem, subcase, 'M2PP', is_real=False)
 
     # stiffness matrices
     check_subcase_dmig_matrix(fem, subcase, 'K2GG')
@@ -1144,6 +1144,7 @@ def check_subcase_dmig_matrix(fem: BDF,
         return
 
     #([(1.0, 'MCB')], [(1.0, 'MCB')])
+    #[(1.0, 1.0, 'UMASS')]
     scale_names: list[tuple[float, str]] = subcase.get_parameter(matrix_name)[0]
     print(f'{matrix_name} (scale,names) = {scale_names}')
 

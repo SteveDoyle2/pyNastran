@@ -127,10 +127,13 @@ def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
 
 def _expand_2_values_name(line1: str) -> list[str]:
     """helper for AMLREG, MICPNT"""
+    line1 = line1.rstrip()
     if '\t' in line1:
         line1 = line1.expandtabs()
         assert ',' not in line1[:16], line1
-
+    while ',' in line1[:24]:
+        line1 = line1.replace(',', '\t', 1)
+        line1 = line1.expandtabs()
     label = line1[24:72]
     unused_comment = line1[24:]  # len=56 max
     #assert ',' not in label, f'base={label!r}'
