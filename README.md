@@ -98,7 +98,7 @@ The force/bending moment diagrams have also been improved:
  - Element ids may also be explicitly limited now
  - You can pick the plot x-axis (global x/y/z vs. distance)
 
-See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.4.1) for details on the other changes.
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.1) for details on the other changes.
 
 ### v1.4.0  has been released (2024/2/29)
 
