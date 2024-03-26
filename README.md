@@ -17,9 +17,9 @@ for instructions on installing pyNastran.
 .. _DiscourseBadge: https://discourse.matplotlib.org
 --->
 
-### v1.4.0
+### v1.4.1
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/2/29)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2024/3/25)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
@@ -88,8 +88,7 @@ it's not included with the official release, but is found in
 This should be hidden...
 --->
 
-<!---
-### v1.4.1  has NOT been released (2024/3/xx)
+### v1.4.1  has been released (2024/3/25)
 
 This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.
 
@@ -100,7 +99,6 @@ The force/bending moment diagrams have also been improved:
  - You can pick the plot x-axis (global x/y/z vs. distance)
 
 See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.4.1) for details on the other changes.
---->
 
 ### v1.4.0  has been released (2024/2/29)
 
