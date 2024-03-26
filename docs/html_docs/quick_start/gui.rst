@@ -373,9 +373,9 @@ You can test the cutting plane by pressing ``Plot Plane``.  The points indicate 
 
 Once you're happy with the coordinate system and the plane press ``Apply`` to generate some force/moment plots.  Use ``Station Label`` to set the x-axis.
 
-.. image:: ../../../pyNastran/gui/images/grid_point_forces5_force.png
+.. image:: ../../../pyNastran/gui/images/grid_point_forces4_force.png
 
-.. image:: ../../../pyNastran/gui/images/grid_point_forces4_moment.png
+.. image:: ../../../pyNastran/gui/images/grid_point_forces5_moment.png
 
 Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
 
@@ -596,7 +596,9 @@ Preferences Menu
 The preferences menu allows you to change various settings.  These will be remembered
 when you load model again.  The menu looks like:
 
-.. image:: ../../../pyNastran/gui/images/preferences_menu.png
+.. image:: ../../../pyNastran/gui/images/preferences_menu1.png
+
+.. image:: ../../../pyNastran/gui/images/preferences_menu2.png
 
 Hover over the cells for more information.
 
