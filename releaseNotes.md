@@ -9,11 +9,15 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.1 (2024/3/xx)
+v1.4.1 (2024/3/25)
 ------------------
-This is a bug fix release.
+This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.
 
-The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
+The force/bending moment diagrams have also been improved:
+ - Loads popup
+ - Visuals to indicate the location of the cutting planes
+ - Element ids may also be explicitly limited now
+ - You can pick the plot x-axis (global x/y/z vs. distance)
 
 BDF:
  - changed (trivial):
@@ -56,10 +60,11 @@ OP2Geom:
 
 other:
  - nastran_to_vtk:
-   - to now supports op2_filename='' to only convert geometry
+   - now supports op2_filename='' to only convert geometry
    - fixed bug when result names are duplicated
 
 GUI:
+ - preferences menu split out into nastran and non-nastran specific parameters
  - added:
    - Shear-Moment-Torque menu:
      - remove unused time box

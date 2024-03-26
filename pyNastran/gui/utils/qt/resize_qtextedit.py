@@ -30,13 +30,14 @@ class AutoResizingTextEdit(QTextEdit):
         Sets minimum widget height to a value corresponding to
         specified number of lines in the default font.
         """
-        self.setMinimumSize(self.minimumSize().width(),
-                            self.lineCountToWidgetHeight(num_lines))
+        width = self.minimumSize().width()
+        height = self.lineCountToWidgetHeight(num_lines)
+        self.setMinimumSize(width, height)
 
     def hasHeightForWidth(self) -> bool:
         return True
 
-    def heightForWidth(self, width):
+    def heightForWidth(self, width) -> int:
         margins = self.contentsMargins()
 
         if width >= margins.left() + margins.right():
@@ -61,14 +62,17 @@ class AutoResizingTextEdit(QTextEdit):
         document = self.document().clone()
         document.setTextWidth(document_width)
 
-        return margins.top() + document.size().height() + margins.bottom()
+        height = margins.top() + document.size().height() + margins.bottom()
+        height_int = int(height)
+        return height_int
 
     def sizeHint(self):
         original_hint = super(AutoResizingTextEdit, self).sizeHint()
-        return QSize(original_hint.width(),
-                     self.heightForWidth(original_hint.width()))
+        width = original_hint.width()
+        height_int = self.heightForWidth(width)
+        return QSize(width, height_int)
 
-    def lineCountToWidgetHeight(self, num_lines):
+    def lineCountToWidgetHeight(self, num_lines: int) -> int:  # not 100% on output type
         """
         Returns the number of pixels corresponding to the height of
         specified number of lines in the default font.
@@ -82,11 +86,12 @@ class AutoResizingTextEdit(QTextEdit):
 
         # font_metrics.lineSpacing() is ignored because it seems to be
         # already included in font_metrics.height()
-        return (
+        npixels = (
             widget_margins.top() +
             document_margin +
             max(num_lines, 1) * font_metrics.height() +
             self.document().documentMargin() +
             widget_margins.bottom()
         )
+        return npixels
         #return QSize(original_hint.width(), minimum_height_hint)

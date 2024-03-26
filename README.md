@@ -88,6 +88,20 @@ it's not included with the official release, but is found in
 This should be hidden...
 --->
 
+<!---
+### v1.4.1  has NOT been released (2024/3/xx)
+
+This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.
+
+The force/bending moment diagrams have also been improved:
+ - Loads popup
+ - Visuals to indicate the location of the cutting planes
+ - Element ids may also be explicitly limited now
+ - You can pick the plot x-axis (global x/y/z vs. distance)
+
+See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.4.1) for details on the other changes.
+--->
+
 ### v1.4.0  has been released (2024/2/29)
 
 It's been a while since the update, but I've had a more time lately.  MSC also provided a copy of MSC Nastran free of charge to help support the project, so modern MSC Nastran support is much better.
