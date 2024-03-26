@@ -13,7 +13,6 @@ Versioning Note
 ---------------
 The GUI download is typically newer than the latest release version.
 
-========
 Overview
 ========
 
@@ -28,9 +27,9 @@ Since the initial development, the GUI has become significantly more capable
 by adding features such as displacements and forces, so the need for a code like
 Patran has decreased, but will not be eliminated.
 
-************
+
 Introduction
-************
+============
 
 The Graphical User Interface (GUI) looks like:
 
@@ -368,13 +367,15 @@ The goal here is to define the cutting plane where the section cut will be.  Not
 
 .. image:: ../../../pyNastran/gui/images/grid_point_forces2_menu.png
 
-You can test the cutting plane by pressing ``Plot Plane``:
+You can test the cutting plane by pressing ``Plot Plane``.  The points indicate where the loads will be computed, while the plane indicates the cut that will be done.
 
 .. image:: ../../../pyNastran/gui/images/grid_point_forces3_plane.png
 
-Once you're happy with the coordinate system and the plane press ``Apply`` to generate a series of plots:
+Once you're happy with the coordinate system and the plane press ``Apply`` to generate some force/moment plots.  Use ``Station Label`` to set the x-axis.
 
-.. image:: ../../../pyNastran/gui/images/grid_point_forces4_plot.png
+.. image:: ../../../pyNastran/gui/images/grid_point_forces5_force.png
+
+.. image:: ../../../pyNastran/gui/images/grid_point_forces4_moment.png
 
 Note that the ``i Station`` of the plot corresponds to the distance along the vector, so it is **not** what is seen in https://github.com/SteveDoyle2/pyNastran/blob/main/models/bwb/shear_moment_torque.ipynb
 
@@ -702,7 +703,7 @@ You can also define groups in your BDF:
     $ group: name="ULFuseCanardAtch MainFuseStruct Fixed point constraints, 123"; spcs=3
     SPC1           3  123         13
 
-Node groups will show up in the EditGeometryProperties menu, while element groups will show up in the Groups menu.  Other group types are not supported in the gui.
+Node groups will show up in the ``EditGeometryProperties`` menu, while element groups will show up in the Groups menu.  Other group types are not supported in the gui.
 
 ============
 Camera Views
