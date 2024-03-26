@@ -15,6 +15,8 @@ from typing import Callable, TYPE_CHECKING
 
 import numpy as np
 
+#import PyQt5
+#import PySide2
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
@@ -197,6 +199,7 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.zaxis_label = QLabel("Z Axis:")
         #self.xz_plane_label = QLabel("XZ Plane:")
 
+        #AutoResizingTextEdit
         desc = AutoResizingTextEdit(
             'Creates a shear force/bending moment diagram by creating '
             'a series of section cuts.')

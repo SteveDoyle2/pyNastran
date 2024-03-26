@@ -14,7 +14,7 @@ pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = False
 INCLUDE_BDFV = False
 INCLUDE_PANDAS = False
-INCLUDE_MATPLOTLIB = False
+INCLUDE_MATPLOTLIB = True
 
 DEBUG = False
 IS_RELEASE = True
