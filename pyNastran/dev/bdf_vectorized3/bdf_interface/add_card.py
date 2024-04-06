@@ -1284,7 +1284,8 @@ class Add1dElements(BDFAttributes):
         bar_type : str
             type of the bar
             valid_types = {
-                ROD, TUBE, I, CHAN, T, BOX, BAR, CROSS, H, T1,
+                ROD, TUBE, TUBE2,
+                I, CHAN, T, BOX, BAR, CROSS, H, T1,
                 I1, CHAN1, Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX
             }
         dim : list[float]

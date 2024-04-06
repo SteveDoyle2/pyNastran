@@ -23,7 +23,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
@@ -1206,9 +1206,24 @@ class TestNastranGUI(unittest.TestCase):
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename)
+
+        assert os.path.exists(vtu_filename), vtu_filename
+
+    def test_gui_elements_01_vtk(self):
+        """tests forces/pressure in SOL 101"""
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
+        model = read_op2(op2_filename, load_geometry=True, combine=False)
+        nastran_to_vtk(model, model, vtk_filename)
+
+    def test_gui_elements_01_vtk(self):
+        """tests forces/pressure in SOL 101"""
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
+        vtk_filename = MODEL_PATH / 'elements' / 'static_elements.vtu'
+        model = read_op2(op2_filename, load_geometry=True, combine=False)
         nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
-        assert os.path.exists(vtk_filename), vtk_filename
 
     def test_bdf_op2_64_bit(self):
         """

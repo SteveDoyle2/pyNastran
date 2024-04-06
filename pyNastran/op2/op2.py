@@ -37,7 +37,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
                                   FortranMarkerError, SixtyFourBitError,
-                                  OverwriteTableError)
+                                  OverwriteTableError, EmptyRecordError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.types import NastranKey
@@ -185,7 +185,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.log.level = backup_level
         return out
 
-    def __eq__(self, op2_model) -> bool:
+    def __eq__(self, op2_model: OP2) -> bool:
         """
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.

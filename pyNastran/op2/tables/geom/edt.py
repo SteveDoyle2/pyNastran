@@ -1982,7 +1982,7 @@ class EDT:
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             #ftype, rcore
-            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy, ftype, rcore = out
+            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy, ftype_int, rcore = out
             method = reshape_bytes_block_size(method_bytes, self.size)
             usage = reshape_bytes_block_size(usage_bytes, self.size)
             #print(f'eid={eid} caero={caero} aelist={aelist} setg={setg} dz={dz} '
@@ -1993,12 +1993,15 @@ class EDT:
             thx = dthx
             thy = dthy
             dtor = dtorzy
+            if ftype_int == 2:
+                ftype = 'WF2'
             spline = SPLINE5(
                 eid, caero, aelist, setg, thx, thy,
                 dz=dz, dtor=dtor, cid=cid,
                 usage=usage, method=method,
                 ftype=ftype, rcore=rcore,  # not in NX
             )
+            spline.validate()
             str(spline)
             splines.append(spline)
             n += ntotal

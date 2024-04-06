@@ -442,3 +442,22 @@ def _parse_table_records(table_name: str, records: list[str], log: SimpleLogger)
             #shape=(mrows, ncols), dtype='f')
     #log.debug(str(matrix))
     return matrix
+
+def main():  # pragma: no cover
+    import sys
+    print(sys.argv)
+    f06_filename = sys.argv[1]
+    tables, matrices = read_f06_matrices(
+        f06_filename, log=None, nlines_max=1_000_000)
+    for key, mat in matrices.items():
+        print(f'{key}:')
+        if 1:
+            mat2 = mat.todense()
+            for row in mat2:
+                print(row.tolist())
+        if 0:
+            for row, col, value in zip(mat.row, mat.col, mat.data):
+                print(f'{row}, {col}, {value}')
+
+if __name__ == '__main__':
+    main()

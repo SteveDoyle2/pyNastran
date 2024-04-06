@@ -654,7 +654,11 @@ class NastranMatrix(BaseCard):
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
-    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True):
+    def get_matrix(self, is_sparse: bool=False,
+                   apply_symmetry: bool=True) -> tuple[np.ndarray | scipy.coomatrix,
+                                                       dict[int, tuple[int, int]],
+                                                       dict[int, tuple[int, int]],
+                                                       ]:
         """
         Builds the Matrix
 

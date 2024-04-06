@@ -80,7 +80,7 @@ class Results:
         self.abs = ABS()
         self.nrl = NRL()
 
-        self.cstm = CSTM()
+        self.cstm = None
         self.trmbd = {}
         self.trmbu = {}
         self.superelement_tables = {}

@@ -189,6 +189,58 @@ class TestBars(unittest.TestCase):
         model.setup()
         #save_load_deck(model)
 
+    def test_pbarl_update(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]
+        #valid_types = {
+            #"ROD": 1,
+            #"TUBE": 2,
+            #"TUBE2": 2,
+            #"I": 6,
+            #"CHAN": 4,
+            #"T": 4,
+            #"BOX": 4,
+            #"BAR": 2,
+            #'L' : 4,
+        #}
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=0., comment='')
+
+        pid = 2
+        dim = [3., 4.]
+        model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=0., comment='')
+
+        pid = 3
+        dim = [1.]
+        bar_type = 'ROD'
+        model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=0., comment='')
+        #--------------------
+        model.setup()
+        dim = [2.]
+        model.pbarl.update_dimensions(3, dim)  #  pid, dim
+
+        pids = np.array([2, 1])
+        dims2 = np.array([
+            [10., 11.],
+            [12., 13.],
+        ])
+        model.pbarl.update_dimensions(pids, dims2)
+
+        pids = np.array([3, 1])
+        dims2 = np.array([
+            [10., 11.],
+            [12., 13.],
+        ])
+        with self.assertRaises(RuntimeError):
+            model.pbarl.update_dimensions(pids, dims2)
+
     def test_cbar_cbarao(self):
         """modification of test_cbeam_01"""
         model = BDF(debug=False)

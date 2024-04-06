@@ -57,6 +57,7 @@ from pyNastran.op2.result_objects.eqexin import EQEXIN
 #from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 from pyNastran.op2.result_objects.qualinfo import QualInfo
+from pyNastran.op2.result_objects.op2_results import CSTM
 from pyNastran.op2.op2_interface.msc_tables import MSC_GEOM_TABLES
 from pyNastran.op2.op2_interface.nx_tables import NX_GEOM_TABLES
 
@@ -1115,7 +1116,10 @@ class OP2Reader:
                 values = np.frombuffer(blocks[1], dtype='float32').reshape(ncoords // 4, 12)
                 #print('floats =', floats.tolist())
 
-            op2.op2_results.cstm.data = np.concatenate([ints, values], axis=1)
+            cstm = CSTM()
+            cstm.data = np.concatenate([ints, values], axis=1)
+
+            op2.op2_results.cstm = cstm
             if not is_geometry:
                 return
 
@@ -3750,6 +3754,7 @@ class OP2Reader:
             try:
                 self._read_subtable_3_4(table3_parser, table4_parser, passer)
             except EmptyRecordError:
+                raise
                 self.log.error('catching EmptyRecordError')
                 self.read_markers([1, 0], macro_rewind=False)
                 #n = op2.n

@@ -10,7 +10,9 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.op2.op2 import (
-    OP2, FatalError, SixtyFourBitError, OverwriteTableError)
+    OP2, FatalError, SixtyFourBitError, OverwriteTableError,
+    EmptyRecordError,
+)
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -400,6 +402,8 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         raise
     except UnsupportedCard:
         is_passed = True
+    except EmptyRecordError:
+        raise
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)

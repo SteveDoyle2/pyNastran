@@ -3636,8 +3636,24 @@ class GEOM2:
         return len(data)
 
     def _read_crbe1(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 NWE    I Number of words for the element
+        3 ELTYPE I Element type: 1-RBE1 2-RBE2 3-RTRPLT
+        4-RTRPLT1
+        4 GN  I Grid point identification number for independent degrees-of-freedom
+        5 CN  I Component numbers of independent degrees-of-freedom
+        Words 4 through 5 repeat until (-2,-2) occurs
+        6 GM  I Grid point identification number for dependent degrees-of-freedom
+        7 CM  I Component numbers of dependent degrees of-freedom
+        Words 6 through 7 repeat until (-3,-3) occurs
+        8 ALPHA RS  Thermal expansion coefficient
+        9 UNDEF none Not used
+        Words 8 through 9 repeat until (-4,-4) occurs
+        """
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
-        self.op2.log.info('geom skipping RBE1 in GEOM2')
+        self.op2.log.info('geom skipping CRBE1 in GEOM2')
         return len(data)
 
     def _read_crbe3(self, data: bytes, n: int) -> int:

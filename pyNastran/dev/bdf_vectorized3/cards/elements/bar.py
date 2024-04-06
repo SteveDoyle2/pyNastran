@@ -1483,6 +1483,40 @@ class PBARL(Property):
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
 
+    def update_dimensions(self, property_id: np.ndarray,
+                          dim: np.ndarray,
+                          idim: Optional[np.ndarray]=None) -> None:
+        if isinstance(property_id, integer_types):
+            property_id = np.array([property_id])
+            dim = np.array([dim])
+
+        uproperty_id = np.unique(property_id)
+        assert len(property_id) == len(uproperty_id), f'property_id={property_id} uproperty_id={uproperty_id}'
+        ipid = np.searchsorted(self.property_id, property_id)
+        assert np.array_equal(self.property_id[ipid], property_id)
+
+        bar_types = self.Type[ipid]
+        bar_lengths = np.array([self.valid_types[bar_type] for bar_type in bar_types])
+        min_length = bar_lengths.min()
+        ndimensions = dim.shape[1]
+        if min_length < ndimensions:
+            imin = np.where(bar_lengths == min_length)[0]
+            bar_typei = np.unique(bar_types[imin])
+            pidi = property_id[imin]
+            raise RuntimeError(f'too many dimensions for pid={pidi} bar_type={bar_typei} '
+                               f'min(bar_lengths)={min_length}; dim.shape={dim.shape}')
+
+        #bar_type = self.bar_type[ipid]
+        idim_ = self.idim[ipid, :]
+        for pid, (i0, i1), dimi in zip(property_id, idim_, dim):
+            dimensions = self.dims[i0:i1]
+            if idim is None:
+                assert len(dimensions) == len(dimi), (dimensions, dimi)
+                dimensions[:] = dimi
+            else:
+                assert len(idim) == len(dimi), (idim, dimi)
+                dimensions[idim] = dimi
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

@@ -225,7 +225,8 @@ def _save_layered_table_results(case: LayeredTableResults,
 
 def nastran_to_vtk(bdf_filename: Union[str, BDF],
                    op2_filename: Union[str, OP2],
-                   vtk_filename: str) -> None:
+                   vtu_filename: str,
+                   log_level: str='warning') -> None:
     """
     Converts a Natsran geometry/results to vtk *.vtu
 
@@ -235,8 +236,10 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
         the geometry
     op2_filename: str, OP2, OP2Geom
         the results; can be '' for no op2
-    vtk_filename : str
-        the output filename; expected to be a *.vtu file
+    vtu_filename : str
+        the vtk output filename; expected to be a *.vtu file
+    log_level : str; default='warning'
+        'debug', 'info', 'warning', 'error'
 
     Examples
     --------
@@ -260,8 +263,8 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
     gui.create_secondary_actors = False
 
     log = gui.log
-    log.level = 'error'
-    log.level = 'warning'
+    log.level = log_level # 'error'
+    log.level = log_level # 'warning'
     #log.set_level('error')
     #log.set_level('warning')
 
@@ -284,7 +287,7 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
         #coords_branch.SetBlock(0, axes)
 
     writer = vtkXMLUnstructuredGridWriter()
-    writer.SetFileName(vtk_filename)
+    writer.SetFileName(vtu_filename)
     writer.SetInputData(vtk_ugrid)
     out = writer.Write()
     #print('done', out)

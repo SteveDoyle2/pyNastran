@@ -6279,8 +6279,8 @@ class SPLINE5(Spline):
         ftype = string_or_blank(card, 15, 'ftype', default='WF2')
         rcore = double_or_blank(card, 16, 'rcore')
 
-        usage = string_or_blank(card, 12, 'usage', default='BOTH')
-        assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
+        #usage = string_or_blank(card, 12, 'usage', default='BOTH')  # ???
+        assert len(card) <= 17, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
                        usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
     @property

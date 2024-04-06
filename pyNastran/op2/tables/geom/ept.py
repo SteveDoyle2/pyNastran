@@ -89,7 +89,7 @@ class EPT:
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
             (3501, 35, 994) : ['NSML', self._read_nsml],
-            (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
+            (1502, 15, 36): ['PAABSF', self.read_paabaf],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
             (5403, 55, 349): ['PBCOMP', self._read_pbcomp],  # record 13
@@ -173,6 +173,39 @@ class EPT:
         self.op2._add_methods._add_convection_property_object(prop)
 
 # HGSUPPR
+
+    def read_paabaf(self, data: bytes, n: int) -> None:
+        """
+        PAABSF(1502,15,36)
+        Defines the properties of a frequency-dependent acoustic absorber
+        Word Name Type Description
+        1 PID     I Property identification number
+        2 TZREID  I TABLEDi entry identification number for resistance
+        3 TZMID   I TABLEDi entry identification number for reactance
+        4 S      RS Impedance scale factor
+        5 A      RS Area factor when only 1 or 2 grid points are specified
+        6 B      RS Equivalent structural damping
+        7 K      RS Equivalent stiffness
+        8 RHOC   RS Constant used for absorption coefficient
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+        #op2.log.info(f'geom skipping PAABSF in {op2.table_name}; ndata={len(data)-12}')
+        #op2.show_data(data[n:], types='ifs')
+
+        op2: OP2Geom = self.op2
+        ntotal = 8 * size  # 8*4
+        struct1 = Struct(mapfmt(op2._endian + b'3i 5f', size))
+        nentries = (len(data) - n) // ntotal
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            pid, tzreid, tzimid, s, a, b, k, rhoc = out
+            op2.add_paabsf(pid, tzreid=tzreid, tzimid=tzimid,
+                           s=s, a=a, b=b, k=k, rhoc=rhoc)
+            n += ntotal
+        op2.card_count['PAABSF'] = nentries
+        return n
 
     def _read_paxsymh(self, data: bytes, n: int) -> None:
         op2: OP2Geom = self.op2

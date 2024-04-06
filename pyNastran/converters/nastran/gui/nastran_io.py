@@ -348,7 +348,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         # skip_reading = self.removeOldGeometry(bdf_filename)
         skip_reading = False
-        if bdf_filename is None or bdf_filename == '':
+
+        # bdf_filename can be a BDF/OP2Geom object, so we check if it's a str first
+        if bdf_filename is None or (isinstance(bdf_filename, str) and bdf_filename == ''):
             #self.grid = vtkUnstructuredGrid()
             #self.scalar_bar_actor.VisibilityOff()
             skip_reading = True
@@ -511,7 +513,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         return dim_max
 
-    def load_nastran_geometry_unvectorized(self, bdf_filename: str, plot: bool=True):
+    def load_nastran_geometry_unvectorized(self, bdf_filename: str,
+                                           plot: bool=True) -> None:
         """
         The entry point for Nastran geometry loading.
 
@@ -619,7 +622,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         #-----------------------------------------------------------------------
         j = 0
-        nid_map = self.gui.nid_map
+        nid_map = gui.nid_map
         idtype = nid_cp_cd.dtype
         nid_to_pid_map, icase, cases, form = self.map_elements(
             xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
@@ -631,7 +634,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                           has_control_surface)
 
         if nconm2 > 0 and xref_nodes:
-            _set_conm_grid(self.gui, nconm2, model,
+            _set_conm_grid(gui, nconm2, model,
                            self.create_secondary_actors)
 
         geometry_names = []
@@ -2622,9 +2625,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             model = self._load_nastran_results_str(results_filename, log)
             if model is None:
                 return
-        else:
+        elif isinstance(results_filename, OP2):  # OP2Geom is included here
             model = results_filename
-            op2_filename = results_filename.filename
+            results_filename = results_filename.op2_filename
+        else:
+            # can this happen?
+            raise TypeError(type(results_filename))
+            #model = results_filename
+            #op2_filename = results_filename.filename
 
         if self.save_data:
             self.model_results = model
@@ -3522,7 +3530,9 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
             #raise NotImplementedError(sebulk)
     #model.write_bdf('spike.bdf')
 
-def _create_masses(gui: MainWindow, model: BDF, node_ids: np.ndarray,
+def _create_masses(gui: MainWindow,
+                   model: BDF,
+                   node_ids: np.ndarray,
                    create_secondary_actors: bool=True) -> int:
     """
     Count the masses.
@@ -3542,7 +3552,12 @@ def _create_masses(gui: MainWindow, model: BDF, node_ids: np.ndarray,
         nconm2 = 0
         return nconm2
 
-    def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes) -> None:
+    def update_conm2s_function(unused_nid_map: dict[int, int],
+                               unused_ugrid: vtkUnstructuredGrid,
+                               points: vtkPoints,
+                               nodes: np.ndarray) -> None:
+        #if not create_secondary_actors:
+            #return
         if not gui.settings.nastran_settings.is_update_conm2:
             return
         mass_grid = gui.alt_grids['conm2']
@@ -3633,7 +3648,7 @@ def _set_conm_grid(gui: MainWindow,
 
     because it's really a "mass" actor
     """
-    if create_secondary_actors:  # pramga: no cover
+    if not create_secondary_actors:  # pramga: no cover
         return
     j = 0
     points = vtkPoints()
