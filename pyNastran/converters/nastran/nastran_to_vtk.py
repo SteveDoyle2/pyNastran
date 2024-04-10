@@ -1,7 +1,7 @@
 """tests the NastranIO class"""
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 #from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
@@ -196,7 +196,7 @@ def _save_simple_table_results(case: SimpleTableResults,
 
 def _save_layered_table_results(case: LayeredTableResults,
                                 key: int,
-                                index_name: tuple[int, tuple[int, int, str]],
+                                index_name: tuple[int, tuple[int, int, int, str]],
                                 used_titles: set[str],
                                 point_data: vtkPointData, cell_data: vtkCellData,
                                 log: SimpleLogger) -> vtkFloatArray:
@@ -226,7 +226,7 @@ def _save_layered_table_results(case: LayeredTableResults,
 def nastran_to_vtk(bdf_filename: Union[str, BDF],
                    op2_filename: Union[str, OP2],
                    vtu_filename: str,
-                   log_level: str='warning') -> None:
+                   log_level: str='error') -> None:
     """
     Converts a Natsran geometry/results to vtk *.vtu
 
