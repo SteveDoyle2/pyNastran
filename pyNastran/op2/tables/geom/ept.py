@@ -2813,7 +2813,7 @@ class EPT:
         asdf
 
     def _read_pmic(self, data: bytes, n: int) -> int:
-        """
+        r"""
         (7001, 70, 632)
         What is the type????
         Pid ???
@@ -3336,11 +3336,72 @@ class EPT:
 # PWELD
 # PWSEAM
     def _read_view(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping VIEW in EPT')
+        """
+        RECORD – VIEW(2606,26,289)
+
+        Word Name Type Description
+        1 IVIEW    I View identification number
+        2 ICAVITY  I Cavity identification number
+        3 SHADE    I Shadowing flag for the face of CHBDYi element
+        4 NB       I Subelement mesh size in the beta direction
+        5 NG       I Subelement mesh size in the gamma direction
+        6 DISLIN  RS Displacement
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 6 * op2.size
+        structi = Struct(op2._endian + b'5if')
+        ncards = (len(data) - n) // ntotal
+        for unused_i in range(ncards):
+            edata = data[n:n+ntotal]
+            out = structi.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  VIEW=%s\n' % str(out))
+            iview, icavity, shade, nbeta, ngamma, dislin = out
+            if shade == 1:
+                shade_str = 'NONE'
+            else:
+                raise NotImplementedError(shade)
+            view = op2.add_view(
+                iview, icavity,
+                shade=shade_str, nbeta=nbeta, ngamma=ngamma,
+                dislin=dislin)
+            n += ntotal
+        op2.card_count['VIEW'] = ncards
         return len(data)
 
     def _read_view3d(self, data: bytes, n: int) -> int:
+        """
+        RECORD – VIEW3D(3002,30,415)
+
+        Word Name Type Description
+        1 ICAVITY  I Radiant cavity identification number
+        2 GITB     I Gaussian integration order for third-body shadowing
+        3 GIPS     I Gaussian integration order for self-shadowing
+        4 CIER     I Discretization level
+        5 ETOL    RS Error estimate
+        6 ZTOL    RS Zero tolerance
+        7 WTOL    RS Warpage tolerance
+        8 RADCHK   I Radiation exchange diagnostic output level
+        """
         self.op2.log.info('geom skipping VIEW3D in EPT')
+        return len(data)
+        op2: OP2Geom = self.op2
+        ntotal = 8 * self.size
+        structi = Struct(op2._endian + b'5if')
+        ncards = (len(data) - n) // ntotal
+        for unused_i in range(ncards):
+            edata = data[n:n+ntotal]
+            out = structi.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  VIEW3D=%s\n' % str(out))
+            icavity, gitb, gips, cier, etol, ztol, wtol, radcheck = out
+            view = op2.add_view3d(icavity, gitb=gitb, gips=gips, cier=cier,
+                                  error_tol=etol, zero_tol=ztol, warp_tol=wtol,
+                                  rad_check=radcheck)
+            n += ntotal
+        op2.card_count['VIEW3D'] = ncards
+        #asdf
+        #self.op2.log.info('geom skipping VIEW3D in EPT')
         return len(data)
 
 def break_by_minus1(idata):

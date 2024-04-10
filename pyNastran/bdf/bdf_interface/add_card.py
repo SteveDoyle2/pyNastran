@@ -5264,16 +5264,45 @@ class AddThermal:
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 
-    def add_view(self, iview, icavity, shade='BOTH', nbeta=1, ngamma=1,
-                 dislin=0.0, comment='') -> VIEW:
-        """Creates a VIEW card"""
+    def add_view(self, iview: int, icavity: int, shade: str='BOTH',
+                 nbeta: int=1, ngamma: int=1,
+                 dislin: float=0.0, comment: str='') -> VIEW:
+        """
+        Creates a VIEW card
+
+        Parameters
+        ----------
+        iview: int
+            Identification number.
+        icavity: int
+            Cavity identification number for grouping the radiant
+            exchange faces of CHBDYi elements.
+        SHADE: str; default='BOTH'
+            Shadowing flag for the face of CHBDYi element.
+            1/NONE:  face can neither shade nor be shaded by other faces.
+            KSHD:  face can shade other faces.
+            KBSHD: face can be shaded by other faces.
+            BOTH:  face can both shade and be shaded by other faces.
+        nbeta: int; default=1
+            Subelement mesh size in the beta direction.
+        ngamma: int; default=1
+            Subelement mesh size in the gamma direction.
+        dislin: float; default=0.0
+            The displacement of a surface perpendicular to the surface.
+
+        """
+        assert isinstance(shade, str), shade
         view = VIEW(iview, icavity, shade=shade, nbeta=nbeta, ngamma=ngamma,
                     dislin=dislin, comment=comment)
         self._add_methods._add_view_object(view)
         return view
 
-    def add_view3d(self, icavity, gitb=4, gips=4, cier=4, error_tol=0.1,
-                        zero_tol=1e-10, warp_tol=0.01, rad_check=3, comment='') -> VIEW3D:
+    def add_view3d(self, icavity: int,
+                   gitb: int=4, gips: int=4, cier: int=4,
+                   error_tol: float=0.1,
+                   zero_tol: float=1e-10,
+                   warp_tol: float=0.01,
+                   rad_check: int=3, comment: str='') -> VIEW3D:
         """Creates a VIEW3D card"""
         view3d = VIEW3D(icavity, gitb=gitb, gips=gips, cier=cier,
                         error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,

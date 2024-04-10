@@ -1207,22 +1207,21 @@ class TestNastranGUI(unittest.TestCase):
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-        nastran_to_vtk(op2_filename, op2_filename, vtu_filename)
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, log_level='error')
 
         assert os.path.exists(vtu_filename), vtu_filename
 
-    def test_gui_elements_01_vtk(self):
-        """tests forces/pressure in SOL 101"""
+    def test_gui_elements_01_vtk1(self):
+        """tests forces/pressure in SOL 101 using an op2 model object"""
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-        model = read_op2(op2_filename, load_geometry=True, combine=False)
-        nastran_to_vtk(model, model, vtk_filename)
+        model = read_op2(op2_filename, load_geometry=True, combine=False, debug=False)
+        nastran_to_vtk(model, model, vtk_filename, log_level='error')
 
-    def test_gui_elements_01_vtk(self):
-        """tests forces/pressure in SOL 101"""
+    def test_gui_elements_01_vtk2(self):
+        """tests forces/pressure in SOL 101 using a Path object"""
         op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         vtk_filename = MODEL_PATH / 'elements' / 'static_elements.vtu'
-        model = read_op2(op2_filename, load_geometry=True, combine=False)
         nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
 
     def test_bdf_op2_64_bit(self):

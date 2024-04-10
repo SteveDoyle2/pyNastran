@@ -3,6 +3,7 @@
 from __future__ import annotations
 import os
 import sys
+from pathlib import PurePath
 import traceback
 from itertools import chain
 from io import StringIO
@@ -460,6 +461,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             code is being called from load_nastran_geometry_and_results
             not used...
         """
+        if isinstance(bdf_filename, PurePath):
+            bdf_filename = str(bdf_filename)
         gui: MainWindow = self.gui
         gui.eid_maps[name] = {}
         gui.nid_maps[name] = {}
@@ -2621,7 +2624,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.scalar_bar_actor.Modified()
 
         log = gui.log
-        if isinstance(results_filename, str):
+        if isinstance(results_filename, (str, PurePath)):
             model = self._load_nastran_results_str(results_filename, log)
             if model is None:
                 return

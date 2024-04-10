@@ -392,7 +392,6 @@ class ShellElement(Element):
             #msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             #raise TypeError(msg)
 
-
     def set_from_op2(self, element_id, property_id, nodes, zoffset=None,
                      tflag=None, T=None, theta=None, mcid=None):
         #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
@@ -1204,6 +1203,82 @@ class CQUAD4(ShellElement):
         used_dict['property_id'].append(self.property_id)
         used_dict['node_id'].append(self.nodes.ravel())
         used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
+
+    def Ke(self):
+        """
+        https://www.youtube.com/watch?v=f1JUfXf2b8A&list=PLLSzlda_AXa1HUjKvPiM9i98Vl6goijab&ab_channel=Dr.ClaytonPettit"""
+        raise NotImplementedError()
+    def strain(Self):
+        """
+              {  e11}
+        {e} = {  e22} = [B]{v1, u1, ..., u4, v4}^T
+              {2*e12}
+        {e} = [B]{u}
+
+        https://www.youtube.com/watch?v=rl8QPPNrWSY&list=PLLSzlda_AXa1HUjKvPiM9i98Vl6goijab&index=3&ab_channel=Dr.ClaytonPettit
+               {  e11}   {du/dx1}
+               {  e22}   {dv/dx2}
+        {e6} = {  e33} = {dw/dx3}           = [B]{u}
+               {2*e12}   {du/dx2 + dv/dx1}
+               {2*e13}   {du/dx3 + dw/dx1}
+               {2*e23}   {dv/dx3 + dw/dx2}
+                    [1/k2  nu/k2     0]
+
+        Solids
+        ------
+        [C6] = k1 * [1-nu   nu     nu     0   0   0]
+                    [nu     1-nu   nu     0   0   0]
+                    [nu     nu     1-nu   0   0   0]
+                    [0      0      0     k2   0   0]
+                    [0      0      0      0  k2   0]
+                    [0      0      0      0   0  k2]
+        k1 = E / ((1-2*nu)*(1+nu))
+        k2 = (1-2*nu) / 2
+
+        Tri
+        ---
+        Ni = [1-X1-X2, X1, X2]
+        Ntri = [N1,  0, N2,  0, N3,  0]
+               [ 0, N1,  0, N2,  0, N3]
+        Fbody = integral([N]^T rho*b, dx)
+        Ftraction = inegral([N]^T t)
+        b = {b1, b2}^T
+        t = {t1, t2}^T
+               [-1,  0, 1, 0, 0, 0]
+        Btri = [ 0, -1, 0, 0, 0, 1]  = constant
+               [-1, -1, 0, 1, 1, 0]
+
+        """
+        raise NotImplementedError()
+    def stress(Self):
+        """
+        https://www.youtube.com/watch?v=rl8QPPNrWSY&list=PLLSzlda_AXa1HUjKvPiM9i98Vl6goijab&index=3&ab_channel=Dr.ClaytonPettit
+
+        {u} = [N]{ue}
+
+        {o} = [C][B]{u}
+              {o11}      {  e11}
+        {o} = {o22} = [C]{  e22}
+              {t12}      {2*e12}
+
+        Plane Strain (o33=0)
+        --------------------
+                   [1/k2  nu/k2     0]
+        [C] = k1 * [nu/k2 1/k2      0]
+                   [0     0       1/2]
+        k1 = E / (1 + nu)
+        k2 = 1 - nu
+
+        Plane Strain (e33=0)
+        --------------------
+                   [1-nu  nu               0]
+        [C] = k3 * [nu    1-nu             0]
+                   [0     0       (1-2*nu)/2]
+        k3 = E / ((1+nu)*(1-nu))
+
+        TODO: rewrite E33 to use G
+        """
+        raise NotImplementedError()
 
     def convert(self, xyz_scale: float=1.0,
                 **kwargs):

@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import cast, Optional, Any, TYPE_CHECKING
+from typing import cast, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -23,11 +23,11 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.coordinate_systems import CORD2R
+from pyNastran.bdf.cards.coordinate_systems import CORD2R, Coord
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import BDF, GRID
+    from pyNastran.bdf.bdf import BDF, GRID, CBEAM
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
@@ -772,6 +772,7 @@ class CBAR(LineElement):
             self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
         else:
             self.g0_vector = self.x
+        #self.get_axes(model)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CBAR eid=%s' % (self.eid)
@@ -910,7 +911,7 @@ class CBAR(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        Li = norm(i)
+        Li: float = norm(i)
         if Li == 0.:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
@@ -935,6 +936,8 @@ class CBAR(LineElement):
         zhat = xform[2, :]
 
         is_failed = False
+        #print('wa =', wa)
+        #print('wb =', wb)
         return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
     def get_orientation_vector(self, model: BDF):
@@ -1821,7 +1824,11 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
-def get_bar_vector(model: BDF, elem, node1: GRID, node2: GRID, xyz1: np.ndarray):
+def get_bar_vector(model: BDF, elem: Union[CBAR, CBEAM],
+                   node1: GRID, node2: GRID,
+                   xyz1: np.ndarray) -> tuple[np.ndarray,
+                                              int, Coord,
+                                              int, Coord]:
     """helper method for ``rotate_v_wa_wb``"""
     cd1 = node1.Cd()
     cd2 = node2.Cd()
@@ -1996,7 +2003,7 @@ def rotate_v_wa_wb(model: BDF, elem,
     #i = ib - ia # (xyz2 + wb) - (xyz1 + wa)
     #i = (xyz2 + wb) - (xyz1 + wa)
     i = i_offset
-    Li = norm(i)
+    Li: float = norm(i)
     ihat = i / Li
     #msg = f'eid={eid} xyz1={xyz1} xyz2={xyz2}\nv={v} ihat={ihat} L={Li}\n{elem}'
     #model.log.error(msg)
@@ -2006,13 +2013,14 @@ def rotate_v_wa_wb(model: BDF, elem,
     #print('  ib=%s ia=%s' % (ib, ia))
     #print('  wa=%s wb=%s' % (wa, wb))
     #print('  ioffset=%s i=%s' % (i_offset, i))
-    #print('  ihat=%s' % (ihat))
-    #print('  yhat=%s' % (yhat))
-    #print('  zhat=%s' % (zhat))
-    #print("")
+    #print(f'ihat = {ihat}')
+    #print(f'yhat = {yhat}')
+    #print(f'zhat = {zhat}')
 
     xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
-
+    #print('xform:')
+    #print(xform)
+    #print("")
     return v, wa, wb, xform
 
 def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
