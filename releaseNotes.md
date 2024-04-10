@@ -9,6 +9,51 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
+v1.4.2 (2024/4/xx)
+------------------
+ 
+BDF:
+ - added:
+ - changed:
+ - fixed:
+   - SPLINE5 add_card out of range bug
+OP2:
+ - added:
+ - changed:
+ - fixed:
+   - CSTM doesn't print out when it's empty
+
+OP2Geom:
+ - added:
+   - thermal: VIEW
+   - NX acoustic: PAABSF
+ - changed:
+ - fixed:
+   - fixed SPLINE5-MSC ftype reading bug
+   - TODO: fix EIGC kstep bug (is set to the BDF incorrectly and then writes followed by reading poorly) 
+
+
+nastran_to_vtk:
+ - passing in op2/op2geom no longer fails the bdf_filename = '' check
+ - renaming vtk_filename -> vtu_filename for clarity 
+ - adding str log_level
+
+GUI:
+ - added:
+ - changed:
+ - fixed:
+   - fixed CONM2 updating bug (vtkPoints were missing)
+   - TODO: add highlight to SMT window
+   - TODO: figure out who SMT axes takes over the global axis
+
+ - known issues:
+    - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
+    - Groups:
+      - node id picking for active groups is buggy (area_pick, highlight menu)
+      - legend doesn't limit min/max when group is active
+      - extra arrows (e.g., load_vectors) are shown when group is active
+
+
 v1.4.1 (2024/3/25)
 ------------------
 This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.

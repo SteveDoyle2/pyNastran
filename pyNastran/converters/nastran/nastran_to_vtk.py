@@ -226,7 +226,7 @@ def _save_layered_table_results(case: LayeredTableResults,
 def nastran_to_vtk(bdf_filename: Union[str, BDF],
                    op2_filename: Union[str, OP2],
                    vtu_filename: str,
-                   log_level: str='warning') -> None:
+                   log_level: str='error') -> None:
     """
     Converts a Natsran geometry/results to vtk *.vtu
 
