@@ -602,7 +602,6 @@ class TestShells(unittest.TestCase):
         ])
         model.pcomp.update_layers(pids, thickness=thickness, theta=theta)
         print(model.pcomp)
-        x
 
     def test_pcomp_02(self):
         """symmetrical, nsm=0.0 and nsm=1.0"""
