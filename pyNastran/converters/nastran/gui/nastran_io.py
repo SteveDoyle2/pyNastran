@@ -2631,7 +2631,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         elif isinstance(results_filename, OP2):  # OP2Geom is included here
             model = results_filename
             results_filename = results_filename.op2_filename
-        else:
+        else:  # pragma: no cover
             # can this happen?
             raise TypeError(type(results_filename))
             #model = results_filename

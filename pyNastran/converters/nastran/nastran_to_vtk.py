@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import Union, TYPE_CHECKING
 
-#from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
@@ -226,7 +225,8 @@ def _save_layered_table_results(case: LayeredTableResults,
 def nastran_to_vtk(bdf_filename: Union[str, BDF],
                    op2_filename: Union[str, OP2],
                    vtu_filename: str,
-                   log_level: str='error') -> None:
+                   log_level: str='error',
+                   compression_level: int=5) -> None:
     """
     Converts a Natsran geometry/results to vtk *.vtu
 
@@ -240,6 +240,9 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
         the vtk output filename; expected to be a *.vtu file
     log_level : str; default='warning'
         'debug', 'info', 'warning', 'error'
+    compression_level : int; default=5
+        LZMA compression level (0-9)
+        5 is balanced performance and used by Paraview
 
     Examples
     --------
@@ -288,6 +291,8 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
 
     writer = vtkXMLUnstructuredGridWriter()
     writer.SetFileName(vtu_filename)
+    writer.SetCompressorTypeToLZMA()
+    writer.SetCompressionLevel(compression_level)
     writer.SetInputData(vtk_ugrid)
     out = writer.Write()
     #print('done', out)

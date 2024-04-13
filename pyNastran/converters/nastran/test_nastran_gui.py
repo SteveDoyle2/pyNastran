@@ -1221,8 +1221,11 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_elements_01_vtk2(self):
         """tests forces/pressure in SOL 101 using a Path object"""
         op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
-        vtk_filename = MODEL_PATH / 'elements' / 'static_elements.vtu'
-        nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
+        vtk_filename = MODEL_PATH / 'elements' / 'static_elements9.vtu'
+        nastran_to_vtk(op2_filename, op2_filename, vtk_filename, compression_level=9)
+
+        vtk_filename = MODEL_PATH / 'elements' / 'static_elements0.vtu'
+        nastran_to_vtk(op2_filename, op2_filename, vtk_filename, compression_level=0)
 
     def test_bdf_op2_64_bit(self):
         """
