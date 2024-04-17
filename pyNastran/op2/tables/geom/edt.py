@@ -52,53 +52,53 @@ class EDT:
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_weld01i.op2
         # F:\work\pyNastran\examples\Dropbox\move_tpl\ac10901a_new.op2
         self.edt_map = {
-            (5201, 52, 373) : ['ACMODL', self._read_acmodl],
+            (5201, 52, 373) : ['ACMODL', self.read_acmodl],
             (6301, 63, 397) : ['ADAPT', self._read_fake],
-            (7801, 78, 582) : ['AECOMP', self._read_aecomp],
-            (7901, 79, 583) : ['AECOMPL', self._read_aecompl],
+            (7801, 78, 582) : ['AECOMP', self.read_aecomp],
+            (7901, 79, 583) : ['AECOMPL', self.read_aecompl],
             (7301, 73, 574) : ['AEDW', self._read_fake],
-            (4002, 40, 273) : ['AEFACT', self._read_aefact],
-            (7501, 75, 576) : ['AEFORCE', self._read_aeforce],
-            (2602, 26, 386) : ['AELINK', self._read_aelink],
-            (2302, 23, 341) : ['AELIST', self._read_aelist],
-            (7001, 70, 571) : ['AEPARM', self._read_aeparm],
-            (7401, 74, 575) : ['AEPRESS', self._read_aepress],
-            (3202, 32, 265) : ['AERO', self._read_aero],
-            (2202, 22, 340) : ['AEROS', self._read_aeros],
-            (2102, 21, 339) : ['AESTAT', self._read_aestat],
-            (2002, 20, 338) : ['AESURF', self._read_aesurf],
-            (7701, 77, 581) : ['AESURFS', self._read_aesurfs],
-            (3002, 30, 263) : ['CAERO1', self._read_caero1],
-            (4301, 43, 167) : ['CAERO2', self._read_caero2],
-            (4401, 44, 168) : ['CAERO3', self._read_caero3],
-            (4501, 45, 169) : ['CAERO4', self._read_caero4],
-            (5001, 50, 175) : ['CAERO5', self._read_caero5],
+            (4002, 40, 273) : ['AEFACT', self.read_aefact],
+            (7501, 75, 576) : ['AEFORCE', self.read_aeforce],
+            (2602, 26, 386) : ['AELINK', self.read_aelink],
+            (2302, 23, 341) : ['AELIST', self.read_aelist],
+            (7001, 70, 571) : ['AEPARM', self.read_aeparm],
+            (7401, 74, 575) : ['AEPRESS', self.read_aepress],
+            (3202, 32, 265) : ['AERO', self.read_aero],
+            (2202, 22, 340) : ['AEROS', self.read_aeros],
+            (2102, 21, 339) : ['AESTAT', self.read_aestat],
+            (2002, 20, 338) : ['AESURF', self.read_aesurf],
+            (7701, 77, 581) : ['AESURFS', self.read_aesurfs],
+            (3002, 30, 263) : ['CAERO1', self.read_caero1],
+            (4301, 43, 167) : ['CAERO2', self.read_caero2],
+            (4401, 44, 168) : ['CAERO3', self.read_caero3],
+            (4501, 45, 169) : ['CAERO4', self.read_caero4],
+            (5001, 50, 175) : ['CAERO5', self.read_caero5],
             (6201, 62, 143) : ['CLOAD', self._read_fake],
-            (6401, 64, 307) : ['CSSCHD', self._read_csschd],
-            (104, 1, 81) : ['DEFORM', self._read_deform],
-            (2702, 27, 387) : ['DIVERG', self._read_diverg],
-            (4102, 41, 274) : ['FLFACT', self._read_flfact],
-            (3902, 39, 272) : ['FLUTTER', self._read_flutter],
-            (17400, 174, 616) : ['GROUP', self._read_group],
-            (3802, 38, 271) : ['MKAERO1', self._read_mkaero1],
-            (3702, 37, 270) : ['MKAERO2', self._read_mkaero2],
-            (7601, 76, 577) : ['MONPNT1', self._read_monpnt1],
-            (3102, 31, 264) : ['PAERO1', self._read_paero1],
-            (4601, 46, 170) : ['PAERO2', self._read_paero2],
-            (4701, 47, 171) : ['PAERO3', self._read_paero3],
-            (4801, 48, 172) : ['PAERO4', self._read_fake],
-            (5101, 51, 176) : ['PAERO5', self._read_paero5],
-            (5301, 53, 378) : ['PANEL', self._read_panel],
-            (3502, 35, 268) : ['SET1', self._read_set1],
-            (3602, 36, 269) : ['SET2', self._read_set2],
-            (4302, 43, 607) : ['SET3', self._read_set3],
-            (3302, 33, 266) : ['SPLINE1', self._read_spline1],
-            (3402, 34, 267) : ['SPLINE2', self._read_spline2],
-            (4901, 49, 173) : ['SPLINE3', self._read_spline3],
-            (6501, 65, 308) : ['SPLINE4', self._read_spline4],
-            (6601, 66, 309) : ['SPLINE5', self._read_spline5],
-            (2402, 24, 342) : ['TRIM', self._read_trim],
-            (7201, 72, 573) : ['UXVEC', self._read_uxvec],
+            (6401, 64, 307) : ['CSSCHD', self.read_csschd],
+            (104, 1, 81) : ['DEFORM', self.read_deform],
+            (2702, 27, 387) : ['DIVERG', self.read_diverg],
+            (4102, 41, 274) : ['FLFACT', self.read_flfact],
+            (3902, 39, 272) : ['FLUTTER', self.read_flutter],
+            (17400, 174, 616) : ['GROUP', self.read_group],
+            (3802, 38, 271) : ['MKAERO1', self.read_mkaero1],
+            (3702, 37, 270) : ['MKAERO2', self.read_mkaero2],
+            (7601, 76, 577) : ['MONPNT1', self.read_monpnt1],
+            (3102, 31, 264) : ['PAERO1', self.read_paero1],
+            (4601, 46, 170) : ['PAERO2', self.read_paero2],
+            (4701, 47, 171) : ['PAERO3', self.read_paero3],
+            (4801, 48, 172) : ['PAERO4', self.read_paero4],
+            (5101, 51, 176) : ['PAERO5', self.read_paero5],
+            (5301, 53, 378) : ['PANEL', self.read_panel],
+            (3502, 35, 268) : ['SET1', self.read_set1],
+            (3602, 36, 269) : ['SET2', self.read_set2],
+            (4302, 43, 607) : ['SET3', self.read_set3],
+            (3302, 33, 266) : ['SPLINE1', self.read_spline1],
+            (3402, 34, 267) : ['SPLINE2', self.read_spline2],
+            (4901, 49, 173) : ['SPLINE3', self.read_spline3],
+            (6501, 65, 308) : ['SPLINE4', self.read_spline4],
+            (6601, 66, 309) : ['SPLINE5', self.read_spline5],
+            (2402, 24, 342) : ['TRIM', self.read_trim],
+            (7201, 72, 573) : ['UXVEC', self.read_uxvec],
             (7108, 822, 51) : ['BOLT', self._read_fake],
             (7108, 71, 251) : ['???', self._read_fake],
             (5808, 58, 220) : ['ITER', self._read_fake],
@@ -120,22 +120,21 @@ class EDT:
             # MSC
             #(1247, 12, 667): ['MONPNT2', self._read_monpnt2],
             (11204, 112, 821): ['ERPPNL', self._read_fake],
-            (8001, 80, 511): ['SET3', self._read_set3],
-            (9400, 94, 641): ['MDLPRM', self._read_mdlprm],
+            (8001, 80, 511): ['SET3', self.read_set3],
+            (9400, 94, 641): ['MDLPRM', self.read_mdlprm],
             (11004, 110, 1820_720): ['HADACRI', self._read_fake],
-            (8804, 88, 628): ['MONDSP1', self._read_mondsp1],
+            (8804, 88, 628): ['MONDSP1', self.read_mondsp1],
 
             (10904, 109, 719): ['HADAPTL', self._read_fake],
-            (8204, 82, 621): ['MONPNT2', self._read_monpnt2],
-            (8304, 83, 622): ['MONPNT3', self._read_monpnt3],
+            (8204, 82, 621): ['MONPNT2', self.read_monpnt2],
+            (8304, 83, 622): ['MONPNT3', self.read_monpnt3],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
-
         }
-    def _read_aeforce(self, data: bytes, n: int) -> int:
+    def read_aeforce(self, data: bytes, n: int) -> int:
         """Word Name Type Description
         1 MACH     RS
         2 SYMXZ(2) CHAR4
@@ -172,7 +171,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aepress(self, data: bytes, n: int) -> int:
+    def read_aepress(self, data: bytes, n: int) -> int:
         """
         Parametric pressure loading for aerodynamics.
         Word Name Type Description
@@ -211,10 +210,10 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_mkaero2(self, data: bytes, n: int) -> int:
+    def read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
 
-    def _read_csschd(self, data: bytes, n: int) -> int:
+    def read_csschd(self, data: bytes, n: int) -> int:
         """
         (6401, 64, 307,
          10, 510, 10, 20, 30,
@@ -232,7 +231,7 @@ class EDT:
             self.op2.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach)
         return len(data)
 
-    def _read_diverg(self, data: bytes, n: int) -> int:
+    def read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)
         Divergence analysis data.
@@ -256,7 +255,7 @@ class EDT:
             str(diverg)
         return len(data)
 
-    def _read_flfact(self, data: bytes, n: int) -> int:
+    def read_flfact(self, data: bytes, n: int) -> int:
         """
         data = (1, 0.206, -1,
                 2, 1.3, -1,
@@ -275,7 +274,7 @@ class EDT:
             str(flfact)
         return len(data)
 
-    def _read_mkaero1(self, data: bytes, n: int) -> int:
+    def read_mkaero1(self, data: bytes, n: int) -> int:
         """
         (3802, 38, 271)
         Kinda brilliant way to write the card.  Weird to parse though.
@@ -306,7 +305,7 @@ class EDT:
             str(mkaero1)
         return len(data)
 
-    def _read_group(self, data: bytes, n: int) -> int:
+    def read_group(self, data: bytes, n: int) -> int:
         """
         GROUP(17400,174,616) - NX specific
 
@@ -560,7 +559,7 @@ class EDT:
         assert nentries > 0, nentries
         return n
 
-    def _read_aero(self, data: bytes, n: int) -> int:
+    def read_aero(self, data: bytes, n: int) -> int:
         """
         (3202, 32, 265)
 
@@ -585,7 +584,7 @@ class EDT:
         n = 36
         return n
 
-    def _read_aeros(self, data: bytes, n: int) -> int:
+    def read_aeros(self, data: bytes, n: int) -> int:
         """
         AEROS(2202, 22, 340)
 
@@ -604,7 +603,7 @@ class EDT:
         n = 40 * self.factor
         return n
 
-    def _read_deform(self, data: bytes, n: int) -> int:
+    def read_deform(self, data: bytes, n: int) -> int:
         """
         (104, 1, 81)
         NX 2019.2
@@ -630,7 +629,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aeparm(self, data: bytes, n: int) -> int:
+    def read_aeparm(self, data: bytes, n: int) -> int:
         """
         MSC 2020
 
@@ -654,7 +653,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_uxvec(self, data: bytes, n: int) -> int:
+    def read_uxvec(self, data: bytes, n: int) -> int:
         """
         MSC 2020
 
@@ -705,7 +704,7 @@ class EDT:
             str(uxvec)
         return n # len(data)
 
-    def _read_caero1(self, data: bytes, n: int) -> int:
+    def read_caero1(self, data: bytes, n: int) -> int:
         """
         (3002, 30, 263)
         MSC 2018.2
@@ -762,7 +761,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero2(self, data: bytes, n: int) -> int:
+    def read_caero2(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -803,7 +802,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero3(self, data: bytes, n: int) -> int:
+    def read_caero3(self, data: bytes, n: int) -> int:
         """
         Aerodynamic panel element configuration.
 
@@ -861,7 +860,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero4(self, data: bytes, n: int) -> int:
+    def read_caero4(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID   I Element identification number
@@ -900,7 +899,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero5(self, data: bytes, n: int) -> int:
+    def read_caero5(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -946,7 +945,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_paero1(self, data: bytes, n: int) -> int:
+    def read_paero1(self, data: bytes, n: int) -> int:
         r"""
         (3102, 31, 264)
         MSC 2018.2
@@ -992,7 +991,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_paero2(self, data: bytes, n: int) -> int:
+    def read_paero2(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1049,7 +1048,7 @@ class EDT:
             str(paero2)
         return n
 
-    def _read_paero3(self, data: bytes, n: int) -> int:
+    def read_paero3(self, data: bytes, n: int) -> int:
         """
         NX 2019.2
         Record – PAERO3(4701,47,171)
@@ -1176,7 +1175,10 @@ class EDT:
             #ncards += 1
         return n
 
-    def _read_paero5(self, data: bytes, n: int) -> int:
+    def read_paero4(self, data: bytes, n: int) -> int:
+        asdf
+
+    def read_paero5(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1209,7 +1211,7 @@ class EDT:
             str(paero5)
         return len(data)
 
-    def _read_panel(self, data: bytes, n: int) -> int:
+    def read_panel(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1240,7 +1242,7 @@ class EDT:
             str(panel)
         return len(data)
 
-    def _read_acmodl(self, data: bytes, n: int) -> int:
+    def read_acmodl(self, data: bytes, n: int) -> int:
         """Reads the ACMODL card"""
         op2: OP2Geom = self.op2
         card_name = 'ACMODL'
@@ -1452,7 +1454,7 @@ class EDT:
             n += ntotal
         return n, acmodls
 
-    def _read_aelist(self, data: bytes, n: int) -> int:
+    def read_aelist(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1475,7 +1477,7 @@ class EDT:
             #n += ntotal
         return len(data)
 
-    def _read_set1(self, data: bytes, n: int) -> int:
+    def read_set1(self, data: bytes, n: int) -> int:
         """
         SET1: (3502, 35, 268)
         MSC 2018.2
@@ -1498,7 +1500,7 @@ class EDT:
             op2.add_set1(sid, elements, is_skin=False)
         return len(data)
 
-    def _read_set2(self, data: bytes, n: int) -> int:
+    def read_set2(self, data: bytes, n: int) -> int:
         """
         SET2
         MSC 2018.2
@@ -1541,7 +1543,7 @@ class EDT:
         op2.to_nx(' because SET2 was found')
         return n
 
-    def _read_set3(self, data: bytes, n: int) -> int:
+    def read_set3(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
         Word Name Type Description
@@ -1591,7 +1593,7 @@ class EDT:
             str(set3)
         return len(data)
 
-    def _read_aelink(self, data: bytes, n: int) -> int:
+    def read_aelink(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1638,7 +1640,7 @@ class EDT:
             str(aelink)
         return len(data)
 
-    def _read_aecomp(self, data: bytes, n: int) -> int:
+    def read_aecomp(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1672,7 +1674,7 @@ class EDT:
         """
         return len(data)
 
-    def _read_aecompl(self, data: bytes, n: int) -> int:
+    def read_aecompl(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1705,7 +1707,7 @@ class EDT:
             str(aecompl)
         return len(data)
 
-    def _read_spline1(self, data: bytes, n: int) -> int:
+    def read_spline1(self, data: bytes, n: int) -> int:
         """reads the SPLINE1 card"""
         n = self._read_spline1_nx(data, n)
         return n
@@ -1757,7 +1759,7 @@ class EDT:
         #op2.to_nx()
         return n
 
-    def _read_spline2(self, data: bytes, n: int) -> int:
+    def read_spline2(self, data: bytes, n: int) -> int:
         """
         Reads the SPLINE2 card
 
@@ -1809,13 +1811,13 @@ class EDT:
         #n = self._read_spline2_nx(data, n)
         return n
 
-    def _read_spline3(self, data: bytes, n: int) -> int:
+    def read_spline3(self, data: bytes, n: int) -> int:
         """reads the SPLINE3 card"""
         spline3
         #n = self._read_spline2_nx(data, n)
         return n
 
-    def _read_spline4(self, data: bytes, n: int) -> int:
+    def read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
         op2: OP2Geom = self.op2
         card_name = 'SPLINE4'
@@ -1927,7 +1929,7 @@ class EDT:
         op2.to_msc(' because SPLINE4-MSC was found')
         return n, splines
 
-    def _read_spline5(self, data: bytes, n: int) -> int:
+    def read_spline5(self, data: bytes, n: int) -> int:
         """reads the SPLINE5 card"""
         op2: OP2Geom = self.op2
         card_name = 'SPLINE5'
@@ -2067,7 +2069,7 @@ class EDT:
         op2.to_nx(' because SPLINE5-NX was found')
         return n, splines
 
-    def _read_monpnt1(self, data: bytes, n: int) -> int:
+    def read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
         op2: OP2Geom = self.op2
         card_name = 'MONPNT1'
@@ -2168,7 +2170,7 @@ class EDT:
         #op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
-    def _read_monpnt2(self, data: bytes, n: int) -> int:
+    def read_monpnt2(self, data: bytes, n: int) -> int:
         """
         Record 59 - MONPNT2(8204,82,621)
         Word Name Type Description
@@ -2205,7 +2207,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_monpnt3(self, data: bytes, n: int) -> int:
+    def read_monpnt3(self, data: bytes, n: int) -> int:
         """
         Record 60 - MONPNT3(8304,83,622)
         Word Name    Type   Description
@@ -2284,7 +2286,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_mondsp1(self, data: bytes, n: int) -> int:
+    def read_mondsp1(self, data: bytes, n: int) -> int:
         """
         Record 56 - MONDSP1(8804,88,628)
         Word Name Type Description
@@ -2323,7 +2325,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_mdlprm(self, data: bytes, n: int) -> int:
+    def read_mdlprm(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 NAME(2) CHAR4 User defined parameter
@@ -2388,7 +2390,7 @@ class EDT:
         #op2._add_methods._add_monpnt_object(monpnt)
         return n # , monpnt1s
 
-    def _read_aestat(self, data: bytes, n: int) -> int:
+    def read_aestat(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -2417,7 +2419,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_flutter(self, data: bytes, n: int) -> int:
+    def read_flutter(self, data: bytes, n: int) -> int:
         r"""
         (3902, 39, 272)
         MSC 2018.2
@@ -2521,7 +2523,7 @@ class EDT:
             #n += ntotal
         #return n
 
-    def _read_trim(self, data: bytes, n: int) -> int:
+    def read_trim(self, data: bytes, n: int) -> int:
         """
         (2402, 24, 342)
         MSC 2018.2
@@ -2570,7 +2572,7 @@ class EDT:
             str(trim)
         return n
 
-    def _read_aesurf(self, data: bytes, n: int) -> int:
+    def read_aesurf(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -2656,7 +2658,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aesurfs(self, data: bytes, n: int) -> int:
+    def read_aesurfs(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID       I     Identification of an aerodynamic trim variable degree
@@ -2689,7 +2691,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aefact(self, data: bytes, n: int) -> int:
+    def read_aefact(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 

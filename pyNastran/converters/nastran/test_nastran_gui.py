@@ -1214,18 +1214,20 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_elements_01_vtk1(self):
         """tests forces/pressure in SOL 101 using an op2 model object"""
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
-        vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements0.vtu')
+        vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtk')
         model = read_op2(op2_filename, load_geometry=True, combine=False, debug=False)
+        nastran_to_vtk(model, model, vtu_filename, log_level='error')
         nastran_to_vtk(model, model, vtk_filename, log_level='error')
 
     def test_gui_elements_01_vtk2(self):
         """tests forces/pressure in SOL 101 using a Path object"""
         op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
-        vtk_filename = MODEL_PATH / 'elements' / 'static_elements9.vtu'
-        nastran_to_vtk(op2_filename, op2_filename, vtk_filename, compression_level=9)
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements9.vtu')
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, compression_level=9)
 
-        vtk_filename = MODEL_PATH / 'elements' / 'static_elements0.vtu'
-        nastran_to_vtk(op2_filename, op2_filename, vtk_filename, compression_level=0)
+        vtu_filename = MODEL_PATH / 'elements' / 'static_elements0.vtu'
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, compression_level=0)
 
     def test_bdf_op2_64_bit(self):
         """

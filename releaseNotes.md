@@ -37,6 +37,8 @@ nastran_to_vtk:
  - passing in op2/op2geom no longer fails the bdf_filename = '' check
  - renaming vtk_filename -> vtu_filename for clarity 
  - adding str log_level
+ - vtk/vtu support depending on filename
+ - adding LZMA compression_level (0-9; default=5)
 
 GUI:
  - added:

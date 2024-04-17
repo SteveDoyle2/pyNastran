@@ -51,88 +51,88 @@ class EPT:
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.ept_map = {
-            (3201, 32, 55): ['NSM', self._read_nsm],          # record 2
-            (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
-            (9102, 91, 52): ['PBARL', self._read_pbarl],      # record 12 - almost there...
-            (2706, 27, 287): ['PCOMP', self._read_pcomp],     # record 22 - buggy
-            (302, 3, 46): ['PELAS', self._read_pelas],        # record 39
-            (2102, 21, 121): ['PGAP', self._read_pgap],       # record 42
-            (902, 9, 29): ['PROD', self._read_prod],          # record 49
-            (1002, 10, 42): ['PSHEAR', self._read_pshear],    # record 50
-            (2402, 24, 281): ['PSOLID', self._read_psolid],   # record 51
-            (15202, 152, 709): ['PCOMPLS', self._read_pcompls],
-            (2302, 23, 283): ['PSHELL', self._read_pshell],   # record 52
-            (1602, 16, 30): ['PTUBE', self._read_ptube],      # record 56
+            (3201, 32, 55): ['NSM', self.read_nsm],          # record 2
+            (52, 20, 181): ['PBAR', self.read_pbar],         # record 11 - buggy
+            (9102, 91, 52): ['PBARL', self.read_pbarl],      # record 12 - almost there...
+            (2706, 27, 287): ['PCOMP', self.read_pcomp],     # record 22 - buggy
+            (302, 3, 46): ['PELAS', self.read_pelas],        # record 39
+            (2102, 21, 121): ['PGAP', self.read_pgap],       # record 42
+            (902, 9, 29): ['PROD', self.read_prod],          # record 49
+            (1002, 10, 42): ['PSHEAR', self.read_pshear],    # record 50
+            (2402, 24, 281): ['PSOLID', self.read_psolid],   # record 51
+            (15202, 152, 709): ['PCOMPLS', self.read_pcompls],
+            (2302, 23, 283): ['PSHELL', self.read_pshell],   # record 52
+            (1602, 16, 30): ['PTUBE', self.read_ptube],      # record 56
 
-            (5402, 54, 262): ['PBEAM', self._read_pbeam],      # record 14 - not done
-            (9202, 92, 53): ['PBEAML', self._read_pbeaml],     # record 15
-            (2502, 25, 248): ['PBEND', self._read_pbend],      # record 16 - not done
-            (1402, 14, 37): ['PBUSH', self._read_pbush],       # record 19 - not done
-            (3101, 31, 219): ['PBUSH1D', self._read_pbush1d],  # record 20 - not done
-            (152, 19, 147): ['PCONEAX', self._read_pconeax],   # record 24 - not done
-            (11001, 110, 411): ['PCONV', self._read_pconv],    # record 25 - not done
+            (5402, 54, 262): ['PBEAM', self.read_pbeam],      # record 14 - not done
+            (9202, 92, 53): ['PBEAML', self.read_pbeaml],     # record 15
+            (2502, 25, 248): ['PBEND', self.read_pbend],      # record 16 - not done
+            (1402, 14, 37): ['PBUSH', self.read_pbush],       # record 19 - not done
+            (3101, 31, 219): ['PBUSH1D', self.read_pbush1d],  # record 20 - not done
+            (152, 19, 147): ['PCONEAX', self.read_pconeax],   # record 24 - not done
+            (11001, 110, 411): ['PCONV', self.read_pconv],    # record 25 - not done
             # record 26
-            (202, 2, 45): ['PDAMP', self._read_pdamp],      # record 27 - not done
-            (2802, 28, 236): ['PHBDY', self._read_phbdy],   # record 43 - not done
-            (402, 4, 44): ['PMASS', self._read_pmass],      # record 48
-            (1802, 18, 31): ['PVISC', self._read_pvisc],    # record 59
-            (10201, 102, 400): ['PVAL', self._read_pval],   # record 58 - not done
-            (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
-            (3201, 32, 991) : ['NSM', self._read_nsm_2],  # record
-            (3301, 33, 992) : ['NSM1', self._read_nsm1],  # record
-            (3701, 37, 995) : ['NSML1', self._read_nsml1_nx],    # record
-            (3601, 36, 62): ['NSML1', self._read_nsml1_msc],  # record 7
-            (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
+            (202, 2, 45): ['PDAMP', self.read_pdamp],      # record 27 - not done
+            (2802, 28, 236): ['PHBDY', self.read_phbdy],   # record 43 - not done
+            (402, 4, 44): ['PMASS', self.read_pmass],      # record 48
+            (1802, 18, 31): ['PVISC', self.read_pvisc],    # record 59
+            (10201, 102, 400): ['PVAL', self.read_pval],   # record 58 - not done
+            (2606, 26, 289): ['VIEW', self.read_view],     # record 62 - not done
+            (3201, 32, 991) : ['NSM', self.read_nsm_2],  # record
+            (3301, 33, 992) : ['NSM1', self.read_nsm1],  # record
+            (3701, 37, 995) : ['NSML1', self.read_nsml1_nx],    # record
+            (3601, 36, 62): ['NSML1', self.read_nsml1_msc],  # record 7
+            (15006, 150, 604): ['PCOMPG', self.read_pcompg],  # record
 
-            (702, 7, 38): ['PBUSHT', self._read_pbusht],  # record 1
+            (702, 7, 38): ['PBUSHT', self.read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
-            (3501, 35, 994) : ['NSML', self._read_nsml],
+            (3501, 35, 994) : ['NSML', self.read_nsml],
             (1502, 15, 36): ['PAABSF', self.read_paabaf],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
-            (5403, 55, 349): ['PBCOMP', self._read_pbcomp],  # record 13
+            (5403, 55, 349): ['PBCOMP', self.read_pbcomp],  # record 13
             (13301, 133, 509): ['PBMSECT', self._read_fake],  # record 17
-            (2902, 29, 420): ['PCONVM', self._read_pconvm],  # record 26
-            (1202, 12, 33): ['PDAMPT', self._read_pdampt],  # record 28
-            (8702, 87, 412): ['PDAMP5', self._read_pdamp5],  # record 29
+            (2902, 29, 420): ['PCONVM', self.read_pconvm],  # record 26
+            (1202, 12, 33): ['PDAMPT', self.read_pdampt],  # record 28
+            (8702, 87, 412): ['PDAMP5', self.read_pdamp5],  # record 29
             (6802, 68, 164): ['PDUM8', self._read_fake],  # record 37
             (6902, 69, 165): ['PDUM9', self._read_fake],  # record 38
-            (1302, 13, 34): ['PELAST', self._read_pelast],  # record 41
+            (1302, 13, 34): ['PELAST', self.read_pelast],  # record 41
             (12001, 120, 480): ['PINTC', self._read_fake],  # record 44
             (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
-            (4606, 46, 375): ['PLPLANE', self._read_plplane],  # record 46
-            (4706, 47, 376): ['PLSOLID', self._read_plsolid],  # record 47
-            (10301, 103, 399): ['PSET', self._read_pset],  # record 57
-            (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
+            (4606, 46, 375): ['PLPLANE', self.read_plplane],  # record 46
+            (4706, 47, 376): ['PLSOLID', self.read_plsolid],  # record 47
+            (10301, 103, 399): ['PSET', self.read_pset],  # record 57
+            (3002, 30, 415): ['VIEW3D', self.read_view3d],  # record 63
 
-            (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
-            (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
-            (3801, 38, 979) : ['PPLANE', self._read_pplane],
+            (13501, 135, 510) : ['PFAST', self.read_pfast_msc],  # MSC-specific
+            (3601, 36, 55) : ['PFAST', self.read_pfast_nx],  # NX-specific
+            (3801, 38, 979) : ['PPLANE', self.read_pplane],
             (11801, 118, 560) : ['PWELD', self._read_fake],
-            (3401, 34, 993) : ['NSMADD', self._read_nsmadd],
+            (3401, 34, 993) : ['NSMADD', self.read_nsmadd],
             (9300, 93, 684) : ['ELAR', self._read_fake],
             (9400, 94, 685) : ['ELAR2', self._read_fake],
-            (16006, 160, 903) : ['PCOMPS', self._read_fake],
+            (16006, 160, 903) : ['PCOMPS', self.read_pcomps],
 
             # MSC-specific
             (14602, 146, 692): ['PSLDN1', self._read_fake],
-            (16502, 165, 916): ['PAXSYMH', self._read_paxsymh],
+            (16502, 165, 916): ['PAXSYMH', self.read_paxsymh],
             (13201, 132, 513): ['PBRSECT', self._read_fake],
 
             (13701, 137, 638): ['PWSEAM', self._read_fake],
-            (7001, 70, 632): ['PMIC', self._read_pmic],
-            (15106, 151, 953): ['PCOMPG1', self._read_fake],
+            (7001, 70, 632): ['PMIC', self.read_pmic],
+            (15106, 151, 953): ['PCOMPG1', self.read_pcompg1],
             (3901, 39, 969): ['PSHL3D', self._read_fake],
-            (17006, 170, 901): ['MATCID', self._read_fake],
+            (17006, 170, 901): ['MATCID', self.read_matcid],
 
             (9601, 96, 691): ['PJOINT', self._read_fake],
 
             (9701, 97, 692): ['PJOINT2', self._read_fake],
-            (13401, 134, 611): ['PBEAM3', self._read_pbeam3],
-            (8901, 89, 905): ['PSOLCZ', self._read_fake],
-            (9801, 98, 698): ['DESC', self._read_desc],
+            (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
+            (8901, 89, 905): ['PSOLCZ', self.read_psolcz],
+            (9801, 98, 698): ['DESC', self.read_desc],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
@@ -174,6 +174,303 @@ class EPT:
 
 # HGSUPPR
 
+    def read_matcid(data: bytes, n: int) -> None:
+        """
+        MATCID(17006,170,901)
+        Defines material coordinate system for solid elements.
+        Word Name Type Description
+        1 CID     I Material coordinate system identification number
+        2 SPECOPT I Specification option
+        SPECOPT=1 Select individual element identification numbers
+        3 EID     I Element identification number
+        Word 3 repeats until -1 occurs
+        SPECOPT=2 Select all element identification numbers
+        3 ALL(2) CHAR4 Keyword for selecting ALL option
+        Words 3 repeats until -1 occurs
+        SPECOPT=3 Select element identification numbers using a THRU range without the BY option
+        3 EID         I Element identification number
+        4 THRU(2) CHAR4 Keyword for selecting THRU option
+        6 EID         I Element identification number
+        Words 3 through 5 repeat until -1 occurs
+        SPECOPT=4 Select element identification numbers using a THRU range with the BY option
+        3 EID         I Element identification number
+        4 THRU(2) CHAR4 Keyword for selecting THRU option
+        6 EID         I Element identification number
+        7 BY(2)   CHAR4 Keyword for selecting BY option
+        9 N           I Element selection increment
+        Words 3 through 9 repeat until -1 occurs
+
+        """
+        matcid
+
+    def read_psolcz(data: bytes, n: int) -> None:
+        """
+        PSOLCZ(8901,89,905)
+        Word Name Type Description
+        1 PID    I Property identification number
+        2 MID    I Material identification number
+        3 CORDM  I Material coordinate system identification number
+        4 THICK RS Thickness of cohesive element
+        5 UNDEF(4)
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+
+        ntotal = 8 * size  # 8*4
+        struct1 = Struct(mapfmt(op2._endian + b'3if 4i', size))
+        nentries = (len(data) - n) // ntotal
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            pid, pid, mid, cordm, thick, undef1, undef2, undef3, undef4 = out
+            assert (undef1, undef2, undef3, undef4) == (0, 0, 0, 0)
+            #op2.add_solcz
+            n += ntotal
+        op2.card_count['PSOLCZ'] = nentries
+        return n
+
+    def read_pcompg1(data: bytes, n: int) -> None:
+        """
+        PCOMPG1(15106,151,953)
+
+        Word Name Type Description
+        1 PID   I Property identification number
+        2 Z0   RS Distance from the reference plane to the bottom surface
+        3 NSM  RS Nonstructural mass per unit area
+        4 SB   RS Allowable shear stress of the bonding material
+        5 UNDEF None
+        6 TREF RS Reference temperature
+        7 GE   RS Damping coefficient
+        8 UNDEF None
+        9 GPLYIDi  I Global ply identification number
+        10 MID     I Material identification number
+        11 T      RS Thicknesses of the ply
+        12 THETA  RS Orientation angle of the longitudinal direction of the ply
+        13 FT      I Failure theory
+        14 SOUT    I Stress or strain output request of the ply
+        15 UNDEF None
+        Words 9 through 15 repeat until (-1,-1,-1,-1,-1,-1,-1) occurs
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+        #op2.to_nx(' because PCOMP-64 was found')
+        nproperties = 0
+        s1 = Struct(mapfmt(op2._endian + b'i7f', size))
+        ntotal1 = 8 * size
+        s2 = Struct(mapfmt(op2._endian + b'2i2f3i', size))
+
+        seven_minus1 = Struct(mapfmt(op2._endian + b'7i', size))
+        ndata = len(data)
+        ntotal2 = 7 * size
+        props = []
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
+            (pid, z0, nsm, sb, undef1, tref, ge, undef2) = out
+            assert (undef1, undef2) == (0, 0)
+            assert pid > 0
+            #if op2.binary_debug:
+                #op2.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers}  '
+                                        #f'sb={sb} Tref={tref} ge={ge}')
+            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            n += ntotal1
+
+            global_ply_ids = []
+            mids = []
+            thicknesses  = []
+            thetas = []
+            souts = []
+            failure_theories = []
+
+            edata2 = data[n:n+ntotal2]
+            idata = seven_minus1.unpack(edata2)
+            while idata != (-1, -1, -1, -1, -1, -1, -1):
+                (global_ply_id, mid, t, theta, fti, souti) = s2.unpack(edata2)
+
+                #HILL for the Hill failure theory.
+                #HOFF for the Hoffman failure theory.
+                #TSAI for the Tsai-Wu failure theory.
+                #STRN for the Maximum Strain failure theory.
+                if fti == 0:
+                    ft = None
+                else:  # pragma: no cover
+                    raise NotImplementedError(fti)
+
+                if souti == 0:
+                    sout = 'NO'
+                elif souti == 1:
+                    sout = 'YES'
+                else:  # pragma: no cover
+                    raise NotImplementedError(sout)
+
+                global_ply_ids.append(global_ply_id)
+                mids.append(mid)
+                thicknesses.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                failure_theories.append(ft)
+                if op2.is_debug_file:
+                    op2.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
+                edata2 = data[n:n+ntotal2]
+                if n == ndata:
+                    op2.log.warning('  no (-1, -1, -1, -1, -1, -1, -1) flag was found to close the PCOMPG1s')
+                    break
+                idata = seven_minus1.unpack(edata2)
+            nlayers = len(mids)
+
+            #if size == 4:
+                #assert 0 < nlayers < 400, 'pid=%s nlayers=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                    #pid, nlayers, sb, ft, tref, ge)
+            #else:
+                #assert nlayers == 0, nlayers
+                #nlayers = len(mids)
+
+            #prop = PCOMP.add_op2_data(data_in)
+            op2.add_pcompg1
+
+            nproperties += 1
+            n += ntotal2
+            #props.append(prop)
+        op2.card_count['PCOMPG1'] = nproperties
+        return n
+
+    def read_pcomps(self, data: bytes, n: int) -> None:
+        """
+        PCOMPS(16006,160,903)
+        Defines the properties of an n-ply composite material laminate for solid elements.
+
+        Word Name Type Description
+        1 PID      I Property identification number
+        2 CORDM    I Material coordinate system identification number
+        3 PSDIR    I Stack and ply directions in the material coordinate system
+        4 SB      RS Allowable shear stress of the bonding material
+        5 NB      RS Allowable normal stress of the bonding material
+        6 TREF    RS Reference temperature
+        7 GE      RS Damping coefficient
+        8 UNDEF None
+        9 GPLYIDi  I Global ply identification number
+        10 MID     I Material identification number
+        11 TR     RS Thicknesses of the ply
+        12 THETA  RS Orientation angle of the longitudinal direction of the ply
+        13 FT      I Failure theory
+        14 ILFT    I Inter-laminar failure theory
+        15 SOUT    I Stress or strain output request of the ply
+        16 TFLAG   I Flag of ABS or REL
+        Words 9 through 16 repeat until (-1,-1,-1,-1,-1,-1,-1,-1) occurs
+
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+        #op2.to_nx(' because PCOMP-64 was found')
+        nproperties = 0
+        s1 = Struct(mapfmt(op2._endian + b'3i 4fi', size))
+        ntotal1 = 8 * size
+        s2 = Struct(mapfmt(op2._endian + b'2i 2f 4i', size))
+
+        eight_minus1 = Struct(mapfmt(op2._endian + b'8i', size))
+        ndata = len(data)
+        ntotal2 = 8 * self.size
+        #props = []
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
+            (pid, cordm, psdir, sb, nb, tref, ge, undef) = out
+            assert pid > 0
+            #if op2.binary_debug:
+                #op2.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers}  '
+                                        #f'sb={sb} Tref={tref} ge={ge}')
+            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            n += ntotal1
+
+            global_ply_ids = []
+            mids = []
+            thicknesses  = []
+            thetas = []
+            souts = []
+            failure_theories = []
+            interlaminar_failure_theories = []
+            tflags = []
+
+            edata2 = data[n:n+ntotal2]
+            idata = eight_minus1.unpack(edata2)
+            while idata != (-1, -1, -1, -1, -1, -1, -1, -1):
+                (global_ply_id, mid, t, theta, fti, lam_fti, souti, tflagi) = s2.unpack(edata2)
+
+                #HILL for the Hill failure theory.
+                #HOFF for the Hoffman failure theory.
+                #TSAI for the Tsai-Wu failure theory.
+                #STRN for the Maximum Strain failure theory.
+                #STRS for the Maximum Stress failure theory.
+                #TS for the Maximum Transverse Shear Stress failure theory.
+                #PFA for progressive ply failure. See Remark 6.
+                #(Character; Default = No failure theory). Not supported
+                if fti == 0:
+                    ft = None
+                else:  # pragma: no cover
+                    raise NotImplementedError(fti)
+
+                #SB for transverse shear stress failure index.
+                #NB for normal stress failure index.
+                #(Character; Default = No failure index)
+                if lam_fti == 0:
+                    lam_ft = None
+                else:  # pragma: no cover
+                    raise NotImplementedError(lam_fti)
+
+                if souti == 0:
+                    sout = 'NO'
+                elif souti == 1:
+                    sout = 'YES'
+                else:  # pragma: no cover
+                    raise NotImplementedError(sout)
+                if tflagi == 0:
+                    tflag = 'ABS'
+                else:  # pragma: no cover
+                    raise NotImplementedError(tflagi)
+
+                global_ply_ids.append(global_ply_id)
+                mids.append(mid)
+                thicknesses.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                failure_theories.append(ft)
+                interlaminar_failure_theories.append(lam_ft)
+                tflags.append(tflag)  # flag of ABS/REL
+                if op2.is_debug_file:
+                    op2.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
+                edata2 = data[n:n+ntotal2]
+                if n == ndata:
+                    op2.log.warning('  no (-1, -1, -1, -1, -1, -1, -1, -1) flag was found to close the PCOMPSs')
+                    break
+                idata = eight_minus1.unpack(edata2)
+            nlayers = len(mids)
+
+            #if size == 4:
+                #assert 0 < nlayers < 400, 'pid=%s nlayers=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                    #pid, nlayers, sb, ft, tref, ge)
+            #else:
+                #assert nlayers == 0, nlayers
+                #nlayers = len(mids)
+
+            #prop = PCOMP.add_op2_data(data_in)
+            assert psdir in [12, 13, 21, 23, 31, 32], psdir
+            del tflags
+            op2.add_pcomps(pid, global_ply_ids, mids, thicknesses, thetas,
+                           cordm=cordm, psdir=psdir, sb=sb, nb=nb, tref=tref, ge=ge,
+                           failure_theories=failure_theories,
+                           interlaminar_failure_theories=interlaminar_failure_theories,
+                           souts=souts, comment='')
+
+            nproperties += 1
+            n += ntotal2
+            #props.append(prop)
+        op2.card_count['PCOMPS'] = nproperties
+        return n
+
     def read_paabaf(self, data: bytes, n: int) -> None:
         """
         PAABSF(1502,15,36)
@@ -193,7 +490,6 @@ class EPT:
         #op2.log.info(f'geom skipping PAABSF in {op2.table_name}; ndata={len(data)-12}')
         #op2.show_data(data[n:], types='ifs')
 
-        op2: OP2Geom = self.op2
         ntotal = 8 * size  # 8*4
         struct1 = Struct(mapfmt(op2._endian + b'3i 5f', size))
         nentries = (len(data) - n) // ntotal
@@ -207,13 +503,13 @@ class EPT:
         op2.card_count['PAABSF'] = nentries
         return n
 
-    def _read_paxsymh(self, data: bytes, n: int) -> None:
+    def read_paxsymh(self, data: bytes, n: int) -> None:
         op2: OP2Geom = self.op2
         op2.log.info(f'geom skipping PAXSYMH in {op2.table_name}; ndata={len(data)-12}')
         #op2.show_data(data[n:], types='ifs')
         return len(data)
 
-    def _read_desc(self, data: bytes, n: int) -> int:
+    def read_desc(self, data: bytes, n: int) -> int:
         """
         RECORD – DESC(9801,98,698)
 
@@ -243,7 +539,7 @@ class EPT:
         assert n == len(data), n
         return n
 
-    def _read_nsml(self, data: bytes, n: int) -> int:
+    def read_nsml(self, data: bytes, n: int) -> int:
         """
         NX 2019.2
         RECORD – NSML(3501, 35, 994)
@@ -288,7 +584,7 @@ class EPT:
         op2.card_count['NSML'] = ncards
         return n
 
-    def _read_nsmadd(self, data: bytes, n: int) -> int:
+    def read_nsmadd(self, data: bytes, n: int) -> int:
         """
         NX 2019.2
         (3401, 34, 993)
@@ -321,7 +617,7 @@ class EPT:
         op2.card_count['NSMADD'] = ncards
         return n
 
-    def _read_nsml1_nx(self, data: bytes, n: int) -> int:
+    def read_nsml1_nx(self, data: bytes, n: int) -> int:
         """
         NSML1(3701, 37, 995)
         Alternate form of NSML entry. Defines lumped nonstructural mass entries by VALUE, ID list.
@@ -450,7 +746,7 @@ class EPT:
         op2.card_count['NSML'] = ncards
         return n
 
-    def _read_nsml1_msc(self, data: bytes, n: int) -> int:
+    def read_nsml1_msc(self, data: bytes, n: int) -> int:
         r"""
         NSML1(3601, 36, 62)
 
@@ -492,7 +788,7 @@ class EPT:
         #bbb
         return len(data)
 
-    def _read_nsm1(self, data: bytes, n: int) -> int:
+    def read_nsm1(self, data: bytes, n: int) -> int:
         """
         NSM1(3301, 33, 992)
 
@@ -592,7 +888,7 @@ class EPT:
         op2.card_count['NSM1'] = ncards
         return n
 
-    def _read_nsm(self, data: bytes, n: int) -> int:
+    def read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -601,7 +897,7 @@ class EPT:
             'NSM', op2._add_methods._add_nsm_object)
         return n
 
-    def _read_nsm_2(self, data: bytes, n: int) -> int:
+    def read_nsm_2(self, data: bytes, n: int) -> int:
         """
         NX 2019.2
         NSM(3201, 32, 991)
@@ -797,7 +1093,7 @@ class EPT:
 # PACABS
 # PACBAR
 
-    def _read_pbar(self, data: bytes, n: int) -> int:
+    def read_pbar(self, data: bytes, n: int) -> int:
         """
         PBAR(52,20,181) - the marker for Record 11
         .. warning:: this makes a funny property...
@@ -840,7 +1136,7 @@ class EPT:
         op2.card_count['PBAR'] = nentries
         return n
 
-    def _read_pbarl(self, data: bytes, n: int) -> int:
+    def read_pbarl(self, data: bytes, n: int) -> int:
         """
         PBARL(9102,91,52) - the marker for Record 12
         TODO: buggy
@@ -941,7 +1237,7 @@ class EPT:
             #n += 8  # same for 32/64 bit - not 100% that it's always active
         return n
 
-    def _read_pbcomp(self, data: bytes, n: int) -> int:
+    def read_pbcomp(self, data: bytes, n: int) -> int:
         """
         PBCOMP(5403, 55, 349)
 
@@ -1038,7 +1334,7 @@ class EPT:
         op2.card_count['PBCOMP'] = nproperties
         return n
 
-    def _read_pbeam(self, data: bytes, n: int) -> int:
+    def read_pbeam(self, data: bytes, n: int) -> int:
         """
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
@@ -1177,7 +1473,7 @@ class EPT:
             op2.card_count['PBEAM'] = nproperties
         return n
 
-    def _read_pbeaml(self, data: bytes, n: int) -> int:
+    def read_pbeaml(self, data: bytes, n: int) -> int:
         """
         PBEAML(9202,92,53)
 
@@ -1228,7 +1524,7 @@ class EPT:
             op2.card_count['PBEAML'] = nproperties
         return len(data)
 
-    def _read_pbend(self, data: bytes, n: int) -> int:
+    def read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -1377,7 +1673,7 @@ class EPT:
 # PBMSECT
 # PBRSECT
 
-    def _read_pbush(self, data: bytes, n: int) -> int:
+    def read_pbush(self, data: bytes, n: int) -> int:
         """
         The PBUSH card is different between MSC and NX Nastran.
 
@@ -1547,7 +1843,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pbush1d(self, data: bytes, n: int) -> int:
+    def read_pbush1d(self, data: bytes, n: int) -> int:
         """
         Record 18 -- PBUSH1D(3101,31,219)
 
@@ -1683,7 +1979,7 @@ class EPT:
             #op2._add_pbusht_object(prop)
         #return n
 
-    def _read_pbusht(self, data: bytes, n: int) -> int:
+    def read_pbusht(self, data: bytes, n: int) -> int:
         """
         NX 12 / MSC 2005
         Word Name Type Description
@@ -1726,7 +2022,7 @@ class EPT:
                                  #'CTRIAX', self.add_op2_element)
         return n
 
-    def _read_pbusht_nx_old(self, data: bytes, n: int) -> int:
+    def read_pbusht_nx_old(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         #op2.show_data(data[12:])
         ndata = (len(data) - n) // self.factor
@@ -1897,7 +2193,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pcomp(self, data: bytes, n: int) -> int:
+    def read_pcomp(self, data: bytes, n: int) -> int:
         r"""
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -2134,7 +2430,7 @@ class EPT:
             nproperties += 1
         return n, props
 
-    def _read_pcompg(self, data: bytes, n: int) -> int:
+    def read_pcompg(self, data: bytes, n: int) -> int:
         """
         PCOMP(2706,27,287)
 
@@ -2287,14 +2583,14 @@ class EPT:
 
 # PCOMPA
 
-    def _read_pconeax(self, data: bytes, n: int) -> int:
+    def read_pconeax(self, data: bytes, n: int) -> int:
         """
         (152,19,147) - Record 24
         """
         self.op2.log.info('geom skipping PCONEAX in EPT')
         return len(data)
 
-    def _read_pconv(self, data: bytes, n: int) -> int:
+    def read_pconv(self, data: bytes, n: int) -> int:
         """common method for reading PCONVs"""
         op2: OP2Geom = self.op2
         #n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
@@ -2381,7 +2677,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pconvm(self, data: bytes, n: int) -> int:
+    def read_pconvm(self, data: bytes, n: int) -> int:
         """Record 24 -- PCONVM(2902,29,420)
 
         1 PID    I Property identification number
@@ -2409,7 +2705,7 @@ class EPT:
         op2.card_count['PCONVM'] = nentries
         return n
 
-    def _read_pdamp(self, data: bytes, n: int) -> int:
+    def read_pdamp(self, data: bytes, n: int) -> int:
         """
         PDAMP(202,2,45) - the marker for Record ???
         """
@@ -2426,11 +2722,11 @@ class EPT:
         op2.card_count['PDAMP'] = nentries
         return n
 
-    def _read_pdampt(self, data: bytes, n: int) -> int:  # 26
+    def read_pdampt(self, data: bytes, n: int) -> int:  # 26
         self.op2.log.info('geom skipping PDAMPT in EPT')
         return len(data)
 
-    def _read_pdamp5(self, data: bytes, n: int) -> int:  # 26
+    def read_pdamp5(self, data: bytes, n: int) -> int:  # 26
         self.op2.log.info('geom skipping PDAMP5 in EPT')
         return len(data)
 
@@ -2444,7 +2740,7 @@ class EPT:
 # PDUM8
 # PDUM9
 
-    def _read_pelas(self, data: bytes, n: int) -> int:
+    def read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
         op2: OP2Geom = self.op2
         ntotal = 16 * self.factor # 4*4
@@ -2462,7 +2758,7 @@ class EPT:
         op2.card_count['PELAS'] = nproperties
         return n
 
-    def _read_pfast_msc(self, data: bytes, n: int) -> int:
+    def read_pfast_msc(self, data: bytes, n: int) -> int:
         r"""
         Word Name Type Description
         1 PID       I Property identification number
@@ -2527,7 +2823,7 @@ class EPT:
         op2.card_count['PFAST'] = nproperties
         return n
 
-    def _read_pfast_nx(self, data: bytes, n: int) -> int:
+    def read_pfast_nx(self, data: bytes, n: int) -> int:
         """
         PFAST(3601,36,55)
         NX only
@@ -2563,7 +2859,7 @@ class EPT:
         op2.to_nx(' because PFAST-NX was found')
         return n
 
-    def _read_pelast(self, data: bytes, n: int) -> int:
+    def read_pelast(self, data: bytes, n: int) -> int:
         """
         Record 41 -- PELAST(1302,13,34)
 
@@ -2589,7 +2885,7 @@ class EPT:
         op2.card_count['PELAST'] = nproperties
         return n
 
-    def _read_pgap(self, data: bytes, n: int) -> int:
+    def read_pgap(self, data: bytes, n: int) -> int:
         """
         PGAP(2102,21,121) - the marker for Record 42
         """
@@ -2609,7 +2905,7 @@ class EPT:
         op2.card_count['PGAP'] = nproperties
         return n
 
-    def _read_phbdy(self, data: bytes, n: int) -> int:
+    def read_phbdy(self, data: bytes, n: int) -> int:
         """
         PHBDY(2802,28,236) - the marker for Record 43
         """
@@ -2628,17 +2924,17 @@ class EPT:
         op2.card_count['PHBDY'] = nproperties
         return n
 
-    def _read_pintc(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_pintc(self, data: bytes, n: int) -> int:  # pragma: no cover
         raise UnsupportedCard('PINTC')
         self.op2.log.info('geom skipping PINTC in EPT')
         return len(data)
 
-    def _read_pints(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_pints(self, data: bytes, n: int) -> int:  # pragma: no cover
         raise UnsupportedCard('PINTS')
         self.op2.log.info('geom skipping PINTS in EPT')
         return len(data)
 
-    def _read_pbeam3(self, data: bytes, n: int) -> int:
+    def read_pbeam3(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         card_name = 'PBUSHT'
         card_obj = PBUSHT
@@ -2812,7 +3108,7 @@ class EPT:
         op2.show_data(data)
         asdf
 
-    def _read_pmic(self, data: bytes, n: int) -> int:
+    def read_pmic(self, data: bytes, n: int) -> int:
         r"""
         (7001, 70, 632)
         What is the type????
@@ -2835,7 +3131,7 @@ class EPT:
         op2.card_count['PMIC'] = nentries
         return len(data)
 
-    def _read_pplane(self, data: bytes, n: int) -> int:
+    def read_pplane(self, data: bytes, n: int) -> int:
         """
         RECORD – PPLANE(3801,38,979)
         Word Name Type Description
@@ -2871,7 +3167,7 @@ class EPT:
         op2.card_count['PLPLANE'] = nentries
         return n
 
-    def _read_plplane(self, data: bytes, n: int) -> int:
+    def read_plplane(self, data: bytes, n: int) -> int:
         """
         PLPLANE(4606,46,375)
 
@@ -2910,7 +3206,7 @@ class EPT:
         op2.card_count['PLPLANE'] = nentries
         return n
 
-    def _read_plsolid(self, data: bytes, n: int) -> int:
+    def read_plsolid(self, data: bytes, n: int) -> int:
         """
         MSC 2016
         1 PID I Property identification number
@@ -2944,7 +3240,7 @@ class EPT:
         op2.card_count['PLSOLID'] = nentries
         return n
 
-    def _read_pmass(self, data: bytes, n: int) -> int:
+    def read_pmass(self, data: bytes, n: int) -> int:
         """
         PMASS(402,4,44) - the marker for Record 48
         """
@@ -2963,7 +3259,7 @@ class EPT:
             n += ntotal
         return n
 
-    def _read_prod(self, data: bytes, n: int) -> int:
+    def read_prod(self, data: bytes, n: int) -> int:
         """
         PROD(902,9,29) - the marker for Record 49
         """
@@ -2983,7 +3279,7 @@ class EPT:
         op2.card_count['PROD'] = nproperties
         return n
 
-    def _read_pshear(self, data: bytes, n: int) -> int:
+    def read_pshear(self, data: bytes, n: int) -> int:
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
@@ -3003,7 +3299,7 @@ class EPT:
         op2.card_count['PSHEAR'] = nproperties
         return n
 
-    def _read_pshell(self, data: bytes, n: int) -> int:
+    def read_pshell(self, data: bytes, n: int) -> int:
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
@@ -3041,7 +3337,7 @@ class EPT:
             op2.card_count['PSHELL'] = nproperties
         return n
 
-    def _read_pcompls(self, data: bytes, n: int) -> int:
+    def read_pcompls(self, data: bytes, n: int) -> int:
         """
         1 Each PCOMPLS creates a fake PSOLID with MID from its first ply, see ifp6nlm.F
         2 # of , see also ta0n2m.F
@@ -3169,7 +3465,7 @@ class EPT:
         op2.log.error('representing PCOMPLS (solid composite) as PCOMP (shell composite)')
         return n
 
-    def _read_psolid(self, data: bytes, n: int) -> int:
+    def read_psolid(self, data: bytes, n: int) -> int:
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
@@ -3208,7 +3504,7 @@ class EPT:
 # PTRIA6
 # PTSHELL
 
-    def _read_ptube(self, data: bytes, n: int) -> int:
+    def read_ptube(self, data: bytes, n: int) -> int:
         """
         PTUBE(1602,16,30) - the marker for Record 56
 
@@ -3236,7 +3532,7 @@ class EPT:
         op2.card_count['PTUBE'] = nproperties
         return n
 
-    def _read_pset(self, data: bytes, n: int) -> int:
+    def read_pset(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         struct_5i4si = Struct(op2._endian + b'5i4si')
         nentries = 0
@@ -3265,7 +3561,7 @@ class EPT:
         op2.card_count['PSET'] = nentries
         return n
 
-    def _read_pval(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_pval(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         PVAL(10201,102,400)
 
@@ -3316,7 +3612,7 @@ class EPT:
         op2.card_count['PVAL'] = nentries
         return n
 
-    def _read_pvisc(self, data: bytes, n: int) -> int:
+    def read_pvisc(self, data: bytes, n: int) -> int:
         """PVISC(1802,18,31) - the marker for Record 39"""
         op2: OP2Geom = self.op2
         struct_i2f = Struct(op2._endian + b'i2f')
@@ -3335,7 +3631,7 @@ class EPT:
 
 # PWELD
 # PWSEAM
-    def _read_view(self, data: bytes, n: int) -> int:
+    def read_view(self, data: bytes, n: int) -> int:
         """
         RECORD – VIEW(2606,26,289)
 
@@ -3359,17 +3655,24 @@ class EPT:
             iview, icavity, shade, nbeta, ngamma, dislin = out
             if shade == 1:
                 shade_str = 'NONE'
-            else:
+            elif shade == 2:
+                shade_str = 'KSHD'
+            elif shade == 3:
+                shade_str = 'KBSHD'
+            elif shade == 4:
+                shade_str = 'BOTH'
+            else:  # pragma: no cover
                 raise NotImplementedError(shade)
             view = op2.add_view(
                 iview, icavity,
                 shade=shade_str, nbeta=nbeta, ngamma=ngamma,
                 dislin=dislin)
+            #print(view)
             n += ntotal
         op2.card_count['VIEW'] = ncards
         return len(data)
 
-    def _read_view3d(self, data: bytes, n: int) -> int:
+    def read_view3d(self, data: bytes, n: int) -> int:
         """
         RECORD – VIEW3D(3002,30,415)
 

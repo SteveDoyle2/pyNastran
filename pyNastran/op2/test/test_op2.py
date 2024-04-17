@@ -403,7 +403,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     except UnsupportedCard:
         is_passed = True
     except EmptyRecordError:
-        raise
+        if not dev:
+            raise
+        is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)

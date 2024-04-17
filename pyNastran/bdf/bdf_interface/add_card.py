@@ -2977,10 +2977,15 @@ class Add3dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_pcomps(self, pid, global_ply_ids, mids, thicknesses, thetas,
-                   cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
+    def add_pcomps(self, pid: int,
+                   global_ply_ids: list[int],
+                   mids: list[int],
+                   thicknesses: list[float],
+                   thetas: list[float],
+                   cordm: int=0, psdir: int=13, sb=None, nb=None,
+                   tref: float=0.0, ge: float=0.0,
                    failure_theories=None, interlaminar_failure_theories=None,
-                   souts=None, comment='') -> PCOMPS:
+                   souts: list[str]=None, comment: str='') -> PCOMPS:
         """Creates a PCOMPS card"""
         prop = PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
                       cordm, psdir, sb, nb, tref, ge,

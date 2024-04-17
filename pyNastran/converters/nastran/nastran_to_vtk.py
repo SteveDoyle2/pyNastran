@@ -6,6 +6,7 @@ from typing import Union, TYPE_CHECKING
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkIOLegacy import vtkUnstructuredGridWriter
 
 from cpylog import SimpleLogger
 
@@ -226,7 +227,7 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
                    op2_filename: Union[str, OP2],
                    vtu_filename: str,
                    log_level: str='error',
-                   compression_level: int=5) -> None:
+                   compression_level: int=5) -> vtkUnstructuredGrid:
     """
     Converts a Natsran geometry/results to vtk *.vtu
 
@@ -237,12 +238,20 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
     op2_filename: str, OP2, OP2Geom
         the results; can be '' for no op2
     vtu_filename : str
-        the vtk output filename; expected to be a *.vtu file
+        the vtk output filename; expected to be a:
+         - *.vtu file (preferred; xml file)
+         - *.vtk file (binary legacy format)
     log_level : str; default='warning'
         'debug', 'info', 'warning', 'error'
     compression_level : int; default=5
+        applies only to vtu
         LZMA compression level (0-9)
         5 is balanced performance and used by Paraview
+
+    Returns
+    -------
+    vtk_ugrid : vtkUnstructuredGrid
+        the unstructured grid object and all the results
 
     Examples
     --------
@@ -261,15 +270,33 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
     Note
     ----
     Kind of a hack, but it will always work assuming the GUI works
+
+    Legacy - use *.vtk
+    It’s a serial formats that are easy to read and write either
+    by hand or programmatically.
+
+    XML - use *.vtu (preferred)
+    More flexible but more complex than the legacy file format, it
+    supports random access, parallel I/O, and portable data compression
+    and are preferred to the serial VTK file formats whenever possible.
+
+    VTKHDF - not supported
+    This is a file format using the same concepts as the XML formats
+    described above but relying on HDF5 for actual storage. It is
+    simpler than the XML. It provides good I/O performance as well as
+    robust and flexible parallel I/O capabilities and may to replace
+    others file formats once it will be complete. It can be read/written
+    using either hdf5 directly or the vtkhdf implementation in VTK.
+
     """
+    filename = str(vtu_filename).lower()
+    assert filename.endswith(('.vtu', '.vtk')), vtu_filename
+
     gui = NastranGUI()
     gui.create_secondary_actors = False
 
     log = gui.log
-    log.level = log_level # 'error'
-    log.level = log_level # 'warning'
-    #log.set_level('error')
-    #log.set_level('warning')
+    log.level = log_level
 
     gui.load_nastran_geometry(bdf_filename)
     vtk_ugrid = gui.grid
@@ -289,12 +316,23 @@ def nastran_to_vtk(bdf_filename: Union[str, BDF],
     #for coord_id, axes_actor in test.axes.items():
         #coords_branch.SetBlock(0, axes)
 
-    writer = vtkXMLUnstructuredGridWriter()
-    writer.SetFileName(vtu_filename)
-    writer.SetCompressorTypeToLZMA()
-    writer.SetCompressionLevel(compression_level)
-    writer.SetInputData(vtk_ugrid)
-    out = writer.Write()
+    if filename.endswith('.vtk'):
+        writer = vtkUnstructuredGridWriter()
+        writer.SetFileName(str(vtu_filename)+'.vtk')
+        writer.SetFileTypeToBinary()
+        writer.SetInputData(vtk_ugrid)
+        out = writer.Write()
+    elif filename.endswith('.vtu'):
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(vtu_filename)
+        writer.SetCompressorTypeToLZMA()
+        writer.SetCompressionLevel(compression_level)
+        writer.SetInputData(vtk_ugrid)
+        out = writer.Write()
+    else:  # pragma: no cover
+        raise ValueError(f'expected vtu/vtk file; filename={filename!r}')
+    assert out == 1, out
+
     #print('done', out)
 
 
