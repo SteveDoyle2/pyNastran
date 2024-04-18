@@ -45,6 +45,9 @@ class EPT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_ept_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.ept_map, data, ndata)
 
@@ -129,12 +132,14 @@ class EPT:
 
             (9601, 96, 691): ['PJOINT', self._read_fake],
 
-            (9701, 97, 692): ['PJOINT2', self._read_fake],
-            (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
             (8901, 89, 905): ['PSOLCZ', self.read_psolcz],
+            (9701, 97, 692): ['PJOINT2', self._read_fake],
             (9801, 98, 698): ['DESC', self.read_desc],
             (12901, 129, 989): ['PDISTB', self._read_fake],
+            (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
             (17302, 173, 971): ['PCOMPFQ', self._read_fake],
+            (14101, 141, 668): ['PSEAM', self._read_fake],
+            (14402, 144, 690): ['???', self.read_stop],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],

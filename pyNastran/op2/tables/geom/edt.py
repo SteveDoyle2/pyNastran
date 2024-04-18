@@ -35,6 +35,9 @@ class EDT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_edt_4(self, data: bytes, ndata: int):
         """
         3.21 EDT
@@ -137,6 +140,9 @@ class EDT:
             (9004, 90, 619): ['MASSSET', self.read_massset],
             (10104, 101, 683): ['SPBLND1', self.read_sblnd1],
             (10004, 100, 682): ['SPLINRB', self._read_fake],
+            (10404, 104, 686): ['???', self.read_stop],
+            (12804, 128, 945): ['???', self.read_stop],
+
         }
     def read_sblnd1(self, data: bytes, n: int) -> int:
         """

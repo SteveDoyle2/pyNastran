@@ -178,6 +178,9 @@ class GEOM2:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_geom2_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.geom2_map, data, ndata)
 
@@ -566,6 +569,11 @@ class GEOM2:
             #(15801, 158, 9955): ['???', self._read_fake],
             (17608, 176, 993): ['CPYRAM', self.read_cpyram15],
             (8408, 84, 994): ['CPYRAM', self.read_cpyram15],
+
+            #C:\MSC.Software\msc_nastran_runs\sl_1blk.op2
+           (11908, 119, 469): ['CSEAM-a', self._read_fake],
+           (15701, 157, 639): ['CSEAM-b', self._read_fake],
+
         }
 
     def read_cpyram15(self, data: bytes, n: int) -> int:
@@ -581,7 +589,6 @@ class GEOM2:
                 op2.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13) = out
-            print(out)
 
             data_in = [eid, pid, g1, g2, g3, g4, g5]
             big_nodes = [g6, g7, g8, g9, g10, g11, g12, g13]
@@ -2121,7 +2128,7 @@ class GEOM2:
         """
         CHEXPR(7409,74,9991) - the marker for Record 48
         """
-        return self._read_chexa(data, n)
+        return self.read_chexa(data, n)
 
     def read_cmass1(self, data: bytes, n: int) -> int:
         """

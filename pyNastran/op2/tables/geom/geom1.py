@@ -30,6 +30,17 @@ class GEOM1:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:  # pragma: no cover
+        """
+        ints    = (1000, 0, 0, 0, 0, 0, 0, 0,               20.0, 100, 30.0, 120, 60.0, 130, -1, -1,
+                   2000, 0, 0, 0, 0, 0, 0, 0, 1101004800, 200, 1106247680, 220, 1114636288, 230, -1, -1)
+        floats  = (1000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 100, 30.0, 120, 60.0, 130, -1, -1, 2.802596928649634e-42, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 2.802596928649634e-43, 30.0, 3.0828566215145976e-43, 60.0, 3.2229864679470793e-43, nan, nan)
+        """
+        op2: OP2Geom = self.op2
+        op2.show_data(data[n:])
+        raise RuntimeError()
+        #return len(data)
+
     def read_geom1_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.geom1_map, data, ndata)
 

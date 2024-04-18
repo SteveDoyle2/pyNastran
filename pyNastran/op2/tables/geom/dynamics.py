@@ -31,56 +31,59 @@ class DYNAMICS(GeomCommon):
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.dynamics_map = {
-            (5307, 53, 379) : ['ACSRCE', self._read_acsrce], # 1
-            (27, 17, 182): ['DAREA', self._read_darea],  # 2
+            (5307, 53, 379) : ['ACSRCE', self.read_acsrce], # 1
+            (27, 17, 182): ['DAREA', self.read_darea],  # 2
 
-            (37, 18, 183): ['DELAY', self._read_delay],  # 3
-            (57, 5, 123): ['DLOAD', self._read_dload],  # 4
-            (77, 19, 184): ['DPHASE', self._read_dphase],  # 5
-            (107, 1, 86): ['EIGB', self._read_eigb],   # 7
-            (207, 2, 87): ['EIGC', self._read_eigc],   # 8
-            (257, 4, 158): ['EIGP', self._read_eigp],   # 9
-            (307, 3, 85): ['EIGR', self._read_eigr],   # 10
+            (37, 18, 183): ['DELAY', self.read_delay],  # 3
+            (57, 5, 123): ['DLOAD', self.read_dload],  # 4
+            (77, 19, 184): ['DPHASE', self.read_dphase],  # 5
+            (107, 1, 86): ['EIGB', self.read_eigb],   # 7
+            (207, 2, 87): ['EIGC', self.read_eigc],   # 8
+            (257, 4, 158): ['EIGP', self.read_eigp],   # 9
+            (307, 3, 85): ['EIGR', self.read_eigr],   # 10
 
-            (308, 8, 348): ['EIGRL', self._read_eigrl],  # 11
-            (707, 7, 124): ['EPOINT', self._read_epoint],  # 12
-            (1307, 13, 126): ['FREQ', self._read_freq],   # 13
-            (1007, 10, 125): ['FREQ1', self._read_freq1],  # 14
-            (1107, 11, 166): ['FREQ2', self._read_freq2],  # 15
-            (1407, 14, 39): ['FREQ3', self._read_freq3],  # 16
-            (1507, 15, 40): ['FREQ4', self._read_freq4],  # 17
-            (1607, 16, 41): ['FREQ5', self._read_freq5],  # 18
+            (308, 8, 348): ['EIGRL', self.read_eigrl],  # 11
+            (707, 7, 124): ['EPOINT', self.read_epoint],  # 12
+            (1307, 13, 126): ['FREQ', self.read_freq],   # 13
+            (1007, 10, 125): ['FREQ1', self.read_freq1],  # 14
+            (1107, 11, 166): ['FREQ2', self.read_freq2],  # 15
+            (1407, 14, 39): ['FREQ3', self.read_freq3],  # 16
+            (1507, 15, 40): ['FREQ4', self.read_freq4],  # 17
+            (1607, 16, 41): ['FREQ5', self.read_freq5],  # 18
 
-            (3707, 37, 556) : ['NLRGAP', self._read_nrlgap], # 19
+            (3707, 37, 556) : ['NLRGAP', self.read_nrlgap], # 19
 
-            (3107, 31, 127): ['NOLIN1', self._read_nolin1], # 20
-            (3207, 32, 128): ['NOLIN2', self._read_nolin2], # 21
+            (3107, 31, 127): ['NOLIN1', self.read_nolin1], # 20
+            (3207, 32, 128): ['NOLIN2', self.read_nolin2], # 21
             #(3207, 33, 129): ['NOLIN3', self._read_fake], # 22
-            (3307, 33, 129) : ['NOLIN3', self._read_nolin3],
-            (3407, 34, 130): ['NOLIN4', self._read_nolin4], # 23
-            (2107, 21, 195): ['RANDPS', self._read_randps], # 24
-            (2207, 22, 196): ['RANDT1', self._read_randt1], # 25
-            (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
-            (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
+            (3307, 33, 129) : ['NOLIN3', self.read_nolin3],
+            (3407, 34, 130): ['NOLIN4', self.read_nolin4], # 23
+            (2107, 21, 195): ['RANDPS', self.read_randps], # 24
+            (2207, 22, 196): ['RANDT1', self.read_randt1], # 25
+            (5107, 51, 131): ['RLOAD1', self.read_rload1],  # 26
+            (5207, 52, 132): ['RLOAD2', self.read_rload2],  # 27
             (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
-            (8210, 82, 599): ['ROTORD', self._read_rotord],  # 29
-            (8410, 84, 600): ['ROTORG', self._read_rotorg],  # 30
+            (8210, 82, 599): ['ROTORD', self.read_rotord],  # 29
+            (8410, 84, 600): ['ROTORG', self.read_rotorg],  # 30
             (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
-            (6207, 62, 136): ['TF', self._read_tf],  # 32
-            (6607, 66, 137): ['TIC', self._read_tic],  # 33
-            (7107, 71, 138): ['TLOAD1', self._read_tload1],  # 37
-            (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
-            (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
-            (17500, 175, 618): ['TSTEP', self._read_tstep1],
+            (6207, 62, 136): ['TF', self.read_tf],  # 32
+            (6607, 66, 137): ['TIC', self.read_tic],  # 33
+            (7107, 71, 138): ['TLOAD1', self.read_tload1],  # 37
+            (7207, 72, 139): ['TLOAD2', self.read_tload2],  # 38
+            (8307, 83, 142): ['TSTEP', self.read_tstep],  # 39
+            (17500, 175, 618): ['TSTEP', self.read_tstep1],
 
-            (10701, 107, 117) : ['RGYRO', self._read_rgyro],
+            (10701, 107, 117) : ['RGYRO', self.read_rgyro],
             (10801, 108, 242) : ['ROTORG', self._read_fake],
-            (3807, 38, 505) : ['NLRSFD', self._read_nlrsfd],
-            (4807, 48, 306) : ['DYNRED', self._read_dynred],
-            (11001, 110, 310) : ['RSPINT', self._read_rspint],
+            (3807, 38, 505) : ['NLRSFD', self.read_nlrsfd],
+            (4807, 48, 306) : ['DYNRED', self.read_dynred],
+            (11001, 110, 310) : ['RSPINT', self.read_rspint],
             (10901, 109, 260) : ['RSPINR', self._read_fake],
             (11101, 111, 368) : ['UNBALNC', self._read_fake],
 
@@ -88,7 +91,7 @@ class DYNAMICS(GeomCommon):
             (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self._read_fake],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
-            (3201, 24, 54) : ['RCROSS', self._read_rcross],
+            (3201, 24, 54) : ['RCROSS', self.read_rcross],
 
             (9010, 90, 569): ['CBEAR', self._read_fake],
 
@@ -98,12 +101,12 @@ class DYNAMICS(GeomCommon):
             (9010, 90, 569): ['CBEAR', self._read_fake],
 
             (9407, 94, 659): ['ACADAPT', self._read_fake],
-            (11701, 117, 656): ['CAMPBLL', self._read_campbll],
+            (11701, 117, 656): ['CAMPBLL', self.read_campbll],
 
             (9607, 96, 660): ['ACORDER', self._read_fake],
             (2601, 26, 58): ['FRFFLEX', self._read_fake],
             (3501, 35, 56): ['RCROSSC', self._read_fake],
-            (5807, 59, 653): ['ACPLNW', self._read_acplnw],
+            (5807, 59, 653): ['ACPLNW', self.read_acplnw],
             (2807, 28, 79): ['FRFOMAP', self._read_fake],
             (7307, 73, 647): ['TLOAD3', self._read_fake],
             (5407, 54, 649): ['ALOAD', self._read_fake],
@@ -111,6 +114,7 @@ class DYNAMICS(GeomCommon):
             (12001, 120, 661): ['NLFREQ1', self.read_nlfreq1],
             (11801, 118, 657): ['NLHARM', self._read_fake],
             (14207, 142, 1001): ['???', self._read_fake],
+            (13207, 132, 697): ['???', self.read_stop],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
@@ -127,7 +131,7 @@ class DYNAMICS(GeomCommon):
         op2.log.warning('geom skipping NLFREQ1')
         return len(data)
 
-    def _read_campbll(self, data: bytes, n: int) -> int:
+    def read_campbll(self, data: bytes, n: int) -> int:
         """
         CAMPBLL
         CAMPBLL CID    VPARM DDVALID TYPE
@@ -179,7 +183,7 @@ class DYNAMICS(GeomCommon):
         asdf
         return len(data)
 
-    def _read_acplnw(self, data: bytes, n: int) -> int:
+    def read_acplnw(self, data: bytes, n: int) -> int:
         """
         Record - ACPLNW(5807,59,653)
 
@@ -239,7 +243,7 @@ class DYNAMICS(GeomCommon):
             #loads.append(acsrce)
         return n # , loads
 
-    def _read_acsrce(self, data: bytes, n: int) -> int:
+    def read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
@@ -329,7 +333,7 @@ class DYNAMICS(GeomCommon):
             loads.append(acsrce)
         return n, loads
 
-    def _read_darea(self, data: bytes, n: int) -> int:
+    def read_darea(self, data: bytes, n: int) -> int:
         """
         DAREA(27,17,182) - the marker for Record 2
 
@@ -353,7 +357,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_delay(self, data: bytes, n: int) -> int:
+    def read_delay(self, data: bytes, n: int) -> int:
         """
         DELAY(37,18,183) - Record 3
 
@@ -379,7 +383,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dload(self, data: bytes, n: int) -> int:
+    def read_dload(self, data: bytes, n: int) -> int:
         """
         DLOAD(57,5,123) - Record 4
 
@@ -426,7 +430,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('DLOAD', nentries)
         return len(data)
 
-    def _read_dphase(self, data: bytes, n: int) -> int:
+    def read_dphase(self, data: bytes, n: int) -> int:
         """
         DPHASE(77,19,184) - Record 5
 
@@ -452,7 +456,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dynred(self, data: bytes, n: int) -> int:
+    def read_dynred(self, data: bytes, n: int) -> int:
         """
         DYNRED(4807,48,306)
 
@@ -498,7 +502,7 @@ class DYNAMICS(GeomCommon):
         return n
 
 
-    def _read_eigb(self, data: bytes, n: int) -> int:
+    def read_eigb(self, data: bytes, n: int) -> int:
         """EIGB(107,1,86) - Record 7
 
         NX
@@ -543,7 +547,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigc(self, data: bytes, n: int) -> int:
+    def read_eigc(self, data: bytes, n: int) -> int:
         """
         EIGC(207,2,87) - Record 8
 
@@ -721,7 +725,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EIGC', nentries)
         return len(data)
 
-    def _read_eigp(self, data: bytes, n: int) -> int:
+    def read_eigp(self, data: bytes, n: int) -> int:
         """
         EIGP(257,4,158) - Record 9
 
@@ -747,7 +751,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigr(self, data: bytes, n: int) -> int:
+    def read_eigr(self, data: bytes, n: int) -> int:
         """
         EIGR(307,3,85) - Record 10
 
@@ -788,7 +792,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EIGR', nentries)
         return n
 
-    def _read_eigrl(self, data: bytes, n: int) -> int:
+    def read_eigrl(self, data: bytes, n: int) -> int:
         """
         EIGRL(308,8,348) - Record 11
 
@@ -899,7 +903,7 @@ class DYNAMICS(GeomCommon):
             assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
-    def _read_epoint(self, data: bytes, n: int) -> int:
+    def read_epoint(self, data: bytes, n: int) -> int:
         """EPOINT(707,7,124) - Record 12"""
         op2: OP2Geom = self.op2
         npoints = (len(data) - n) // 4
@@ -912,7 +916,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EPOINT', count_num=npoints)
         return len(data)
 
-    def _read_freq(self, data: bytes, n: int) -> int:
+    def read_freq(self, data: bytes, n: int) -> int:
         """FREQ(1307,13,126) - Record 13"""
         op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
@@ -927,7 +931,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ', count_num=len(iminus1))
         return len(data)
 
-    def _read_freq1(self, data: bytes, n: int) -> int:
+    def read_freq1(self, data: bytes, n: int) -> int:
         """
         FREQ1(1007,10,125) - Record 14
 
@@ -954,7 +958,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ1', nentries)
         return n
 
-    def _read_freq2(self, data: bytes, n: int) -> int:
+    def read_freq2(self, data: bytes, n: int) -> int:
         """
         FREQ2(1107,11,166) - Record 15
 
@@ -979,7 +983,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ2', nentries)
         return n
 
-    def _read_freq3(self, data: bytes, n: int) -> int:
+    def read_freq3(self, data: bytes, n: int) -> int:
         """
         FREQ3(1407,14,39) - Record 16
 
@@ -1011,7 +1015,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ3', nentries)
         return n
 
-    def _read_freq4(self, data: bytes, n: int) -> int:
+    def read_freq4(self, data: bytes, n: int) -> int:
         """
         FREQ4(1507,15,40) - Record 17
 
@@ -1037,7 +1041,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ4', nentries)
         return n
 
-    def _read_freq5(self, data: bytes, n: int) -> int:
+    def read_freq5(self, data: bytes, n: int) -> int:
         """
         FREQ5(1607,16,41) - Record 18
 
@@ -1081,7 +1085,7 @@ class DYNAMICS(GeomCommon):
             #n += ntotal
         #op2.increase_card_count('FREQ5', nentries)
 
-    def _read_nrlgap(self, data: bytes, n: int) -> int:
+    def read_nrlgap(self, data: bytes, n: int) -> int:
         r"""
         C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
         NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
@@ -1106,7 +1110,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return len(data)
 
-    def _read_nlrsfd(self, data: bytes, n: int) -> int:
+    def read_nlrsfd(self, data: bytes, n: int) -> int:
         """this card is faked..."""
         card_name = 'NLRSFD'
         card_obj = None
@@ -1257,7 +1261,7 @@ class DYNAMICS(GeomCommon):
         return n, []
 
 
-    def _read_nolin1(self, data: bytes, n: int) -> int:
+    def read_nolin1(self, data: bytes, n: int) -> int:
         """
         NOLIN1(3107,31,127)
 
@@ -1293,7 +1297,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN1', nentries)
         return n
 
-    def _read_nolin2(self, data: bytes, n: int) -> int:
+    def read_nolin2(self, data: bytes, n: int) -> int:
         """
         NOLIN2(3207,32,128)
 
@@ -1330,7 +1334,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN2', nentries)
         return n
 
-    def _read_nolin3(self, data: bytes, n: int) -> int:
+    def read_nolin3(self, data: bytes, n: int) -> int:
         """
         NOLIN3(3307,33,129)
 
@@ -1364,7 +1368,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN3', nentries)
         return n
 
-    def _read_nolin4(self, data: bytes, n: int) -> int:
+    def read_nolin4(self, data: bytes, n: int) -> int:
         """
         NOLIN4(3407,34,130)
 
@@ -1398,7 +1402,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN4', nentries)
         return n
 
-    def _read_randps(self, data: bytes, n: int) -> int:
+    def read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
@@ -1482,7 +1486,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RANDPS', nentries)
         return n, []
 
-    def _read_randt1(self, data: bytes, n: int) -> int:
+    def read_randt1(self, data: bytes, n: int) -> int:
         """
         RANDT1(2207,22,196)
 
@@ -1507,7 +1511,7 @@ class DYNAMICS(GeomCommon):
         op2.card_count['RANDT1'] = nentries
         return n
 
-    def _read_rload1(self, data: bytes, n: int) -> int:
+    def read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
@@ -1604,7 +1608,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_rload2(self, data: bytes, n: int) -> int:
+    def read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -1702,7 +1706,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_rgyro(self, data: bytes, n: int) -> int:
+    def read_rgyro(self, data: bytes, n: int) -> int:
         """this card is faked..."""
         card_name = 'RGYRO'
         card_obj = None
@@ -1798,7 +1802,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RGYRO', nentries)
         return n, cards
 
-    def _read_rotord(self, data: bytes, n: int) -> int:
+    def read_rotord(self, data: bytes, n: int) -> int:
         """
         ROTORD(8210, 82, 599)
 
@@ -1883,7 +1887,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('ROTORD', nentries)
         return n
 
-    def _read_rotorg(self, data: bytes, n: int) -> int:
+    def read_rotorg(self, data: bytes, n: int) -> int:
         """
         ROTORG(8410, 84, 600)
 
@@ -1911,7 +1915,7 @@ class DYNAMICS(GeomCommon):
 
 #RSPINR
 
-    def _read_rspint(self, data: bytes, n: int) -> int:
+    def read_rspint(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
@@ -2080,7 +2084,7 @@ class DYNAMICS(GeomCommon):
 
 #SEQEP(5707,57,135)
 
-    def _read_tf(self, data: bytes, n: int) -> int:
+    def read_tf(self, data: bytes, n: int) -> int:
         """TF"""
         op2: OP2Geom = self.op2
         # subtract of the header (sid, nid, component, b0, b1, b2)
@@ -2129,7 +2133,7 @@ class DYNAMICS(GeomCommon):
             n = n3
         return n
 
-    def _read_tic(self, data: bytes, n: int) -> int:
+    def read_tic(self, data: bytes, n: int) -> int:
         """
         TIC(6607,66,137)
 
@@ -2155,7 +2159,7 @@ class DYNAMICS(GeomCommon):
         return n
 
 #TIC3
-    def _read_tload1(self, data: bytes, n: int) -> int:
+    def read_tload1(self, data: bytes, n: int) -> int:
         """
         common method for reading NX/MSC TLOAD1
 
@@ -2353,7 +2357,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tload2(self, data: bytes, n: int) -> int:
+    def read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -2462,7 +2466,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tstep(self, data: bytes, n: int) -> int:
+    def read_tstep(self, data: bytes, n: int) -> int:
         """TSTEP(8307,83,142) - Record 38
 
         Word Name Type Description
@@ -2511,7 +2515,7 @@ class DYNAMICS(GeomCommon):
             op2.add_tstep(sid, ntimes, dt, no)
         return len(data)
 
-    def _read_tstep1(self, data: bytes, n: int) -> int:
+    def read_tstep1(self, data: bytes, n: int) -> int:
         """
         Record - TSTEP1(17500,175,618)
 
@@ -2531,7 +2535,7 @@ class DYNAMICS(GeomCommon):
 
 #UNBALNC
 
-    def _read_rcross(self, data: bytes, n: int) -> int:
+    def read_rcross(self, data: bytes, n: int) -> int:
         """
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\rcross01.op2

@@ -31,6 +31,9 @@ class MPT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_mpt_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.mpt_map, data, ndata)
 
@@ -95,7 +98,7 @@ class MPT:
             (15703, 157, 975): ['MAT1F', self._read_fake],
             (15903, 159, 977): ['MAT2F', self._read_fake],
             (16303, 163, 981): ['MAT2SP', self._read_fake],
-
+            (12000, 120, 108): ['CONTRLT', self._read_fake],
         }
 
     def add_op2_material(self, mat):

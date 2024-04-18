@@ -39,6 +39,9 @@ class GEOM4(GeomCommon):
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_geom4_4(self, data: bytes, ndata: int) -> int:
         """reads the GEOM4/GEOM4OLD table"""
         return self.op2._read_geom_4(self.geom4_map, data, ndata)
@@ -152,6 +155,8 @@ class GEOM4(GeomCommon):
             (12101, 121, 696) : ['JCON', self._read_fake],
             #(4901, 49, 320017) : ['???', self._read_fake],
             #(4901, 49, 320017) : ['???', self._read_fake],
+
+            (12100, 121, 259) : ['STOP', self.read_stop],
         }
 
     def _read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover

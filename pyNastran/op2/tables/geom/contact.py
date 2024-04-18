@@ -25,6 +25,9 @@ class CONTACT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def read_contact_4(self, data: bytes, ndata: int):
         """
         reads the CONTACT/CONTACTS table
@@ -107,11 +110,15 @@ class CONTACT:
             (4724, 47, 889) : ['BCBODY1', self._read_fake],
             (4824, 48, 890) : ['BCBDPRP', self._read_fake],
             (6724, 67, 948) : ['BCSCAP', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
+            (7424, 74, 997) : ['???', self.read_stop],
+            (4924, 49, 891) : ['???', self.read_stop],
+            (5024, 50, 892) : ['???', self.read_stop],
+            (5224, 52, 894) : ['???', self.read_stop],
+            (5424, 54, 896) : ['???', self.read_stop],
+            (5724, 57, 899) : ['???', self.read_stop],
+
+            (7324, 73, 996) : ['???', self.read_stop],
+            (5324, 53, 895) : ['???', self.read_stop],
         }
 
     #def _read_924(self, data: bytes, n: int) -> int:

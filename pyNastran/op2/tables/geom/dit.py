@@ -33,6 +33,9 @@ class DIT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
+
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.dit_map = {
@@ -65,25 +68,7 @@ class DIT:
             (1605, 16, 117) : ['TABLED6', self._read_fake],
             (4101, 41, 642) : ['TABLED5', self.read_tabled5],
             #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
         }
-
-    def read_stop(self, data: bytes, n: int) -> int:  # pragma: no cover
-        """
-        ints    = (1000, 0, 0, 0, 0, 0, 0, 0,               20.0, 100, 30.0, 120, 60.0, 130, -1, -1,
-                   2000, 0, 0, 0, 0, 0, 0, 0, 1101004800, 200, 1106247680, 220, 1114636288, 230, -1, -1)
-        floats  = (1000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 100, 30.0, 120, 60.0, 130, -1, -1, 2.802596928649634e-42, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 2.802596928649634e-43, 30.0, 3.0828566215145976e-43, 60.0, 3.2229864679470793e-43, nan, nan)
-        """
-        op2: OP2Geom = self.op2
-        op2.show_data(data[n:])
-        asdf
-        return len(data)
 
     def _read_tabdmp1(self, data: bytes, n: int) -> int:
         """
