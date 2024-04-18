@@ -110,20 +110,19 @@ class CONTACT:
             (4724, 47, 889) : ['BCBODY1', self._read_fake],
             (4824, 48, 890) : ['BCBDPRP', self._read_fake],
             (6724, 67, 948) : ['BCSCAP', self._read_fake],
-            (7424, 74, 997) : ['???', self.read_stop],
-            (4924, 49, 891) : ['???', self.read_stop],
-            (5024, 50, 892) : ['???', self.read_stop],
-            (5224, 52, 894) : ['???', self.read_stop],
-            (5424, 54, 896) : ['???', self.read_stop],
-            (5724, 57, 899) : ['???', self.read_stop],
+            (4924, 49, 891) : ['???', self._read_fake],
+            (5024, 50, 892) : ['BCRGSRF', self._read_fake],
+            (5424, 54, 896) : ['BCNURBS', self._read_fake],
+            (5724, 57, 899) : ['BCTRIM', self._read_fake],
+            (7324, 73, 996) : ['BCSURF', self._read_fake],
+            (7424, 74, 997) : ['BSURF', self._read_fake],
+            (3824, 38, 742) : ['BCBMRAD', self._read_fake],
+            (7224, 72, 995) : ['BCGRID', self._read_fake],
+            (20032, 32, 496) : ['GMNURB', self._read_fake],
 
-            (7324, 73, 996) : ['???', self.read_stop],
+            (5224, 52, 894) : ['???', self.read_stop],
             (5324, 53, 895) : ['???', self.read_stop],
         }
-
-    #def _read_924(self, data: bytes, n: int) -> int:
-        #self.show_data(data[n:])
-        #sds
 
     def _read_amlreg(self, data: bytes, n: int) -> int:
         """

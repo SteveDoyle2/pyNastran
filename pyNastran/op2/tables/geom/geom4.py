@@ -50,86 +50,86 @@ class GEOM4(GeomCommon):
         GeomCommon.__init__(self)
         self.op2 = op2
         self.geom4_map = {
-            (5561, 76, 215): ['ASET', self._read_aset],          # record 1
-            (5571, 77, 216): ['ASET1', self._read_aset1],        # record 2
-            (10200, 102, 473): ['BNDGRID', self._read_bndgrid],  # record 3  - not done
+            (5561, 76, 215): ['ASET', self.read_aset],          # record 1
+            (5571, 77, 216): ['ASET1', self.read_aset1],        # record 2
+            (10200, 102, 473): ['BNDGRID', self.read_bndgrid],  # record 3  - not done
 
-            (110, 1, 311): ['BSET', self._read_bset],            # record 5  - not done
-            (210, 2, 312): ['BSET1', self._read_bset1],          # record 6  - not done
-            (310, 3, 313): ['CSET', self._read_cset],            # record 7  - not done
-            (410, 4, 314): ['CSET1', self._read_cset1],          # record 8  - not done
+            (110, 1, 311): ['BSET', self.read_bset],            # record 5  - not done
+            (210, 2, 312): ['BSET1', self.read_bset1],          # record 6  - not done
+            (310, 3, 313): ['CSET', self.read_cset],            # record 7  - not done
+            (410, 4, 314): ['CSET1', self.read_cset1],          # record 8  - not done
 
-            (1510, 15, 328): ['CYAX', self._read_cyax],          # record 9  - not done
-            (5210, 52, 257): ['CYJOIN', self._read_cyjoin],      # record 10 - not done
-            (1610, 16, 329) : ['CYSUP', self._read_cysup],       # record 11 - not done
-            (1710, 17, 330): ['CYSYM', self._read_cysym],        # record 12 - not done
-            (8801, 88, 9022) : ['EGENDT', self._read_egendt],    # record 13 - not done (NX)
-            (9001, 90, 9024): ['FCENDT', self._read_fcendt],     # record 14 - not done (NX)
-            (8001, 80, 395): ['GMBC', self._read_gmbc],          # record 15 - not done
-            (7801, 78, 393): ['GMSPC', self._read_gmspc],        # record 16 - not done
+            (1510, 15, 328): ['CYAX', self.read_cyax],          # record 9  - not done
+            (5210, 52, 257): ['CYJOIN', self.read_cyjoin],      # record 10 - not done
+            (1610, 16, 329) : ['CYSUP', self.read_cysup],       # record 11 - not done
+            (1710, 17, 330): ['CYSYM', self.read_cysym],        # record 12 - not done
+            (8801, 88, 9022) : ['EGENDT', self.read_egendt],    # record 13 - not done (NX)
+            (9001, 90, 9024): ['FCENDT', self.read_fcendt],     # record 14 - not done (NX)
+            (8001, 80, 395): ['GMBC', self.read_gmbc],          # record 15 - not done
+            (7801, 78, 393): ['GMSPC', self.read_gmspc],        # record 16 - not done
             #: ['', self._read_fake],
 
 
             #(4901, 49, 420017): ['', self._read_fake],    # record
-            (4901, 49, 420017) : ['MPC', self._read_mpc2],  # this theoretically shouldn't exist
-            (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17
-            (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18
-            (5001, 50, 15) : ['OMIT', self._read_omit],           # record 19 - not done
-            (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20
-            (510, 5, 315) : ['QSET', self._read_qset],            # record 21
-            (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22
+            (4901, 49, 420017) : ['MPC', self.read_mpc2],  # this theoretically shouldn't exist
+            (4901, 49, 17) : ['MPC', self.read_mpc],             # record 17
+            (4891, 60, 83) : ['MPCADD', self.read_mpcadd],       # record 18
+            (5001, 50, 15) : ['OMIT', self.read_omit],           # record 19 - not done
+            (4951, 63, 92) : ['OMIT1', self.read_omit1],         # record 20
+            (510, 5, 315) : ['QSET', self.read_qset],            # record 21
+            (610, 6, 316) : ['QSET1', self.read_qset1],          # record 22
 
-            (6601, 66, 292) : ['RBAR', self._read_rbar],          # record 23 - not done
-            (6801, 68, 294) : ['RBE1', self._read_rbe1],          # record 24 - not done
-            (6901, 69, 295) : ['RBE2', self._read_rbe2],          # record 25 - buggy
-            (7101, 71, 187) : ['RBE3', self._read_rbe3],          # record 26 - not done
-            (14201, 142, 652) : ['RBJOINT', self._read_rbjoint],  # record 27 - not done
-            (14301, 143, 653) : ['RBJSTIF', self._read_rbjstif],  # record 28 - not done
-            (1310, 13, 247) : ['RELEASE', self._read_release],    # record 29 - not done
-            (14101, 141, 640): ['RPNOM', self._read_rpnom],       # record 30 - not done
-            (6501, 65, 291): ['RROD', self._read_rrod],           # record 31 - not done
-            (7001, 70, 186): ['RSPLINE', self._read_rspline],     # record 32 - not done
-            (7201, 72, 398): ['RSSCON', self._read_rsscon],       # record 33 - not done
+            (6601, 66, 292) : ['RBAR', self.read_rbar],          # record 23 - not done
+            (6801, 68, 294) : ['RBE1', self.read_rbe1],          # record 24 - not done
+            (6901, 69, 295) : ['RBE2', self.read_rbe2],          # record 25 - buggy
+            (7101, 71, 187) : ['RBE3', self.read_rbe3],          # record 26 - not done
+            (14201, 142, 652) : ['RBJOINT', self.read_rbjoint],  # record 27 - not done
+            (14301, 143, 653) : ['RBJSTIF', self.read_rbjstif],  # record 28 - not done
+            (1310, 13, 247) : ['RELEASE', self.read_release],    # record 29 - not done
+            (14101, 141, 640): ['RPNOM', self.read_rpnom],       # record 30 - not done
+            (6501, 65, 291): ['RROD', self.read_rrod],           # record 31 - not done
+            (7001, 70, 186): ['RSPLINE', self.read_rspline],     # record 32 - not done
+            (7201, 72, 398): ['RSSCON', self.read_rsscon],       # record 33 - not done
             #: ['', self._read_fake],
             #: ['', self._read_fake],
             #: ['', self._read_fake],
-            (1110, 11, 321): ['SEQSET', self._read_seqset],      # record 40
-            (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 41
-            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 48 - buggy
+            (1110, 11, 321): ['SEQSET', self.read_seqset],      # record 40
+            (1210, 12, 322): ['SEQSET1', self.read_seqset1],    # record 41
+            (5110, 51, 256): ['SPCD', self.read_spcd],          # record 48 - buggy
 
             # these ones are not fully marked...
-            (5501, 55, 16): ['SPC', self._read_spc],             # record 44 - buggy
-            (5481, 58, 12): ['SPC1', self._read_spc1],           # record 45 - not done
-            (5491, 59, 13): ['SPCADD', self._read_spcadd],       # record 46 - not done
-            (5601, 56, 14): ['SUPORT', self._read_suport],       # record 59 - not done
-            (10100, 101, 472): ['SUPORT1', self._read_suport1],  # record 60 - not done
-            (2010, 20, 193) : ['USET', self._read_uset],         # Record 62
+            (5501, 55, 16): ['SPC', self.read_spc],             # record 44 - buggy
+            (5481, 58, 12): ['SPC1', self.read_spc1],           # record 45 - not done
+            (5491, 59, 13): ['SPCADD', self.read_spcadd],       # record 46 - not done
+            (5601, 56, 14): ['SUPORT', self.read_suport],       # record 59 - not done
+            (10100, 101, 472): ['SUPORT1', self.read_suport1],  # record 60 - not done
+            (2010, 20, 193) : ['USET', self.read_uset],         # Record 62
 
-            (6210, 62, 344): ['SPCOFF1', self._read_spcoff1],    # record
-            (2110, 21, 194) : ['USET1', self._read_uset1],  # record
-            (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
-            (910,   9, 319): ['SECSET', self._read_secset],  # record
-            (710,   7, 317): ['SEBSET', self._read_sebset],  # record
-            (810,   8, 318): ['SEBSET1', self._read_sebset1],  # record
+            (6210, 62, 344): ['SPCOFF1', self.read_spcoff1],    # record
+            (2110, 21, 194) : ['USET1', self.read_uset1],  # record
+            (1010, 10, 320): ['SECSET1', self.read_secset1],  # record
+            (910,   9, 319): ['SECSET', self.read_secset],  # record
+            (710,   7, 317): ['SEBSET', self.read_sebset],  # record
+            (810,   8, 318): ['SEBSET1', self.read_sebset1],  # record
 
-            (1810, 18, 334): ['SEUSET', self._read_seuset],  # record
-            (1910, 19, 335): ['SEUSET1', self._read_seuset1],  # record
+            (1810, 18, 334): ['SEUSET', self.read_seuset],  # record
+            (1910, 19, 335): ['SEUSET1', self.read_seuset1],  # record
 
             (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_fake],         # record
-            #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_seqset1b],         # record
-            (610, 6, 0): ['SESET/SEQSET1?', self._read_seseta],           # record
+            #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self.read_seqset1b],         # record
+            (610, 6, 0): ['SESET/SEQSET1?', self.read_seseta],           # record
             (5110, 51, 620256): ['SPCD?', self._read_fake],    # record
-            (5501, 55, 620016): ['SPC', self._read_spcb],    # record
+            (5501, 55, 620016): ['SPC', self.read_spcb],    # record
             (410, 4, 0): ['', self._read_fake],    # record
-            (6701, 67, 293): ['RTRPLT', self._read_rtrplt],    # record 34
+            (6701, 67, 293): ['RTRPLT', self.read_rtrplt],    # record 34
             (9801, 98, 79): ['', self._read_fake],  # record
             (9901, 99, 80): ['', self._read_fake],  # record
-            (12001, 120, 601) : ['BLTMPC', self._read_bltmpc],  # record (NX)
+            (12001, 120, 601) : ['BLTMPC', self.read_bltmpc],  # record (NX)
 
             # GEOM4705 - pre MSC 2001
-            (110, 1, 584): ['BNDFIX', self._read_bndfix],    # record 3 (NX)
-            (210, 2, 585): ['BNDFIX1', self._read_bndfix1],    # record 4 (NX)
-            (310, 3, 586) : ['BNDFREE', self._read_bndfree],  # record 5 (NX)
+            (110, 1, 584): ['BNDFIX', self.read_bndfix],    # record 3 (NX)
+            (210, 2, 585): ['BNDFIX1', self.read_bndfix1],    # record 4 (NX)
+            (310, 3, 586) : ['BNDFREE', self.read_bndfree],  # record 5 (NX)
 
             (9801, 98, 609) : ['RVDOF', self._read_fake],
             (9901, 99, 610) : ['RVDOF1', self._read_fake],
@@ -150,16 +150,19 @@ class GEOM4(GeomCommon):
             (12000, 120, 255) : ['???', self._read_fake],
 
             # ???
-            (4901, 49, 310017) : ['MPC-3', self._read_mpc],
+            (4901, 49, 310017) : ['MPC-3', self.read_mpc],
             (4901, 49, 320017) : ['???', self._read_fake],
             (12101, 121, 696) : ['JCON', self._read_fake],
             #(4901, 49, 320017) : ['???', self._read_fake],
             #(4901, 49, 320017) : ['???', self._read_fake],
 
-            (12100, 121, 259) : ['STOP', self.read_stop],
+            (12100, 121, 259) : ['RBAR1', self._read_fake],
+            (12200, 122, 254) : ['RTRPLT1', self._read_fake],
+            (14410, 144, 320700) : ['MPCY', self._read_fake],
+            (14910, 149, 820) : ['ACCSSPT', self._read_fake],
         }
 
-    def _read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover
         r"""
         (610, 6, 0,
          12, 0, 1, -1)
@@ -169,7 +172,7 @@ class GEOM4(GeomCommon):
         self.op2.show_data(data, types='ifs')
         return len(data)
 
-    def _read_mpc3(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_mpc3(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         MPC(4901, 49, 310017)
 
@@ -202,15 +205,15 @@ class GEOM4(GeomCommon):
         dd
         return len(data)
 
-    def _read_aset(self, data: bytes, n: int) -> int:
+    def read_aset(self, data: bytes, n: int) -> int:
         """ASET(5561,76,215) - Record 1"""
         return self._read_xset(data, n, 'ASET', ASET, self.op2._add_methods._add_aset_object)
 
-    def _read_qset(self, data: bytes, n: int) -> int:
+    def read_qset(self, data: bytes, n: int) -> int:
         """QSET(610, 6, 316) - Record 21"""
         return self._read_xset(data, n, 'QSET', QSET, self.op2._add_methods._add_qset_object)
 
-    def _read_aset1(self, data: bytes, n: int) -> int:
+    def read_aset1(self, data: bytes, n: int) -> int:
         """
         ASET1(5571,77,216) - Record 22
 
@@ -353,64 +356,64 @@ class GEOM4(GeomCommon):
             #op2.increase_card_count(card_name, len(i))
         return ndata
 
-    def _read_bndgrid(self, data: bytes, n: int) -> int:
+    def read_bndgrid(self, data: bytes, n: int) -> int:
         """BNDGRID(10200,102,473) - Record 3 """
         self.op2.log.info('geom skipping BNDGRID in GEOM4')
         return len(data)
 
-    def _read_bset(self, data: bytes, n: int) -> int:
+    def read_bset(self, data: bytes, n: int) -> int:
         return self._read_xset(data, n, 'BSET', BSET, self.op2._add_methods._add_bset_object)
 
-    def _read_bset1(self, data: bytes, n: int) -> int:
+    def read_bset1(self, data: bytes, n: int) -> int:
         return self._read_xset1(data, n, 'BSET1', BSET1, self.op2._add_methods._add_bset_object)
 
-    def _read_cset(self, data: bytes, n: int) -> int:
+    def read_cset(self, data: bytes, n: int) -> int:
         return self._read_xset(data, n, 'CSET', CSET, self.op2._add_methods._add_cset_object)
 
-    def _read_cset1(self, data: bytes, n: int) -> int:
+    def read_cset1(self, data: bytes, n: int) -> int:
         return self._read_xset1(data, n, 'CSET1', CSET1, self.op2._add_methods._add_cset_object)
 
-    def _read_cyax(self, data: bytes, n: int) -> int:
+    def read_cyax(self, data: bytes, n: int) -> int:
         """CYAX(1510,15,328) - Record 8 """
         self.op2.log.info('geom skipping CYAX in GEOM4')
         return len(data)
 
-    def _read_cyjoin(self, data: bytes, n: int) -> int:
+    def read_cyjoin(self, data: bytes, n: int) -> int:
         """CYJOIN(5210,52,257) - Record 9 """
         self.op2.log.info('geom skipping CYJOIN in GEOM4')
         return len(data)
 
-    def _read_cysup(self, data: bytes, n: int) -> int:
+    def read_cysup(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping CYSUP in GEOM4')
         return len(data)
 
-    def _read_cysym(self, data: bytes, n: int) -> int:
+    def read_cysym(self, data: bytes, n: int) -> int:
         """CYSYM(1710,17,330) - Record 11"""
         self.op2.log.info('geom skipping CYSYM in GEOM4')
         return len(data)
 
-    def _read_egendt(self, data: bytes, n: int) -> int:
+    def read_egendt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping EGENDT in GEOM4')
         return len(data)
 
-    def _read_fcendt(self, data: bytes, n: int) -> int:
+    def read_fcendt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping FCENDT in GEOM4')
         return len(data)
 
-    def _read_gmbc(self, data: bytes, n: int) -> int:
+    def read_gmbc(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping GMBC in GEOM4')
         return len(data)
 
-    def _read_gmspc(self, data: bytes, n: int) -> int:
+    def read_gmspc(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping GMSPC in GEOM4')
         return len(data)
 
-    def _read_mpc2(self, data: bytes, n: int) -> int:
+    def read_mpc2(self, data: bytes, n: int) -> int:
         """MPC(4901,49,420017) - Record 16"""
         self.op2.log.info('geom skipping MPC? in GEOM4')
         return len(data)
 
-    def _read_mpc(self, data: bytes, n: int) -> int:
+    def read_mpc(self, data: bytes, n: int) -> int:
         """MPC(4901,49,17) - Record 16"""
         op2: OP2Geom = self.op2
         ndata = len(data)
@@ -450,7 +453,7 @@ class GEOM4(GeomCommon):
         op2.increase_card_count('MPC', nentries)
         return len(data)
 
-    def _read_mpcadd(self, data: bytes, n: int) -> int:
+    def read_mpcadd(self, data: bytes, n: int) -> int:
         """
         MPCADD(4891,60,83) - Record 17
         """
@@ -459,15 +462,15 @@ class GEOM4(GeomCommon):
         _read_spcadd_mpcadd(op2, 'MPCADD', datai)
         return len(data)
 
-    def _read_omit1(self, data: bytes, n: int) -> int:
+    def read_omit1(self, data: bytes, n: int) -> int:
         """OMIT1(4951,63,92) - Record 19"""
         return self._read_xset1(data, n, 'OMIT1', OMIT1, self.op2._add_methods._add_omit_object)
 
-    def _read_qset1(self, data: bytes, n: int) -> int:
+    def read_qset1(self, data: bytes, n: int) -> int:
         """QSET1(610,6,316) - Record 22"""
         return self._read_xset1(data, n, 'QSET1', QSET1, self.op2._add_methods._add_qset_object)
 
-    def _read_rbar(self, data: bytes, n: int) -> int:
+    def read_rbar(self, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22"""
         card_name = 'RBAR'
         card_obj = RBAR
@@ -582,7 +585,7 @@ class GEOM4(GeomCommon):
         assert n == len(data)
         return n, elems
 
-    def _read_rbe1(self, data: bytes, n: int) -> int:
+    def read_rbe1(self, data: bytes, n: int) -> int:
         """
         RBE1(6801,68,294) - Record 23
 
@@ -640,7 +643,7 @@ class GEOM4(GeomCommon):
         op2.card_count['RBE1'] = nelements
         return len(data)
 
-    def _read_rbe2(self, data: bytes, n: int) -> int:
+    def read_rbe2(self, data: bytes, n: int) -> int:
         """
         RBE2(6901,69,295) - Record 24
         """
@@ -650,7 +653,7 @@ class GEOM4(GeomCommon):
         read_rbe2s_from_idata_fdata(op2, idata, fdata)
         return len(data)
 
-    def _read_rbe3(self, data: bytes, n: int) -> int:
+    def read_rbe3(self, data: bytes, n: int) -> int:
         """RBE3(7101,71,187) - Record 25"""
         #self.show_data(data[n+80:], 'ifs')
         op2: OP2Geom = self.op2
@@ -659,15 +662,15 @@ class GEOM4(GeomCommon):
         read_rbe3s_from_idata_fdata(op2, idata, fdata)
         return len(data)
 
-    def _read_rbjoint(self, data: bytes, n: int) -> int:
+    def read_rbjoint(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RBJOINT in GEOM4')
         return len(data)
 
-    def _read_rbjstif(self, data: bytes, n: int) -> int:
+    def read_rbjstif(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RBJSTIF in GEOM4')
         return len(data)
 
-    def _read_release(self, data: bytes, n: int) -> int:
+    def read_release(self, data: bytes, n: int) -> int:
         """
         Record - RELEASE(1310,13,247)
 
@@ -722,11 +725,11 @@ class GEOM4(GeomCommon):
             op2.reject_lines.append(print_card_16(fields))
         return len(data)
 
-    def _read_rpnom(self, data: bytes, n: int) -> int:
+    def read_rpnom(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RPNOM in GEOM4')
         return len(data)
 
-    def _read_rrod(self, data: bytes, n: int) -> int:
+    def read_rrod(self, data: bytes, n: int) -> int:
         """common method for reading RROD"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -777,21 +780,21 @@ class GEOM4(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_rspline(self, data: bytes, n: int) -> int:
+    def read_rspline(self, data: bytes, n: int) -> int:
         """RSPLINE(7001,70,186) - Record 31"""
         self.op2.log.info('geom skipping RSPLINE in GEOM4')
         return len(data)
 
-    def _read_rsscon(self, data: bytes, n: int) -> int:
+    def read_rsscon(self, data: bytes, n: int) -> int:
         """RSSCON(7201,72,398) - Record 32"""
         self.op2.log.info('geom skipping RSSCON in GEOM4')
         return len(data)
 
-    def _read_rweld(self, data: bytes, n: int) -> int:
+    def read_rweld(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RWELD in GEOM4')
         return len(data)
 
-    def _read_secset(self, data: bytes, n: int) -> int:
+    def read_secset(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 SEID I Superelement identification number
@@ -807,7 +810,7 @@ class GEOM4(GeomCommon):
             op2.add_secset(seid, [nid], [str(component)])
         return len(data)
 
-    def _read_sebset(self, data: bytes, n: int) -> int:
+    def read_sebset(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nints = len(ints)
@@ -817,7 +820,7 @@ class GEOM4(GeomCommon):
             op2.add_sebset(seid, [nid], [str(component)])
         return len(data)
 
-    def _read_sebset1(self, data: bytes, n: int) -> int:
+    def read_sebset1(self, data: bytes, n: int) -> int:
         #asdf
         #self.op2.log.info('geom skipping SEBSET1 in GEOM4')
         op2: OP2Geom = self.op2
@@ -828,7 +831,7 @@ class GEOM4(GeomCommon):
             op2.add_sebset1(seid, values, comp)
         return len(data)
 
-    def _read_secset1(self, data: bytes, n: int) -> int:
+    def read_secset1(self, data: bytes, n: int) -> int:
         """
         (1010, 10, 320,
          103, 123456, 0, 1, 101, -1)
@@ -859,7 +862,7 @@ class GEOM4(GeomCommon):
             op2.add_secset1(seid, values, str(comp))
         return len(data)
 
-    def _read_seqset(self, data: bytes, n: int) -> int:
+    def read_seqset(self, data: bytes, n: int) -> int:
         """SEQSET(1110,11,321) - Record 40"""
         op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
@@ -871,7 +874,7 @@ class GEOM4(GeomCommon):
         return len(data)
         #return self._read_xset(data, n, 'SEQSET', SEQSET, self.add_SEQSET)
 
-    def _read_seqset1(self, data: bytes, n: int) -> int:
+    def read_seqset1(self, data: bytes, n: int) -> int:
         """
         SEQSET1(1210,12,322) - Record 41
 
@@ -901,16 +904,16 @@ class GEOM4(GeomCommon):
             #print(seqset)
         return nbytes
 
-    def _read_sesup(self, data: bytes, n: int) -> int:
+    def read_sesup(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SESUP in GEOM4')
         return len(data)
 
-    def _read_seuset(self, data: bytes, n: int) -> int:
+    def read_seuset(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SEUSET in GEOM4')
         asdf
         return len(data)
 
-    def _read_seuset1(self, data: bytes, n: int) -> int:
+    def read_seuset1(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         i, cards = ints_to_secset1s('SEUSET1', ints)
@@ -919,7 +922,7 @@ class GEOM4(GeomCommon):
         #self.op2.log.info('geom skipping SEUSET1 in GEOM4')
         return len(data)
 
-    def _read_spcoff(self, data: bytes, n: int) -> int:
+    def read_spcoff(self, data: bytes, n: int) -> int:
         """SPCOFF(5501,55,16) - Record 44"""
         op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
@@ -935,7 +938,7 @@ class GEOM4(GeomCommon):
             n += 16
         return n
 
-    def _read_spc(self, data: bytes, n: int) -> int:
+    def read_spc(self, data: bytes, n: int) -> int:
         """common method for reading SPCs"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -1022,7 +1025,7 @@ class GEOM4(GeomCommon):
         #op2.to_nx()
         return n, constraints
 
-    def _read_spcoff1(self, data: bytes, n: int) -> int:
+    def read_spcoff1(self, data: bytes, n: int) -> int:
         """
         SPCOFF1(6210, 62, 344) - Record
         see SPC1
@@ -1100,7 +1103,7 @@ class GEOM4(GeomCommon):
             #card = out[5:]
             self._add_spcoff1_card(out[5:])
 
-    def _read_spc1(self, data: bytes, n: int) -> int:
+    def read_spc1(self, data: bytes, n: int) -> int:
         r"""
         SPC1(5481,58,12) - Record 45
 
@@ -1137,7 +1140,7 @@ class GEOM4(GeomCommon):
             self._add_spc1_card(outi)
         return len(data)
 
-    def _read_spcb(self, data: bytes, n: int) -> int:
+    def read_spcb(self, data: bytes, n: int) -> int:
         r"""
         SPC(5501, 55, 620016) - Record 45 - MSC
 
@@ -1204,7 +1207,7 @@ class GEOM4(GeomCommon):
             #card = out[5:]
             self._add_spc1_card(out[5:])
 
-    def _read_spcadd(self, data: bytes, n: int) -> int:
+    def read_spcadd(self, data: bytes, n: int) -> int:
         """SPCADD(5491,59,13) - Record 46"""
         #nentries = (len(data) - n) // 4
         op2: OP2Geom = self.op2
@@ -1212,7 +1215,7 @@ class GEOM4(GeomCommon):
         _read_spcadd_mpcadd(op2, 'SPCADD', datai)
         return len(data)
 
-    def _read_spcd(self, data: bytes, n: int) -> int:
+    def read_spcd(self, data: bytes, n: int) -> int:
         """common method for reading SPCDs"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -1279,39 +1282,39 @@ class GEOM4(GeomCommon):
             n += ntotal
         return n, constraints
 
-    def _read_spcde(self, data: bytes, n: int) -> int:
+    def read_spcde(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCDE in GEOM4')
         return len(data)
 
-    def _read_spcf(self, data: bytes, n: int) -> int:
+    def read_spcf(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCDF in GEOM4')
         return len(data)
 
-    def _read_spcdg(self, data: bytes, n: int) -> int:
+    def read_spcdg(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCDG in GEOM4')
         return len(data)
 
-    def _read_spce(self, data: bytes, n: int) -> int:
+    def read_spce(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCE in GEOM4')
         return len(data)
 
-    def _read_spceb(self, data: bytes, n: int) -> int:
+    def read_spceb(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCEB in GEOM4')
         return len(data)
 
-    def _read_spcfb(self, data: bytes, n: int) -> int:
+    def read_spcfb(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCFB in GEOM4')
         return len(data)
 
-    def _read_spcgb(self, data: bytes, n: int) -> int:
+    def read_spcgb(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCGB in GEOM4')
         return len(data)
 
-    def _read_spcgrid(self, data: bytes, n: int) -> int:
+    def read_spcgrid(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping SPCGRID in GEOM4')
         return len(data)
 
-    def _read_suport(self, data: bytes, n: int) -> int:
+    def read_suport(self, data: bytes, n: int) -> int:
         """SUPORT(5601,56, 14) - Record 59"""
         op2: OP2Geom = self.op2
         ntotal = 8 * self.factor  # 2*4
@@ -1327,7 +1330,7 @@ class GEOM4(GeomCommon):
             n += ntotal
         return n
 
-    def _read_suport1(self, data: bytes, n: int) -> int:
+    def read_suport1(self, data: bytes, n: int) -> int:
         """SUPORT1(10100,101,472) - Record 60"""
         op2: OP2Geom = self.op2
         nfields = (len(data) - n) // 4 - 2
@@ -1362,11 +1365,11 @@ class GEOM4(GeomCommon):
         assert n+nfields*4+8 == len(data), 'a=%s b=%s' % (n+nfields*4+8, len(data))
         return len(data)
 
-    def _read_tempbc(self, data: bytes, n: int) -> int:
+    def read_tempbc(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping TEMPBC in GEOM4')
         return len(data)
 
-    def _read_uset(self, data: bytes, n: int) -> int:
+    def read_uset(self, data: bytes, n: int) -> int:
         """
         USET(2010,20,193) - Record 63
         (sid, nid, comp), ...
@@ -1389,7 +1392,7 @@ class GEOM4(GeomCommon):
         op2.increase_card_count('USET', len(op2.usets))
         return n
 
-    def _read_seqset1b(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_seqset1b(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
 
         SEQSET1(1210,12,322)
@@ -1411,7 +1414,7 @@ class GEOM4(GeomCommon):
         self.op2.show_data(data)
         return len(data)
 
-    def _read_uset1(self, data: bytes, n: int) -> int:
+    def read_uset1(self, data: bytes, n: int) -> int:
         """USET1(2110,21,194) - Record 65
 
         odd case = (
@@ -1480,26 +1483,26 @@ class GEOM4(GeomCommon):
         return len(data)
 
 
-    def _read_omit(self, data: bytes, n: int) -> int:
+    def read_omit(self, data: bytes, n: int) -> int:
         return self._read_xset(data, n, 'OMIT', OMIT, self.op2._add_methods._add_omit_object)
 
-    def _read_rtrplt(self, data: bytes, n: int) -> int:
+    def read_rtrplt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RTRPLT in GEOM4')
         return len(data)
 
-    def _read_bndfix(self, data: bytes, n: int) -> int:
+    def read_bndfix(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BNDFIX in GEOM4')
         return len(data)
 
-    def _read_bndfix1(self, data: bytes, n: int) -> int:
+    def read_bndfix1(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BNDFIX1 in GEOM4')
         return len(data)
 
-    def _read_bndfree(self, data: bytes, n: int) -> int:
+    def read_bndfree(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BNDFREE in GEOM4')
         return len(data)
 
-    def _read_bltmpc(self, data: bytes, n: int) -> int:
+    def read_bltmpc(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BLTMPC in GEOM4')
         return len(data)
 

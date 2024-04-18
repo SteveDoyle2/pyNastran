@@ -573,6 +573,7 @@ class GEOM2:
             #C:\MSC.Software\msc_nastran_runs\sl_1blk.op2
            (11908, 119, 469): ['CSEAM-a', self._read_fake],
            (15701, 157, 639): ['CSEAM-b', self._read_fake],
+           (15601, 156, 635): ['CBUSH2D', self.read_cbush2d],
 
         }
 
@@ -1301,6 +1302,42 @@ class GEOM2:
             op2.add_cbush1d(eid, pid, [g1, g2], cid=cid)
             n += ntotal
         op2.card_count['CBUSH1D'] = nelements
+        return n
+
+    def read_cbush2d(self, data: bytes, n: int) -> int:
+        """
+        CBUSH2D
+
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(2) I Grid point identification numbers
+        5 CID  I Coordinate system identification number
+        6 UNDEF(3) none
+
+        CBUSH2D  EID  PID  GA   GB  CID PLANE
+        CBUSH2D  201  202  101  100  0  XY
+        (201, 202, 101, 100, 0, 1, 0, 0)
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 8 * self.size # 4*8
+        nelements = (len(data) - n) // ntotal
+        struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_6i.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CBUSH2D=%s\n' % str(out))
+            (eid, pid, n1, n2, cid, plane_int, undef1, undef2) = out
+            assert (undef1, undef2) == (0, 0), (undef1, undef2)
+            assert plane_int == 1, plane_int
+            plane = 'XY'
+            assert cid >= 0, cid
+            sptid = None
+            nids = [n1, n2]
+            op2.add_cbush2d(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment='')
+            n += ntotal
+        op2.card_count['CBUSH2D'] = nelements
+        asdf
         return n
 
     def read_ccone(self, data: bytes, n: int) -> int:

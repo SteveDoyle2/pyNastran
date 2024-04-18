@@ -99,6 +99,9 @@ class MPT:
             (15903, 159, 977): ['MAT2F', self._read_fake],
             (16303, 163, 981): ['MAT2SP', self._read_fake],
             (12000, 120, 108): ['CONTRLT', self._read_fake],
+            (15603, 156, 967): ['MONCARL', self._read_fake],
+            (16803, 168, 1019):  ['MAT8', self._read_fake],
+            (16503, 165, 983): ['MAT9', self.read_mat9],
         }
 
     def add_op2_material(self, mat):
@@ -461,15 +464,17 @@ class MPT:
         op2: OP2Geom = self.op2
         ntotal = 76 * self.factor
         s = Struct(mapfmt(op2._endian + b'i18f', self.size))
-        nmaterials = (len(data) - n) // ntotal
-        for unused_i in range(nmaterials):
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
             # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
             mat = MAT8.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
-        op2.card_count['MAT8'] = nmaterials
+        op2.card_count['MAT8'] = nentries
         return n
 
     def read_mat9(self, data: bytes, n: int) -> int:
@@ -1487,6 +1492,8 @@ class MPT:
         ntotal = 16 * self.size # 32*4
         struct0 = Struct(mapfmt(op2._endian + b'2i', self.size))
         struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i 3f 5i', self.size)) # cragg
+        struct2 = Struct(mapfmt(op2._endian + b'2i 2fi 3i 2fif 4f', self.size))
+        struct3 = Struct(mapfmt(op2._endian + b'2i 2fi 9f 2i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata0 = data[n:n+ntotal0]
@@ -1498,14 +1505,37 @@ class MPT:
                 assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
                 assert dummy == [0, 0, 0, 0, 0], dummy
                 op2.add_matpor_cragg(mid, rho, c, res, por, tort)
-            #elif model == 2:
-                #rho, c, frame, dummy1, dummy2, dummy3, res, por, dummy4, density, *dummy = out # Delaney-Miki
+            elif model == 2:
+                out = struct2.unpack(edata)
+                (mid, model, rho, c, frame_int, dummy1, dummy2, dummy3,
+                 resistivity, porosity, dummy4, density, *dummy) = out # Delaney-Miki
+                if frame_int == 1:
+                    frame = 'RIGID'
+                elif frame_int == 2:
+                    frame = 'LIMP'
+                assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                assert dummy == [0.0, 0.0, 0.0, 0.0], dummy
                 #assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
                 #assert dummy == (0, 0, 0), dummy
-            #elif model == 3:
-                #rho, c, frame, gamma, prandtl, dynanmic_viscosity, res, por, tort, densiity, L1, L2, *dummy = johnson
-                #assert dummy == (0, 0, 0), dummy
-            else:
+                op2.add_matpor_delmiki(mid, rho, c, resistivity, porosity, frame, density=density, comment='')
+            elif model == 3:
+                out = struct3.unpack(edata)
+                #MATPOR         2     JCA   1.205   343.0    LIMP     1.4    0.71 1.84E-5+
+                #+        80000.0    0.93     2.5    30.0  1.0E-5  1.0E-4
+                (mid, model, rho, c, frame_int, gamma, prandtl_number,
+                 dynanmic_viscosity, resistivity, porosity, tortuosity, density,
+                 L1, L2, *dummy) = out # johnson
+                assert dummy == [0, 0], dummy
+
+                #FRAME = 1 for rigid; FRAME = 2 for limp
+                if frame_int == 1:
+                    frame = 'RIGID'
+                elif frame_int == 2:
+                    frame = 'LIMP'
+                op2.add_matpor_jca(mid, rho, c, resistivity, porosity, tortuosity, frame,
+                                   gamma, prandtl_number, dynanmic_viscosity,
+                                   L1, L2, density=density)
+            else:  # pragma: no cover
                 raise RuntimeError(model)
 
             if op2.is_debug_file:

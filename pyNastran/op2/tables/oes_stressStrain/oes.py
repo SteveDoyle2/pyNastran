@@ -3574,6 +3574,11 @@ class OES(OP2Common2):
                 return ndata, None, None
             self.show_data(data[n:n+4*op2.num_wide])
             aaa
+        elif result_type == 0 and op2.num_wide == 68:  # real
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-OES-CSOLID-random-numwide={op2.num_wide} '
+                   f'numwide_real=11 numwide_imag=9 result_type={result_type}')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise NotImplementedError(op2.code_information())
         assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'

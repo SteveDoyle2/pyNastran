@@ -1203,6 +1203,7 @@ class MATPOR(BaseCard):
         mu = 0.0
         L1 = 0.0
         L2 = 0.0
+        tortuosity = 0.0
         return MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
                       frame, gamma, prandtl_number, mu, L1, L2,
                       density=density, comment=comment)

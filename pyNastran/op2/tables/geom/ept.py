@@ -139,9 +139,9 @@ class EPT:
             (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
             (17302, 173, 971): ['PCOMPFQ', self._read_fake],
             (14101, 141, 668): ['PSEAM', self._read_fake],
-            (14402, 144, 690): ['???', self.read_stop],
-            #(9701, 97, 692): ['???', self._read_fake],
-            #(9701, 97, 692): ['???', self._read_fake],
+            (14402, 144, 690): ['PSHLN1', self._read_fake],
+            (16902, 169, 955): ['???', self._read_fake],
+            (17502, 175, 973): ['PFASTT', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
 
         }
@@ -181,7 +181,7 @@ class EPT:
 
 # HGSUPPR
 
-    def read_matcid(data: bytes, n: int) -> None:
+    def read_matcid(self, data: bytes, n: int) -> None:
         """
         MATCID(17006,170,901)
         Defines material coordinate system for solid elements.
@@ -208,9 +208,10 @@ class EPT:
         Words 3 through 9 repeat until -1 occurs
 
         """
-        matcid
+        self.op2.log.warning('geom skipping MATCID in EPT')
+        return len(data)
 
-    def read_psolcz(data: bytes, n: int) -> None:
+    def read_psolcz(self, data: bytes, n: int) -> None:
         """
         PSOLCZ(8901,89,905)
         Word Name Type Description
@@ -223,16 +224,19 @@ class EPT:
         op2: OP2Geom = self.op2
         size = self.size
 
-        ntotal = 8 * size  # 8*4
+        ntotal = 8 * size
         struct1 = Struct(mapfmt(op2._endian + b'3if 4i', size))
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            pid, pid, mid, cordm, thick, undef1, undef2, undef3, undef4 = out
+            pid, mid, cordm, thick, undef1, undef2, undef3, undef4 = out
             assert (undef1, undef2, undef3, undef4) == (0, 0, 0, 0)
             #op2.add_solcz
             n += ntotal
+        self.op2.log.warning('geom skipping PSOLCZ in EPT')
         op2.card_count['PSOLCZ'] = nentries
         return n
 

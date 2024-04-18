@@ -67,6 +67,7 @@ class DIT:
             (505, 5, 644) : ['TABLEM5', self._read_fake],
             (1605, 16, 117) : ['TABLED6', self._read_fake],
             (4101, 41, 642) : ['TABLED5', self.read_tabled5],
+            (14805, 148, 731) : ['TABL3D0', self._read_fake],
             #(1605, 16, 117) : ['???', self._read_fake],
         }
 

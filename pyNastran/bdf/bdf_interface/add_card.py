@@ -3293,13 +3293,14 @@ class AddAcoustic:
         self._add_methods._add_property_object(pmic)
         return pmic
 
-    def add_matpor_jca(mid: int, model: str,
+    def add_matpor_jca(self, mid: int,
                        rho: float, c: float, resistivity: float,
                        porosity: float, tortuosity: float,
                        frame: str,
                        gamma: float, prandtl_number: float,
-                       mu: float, L1, L2,
+                       mu: float, L1: float, L2: float,
                        density: float=0.0, comment: str=''):
+        model = 'JCA'
         mat = MATPOR(mid, model, rho, c, resistivity, porosity, tortuosity,
                      frame, gamma, prandtl_number, mu, L1, L2,
                      density=density, comment=comment)
@@ -4894,7 +4895,7 @@ class AddAero:
         return aeparm
 
     def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
-                    dmij: str, dmiji: str):
+                    dmij: str, dmiji: str) -> None:
         #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
         """adds an AEPRESS card"""
         assert isinstance(sym_xz, str), sym_xz
@@ -4905,7 +4906,7 @@ class AddAero:
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
-                    mesh: str, force: int, dmik: str, perq: str):
+                    mesh: str, force: int, dmik: str, perq: str) -> None:
         """adds an AEPRESS card"""
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
@@ -4914,6 +4915,18 @@ class AddAero:
         assert isinstance(perq, str), perq
         fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+
+    def add_sblnd1(self, eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid):
+        fields = ['SBLND1', eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2] + x + [cid]
+        self.reject_card_lines('SBLND1', print_card_(fields).split('\n'), show_log=False)
+
+    def add_massset(self, mass_set_id, scale, scales, mass_set_ids) -> None:
+        """adds an MASSSET card"""
+        fields = ['MASSSET', mass_set_id, scale]
+        for scalei, massi in zip(scales, mass_set_ids):
+            fields.append(scalei)
+            fields.append(massi)
+        self.reject_card_lines('MASSSET', print_card_(fields).split('\n'), show_log=False)
 
 
 class AddThermal:
