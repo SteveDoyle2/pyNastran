@@ -39,37 +39,37 @@ class MPT:
 
         #F:\work\pyNastran\examples\Dropbox\move_tpl\chkout01.op2
         self.mpt_map = {
-            (1003, 10, 245) : ['CREEP', self._read_creep],  # record 1
-            (103, 1, 77) : ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
-            (203, 2, 78) : ['MAT2', self._read_mat2],       # record 3
-            (1403, 14, 122) : ['MAT3', self._read_mat3],    # record 4
-            (2103, 21, 234) : ['MAT4', self._read_mat4],    # record 5
-            (2203, 22, 235) : ['MAT5', self._read_mat5],    # record 6
-            (2503, 25, 288) : ['MAT8', self._read_mat8],    # record 7
-            (2603, 26, 300) : ['MAT9', self._read_mat9],    # record 8 - buggy
-            (2801, 28, 365) : ['MAT10', self._read_mat10],  # record 9
-            (2903, 29, 371) : ['MAT11', self._read_mat11],  # record ??? - NX specific - buggy?
+            (1003, 10, 245) : ['CREEP', self.read_creep],  # record 1
+            (103, 1, 77) : ['MAT1', self.read_mat1],       # record 3-msc-dmap2014
+            (203, 2, 78) : ['MAT2', self.read_mat2],       # record 3
+            (1403, 14, 122) : ['MAT3', self.read_mat3],    # record 4
+            (2103, 21, 234) : ['MAT4', self.read_mat4],    # record 5
+            (2203, 22, 235) : ['MAT5', self.read_mat5],    # record 6
+            (2503, 25, 288) : ['MAT8', self.read_mat8],    # record 7
+            (2603, 26, 300) : ['MAT9', self.read_mat9],    # record 8 - buggy
+            (2801, 28, 365) : ['MAT10', self.read_mat10],  # record 9
+            (2903, 29, 371) : ['MAT11', self.read_mat11],  # record ??? - NX specific - buggy?
 
-            (4506, 45, 374) : ['MATHP', self._read_mathp],   # record 11
-            (503, 5, 90) : ['MATS1', self._read_mats1],      # record 12
-            (703, 7, 91) : ['MATT1', self._read_matt1],      # record 13 - not done
-            (803, 8, 102) : ['MATT2', self._read_matt2],     # record 14
-            #(1503, 14, 189) : ['MATT3', self._read_matt3],   # record 15 - not done
-            (1503, 15, 189)  : ['MATT3', self._read_matt3],
-            (2303, 23, 237) : ['MATT4', self._read_matt4],   # record 16 - not done
-            (2403, 24, 238) : ['MATT5', self._read_matt5],   # record 17 - not done
-            (2703, 27, 301) : ['MATT9', self._read_matt9],   # record 19 - not done
-            (8802, 88, 413) : ['RADM', self._read_radm],     # record 25 - not done
+            (4506, 45, 374) : ['MATHP', self.read_mathp],   # record 11
+            (503, 5, 90) : ['MATS1', self.read_mats1],      # record 12
+            (703, 7, 91) : ['MATT1', self.read_matt1],      # record 13 - not done
+            (803, 8, 102) : ['MATT2', self.read_matt2],     # record 14
+            #(1503, 14, 189) : ['MATT3', self.read_matt3],   # record 15 - not done
+            (1503, 15, 189)  : ['MATT3', self.read_matt3],
+            (2303, 23, 237) : ['MATT4', self.read_matt4],   # record 16 - not done
+            (2403, 24, 238) : ['MATT5', self.read_matt5],   # record 17 - not done
+            (2703, 27, 301) : ['MATT9', self.read_matt9],   # record 19 - not done
+            (8802, 88, 413) : ['RADM', self.read_radm],     # record 25 - not done
             # record 26
-            (3003, 30, 286) : ['NLPARM', self._read_nlparm],   # record 27
-            (3104, 32, 350) : ['NLPCI', self._read_nlpci],     # record 28
-            (3103, 31, 337) : ['TSTEPNL', self._read_tstepnl], # record 29
-            (3303, 33, 988) : ['MATT11', self._read_matt11],
+            (3003, 30, 286) : ['NLPARM', self.read_nlparm],   # record 27
+            (3104, 32, 350) : ['NLPCI', self.read_nlpci],     # record 28
+            (3103, 31, 337) : ['TSTEPNL', self.read_tstepnl], # record 29
+            (3303, 33, 988) : ['MATT11', self.read_matt11],
 
-            (903, 9, 336) : ['MATT8', self._read_matt8],
-            (8902, 89, 423) : ['RADMT', self._read_radmt],
-            (9002, 90, 410) : ['RADBND', self._read_radbnd],
-            (4801, 48, 961): ['MATPOR', self._read_matpor],
+            (903, 9, 336) : ['MATT8', self.read_matt8],
+            (8902, 89, 423) : ['RADMT', self.read_radmt],
+            (9002, 90, 410) : ['RADBND', self.read_radbnd],
+            (4801, 48, 961): ['MATPOR', self.read_matpor],
             (5101, 51, 642): ['MATDMG', self._read_fake],
             (14403, 144, 840): ['NLSTEP', self._read_fake],
             (4603, 46, 623): ['MATCRP', self._read_fake],
@@ -80,6 +80,10 @@ class MPT:
             (8310, 83, 403): ['MATG', self._read_fake],
 
             (5303, 53, 906): ['MATCZ', self._read_fake],
+            (10900, 109, 596): ['MATORT', self.read_matort],
+            (10600, 106, 593): ['MATF', self._read_fake],
+            (11000, 110, 597): ['MATTORT', self._read_fake],
+            (13103, 131, 695): ['NLMOPTS', self._read_fake],
             #(8310, 83, 403): ['???', self._read_fake],
             #(8310, 83, 403): ['???', self._read_fake],
             #(8310, 83, 403): ['???', self._read_fake],
@@ -88,6 +92,9 @@ class MPT:
             #(8310, 83, 403): ['???', self._read_fake],
             #(8310, 83, 403): ['???', self._read_fake],
             #(8310, 83, 403): ['???', self._read_fake],
+            (15703, 157, 975): ['MAT1F', self._read_fake],
+            (15903, 159, 977): ['MAT2F', self._read_fake],
+            (16303, 163, 981): ['MAT2SP', self._read_fake],
 
         }
 
@@ -97,7 +104,59 @@ class MPT:
         self.op2._add_methods._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
-    def _read_creep(self, data: bytes, n: int) -> int:
+    def read_matort(self, data: bytes, n: int) -> int:
+        """
+        MATORT(10900,109,596) - SOL 600 only
+
+        Word Name Type Description
+        1 MID      I   Material identification number
+        2 E1      RS   modulus of elasticity in longitudinal direction
+        3 E2      RS   modulus of elasticity in lateral direction
+        4 E3      RS   modulus of elasticity in thickness direction
+        5 NU12    RS   Poisson's ratio
+        6 NU23    RS   Poisson's ratio
+        7 NU31    RS   Poisson's ratio
+        8 RHO     RS   Mass density
+        9 G12     RS   shear modulus in plane 1-2
+        10 G23    RS   shear modulus in plane 2-3
+        11 G31    RS   shear modulus in plane 3-1
+        12 A1     RS   coefficient of thermal expansion in direction 1
+        13 A2     RS   coefficient of thermal expansion in direction 2
+        14 A3     RS   coefficient of thermal expansion in direction 3
+        15 TREF   RS   reference temperature
+        16 GE     RS   structure damping coefficient
+        17 IYLD    I   Yield criteria
+        18 IHARD   I   Work harding rules
+        19 SY     RS   Equivalent (von Mises) tensile yield stress
+        20 SORNL  RS   For ORNL only, 10th cycle equivalent yield stress
+        21 Y1     RS   Hill's yield stress in direction 1
+        22 Y2     RS   Hill's yield stress in direction 2
+        23 Y3     RS   Hill's yield stress in direction 3
+        24 UNDEF  none
+        25 YSHR1  RS   Hill's yield shear stress in direction 1
+        26 YSHR2  RS   Hill's yield shear stress in direction 2
+        27 YSHR3  RS   Hill's yield shear stress in direction 3
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 27 * self.size
+        s = Struct(mapfmt(op2._endian + b'i 15f 2i 5f i 3f', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (mid, e1, e2, e2, nu12, nu23, nu31, rho,
+             g12, g23, g31, a1, a2, a3, tref, ge,
+             iyield, ihard, sy, sornl, y1, y2, y3,
+             undef, yshear1, yshear2, yshear3) = out
+            assert undef == 0, undef
+            #mat = op2.add_matort
+            #self.add_op2_material(mat)
+            n += ntotal
+        op2.log.warning('geom skipping MATORT in MPT')
+        #op2.card_count['MATORT'] = nmaterials
+        return n
+
+    def read_creep(self, data: bytes, n: int) -> int:
         """
         CREEP(1003,10,245) - record 1
         """
@@ -118,7 +177,7 @@ class MPT:
         op2.card_count['CREEP'] = nmaterials
         return n
 
-    def _read_mat1(self, data: bytes, n: int) -> int:
+    def read_mat1(self, data: bytes, n: int) -> int:
         """
         MAT1(103,1,77) - record 2
         """
@@ -136,7 +195,7 @@ class MPT:
         op2.card_count['MAT1'] = nmaterials
         return n
 
-    def _read_mat2(self, data: bytes, n: int) -> int:
+    def read_mat2(self, data: bytes, n: int) -> int:
         """
         MAT2(203,2,78) - record 3
 
@@ -336,7 +395,7 @@ class MPT:
             mats.append(mat)
         return n, mats
 
-    def _read_mat3(self, data: bytes, n: int) -> int:
+    def read_mat3(self, data: bytes, n: int) -> int:
         """
         MAT3(1403,14,122) - record 4
         """
@@ -357,7 +416,7 @@ class MPT:
         op2.card_count['MAT3'] = nmaterials
         return n
 
-    def _read_mat4(self, data: bytes, n: int) -> int:
+    def read_mat4(self, data: bytes, n: int) -> int:
         """
         MAT4(2103,21,234) - record 5
         """
@@ -374,7 +433,7 @@ class MPT:
         op2.card_count['MAT4'] = nmaterials
         return n
 
-    def _read_mat5(self, data: bytes, n: int) -> int:
+    def read_mat5(self, data: bytes, n: int) -> int:
         """
         MAT5(2203,22,235) - record 6
         """
@@ -392,7 +451,7 @@ class MPT:
         op2.card_count['MAT5'] = nmaterials
         return n
 
-    def _read_mat8(self, data: bytes, n: int) -> int:
+    def read_mat8(self, data: bytes, n: int) -> int:
         """
         MAT8(2503,25,288) - record 7
         """
@@ -410,7 +469,7 @@ class MPT:
         op2.card_count['MAT8'] = nmaterials
         return n
 
-    def _read_mat9(self, data: bytes, n: int) -> int:
+    def read_mat9(self, data: bytes, n: int) -> int:
         """
         MAT9(2603,26,300) - record 9
         """
@@ -526,7 +585,7 @@ class MPT:
             n += ntotal
         return n, materials
 
-    def _read_mat10(self, data: bytes, n: int) -> int:
+    def read_mat10(self, data: bytes, n: int) -> int:
         """
         MAT10(2801,28,365) - record 9
 
@@ -618,7 +677,7 @@ class MPT:
             materials.append(mat)
         return n, materials
 
-    def _read_mat11(self, data: bytes, n: int) -> int:
+    def read_mat11(self, data: bytes, n: int) -> int:
         """
         MAT11(2903,29,371)
         """
@@ -665,7 +724,7 @@ class MPT:
         op2.card_count['MAT11'] = nmaterials
         return n
 
-    def _read_mathp(self, data: bytes, n: int) -> int:
+    def read_mathp(self, data: bytes, n: int) -> int:
         """
         MATHP(4506,45,374) - Record 11
 
@@ -761,7 +820,7 @@ class MPT:
         op2.card_count['MATHP'] = nmaterials
         return n
 
-    def _read_mats1(self, data: bytes, n: int) -> int:
+    def read_mats1(self, data: bytes, n: int) -> int:
         """
         MATS1(503,5,90) - record 12
         """
@@ -785,7 +844,7 @@ class MPT:
         op2.card_count['MATS1'] = nmaterials
         return n
 
-    def _read_matt1(self, data: bytes, n: int) -> int:
+    def read_matt1(self, data: bytes, n: int) -> int:
         """
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
@@ -806,7 +865,7 @@ class MPT:
         op2.increase_card_count('MATT1', ncards)
         return n
 
-    def _read_matt2(self, data: bytes, n: int) -> int:
+    def read_matt2(self, data: bytes, n: int) -> int:
         card_name = 'MATT2'
         card_obj = MATT2
         methods = {
@@ -890,7 +949,7 @@ class MPT:
             n += ntotal
         return n, cards
 
-    def _read_matt3(self, data: bytes, n: int) -> int:
+    def read_matt3(self, data: bytes, n: int) -> int:
         r"""
         Word Name Type Description
         1 MID     I Material identification number
@@ -953,7 +1012,7 @@ class MPT:
         op2.card_count['MATT3'] = nmaterials
         return n
 
-    def _read_matt4(self, data: bytes, n: int) -> int:
+    def read_matt4(self, data: bytes, n: int) -> int:
         """
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
@@ -975,7 +1034,7 @@ class MPT:
         op2.increase_card_count('MATT4', ncards)
         return n
 
-    def _read_matt5(self, data: bytes, n: int) -> int:
+    def read_matt5(self, data: bytes, n: int) -> int:
         """
         MATT5(2403,24,238)
         checked NX-10.1, MSC-2016
@@ -998,7 +1057,7 @@ class MPT:
         op2.increase_card_count('MATT5', ncards)
         return n
 
-    def _read_matt8(self, data: bytes, n: int) -> int:
+    def read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
@@ -1108,7 +1167,7 @@ class MPT:
 
         return n, matt8s
 
-    def _read_matt9(self, data: bytes, n: int) -> int:
+    def read_matt9(self, data: bytes, n: int) -> int:
         """common method for reading MATT9s"""
         op2: OP2Geom = self.op2
         card_name = 'MATT9'
@@ -1317,7 +1376,7 @@ class MPT:
         op2.log.warning('geom skipping MAT11 in MPT')
         return n
 
-    def _read_matt11(self, data: bytes, n: int) -> int:
+    def read_matt11(self, data: bytes, n: int) -> int:
         """
         Record – MATT11(3303,33,988)
         Solid orthotropic material temperature dependence.
@@ -1379,7 +1438,7 @@ class MPT:
         op2.log.warning('geom skipping MATT11 in MPT')
         return n
 
-    def _read_matpor(self, data: bytes, n: int) -> int:
+    def read_matpor(self, data: bytes, n: int) -> int:
         """
         Record – MATPOR(4801,48,961)
 
@@ -1458,12 +1517,12 @@ class MPT:
 # MSTACK
 # NLAUTO
 
-    def _read_radbnd(self, data: bytes, n: int) -> int:
+    def read_radbnd(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RADBND in MPT')
         return len(data)
 
 
-    def _read_radm(self, data: bytes, n: int) -> int:
+    def read_radm(self, data: bytes, n: int) -> int:
         """
         RADM(8802,88,413) - record 25
         .. todo:: add object
@@ -1498,11 +1557,11 @@ class MPT:
         op2.card_count['RADM'] = nmaterials
         return n
 
-    def _read_radmt(self, data: bytes, n: int) -> int:
+    def read_radmt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RADMT in MPT')
         return len(data)
 
-    def _read_nlparm(self, data: bytes, n: int) -> int:
+    def read_nlparm(self, data: bytes, n: int) -> int:
         r"""
         NLPARM(3003,30,286) - record 27
 
@@ -1664,11 +1723,11 @@ class MPT:
             nlparms.append(nlparm)
         return n, nlparms
 
-    def _read_nlpci(self, data: bytes, n: int) -> int:
+    def read_nlpci(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping NLPCI in MPT')
         return len(data)
 
-    def _read_tstepnl(self, data: bytes, n: int) -> int:
+    def read_tstepnl(self, data: bytes, n: int) -> int:
         """Common method to read MSC/NX TSTEPNLs"""
         ndatai = (len(data) - n) * self.factor
         n108 = ndatai % 108 # nx

@@ -81,8 +81,8 @@ class GEOM1:
             (5801,   58, 324): ('SUPUP', self._read_fake),  # record 33 - CSUPUP in NX; SUPUP in MSC
             (14101, 141, 403): ('SWLDPRM', self._read_fake),  # record 34
 
-            (1101,   11,  66): ('CMASS2', geom2._read_cmass2),  # record
-            (3901,   39,  50): ('CVISC', self._read_cvisc),  # record
+            (1101,   11,  66): ('CMASS2', geom2.read_cmass2),  # record
+            (3901,   39,  50): ('CVISC', self.read_cvisc),  # record
             (13301, 133, 509): ('', self._read_fake),  # record
             (1127,   11, 461) : ('SELOAD', self._read_fake),  # record NX
             (4501, 45, 1120001): ('GRID', self._read_grid_maybe),  # record ???; test_ibulk
@@ -882,7 +882,7 @@ class GEOM1:
         #return n
         #return len(data)
 
-    def _read_cvisc(self, data: bytes, n: int) -> int:
+    def read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
         op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')

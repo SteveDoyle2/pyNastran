@@ -126,6 +126,8 @@ class GEOM3:
             (2901, 29, 638): ['INITSO', self._read_fake],
             (9801, 98, 695): ['DRIVER', self._read_fake],
             (11501, 115, 624): ['TEMPBC', self._read_fake],
+
+            (12509, 125, 999): ['HYDROS', self.read_hydros],
             #(9709, 97, 635): ['???', self._read_fake],
             #(9709, 97, 635): ['???', self._read_fake],
             #(9709, 97, 635): ['???', self._read_fake],
@@ -139,6 +141,55 @@ class GEOM3:
 
 
         }
+    def read_hydros(self, data: bytes, n: int) -> int:
+        """
+        $       SID     PNOM    RHO     G       SETE    SETG    PLD4    OVRD
+        $       CID/G   HGHTB   HABOV   CNTL
+        HYDROS	350	0.	1.21-9	980.	  	31	1
+            1	20.	50.	999999
+
+        ints    = (350, 0, 816205079, 1148518400, 0, 31, 1, 0, 1, 1101004800, 1112014848, 999999, 0)
+        floats  = (4.90454462513686e-43, 0.0, 1.2099999890935464e-09, 980.0, 0.0, 4.344025239406933e-44, 1.401298464324817e-45, 0.0, 1.401298464324817e-45, 20.0, 50.0, 1.4012970630263527e-39, 0.0)
+        """
+        op2: OP2Geom = self.op2
+        op2.show_data(data[n:])
+        op2: OP2Geom = self.op2
+        ntotal = 13 * self.size
+        nelements = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(op2._endian + b'if f f ii ii i ffii', self.size))
+
+        for i in range(nelements):
+            datai = data[n:n+ntotal]
+            out = structi.unpack(datai)
+            (sid, pnom, rho, g, sete, setg, pld4, ovrd, cidg, hghtb, harbov, cntl, undef) = out
+            #print(f'(sid={sid} pnom={pnom} rho={rho} g={g} sete={sete} setg={setg} pld4={pld4} ovrd={ovrd}\n'
+            #      f'cidg={cidg} hghtb={hghtb} harbov={harbov} cntl={cntl} undef={undef}')
+            #print(out)
+            assert isinstance(sete, int), sete
+            assert isinstance(setg, int), setg
+            assert isinstance(cidg, int), cidg
+            assert isinstance(cntl, int), cntl
+            assert isinstance(pld4, int), pld4
+
+            assert isinstance(pnom, float), pnom
+            assert isinstance(rho, float), rho
+            assert isinstance(g, float), g
+            assert isinstance(hghtb, float), hghtb
+            assert isinstance(harbov, float), harbov
+
+            # ???
+            assert isinstance(ovrd, int), ovrd
+            assert isinstance(undef, int), undef
+            assert undef == 0, undef
+
+            assert cidg >= 0, cidg
+
+            #self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            n += ntotal
+        #self.show_data(data[n:])
+        op2.log.warning('geom skipping HYDROS')
+        op2.card_count['HYDROS'] = nelements
+        return n
 
     def _read_ploadb3(self, data: bytes, n: int) -> int:
         """

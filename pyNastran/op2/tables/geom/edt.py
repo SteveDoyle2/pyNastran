@@ -128,12 +128,83 @@ class EDT:
             (10904, 109, 719): ['HADAPTL', self._read_fake],
             (8204, 82, 621): ['MONPNT2', self.read_monpnt2],
             (8304, 83, 622): ['MONPNT3', self.read_monpnt3],
+            (1247, 12, 667): ['MONPNT2', self.read_monpnt2], # nx
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
+            (9004, 90, 619): ['MASSSET', self.read_massset],
+            (10104, 101, 683): ['SPBLND1', self.read_sblnd1],
+            (10004, 100, 682): ['SPLINRB', self._read_fake],
         }
+    def read_sblnd1(self, data: bytes, n: int) -> int:
+        """
+        24 - SPBLND1(10104,101,683)
+        Word Name Type Description
+        1 EID           I Identification of Blended Spline
+        2 EID1          I Ident. of 1st Spline to be Blended
+        3 EID2          I Ident. of 2nd Spline to be Blended
+        4 OPTION(2) CHAR4 Blending Option: WAVG, LIN, CUB
+        6 W1           RS Weight for 1st Spline
+        7 GID           I Aerodynamic Reference Grid
+        8 D1           RS Blending Depth of 1st Spline
+        9 D2           RS Blending Depth of 2nd Spline
+        10 X1          RS X1 Component of Direction Vector
+        11 X2          RS X2 Component of Direction Vector
+        12 X3          RS X3 Component of Direction Vector
+        13 CID          I Coordinate System Identification Number
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 13 * self.size # 4*13
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert self.factor == 1, self.factor
+        structi = Struct(op2._endian + b'3i 8s fi 5fi')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+
+            eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x1, x2, x3, cid = out
+            option = reshape_bytes_block_size(option_bytes, size=self.size)
+            x = [x1, x2, x3]
+            spline_blend = op2.add_sblnd1(eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid)
+            str(spline_blend)
+            n += ntotal
+        return n
+
+    def read_massset(self, data: bytes, n: int) -> int:
+        """
+        51 - MASSSET(9004,90,602)
+        Word Name Type Description
+        1 MID     I massset id
+        2 S      RS Overall scale factor
+        3 SI     RS massid scale factor
+        4 MASSID  I massid
+        Words 3 through 4 repeat until (-1,-1) occurs
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        #ncards = 0
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            mid = ints[i0]
+            scale = floats[i0+1]
+            scales = floats[i0+2:i1:2].tolist()
+            massids = ints[i0+3:i1:2].tolist()
+            assert len(scales) == len(massids)
+            assert len(scales) > 0, scales
+            op2.add_massset(mid, scale, scales, massids)
+        return len(data)
+
     def read_aeforce(self, data: bytes, n: int) -> int:
         """Word Name Type Description
         1 MACH     RS
@@ -1176,7 +1247,37 @@ class EDT:
         return n
 
     def read_paero4(self, data: bytes, n: int) -> int:
-        asdf
+        """
+        67 - PAERO4(4801,48,172)
+        1 PID   I
+        2 CLA   I
+        3 LCLA  I
+        4 CIRC  I
+        5 LCIRC I
+        6 DOCI   RS
+        7 CAOCI  RS
+        8 GAPOCI RS
+        Words 6 through 8 repeat until End of Record
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+
+        for (i0, i1) in zip(istart, iend):
+            pid, cla, lcla, circ, lcirc = ints[i0:i0+5]
+            doci_caoci_gapoci = floats[i0+5:i1]
+            nrow = len(doci_caoci_gapoci) // 3
+            doci_caoci_gapoci = doci_caoci_gapoci.reshape(nrow, 3)
+            assert ints[i1] == -1, ints[i1]
+            docs = doci_caoci_gapoci[:, 0].tolist()
+            caocs = doci_caoci_gapoci[:, 1].tolist()
+            gapocs = doci_caoci_gapoci[:, 2].tolist()
+            paero4 = op2.add_paero4(
+                pid, docs, caocs, gapocs,
+                cla=cla, lcla=lcla, circ=circ, lcirc=lcirc)
+            str(paero4)
+        return len(data)
 
     def read_paero5(self, data: bytes, n: int) -> int:
         """
@@ -2181,6 +2282,9 @@ class EDT:
         21 ITEM(2)  CHAR4
         23 EID      I
 
+        NX?
+        Words 17 thru 23 repeat until -1 occurs
+        Words 1 thru 23 repeat until (-2,-2) occurs
         """
         op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 4 * 23
@@ -2376,7 +2480,6 @@ class EDT:
 
             data_dict[name] = value
             n += ntotal
-
 
         if 'SPBLNDX' in data_dict:
             raise RuntimeError(f'SPBLNDX exists and has the wrong value...{data_dict}')

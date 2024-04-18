@@ -108,12 +108,24 @@ class DYNAMICS(GeomCommon):
             (7307, 73, 647): ['TLOAD3', self._read_fake],
             (5407, 54, 649): ['ALOAD', self._read_fake],
             (2701, 27, 62): ['FRFOTM', self._read_fake],
+            (12001, 120, 661): ['NLFREQ1', self.read_nlfreq1],
+            (11801, 118, 657): ['NLHARM', self._read_fake],
+            (14207, 142, 1001): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
         }
+
+    def read_nlfreq1(self, data: bytes, n: int) -> int:
+        """
+        NLFREQ1, 20, 0.0, 0.01, 150
+        data = (20, 0.0, 0.01, 150)
+        """
+        op2: OP2Geom = self.op2
+        op2.log.warning('geom skipping NLFREQ1')
+        return len(data)
 
     def _read_campbll(self, data: bytes, n: int) -> int:
         """
@@ -149,7 +161,7 @@ class DYNAMICS(GeomCommon):
             # darea = DAREA.add_op2_data(data=out)
             # op2._add_methods._add_darea_object(darea)
             n += ntotal
-        op2.log.warning('skipping CAMPBLL')
+        op2.log.warning('geom skipping CAMPBLL')
         return n
 
     def _read_aload(self, data: bytes, n: int) -> int:

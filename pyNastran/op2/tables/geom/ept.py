@@ -133,6 +133,8 @@ class EPT:
             (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
             (8901, 89, 905): ['PSOLCZ', self.read_psolcz],
             (9801, 98, 698): ['DESC', self.read_desc],
+            (12901, 129, 989): ['PDISTB', self._read_fake],
+            (17302, 173, 971): ['PCOMPFQ', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],

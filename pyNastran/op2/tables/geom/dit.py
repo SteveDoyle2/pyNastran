@@ -63,6 +63,7 @@ class DIT:
 
             (505, 5, 644) : ['TABLEM5', self._read_fake],
             (1605, 16, 117) : ['TABLED6', self._read_fake],
+            (4101, 41, 642) : ['TABLED5', self.read_tabled5],
             #(1605, 16, 117) : ['???', self._read_fake],
             #(1605, 16, 117) : ['???', self._read_fake],
             #(1605, 16, 117) : ['???', self._read_fake],
@@ -72,6 +73,17 @@ class DIT:
             #(1605, 16, 117) : ['???', self._read_fake],
             #(1605, 16, 117) : ['???', self._read_fake],
         }
+
+    def read_stop(self, data: bytes, n: int) -> int:  # pragma: no cover
+        """
+        ints    = (1000, 0, 0, 0, 0, 0, 0, 0,               20.0, 100, 30.0, 120, 60.0, 130, -1, -1,
+                   2000, 0, 0, 0, 0, 0, 0, 0, 1101004800, 200, 1106247680, 220, 1114636288, 230, -1, -1)
+        floats  = (1000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 100, 30.0, 120, 60.0, 130, -1, -1, 2.802596928649634e-42, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 2.802596928649634e-43, 30.0, 3.0828566215145976e-43, 60.0, 3.2229864679470793e-43, nan, nan)
+        """
+        op2: OP2Geom = self.op2
+        op2.show_data(data[n:])
+        asdf
+        return len(data)
 
     def _read_tabdmp1(self, data: bytes, n: int) -> int:
         """
@@ -301,6 +313,14 @@ class DIT:
         n = self._read_table4(TABLED4, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED4')
         return n
 
+    def read_tabled5(self, data: bytes, n: int) -> int:
+        """
+        TABLED5 - the marker for Record 7
+        """
+        op2: OP2Geom = self.op2
+        n = self._read_table5(TABLED4, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED5')
+        return n
+
 #TABLEDR
 
     def _read_tableh1(self, data: bytes, n: int) -> int:
@@ -444,6 +464,72 @@ class DIT:
             #n = n0 + ndata
             raise
         op2.increase_card_count(table_name, nentries)
+        return n
+
+    def _read_table5(self, cls, slot, add_method,
+                     data: bytes, n: int, table_name: str) -> int:
+        """
+        1 ID I Table identification number
+        2 X1 RS X-axis shift
+        3 X2 RS X-axis normalization
+        4 X3 RS X value when x is less than X3
+        5 X4 RS X value when x is greater than X4
+        6 UNDEF(3) None
+        9 A RS
+        Word 9 repeats until End of Record (-1)
+        """
+        op2: OP2Geom = self.op2
+        n0 = n
+        nentries = 0
+        ndata = len(data)
+        size = self.size
+        struct1 = Struct(mapfmt(op2._endian + b'i 4f 3i', size))
+        struct_i = op2.struct_i if size == 4 else op2.struct_q
+        struct_f = Struct(op2._endian + b'f') if size == 4 else Struct(op2._endian + b'd')
+        ntotal1 = 8 * self.size
+
+        #TABLED5 1000
+            #20.0    100      30.0    120     60.0    130    ENDT
+        #TABLED5 2000
+            #20.0    200      30.0    220     60.0    230    ENDT
+
+        try:
+            while ndata - n >= ntotal1:
+                edata = data[n:n + ntotal1]
+                out = struct1.unpack(edata)
+                print(out)
+                (tid, x1, x2, x3, x4, unused_a, unused_b, unused_c) = out
+                #print(f'tid = {tid}')
+                data_in = [tid, x1, x2, x3, x4]
+                n += ntotal1
+                #if test_minus1 == -1:
+                    #n += size
+                #else:
+                table_data = []
+                while 1:
+                    x, = struct_f.unpack(data[n:n + size])
+                    n += size
+                    xint, = struct_i.unpack(data[n:n + size])
+                    #print(x, xint)
+                    n += size
+                    if xint == -1:
+                        break
+                    else:
+                        table_data.append(x)
+                        table_data.append(xint)
+                print(table_data)
+                data_in += table_data
+                #table = cls.add_op2_data(data_in)
+                #add_method(table)
+                nentries += 1
+        except struct_error:
+            op2.log.error('failed parsing %s' % table_name)
+            op2.show_data(data[n0:], 'if')
+            op2.show_data(edata, 'if')
+            #n = n0 + ndata
+            raise
+        op2.log.warning(f'geom skipping {table_name}')
+        #op2.increase_card_count(table_name, nentries)0
         return n
 
 #TABLEST
