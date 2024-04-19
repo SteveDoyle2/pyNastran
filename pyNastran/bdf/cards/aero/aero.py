@@ -3840,19 +3840,34 @@ class MONPNT2(BaseCard):
         eid = 2
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
 
-    def __init__(self, name, label, table, Type, nddl_item, eid, comment=''):
+    def __init__(self, name: str, label: str,
+                 tables: list[str],
+                 element_types: list[str],
+                 nddl_items: list[str],
+                 eids: list[list[int]],
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.name = name
+        if isinstance(tables, str):
+            tables = [tables]
+        if isinstance(element_types, str):
+            element_types = [element_types]
+        if isinstance(nddl_items, str):
+            nddl_items = [nddl_items]
+        if isinstance(eids, int):
+            eids = [[eids]]
+
         self.label = label
-        self.table = table
-        self.Type = Type
-        self.nddl_item = nddl_item
-        self.eid = eid
+        self.tables = tables
+        self.element_types = element_types
+        self.nddl_items = nddl_items
+        self.eids = eids
 
     def validate(self):
-        assert self.table in ['STRESS', 'FORCE', 'STRAIN'], self.table
+        for table in self.tables:
+            assert table in ['STRESS', 'FORCE', 'STRAIN'], self.tables
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -3867,6 +3882,7 @@ class MONPNT2(BaseCard):
         nddl_item = integer_or_string(card, 11, 'nddl_item')
         #nddl_item = integer_or_blank(card, 11, 'nddl_item')
         eid = integer_or_blank(card, 12, 'eid')
+        assert len(card) == 13, card
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -3881,15 +3897,19 @@ class MONPNT2(BaseCard):
 
     def raw_fields(self):
         list_fields = [
-            'MONPNT2', self.name, self.label.strip(),
-            self.table, self.Type, self.nddl_item, self.eid]
+            'MONPNT2', self.name, self.label.strip()]
+        for table, element_type, nddl_item, eids in zip(self.tables, self.element_types, self.nddl_items, self.eids):
+            list_fields += [table, element_type, nddl_item] + eids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = 'MONPNT2 %-8s%s\n' % (self.name, self.label)
-        msg += ('        %-8s%-8s%-8s%-8s\n' % (
-            self.table, self.Type, self.nddl_item, self.eid
-        ))
+        for table, element_type, nddl_item, eids in zip(self.tables, self.element_types, self.nddl_items, self.eids):
+            assert len(eids) == 1, eids
+            #list_fields += [table, element_type, nddl_item] + eids
+            msg += ('        %-8s%-8s%-8s%-8s\n' % (
+                table, element_type, nddl_item, eids[0]
+            ))
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
 

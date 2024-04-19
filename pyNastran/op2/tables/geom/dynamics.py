@@ -114,10 +114,11 @@ class DYNAMICS(GeomCommon):
             (11801, 118, 657): ['NLHARM', self._read_fake],
             (12001, 120, 661): ['NLFREQ1', self.read_nlfreq1],
             (12201, 122, 667): ['JCONADD', self._read_fake],
-            (12607, 126, 672): ['???', self._read_fake],
             (13207, 132, 697): ['DAMPING', self._read_fake],
             (13007, 130, 676): ['FRFXIT1', self._read_fake],
-            (14207, 142, 1001): ['???', self._read_fake],
+
+            (12607, 126, 672): ['???-1', self._read_fake],
+            (14207, 142, 1001): ['NLFREQ1?', self._read_fake],
 
             (12707, 127, 673): ['SPC?', self._read_fake],
             (12907, 129, 675): ['FRFXIT', self._read_fake],

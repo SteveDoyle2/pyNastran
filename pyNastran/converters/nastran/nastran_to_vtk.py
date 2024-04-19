@@ -56,22 +56,22 @@ def save_nastran_results(gui: NastranGUI,
             continue
 
         if isinstance(case, ForceTableResults):
-            _save_force_table_results(case, key, index_name, used_titles,
+            _save_force_table_results(icase, case, key, index_name, used_titles,
                                       point_data, cell_data, log)
             continue
 
         elif isinstance(case, DisplacementResults):
-            _save_displacement_results(case, key, index_name, used_titles,
+            _save_displacement_results(icase, case, key, index_name, used_titles,
                                        point_data, cell_data, log)
             continue
 
         elif isinstance(case, SimpleTableResults):
-            _save_simple_table_results(case, key, index_name, used_titles,
+            _save_simple_table_results(icase, case, key, index_name, used_titles,
                                        point_data, cell_data, log)
             continue
 
         if isinstance(case, LayeredTableResults):
-            vtk_array = _save_layered_table_results(case,
+            vtk_array = _save_layered_table_results(icase, case,
                                                     key, index_name, used_titles,
                                                     point_data, cell_data, log)
             location = case.location
@@ -100,10 +100,11 @@ def save_nastran_results(gui: NastranGUI,
                 return
             assert isinstance(case, GuiResult), case
             location = case.location
-            vtk_array = case.save_vtk_result(used_titles)
+            vtk_array = case.save_vtk_result(icase, used_titles)
         add_vtk_array(location, point_data, cell_data, vtk_array)
 
-def _save_force_table_results(case: ForceTableResults,
+def _save_force_table_results(icase: int,
+                              case: ForceTableResults,
                               key: int,
                               index_name: tuple[int, tuple[int, int, str]],
                               used_titles: set[str],
@@ -116,7 +117,7 @@ def _save_force_table_results(case: ForceTableResults,
 
     if dxyz.ndim == 2:
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        titlei =  f'{title}_subcase={case.subcase_id}'
+        titlei =  f'icase={icase}; {title}_subcase={case.subcase_id}'
         titlei = check_title(title, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
@@ -125,14 +126,15 @@ def _save_force_table_results(case: ForceTableResults,
             header = case.headers[itime].replace(' = ', '=')
             dxyz = case.dxyz[itime, :, :]
             vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-            titlei =  f'{header}_subcase={case.subcase_id}'
+            titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
             titlei = check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
             add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
         log.warning(f'cannot add {str(case)!r}')
 
-def _save_displacement_results(case: DisplacementResults,
+def _save_displacement_results(icase: int,
+                               case: DisplacementResults,
                                key: int,
                                index_name: tuple[int, tuple[int, int, str]],
                                used_titles: set[str],
@@ -149,12 +151,13 @@ def _save_displacement_results(case: DisplacementResults,
         dxyz = case.dxyz[itime, :, :]
         assert dxyz.ndim == 2, dxyz.shape
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        titlei =  f'{header}_subcase={case.subcase_id}'
+        titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
         titlei = check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
-def _save_simple_table_results(case: SimpleTableResults,
+def _save_simple_table_results(icase: int,
+                               case: SimpleTableResults,
                                key: int,
                                index_name: tuple[int, tuple[int, int, str]],
                                used_titles: set[str],
@@ -181,7 +184,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     (itime, imethod, header) = name
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
-    titlei =  f'{case.uname}: {method}_{header2}_subcase={case.subcase_id}'
+    titlei =  f'icase={icase}; {case.uname}: {method}_{header2}_subcase={case.subcase_id}'
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
@@ -194,7 +197,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     add_vtk_array(case.location, point_data, cell_data, vtk_array)
     #log.warning(f'skipping SimpleTableResults {case}')
 
-def _save_layered_table_results(case: LayeredTableResults,
+def _save_layered_table_results(icase, case: LayeredTableResults,
                                 key: int,
                                 index_name: tuple[int, tuple[int, int, int, str]],
                                 used_titles: set[str],
@@ -212,7 +215,7 @@ def _save_layered_table_results(case: LayeredTableResults,
     #form_index = case.get_form_index(key, name)
     form_name = case.form_names[itime, ilayer, imethod]
     #for method in case.methods:
-    titlei =  f'{form_name}_subcase={case.subcase_id}'
+    titlei =  f'icase={icase}; {form_name}_subcase={case.subcase_id}'
     method = case.get_methods(key, name)[0]
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe

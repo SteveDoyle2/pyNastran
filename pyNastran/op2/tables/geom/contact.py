@@ -120,8 +120,9 @@ class CONTACT:
             (7224, 72, 995) : ['BCGRID', self._read_fake],
             (20032, 32, 496) : ['GMNURB', self._read_fake],
 
-            (5224, 52, 894) : ['???', self.read_stop],
-            (5324, 53, 895) : ['???', self.read_stop],
+            (5224, 52, 894) : ['BCBZIER', self._read_fake],
+            (5324, 53, 895) : ['BCNURB2', self._read_fake],
+            (5124, 51, 893) : ['BCPATCH', self._read_fake],
         }
 
     def _read_amlreg(self, data: bytes, n: int) -> int:

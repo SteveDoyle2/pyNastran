@@ -304,9 +304,31 @@ class GEOM3:
         8 VALi   RS The load scale factor associated with location LOCi
         Words 7 through 8 repeat until (-1,-1) occurs.
         """
+        assert self.size == 4, self.size
+
         op2: OP2Geom = self.op2
-        op2.show_data(data)
-        op2.log.info('geom skipping ACCEL in GEOM3')
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        strings = np.frombuffer(data[n:], '|S4').copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            #ACCEL   1               .267261 .534522 .801784 X                       +
+            #+       0.0     -32.2   4.0     -161.0
+
+            sid, cid = ints[i0:i0+2]
+            N = floats[i0+2:i0+5]
+            direction = strings[i0+5].decode('latin1').strip()
+            locs = floats[i0+6:i1:2]
+            vals = floats[i0+7:i1:2]
+            assert len(locs) == len(vals)
+            accel = op2.add_accel(sid, N, direction, locs, vals, cid=cid, comment='')
+            str(accel)
         return len(data)
 
     def _read_accel1(self, data: bytes, n: int) -> int:

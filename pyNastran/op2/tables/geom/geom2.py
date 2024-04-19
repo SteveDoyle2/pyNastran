@@ -1337,7 +1337,6 @@ class GEOM2:
             op2.add_cbush2d(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment='')
             n += ntotal
         op2.card_count['CBUSH2D'] = nelements
-        asdf
         return n
 
     def read_ccone(self, data: bytes, n: int) -> int:

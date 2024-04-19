@@ -1501,10 +1501,10 @@ class MPT:
             mid, model = struct0.unpack(edata0)
             if model == 1:
                 out = struct1.unpack(edata)
-                mid, model, rho, c, dummy1, dummy2, dummy3, dummy4, res, por, tort, *dummy = out # cragg
+                mid, model, rho, c, dummy1, dummy2, dummy3, dummy4, resistivity, porosity, tortuosity, *dummy = out # cragg
                 assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
                 assert dummy == [0, 0, 0, 0, 0], dummy
-                op2.add_matpor_cragg(mid, rho, c, res, por, tort)
+                op2.add_matpor_craggs(mid, rho, c, resistivity, porosity, tortuosity)
             elif model == 2:
                 out = struct2.unpack(edata)
                 (mid, model, rho, c, frame_int, dummy1, dummy2, dummy3,
@@ -1527,7 +1527,8 @@ class MPT:
                  L1, L2, *dummy) = out # johnson
                 assert dummy == [0, 0], dummy
 
-                #FRAME = 1 for rigid; FRAME = 2 for limp
+                # FRAME = 1 for rigid
+                # FRAME = 2 for limp
                 if frame_int == 1:
                     frame = 'RIGID'
                 elif frame_int == 2:

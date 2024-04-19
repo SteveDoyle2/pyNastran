@@ -144,6 +144,8 @@ class EPT:
             (17502, 175, 973): ['PFASTT', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
 
+            (13601, 136, 636): ['PBUSH2D', self.read_pbush2d],
+
         }
 
     def _add_op2_property(self, prop):
@@ -240,7 +242,7 @@ class EPT:
         op2.card_count['PSOLCZ'] = nentries
         return n
 
-    def read_pcompg1(data: bytes, n: int) -> None:
+    def read_pcompg1(self, data: bytes, n: int) -> None:
         """
         PCOMPG1(15106,151,953)
 
@@ -261,6 +263,11 @@ class EPT:
         14 SOUT    I Stress or strain output request of the ply
         15 UNDEF None
         Words 9 through 15 repeat until (-1,-1,-1,-1,-1,-1,-1) occurs
+        PCOMPG1        PID     Z0   NSM     SB      N/A      TREF     GE
+        GPLYIDi        MIDi    TRi  THETAi          FTi      N/A     SOUTi
+        PCOMPG1        1             0.0    20.0                     0.0        +
+        +              1       1    0.4      0.0    STRN             YES        +
+
         """
         op2: OP2Geom = self.op2
         size = self.size
@@ -268,12 +275,12 @@ class EPT:
         nproperties = 0
         s1 = Struct(mapfmt(op2._endian + b'i7f', size))
         ntotal1 = 8 * size
-        s2 = Struct(mapfmt(op2._endian + b'2i2f3i', size))
+        s2 = Struct(mapfmt(op2._endian + b'2i2f2i i', size))
 
         seven_minus1 = Struct(mapfmt(op2._endian + b'7i', size))
         ndata = len(data)
         ntotal2 = 7 * size
-        props = []
+        #props = []
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
             (pid, z0, nsm, sb, undef1, tref, ge, undef2) = out
@@ -282,8 +289,8 @@ class EPT:
             #if op2.binary_debug:
                 #op2.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers}  '
                                         #f'sb={sb} Tref={tref} ge={ge}')
-            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
-                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            print(f'PCOMP pid={pid} z0={z0} nsm={nsm} '
+                  f'sb={sb} tref={tref} ge={ge}')
             n += ntotal1
 
             global_ply_ids = []
@@ -293,26 +300,32 @@ class EPT:
             souts = []
             failure_theories = []
 
+            #op2.show_data(data[n:], types='dqs')
             edata2 = data[n:n+ntotal2]
-            idata = seven_minus1.unpack(edata2)
+            #idata = seven_minus1.unpack(edata2)
+            idata = (2, )
             while idata != (-1, -1, -1, -1, -1, -1, -1):
-                (global_ply_id, mid, t, theta, fti, souti) = s2.unpack(edata2)
+                out = s2.unpack(edata2)
+                (global_ply_id, mid, t, theta, ft_int, sout_int, junk) = out
+                #print(out)
 
                 #HILL for the Hill failure theory.
                 #HOFF for the Hoffman failure theory.
                 #TSAI for the Tsai-Wu failure theory.
-                #STRN for the Maximum Strain failure theory.
-                if fti == 0:
+                #4-STRN for the Maximum Strain failure theory.
+                if ft_int == 0:
                     ft = None
+                elif ft_int == 4:
+                    ft = 'STRN'
                 else:  # pragma: no cover
-                    raise NotImplementedError(fti)
+                    raise NotImplementedError(ft_int)
 
-                if souti == 0:
+                if sout_int == 0:
                     sout = 'NO'
-                elif souti == 1:
+                elif sout_int == 1:
                     sout = 'YES'
                 else:  # pragma: no cover
-                    raise NotImplementedError(sout)
+                    raise NotImplementedError(sout_int)
 
                 global_ply_ids.append(global_ply_id)
                 mids.append(mid)
@@ -324,12 +337,18 @@ class EPT:
                     op2.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
                 #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
-                edata2 = data[n:n+ntotal2]
                 if n == ndata:
                     op2.log.warning('  no (-1, -1, -1, -1, -1, -1, -1) flag was found to close the PCOMPG1s')
                     break
+
+                # NX
+                #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\c402cmpg8lgm.op2
+                n += 8  # TODO: random 0 flag???
+                edata2 = data[n:n+ntotal2]
                 idata = seven_minus1.unpack(edata2)
+                #print(idata)
             nlayers = len(mids)
+            assert nlayers > 0, nlayers
 
             #if size == 4:
                 #assert 0 < nlayers < 400, 'pid=%s nlayers=%s sb=%s ft=%s Tref=%s ge=%s' % (
@@ -339,7 +358,7 @@ class EPT:
                 #nlayers = len(mids)
 
             #prop = PCOMP.add_op2_data(data_in)
-            op2.add_pcompg1
+            #op2.add_pcompg1
 
             nproperties += 1
             n += ntotal2
@@ -408,18 +427,35 @@ class EPT:
             idata = eight_minus1.unpack(edata2)
             while idata != (-1, -1, -1, -1, -1, -1, -1, -1):
                 (global_ply_id, mid, t, theta, fti, lam_fti, souti, tflagi) = s2.unpack(edata2)
-
-                #HILL for the Hill failure theory.
-                #HOFF for the Hoffman failure theory.
-                #TSAI for the Tsai-Wu failure theory.
-                #STRN for the Maximum Strain failure theory.
-                #STRS for the Maximum Stress failure theory.
-                #TS for the Maximum Transverse Shear Stress failure theory.
-                #PFA for progressive ply failure. See Remark 6.
-                #(Character; Default = No failure theory). Not supported
+                #1-HILL for the Hill failure theory.
+                #2-HOFF for the Hoffman failure theory.
+                #3-TSAI for the Tsai-Wu failure theory.
+                #4-STRN for the Maximum Strain failure theory.
+                #5-STRS for the Maximum Stress failure theory.
+                #6-TS for the Maximum Transverse Shear Stress failure theory.
+                #
+                #
+                #9-PFA for progressive ply failure. See Remark 6.
+                #0-(Character; Default = No failure theory). Not supported
                 if fti == 0:
                     ft = None
+                elif fti == 1:
+                    ft = 'HILL'
+                elif fti == 2:
+                    ft = 'HOFF'
+                elif fti == 3:
+                    ft = 'TSAI'
+                elif fti == 4:
+                    ft = 'STRN'
+                elif fti == 5:
+                    ft = 'STRS'
+                elif fti == 6:
+                    ft = 'TS'
+                elif fti == 9:
+                    ft = 'PFA'
                 else:  # pragma: no cover
+                    self.log.error(f'PCOMPS pid={pid} global_ply_id={global_ply_id} mid={mid} t={t:g} '
+                                   f'theta={theta} fti={fti} lam_ft={lam_fti} sout={souti} tflag={tflagi}')
                     raise NotImplementedError(fti)
 
                 #SB for transverse shear stress failure index.
@@ -427,6 +463,10 @@ class EPT:
                 #(Character; Default = No failure index)
                 if lam_fti == 0:
                     lam_ft = None
+                elif lam_fti == 7:
+                    lam_ft = 'SB'
+                elif lam_fti == 8:
+                    lam_ft = 'NB'
                 else:  # pragma: no cover
                     raise NotImplementedError(lam_fti)
 
@@ -440,6 +480,8 @@ class EPT:
                     tflag = 'ABS'
                 else:  # pragma: no cover
                     raise NotImplementedError(tflagi)
+
+                #print(f'global_ply_id={global_ply_id} mid={mid} t={t:g} theta={theta} fti={ft} lam_ft={lam_ft} sout={sout} tflag={tflag}')
 
                 global_ply_ids.append(global_ply_id)
                 mids.append(mid)
@@ -1990,6 +2032,134 @@ class EPT:
             #op2._add_pbusht_object(prop)
         #return n
 
+    def read_pbush2d(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 PID   I Property identification number
+        2 K1   RS Nominal Stiffness for T1
+        3 K2   RS Nominal Stiffness for T2
+        4 B1   RS Nominal Viscous Damping for T1
+        5 B2   RS Nominal Viscous Damping for T2
+        6 M1   RS Nominal Mass for T1
+        7 M2   RS Nominal Mass for T2
+        8 DEFINED I
+        DEFINED =1
+          9  FTBEQ I TABLE or EQUATN; see NOTEs after EOR
+          10 TIDF1 I TABLE/DEQATN ID for P in T1 vs. disp/velo/acce/rotorsp
+          11 TIDF2 I TABLE/DEQATN ID for P in T2 vs. disp/velo/acce/rotorsp
+          12 UNDEF(17) none
+        DEFINED=2 defined via SQUEEZE
+          9  BDIA    RS Inner journal diameter, required
+          10 BLEN    RS Damper length, required
+          11 BCLR    RS Damper radial clearance, required
+          12 SOLN     I Solution option: 1=LONG or 2=SHORT bearing
+          13 VISCO   RS Lubricant viscosity, required
+          14 PVAPCO  RS Lubricant vapor pressure, required
+          15 NPORT    I Number of lubrication ports: 1 or 2
+          16 PRES1   RS Boundary pressure for port 1, required if NPORT=1 or 2
+          17 THETA1  RS Angular position for port 1, required if NPORT=1 or 2
+          18 PRES2   RS Boundary pressure for port 2, required if NPORT=2
+          19 THETA2  RS Angular position for port 2, required if NPORT=2
+          20 OFFSET1 RS Offset in the SFD direction 1
+          21 OFFSET2 RS Offset in the SFD direction 2
+          22 UNDEF(7) none
+        DEFINED=3 defined via CROSS
+          9 K12  RS Stiffness in T1 due to disp in T2
+          10 K21 RS Stiffness in T2 due to disp in T1
+          11 B12 RS Damping in T1 due to velo in T2
+          12 B21 RS Damping in T2 due to velo in T1
+          13 M12 RS Acce depend force in T1 due to acce in T2
+          14 M21 RS Acce depend force in T2 due to acce in T1
+          15 UNDEF(14) none
+        DEFINED=4 defined via SPRING/DAMPER/MASS
+          9 OPTTYP(C)  I Option type
+          OPTTYP=1 for SPRING
+            10 STBEQ   I TABLE or EQUATN; see NOTEs after EOR
+            11 TEIDK11 I TABLED5/DEQATN ID for K in T1 due to motion in T1
+            12 TEIDK22 I TABLED5/DEQATN ID for K in T2 due to motion in T2
+            13 TEIDK12 I TABLED5/DEQATN ID for K in T1 due to motion in T2
+            14 TEIDK21 I TABLED5/DEQATN ID for K in T2 due to motion in T1
+          OPTTYP=2 for DAMPER
+            10 DTBEQ   I TABLE or EQUATN; see NOTEs after EOR
+            11 TEIDB11 I TABLED5/DEQATN ID for B in T1 due to motion in T1
+            12 TEIDB22 I TABLED5/DEQATN ID for B in T2 due to motion in T2
+            13 TEIDB12 I TABLED5/DEQATN ID for B in T1 due to motion in T2
+            14 TEIDB21 I TABLED5/DEQATN ID for B in T2 due to motion in T1
+          OPTTYP=3 for MASS
+            10 MTBEQ   I TABLE or EQUATN; see NOTEs after EOR
+            11 TEIDM11 I TABLED5/DEQATN ID for M in T1 due to motion in T1
+            12 TEIDM22 I TABLED5/DEQATN ID for M in T2 due to motion in T2
+            13 TEIDM12 I TABLED5/DEQATN ID for M in T1 due to motion in T2
+            14 TEIDM21 I TABLED5/DEQATN ID for M in T2 due to motion in T1
+          End OPTTYP
+          Words 9 through max repeat until End of Record
+          15 N(C)     I Count for UNDEF
+          16 UNDEF none
+          Word 16 repeats N times
+        DEFINED=5 defined via RGAP
+          9  TABK    I Table ID for GAP K vs. rela disp
+          10 TABB    I Table ID for GAP K vs. rela disp(>0) or velo(
+          11 TABG    I Table ID for GAP clearance vs. time
+          12 TABU    I Table ID for friciton coef vs. time
+          13 RADIUS RS Shaft radius >=0.0
+          14 UNDEF(15) none
+        DEFINED=0 No continuation
+        9 UNDEF(20) none
+        End DEFINED VIA
+        """
+
+        #1 PID   I Property identification number
+        #2 K1   RS Nominal Stiffness for T1
+        #3 K2   RS Nominal Stiffness for T2
+        #4 B1   RS Nominal Viscous Damping for T1
+        #5 B2   RS Nominal Viscous Damping for T2
+        #6 M1   RS Nominal Mass for T1
+        #7 M2   RS Nominal Mass for T2
+        #8 DEFINED I
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+
+        i = 0
+        nfields = len(ints)
+        while i < nfields:
+            pid = ints[i]
+            k1, k2, b1, b2, m1, m2 = floats[i+1:i+7]
+            flag = ints[i+7]
+            if flag == 1:
+                #9  FTBEQ I TABLE or EQUATN; see NOTEs after EOR
+                #10 TIDF1 I TABLE/DEQATN ID for P in T1 vs. disp/velo/acce/rotorsp
+                #11 TIDF2 I TABLE/DEQATN ID for P in T2 vs. disp/velo/acce/rotorsp
+                #12 UNDEF(17) none
+                ftbeq_flag, tid_f1, tid_f2 = ints[i+8:i+10]
+                i += 10
+                asdf
+            elif flag == 3:
+                #9 K12  RS Stiffness in T1 due to disp in T2
+                #10 K21 RS Stiffness in T2 due to disp in T1
+                #11 B12 RS Damping in T1 due to velo in T2
+                #12 B21 RS Damping in T2 due to velo in T1
+                #13 M12 RS Acce depend force in T1 due to acce in T2
+                #14 M21 RS Acce depend force in T2 due to acce in T1
+                #15 UNDEF(14) none
+                k12, k21, b12, b21, m12, m21 = floats[i+8:i+14]
+                undef = floats[i+14:i+28]
+                assert np.abs(undef).sum() == 0, undef
+                i += 28
+                op2.add_pbush2d_cross(pid,
+                                      k1, k2, b1, b2, m1, m2,
+                                      k12, k21, b12, b21, m12, m21)
+            else: # pragma: no cover
+                raise NotImplementedError(flag)
+        #op2.log.warning('geom skipping PBUSH2D in EPT')
+        #op2.add_pbush2d_squeeze()
+        #"""
+        #| PBUSH2D | PID     | K11   | K22    | B11   | B22    | M11     | M22     |
+        #|         | SQUEEZE | BDIA  | BLEN   | BCLR  | SOLN   | VISCO   | PVAPCO  |
+        #|         | NPORT   | PRES1 | THETA1 | PRES2 | THETA2 | OFFSET1 | OFFSET2 |
+        #"""
+        return len(data)
+
     def read_pbusht(self, data: bytes, n: int) -> int:
         """
         NX 12 / MSC 2005
@@ -2738,7 +2908,25 @@ class EPT:
         return len(data)
 
     def read_pdamp5(self, data: bytes, n: int) -> int:  # 26
-        self.op2.log.info('geom skipping PDAMP5 in EPT')
+        """
+        Word Name Type Description
+        1 PID I Property identification number
+        2 MID I Material identification number
+        3 B RS Damping multiplier
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 3 * self.size
+        struct_if = Struct(mapfmt(op2._endian + b'2if', self.size))
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
+            pid, mid, b = struct_if.unpack(data[n:n+ntotal])
+            #(pid, b) = out
+            prop = op2.add_pdamp5(pid, mid, b)
+            self._add_op2_property(prop)
+            n += ntotal
+        op2.card_count['PDAMP5'] = nentries
         return len(data)
 
 # PDUM1

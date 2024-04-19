@@ -155,6 +155,7 @@ class EDT:
             (12504, 125, 912): ['SET4', self._read_fake],
             (12604, 126, 913): ['UDNAME', self._read_fake],
 
+            (9300, 93, 631) : ['FBODYSB', self._read_fake],
             (14402, 144, 690): ['???', self.read_stop],
             #(14402, 144, 690): ['???', self.read_stop],
 
@@ -2292,7 +2293,107 @@ class EDT:
         #op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
+
     def read_monpnt2(self, data: bytes, n: int) -> int:
+        """Reads the MONPNT2 card"""
+        op2: OP2Geom = self.op2
+        card_name = 'MONPNT2'
+        card_obj = MONPNT2
+
+        ndatai = len(data) - n
+        ntotal_msc = 23 * self.size
+        if ndatai // ndatai > 0 and ndatai % ntotal_msc == 0:
+            n = self.read_monpnt2_msc(data, n)
+        else:
+            n = self.read_monpnt2_nx(data, n)
+        return n
+
+    def read_monpnt2_nx(self, data: bytes, n: int) -> int:
+        """
+        MONPNT2(1247,12,667)
+        Word Name Type Description
+
+        1 NAME(2)   CHAR4 Character string identifying the monitor point
+        3 LABEL(14) CHAR4 Character string identifying and labeling the monitor point
+        17 TABLE(2) CHAR4 Stress, strain, or force
+        19 ELTYP(2) CHAR4 Element type
+        21 ITEM(2)  CHAR4 NDDL item
+        23 EID         I Element identification number
+        Words 17 thru 23 repeat until -1 occurs
+        Words 1 thru 23 repeat until (-2,-2) occurs
+
+        strings = (b'LOCR    TESTING18       \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00STRAIN  CTRIAR  EX1     \x01\x00\x00\x00\xff\xff\xff\xffSTRESS  CTRIAR  SX1     \x01\x00\x00\x00\xff\xff\xff\xffFORCE   CTRIAR  MX      \x01\x00\x00\x00\xff\xff\xff\xff\xfe\xff\xff\xff\xfe\xff\xff\xff',)
+        ints    = (1380142924, 538976288, 1414743380, 826756681, 538976312, 538976288, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1095914579, 538988105, 1230132291, 538989121, 540104773, 538976288, 1, -1,
+                   1163023443, 538989395, 1230132291, 538989121, 540104787, 538976288, 1, -1,
+                   1129467718, 538976325, 1230132291, 538989121, 538990669, 538976288, 1, -1, -2, -2)
+        floats  = (209712250880.0, 1.3563156426940112e-19, 3629604929536.0, 2.900281126372306e-09, 1.3563187446213083e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.145586967468262, 1.357842954146908e-19, 861508.1875, 1.3579742690691507e-19, 1.5021689104372773e-19, 1.3563156426940112e-19, 1.401298464324817e-45, nan,
+                   3365.270263671875, 1.3580096827391256e-19, 861508.1875, 1.3579742690691507e-19, 1.5021707198948673e-19, 1.3563156426940112e-19, 1.401298464324817e-45, nan,
+                   210.30966186523438, 1.3563204248319275e-19, 861508.1875, 1.3579742690691507e-19, 1.358174343379812e-19, 1.3563156426940112e-19, 1.401298464324817e-45, -1, -2, -2)
+        """
+        op2: OP2Geom = self.op2
+        assert self.size == 4, self.size
+        struct0 = Struct(op2._endian + b'8s 56s')
+        structi = op2.struct_i
+
+        struct1i = Struct(op2._endian + b'8s 8s 8s')
+        struct2i = op2.struct_2i
+        ntotal0 = 16 * self.size
+        ntotal1 = 6 * self.size
+        ntotal2 = 2 * self.size
+        monpnts = []
+        while n < len(data):
+            edata = data[n:n+ntotal0]
+            n += ntotal0
+            name_bytes, label_bytes = struct0.unpack(edata)
+            label_bytes_strip1 = label_bytes.rstrip(b'\x00')
+            label_bytes_strip2 = b'%-56s' % label_bytes_strip1
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes_strip2, self.size)
+
+            #print('monpnt2', n, name, label)
+            tables = []
+            element_types = []
+            nddl_items = []
+            all_eids = []
+            while n < len(data): # -2
+                edatai = data[n:n+ntotal1]
+                table_bytes, eltype_bytes, item_bytes = struct1i.unpack(edatai)
+                table = reshape_bytes_block_size(table_bytes, self.size)
+                element_type = reshape_bytes_block_size(eltype_bytes, self.size)
+                nddl_item = reshape_bytes_block_size(item_bytes, self.size)
+                tables.append(table)
+                element_types.append(element_type)
+                nddl_items.append(nddl_item)
+                n += ntotal1
+
+                eid = 0
+                eids = []
+                #print(f'table={table!r} Type={element_type!r} nddl_item={nddl_item!r}')
+                while eid != -1: # -1
+                    data_stop = data[n:n+self.size]
+                    eid, = structi.unpack(data_stop)
+                    n += self.size
+
+                    if eid == -1:
+                        #print(f'breaking...eid={eid}')
+                        break
+                    #print(f'n={n}; eid={eid}')
+                    eids.append(eid)
+                all_eids.append(eids)
+                edatai2 = data[n:n+ntotal2]
+                value1, value2 = struct2i.unpack(edatai2)
+                if (value1, value2) == (-2, -2):
+                    n += ntotal2
+                    break
+
+            monpnt = MONPNT2(name, label, tables, element_types, nddl_items, all_eids, comment='')
+            op2._add_methods._add_monpnt_object(monpnt)
+            str(monpnt)
+            #print(monpnt)
+            monpnts.append(monpnt)
+        return n
+
+    def read_monpnt2_msc(self, data: bytes, n: int) -> int:
         """
         Record 59 - MONPNT2(8204,82,621)
         Word Name Type Description
@@ -2302,10 +2403,6 @@ class EDT:
         19 ELTYP(2) CHAR4
         21 ITEM(2)  CHAR4
         23 EID      I
-
-        NX?
-        Words 17 thru 23 repeat until -1 occurs
-        Words 1 thru 23 repeat until (-2,-2) occurs
         """
         op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 4 * 23

@@ -2369,6 +2369,21 @@ class Add1dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
+    def add_pbush2d_cross(self, pid: int,
+                          k1: float, k2: float,
+                          b1: float, b2: float,
+                          m1: float, m2: float,
+                          k12: float, k21: float,
+                          b12: float, b21: float,
+                          m12: float, m21: float) -> None:
+        """
+        | PBUSH2D | PID     |  K11  |   K22  |  B11  |   B22  |   M11   |   M22   |
+        |         | CROSS   |  K12  |   K21  |  B12  |   B21  |   M12   |   M21   |
+        """
+        list_fields = ['PBUSH2D', pid, k1, k2, b1, b2, m1, m2, None,
+                       'CROSS', k12, k21, b12, b21, m12, m21]
+        self.reject_card_lines('PBUSH2D', print_card_8(list_fields).split('\n'), show_log=False)
+
     #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment='') -> PBUSH2D:
         #"""
         #Creates a PBUSH2D card
