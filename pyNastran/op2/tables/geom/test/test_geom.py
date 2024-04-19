@@ -123,11 +123,11 @@ class TestOP2GeomUnit(unittest.TestCase):
         data = (2110, 21, 194,
                 2.0, 123456, 0, 44, 45, 48, 49, -1)
         data_bytes = struct.pack(b'3i f 7i', *data)
-        op2.reader_geom4._read_uset1(data_bytes, 12)
+        op2.reader_geom4.read_uset1(data_bytes, 12)
 
 
         data_bytes = struct.pack(b'3i f 7i', *data)
-        op2.reader_geom4._read_uset1(data_bytes, 12)
+        op2.reader_geom4.read_uset1(data_bytes, 12)
 
     def test_nsml1_nx(self):
         """tests NSML1-NX"""
