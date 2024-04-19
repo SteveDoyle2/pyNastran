@@ -3885,11 +3885,9 @@ class EPT:
         7 WTOL    RS Warpage tolerance
         8 RADCHK   I Radiation exchange diagnostic output level
         """
-        self.op2.log.info('geom skipping VIEW3D in EPT')
-        return len(data)
         op2: OP2Geom = self.op2
         ntotal = 8 * self.size
-        structi = Struct(op2._endian + b'5if')
+        structi = Struct(mapfmt(op2._endian + b'4i 3f i', self.size))
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n+ntotal]
@@ -3900,6 +3898,7 @@ class EPT:
             view = op2.add_view3d(icavity, gitb=gitb, gips=gips, cier=cier,
                                   error_tol=etol, zero_tol=ztol, warp_tol=wtol,
                                   rad_check=radcheck)
+            str(view)
             n += ntotal
         op2.card_count['VIEW3D'] = ncards
         #asdf

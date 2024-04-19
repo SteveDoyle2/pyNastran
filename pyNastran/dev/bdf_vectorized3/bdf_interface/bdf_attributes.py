@@ -619,6 +619,7 @@ class BDFAttributes:
         self.matt5 = MATT5(self)
         self.matt8 = MATT8(self)
         self.matt9 = MATT9(self)
+        #self.matt11 = MATT11(self)
 
         self.spc = SPC(self)
         self.spc1 = SPC1(self)

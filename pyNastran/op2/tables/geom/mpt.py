@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
 from pyNastran.bdf.cards.material_deps import (
-    MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
+    MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11)
 from pyNastran.bdf.cards.dynamic import (TSTEPNL,
                                          NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP) # TSTEP
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -1387,6 +1387,7 @@ class MPT:
     def read_matt11(self, data: bytes, n: int) -> int:
         """
         Record – MATT11(3303,33,988)
+
         Solid orthotropic material temperature dependence.
         Defines the temperature dependent material property for a
         3D orthotropic material for isoparametric solid elements.
@@ -1420,30 +1421,23 @@ class MPT:
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge, *other = out
+            (mid, e1_table, e2_table, e3_table, nu12_table, nu13_table, nu23_table,
+             rho_table, g12_table, g13_table, g23_table,
+             a1_table, a2_table, a3_table, undef, ge_table, *other) = out
+            assert undef == 0, undef
             if op2.is_debug_file:
                 op2.binary_debug.write('  MATT11=%s\n' % str(out))
-            #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
             assert min(other) == 0, other
             assert max(other) == 0, other
-            #assert a == 0, out
-            #assert b == 0, out
-            #assert c == 0, out
-            #assert d == 0, out
-            #assert e == 0, out
-            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                                 #g66_table=None, rho_table=None,
-                                 #a1_table=None, a2_table=None, a3_table=None,
-                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
-            #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
-            #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            assert sum(other) == 0, other
+            mat = MATT11(mid, e1_table=e1_table, e2_table=e2_table, e3_table=e3_table,
+                         nu12_table=nu12_table, nu13_table=nu13_table, nu23_table=nu23_table,
+                         g12_table=g12_table, g13_table=g13_table, g23_table=g23_table,
+                         a1_table=a1_table, a2_table=a2_table, a3_table=a3_table,
+                         rho_table=rho_table, ge_table=ge_table)
+            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         op2.card_count['MATT11'] = nmaterials
-        op2.log.warning('geom skipping MATT11 in MPT')
         return n
 
     def read_matpor(self, data: bytes, n: int) -> int:

@@ -33,7 +33,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string,
-    interpret_value, parse_components, components_or_blank)
+    interpret_value, parse_components, components_or_blank, blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
@@ -3877,13 +3877,31 @@ class MONPNT2(BaseCard):
         label = ''.join(label_fields).strip()
         assert len(label) <= 56, label
 
-        table = string(card, 9, 'table')
-        Type = string(card, 10, 'type')
-        nddl_item = integer_or_string(card, 11, 'nddl_item')
-        #nddl_item = integer_or_blank(card, 11, 'nddl_item')
-        eid = integer_or_blank(card, 12, 'eid')
-        assert len(card) == 13, card
-        return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
+        tables = []
+        element_types = []
+        nddl_items = []
+        eids = []
+        ifield = 9
+        i = 1
+        while ifield < len(card):
+            table = string(card, ifield, f'table{i}')
+            element_type = string(card, ifield+1, f'type{i}')
+            nddl_item = integer_or_string(card, ifield+2, f'nddl_item{i}')
+            #nddl_item = integer_or_blank(card, 11, 'nddl_item')
+            eid = integer_or_blank(card, ifield+3, f'eid{i}')
+            tables.append(table)
+            element_types.append(element_type)
+            nddl_items.append(nddl_item)
+            eids.append([eid])
+
+            blank(card, ifield+4, f'eid-b{i}')
+            blank(card, ifield+5, f'eid-c{i}')
+            blank(card, ifield+6, f'eid-d{i}')
+            blank(card, ifield+7, f'eid-e{i}')
+            ifield += 8
+        return MONPNT2(name, label,
+                       tables, element_types, nddl_items, eids,
+                       comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass

@@ -819,10 +819,10 @@ class GuiResult(GuiResultCommon):
             #phase = self.phase
         #return self.xyz, xyz
 
-    def save_vtk_result(self, used_titles: set[str]):
-        titlei = self.title
+    def save_vtk_result(self, icase: int, used_titles: set[str]):
+        titlei = f'icase={icase}; {self.title}'
         if self.subcase_id > 0:
-            titlei = f'{self.title}_subcase={self.subcase_id:d}'
+            titlei = f'icase={icase}; {self.title}_subcase={self.subcase_id:d}'
 
         from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
         vtk_array = numpy_to_vtk(self.scalar, deep=0, array_type=None)

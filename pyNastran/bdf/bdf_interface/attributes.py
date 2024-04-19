@@ -79,7 +79,7 @@ if TYPE_CHECKING:  # pragma: no cover
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
 
         CREEP,
-        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATDMG,
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATDMG,
         NXSTRAT,
         PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
@@ -501,6 +501,7 @@ class BDFAttributes:
         self.MATT5: dict[int, MATT5] = {}
         self.MATT8: dict[int, MATT8] = {}
         self.MATT9: dict[int, MATT9] = {}
+        self.MATT11: dict[int, MATT11] = {}
         self.MATDMG: dict[int, MATDMG] = {}
         self.nxstrats: dict[int, NXSTRAT] = {}
 
@@ -887,6 +888,7 @@ class BDFAttributes:
             'MATT5' : ['MATT5'], # thermal
             'MATT8' : ['MATT8'],
             'MATT9' : ['MATT9'],
+            'MATT11' : ['MATT11'],
             'MATS1' : ['MATS1'],
             'MATDMG': ['MATDMG'],
             'MATS3' : ['MATS3'],

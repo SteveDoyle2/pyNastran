@@ -132,7 +132,7 @@ from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MATG, MATHE, MATHP, MATEV,
                               CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
 from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -690,7 +690,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATG', 'MATHE', 'MATHP', 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
             'MATS1', #'MATS3', 'MATS8',
             'MATDMG',
             # 'MATHE'
@@ -2401,6 +2401,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATT5' : (MATT5, add_methods._add_material_dependence_object),
             'MATT8' : (MATT8, add_methods._add_material_dependence_object),
             'MATT9' : (MATT9, add_methods._add_material_dependence_object),
+            'MATT11' : (MATT11, add_methods._add_material_dependence_object),
 
             'MATDMG': (MATDMG, add_methods._add_material_dependence_object),
 

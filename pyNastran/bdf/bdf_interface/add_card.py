@@ -88,7 +88,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MATG, MATHE, MATHP, CREEP, MATEV,
                                            EQUIV, NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -443,6 +443,7 @@ CARD_MAP = {
     'MATT5' : MATT5,
     'MATT8' : MATT8,
     'MATT9' : MATT9,
+    'MATT11' : MATT11,
     'NXSTRAT' : NXSTRAT,
 
     'CREEP' : CREEP,
@@ -3750,6 +3751,21 @@ class AddMaterial:
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
+    def add_matt11(self, mid: int,
+                   e1_table=None, e2_table=None, e3_table=None,
+                   nu12_table=None, nu13_table=None, nu23_table=None,
+                   g12_table=None, g13_table=None, g23_table=None,
+                   rho_table=None,
+                   a1_table=None, a2_table=None, a3_table=None,
+                   ge_table=None, comment: str='') -> MATT11:
+        mat = MATT11(mid, e1_table=e1_table, e2_table=e2_table, e3_table=e3_table,
+                     nu12_table=nu12_table, nu13_table=nu13_table, nu23_table=nu23_table,
+                     g12_table=g12_table, g13_table=g13_table, g23_table=g23_table,
+                     a1_table=a1_table, a2_table=a2_table, a3_table=a3_table,
+                     rho_table=rho_table, ge_table=ge_table, comment=comment)
+        self._add_methods._add_material_dependence_object(mat)
+        return mat
+
     def add_matcid(self, cid: int, form: int,
                    eids = None,
                    start: Optional[int] = None,
@@ -6103,6 +6119,10 @@ class AddOptimization:
         """
         fields = ['DVAR', bid, label, deltab] + vids
         self.reject_card_lines('DVAR', print_card_(fields).split('\n'), show_log=False)
+
+    def add_bndgrid(self, components: str, values: list[int], comment: str='') -> None:
+        fields = ['BNDGRID', components] + values
+        self.reject_card_lines('BNDGRID', print_card_(fields).split('\n'), show_log=False)
 
 class AddSuperelements:
     def add_sebset(self, seid: int, ids: list[int], components, comment='') -> Union[SEBSET, SEBSET1]:

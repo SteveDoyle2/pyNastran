@@ -80,7 +80,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                MATDMG,
                                                NXSTRAT)
     from pyNastran.bdf.cards.material_deps import (
-        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1)
 
     from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
     from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -828,14 +828,14 @@ class AddMethods:
             self.model.hyperelastic_materials[key] = material
             self.model._type_to_id_map[material.type].append(key)
 
-    def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
+    def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
                                                               MATS1, MATDMG], # MATS3, MATS8
                                         allow_overwrites: bool=False) -> None:
         """
         adds the following objects:
             MATS1, MATS3, MATS8,
             MATT1, MATT2, MATT3,
-            MATT4, MATT5, MATT8, MATT9,
+            MATT4, MATT5, MATT8, MATT9, MATT11,
             MATDMG
         """
         Type = material.type
@@ -852,6 +852,7 @@ class AddMethods:
             'MATT5' : self.model.MATT5,
             'MATT8' : self.model.MATT8,
             'MATT9' : self.model.MATT9,
+            'MATT11' : self.model.MATT11,
             'MATDMG': self.model.MATDMG,
         }
         slot = mapper[Type]

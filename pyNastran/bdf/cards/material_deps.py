@@ -10,6 +10,7 @@ All material dependency cards are defined in this file.  This includes:
  * MATT5 (thermal)
  * MATT8 (orthotropic shell) - NA
  * MATT9 (anisotropic solid) - NA
+ * MATT11 (orthotropic solid)
 
 All cards are Material objects.
 
@@ -1620,6 +1621,24 @@ class MATT8(MaterialDependenceThermal):
             self.comment = comment
 
         self.mid = mid
+        if e1_table == 0:
+            e1_table = None
+        if e2_table == 0:
+            e2_table = None
+        if nu12_table == 0:
+            nu12_table = None
+        if g12_table == 0:
+            g12_table = None
+        if g1z_table == 0:
+            g1z_table = None
+        if g2z_table == 0:
+            g2z_table = None
+        if rho_table == 0:
+            rho_table = None
+        if a1_table == 0:
+            a1_table = None
+        if a2_table == 0:
+            a2_table = None
         self.e1_table = e1_table
         self.e2_table = e2_table
         self.nu12_table = nu12_table
@@ -1630,6 +1649,20 @@ class MATT8(MaterialDependenceThermal):
         self.a1_table = a1_table
         self.a2_table = a2_table
 
+        if xt_table == 0:
+            xt_table = None
+        if xc_table == 0:
+            xc_table = None
+        if yt_table == 0:
+            yt_table = None
+        if yc_table == 0:
+            yc_table = None
+        if s_table == 0:
+            s_table = None
+        if ge_table == 0:
+            ge_table = None
+        if f12_table == 0:
+            f12_table = None
         self.xt_table = xt_table
         self.xc_table = xc_table
         self.yt_table = yt_table
@@ -1883,6 +1916,7 @@ class MATT8(MaterialDependenceThermal):
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
 
+
 class MATT9(MaterialDependenceThermal):
     type = 'MATT9'
 
@@ -2058,6 +2092,156 @@ class MATT9(MaterialDependenceThermal):
             self.a1_table, self.a2_table, self.a3_table,
             self.a4_table, self.a5_table, self.a6_table,
             self.ge_table,
+        ]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        list_fields = self.raw_fields()
+        return self.comment + print_card_8(list_fields)
+
+
+class MATT11(MaterialDependenceThermal):
+    """
+    +--------+-----+-----+-----+----+------+------+------+-----+
+    |    1   |  2  |  3  |  4  |  5 |   6  |   7  |   8  |  9  |
+    +========+=====+=====+=====+====+======+======+======+=====+
+    | MATT11 | MID | E1  | E2  | E3 | NU12 | NU13 | NU23 | G12 |
+    +--------+-----+-----+-----+----+------+------+------+-----+
+    |        | G13 | G23 | RHO | A1 |  A2  |  A3  |      |  GE |
+    +--------+-----+-----+-----+----+------+------+------+-----+
+    """
+    type = 'MATT11'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT11(mid, e1_table=None, e2_table=None, e3_table=None,
+                      nu12_table=None, nu13_table=None, nu23_table=None,
+                      g12_table=None, g13_table=None, g23_table=None,
+                      rho_table=None,
+                      a1_table=None, a2_table=None, a3_table=None,
+                      ge_table=None, comment='')
+
+    def __init__(self, mid: int,
+                 e1_table=None, e2_table=None, e3_table=None,
+                 nu12_table=None, nu13_table=None, nu23_table=None,
+                 g12_table=None, g13_table=None, g23_table=None,
+                 rho_table=None,
+                 a1_table=None, a2_table=None, a3_table=None,
+                 ge_table=None,
+                 comment: str=''):
+        MaterialDependenceThermal.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self.e1_table = e1_table
+        self.e2_table = e2_table
+        self.e3_table = e3_table
+        self.nu12_table = nu12_table
+        self.nu13_table = nu13_table
+        self.nu23_table = nu23_table
+        self.g12_table = g12_table
+        self.g13_table = g13_table
+        self.g23_table = g23_table
+        self.rho_table = rho_table
+        self.a1_table = a1_table
+        self.a2_table = a2_table
+        self.a3_table = a3_table
+        self.ge_table = ge_table
+        self.mid_ref = None
+
+        self.e1_table_ref = None
+        self.e2_table_ref = None
+        self.e3_table_ref = None
+        self.nu12_table_ref = None
+        self.nu13_table_ref = None
+        self.nu23_table_ref = None
+        self.g12_table_ref = None
+        self.g13_table_ref = None
+        self.g23_table_ref = None
+        self.a1_table_ref = None
+        self.a2_table_ref = None
+        self.a3_table_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a MATT9 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mid = integer(card, 1, 'mid')
+        e1_table = integer_or_blank(card, 2, 'T(E1)')
+        e2_table = integer_or_blank(card, 3, 'T(E2)')
+        e3_table = integer_or_blank(card, 4, 'T(E3)')
+        nu12_table = integer_or_blank(card, 5, 'T(NU12)')
+        nu13_table = integer_or_blank(card, 6, 'T(NU13)')
+        nu23_table = integer_or_blank(card, 7, 'T(NU23)')
+        g12_table = integer_or_blank(card, 8, 'T(G12)')
+
+        g13_table = integer_or_blank(card, 9, 'T(G13)')
+        g23_table = integer_or_blank(card, 10, 'T(G23)')
+        rho_table = integer_or_blank(card, 11, 'T(RHO)')
+        a1_table = integer_or_blank(card, 12, 'T(A1)')
+        a2_table = integer_or_blank(card, 13, 'T(A3)')
+        a3_table = integer_or_blank(card, 14, 'T(A3)')
+        #15
+        ge_table = integer_or_blank(card, 16, 'T(GE)')
+
+        assert len(card) <= 17, f'len(MATT11 card) = {len(card):d}\ncard={card}'
+        return MATT11(mid, e1_table=e1_table, e2_table=e2_table, e3_table=e3_table,
+                      nu12_table=nu12_table, nu13_table=nu13_table, nu23_table=nu23_table,
+                      g12_table=g12_table, g13_table=g13_table, g23_table=g23_table,
+                      a1_table=a1_table, a2_table=a2_table, a3_table=a3_table,
+                      rho_table=rho_table, ge_table=ge_table, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by MATT9 mid=%s' % self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+
+        #if self.e1_table is not None:
+            #self.e1_table_ref = model.TableM(self.e1_table)
+        #if self.e2_table is not None:
+            #self.e2_table_ref = model.TableM(self.e2_table)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+        #self.e1_table = self.E1_table()
+        #self.e2_table = self.E2_table()
+        #self.e1_table_ref = None
+        #self.e2_table_ref = None
+
+    #def E1_table(self):
+        #if self.e1_table_ref is not None:
+            #return self.e1_table_ref.tid
+        #return self.e1_table
+
+    def raw_fields(self):
+        list_fields = [
+            'MATT11', self.mid,
+            self.e1_table, self.e2_table, self.e3_table,
+            self.nu12_table, self.nu13_table, self.nu23_table,
+            self.g12_table, self.g13_table, self.g23_table,
+            self.rho_table,
+            self.a1_table, self.a2_table, self.a3_table,
+            None, self.ge_table,
         ]
         return list_fields
 

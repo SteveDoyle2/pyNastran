@@ -357,8 +357,49 @@ class GEOM4(GeomCommon):
         return ndata
 
     def read_bndgrid(self, data: bytes, n: int) -> int:
-        """BNDGRID(10200,102,473) - Record 3 """
-        self.op2.log.info('geom skipping BNDGRID in GEOM4')
+        """
+        BNDGRID(10200,102,473) - Record 3
+
+        Specifies a list of grid point identification numbers on design
+        boundaries or surfaces for shape optimization (SOL 200).
+
+        Word Name Type Description
+        1 GPI I Shape boundary grid point identification number
+        1 ID  I Grid or scalar point identification number
+        2 C   I Component numbers
+        ^The cake is a lie
+
+        BNDGRID C       GP1     GP2     ...
+        BNDGRID 123     1       2       3       4       5       6       7
+                71      72      73      74      75      76      77
+        BNDGRID 123     8       14      15      21      22      28      29
+                35      36      42      43      49      50      56      57
+                63      64      70
+        ints = (123, 0, 1, 2, 3, 4, 5, 6, 7, 71, 72, 73, 74, 75, 76, 77, -1,
+                123, 0, 8, 14, 15, 21, 22, 28, 29, 35, 36, 42, 43, 49, 50, 56, 57, 63, 64, 70, -1)
+        """
+
+        op2: OP2Geom = self.op2
+        op2.show_data(data[n:])
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        nvalues = len(ints)
+
+        i = 0
+        value = 0
+        while value != 0:
+            components = ints[i]
+            assert ints[i+1] == 0, ints[i:]
+            value = 0
+            i += 2
+            values = []
+            while value != -1:
+                value = ints[i]
+                i += 1
+                if value == -1:
+                    break
+                values.append(value)
+            components_str = str(components)
+            op2.add_bndgrid(components_str, values)
         return len(data)
 
     def read_bset(self, data: bytes, n: int) -> int:

@@ -14,9 +14,14 @@ v1.4.2 (2024/4/xx)
  
 BDF:
  - added:
+   - added add_pbush2d_cross
+   - MATT11
  - changed:
+   - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
  - fixed:
    - SPLINE5 add_card out of range bug
+   - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
+
 OP2:
  - added:
  - changed:
@@ -25,20 +30,26 @@ OP2:
 
 OP2Geom:
  - added:
-   - thermal: VIEW
-   - NX acoustic: PAABSF
+   - thermal: VIEW, VIEW3D
+   - NX acoustic: PAABSF, MATPOR-JCA
+   - other: ACCEL, PAERO4, PBUSH2D-CROSS, CBUSH2D, BNDGRID, MATT11, BNDGRID
  - changed:
  - fixed:
    - fixed SPLINE5-MSC ftype reading bug
+   - fixed MONPNT2-NX parsing
    - TODO: fix EIGC kstep bug (is set to the BDF incorrectly and then writes followed by reading poorly) 
 
 
 nastran_to_vtk:
- - passing in op2/op2geom no longer fails the bdf_filename = '' check
- - renaming vtk_filename -> vtu_filename for clarity 
- - adding str log_level
- - vtk/vtu support depending on filename
- - adding LZMA compression_level (0-9; default=5)
+ - added:
+   - vtk/vtu support depending on filename
+   - added log_level argument (debug, info, warning, error; default='error')
+   - added LZMA compression_level argument (0-9; default=5)
+ - changed:
+   - renaming vtk_filename -> vtu_filename for clarity (vtu is preferred)
+   - added icase to every result to avoid -1, -2, ... at the end of the result name
+ - fixed:
+   - passing in an op2/op2geom for bdf_filename no longer fails the bdf_filename = '' check
 
 GUI:
  - added:

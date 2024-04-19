@@ -541,7 +541,7 @@ class ToolActions:
                 if not isinstance(case, GuiResult):
                     log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is not a GuiResult')
                     continue
-                vtk_array = case.save_vtk_result(used_titles)
+                vtk_array = case.save_vtk_result(icase, used_titles)
                 add_vtk_array(case.location, point_data, cell_data, vtk_array)
         return vtk_ugrid
 
