@@ -77,9 +77,13 @@ class MATS1(MaterialDependence):
 
         #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
         #: or 'PLASTIC' for elastoplastic.)
-        Type = Type.upper()
-        if Type == 'NLELAS':
-            Type = 'NLELAST'
+        if Type is None:
+            pass
+        else:
+            assert isinstance(Type, str), Type
+            Type = Type.upper()
+            if Type == 'NLELAS':
+                Type = 'NLELAST'
         self.Type = Type
 
         #: Work hardening slope (slope of stress versus plastic strain)

@@ -2380,6 +2380,7 @@ class Add1dElements:
                           m12: float, m21: float, comment: str='') -> None:
         """
         MSC only card
+
         | PBUSH2D | PID     |  K11  |   K22  |  B11  |   B22  |   M11   |   M22   |
         |         | CROSS   |  K12  |   K21  |  B12  |   B21  |   M12   |   M21   |
         """

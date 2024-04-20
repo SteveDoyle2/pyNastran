@@ -3943,7 +3943,39 @@ class MONPNT2(BaseCard):
 
 
 class MONPNT3(BaseCard):
-    """MSC Nastran specific card"""
+    """
+    MSC
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |    1    |    2    |    3    |    4    |  5  |   6   |   7  |   8   | 9  |
+    +=========+=========+=========+=========+=====+=======+======+=======+====+
+    | MONPNT3 |  NAME   |                   LABEL                        |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |  AXES   | GRIDSET | ELEMSET |  X  |   Y   |   Z  | XFLAG |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |   CD    |         |         |      |      |      |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    | MONPNT3 | WING155 |    Wing Integrated Load to Butline 155              |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |    34   |    37   |         | 0.0 | 155.0 | 15.0 |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+
+    NX
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |    1    |    2    |    3    |    4    |  5  |   6   |   7  |   8   | 9  |
+    +=========+=========+=========+=========+=====+=======+======+=======+====+
+    | MONPNT3 |  NAME   |                   LABEL                        |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |  AXES   | GRIDGRP | ELEMGRP |  X  |   Y   |   Z  | XFLAG |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |   CD    |         |         |      |      |      |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    | MONPNT3 | WING155 |    Wing Integrated Load to Butline 155              |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |    34   |    37   |         | 0.0 | 155.0 | 15.0 |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+
+    Note: the GRIDSET/ELEMSET and GRIDGRP/ELEMGRP is different
+    """
     type = 'MONPNT3'
 
     @classmethod
@@ -3957,8 +3989,50 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                        cp=0, cd=None, xflag=None, comment='')
 
-    def __init__(self, name, label, axes, grid_set, elem_set, xyz,
-                 cp=0, cd=None, xflag=None, comment=''):
+    def __init__(self, name: str, label: str, axes: str,
+                 grid_set_group: Union[int, str],
+                 elem_set_group: Union[int, str],
+                 xyz: list[float],
+                 cp: int=0, cd=None, xflag=None, comment=''):
+        """
+        Parameters
+        ----------
+        name : str
+            A unique character string that identifies the monitor point.
+            (8 characters maximum)
+        label : str
+            A string that identifies and labels the monitor point.
+            (56 characters maximum)
+        axes : str
+            Component axes about which to sum. (Integer; Any unique combination
+            of the integers 1 through 6 with no embedded blanks)
+        grid_set: int
+            Refers to a SET1 entry that has a list of grids to be included in the monitored point.
+        elem_set: int; default=0
+            Refers to a SET1 entry that has a list of elements to include at the monitored point.
+            optional
+        grid_group : str
+            GROUP entry that has a list of grids to be included in the monitor point.
+        elem_group : str; default=''
+            GROUP entry that has a list of elements to process at the monitor point.
+        cp : int; default=0
+            The identification number of a coordinate system in which the X1, X2,
+            and X3 coordinates are defined.
+        xyz: list[float]
+            The coordinates in the CP coordinate system about which the forces
+            are to be summed.
+        xflag : str; deault=None -> no types excluded
+            Exclusion flag excludes the indicated Grid Point Force types from
+            summation at the monitor point.
+            - "S": SPC forces are excluded.
+            - "M": MPC forces are excluded.
+            - "A", "L", or "P": applied loads (including thermal loads), are excluded.
+            - "D": DMIGs at the monitored point are excluded.
+            - C contact forces (MSC-SOL 400 only)
+        cd : int; default=None -> cp
+            The identification number of a coordinate system in which the results
+            are output.
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -3970,8 +4044,8 @@ class MONPNT3(BaseCard):
         self.label = label
         self.axes = axes
         #self.comp = comp
-        self.grid_set = grid_set
-        self.elem_set = elem_set
+        self.grid_set = grid_set_group
+        self.elem_set = elem_set_group
         self.xyz = xyz
         self.xflag = xflag
         self.cp = cp
@@ -3988,8 +4062,11 @@ class MONPNT3(BaseCard):
         assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        grid_set = integer(card, 10, 'grid_set')
-        elem_set = integer_or_blank(card, 11, 'elem_set')
+        grid_set = integer_or_string(card, 10, 'grid_set')
+        if isinstance(grid_set, int):
+            elem_set = integer_or_blank(card, 11, 'elem_set', default=0)
+        else:
+            elem_set = string_or_blank(card, 11, 'elem_set', default='')
         cp = integer_or_blank(card, 12, 'cp', default=0)
         xyz = [
             double_or_blank(card, 13, 'x', default=0.0),

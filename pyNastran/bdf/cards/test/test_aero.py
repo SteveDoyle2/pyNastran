@@ -2836,6 +2836,7 @@ class TestAero(unittest.TestCase):
         xzplane = [1., 0., 0.]
         cid = 225
         model.add_cord2r(cid, origin, zaxis, xzplane)
+        #model.add_monpnt3()
         save_load_deck(model)
 
     def test_bah_plane_bdf(self):
