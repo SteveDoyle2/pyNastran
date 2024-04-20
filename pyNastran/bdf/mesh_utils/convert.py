@@ -328,7 +328,7 @@ def _convert_elements(model: BDF,
         'CCONEAX',
         'CELAS1', 'CELAS3',
         'CDAMP1', 'CDAMP3', 'CDAMP5',
-        'CVISC', 'CBUSH1D',
+        'CVISC', 'CBUSH1D', 'CBUSH2D',
         'CROD', 'CTUBE',
         'CSHEAR', 'CQUAD', 'CQUADX', 'CTRIAX', 'CTRIAX6',
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
@@ -483,6 +483,7 @@ def _convert_elements(model: BDF,
                 scales.add('flexibility')
                 elem.z *= flexibility_scale
         else:
+            print(elem.get_stats())
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
     for elem in model.masses.values():

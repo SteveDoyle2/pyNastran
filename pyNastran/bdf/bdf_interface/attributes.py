@@ -855,7 +855,7 @@ class BDFAttributes:
 
                 # 0d
                 'PELAS', 'PGAP', 'PFAST',
-                'PBUSH', 'PBUSH1D',
+                'PBUSH', 'PBUSH1D', 'PBUSH2D',
                 'PDAMP', 'PDAMP5',
 
                 # 1d

@@ -631,12 +631,12 @@ class PBUSH1D(BushingProperty):
 
         """
         pid = integer(card, 1, 'pid')
-        k = double_or_blank(card, 2, 'k', 0.0)
-        c = double_or_blank(card, 3, 'c', 0.0)
-        m = double_or_blank(card, 4, 'm', 0.0)
+        k = double_or_blank(card, 2, 'k', default=0.0)
+        c = double_or_blank(card, 3, 'c', default=0.0)
+        m = double_or_blank(card, 4, 'm', default=0.0)
 
-        sa = double_or_blank(card, 6, 'sa', 0.0)
-        se = double_or_blank(card, 7, 'se', 0.0)
+        sa = double_or_blank(card, 6, 'sa', default=0.0)
+        se = double_or_blank(card, 7, 'se', default=0.0)
 
         nfields = card.nfields
         optional_vars = {}
@@ -847,13 +847,106 @@ class PBUSH1D(BushingProperty):
 
 
 class PBUSH2D(BushingProperty):
+    """
+    MSC only card
+    CROSS / blank options supported; no  SQUEEZE support
+
+    +---------+---------+-------+--------+-------+--------+---------+---------+
+    |   1     |    2    |   3   |    4   |   5   |    6   |    7    |    8    |
+    +=========+=========+=======+========+=======+========+=========+=========+
+    | PBUSH2D |   PID   |  K11  |   K22  |  B11  |   B22  |   M11   |   M22   |
+    +---------+---------+-------+--------+-------+--------+---------+---------+
+    |         |  CROSS  |  K12  |   K21  |  B12  |   B21  |   M12   |   M21   |
+    +---------+---------+-------+--------+-------+--------+---------+---------+
+    """
     type = 'PBUSH2D'
 
-    def __init__(self, card=None, comment=''):
-        BushingProperty.__init__(self, card)
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        k11 = k22 = b11 = b22 = m11 = m22 = 1.0
+        cross_flag = ''
+        k12 = k21 = b12 = b21 = m12 = m21 = 0.0
+        return PBUSH2D(pid, k11, k22, b11, b22, m11, m22,
+                       cross_flag, k12, k21, b12, b21, m12, m21)
+
+    def __init__(self, pid: int,
+                 k11, k22, b11, b22, m11, m22,
+                 cross_flag,
+                 k12, k21, b12, b21, m12, m21,
+                 comment: str=''):
+        BushingProperty.__init__(self)
         if comment:
             self.comment = comment
-        raise NotImplementedError()
+
+        self.pid = pid
+        self.k11 = k11
+        self.k22 = k22
+        self.b11 = b11
+        self.b22 = b22
+        self.m11 = m11
+        self.m22 = m22
+
+        self.cross_flag = cross_flag
+        self.k12 = k12
+        self.k21 = k21
+        self.b12 = b12
+        self.b21 = b21
+        self.m12 = m12
+        self.m21 = m21
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PBUSH1D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        pid = integer(card, 1, 'pid')
+        k11 = double(card, 2, 'k11')
+        k22 = double(card, 3, 'k22')
+        b11 = double_or_blank(card, 4, 'b11', default=0.0)
+        b22 = double_or_blank(card, 5, 'b22', default=0.0)
+        m11 = double_or_blank(card, 6, 'm11', default=0.0)
+        m22 = double_or_blank(card, 7, 'm22', default=0.0)
+        cross_flag = string_or_blank(card, 9, 'cross_flag', default='')
+        if cross_flag == 'CROSS':
+            k12 = double(card, 10, 'k12')
+            k21 = double(card, 11, 'k21')
+            b12 = double_or_blank(card, 12, 'b12', default=0.0)
+            b21 = double_or_blank(card, 13, 'b21', default=0.0)
+            m12 = double_or_blank(card, 14, 'm12', default=0.0)
+            m21 = double_or_blank(card, 15, 'm21', default=0.0)
+        else:
+            assert cross_flag == '', card
+            k12 = None
+            k21 = None
+            b12 = None
+            b21 = None
+            m12 = None
+            m21 = None
+        return PBUSH2D(pid, k11, k22, b11, b22, m11, m22,
+                       cross_flag,
+                       k12, k21, b12, b21, m12, m21, comment=comment)
+
+    def repr_fields(self) -> list:
+        list_fields = ['PBUSH2D', self.pid,
+                       self.k11, self.k22,
+                       self.b11, self.b22,
+                       self.m11, self.m22, None]
+
+        if self.cross_flag == 'CROSS':
+            list_fields.extend(['CROSS',
+                                self.k12, self.k21,
+                                self.b12, self.b21,
+                                self.m12, self.m21])
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         """

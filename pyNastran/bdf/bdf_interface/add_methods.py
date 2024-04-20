@@ -40,7 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
     from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-    from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
+    from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH2D
     from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                      CDAMP5)
     from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -565,7 +565,7 @@ class AddMethods:
     def _add_acoustic_property_object(self, prop: PACABS) -> None:
         self._add_property_object(prop)
 
-    def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, # PBUSH2D,
+    def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, PBUSH2D,
                                                PFAST, PVISC, PGAP, PRAC2D, PRAC3D, # PWELD
                                                PROD, PTUBE,
                                                PBAR, PBARL, PBRSECT, PCONEAX,

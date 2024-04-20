@@ -52,7 +52,7 @@ from pyNastran.bdf.cards.elements.acoustic import (
     ACMODL, ACPLNW, AMLREG, PMIC, MICPNT, MATPOR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH2D
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -385,6 +385,7 @@ CARD_MAP = {
     'CBUSH2D' : CBUSH2D,
     'PBUSH' : PBUSH,
     'PBUSH1D' : PBUSH1D,
+    'PBUSH2D' : PBUSH2D,
 
     'CRAC2D' : CRAC2D,
     'PRAC2D' : PRAC2D,
@@ -2371,19 +2372,26 @@ class Add1dElements:
         return prop
 
     def add_pbush2d_cross(self, pid: int,
-                          k1: float, k2: float,
-                          b1: float, b2: float,
-                          m1: float, m2: float,
+                          k11: float, k22: float,
+                          b11: float, b22: float,
+                          m11: float, m22: float,
                           k12: float, k21: float,
                           b12: float, b21: float,
-                          m12: float, m21: float) -> None:
+                          m12: float, m21: float, comment: str='') -> None:
         """
+        MSC only card
         | PBUSH2D | PID     |  K11  |   K22  |  B11  |   B22  |   M11   |   M22   |
         |         | CROSS   |  K12  |   K21  |  B12  |   B21  |   M12   |   M21   |
         """
-        list_fields = ['PBUSH2D', pid, k1, k2, b1, b2, m1, m2, None,
-                       'CROSS', k12, k21, b12, b21, m12, m21]
-        self.reject_card_lines('PBUSH2D', print_card_8(list_fields).split('\n'), show_log=False)
+        cross_flag = 'CROSS'
+        prop = PBUSH2D(pid, k11, k22, b11, b22, m11, m22,
+                       cross_flag, k12, k21, b12, b21, m12, m21, comment=comment)
+        self._add_methods._add_property_object(prop)
+        return prop
+
+        #list_fields = ['PBUSH2D', pid, k1, k2, b1, b2, m1, m2, None,
+                       #'CROSS', k12, k21, b12, b21, m12, m21]
+        #self.reject_card_lines('PBUSH2D', print_card_8(list_fields).split('\n'), show_log=False)
 
     #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment='') -> PBUSH2D:
         #"""

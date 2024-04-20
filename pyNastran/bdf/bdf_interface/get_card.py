@@ -1488,7 +1488,8 @@ class GetCard(GetMethods):
             mid_to_pids_map[mid] = []
 
         properties_without_materials = {
-            'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D',
+            'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST',
+            'PBUSH1D', 'PBUSH2D',
             'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
         }
 

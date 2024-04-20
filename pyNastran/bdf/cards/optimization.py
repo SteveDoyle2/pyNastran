@@ -329,7 +329,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                    'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
                    'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                    'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
-                   -13]
+                   -2, -13]
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBUSH1D':
@@ -418,7 +418,8 @@ def _check_dvmrel_options(mp_name, material_type, options):
             'valid: [%s]' % (mp_name, material_type, ', '.join(soptions)))
         raise ValueError(msg)
 
-def _check_dvprel_options(pname_fid, prop_type, options):
+def _check_dvprel_options(pname_fid: Union[str, int],
+                          prop_type: str, options):
     if pname_fid not in options:
         soptions = [str(val) for val in options]
         msg = (

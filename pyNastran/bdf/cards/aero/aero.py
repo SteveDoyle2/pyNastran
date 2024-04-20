@@ -3836,7 +3836,7 @@ class MONPNT2(BaseCard):
         label = 'Wing Integrated Load to Butline'
         table = 'MYTABLE'
         Type = 'CAT'
-        nddl_item = 42
+        nddl_item = 'dog'
         eid = 2
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
 
@@ -3856,8 +3856,15 @@ class MONPNT2(BaseCard):
             element_types = [element_types]
         if isinstance(nddl_items, str):
             nddl_items = [nddl_items]
+        elif isinstance(nddl_items, int):  # pragma: no cover
+            raise TypeError(nddl_items)
+
         if isinstance(eids, int):
             eids = [[eids]]
+        assert isinstance(tables, list), tables
+        assert isinstance(element_types, list), element_types
+        assert isinstance(nddl_items, list), nddl_items
+        assert isinstance(eids, list), eids
 
         self.label = label
         self.tables = tables

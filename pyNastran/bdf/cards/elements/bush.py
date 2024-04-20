@@ -634,14 +634,15 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 cid: int=0, plane: str='XY', sptid=None,
+                 comment: str=''):
         BushElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = nids[0]
-        self.gb = nids[1]
+        self.nodes = nids
         self.cid = cid
         self.plane = plane
         self.sptid = sptid
@@ -739,8 +740,11 @@ class CBUSH2D(BushElement):
         return self.gb_ref.nid
 
     @property
-    def nodes(self):
-        return [self.ga, self.gb]
+    def ga(self) -> int:
+        return self.nodes[0]
+    @property
+    def gb(self) -> int:
+        return self.nodes[1]
 
     @property
     def node_ids(self):
@@ -782,8 +786,7 @@ class CBUSH2D(BushElement):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        self.ga = self.Ga()
-        self.gb = self.Gb()
+        self.nodes = self.node_ids
         self.cid = self.Cid()
         self.pid = self.Pid()
         self.ga_ref = None

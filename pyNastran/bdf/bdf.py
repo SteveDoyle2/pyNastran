@@ -92,7 +92,7 @@ from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
     ACMODL, PMIC, ACPLNW, AMLREG, MATPOR, MICPNT)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
+from .cards.properties.bush import PBUSH, PBUSH1D, PBUSH2D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5)
 from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -651,7 +651,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## properties
             'PMASS',
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
-            'PBUSH', 'PBUSH1D',
+            'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
             'PBEAML', 'PBMSECT', # not fully supported
@@ -2343,6 +2343,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBUSH2D' : (CBUSH2D, add_methods._add_damper_object),
             'PBUSH' : (PBUSH, add_methods._add_property_object),
             'PBUSH1D' : (PBUSH1D, add_methods._add_property_object),
+            'PBUSH2D' : (PBUSH2D, add_methods._add_property_object),
 
             'CRAC2D' : (CRAC2D, add_methods._add_element_object),
             'PRAC2D' : (PRAC2D, add_methods._add_property_object),

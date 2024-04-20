@@ -1412,11 +1412,31 @@ def _write_monpnt2(model: Union[BDF, OP2Geom], name: str,
         #print(monitor.get_stats())
         name_bytes = ('%-8s' % monitor.name).encode('latin1')
         label_bytes = ('%-56s' % monitor.label).encode('latin1')
+        data = [name_bytes, label_bytes]
 
-        table_bytes = ('%-8s' % monitor.table).encode('latin1')
-        eltype_bytes = ('%-8s' % monitor.Type).encode('latin1')
-        item_bytes = ('%-8s' % monitor.nddl_item).encode('latin1')
-
+        if nastran_format == 'msc':
+            assert len(monitor.tables) == 1, monitor.tables
+            assert len(monitor.element_types) == 1, monitor.element_types
+            assert len(monitor.nddl_items) == 1, monitor.nddl_items
+            assert len(monitor.eids) == 1, monitor.eids
+            for table, element_type, nddl_item, eids in zip(monitor.tables, monitor.element_types, monitor.nddl_items, monitor.eids):
+                assert len(eids) == 1, eids
+                table_bytes = ('%-8s' % table).encode('latin1')
+                eltype_bytes = ('%-8s' % element_type).encode('latin1')
+                item_bytes = ('%-8s' % nddl_item).encode('latin1')
+                data.extend([table_bytes, eltype_bytes, item_bytes]+eids)
+        else:
+            # TODO: should have -1 and -2 flags, but I need to update nbytes for the header...
+            assert len(monitor.tables) == 1, monitor.tables
+            assert len(monitor.element_types) == 1, monitor.element_types
+            assert len(monitor.nddl_items) == 1, monitor.nddl_items
+            assert len(monitor.eids) == 1, monitor.eids
+            for table, element_type, nddl_item, eids in zip(monitor.tables, monitor.element_types, monitor.nddl_items, monitor.eids):
+                assert len(eids) == 1, eids
+                table_bytes = ('%-8s' % table).encode('latin1')
+                eltype_bytes = ('%-8s' % element_type).encode('latin1')
+                item_bytes = ('%-8s' % nddl_item).encode('latin1')
+                data.extend([table_bytes, eltype_bytes, item_bytes]+eids)
         #name_bytes, label_bytes, table_bytes, eltype_bytes, item_bytes, eid = out
         #name = reshape_bytes_block_size(name_bytes, self.size)
         #label = reshape_bytes_block_size(label_bytes, self.size)
@@ -1424,7 +1444,6 @@ def _write_monpnt2(model: Union[BDF, OP2Geom], name: str,
         #Type = reshape_bytes_block_size(eltype_bytes, self.size)
         #nddl_item = reshape_bytes_block_size(item_bytes, self.size)
 
-        data = [name_bytes, label_bytes, table_bytes, eltype_bytes, item_bytes, monitor.eid]
         assert len(data) == 6, f'data={data} ndata={len(data)}'
         assert None not in data, data
         op2_ascii.write(f'  MONPNT2 data={data}\n')

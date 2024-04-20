@@ -372,7 +372,7 @@ def remove_unused(bdf_filename: str,
             for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
 
-        elif card_type in ['PBUSH']:
+        elif card_type in {'PBUSH', 'PBUSH2D'}:
             pass
             #for pid in ids:
                 #prop = model.properties[pid]

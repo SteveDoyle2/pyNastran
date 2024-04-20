@@ -2800,7 +2800,7 @@ class TestAero(unittest.TestCase):
 
         Type = 'CQUAD4'
         table = 'STRESS'
-        nddl_item = 42
+        nddl_item = 'cat'
         eid = 17
         monpnt2 = model.add_monpnt2(name, label, table, Type, nddl_item, eid,
                                     comment='monpnt2')
