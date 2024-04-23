@@ -602,9 +602,9 @@ class MATT1(MaterialDependenceThermal):
         elif rho_table > 100000000:
             rho_table = -(rho_table - 100000000)
 
-        if E_table == 0:
-            E_table = None
-        if A_table > 100000000:
+        if A_table == 0:
+            A_table = None
+        elif A_table > 100000000:
             A_table = -(A_table - 100000000)
 
         mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,

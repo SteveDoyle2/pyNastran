@@ -191,6 +191,7 @@ class CBUSH(Element):
         self.coord_id = coord_id
         self.ocid = ocid
         self.ocid_offset = ocid_offset
+        self.n = len(self.property_id)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -595,6 +596,23 @@ class PBUSH(Property):
 
     def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
               _mass, alpha, tref, coincident_length) -> None:
+        if len(self.property_id) != 0:
+            asdf
+        ncards = len(property_id)
+        if _mass is None:
+            _mass = np.zeros(ncards, dtype='float64')
+        if alpha is None:
+            alpha = np.zeros(ncards, dtype='float64')
+        if tref is None:
+            tref = np.zeros(ncards, dtype='float64')
+        if coincident_length is None:
+            coincident_length = np.zeros(ncards, dtype='float64')
+
+        if ge_fields.ndim == 1:
+            ge_fields2 = np.zeros((ncards, 6), dtype='float64')
+            ge_fields2[:, :] = ge_fields[:, np.newaxis]
+            ge_fields = ge_fields2
+            del ge_fields2
         self.property_id = property_id
         self.k_fields = k_fields
         self.b_fields = b_fields
@@ -604,6 +622,7 @@ class PBUSH(Property):
         self.alpha = alpha
         self.tref = tref
         self.coincident_length = coincident_length
+        self.n = len(self.property_id)
 
     def __apply_slice__(self, prop: PBUSH, i: np.ndarray) -> None:
         prop.property_id = self.property_id[i]

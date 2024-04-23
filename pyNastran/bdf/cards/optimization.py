@@ -320,6 +320,9 @@ def validate_dvprel(prop_type, pname_fid, validate):
                    14, 24, 34, 44,
                    15, 25, 75, 85]
         _check_dvprel_options(pname_fid, prop_type, options)
+    elif prop_type == 'GPLY':
+        options = ['T', 'THETA']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBUSH':
         #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
@@ -402,7 +405,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         raise NotImplementedError(msg)
     return pname_fid
 
-def _check_dvcrel_options(cp_name, element_type, options):
+def _check_dvcrel_options(cp_name: str, element_type: str, options):
     if cp_name not in options:
         soptions = [str(val) for val in options]
         msg = (
@@ -4722,10 +4725,13 @@ class DVPREL1(DVXREL1):
             #raise NotImplementedError('prop_type=%r is not supported in '
                                       #'update_model' % self.prop_type)
 
-    def _update_by_dvprel(self, prop, value):
-        if self.prop_type == 'PCOMP' and prop.type == 'PCOMPG':
+    def _update_by_dvprel(self, prop, value: float) -> None:
+        prop_type = self.prop_type
+        if prop_type == 'PCOMP' and prop.type == 'PCOMPG':
             pass
-        elif self.prop_type != prop.type:
+        elif prop_type == 'GPLY':
+            pass
+        elif prop_type != prop.type:
             raise RuntimeError('prop_type=%s is not the same as the property type (%s)\n%s%s' % (
                 self.prop_type, prop.type, str(self), str(prop)))
 
@@ -4843,22 +4849,27 @@ class DVPREL1(DVXREL1):
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
-    def _get_property(self, model, pid, msg=''):
+    def _get_property(self, model: BDF, pid: int, msg: str=''):
         assert isinstance(self.pid, int), type(self.pid)
-        if self.prop_type in self.allowed_properties:
+        prop_type = self.prop_type
+        if prop_type in self.allowed_properties:
             pid_ref = model.Property(pid, msg=msg)
         #elif self.prop_type in self.allowed_elements:
             #pid_ref = model.Element(pid, msg=msg)
         #elif self.prop_type in self.allowed_masses:
             #pid_ref = model.masses[pid]
-        elif self.prop_type in self.allowed_properties_mass:
+        elif prop_type in self.allowed_properties_mass:
             pid_ref = model.properties_mass[pid]
-        elif self.prop_type == 'PBUSHT':
+        elif prop_type == 'PBUSHT':
             pid_ref = model.pbusht[pid]
-        elif self.prop_type == 'PELAST':
+        elif prop_type == 'PELAST':
             pid_ref = model.pelast[pid]
-        elif self.prop_type in ['PFAST', 'PBRSECT']:
+        elif prop_type in {'PFAST', 'PBRSECT'}:
             pid_ref = model.properties[pid]
+        elif prop_type == 'GPLY':
+            # TODO: should be the global layer...it's not really a property tho...
+            pid_ref = None
+            return pid_ref
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         assert pid_ref.type not in ['PBEND'], pid_ref
@@ -5753,6 +5764,11 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+    elif prop_type == 'GPLY':
+        if var_to_change in ['T', 'THETA']:
+            pass
+        else:
+            raise ValueError(var_to_change)
 
     elif prop_type == 'PBAR':
         pbar_var_map = {

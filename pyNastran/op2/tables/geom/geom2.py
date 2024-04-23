@@ -383,7 +383,6 @@ class GEOM2:
             (2108, 21, 224): ['CAXIF2', self._read_fake], # 6
             (2208, 22, 225): ['CAXIF3', self._read_fake], # 7
             (2308, 23, 226): ['CAXIF4', self._read_fake], # 8
-            #(2408, 24, 180): ['CBAR', self._read_fake], # record 9
 
             #(4001, 40, 275): ['CBARAO', self._read_fake],    # record 10
             #(5408, 54, 261): ['CBEAM', self._read_fake],     # record 11
@@ -574,7 +573,6 @@ class GEOM2:
            (11908, 119, 469): ['CSEAM-a', self._read_fake],
            (15701, 157, 639): ['CSEAM-b', self._read_fake],
            (15601, 156, 635): ['CBUSH2D', self.read_cbush2d],
-
         }
 
     def read_cpyram15(self, data: bytes, n: int) -> int:

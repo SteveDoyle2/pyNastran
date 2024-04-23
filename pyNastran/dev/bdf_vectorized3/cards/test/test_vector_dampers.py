@@ -124,6 +124,7 @@ class TestDampers(unittest.TestCase):
         cdamp5_id = model.add_cdamp5(eid, pid, [s1, s2], comment='cdamp5')
         model.cdamp5.write(size=8, is_double=False)
         model.pdamp5.write(size=8, is_double=False)
+        save_load_deck(model)
 
     def test_damper_03(self):
         """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""

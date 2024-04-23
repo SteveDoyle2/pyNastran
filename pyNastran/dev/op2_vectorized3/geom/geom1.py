@@ -84,7 +84,7 @@ class GEOM1:
             #(3901,   39,  50): ['CVISC', self._read_cvisc],  # record
             #(13301, 133, 509): ['', self._read_fake],  # record
             #(1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
-            #(4501, 45, 1120001): ['GRID', self._read_grid_maybe],  # record ???; test_ibulk
+            (4501, 45, 1120001): ['GRID', self._read_grid_maybe],  # record ???; test_ibulk
             #(4501, 45, 810001): ['GRID', self._read_grid],
 
 
@@ -92,7 +92,7 @@ class GEOM1:
             #(2001, 20, 2220009): ['CORD2C?', self._read_cord2cx],
 
             ## F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
-            #(2101, 21, 2220008) : ['CORD2R?', self._read_cord2rx],
+            (2101, 21, 2220008) : ['CORD2R?', self.read_cord2rx],
             #(2001, 20, 1310009) : ['CORD2C-NX', self._read_cord2c_nx],
 
             #(2101, 21, 1310008) : ['CORD2R?', self._read_fake],
@@ -411,7 +411,7 @@ class GEOM1:
         #print(coord)
         return len(data)
 
-    def _read_cord2rx(self, data: bytes, n: int) -> int:
+    def read_cord2rx(self, data: bytes, n: int) -> int:
         n = self._read_cordx(data, n, cord_type=1, cord_n=2)
         return n
 
@@ -672,6 +672,7 @@ class GEOM1:
         this is a GRID card with double vales for xyz
         """
         op2 = self.op2
+        grid = op2.grid
         ntotal = 44 * op2.factor
         structi = Struct(mapfmt(op2._endian + b'2i 3d 3i', op2.size))
         nentries = (len(data) - n) // ntotal
@@ -687,9 +688,11 @@ class GEOM1:
             # cd can be < 0
             if ps == 0:
                 ps = ''
-            node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
-            op2._type_to_id_map['GRID'].append(nid)
-            op2.nodes[nid] = node
+            #node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+            #op2._type_to_id_map['GRID'].append(nid)
+            xyz = [x1, x2, x3]
+            grid.add(nid, xyz, cp=cp, cd=cd, ps=ps, seid=0, comment='')
+            #op2.nodes[nid] = node
             #op2.log.debug(f'  nid={nid} cp={cp} x=[{x1:g}, {x2:g}, {x3:g}] cd={cd} ps={ps} seid={seid}')
 
             n += ntotal
