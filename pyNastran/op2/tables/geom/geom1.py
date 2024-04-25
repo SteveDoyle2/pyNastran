@@ -27,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class GEOM1:
     """defines methods for reading op2 nodes/coords"""
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:  # pragma: no cover
@@ -68,8 +68,8 @@ class GEOM1:
             (4501,  45,  1): ('GRID',   self._read_grid),    # record 17
             (5301,  53,  4): ('SEQGP',  self._read_seqgp),   # record 27
 
-            (2301,  23, 304): ('CSUPER',  self._read_fake),  # record 8
-            (5501,  55, 297): ('CSUPEXT', self._read_fake),  # record 9
+            (2301,  23, 304): ('CSUPER',  self.read_fake),  # record 8
+            (5501,  55, 297): ('CSUPEXT', self.read_fake),  # record 9
             (1627,  16, 463): ('EXTRN',   self._read_extrn),  # record 10
             (6101,  61, 388): ('FEEDGE',  self._read_feedge),  # record 11
             (6601,  66, 392): ('GMCURVE', self._read_gmcurv),  # record 12
@@ -78,30 +78,30 @@ class GEOM1:
             (10101,101, 394): ('GMSURF',  self._read_gmsurf),  # record 15
             (6401,  64, 402): ('GMCORD',  self._read_gmcord),  # record 16
             # 17 - GRID  (above)
-            (1527, 15, 466): ('SEBNDRY', self._read_fake),  # record 18
+            (1527, 15, 466): ('SEBNDRY', self.read_fake),  # record 18
             (1427, 14, 465): ('SEBULK',  self._read_sebulk),  # record 19 - superelements/see103q4.op2
             (427,   4, 453): ('SECONCT', self._read_seconct),  # record 20
 
             (7902, 79, 302): ('SEELT',   self._read_seelt),  # record 21
-            (527,  72, 454): ('SEEXCLD', self._read_fake),  # record 22
+            (527,  72, 454): ('SEEXCLD', self.read_fake),  # record 22
             (1027, 10, 459): ('SELABEL', self._read_selabel),  # record 23 - superelements/see103q4.op2
             (827,   8, 457): ('SELOC',   self._read_seloc),  # record 24 - superelements/see103q4.op2
             (927,   9, 458): ('SEMPLN',  self._read_sempln),  # record 25 - superelements/see103q4.op2
-            (1327, 13, 464): ('SENQSET', self._read_fake),  # record 26
+            (1327, 13, 464): ('SENQSET', self.read_fake),  # record 26
             # 27 - SEQGP (above)
-            (5401, 54, 305): ('SEQSEP',  self._read_fake),  # record 28
+            (5401, 54, 305): ('SEQSEP',  self.read_fake),  # record 28
             (5601, 56, 296): ('SESET',   self._read_seset),  # record 29
-            (1227, 12, 462): ('SETREE',  self._read_fake),  # record 30
+            (1227, 12, 462): ('SETREE',  self.read_fake),  # record 30
             (5678, 71, 475): ('SNORM',   self._read_snorm),  # record 31
-            (5701, 57, 323): ('CSUPER1', self._read_fake),  # record 32
+            (5701, 57, 323): ('CSUPER1', self.read_fake),  # record 32
 
-            (5801,   58, 324): ('SUPUP', self._read_fake),  # record 33 - CSUPUP in NX; SUPUP in MSC
-            (14101, 141, 403): ('SWLDPRM', self._read_fake),  # record 34
+            (5801,   58, 324): ('SUPUP', self.read_fake),  # record 33 - CSUPUP in NX; SUPUP in MSC
+            (14101, 141, 403): ('SWLDPRM', self.read_fake),  # record 34
 
             (1101,   11,  66): ('CMASS2', geom2.read_cmass2),  # record
             (3901,   39,  50): ('CVISC', self.read_cvisc),  # record
-            (13301, 133, 509): ('', self._read_fake),  # record
-            (1127,   11, 461) : ('SELOAD', self._read_fake),  # record NX
+            (13301, 133, 509): ('', self.read_fake),  # record
+            (1127,   11, 461) : ('SELOAD', self.read_fake),  # record NX
             (4501, 45, 1120001): ('GRID', self._read_grid_maybe),  # record ???; test_ibulk
             (4501, 45, 810001): ('GRID', self._read_grid),
 
@@ -113,17 +113,17 @@ class GEOM1:
             (2101, 21, 2220008) : ('CORD2R?', self._read_cord2rx),
             (2001, 20, 1310009) : ('CORD2C-NX', self._read_cord2c_nx),
 
-            (2101, 21, 1310008) : ('CORD2R?', self._read_fake),
+            (2101, 21, 1310008) : ('CORD2R?', self.read_fake),
             (501, 5, 43) : ('CORDx?', self._read_cord3g),
-            (6591, 65, 677) : ('ATVBULK', self._read_fake),
-            (2201, 22, 2220010) : ('CORDx?', self._read_fake),
-            (1209, 96, 665) : ('IMPERF', self._read_fake),
+            (6591, 65, 677) : ('ATVBULK', self.read_fake),
+            (2201, 22, 2220010) : ('CORDx?', self.read_fake),
+            (1209, 96, 665) : ('IMPERF', self.read_fake),
 
             # nx
             #(707, 7, 124) :  ('EPOINT', self._read_epoint],  # record 12
         }
 
-    #def _read_fake_c(self, data: bytes, n: int) -> int:
+    #def read_fake_c(self, data: bytes, n: int) -> int:
         #"""(2101, 21, 2220008)
 
           #ints    = (20, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

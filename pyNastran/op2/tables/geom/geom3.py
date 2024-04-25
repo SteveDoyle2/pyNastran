@@ -44,7 +44,7 @@ class GEOM3:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
@@ -90,57 +90,57 @@ class GEOM3:
             (2309, 23, 416): ['QVOL', self._read_qvol],
             (4309, 43, 233): ['QHBDY', self._read_qhbdy],
             (6609, 66, 9031): ['PEDGE', self._read_pedge],
-            (8100, 81, 381): ['CHACAB', self._read_fake],
+            (8100, 81, 381): ['CHACAB', self.read_fake],
             (2209, 22, 241): ['QVECT', self._read_qvect],
             (6409, 64, 9032): ['PFACE', self._read_pface],
             (3809, 38, 332): ['LOADCYN', self._read_loadcyn],    # record
             (6209, 62, 390): ['TEMPF', self._read_tempf],    # record
-            (10901, 109, 427): ['', self._read_fake],  # record
-            (10801, 108, 428): ['GMQVOL', self._read_fake],  # record
-            (11329, 113, 9602): ['', self._read_fake],  # record
-            (11429, 114, 9603): ['', self._read_fake],  # record
-            (11529, 115, 9604): ['', self._read_fake],  # record
+            (10901, 109, 427): ['', self.read_fake],  # record
+            (10801, 108, 428): ['GMQVOL', self.read_fake],  # record
+            (11329, 113, 9602): ['', self.read_fake],  # record
+            (11429, 114, 9603): ['', self.read_fake],  # record
+            (11529, 115, 9604): ['', self.read_fake],  # record
             (7002, 70, 254) : ['BOLTFOR', self._read_boltfor],  # record
             (7601, 76, 608) : ['BOLTLD', self._read_boltld],  # record
 
             # ???
-            (6701,67,978): ['PLOADE1', self._read_fake],  # record
-            (7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
-            (7701, 77, 619): ['DTEMP', self._read_fake],  # record
-            (5215, 52, 154): ['PRESAX', self._read_fake],  # record
+            (6701,67,978): ['PLOADE1', self.read_fake],  # record
+            (7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
+            (7701, 77, 619): ['DTEMP', self.read_fake],  # record
+            (5215, 52, 154): ['PRESAX', self.read_fake],  # record
             (7401, 74, 601): ['ACCEL', self._read_accel],  # record
             (7501, 75, 602): ['ACCEL1', self._read_accel1],  # record
-            (17600, 176, 627): ['RFORCE2', self._read_fake],  # record
-            #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
-            #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
+            (17600, 176, 627): ['RFORCE2', self.read_fake],  # record
+            #(7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
+            #(7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
 
             # nx-specific
-            (3909, 39, 333): ['LOADCYT', self._read_fake],  # record
-            (9709, 97, 635): ['BOLTFRC', self._read_fake],
+            (3909, 39, 333): ['LOADCYT', self.read_fake],  # record
+            (9709, 97, 635): ['BOLTFRC', self.read_fake],
 
 
-            (17300, 173, 615): ['RFORCE1', self._read_fake],
-            (7801, 78, 968): ['CRAKTP', self._read_fake],
-            (5001, 50, 646): ['FORCDST', self._read_fake],
-            (1101, 11, 626): ['INITADD', self._read_fake],
-            (8701, 87, 625): ['INITS', self._read_fake],
+            (17300, 173, 615): ['RFORCE1', self.read_fake],
+            (7801, 78, 968): ['CRAKTP', self.read_fake],
+            (5001, 50, 646): ['FORCDST', self.read_fake],
+            (1101, 11, 626): ['INITADD', self.read_fake],
+            (8701, 87, 625): ['INITS', self.read_fake],
             (11601, 116, 625): ['PLOADB3', self._read_ploadb3],
-            (7901, 79, 967): ['VCEV', self._read_fake],
-            (2901, 29, 638): ['INITSO', self._read_fake],
-            (9801, 98, 695): ['DRIVER', self._read_fake],
-            (11501, 115, 624): ['TEMPBC', self._read_fake],
+            (7901, 79, 967): ['VCEV', self.read_fake],
+            (2901, 29, 638): ['INITSO', self.read_fake],
+            (9801, 98, 695): ['DRIVER', self.read_fake],
+            (11501, 115, 624): ['TEMPBC', self.read_fake],
 
             (12509, 125, 999): ['HYDROS', self.read_hydros],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
-            #(9709, 97, 635): ['???', self._read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
+            #(9709, 97, 635): ['???', self.read_fake],
 
 
         }

@@ -1179,8 +1179,8 @@ class NLPARM(BaseCard):
 
         # line 2
         assert self.eps_p > 0.0, self.get_stats()
-        assert self.eps_u > 0.0, self.get_stats()
-        assert self.eps_w > 0.0, self.get_stats()
+        assert self.eps_u > 0.0 or self.eps_u < 0.0, self.get_stats()
+        assert self.eps_w > 0.0 or self.eps_w < 0.0, self.get_stats()
         assert isinstance(self.max_div, int), self.get_stats()
         assert self.max_qn >= 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()
@@ -2369,14 +2369,16 @@ class TSTEPNL(BaseCard):
         if self.method in {'FNT', 'PFNT'}:
             assert self.kstep in {-1, None, 1}, self.get_stats()
         else:
-            assert self.kstep is None or self.kstep >= 2, self.get_stats()
+            assert self.kstep is None or self.kstep >= 1, self.get_stats()
 
         assert self.min_iter is None or self.min_iter >= 0, self.get_stats()
         assert self.max_iter != 0, self.get_stats()
         assert self.max_div != 0, self.get_stats()
-        assert self.max_qn > 0, self.get_stats()
+        assert self.max_qn >= 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()
-        assert self.max_bisect >= 0, self.get_stats()  # default in MSC 2020=0
+
+        # -9 <= Integer <= 9
+        assert -9 <= self.max_bisect <= 9, self.get_stats()  # default in MSC 2020=0
         assert self.adjust >= 0, self.get_stats()  #  is this >0 or >= 0?
     #def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
                  #max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
@@ -2385,9 +2387,9 @@ class TSTEPNL(BaseCard):
                  #rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
                  #min_iter=None, comment=''):
 
-        assert self.eps_u > 0.0, self.get_stats()
+        assert self.eps_u > 0.0 or self.eps_u < 0, self.get_stats()
         assert self.eps_p > 0.0, self.get_stats()
-        assert self.eps_w > 0.0, self.get_stats()
+        assert self.eps_w > 0.0 or self.eps_u < 0, self.get_stats()
         assert self.fstress > 0.0, self.get_stats()
         assert self.rb > 0.0, self.get_stats()
         assert self.max_r > 0.0, self.get_stats()

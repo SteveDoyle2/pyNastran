@@ -42,7 +42,7 @@ class EPT:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
@@ -88,23 +88,23 @@ class EPT:
             (15006, 150, 604): ['PCOMPG', self.read_pcompg],  # record
 
             (702, 7, 38): ['PBUSHT', self.read_pbusht],  # record 1
-            (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
-            (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
-            (3501, 35, 58): ['NSML', self._read_fake],  # record 6
+            (3301, 33, 56): ['NSM1', self.read_fake],  # record 3
+            (3401, 34, 57) : ['NSMADD', self.read_fake],    # record 5
+            (3501, 35, 58): ['NSML', self.read_fake],  # record 6
             (3501, 35, 994) : ['NSML', self.read_nsml],
             (1502, 15, 36): ['PAABSF', self.read_paabaf],  # record 8
-            (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
-            (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
+            (8300, 83, 382): ['PACABS', self.read_fake],  # record 9
+            (8500, 85, 384): ['PACBAR', self.read_fake],  # record 10
             (5403, 55, 349): ['PBCOMP', self.read_pbcomp],  # record 13
-            (13301, 133, 509): ['PBMSECT', self._read_fake],  # record 17
+            (13301, 133, 509): ['PBMSECT', self.read_fake],  # record 17
             (2902, 29, 420): ['PCONVM', self.read_pconvm],  # record 26
             (1202, 12, 33): ['PDAMPT', self.read_pdampt],  # record 28
             (8702, 87, 412): ['PDAMP5', self.read_pdamp5],  # record 29
-            (6802, 68, 164): ['PDUM8', self._read_fake],  # record 37
-            (6902, 69, 165): ['PDUM9', self._read_fake],  # record 38
+            (6802, 68, 164): ['PDUM8', self.read_fake],  # record 37
+            (6902, 69, 165): ['PDUM9', self.read_fake],  # record 38
             (1302, 13, 34): ['PELAST', self.read_pelast],  # record 41
-            (12001, 120, 480): ['PINTC', self._read_fake],  # record 44
-            (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
+            (12001, 120, 480): ['PINTC', self.read_fake],  # record 44
+            (12101, 121, 484): ['PINTS', self.read_fake],  # record 45
             (4606, 46, 375): ['PLPLANE', self.read_plplane],  # record 46
             (4706, 47, 376): ['PLSOLID', self.read_plsolid],  # record 47
             (10301, 103, 399): ['PSET', self.read_pset],  # record 57
@@ -113,36 +113,36 @@ class EPT:
             (13501, 135, 510) : ['PFAST', self.read_pfast_msc],  # MSC-specific
             (3601, 36, 55) : ['PFAST', self.read_pfast_nx],  # NX-specific
             (3801, 38, 979) : ['PPLANE', self.read_pplane],
-            (11801, 118, 560) : ['PWELD', self._read_fake],
+            (11801, 118, 560) : ['PWELD', self.read_fake],
             (3401, 34, 993) : ['NSMADD', self.read_nsmadd],
-            (9300, 93, 684) : ['ELAR', self._read_fake],
-            (9400, 94, 685) : ['ELAR2', self._read_fake],
+            (9300, 93, 684) : ['ELAR', self.read_fake],
+            (9400, 94, 685) : ['ELAR2', self.read_fake],
             (16006, 160, 903) : ['PCOMPS', self.read_pcomps],
 
             # MSC-specific
-            (14602, 146, 692): ['PSLDN1', self._read_fake],
+            (14602, 146, 692): ['PSLDN1', self.read_fake],
             (16502, 165, 916): ['PAXSYMH', self.read_paxsymh],
-            (13201, 132, 513): ['PBRSECT', self._read_fake],
+            (13201, 132, 513): ['PBRSECT', self.read_fake],
 
-            (13701, 137, 638): ['PWSEAM', self._read_fake],
+            (13701, 137, 638): ['PWSEAM', self.read_fake],
             (7001, 70, 632): ['PMIC', self.read_pmic],
             (15106, 151, 953): ['PCOMPG1', self.read_pcompg1],
-            (3901, 39, 969): ['PSHL3D', self._read_fake],
+            (3901, 39, 969): ['PSHL3D', self.read_fake],
             (17006, 170, 901): ['MATCID', self.read_matcid],
 
-            (9601, 96, 691): ['PJOINT', self._read_fake],
+            (9601, 96, 691): ['PJOINT', self.read_fake],
 
             (8901, 89, 905): ['PSOLCZ', self.read_psolcz],
-            (9701, 97, 692): ['PJOINT2', self._read_fake],
+            (9701, 97, 692): ['PJOINT2', self.read_fake],
             (9801, 98, 698): ['DESC', self.read_desc],
-            (12901, 129, 989): ['PDISTB', self._read_fake],
+            (12901, 129, 989): ['PDISTB', self.read_fake],
             (13401, 134, 611): ['PBEAM3', self.read_pbeam3],
-            (17302, 173, 971): ['PCOMPFQ', self._read_fake],
-            (14101, 141, 668): ['PSEAM', self._read_fake],
-            (14402, 144, 690): ['PSHLN1', self._read_fake],
-            (16902, 169, 955): ['???', self._read_fake],
-            (17502, 175, 973): ['PFASTT', self._read_fake],
-            #(9701, 97, 692): ['???', self._read_fake],
+            (17302, 173, 971): ['PCOMPFQ', self.read_fake],
+            (14101, 141, 668): ['PSEAM', self.read_fake],
+            (14402, 144, 690): ['PSHLN1', self.read_fake],
+            (16902, 169, 955): ['???', self.read_fake],
+            (17502, 175, 973): ['PFASTT', self.read_fake],
+            #(9701, 97, 692): ['???', self.read_fake],
 
             (13601, 136, 636): ['PBUSH2D', self.read_pbush2d],
 
@@ -3301,7 +3301,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_fake_16502(self, data: bytes, n: int) -> int:
+    def read_fake_16502(self, data: bytes, n: int) -> int:
         """(16502, 165, 916)"""
         op2: OP2Geom = self.op2
         op2.show_data(data)

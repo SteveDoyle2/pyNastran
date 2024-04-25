@@ -97,8 +97,8 @@ class EDOM(GeomCommon):
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
-        return self.op2._read_fake(data, n)
+    def read_fake(self, data: bytes, n: int) -> int:
+        return self.op2.read_fake(data, n)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
@@ -127,7 +127,7 @@ class EDOM(GeomCommon):
             (4106, 41, 362) : ['DCONSTR', self._read_dconstr],
             #DDVAL(7000,70,563)
             #DRESP3(6700,67,433)
-            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self.read_fake],
 
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_dlink],
@@ -135,37 +135,37 @@ class EDOM(GeomCommon):
             (3406, 34, 355) : ['DVPREL2', self._read_dvprel2],
             #DOPTPRM(4306,43,364)
             (3706, 37, 358) : ['DTABLE', self._read_dtable],
-            #(3806, 38, 359) : ['DRESP1', self._read_fake],
+            #(3806, 38, 359) : ['DRESP1', self.read_fake],
             (3806, 38, 359) : ['DRESP1', self._read_dresp1],
-            (3906, 39, 360) : ['DRESP2', self._read_fake],
+            (3906, 39, 360) : ['DRESP2', self.read_fake],
             (4206, 42, 363) : ['DSCREEN', self._read_dscreen],
             (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
             (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
             (5106, 51, 471) : ['DCONADD', self._read_dconadd],
-            (5806, 58, 474) : ['DVBSHAP', self._read_fake],
+            (5806, 58, 474) : ['DVBSHAP', self.read_fake],
             #DVGEOM(5906,59,356)
-            (6006, 60, 477) : ['MODTRAK', self._read_fake],
+            (6006, 60, 477) : ['MODTRAK', self.read_fake],
             #DRESP3(6700,67,433)
             (6100, 61, 429) : ['DVCREL1', self._read_dvcrel1],
             (6200, 62, 430) : ['DVCREL2', self._read_dvcrel2],
             (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
             (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
-            (6006, 60, 477) : ['???', self._read_fake],
-            (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
+            (6006, 60, 477) : ['???', self.read_fake],
+            (7000, 70, 563) : ['DCONSTR/DDVAL?', self.read_fake],
 
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s200tpgchbc1.op2
             (6903, 69, 637) : ['DMNCON', self._read_dmncon], # nx
-            (7102, 71, 645) : ['DMRLAW', self._read_fake], # nx
+            (7102, 71, 645) : ['DMRLAW', self.read_fake], # nx
             (6803, 68, 636) : ['DVTREL1', self._read_dvtrel1], # nx
 
 
-            (2801, 28, 9945) : ['MAT10DOM', self._read_fake],
-            (5706, 57, 634) : ['DVEREL1', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
+            (2801, 28, 9945) : ['MAT10DOM', self.read_fake],
+            (5706, 57, 634) : ['DVEREL1', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
         }
 
     def _read_dconadd(self, data: bytes, n: int) -> int:

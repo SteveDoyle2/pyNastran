@@ -36,7 +36,7 @@ class GEOM4(GeomCommon):
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
@@ -67,10 +67,10 @@ class GEOM4(GeomCommon):
             (9001, 90, 9024): ['FCENDT', self.read_fcendt],     # record 14 - not done (NX)
             (8001, 80, 395): ['GMBC', self.read_gmbc],          # record 15 - not done
             (7801, 78, 393): ['GMSPC', self.read_gmspc],        # record 16 - not done
-            #: ['', self._read_fake],
+            #: ['', self.read_fake],
 
 
-            #(4901, 49, 420017): ['', self._read_fake],    # record
+            #(4901, 49, 420017): ['', self.read_fake],    # record
             (4901, 49, 420017) : ['MPC', self.read_mpc2],  # this theoretically shouldn't exist
             (4901, 49, 17) : ['MPC', self.read_mpc],             # record 17
             (4891, 60, 83) : ['MPCADD', self.read_mpcadd],       # record 18
@@ -90,9 +90,9 @@ class GEOM4(GeomCommon):
             (6501, 65, 291): ['RROD', self.read_rrod],           # record 31 - not done
             (7001, 70, 186): ['RSPLINE', self.read_rspline],     # record 32 - not done
             (7201, 72, 398): ['RSSCON', self.read_rsscon],       # record 33 - not done
-            #: ['', self._read_fake],
-            #: ['', self._read_fake],
-            #: ['', self._read_fake],
+            #: ['', self.read_fake],
+            #: ['', self.read_fake],
+            #: ['', self.read_fake],
             (1110, 11, 321): ['SEQSET', self.read_seqset],      # record 40
             (1210, 12, 322): ['SEQSET1', self.read_seqset1],    # record 41
             (5110, 51, 256): ['SPCD', self.read_spcd],          # record 48 - buggy
@@ -115,15 +115,15 @@ class GEOM4(GeomCommon):
             (1810, 18, 334): ['SEUSET', self.read_seuset],  # record
             (1910, 19, 335): ['SEUSET1', self.read_seuset1],  # record
 
-            (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_fake],         # record
+            (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self.read_fake],         # record
             #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self.read_seqset1b],         # record
             (610, 6, 0): ['SESET/SEQSET1?', self.read_seseta],           # record
-            (5110, 51, 620256): ['SPCD?', self._read_fake],    # record
+            (5110, 51, 620256): ['SPCD?', self.read_fake],    # record
             (5501, 55, 620016): ['SPC', self.read_spcb],    # record
-            (410, 4, 0): ['', self._read_fake],    # record
+            (410, 4, 0): ['', self.read_fake],    # record
             (6701, 67, 293): ['RTRPLT', self.read_rtrplt],    # record 34
-            (9801, 98, 79): ['', self._read_fake],  # record
-            (9901, 99, 80): ['', self._read_fake],  # record
+            (9801, 98, 79): ['', self.read_fake],  # record
+            (9901, 99, 80): ['', self.read_fake],  # record
             (12001, 120, 601) : ['BLTMPC', self.read_bltmpc],  # record (NX)
 
             # GEOM4705 - pre MSC 2001
@@ -131,35 +131,35 @@ class GEOM4(GeomCommon):
             (210, 2, 585): ['BNDFIX1', self.read_bndfix1],    # record 4 (NX)
             (310, 3, 586) : ['BNDFREE', self.read_bndfree],  # record 5 (NX)
 
-            (9801, 98, 609) : ['RVDOF', self._read_fake],
-            (9901, 99, 610) : ['RVDOF1', self._read_fake],
-            (11901, 119, 561) : ['RWELD', self._read_fake],
-            (5571, 77, 0) : ['', self._read_fake],
+            (9801, 98, 609) : ['RVDOF', self.read_fake],
+            (9901, 99, 610) : ['RVDOF1', self.read_fake],
+            (11901, 119, 561) : ['RWELD', self.read_fake],
+            (5571, 77, 0) : ['', self.read_fake],
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sdr_s111se.op2
-            (210, 2, 0) : ['', self._read_fake],
-            (810, 8, 318) : ['SESET?', self._read_fake],
+            (210, 2, 0) : ['', self.read_fake],
+            (810, 8, 318) : ['SESET?', self.read_fake],
 
-            (8420, 84, 641) : ['CYCADD', self._read_fake],
-            (8510, 85, 643) : ['CYCAXIS', self._read_fake],
-            (8220, 82, 640) : ['CYCSET', self._read_fake],
+            (8420, 84, 641) : ['CYCADD', self.read_fake],
+            (8510, 85, 643) : ['CYCAXIS', self.read_fake],
+            (8220, 82, 640) : ['CYCSET', self.read_fake],
 
             # MSC
-            (16010, 160, 934) : ['???', self._read_fake],
-            (15010, 150, 841) : ['???', self._read_fake],
-            (12000, 120, 255) : ['???', self._read_fake],
+            (16010, 160, 934) : ['???', self.read_fake],
+            (15010, 150, 841) : ['???', self.read_fake],
+            (12000, 120, 255) : ['???', self.read_fake],
 
             # ???
             (4901, 49, 310017) : ['MPC-3', self.read_mpc],
-            (4901, 49, 320017) : ['???', self._read_fake],
-            (12101, 121, 696) : ['JCON', self._read_fake],
-            #(4901, 49, 320017) : ['???', self._read_fake],
-            #(4901, 49, 320017) : ['???', self._read_fake],
+            (4901, 49, 320017) : ['???', self.read_fake],
+            (12101, 121, 696) : ['JCON', self.read_fake],
+            #(4901, 49, 320017) : ['???', self.read_fake],
+            #(4901, 49, 320017) : ['???', self.read_fake],
 
-            (12100, 121, 259) : ['RBAR1', self._read_fake],
-            (12200, 122, 254) : ['RTRPLT1', self._read_fake],
-            (14410, 144, 320700) : ['MPCY', self._read_fake],
-            (14910, 149, 820) : ['ACCSSPT', self._read_fake],
+            (12100, 121, 259) : ['RBAR1', self.read_fake],
+            (12200, 122, 254) : ['RTRPLT1', self.read_fake],
+            (14410, 144, 320700) : ['MPCY', self.read_fake],
+            (14910, 149, 820) : ['ACCSSPT', self.read_fake],
         }
 
     def read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover

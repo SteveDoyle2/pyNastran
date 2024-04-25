@@ -915,7 +915,21 @@ class TestOP2Main(Tester):
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, build_pandas=True, log=log)
+
+        #print(op2.get_op2_stats())
         write_csv(op2, csv_filename)
+
+        exclude_results = ['modal_contribution.cquadr_composite_strain', 'grid_point_forces',
+                           'force*', 'load_vectors']
+        op2b, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+            write_f06=False, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=exclude_results, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False, build_pandas=True, log=log)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)

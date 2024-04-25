@@ -28,8 +28,8 @@ class DYNAMICS(GeomCommon):
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
-        return self.op2._read_fake(data, n)
+    def read_fake(self, data: bytes, n: int) -> int:
+        return self.op2.read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
         return self.op2.reader_geom1.read_stop(data, n)
@@ -61,17 +61,17 @@ class DYNAMICS(GeomCommon):
 
             (3107, 31, 127): ['NOLIN1', self.read_nolin1], # 20
             (3207, 32, 128): ['NOLIN2', self.read_nolin2], # 21
-            #(3207, 33, 129): ['NOLIN3', self._read_fake], # 22
+            #(3207, 33, 129): ['NOLIN3', self.read_fake], # 22
             (3307, 33, 129) : ['NOLIN3', self.read_nolin3],
             (3407, 34, 130): ['NOLIN4', self.read_nolin4], # 23
             (2107, 21, 195): ['RANDPS', self.read_randps], # 24
             (2207, 22, 196): ['RANDT1', self.read_randt1], # 25
             (5107, 51, 131): ['RLOAD1', self.read_rload1],  # 26
             (5207, 52, 132): ['RLOAD2', self.read_rload2],  # 27
-            (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
+            (8910, 89, 606): ['ROTORB', self.read_fake],  # 28
             (8210, 82, 599): ['ROTORD', self.read_rotord],  # 29
             (8410, 84, 600): ['ROTORG', self.read_rotorg],  # 30
-            (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
+            (5707, 57, 135): ['SEQEP', self.read_fake],  # 31
             (6207, 62, 136): ['TF', self.read_tf],  # 32
             (6607, 66, 137): ['TIC', self.read_tic],  # 33
             (7107, 71, 138): ['TLOAD1', self.read_tload1],  # 37
@@ -80,48 +80,48 @@ class DYNAMICS(GeomCommon):
             (17500, 175, 618): ['TSTEP', self.read_tstep1],
 
             (10701, 107, 117) : ['RGYRO', self.read_rgyro],
-            (10801, 108, 242) : ['ROTORG', self._read_fake],
+            (10801, 108, 242) : ['ROTORG', self.read_fake],
             (3807, 38, 505) : ['NLRSFD', self.read_nlrsfd],
             (4807, 48, 306) : ['DYNRED', self.read_dynred],
             (11001, 110, 310) : ['RSPINT', self.read_rspint],
-            (10901, 109, 260) : ['RSPINR', self._read_fake],
-            (11101, 111, 368) : ['UNBALNC', self._read_fake],
+            (10901, 109, 260) : ['RSPINR', self.read_fake],
+            (11101, 111, 368) : ['UNBALNC', self.read_fake],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\nlttlhxb.op2
-            (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self._read_fake],
+            (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self.read_fake],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
             (3201, 24, 54) : ['RCROSS', self.read_rcross],
 
-            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
 
-            (9010, 90, 569): ['CBEAR', self._read_fake],
-            (9110, 91, 570): ['PBEAR', self._read_fake],
-            (9310, 93, 633): ['ROTPARM', self._read_fake],
-            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
+            (9110, 91, 570): ['PBEAR', self.read_fake],
+            (9310, 93, 633): ['ROTPARM', self.read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
 
-            (9407, 94, 659): ['ACADAPT', self._read_fake],
+            (9407, 94, 659): ['ACADAPT', self.read_fake],
             (11701, 117, 656): ['CAMPBLL', self.read_campbll],
 
-            (2601, 26, 58): ['FRFFLEX', self._read_fake],
-            (2807, 28, 79): ['FRFOMAP', self._read_fake],
-            (2701, 27, 62): ['FRFOTM', self._read_fake],
-            (3501, 35, 56): ['RCROSSC', self._read_fake],
-            (5407, 54, 649): ['ALOAD', self._read_fake],
+            (2601, 26, 58): ['FRFFLEX', self.read_fake],
+            (2807, 28, 79): ['FRFOMAP', self.read_fake],
+            (2701, 27, 62): ['FRFOTM', self.read_fake],
+            (3501, 35, 56): ['RCROSSC', self.read_fake],
+            (5407, 54, 649): ['ALOAD', self.read_fake],
             (5807, 59, 653): ['ACPLNW', self.read_acplnw],
-            (7307, 73, 647): ['TLOAD3', self._read_fake],
-            (9607, 96, 660): ['ACORDER', self._read_fake],
-            (11801, 118, 657): ['NLHARM', self._read_fake],
+            (7307, 73, 647): ['TLOAD3', self.read_fake],
+            (9607, 96, 660): ['ACORDER', self.read_fake],
+            (11801, 118, 657): ['NLHARM', self.read_fake],
             (12001, 120, 661): ['NLFREQ1', self.read_nlfreq1],
-            (12201, 122, 667): ['JCONADD', self._read_fake],
-            (13207, 132, 697): ['DAMPING', self._read_fake],
-            (13007, 130, 676): ['FRFXIT1', self._read_fake],
+            (12201, 122, 667): ['JCONADD', self.read_fake],
+            (13207, 132, 697): ['DAMPING', self.read_fake],
+            (13007, 130, 676): ['FRFXIT1', self.read_fake],
 
-            (12607, 126, 672): ['???-1', self._read_fake],
-            (14207, 142, 1001): ['NLFREQ1?', self._read_fake],
+            (12607, 126, 672): ['???-1', self.read_fake],
+            (14207, 142, 1001): ['NLFREQ1?', self.read_fake],
 
-            (12707, 127, 673): ['SPC?', self._read_fake],
-            (12907, 129, 675): ['FRFXIT', self._read_fake],
+            (12707, 127, 673): ['SPC?', self.read_fake],
+            (12907, 129, 675): ['FRFXIT', self.read_fake],
             #(12607, 126, 672): ['???', self.read_stop],
         }
 

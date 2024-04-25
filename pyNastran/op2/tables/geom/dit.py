@@ -30,8 +30,8 @@ class DIT:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
-        return self.op2._read_fake(data, n)
+    def read_fake(self, data: bytes, n: int) -> int:
+        return self.op2.read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
         return self.op2.reader_geom1.read_stop(data, n)
@@ -55,20 +55,20 @@ class DIT:
             (15, 21, 162): ['TABDMP1', self._read_tabdmp1],   # NX
             (56, 26, 303): ['TABRNDG', self._read_tabrndg],   # NX
             (3105, 31, 97): ['TABLES1', self._read_tables1],  # record 13 - TABLES1 (NX)
-            (4000, 40, 460) : ['TABLE3D', self._read_fake],
+            (4000, 40, 460) : ['TABLE3D', self.read_fake],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\htab11.op2
             (14705, 147, 618) : ['TABLEHT', self._read_tableht],
             (14605, 146, 617) : ['TABLEH1', self._read_tableh1],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
-            (1905, 19, 178) : ['TABLEST', self._read_fake],
+            (1905, 19, 178) : ['TABLEST', self.read_fake],
 
-            (505, 5, 644) : ['TABLEM5', self._read_fake],
-            (1605, 16, 117) : ['TABLED6', self._read_fake],
+            (505, 5, 644) : ['TABLEM5', self.read_fake],
+            (1605, 16, 117) : ['TABLED6', self.read_fake],
             (4101, 41, 642) : ['TABLED5', self.read_tabled5],
-            (14805, 148, 731) : ['TABL3D0', self._read_fake],
-            #(1605, 16, 117) : ['???', self._read_fake],
+            (14805, 148, 731) : ['TABL3D0', self.read_fake],
+            #(1605, 16, 117) : ['???', self.read_fake],
         }
 
     def _read_tabdmp1(self, data: bytes, n: int) -> int:
