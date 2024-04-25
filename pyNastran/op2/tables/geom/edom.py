@@ -98,7 +98,7 @@ class EDOM(GeomCommon):
         return self.op2.factor
 
     def read_fake(self, data: bytes, n: int) -> int:
-        return self.op2.read_fake(data, n)
+        return self.op2._read_fake(data, n)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
@@ -129,35 +129,35 @@ class EDOM(GeomCommon):
             #DRESP3(6700,67,433)
             #(504, 5, 246) : ['???', self.read_fake],
 
-            (3106, 31, 352) : ['DESVAR', self._read_desvar],
-            (3206, 32, 353) : ['DLINK', self._read_dlink],
-            (3306, 33, 354) : ['DVPREL1', self._read_dvprel1],
-            (3406, 34, 355) : ['DVPREL2', self._read_dvprel2],
+            (3106, 31, 352) : ['DESVAR', self.read_desvar],
+            (3206, 32, 353) : ['DLINK', self.read_dlink],
+            (3306, 33, 354) : ['DVPREL1', self.read_dvprel1],
+            (3406, 34, 355) : ['DVPREL2', self.read_dvprel2],
             #DOPTPRM(4306,43,364)
-            (3706, 37, 358) : ['DTABLE', self._read_dtable],
+            (3706, 37, 358) : ['DTABLE', self.read_dtable],
             #(3806, 38, 359) : ['DRESP1', self.read_fake],
-            (3806, 38, 359) : ['DRESP1', self._read_dresp1],
+            (3806, 38, 359) : ['DRESP1', self.read_dresp1],
             (3906, 39, 360) : ['DRESP2', self.read_fake],
-            (4206, 42, 363) : ['DSCREEN', self._read_dscreen],
-            (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
-            (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
+            (4206, 42, 363) : ['DSCREEN', self.read_dscreen],
+            (4306, 43, 364) : ['DOPTPRM', self.read_doptprm],
+            (4406, 44, 372) : ['DVGRID', self.read_dvgrid],
             #DVSHAP(5006,50,470)
-            (5106, 51, 471) : ['DCONADD', self._read_dconadd],
+            (5106, 51, 471) : ['DCONADD', self.read_dconadd],
             (5806, 58, 474) : ['DVBSHAP', self.read_fake],
             #DVGEOM(5906,59,356)
             (6006, 60, 477) : ['MODTRAK', self.read_fake],
             #DRESP3(6700,67,433)
-            (6100, 61, 429) : ['DVCREL1', self._read_dvcrel1],
-            (6200, 62, 430) : ['DVCREL2', self._read_dvcrel2],
-            (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
-            (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
+            (6100, 61, 429) : ['DVCREL1', self.read_dvcrel1],
+            (6200, 62, 430) : ['DVCREL2', self.read_dvcrel2],
+            (6300, 63, 431) : ['DVMREL1', self.read_dvmrel1],
+            (6400, 64, 432) : ['DVMREL2', self.read_dvmrel2],
             (6006, 60, 477) : ['???', self.read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self.read_fake],
 
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s200tpgchbc1.op2
-            (6903, 69, 637) : ['DMNCON', self._read_dmncon], # nx
+            (6903, 69, 637) : ['DMNCON', self.read_dmncon], # nx
             (7102, 71, 645) : ['DMRLAW', self.read_fake], # nx
-            (6803, 68, 636) : ['DVTREL1', self._read_dvtrel1], # nx
+            (6803, 68, 636) : ['DVTREL1', self.read_dvtrel1], # nx
 
 
             (2801, 28, 9945) : ['MAT10DOM', self.read_fake],
@@ -168,13 +168,13 @@ class EDOM(GeomCommon):
             #(6903, 69, 637) : ['???', self.read_fake],
         }
 
-    def _read_dconadd(self, data: bytes, n: int) -> int:
+    def read_dconadd(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         datai = np.frombuffer(data[n:], op2.idtype8).copy()
         _read_spcadd_mpcadd(op2, 'DCONADD', datai)
         return len(data)
 
-    def _read_dmncon(self, data: bytes, n: int) -> int:
+    def read_dmncon(self, data: bytes, n: int) -> int:
         """
         Record – DMNCON(6903,69,637)
         NX
@@ -416,7 +416,7 @@ class EDOM(GeomCommon):
         assert n == len(data), f'n={n}; ndata={len(data)}'
         return n
 
-    def _read_dvtrel1(self, data: bytes, n: int) -> int:
+    def read_dvtrel1(self, data: bytes, n: int) -> int:
         """
         Record – DVTREL1(6803,68,636)
         NX
@@ -459,7 +459,7 @@ class EDOM(GeomCommon):
         op2.card_count['DVTREL1'] = ncards
         return n
 
-    def _read_dconstr(self, data: bytes, n: int) -> int:
+    def read_dconstr(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         card_name = 'DCONSTR'
         card_obj = DCONSTR
@@ -580,7 +580,7 @@ class EDOM(GeomCommon):
         #op2.to_msc('; DCONSTR-32 found')
         return n, dconstrs
 
-    def _read_dscreen(self, data: bytes, n: int) -> int:
+    def read_dscreen(self, data: bytes, n: int) -> int:
         """
         DSCREEN(4206, 42, 363)
         Design constraint screening data.
@@ -653,7 +653,7 @@ class EDOM(GeomCommon):
             raise RuntimeError(msg2)
         return n
 
-    def _read_doptprm(self, data: bytes, n: int) -> int:
+    def read_doptprm(self, data: bytes, n: int) -> int:
         """
         Record – DOPTPRM(4306,43,364)
         Design optimization parameters.
@@ -809,7 +809,7 @@ class EDOM(GeomCommon):
         op2.card_count['DOPTPRM'] = ncards
         return n
 
-    def _read_dtable(self, data: bytes, n: int) -> int:
+    def read_dtable(self, data: bytes, n: int) -> int:
         """
         Record – DTABLE(3706,37,358)
         Table constants.
@@ -852,7 +852,7 @@ class EDOM(GeomCommon):
         op2.card_count['DTABLE'] = ncards
         return n
 
-    def _read_mat1dom(self, data: bytes, n: int) -> int:
+    def read_mat1dom(self, data: bytes, n: int) -> int:
         """
         If one or more properties from a MAT1 entry are used as design
         variables, the MAT1DOM record is written to the EDOM data block.
@@ -869,7 +869,7 @@ class EDOM(GeomCommon):
         assert len(data) == 28, len(data)
         return len(data)
 
-    def _read_dvgrid(self, data: bytes, n: int) -> int:
+    def read_dvgrid(self, data: bytes, n: int) -> int:
         """
         Design variable to grid point relation.
         Word Name Type Description
@@ -898,7 +898,7 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dvprel1(self, data: bytes, n: int) -> int:
+    def read_dvprel1(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID          I Unique identification number
@@ -970,7 +970,7 @@ class EDOM(GeomCommon):
         op2.card_count['DVPREL1'] = ncards
         return n
 
-    def _read_dvcrel1(self, data: bytes, n: int) -> int:
+    def read_dvcrel1(self, data: bytes, n: int) -> int:
         """
         Record – DVCREL1(6100,61,429)
         Design variable to connectivity property relation.
@@ -1014,10 +1014,10 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvcrel2(self, data: bytes, n: int) -> int:
+    def read_dvcrel2(self, data: bytes, n: int) -> int:
         read_dvcrel2
 
-    def _read_dvmrel1(self, data: bytes, n: int) -> int:
+    def read_dvmrel1(self, data: bytes, n: int) -> int:
         """
         Design variable to material relation.
         Word Name Type Description
@@ -1062,7 +1062,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvprel2(self, data: bytes, n: int) -> int:
+    def read_dvprel2(self, data: bytes, n: int) -> int:
         """
         Record – DVPREL2(3406,34,355)
         Design variable to property relation based on a user-supplied equation.
@@ -1145,7 +1145,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvmrel2(self, data: bytes, n: int) -> int:
+    def read_dvmrel2(self, data: bytes, n: int) -> int:
         """
         Record – DVMREL2(6400,64,432)
         Design variable to material relation based on a user-supplied equation.
@@ -1172,7 +1172,7 @@ class EDOM(GeomCommon):
         cls = DVMREL2
         #return  self._read_dvxrel2(data, n, DVMREL2)
 
-    #def _read_dvxrel2(self, data: bytes, n: int, cls) -> int:
+    #def read_dvxrel2(self, data: bytes, n: int, cls) -> int:
         n0 = n
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -1236,7 +1236,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dresp1(self, data: bytes, n: int) -> int:
+    def read_dresp1(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID           I Unique entry identifier
@@ -1938,7 +1938,7 @@ class EDOM(GeomCommon):
         #ddd
         return n
 
-    def _read_dvset(self, data: bytes, n: int) -> int:
+    def read_dvset(self, data: bytes, n: int) -> int:
         """
         DVSET   13013   PSHELL  4       .02     1.0     13013
         DVSET   13016   PSHELL  4       .02     1.0     13016
@@ -2069,7 +2069,7 @@ class EDOM(GeomCommon):
         #op2.log.info(f'geom skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return n
 
-    def _read_dvar(self, data: bytes, n: int) -> int:
+    def read_dvar(self, data: bytes, n: int) -> int:
         """
         DVAR    13013   SPARPNL .01     13013
 
@@ -2101,7 +2101,7 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dscons(self, data: bytes, n: int) -> int:
+    def read_dscons(self, data: bytes, n: int) -> int:
         """DSCONS
 
         DSCONS  110131  SPRCAPS STRESS  11013   2       25000.  MAX
@@ -2154,7 +2154,7 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dlink(self, data: bytes, n: int) -> int:
+    def read_dlink(self, data: bytes, n: int) -> int:
         """
         DLINK(3206,32,353)
 
@@ -2193,7 +2193,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * self.size
         return n
 
-    def _read_desvar(self, data: bytes, n: int) -> int:
+    def read_desvar(self, data: bytes, n: int) -> int:
         """
         (3106, 31, 352)
         Word Name  Type  Description

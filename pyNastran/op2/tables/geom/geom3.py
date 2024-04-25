@@ -56,60 +56,60 @@ class GEOM3:
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.geom3_map = {
-            (11302, 113, 600): ['ACCEL', self._read_accel],    # record 2 - not done
-            (11402, 114, 601): ['ACCEL1', self._read_accel1],  # record 3 - not done
-            (4201, 42,  18): ['FORCE', self._read_force],      # record 3
-            (4001, 40,  20): ['FORCE1', self._read_force1],    # record 4
-            (4101, 41,  22): ['FORCE2', self._read_force2],    # record 5
-            (4401, 44,  26): ['GRAV', self._read_grav],        # record 7 - buggy
-            (4551, 61,  84): ['LOAD', self._read_load],        # record 8
-            (3709, 37, 331): ['LOADCYH', self._read_loadcyh],  # record 9 - not done
-            (3609, 36, 188): ['LSEQ', self._read_lseq],        # record 12 - not done
-            (4801, 48,  19): ['MOMENT', self._read_moment],    # record 13 - not tested
-            (4601, 46,  21): ['MOMENT1', self._read_moment1],  # record 14 - not tested
-            (4701, 47,  23): ['MOMENT2', self._read_moment2],  # record 15 - not tested
-            (5101, 51,  24): ['PLOAD', self._read_pload],      # record 16 - not done
-            (6909, 69, 198): ['PLOAD1', self._read_pload1],    # record 17 - buggy
-            (6802, 68, 199): ['PLOAD2', self._read_pload2],    # record 18 - buggy
-            (7109, 81, 255): ['PLOAD3', self._read_pload3],    # record 19 - not done
-            (7209, 72, 299): ['PLOAD4', self._read_pload4],    # record 20 - buggy - g1/g3/g4
-            (7001, 70, 278) : ['PLOADX', self._read_ploadx],
-            (7309, 73, 351): ['PLOADX1', self._read_ploadx1],  # record 22
-            (4509, 45, 239): ['QBDY1', self._read_qbdy1],      # record 24
-            (4909, 49, 240): ['QBDY2', self._read_qbdy2],      # record 25
-            (2109, 21, 414): ['QBDY3', self._read_qbdy3],      # record 26
-            (5509, 55, 190): ['RFORCE', self._read_rforce],    # record 30 - not done
-            (5401, 54,  25): ['SLOAD', self._read_sload],      # record 31 - not done
-            (5701, 57,  27): ['TEMP', self._read_temp],        # record 32
-            (5641, 65,  98): ['TEMPD', self._read_tempd],      # record 33
-            (8409, 84, 204): ['TEMPRB', self._read_temprb],    # record 40 - not done
-            (8109, 81, 201): ['TEMPP1', self._read_tempp1],    # record 37 - not done
-            (8209, 82, 202): ['TEMPP2', self._read_tempp2],    # record 38 - not done
-            (8309, 83, 203): ['TEMPP3', self._read_tempp3],    # record 39 - not done
-            (8409, 84, 204): ['TEMP4', self._read_tempp4],     # record 40 - not done
-            (2309, 23, 416): ['QVOL', self._read_qvol],
-            (4309, 43, 233): ['QHBDY', self._read_qhbdy],
-            (6609, 66, 9031): ['PEDGE', self._read_pedge],
+            (11302, 113, 600): ['ACCEL', self.read_accel],    # record 2 - not done
+            (11402, 114, 601): ['ACCEL1', self.read_accel1],  # record 3 - not done
+            (4201, 42,  18): ['FORCE', self.read_force],      # record 3
+            (4001, 40,  20): ['FORCE1', self.read_force1],    # record 4
+            (4101, 41,  22): ['FORCE2', self.read_force2],    # record 5
+            (4401, 44,  26): ['GRAV', self.read_grav],        # record 7 - buggy
+            (4551, 61,  84): ['LOAD', self.read_load],        # record 8
+            (3709, 37, 331): ['LOADCYH', self.read_loadcyh],  # record 9 - not done
+            (3609, 36, 188): ['LSEQ', self.read_lseq],        # record 12 - not done
+            (4801, 48,  19): ['MOMENT', self.read_moment],    # record 13 - not tested
+            (4601, 46,  21): ['MOMENT1', self.read_moment1],  # record 14 - not tested
+            (4701, 47,  23): ['MOMENT2', self.read_moment2],  # record 15 - not tested
+            (5101, 51,  24): ['PLOAD', self.read_pload],      # record 16 - not done
+            (6909, 69, 198): ['PLOAD1', self.read_pload1],    # record 17 - buggy
+            (6802, 68, 199): ['PLOAD2', self.read_pload2],    # record 18 - buggy
+            (7109, 81, 255): ['PLOAD3', self.read_pload3],    # record 19 - not done
+            (7209, 72, 299): ['PLOAD4', self.read_pload4],    # record 20 - buggy - g1/g3/g4
+            (7001, 70, 278) : ['PLOADX', self.read_ploadx],
+            (7309, 73, 351): ['PLOADX1', self.read_ploadx1],  # record 22
+            (4509, 45, 239): ['QBDY1', self.read_qbdy1],      # record 24
+            (4909, 49, 240): ['QBDY2', self.read_qbdy2],      # record 25
+            (2109, 21, 414): ['QBDY3', self.read_qbdy3],      # record 26
+            (5509, 55, 190): ['RFORCE', self.read_rforce],    # record 30 - not done
+            (5401, 54,  25): ['SLOAD', self.read_sload],      # record 31 - not done
+            (5701, 57,  27): ['TEMP', self.read_temp],        # record 32
+            (5641, 65,  98): ['TEMPD', self.read_tempd],      # record 33
+            (8409, 84, 204): ['TEMPRB', self.read_temprb],    # record 40 - not done
+            (8109, 81, 201): ['TEMPP1', self.read_tempp1],    # record 37 - not done
+            (8209, 82, 202): ['TEMPP2', self.read_tempp2],    # record 38 - not done
+            (8309, 83, 203): ['TEMPP3', self.read_tempp3],    # record 39 - not done
+            (8409, 84, 204): ['TEMP4', self.read_tempp4],     # record 40 - not done
+            (2309, 23, 416): ['QVOL', self.read_qvol],
+            (4309, 43, 233): ['QHBDY', self.read_qhbdy],
+            (6609, 66, 9031): ['PEDGE', self.read_pedge],
             (8100, 81, 381): ['CHACAB', self.read_fake],
-            (2209, 22, 241): ['QVECT', self._read_qvect],
-            (6409, 64, 9032): ['PFACE', self._read_pface],
-            (3809, 38, 332): ['LOADCYN', self._read_loadcyn],    # record
-            (6209, 62, 390): ['TEMPF', self._read_tempf],    # record
+            (2209, 22, 241): ['QVECT', self.read_qvect],
+            (6409, 64, 9032): ['PFACE', self.read_pface],
+            (3809, 38, 332): ['LOADCYN', self.read_loadcyn],    # record
+            (6209, 62, 390): ['TEMPF', self.read_tempf],    # record
             (10901, 109, 427): ['', self.read_fake],  # record
             (10801, 108, 428): ['GMQVOL', self.read_fake],  # record
             (11329, 113, 9602): ['', self.read_fake],  # record
             (11429, 114, 9603): ['', self.read_fake],  # record
             (11529, 115, 9604): ['', self.read_fake],  # record
-            (7002, 70, 254) : ['BOLTFOR', self._read_boltfor],  # record
-            (7601, 76, 608) : ['BOLTLD', self._read_boltld],  # record
+            (7002, 70, 254) : ['BOLTFOR', self.read_boltfor],  # record
+            (7601, 76, 608) : ['BOLTLD', self.read_boltld],  # record
 
             # ???
             (6701,67,978): ['PLOADE1', self.read_fake],  # record
             (7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
             (7701, 77, 619): ['DTEMP', self.read_fake],  # record
             (5215, 52, 154): ['PRESAX', self.read_fake],  # record
-            (7401, 74, 601): ['ACCEL', self._read_accel],  # record
-            (7501, 75, 602): ['ACCEL1', self._read_accel1],  # record
+            (7401, 74, 601): ['ACCEL', self.read_accel],  # record
+            (7501, 75, 602): ['ACCEL1', self.read_accel1],  # record
             (17600, 176, 627): ['RFORCE2', self.read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self.read_fake],  # record
@@ -124,7 +124,7 @@ class GEOM3:
             (5001, 50, 646): ['FORCDST', self.read_fake],
             (1101, 11, 626): ['INITADD', self.read_fake],
             (8701, 87, 625): ['INITS', self.read_fake],
-            (11601, 116, 625): ['PLOADB3', self._read_ploadb3],
+            (11601, 116, 625): ['PLOADB3', self.read_ploadb3],
             (7901, 79, 967): ['VCEV', self.read_fake],
             (2901, 29, 638): ['INITSO', self.read_fake],
             (9801, 98, 695): ['DRIVER', self.read_fake],
@@ -141,9 +141,8 @@ class GEOM3:
             #(9709, 97, 635): ['???', self.read_fake],
             #(9709, 97, 635): ['???', self.read_fake],
             #(9709, 97, 635): ['???', self.read_fake],
-
-
         }
+
     def read_hydros(self, data: bytes, n: int) -> int:
         """
         $       SID     PNOM    RHO     G       SETE    SETG    PLD4    OVRD
@@ -194,7 +193,7 @@ class GEOM3:
         op2.card_count['HYDROS'] = nelements
         return n
 
-    def _read_ploadb3(self, data: bytes, n: int) -> int:
+    def read_ploadb3(self, data: bytes, n: int) -> int:
         """
         PLOADB3 SID     EID     CID     N1      N2      N3      TYPE    SCALE
                 P(A)    P(B)    P(C)
@@ -263,7 +262,7 @@ class GEOM3:
         op2.card_count['PLOADB3'] = nelements
         return n
 
-    def _read_tempb3(self, data: bytes, n: int) -> int:
+    def read_tempb3(self, data: bytes, n: int) -> int:
         r"""
         $TEMPB3 SID     EID     TA      TB      TC      TPYA    TPZA    TPYB
         $       TPZB    TPYC    TPZC    TCA     TDA     TEA     TFA     TCB
@@ -291,7 +290,7 @@ class GEOM3:
         op2.show_data(data[n:], types='ifs')
         sss
 
-    def _read_accel(self, data: bytes, n: int) -> int:
+    def read_accel(self, data: bytes, n: int) -> int:
         """
         Record - ACCEL(7401,74,601)
 
@@ -331,7 +330,7 @@ class GEOM3:
             str(accel)
         return len(data)
 
-    def _read_accel1(self, data: bytes, n: int) -> int:
+    def read_accel1(self, data: bytes, n: int) -> int:
         """
         ACCEL1(7501,75,602)
 
@@ -370,7 +369,7 @@ class GEOM3:
             i0 = i_minus_1 + 1
         return len(data)
 
-    def _read_force(self, data: bytes, n: int) -> int:
+    def read_force(self, data: bytes, n: int) -> int:
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
@@ -393,7 +392,7 @@ class GEOM3:
         op2.card_count['FORCE'] = nentries
         return n
 
-    def _read_force1(self, data: bytes, n: int) -> int:
+    def read_force1(self, data: bytes, n: int) -> int:
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
@@ -413,7 +412,7 @@ class GEOM3:
         op2.card_count['FORCE1'] = nentries
         return n
 
-    def _read_force2(self, data: bytes, n: int) -> int:
+    def read_force2(self, data: bytes, n: int) -> int:
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
@@ -432,12 +431,12 @@ class GEOM3:
         op2.card_count['FORCE2'] = nentries
         return n
 
-    def _read_gmload(self, data: bytes, n: int) -> int:
+    def read_gmload(self, data: bytes, n: int) -> int:
         """GMLOAD"""
         self.op2.log.info('geom skipping GMLOAD in GEOM3')
         return len(data)
 
-    def _read_grav(self, data: bytes, n: int) -> int:
+    def read_grav(self, data: bytes, n: int) -> int:
         """
         GRAV(4401,44,26) - the marker for Record 7
 
@@ -464,7 +463,7 @@ class GEOM3:
         op2.card_count['GRAV'] = nentries
         return n
 
-    def _read_load(self, data: bytes, n: int) -> int:
+    def read_load(self, data: bytes, n: int) -> int:
         """
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
@@ -509,22 +508,22 @@ class GEOM3:
         op2.card_count['LOAD'] = nentries_actual
         return n
 
-    def _read_loadcyh(self, data: bytes, n: int) -> int:
+    def read_loadcyh(self, data: bytes, n: int) -> int:
         """LOADCYH"""
         self.op2.log.info('geom skipping LOADCYH in GEOM3')
         return len(data)
 
-    def _read_loadcyn(self, data: bytes, n: int) -> int:
+    def read_loadcyn(self, data: bytes, n: int) -> int:
         """LOADCYN"""
         self.op2.log.info('geom skipping LOADCYN in GEOM3')
         return len(data)
 
-    def _read_loadcyt(self, data: bytes, n: int) -> int:
+    def read_loadcyt(self, data: bytes, n: int) -> int:
         """LOADCYT"""
         self.op2.log.info('geom skipping LOADCYT in GEOM3')
         return len(data)
 
-    def _read_lseq(self, data: bytes, n: int) -> int:
+    def read_lseq(self, data: bytes, n: int) -> int:
         """
         LSEQ    2000    101     1101
         [2000,  101, 1101,    0,    0]
@@ -544,7 +543,7 @@ class GEOM3:
         op2.card_count['LSEQ'] = nentries
         return n
 
-    def _read_moment(self, data: bytes, n: int) -> int:
+    def read_moment(self, data: bytes, n: int) -> int:
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
@@ -566,7 +565,7 @@ class GEOM3:
         op2.card_count['MOMENT'] = nentries
         return n
 
-    def _read_moment1(self, data: bytes, n: int) -> int:
+    def read_moment1(self, data: bytes, n: int) -> int:
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
@@ -586,7 +585,7 @@ class GEOM3:
         op2.card_count['MOMENT1'] = nentries
         return n
 
-    def _read_moment2(self, data: bytes, n: int) -> int:
+    def read_moment2(self, data: bytes, n: int) -> int:
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
@@ -606,7 +605,7 @@ class GEOM3:
         op2.card_count['MOMENT2'] = nentries
         return n
 
-    def _read_pload(self, data: bytes, n: int) -> int:
+    def read_pload(self, data: bytes, n: int) -> int:
         """
         PLOAD(5101,51,24)
         """
@@ -626,7 +625,7 @@ class GEOM3:
         op2.card_count['PLOAD1'] = nentries
         return n
 
-    def _read_pload1(self, data: bytes, n: int) -> int:
+    def read_pload1(self, data: bytes, n: int) -> int:
         """
         PLOAD1(6909, 69, 198) - the marker for Record 17
         """
@@ -646,7 +645,7 @@ class GEOM3:
         op2.card_count['PLOAD1'] = nentries
         return n
 
-    def _read_pload2(self, data: bytes, n: int) -> int:
+    def read_pload2(self, data: bytes, n: int) -> int:
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
@@ -666,7 +665,7 @@ class GEOM3:
         op2.card_count['PLOAD2'] = nentries
         return n
 
-    def _read_pload3(self, data: bytes, n: int) -> int:
+    def read_pload3(self, data: bytes, n: int) -> int:
         """PLOAD3(7109,71,255) - the marker for Record 19"""
         op2: OP2Geom = self.op2
         ntotal = 20  # 5*4
@@ -684,7 +683,7 @@ class GEOM3:
         op2.card_count['PLOAD3'] = nloads
         return n
 
-    def _read_pload4(self, data: bytes, n: int) -> int:
+    def read_pload4(self, data: bytes, n: int) -> int:
         """PLOAD4(7209,72,299) - the marker for Record 20"""
         n = self.op2.reader_geom2._read_dual_card(
             data, n,
@@ -780,7 +779,7 @@ class GEOM3:
         op2.card_count['PLOAD4'] = nentries
         return n, loads
 
-    def _read_ploadx(self, data: bytes, n: int) -> int:
+    def read_ploadx(self, data: bytes, n: int) -> int:
         """
         Record - PLOADX(7001,70,278)
         This record is obsolete
@@ -810,7 +809,7 @@ class GEOM3:
         op2.card_count['PLOADX'] = nloads
         return n
 
-    def _read_ploadx1(self, data: bytes, n: int) -> int:
+    def read_ploadx1(self, data: bytes, n: int) -> int:
         """
         Record - PLOADX1(7309,73,351)
 
@@ -839,7 +838,7 @@ class GEOM3:
 
 # PRESAX
 
-    def _read_qbdy1(self, data: bytes, n: int) -> int:
+    def read_qbdy1(self, data: bytes, n: int) -> int:
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
@@ -859,7 +858,7 @@ class GEOM3:
         op2.card_count['QBDY1'] = nentries
         return n
 
-    def _read_qbdy2(self, data: bytes, n: int) -> int:
+    def read_qbdy2(self, data: bytes, n: int) -> int:
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
@@ -879,7 +878,7 @@ class GEOM3:
         op2.card_count['QBDY2'] = nentries
         return n
 
-    def _read_qbdy3(self, data: bytes, n: int) -> int:
+    def read_qbdy3(self, data: bytes, n: int) -> int:
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
@@ -897,7 +896,7 @@ class GEOM3:
         op2.card_count['QBDY3'] = nentries
         return n
 
-    def _read_temp(self, data: bytes, n: int) -> int:
+    def read_temp(self, data: bytes, n: int) -> int:
         """
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
@@ -921,7 +920,7 @@ class GEOM3:
         op2.card_count['TEMP'] = nentries
         return n
 
-    def _read_tempd(self, data: bytes, n: int) -> int:
+    def read_tempd(self, data: bytes, n: int) -> int:
         """
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
@@ -942,7 +941,7 @@ class GEOM3:
         op2.card_count['TEMPD'] = nentries
         return n
 
-    def _read_qhbdy(self, data: bytes, n: int) -> int:
+    def read_qhbdy(self, data: bytes, n: int) -> int:
         """
         (4309,43,233)
 
@@ -971,7 +970,7 @@ class GEOM3:
         op2.card_count['QHBDY'] = nentries
         return n
 
-    def _read_qvect(self, data: bytes, n: int) -> int:
+    def read_qvect(self, data: bytes, n: int) -> int:
         """
         MSC
         Record 29 -- QVECT(2209,22,241)
@@ -1015,7 +1014,7 @@ class GEOM3:
         op2.card_count['QHBDY'] = nentries
         return n
 
-    def _read_qvol(self, data: bytes, n: int) -> int:
+    def read_qvol(self, data: bytes, n: int) -> int:
         """
         Record 30 -- QVOL(2309,23,416)
 
@@ -1042,7 +1041,7 @@ class GEOM3:
         op2.card_count['QVOL'] = nentries
         return n
 
-    def _read_rforce(self, data: bytes, n: int) -> int:
+    def read_rforce(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         ntotal = 40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
@@ -1059,7 +1058,7 @@ class GEOM3:
         op2.card_count['RFORCE'] = nentries
         return n
 
-    def _read_sload(self, data: bytes, n: int) -> int:
+    def read_sload(self, data: bytes, n: int) -> int:
         """SLOAD(5401, 54, 25)"""
         op2: OP2Geom = self.op2
         ntotal = 12 * self.factor  # 3*4
@@ -1081,12 +1080,12 @@ class GEOM3:
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
 # TEMPEST
-    def _read_tempf(self, data: bytes, n: int) -> int:
+    def read_tempf(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping TEMPF in GEOM3')
         return len(data)
 # TEMP1C
 
-    def _read_tempp1(self, data: bytes, n: int) -> int:
+    def read_tempp1(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nloads = (len(data) - n) // ntotal
@@ -1103,48 +1102,48 @@ class GEOM3:
         op2.card_count['TEMPP1'] = nloads
         return n
 
-    def _read_tempp2(self, data: bytes, n: int) -> int:
+    def read_tempp2(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPP2 in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPP2 in GEOM3\n')
         return len(data)
 
-    def _read_tempp3(self, data: bytes, n: int) -> int:
+    def read_tempp3(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPP3 in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPP3 in GEOM3\n')
         return len(data)
 
-    def _read_tempp4(self, data: bytes, n: int) -> int:
+    def read_tempp4(self, data: bytes, n: int) -> int:
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
         self.op2.log.info('geom skipping TEMPP4 in GEOM3')
         return len(data)
 
-    def _read_temprb(self, data: bytes, n: int) -> int:
+    def read_temprb(self, data: bytes, n: int) -> int:
         op2: OP2Geom = self.op2
         op2.log.info('geom skipping TEMPRB in GEOM3')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping TEMPRB in GEOM3\n')
         return len(data)
 
-    def _read_pface(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_pface(self, data: bytes, n: int) -> int:  # pragma: no cover
         raise UnsupportedCard('PFACE')
         self.op2.log.info('geom skipping PFACE in GEOM3')
         return len(data)
 
-    def _read_pedge(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_pedge(self, data: bytes, n: int) -> int:  # pragma: no cover
         raise UnsupportedCard('PEDGE')
         self.op2.log.info('geom skipping PEDGE in GEOM3')
         return len(data)
 
-    def _read_boltfor(self, data: bytes, n: int) -> int:
+    def read_boltfor(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BOLTFOR in GEOM3')
         return len(data)
 
-    def _read_boltld(self, data: bytes, n: int) -> int:
+    def read_boltld(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping BOLTLD in GEOM3')
         return len(data)

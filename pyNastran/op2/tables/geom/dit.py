@@ -31,7 +31,7 @@ class DIT:
         return self.op2.factor
 
     def read_fake(self, data: bytes, n: int) -> int:
-        return self.op2.read_fake(data, n)
+        return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
         return self.op2.reader_geom1.read_stop(data, n)
@@ -39,27 +39,27 @@ class DIT:
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.dit_map = {
-            (1005, 10, 174): ['GUST', self._read_gust],     # record 1
-            (1105, 11, 133): ['TABLED1', self._read_tabled1],  # record 4
-            (1205, 12, 134): ['TABLED2', self._read_tabled2],  # record 5
-            (1305, 13, 140): ['TABLED3', self._read_tabled3],  # record 6
-            (1405, 14, 141) : ['TABLED4', self._read_tabled4],  # record 7-MSC
-            #(4201, 42, 648) : ['TABLEDR', self._read_tabledr], # record 8-MSC
+            (1005, 10, 174): ['GUST', self.read_gust],     # record 1
+            (1105, 11, 133): ['TABLED1', self.read_tabled1],  # record 4
+            (1205, 12, 134): ['TABLED2', self.read_tabled2],  # record 5
+            (1305, 13, 140): ['TABLED3', self.read_tabled3],  # record 6
+            (1405, 14, 141) : ['TABLED4', self.read_tabled4],  # record 7-MSC
+            #(4201, 42, 648) : ['TABLEDR', self.read_tabledr], # record 8-MSC
 
-            (105, 1, 93): ['TABLEM1', self._read_tablem1], # record 9
-            (205, 2, 94): ['TABLEM2', self._read_tablem2],  # record 10
-            (305, 3, 95): ['TABLEM3', self._read_tablem3],  # record 11
-            (405, 4, 96): ['TABLEM4', self._read_tablem4], # record 12
+            (105, 1, 93): ['TABLEM1', self.read_tablem1], # record 9
+            (205, 2, 94): ['TABLEM2', self.read_tablem2],  # record 10
+            (305, 3, 95): ['TABLEM3', self.read_tablem3],  # record 11
+            (405, 4, 96): ['TABLEM4', self.read_tablem4], # record 12
 
-            (55, 25, 191) : ['TABRND1', self._read_tabrnd1],
-            (15, 21, 162): ['TABDMP1', self._read_tabdmp1],   # NX
-            (56, 26, 303): ['TABRNDG', self._read_tabrndg],   # NX
-            (3105, 31, 97): ['TABLES1', self._read_tables1],  # record 13 - TABLES1 (NX)
+            (55, 25, 191) : ['TABRND1', self.read_tabrnd1],
+            (15, 21, 162): ['TABDMP1', self.read_tabdmp1],   # NX
+            (56, 26, 303): ['TABRNDG', self.read_tabrndg],   # NX
+            (3105, 31, 97): ['TABLES1', self.read_tables1],  # record 13 - TABLES1 (NX)
             (4000, 40, 460) : ['TABLE3D', self.read_fake],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\htab11.op2
-            (14705, 147, 618) : ['TABLEHT', self._read_tableht],
-            (14605, 146, 617) : ['TABLEH1', self._read_tableh1],
+            (14705, 147, 618) : ['TABLEHT', self.read_tableht],
+            (14605, 146, 617) : ['TABLEH1', self.read_tableh1],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
             (1905, 19, 178) : ['TABLEST', self.read_fake],
@@ -71,7 +71,7 @@ class DIT:
             #(1605, 16, 117) : ['???', self.read_fake],
         }
 
-    def _read_tabdmp1(self, data: bytes, n: int) -> int:
+    def read_tabdmp1(self, data: bytes, n: int) -> int:
         """
         TABDMP1(15, 21, 162)
 
@@ -108,7 +108,7 @@ class DIT:
         op2.increase_card_count('TABDMP1', nentries)
         return len(data)
 
-    def _read_tabrndg(self, data: bytes, n: int) -> int:
+    def read_tabrndg(self, data: bytes, n: int) -> int:
         """
         TABRNDG(56, 26, 303)
         Power spectral density for gust loads in aeroelastic analysis.
@@ -141,7 +141,7 @@ class DIT:
         n += 8  #  for the (-1,-1)
         return n
 
-    def _read_tables1(self, data: bytes, n: int) -> int:
+    def read_tables1(self, data: bytes, n: int) -> int:
         """TABLES1(3105, 31, 97)"""
         op2: OP2Geom = self.op2
         n = self._read_table1(TABLES1, op2.tables,
@@ -149,7 +149,7 @@ class DIT:
                               add_codes=False)
         return n
 
-    def _read_gust(self, data: bytes, n: int) -> int:
+    def read_gust(self, data: bytes, n: int) -> int:
         """
         GUST(1005,10,174) - the marker for Record 1
         """
@@ -168,7 +168,7 @@ class DIT:
 #TABDMP1
 #TABLE3D
 
-    def _read_tabled1(self, data: bytes, n: int) -> int:
+    def read_tabled1(self, data: bytes, n: int) -> int:
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
@@ -228,7 +228,7 @@ class DIT:
         op2.increase_card_count(table_name, nentries)
         return n
 
-    def _read_tabled2(self, data: bytes, n: int) -> int:
+    def read_tabled2(self, data: bytes, n: int) -> int:
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
@@ -236,7 +236,8 @@ class DIT:
         n = self._read_table2(TABLED2, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED2')
         return n
 
-    def _read_table2(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
+    def _read_table2(self, cls, slot, add_method,
+                     data: bytes, n: int, table_name: str) -> int:
         """
         1 ID    I  Table identification number
         2 X1    RS X-axis shift
@@ -283,7 +284,7 @@ class DIT:
         op2.increase_card_count(table_name, nentries)
         return n
 
-    def _read_tabled3(self, data: bytes, n: int) -> int:
+    def read_tabled3(self, data: bytes, n: int) -> int:
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
@@ -291,7 +292,7 @@ class DIT:
         n = self._read_table3(TABLED3, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED3')
         return n
 
-    def _read_tabled4(self, data: bytes, n: int) -> int:
+    def read_tabled4(self, data: bytes, n: int) -> int:
         """
         TABLED4 - the marker for Record 7
         """
@@ -309,7 +310,7 @@ class DIT:
 
 #TABLEDR
 
-    def _read_tableh1(self, data: bytes, n: int) -> int:
+    def read_tableh1(self, data: bytes, n: int) -> int:
         """
         TABLEH1(14605, 146, 617)
         """
@@ -319,7 +320,7 @@ class DIT:
             data, n, 'TABLEH1')
         return n
 
-    def _read_tableht(self, data: bytes, n: int) -> int:
+    def read_tableht(self, data: bytes, n: int) -> int:
         """
         TABLEHT(14705, 147, 618)
         """
@@ -329,7 +330,7 @@ class DIT:
             data, n, 'TABLEHT')
         return n
 
-    def _read_tablem1(self, data: bytes, n: int) -> int:
+    def read_tablem1(self, data: bytes, n: int) -> int:
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
@@ -337,7 +338,7 @@ class DIT:
         n = self._read_table1(TABLEM1, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM1')
         return n
 
-    def _read_tablem2(self, data: bytes, n: int) -> int:
+    def read_tablem2(self, data: bytes, n: int) -> int:
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
@@ -345,7 +346,7 @@ class DIT:
         n = self._read_table2(TABLEM2, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM2')
         return n
 
-    def _read_tablem3(self, data: bytes, n: int) -> int:
+    def read_tablem3(self, data: bytes, n: int) -> int:
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
@@ -353,7 +354,7 @@ class DIT:
         n = self._read_table3(TABLEM3, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM3')
         return n
 
-    def _read_tablem4(self, data: bytes, n: int) -> int:
+    def read_tablem4(self, data: bytes, n: int) -> int:
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
@@ -519,7 +520,7 @@ class DIT:
         return n
 
 #TABLEST
-    def _read_tabrnd1(self, data: bytes, n: int) -> int:
+    def read_tabrnd1(self, data: bytes, n: int) -> int:
         """
         TABRND1(55,25,191)
 

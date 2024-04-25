@@ -29,7 +29,7 @@ class DYNAMICS(GeomCommon):
         return self.op2.factor
 
     def read_fake(self, data: bytes, n: int) -> int:
-        return self.op2.read_fake(data, n)
+        return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
         return self.op2.reader_geom1.read_stop(data, n)

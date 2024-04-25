@@ -23,7 +23,7 @@ class CONTACT:
         return self.op2.factor
 
     def read_fake(self, data: bytes, n: int) -> int:
-        return self.op2.read_fake(data, n)
+        return self.op2._read_fake(data, n)
 
     def read_stop(self, data: bytes, n: int) -> int:
         return self.op2.reader_geom1.read_stop(data, n)
@@ -53,7 +53,7 @@ class CONTACT:
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sline5.op2
         self.contact_map = {
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\femao8rand.op2
-            (7110, 71, 588) : ['BSURFS', self._read_bsurfs],
+            (7110, 71, 588) : ['BSURFS', self.read_bsurfs],
             (724, 7, 441) : ['BSURF', self.read_fake],
             (224, 2, 436) : ['BLSEG', self.read_fake],
             (1224, 12, 446) : ['BGSET', self.read_fake],
@@ -64,7 +64,7 @@ class CONTACT:
             (8920, 89, 614) : ['BEDGE', self.read_fake],
             (124, 1, 435) : ['BCONP', self.read_fake],
             (7710, 77, 594) : ['BCRPARA', self.read_fake],
-            (8110, 81, 598) : ['BCTPARM', self._read_bctparm],
+            (8110, 81, 598) : ['BCTPARM', self.read_bctparm],
             (8301, 83, 605) : ['BCPROPS', self.read_fake],
 
             #(124, 1, 435) : ['???', self.read_fake],
@@ -94,10 +94,10 @@ class CONTACT:
             (1124, 11, 445) : ['BCPARA', self.read_fake],
             (20029, 29, 493) : ['BCPROP', self.read_fake],
             (1024, 10, 444) : ['BCBODY', self.read_fake],
-            (811, 8, 628) : ['AMLREG', self._read_amlreg],
+            (811, 8, 628) : ['AMLREG', self.read_amlreg],
 
             (6621, 66, 662) : ['BCTPAR2', self.read_fake],
-            (7610, 76, 593) : ['BGPARA', self._read_bgpara],
+            (7610, 76, 593) : ['BGPARA', self.read_bgpara],
             (9101, 91, 693) : ['FLXSLI', self.read_fake],
             (5524, 55, 897) : ['BCONPRG', self.read_fake],
             (924, 9, 443) : ['???', self.read_fake],
@@ -125,7 +125,7 @@ class CONTACT:
             (5124, 51, 893) : ['BCPATCH', self.read_fake],
         }
 
-    def _read_amlreg(self, data: bytes, n: int) -> int:
+    def read_amlreg(self, data: bytes, n: int) -> int:
         """
         Record – AMLREG(811,8,628)
 
@@ -188,14 +188,15 @@ class CONTACT:
             #loads.append(acsrce)
         return n # , loads
 
-
-    #def _read_bcrpara(self, data: bytes, n: int) -> int:
+    #def read_bcrpara(self, data: bytes, n: int) -> int:
         #return self._read_bc_param(data, n, 'BCRPARA')
 
-    def _read_bgpara(self, data: bytes, n: int) -> int:
+    def read_bgpara(self, data: bytes, n: int) -> int:
+        """BGPARA"""
         return self._read_bc_param(data, n, 'BGPARA')
 
-    def _read_bctparm(self, data: bytes, n: int) -> int:
+    def read_bctparm(self, data: bytes, n: int) -> int:
+        """BCTPARM"""
         return self._read_bc_param(data, n, 'BCTPARM')
 
     def _read_bc_param(self, data: bytes, n: int, name: str) -> int:
@@ -298,7 +299,7 @@ class CONTACT:
         op2.log.warning(f'skipping {name}; id={contact_id} params={params}')
         return len(data)
 
-    def _read_bsurfs(self, data: bytes, n: int) -> int:
+    def read_bsurfs(self, data: bytes, n: int) -> int:
         """
         BSURFS
 

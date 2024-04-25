@@ -45,7 +45,7 @@ class AXIC:
         return self.op2.factor
 
     def read_fake(self, data: bytes, n: int) -> int:
-        return self.op2.read_fake(data, n)
+        return self.op2._read_fake(data, n)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
