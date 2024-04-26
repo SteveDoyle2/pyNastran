@@ -3,7 +3,6 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from __future__ import annotations
 from struct import Struct
-from itertools import count
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -20,12 +19,13 @@ DSCREEN_INT_TO_RTYPE = {
     4 : 'EIGN',
     5 : 'DISP',
     6 : 'STRESS',
+    #7: 'STRAIN', # ?
     #8: '???a',  force?
     #9: '???b',
     12: 'FREQ',  # goland_final_test.op2
 }
 
-FLAG_TO_RESP_MSC = {
+DRESP_FLAG_TO_RESP_MSC = {
     1 : 'WEIGHT',
     2 : 'VOLUME',
     3 : 'LAMA',
@@ -35,7 +35,7 @@ FLAG_TO_RESP_MSC = {
     7 : 'STRAIN',
     8 : 'FORCE',
 }
-FLAG_TO_RESP_NX = {
+DRESP_FLAG_TO_RESP_NX = {
     1 : 'WEIGHT',
     2 : 'VOLUME',
     3 : 'LAMA',
@@ -593,7 +593,7 @@ class EDOM(GeomCommon):
         data = (5, -0.70, 10)
         """
         op2: OP2Geom = self.op2
-        ntotal = 12 * self.factor # 3*4
+        ntotal = 3 * self.size # 3*4
         struct1 = Struct(mapfmt(op2._endian + b'ifi', self.size))
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1472,11 +1472,11 @@ class EDOM(GeomCommon):
         is_msc = False
         if op2.is_msc:
             is_msc = True
-            flag_to_resp = FLAG_TO_RESP_NX
+            flag_to_resp = DRESP_FLAG_TO_RESP_NX
         else:
             # NX
             is_nx = True
-            flag_to_resp = FLAG_TO_RESP_NX
+            flag_to_resp = DRESP_FLAG_TO_RESP_NX
 
         #self.show_data(data[n:], types='qds')
         datan = data[n:]

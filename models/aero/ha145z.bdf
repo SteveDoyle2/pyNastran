@@ -1,0 +1,599 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element HA145Z.DAT
+$ *1     2-MAY-1991 14:43:36 EC004ABB "67 PLUS/G/ NEW AERO DECK FROM BILL RODDEN FOR V67"
+$ DEC/CMS REPLACEMENT HISTORY, Element HA145Z.DAT
+ID MSC, HA145Z $ 4/23/91 WPR
+$ID MSC, ZONA75FWT
+$$$$$$$$ EXAMPLE ZONA75FWT                                      $$$$$$$$
+$                                                                      $
+$       MODEL DESCRIPTION       MODEL A OF NASA TN D-1824              $
+$                               HALF SPAN 15 DEGREE SWEPT WING         $
+$                               28 QUAD4 PANEL MODEL                   $
+$                                                                      $
+$       SOLUTION                PK-FLUTTER ANALYSIS METHOD             $
+$                               USING ZONA51 AERODYNAMICS              $
+$                               AT MACH NO. 1.3 AND VAN                $
+$                               DYKE CORRECTION FACTORS                $
+$                                                                      $
+$$$$$$$$                                                        $$$$$$$$
+TIME 15 $
+SOL 145  $ FLUTTER ANALYSIS
+CEND
+TITLE = EXAMPLE ZONA75FWT:HALF SPAN 15-DEG SWEPT UNTAPERED WIN HA145Z
+SUBT  = PK-METHOD FLUTTER ANALYSIS, M=1.3 WEIGHTED ZONA51 AERO
+LABEL = 0.041 IN AL PLATE W/BEVELLED LEADING AND TRAILING EDGES
+  SEALL = ALL
+  ECHO    = BOTH
+  SPC     = 1   $
+  METHOD  = 10  $ MODIFIED GIVENS
+  SDAMP   = 2000
+  FMETHOD = 30  $ PK-FLUTTER METHOD
+  SET 10  = 1 THRU 1000
+  DISP    = 10 $ GRID AND AERO BOX DISPLACEMENTS IN MODES
+BEGIN BULK
+$*** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ***$
+$                                                                       $
+$        THE ANNOTATIONS IN THIS INPUT DECK ARE INTENDED TO             $
+$        EXPLAIN THE DATA ON THE CARD IMAGES FOR THIS                   $
+$        EXAMPLE WITHOUT REFERENCE TO THE VARIOUS MANUALS WHERE         $
+$        MORE GENERAL DESCRIPTIONS WILL BE FOUND.                       $
+$                                                                       $
+$*** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ***$
+$                                                                       $
+$                     * * * STRUCTURAL DATA * * *                       $
+$                                                                       $
+$                          (LB-IN-SEC SYSTEM)                           $
+$                                                                       $
+$                        * * GRID GEOMETRY * *                          $
+$                                                                       $
+$        THE GRID ARRAY IS A FIVE BY EIGHT MESH OF EQUALLY SPACED       $
+$        GRIDS IN THE SPANWISE DIRECTION AND UNEQUALLY SPACED GRIDS     $
+$        IN THE CHORDWISE DIRECTION. CHORDWISE THE GRIDS ARE STATIONED  $
+$        AT THE LEADING EGDE, 1/8 CHORD, 7/8 CHORD AND TRAILING EDGE.   $
+$        THE WING HAS A 15 DEGREE SWEEP ANGLE.                          $
+$                                                                       $
+GRID    1                0.0     0.0     0.0
+GRID    2                .211491 .7893   0.0
+GRID    3                .422983 1.5786  0.0
+GRID    4                .634474 2.3679  0.0
+GRID    5                .845966 3.1572  0.0
+GRID    6                1.05746 3.9465  0.0
+GRID    7                1.26895 4.7358  0.0
+GRID    8                1.48044 5.5251  0.0
+GRID    9                .258819 0.0     0.0
+GRID    10               .47031  .7893   0.0
+GRID    11               .681802 1.5786  0.0
+GRID    12               .893293 2.3679  0.0
+GRID    13               1.10478 3.1572  0.0
+GRID    14               1.31628 3.9465  0.0
+GRID    15               1.52777 4.7358  0.0
+GRID    16               1.73926 5.5251  0.0
+GRID    17               1.03528 0.0     0.0
+GRID    18               1.24677 .7893   0.0
+GRID    19               1.45826 1.5786  0.0
+GRID    20               1.66975 2.3679  0.0
+GRID    21               1.88124 3.1572  0.0
+GRID    22               2.09273 3.9465  0.0
+GRID    23               2.30422 4.7358  0.0
+GRID    24               2.51572 5.5251  0.0
+GRID    25               1.81173 0.0     0.0
+GRID    26               2.02322 .7893   0.0
+GRID    27               2.23471 1.5786  0.0
+GRID    28               2.44621 2.3679  0.0
+GRID    29               2.6577  3.1572  0.0
+GRID    30               2.86919 3.9465  0.0
+GRID    31               3.08068 4.7358  0.0
+GRID    32               3.29217 5.5251  0.0
+GRID    33               2.07055 0.0     0.0
+GRID    34               2.28204 .7893   0.0
+GRID    35               2.49353 1.5786  0.0
+GRID    36               2.70502 2.3679  0.0
+GRID    37               2.91652 3.1572  0.0
+GRID    38               3.12801 3.9465  0.0
+GRID    39               3.3395  4.7358  0.0
+GRID    40               3.55099 5.5251  0.0
+$                                                                       $
+$                                                                       $
+$                * * STRUCTURAL STIFFNESS PROPERTIES * *                $
+$                                                                       $
+$        THE ELEMENT CONNECTIVITY IS DEFINED BY THE CQUAD4 CARD. THE    $
+$        PLATES ALONG THE LEADING AND TRAILING EDGES HAVE 0.0 IN.       $
+$        THICKNESS BUT TAPER TO A CONTSTANT THICKNESS OF 0.041 IN.      $
+$        BETWEEN THE 1/8 AND 7/8 CHORDS.                                $
+$                                                                       $
+CQUAD4  1       1       1       2       10      9                       +M00000
++M00000                  0.0     0.0     .041    .041
+CQUAD4  2       1       2       3       11      10                      +M00001
++M00001                  0.0     0.0     .041    .041
+CQUAD4  3       1       3       4       12      11                      +M00002
++M00002                  0.0     0.0     .041    .041
+CQUAD4  4       1       4       5       13      12                      +M00003
++M00003                  0.0     0.0     .041    .041
+CQUAD4  5       1       5       6       14      13                      +M00004
++M00004                  0.0     0.0     .041    .041
+CQUAD4  6       1       6       7       15      14                      +M00005
++M00005                  0.0     0.0     .041    .041
+CQUAD4  7       1       7       8       16      15                      +M00006
++M00006                  0.0     0.0     .041    .041
+CQUAD4  8       1       9       10      18      17
+CQUAD4  9       1       10      11      19      18
+CQUAD4  10      1       11      12      20      19
+CQUAD4  11      1       12      13      21      20
+CQUAD4  12      1       13      14      22      21
+CQUAD4  13      1       14      15      23      22
+CQUAD4  14      1       15      16      24      23
+CQUAD4  15      1       17      18      26      25
+CQUAD4  16      1       18      19      27      26
+CQUAD4  17      1       19      20      28      27
+CQUAD4  18      1       20      21      29      28
+CQUAD4  19      1       21      22      30      29
+CQUAD4  20      1       22      23      31      30
+CQUAD4  21      1       23      24      32      31
+CQUAD4  22      1       25      26      34      33                      +M00007
++M00007                  .041    .041    0.0     0.0
+CQUAD4  23      1       26      27      35      34                      +M00008
++M00008                  .041    .041    0.0     0.0
+CQUAD4  24      1       27      28      36      35                      +M00009
++M00009                  .041    .041    0.0     0.0
+CQUAD4  25      1       28      29      37      36                      +M00010
++M00010                  .041    .041    0.0     0.0
+CQUAD4  26      1       29      30      38      37                      +M00011
++M00011                  .041    .041    0.0     0.0
+CQUAD4  27      1       30      31      39      38                      +M00012
++M00012                  .041    .041    0.0     0.0
+CQUAD4  28      1       31      32      40      39                      +M00013
++M00013                  .041    .041    0.0     0.0
+$                                                                       $
+$                         * WING STRUCTURE *                            $
+$                                                                       $
+$        THE PSHELL CARD DEFINES THE MEMBRANE, BENDING, TRANSVERSE      $
+$        SHEAR, AND COUPLING PROPERTIES OF THIN SHELL ELEMENTS.         $
+$        IT LISTS ITS ID, MATERIAL ID CARDS 1,2 AND 3 FOR THE           $
+$        MEMBRANE STIFFNESS PROPERTIES, DEFAULT VALUES OF THICKNESS     $
+$        0.041, BENDING STIFFNESS AND TRANSVERSE SHEAR STIFFNESS        $
+$        AND THE NON-STRUCTURAL MASS DEFAULTS TO ZERO.                  $
+$                                                                       $
+$       PID     MID1    T      MID2 12.*I/T**3  MID3    TS/T    NSM     $
+PSHELL  1       1       .041    1               1
+$                                                                       $
+$                 * * MASS AND INERTIA PROPERTIES * *                   $
+$                                                                       $
+$        THE MAT1 CARD DEFINES THE MATERIAL PROPERTIES FOR LINEAR,      $
+$        TEMPERATURE-INDEPENDENT, ISOTROPIC MATERIALS.  IT LISTS        $
+$        YOUNGS MODULUS, THE SHEAR MODULUS, POISSONS RATIO, DENSITY,    $
+$        THERMAL EXPANSION COEFFICIENT AND STRUCTURAL ELEMENT DAMPING.  $
+$                                                                       $
+$       MID     E       G       NU      RHO     A       TREF    GE
+MAT1    1       8.5977+63.2554+6        0.097464                        ALUMINUM
+$                                                                       $
+$                    * * STRUCTURAL PARAMETERS * *                      $
+$                                                                       $
+$        COUPMASS (=1), CAUSES THE GENERATION OF COUPLED MASS           $
+$        MATRICES RATHER THAN LUMPED MASS MATRICES.                     $
+$                                                                       $
+$       N       V1                                                      $
+PARAM   COUPMASS  1
+$                                                                       $
+$        PARAMETER WTMASS CONVERTS STRUCTURAL WEIGHT TO MASS UNITS;     $
+$        ITS VALUE IS 1/G.                                              $
+$                                                                       $
+$       N       V1      V2                                              $
+PARAM   WTMASS  .0025901
+$                                                                       $
+$        PARAMETER GRDPNT GENERATES THE INERTIAL MATRIX WITH RESPECT    $
+$        TO A COORDINATE SYSTEM THROUGH THE GRID POINT SPECIFIED.       $
+$                                                                       $
+PARAM   GRDPNT  17
+$                                                                       $
+$                    * * STRUCTURAL CONSTRAINTS * *                     $
+$                                                                       $
+$        THE SPC1 CARD DEFINES SETS OF SINGLE-POINT CONSTRAINTS.        $
+$        IT LISTS ITS ID, THE DOF COMPONENTS TO BE CONSTRAINED          $
+$        AND THE GRID POINT NO.                                         $
+$                                                                       $
+$       SID     C       G1      G2      ETC
+SPC1    1       12345   9
+SPC1    1       12345   25
+SPC1    1       6       1       THRU    40
+$                                                                       $
+$        THE ASET1 CARD DEFINES DOFS THAT THE USER DESIRES TO BE        $
+$        IN THE ANALYSIS SET. IT LISTS THE DOF COMPONENT NUMBERS AND    $
+$        THE GRID ID NO.S.                                              $
+$                                                                       $
+$       V       ID1     THRU    ID2
+ASET1   3        1      THRU     8
+ASET1   3       10      THRU    16
+ASET1   3       18      THRU    24
+ASET1   3       26      THRU    40
+$                                                                       $
+$                      *  STRUCTURAL DAMPING *                          $
+$                                                                       $
+$        THE PARAMETER KDAMP DETERMINES THE MANNER OF INCLUDING         $
+$        STRUCTURAL DAMPING IN THE EQUATIONS OF MOTION (SEE THE         $
+$        HANDBOOK FOR DYNAMIC ANALYSIS, SECTION 3.2.2).  IF SET TO      $
+$        -1, MODAL STRUCTURAL DAMPING IS INCLUDED AS THE IMAGINARY      $
+$        PART OF A COMPLEX STIFFNESS MATRIX.                            $
+$                                                                       $
+$       N       V1      V2                                              $
+PARAM   KDAMP   +1
+$                                                                       $
+$        THE TABDMP1 CARD AND TABLE DEFINE MODAL DAMPING AS A           $
+$        TABULAR FUNCTION OF FREQUENCY.  THE DAMPING VALUES ARE         $
+$        LINEAR BETWEEN THE FREQUENCY AND DAMPING PAIRS AND ARE         $
+$        EXTRAPOLATED OUTSIDE THE TABULATED FREQUENCY RANGE.            $
+$                                                                       $
+$       ID                                                              +TDP
+TABDMP1 2000                                                            +T2000
+$       F1      G1      F2      G2      ETC             ENDT
++T2000  0.0     0.01    1000.0  0.01    ENDT
+$+T2000 0.0     0.0     1000.0  0.0     ENDT
+$                                                                       $
+$                    * * * AERODYNAMIC DATA * * *                       $
+$                                                                       $
+$                        (LB-IN-SEC SYSTEM)                             $
+$                                                                       $
+$                       * * ELEMENT GEOMETRY * *                        $
+$                                                                       $
+$        THE AERO CARD SPECIFIES THE AERO COORDINATE SYSTEM, THE        $
+$        VELOCITY (USED FOR DATA RECOVERY), THE REFERENCE CHORD         $
+$        AND FLUID DENSITY, PLUS SYMMETRY KEYS.  SYMXZ=0 INDICATES      $
+$        THAT THE MODEL IS MOUNTED AS AN ISOLATED WING; SYMXY=0         $
+$        INDICATES THAT THE MODEL IS MOUNTED FAR ENOUGH FROM THE        $
+$        FLOOR SO THAT REFLECTION EFFECTS ARE NEGLIGIBLE.               $
+$                                                                       $
+$       ACSID   VELOCITY REFC   RHOREF  SYMXZ   SYMXY
+AERO    0               2.0706  1.145-7 1
+$                                                                       $
+$                                                                       $
+$        THE CAERO5 CARD DEFINES PANEL ELEMENTS FOR THE PISTON          $
+$        THEORY METHOD.  IT LISTS THE ID OF THE PAERO CARD, THE         $
+$        COORDINATE SYSTEM OF POINTS 1 AND 4, THE NO. OF EQUAL          $
+$        STRIPS (LSPAN WOULD SPECIFY AN AEFACT CARD IF UNEQUAL          $
+$        STRIPS WERE SPECIFIED), AND AN AEFACT CARD WHERE THICKNESS     $
+$        INTEGRALS WILL BE FOUND.  NTHRY SPECIFIES PISTON OR VAN        $
+$        DYKES THEORY WITH OR WITHOUT SWEEP EFFECTS.  THE CONTINUA-     $
+$        TION CARD CONTAINS THE COORDINATES OF THE ROOT AND TIP         $
+$        LEADING EDGES AND THE CHORDS THERE.                            $
+$                                                                       $
+CAERO1  101     1       0       10      10                      1       +CA101
++CA101  0.0     0.0     0.0     2.07055 1.48044 5.52510 0.0     2.07055
+PAERO1  1
+SPLINE1 100     101     101     200     100     0.0
+$       EID     PID     CP      NSPAN   LSPAN   NTHRY   NTHICK
+$CAERO5 101     1       0       6               2       702             +CA101
+$           (INBD POINT)        X12        (OUTBD POINT)        X43
+$       X1      Y1      Z1    ROOTCHORD X4      Y4      Z4     TIPCHORD
+$+CA101 .0      .0      .0      2.07055 1.48044 5.52510 0.0     2.07055
+$                                                                       $
+$        THE SIX THICKNESS INTEGRALS.                                   $
+$                                                                       $
+$AEFACT  702     0.0     -.008663-.008663 .001568 .000784 .000694
+$                                                                       $
+$        THE PAERO5 CARD CONTAINS THREE PAIRS OF NUMBERS SPECIFYING     $
+$        THE NUMBERS OF PARAMETERS AND THE AEFACT CARDS ON WHICH THEY   $
+$        ARE LISTED; THE PARAMETERS ARE LOCAL ANGLE OF ATTACK, LOCAL    $
+$        CHORD AND LOCAL THICKNESS.  THE CONTINUATION CARD LISTS        $
+$        TRAILING EDGE CONTROL SURFACE CHORDS IN FRACTION OF LOCAL      $
+$        CHORD.                                                         $
+$                                                                       $
+$       PID     NALPHA  LALPHA  NXIS    LXIS    NTAUS   LTAUS
+$PAERO5 1       1       701                                             +PA5
+$       CAOC1   CAOC2   CAOC3   CAOC4   CAOC5   CAOC6
+$+PA5    0.      0.      0.      0.      0.      0.
+$                                                                       $
+$               MACH1   ALPHA11 ALPHA12 ETC     MACH2           ETC
+$AEFACT  701     3.0     0.
+$                                                                       $
+$                      * * FLIGHT  CONDITIONS * *                       $
+$                                                                       $
+$        ALL COMBINATIONS OF MACH NUMBER AND REDUCED FREQUENCY LISTED   $
+$        ON THE MKAERO1 CARD AND ITS CONTINUATION CARD ARE USED TO      $
+$        GENERATE GENERALIZED AERODYNAMIC FORCE MATRICES.               $
+$                                                                       $
+$       M1      M2      M3      ETC
+MKAERO1 1.3                                                             +MK
+$       K1      K2      K3      ETC
++MK     .02     .03     .04     .05     .06     .08     0.10
+$                                                                       $
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$
+$        THE SPLINE2 CARD SPECIFIES A BEAM SPLINE FOR INTERPOLA-        $
+$        TION OVER A REGION OF THE CAERO CARD (ID1 AND ID2 ARE          $
+$        THE FIRST AND LAST BOXES (STRIPS) IN THIS REGION).  SETG       $
+$        REFERS TO A SET1 CARD WHERE THE STRUCTURAL GRID POINTS         $
+$        ARE SELECTED.  DZ AND DTOR ARE SMOOTHING CONSTANTS FOR         $
+$        FOR LINEAR ATTACHMENT AND TORSIONAL FLEXIBILITIES.  DTHX       $
+$        AND DTHY ARE ROTATIONAL ATTACHMENT FLEXIBILITIES.  CID         $
+$        IDENTIFIES THE SPLINE COORDINATE SYSTEM AND ITS AXIS.          $
+$                                                                       $
+$       EID     CAERO   ID1     ID2     SETG    DZ      DTOR    CID     +SPL2
+$SPLINE2        100     101     101     106     100     0.0     1.0     10
+$+SPL2  DTHX    DTHY
+$+SP2   -1.0    -1.0
+$                                                                       $
+$        THIS CORD2R CARD DEFINES THE SPLINE COORDINATE SYSTEM          $
+$        FLAGGED BY THE SPLINE2 CARD.  LISTED ARE THE ORIGIN. A         $
+$        POINT ALONG THE Z-AXIS, AND A POINT IN THE X-Z PLANE,          $
+$        ALL IN THE RID COORDINATE SYSTEM.                              $
+$                                                                       $
+$       CID     RID     A1      A2      A3      B1      B2      B3      +CRD2
+CORD2R  10              1.035275 0.0    0.0     1.035275 0.0    1.0     +CRD
+$+CRD2  C1      C2      C3
++CRD    2.07055 -.277401 1.0
+$                                                                       $
+$        THE SET1 CARD DEFINES THE SETS OF POINTS TO BE USED BY         $
+$        THE SPLINE FOR INTERPOLATION.                                  $
+$                                                                       $
+$       SID     G1      G2      ETC
+$SET1   100     9       THRU    16      25      THRU    32
+SET1    100     2       4       6       8       9       11      13      +S1
++S1     15      18      20      22      24      25      27      29      +S2
++S2     31      34      36      38      40
+$                                                                       $
+$                    * * VIBRATION ANALYSIS * *                         $
+$                                                                       $
+$        THE EIGR CARD SPECIFIES THE METHOD OF EXTRACTING THE EIGEN-    $
+$        SOLUTIONS OF THE STRUCTURE IN A VACUUM; IN THIS CASE THE       $
+$        MODIFIED GIVENS METHOD.  FIVE MODES ARE DESIRED, NORMAL-       $
+$        IZED ON THE MAXIMUM DISPLACEMENTS.                             $
+$                                                                       $
+$       SID     METHOD  F1      F2              NO                      $
+EIGR    10      MGIV                            8                       +ER
+$       NORM                                                            $
++ER     MAX
+$                                                                       $
+$        THE PARAMETER OPPHIPA,1 PRINTS THE MODAL DISPLACEMENTS         $
+$        AT THE STRUCTURAL AND AERO GRID POINTS THAT CORRESPOND         $
+$        TO THE DISP AND SET REQUESTS IN THE CASE CONTROL DECK.         $
+$                                                                       $
+PARAM   OPPHIPA 1
+$                                                                       $
+$                   *  * * FLUTTER ANALYSIS * * *                       $
+$                                                                       $
+$        THE PARAM,LMODES,N CARD SPECIFIES THAT N MODES ARE TO BE       $
+$        USED IN THE FLUTTER ANALYSIS.                                  $
+$                                                                       $
+PARAM   LMODES  8
+$                                                                       $
+$        THE FLUTTER CARD DEFINES THE METHOD OF SOLUTION, IDENTIFIES    $
+$        THE FLFACT CARDS THAT FOLL0W, SPECIFIES THE INTERPOLATION      $
+$        METHOD, THE NUMBER OF ROOTS DESIRED IN THE OUTPUT AND THE      $
+$        CRITERION FOR CONVERGENCE.                                     $
+$                                                                       $
+$       SID     METHOD  DENS    MACH    VEL     IMETH   NVALUE  EPS     $
+FLUTTER 30      PK      1       2       3       L       3
+$                                                                       $
+$        FLFACT CARDS ARE USED TO SPECIFY DENSITY RATIOS, MACH NOS.     $
+$        AND REDUCED FREQUENCIES/VELOCITIES FOR FLUTTER ANALYSES.       $
+$                                                                       $
+$                     * * PK SOLUTION WARNING * *                       $
+$        IN VERSIONS THRU 65 SOLUTIONS WILL BE PRINTED FOR THE FIRST    $
+$        DENSITY AND THE FIRST VELOCITY, THE SECOND DENSITY AND THE     $
+$        SECOND VELOCITY, ETC TO THE LAST DENSITY AND THE REMAINING     $
+$        VELOCITIES.  THEREFORE IT IS RECOMMENDED TO USE ONE DENSITY    $
+$        PER RUN, USING RESTARTS TO AVOID REGENERATING THE DATABASE.    $
+$                     * * PK SOLUTION WARNING * *                       $
+$                                                                       $
+$       SID     F1      F2      F3      ETC
+FLFACT  1       0.20606                                                 DENSITY
+FLFACT  2       1.3                                                     MACH NO
+FLFACT  3       12000.  13200.  14400.  15600.  16680.  16740.  16800.  +FL3
++FL3    18000.  19200.  20400.  21600.  22800.  24000.
+$                                                                       $
+$        THE PARAMETER VREF CONVERTS THE ANALYSIS UNITS OF VELOCITY     $
+$        TO THE UNITS DESIRED IN THE FLUTTER SUMMARY TABLES.            $
+$                                                                       $
+$       N       V1      V2                                              $
+PARAM   VREF    12.0
+$                                                                       $
+DMI     WTFACT  0       2       1       0               200     200
+$1ST STRIP
+DMI     WTFACT  1       1       1.2020
+DMI     WTFACT  2       2       1.2020
+DMI     WTFACT  3       3       1.1571
+DMI     WTFACT  4       4       1.1571
+DMI     WTFACT  5       5       1.1122
+DMI     WTFACT  6       6       1.1122
+DMI     WTFACT  7       7       1.0673
+DMI     WTFACT  8       8       1.0673
+DMI     WTFACT  9       9       1.0224
+DMI     WTFACT  10      10      1.0224
+DMI     WTFACT  11      11      0.9776
+DMI     WTFACT  12      12      0.9776
+DMI     WTFACT  13      13      0.9327
+DMI     WTFACT  14      14      0.9327
+DMI     WTFACT  15      15      0.8878
+DMI     WTFACT  16      16      0.8878
+DMI     WTFACT  17      17      0.8429
+DMI     WTFACT  18      18      0.8429
+DMI     WTFACT  19      19      0.7980
+DMI     WTFACT  20      20      0.7980
+$2ND STRIP
+DMI     WTFACT  21      21      1.2020
+DMI     WTFACT  22      22      1.2020
+DMI     WTFACT  23      23      1.1571
+DMI     WTFACT  24      24      1.1571
+DMI     WTFACT  25      25      1.1122
+DMI     WTFACT  26      26      1.1122
+DMI     WTFACT  27      27      1.0673
+DMI     WTFACT  28      28      1.0673
+DMI     WTFACT  29      29      1.0224
+DMI     WTFACT  30      30      1.0224
+DMI     WTFACT  31      31      0.9776
+DMI     WTFACT  32      32      0.9776
+DMI     WTFACT  33      33      0.9327
+DMI     WTFACT  34      34      0.9327
+DMI     WTFACT  35      35      0.8878
+DMI     WTFACT  36      36      0.8878
+DMI     WTFACT  37      37      0.8429
+DMI     WTFACT  38      38      0.8429
+DMI     WTFACT  39      39      0.7980
+DMI     WTFACT  40      40      0.7980
+$3RD STRIP
+DMI     WTFACT  41      41      1.2020
+DMI     WTFACT  42      42      1.2020
+DMI     WTFACT  43      43      1.1571
+DMI     WTFACT  44      44      1.1571
+DMI     WTFACT  45      45      1.1122
+DMI     WTFACT  46      46      1.1122
+DMI     WTFACT  47      47      1.0673
+DMI     WTFACT  48      48      1.0673
+DMI     WTFACT  49      49      1.0224
+DMI     WTFACT  50      50      1.0224
+DMI     WTFACT  51      51      0.9776
+DMI     WTFACT  52      52      0.9776
+DMI     WTFACT  53      53      0.9327
+DMI     WTFACT  54      54      0.9327
+DMI     WTFACT  55      55      0.8878
+DMI     WTFACT  56      56      0.8878
+DMI     WTFACT  57      57      0.8429
+DMI     WTFACT  58      58      0.8429
+DMI     WTFACT  59      59      0.7980
+DMI     WTFACT  60      60      0.7980
+$4TH STRIP
+DMI     WTFACT  61      61      1.2020
+DMI     WTFACT  62      62      1.2020
+DMI     WTFACT  63      63      1.1571
+DMI     WTFACT  64      64      1.1571
+DMI     WTFACT  65      65      1.1122
+DMI     WTFACT  66      66      1.1122
+DMI     WTFACT  67      67      1.0673
+DMI     WTFACT  68      68      1.0673
+DMI     WTFACT  69      69      1.0224
+DMI     WTFACT  70      70      1.0224
+DMI     WTFACT  71      71      0.9776
+DMI     WTFACT  72      72      0.9776
+DMI     WTFACT  73      73      0.9327
+DMI     WTFACT  74      74      0.9327
+DMI     WTFACT  75      75      0.8878
+DMI     WTFACT  76      76      0.8878
+DMI     WTFACT  77      77      0.8429
+DMI     WTFACT  78      78      0.8429
+DMI     WTFACT  79      79      0.7980
+DMI     WTFACT  80      80      0.7980
+$5TH STRIP
+DMI     WTFACT  81      81      1.2020
+DMI     WTFACT  82      82      1.2020
+DMI     WTFACT  83      83      1.1571
+DMI     WTFACT  84      84      1.1571
+DMI     WTFACT  85      85      1.1122
+DMI     WTFACT  86      86      1.1122
+DMI     WTFACT  87      87      1.0673
+DMI     WTFACT  88      88      1.0673
+DMI     WTFACT  89      89      1.0224
+DMI     WTFACT  90      90      1.0224
+DMI     WTFACT  91      91      0.9776
+DMI     WTFACT  92      92      0.9776
+DMI     WTFACT  93      93      0.9327
+DMI     WTFACT  94      94      0.9327
+DMI     WTFACT  95      95      0.8878
+DMI     WTFACT  96      96      0.8878
+DMI     WTFACT  97      97      0.8429
+DMI     WTFACT  98      98      0.8429
+DMI     WTFACT  99      99      0.7980
+DMI     WTFACT  100     100     0.7980
+$6TH STRIP
+DMI     WTFACT  101     101     1.2020
+DMI     WTFACT  102     102     1.2020
+DMI     WTFACT  103     103     1.1571
+DMI     WTFACT  104     104     1.1571
+DMI     WTFACT  105     105     1.1122
+DMI     WTFACT  106     106     1.1122
+DMI     WTFACT  107     107     1.0673
+DMI     WTFACT  108     108     1.0673
+DMI     WTFACT  109     109     1.0224
+DMI     WTFACT  110     110     1.0224
+DMI     WTFACT  111     111     0.9776
+DMI     WTFACT  112     112     0.9776
+DMI     WTFACT  113     113     0.9327
+DMI     WTFACT  114     114     0.9327
+DMI     WTFACT  115     115     0.8878
+DMI     WTFACT  116     116     0.8878
+DMI     WTFACT  117     117     0.8429
+DMI     WTFACT  118     118     0.8429
+DMI     WTFACT  119     119     0.7980
+DMI     WTFACT  120     120     0.7980
+$7TH STRIP
+DMI     WTFACT  121     121     1.2020
+DMI     WTFACT  122     122     1.2020
+DMI     WTFACT  123     123     1.1571
+DMI     WTFACT  124     124     1.1571
+DMI     WTFACT  125     125     1.1122
+DMI     WTFACT  126     126     1.1122
+DMI     WTFACT  127     127     1.0673
+DMI     WTFACT  128     128     1.0673
+DMI     WTFACT  129     129     1.0224
+DMI     WTFACT  130     130     1.0224
+DMI     WTFACT  131     131     0.9776
+DMI     WTFACT  132     132     0.9776
+DMI     WTFACT  133     133     0.9327
+DMI     WTFACT  134     134     0.9327
+DMI     WTFACT  135     135     0.8878
+DMI     WTFACT  136     136     0.8878
+DMI     WTFACT  137     137     0.8429
+DMI     WTFACT  138     138     0.8429
+DMI     WTFACT  139     139     0.7980
+DMI     WTFACT  140     140     0.7980
+$8TH STRIP
+DMI     WTFACT  141     141     1.2020
+DMI     WTFACT  142     142     1.2020
+DMI     WTFACT  143     143     1.1571
+DMI     WTFACT  144     144     1.1571
+DMI     WTFACT  145     145     1.1122
+DMI     WTFACT  146     146     1.1122
+DMI     WTFACT  147     147     1.0673
+DMI     WTFACT  148     148     1.0673
+DMI     WTFACT  149     149     1.0224
+DMI     WTFACT  150     150     1.0224
+DMI     WTFACT  151     151     0.9776
+DMI     WTFACT  152     152     0.9776
+DMI     WTFACT  153     153     0.9327
+DMI     WTFACT  154     154     0.9327
+DMI     WTFACT  155     155     0.8878
+DMI     WTFACT  156     156     0.8878
+DMI     WTFACT  157     157     0.8429
+DMI     WTFACT  158     158     0.8429
+DMI     WTFACT  159     159     0.7980
+DMI     WTFACT  160     160     0.7980
+$9TH STRIP
+DMI     WTFACT  161     161     1.2020
+DMI     WTFACT  162     162     1.2020
+DMI     WTFACT  163     163     1.1571
+DMI     WTFACT  164     164     1.1571
+DMI     WTFACT  165     165     1.1122
+DMI     WTFACT  166     166     1.1122
+DMI     WTFACT  167     167     1.0673
+DMI     WTFACT  168     168     1.0673
+DMI     WTFACT  169     169     1.0224
+DMI     WTFACT  170     170     1.0224
+DMI     WTFACT  171     171     0.9776
+DMI     WTFACT  172     172     0.9776
+DMI     WTFACT  173     173     0.9327
+DMI     WTFACT  174     174     0.9327
+DMI     WTFACT  175     175     0.8878
+DMI     WTFACT  176     176     0.8878
+DMI     WTFACT  177     177     0.8429
+DMI     WTFACT  178     178     0.8429
+DMI     WTFACT  179     179     0.7980
+DMI     WTFACT  180     180     0.7980
+$10TH STRIP
+DMI     WTFACT  181     181     1.2020
+DMI     WTFACT  182     182     1.2020
+DMI     WTFACT  183     183     1.1571
+DMI     WTFACT  184     184     1.1571
+DMI     WTFACT  185     185     1.1122
+DMI     WTFACT  186     186     1.1122
+DMI     WTFACT  187     187     1.0673
+DMI     WTFACT  188     188     1.0673
+DMI     WTFACT  189     189     1.0224
+DMI     WTFACT  190     190     1.0224
+DMI     WTFACT  191     191     0.9776
+DMI     WTFACT  192     192     0.9776
+DMI     WTFACT  193     193     0.9327
+DMI     WTFACT  194     194     0.9327
+DMI     WTFACT  195     195     0.8878
+DMI     WTFACT  196     196     0.8878
+DMI     WTFACT  197     197     0.8429
+DMI     WTFACT  198     198     0.8429
+DMI     WTFACT  199     199     0.7980
+DMI     WTFACT  200     200     0.7980
+ENDDATA

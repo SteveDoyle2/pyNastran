@@ -6,6 +6,7 @@ defines:
 from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
+import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -42,13 +43,34 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
 
     inid = 1
     mid = 1
-    model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
+    model.log.debug(f'---starting export_caero_model of {caero_bdf_filename}---')
+
+    #all_points = []
+    aero_eid_map = {}
+    #if is_subpanel_model:
+    isubpanel_ieid = 0
+    for caero_eid, caero in sorted(model.caeros.items()):
+        if caero.type == 'CAERO2':
+            model.log.warning('CAERO2 will probably cause issues...put it at the max id')
+            continue
+        points, elements = caero.panel_points_elements()
+        for isubpanel_eid in range(len(elements)):
+            aero_eid_map[isubpanel_ieid] = caero_eid + isubpanel_eid
+            isubpanel_ieid += 1
+
+    subcases, loads = _write_subcases_loads(model, aero_eid_map, is_subpanel_model)
+
     with open(caero_bdf_filename, 'w') as bdf_file:
         #bdf_file.write('$ pyNastran: punch=True\n')
+        bdf_file.write('SOL 101\n')
         bdf_file.write('CEND\n')
+        bdf_file.write(subcases)
         bdf_file.write('BEGIN BULK\n')
 
+        bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
+
+
         for caero_eid, caero in sorted(model.caeros.items()):
             #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
             scaero = str(caero).rstrip().split('\n')
@@ -105,9 +127,110 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
         #G = None
         nu = 0.3
         rho = 2700. # 2700 kg/m^3
-        bdf_file.write(f'MAT1,%s,{E},,{nu},{rho}\n' % mid)
+        bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
         bdf_file.write('ENDDATA\n')
 
+
+def _write_subcases_loads(model: BDF,
+                          aero_eid_map: dict[int, int],
+                          is_subpanel_model: bool) -> tuple[str, str]:
+    subcases = ''
+    loads = ''
+    if len(model.dmi) == 0:
+        return subcases, loads
+
+    isubcase = 1
+    for name, dmi in model.dmi.items():
+        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+        if name == 'WTFACT':
+            # square matrix of (neids,neids) that has values on only? the diagonal
+            subcases += (
+                f'SUBCASE {isubcase}\n'
+                f'  SUBTITLE = DMI {name} - FORCE\n'
+                f'  LOAD = {isubcase}\n')
+
+            # diagonal matrix
+            diag = data.diagonal()
+            data = data.copy()
+            np.fill_diagonal(data, 0.)
+            assert np.abs(data).max() == 0.0, 'WTFACT has cross terms'
+
+            loads += f'$ {name} - FORCE\n'
+            loads += '$ PLOAD2 SID P EID1\n'
+            for ieid, value in enumerate(diag[::2]):
+                eid = aero_eid_map[ieid]
+                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            isubcase += 1
+
+            subcases += (
+                f'SUBCASE {isubcase}\n'
+                f'  SUBTITLE = DMI {name} - MOMENT\n'
+                f'  LOAD = {isubcase}\n')
+            loads += f'$ {name} - MOMENT\n'
+            loads += '$ PLOAD2 SID P EID1\n'
+            for ieid, value in enumerate(diag[1::2]):
+                eid = aero_eid_map[ieid]
+                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+
+        elif name in {'W2GJ', 'FA2J'}:
+            # column matrix of (neids,1)
+            assert data.shape[1] == 1, data.shape  # (56,1)
+            subcases += (
+                f'SUBCASE {isubcase}\n'
+                f'  SUBTITLE = DMI {name}\n'
+                f'  LOAD = {isubcase}\n')
+
+            # (56,1)
+            if name == 'W2GJ':
+                data *= 180 / np.pi
+                loads += f'$ {name} (degrees)\n'
+            else:
+                loads += f'$ {name}\n'
+            loads += '$ PLOAD2 SID P EID1\n'
+            for ieid, value in enumerate(data.ravel()):
+                eid = aero_eid_map[ieid]
+                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+        elif name == 'WKK':
+            # column matrix of (neids*2,1)
+            assert data.shape[1] == 1, data.shape  # (112,1)
+
+            subcases += (
+                f'SUBCASE {isubcase}\n'
+                f'  SUBTITLE = DMI {name} - FORCE\n'
+                f'  LOAD = {isubcase}\n')
+
+            nrows = data.shape[0] // 2
+            data = data.reshape(nrows, 2)
+            # TODO: assume first column is forces & second column is moments...verify
+            loads += f'$ {name} - FORCE\n'
+            loads += '$ PLOAD2 SID P EID1\n'
+            for ieid, value in enumerate(data[:, 0].ravel()):
+                eid = aero_eid_map[ieid]
+                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            isubcase += 1
+
+            subcases += (
+                f'SUBCASE {isubcase}\n'
+                f'  SUBTITLE = DMI {name} - MOMENT\n'
+                f'  LOAD = {isubcase}\n')
+            loads += f'$ {name} - MOMENT\n'
+            loads += '$ PLOAD2 SID P EID1\n'
+            for ieid, value in enumerate(data[:, 1].ravel()):
+                eid = aero_eid_map[ieid]
+                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+        else:  # pragma: no cover
+            msg = f'{name}:\n'
+            msg += str(data)
+            raise NotImplementedError(msg)
+        isubcase += 1
+
+    if not is_subpanel_model:
+        # we put this here to test
+        model.log.warning('cannot export "loads" because not a subpanel model')
+        subcases = ''
+        loads = ''
+        return subcases, loads
+    return subcases, loads
 
 def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
     """writes the strips for the subpanels"""
