@@ -14,13 +14,26 @@ v1.4.2 (2024/4/xx)
  
 BDF:
  - added:
-   - added add_pbush2d_cross
+   - added PBUSH2D-MSC, add_pbush2d_cross (only CROSS is saupported)
    - MATT11
  - changed:
    - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
  - fixed:
    - SPLINE5 add_card out of range bug
    - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
+   - MATS1: NLEAS and NLEAST are the same thing 
+   - PBUSH: -2 field is supported
+   - MONPNT3 is now an NX card as well and references GROUPs instead of SETs
+   - TSTEPNL:
+     - maxqn >= 0 used now (instead of > 0)
+     - eps_u and eps_w can now be negative
+     - max_bisect can now be -9 to 0
+     - kstep can now be 1
+   - NLPARM:
+     - eps_u and eps_w can now be negative
+   - DRESP1:
+     - ERP supported
+
 
 OP2:
  - added:
@@ -33,6 +46,8 @@ OP2Geom:
    - thermal: VIEW, VIEW3D
    - NX acoustic: PAABSF, MATPOR-JCA
    - other: ACCEL, PAERO4, PBUSH2D-CROSS, CBUSH2D, BNDGRID, MATT11, BNDGRID
+   - DRESP1-NX:
+     - PSDVELO, ERP now supported
  - changed:
  - fixed:
    - fixed SPLINE5-MSC ftype reading bug

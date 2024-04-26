@@ -1561,7 +1561,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
         assert len(atti) > 0, msg
         for eid in atti:
             assert isinstance(eid, int), msg
-    elif response_type in {'PSDDISP', 'PSDACCL'}:
+    elif response_type in {'PSDDISP', 'PSDVELO', 'PSDACCL'}:
         #RuntimeError: DRESP1 ptype=91 rtype=PSDDISP atta=3 attb=60.0 atti=[3]
         assert atta in {3}, msg
         assert isinstance(attb, float_types), msg
@@ -1662,7 +1662,11 @@ def _validate_dresp_property_none(label: str,
         if attb is None:
             attb = 'ALPHA'
         assert isinstance(atta, integer_types), msg
-        assert atta > 0, msg
+        assert atta > 0, msg  # mode number
+        # the allowable character inputs are:
+        # - ALPHA (for the real component)
+        # - OMEGA (for the imaginary component)
+        # with ALPHA being the default.
         assert attb in ['ALPHA', 'OMEGA'], msg
         assert len(atti) == 0, msg
 
@@ -1704,6 +1708,11 @@ def _validate_dresp_property_none(label: str,
         assert atta is None, msg
         assert attb is None, msg
         assert len(atti) == 0, msg
+    elif response_type == 'ERP':
+        assert isinstance(atta, integer_types), msg
+        assert len(atti) >= 1, msg  # SET3 ids
+        assert attb is None or isinstance(attb, float_types), msg
+
     elif response_type in {'STRESS', 'STRAIN', 'FORCE', 'CFAILURE'}:
         raise RuntimeError(f'response_type={response_type!r} and property_type must not be None...{msg}')
     else:
