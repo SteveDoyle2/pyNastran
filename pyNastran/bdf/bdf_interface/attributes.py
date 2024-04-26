@@ -1367,32 +1367,42 @@ class BDFAttributes:
     # deprecations
     @property
     def dmis(self) -> dict[str, DMI]:
+        self.deprecated('dmis', 'dmi', '1.5')
         return self.dmi
     @property
     def dmigs(self) -> dict[str, DMIG]:
+        self.deprecated('dmig', 'dmigs', '1.5')
         return self.dmig
     @property
     def dmiks(self) -> dict[str, DMIK]:
+        self.deprecated('dmik', 'dmiks', '1.5')
         return self.dmik
     @property
     def dmijs(self) -> dict[str, DMIJ]:
+        self.deprecated('dmij', 'dmijs', '1.5')
         return self.dmij
     @property
     def dmijis(self) -> dict[str, DMIJI]:
+        self.deprecated('dmiji', 'dmiji', '1.5')
         return self.dmiji
 
     @dmis.setter
     def dmis(self, dmi):
+        self.deprecated('dmis', 'dmi', '1.5')
         self.dmi = dmi
     @dmigs.setter
     def dmigs(self, dmig):
+        self.deprecated('dmig', 'dmigs', '1.5')
         self.dmig = dmig
     @dmiks.setter
     def dmiks(self, dmik):
+        self.deprecated('dmik', 'dmiks', '1.5')
         self.dmik = dmik
     @dmijs.setter
     def dmijs(self, dmij):
+        self.deprecated('dmij', 'dmijs', '1.5')
         self.dmij = dmij
     @dmijis.setter
     def dmijis(self, dmiji):
+        self.deprecated('dmiji', 'dmiji', '1.5')
         self.dmiji = dmiji

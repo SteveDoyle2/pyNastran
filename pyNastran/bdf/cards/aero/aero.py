@@ -3108,26 +3108,26 @@ class CAERO4(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        cp = integer_or_blank(card, 3, 'cp', 0)
-        nspan = integer_or_blank(card, 4, 'nspan', 0)
-        lspan = integer_or_blank(card, 5, 'lspan', 0)
+        cp = integer_or_blank(card, 3, 'cp', default=0)
+        nspan = integer_or_blank(card, 4, 'nspan', default=0)
+        lspan = integer_or_blank(card, 5, 'lspan', default=0)
 
         p1 = np.array([
-            double_or_blank(card, 9, 'x1', 0.0),
-            double_or_blank(card, 10, 'y1', 0.0),
-            double_or_blank(card, 11, 'z1', 0.0)])
-        x12 = double_or_blank(card, 12, 'x12', 0.)
+            double_or_blank(card, 9, 'x1', default=0.0),
+            double_or_blank(card, 10, 'y1', default=0.0),
+            double_or_blank(card, 11, 'z1', default=0.0)])
+        x12 = double_or_blank(card, 12, 'x12', default=0.)
 
         p4 = np.array([
-            double_or_blank(card, 13, 'x4', 0.0),
-            double_or_blank(card, 14, 'y4', 0.0),
-            double_or_blank(card, 15, 'z4', 0.0)])
-        x43 = double_or_blank(card, 16, 'x43', 0.)
+            double_or_blank(card, 13, 'x4', default=0.0),
+            double_or_blank(card, 14, 'y4', default=0.0),
+            double_or_blank(card, 15, 'z4', default=0.0)])
+        x43 = double_or_blank(card, 16, 'x43', default=0.)
         assert len(card) <= 17, f'len(CAERO4 card) = {len(card):d}\ncard={card}'
         return CAERO4(eid, pid, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, comment=comment)
 
-    def get_points(self):
+    def get_points(self) -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + np.array([self.x12, 0., 0.])

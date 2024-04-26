@@ -49,6 +49,7 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
     aero_eid_map = {}
     #if is_subpanel_model:
     isubpanel_ieid = 0
+    model._cross_reference_aero()
     for caero_eid, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO2':
             model.log.warning('CAERO2 will probably cause issues...put it at the max id')
@@ -136,7 +137,7 @@ def _write_subcases_loads(model: BDF,
                           is_subpanel_model: bool) -> tuple[str, str]:
     subcases = ''
     loads = ''
-    if len(model.dmi) == 0:
+    if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
         return subcases, loads
 
     isubcase = 1
@@ -174,6 +175,7 @@ def _write_subcases_loads(model: BDF,
 
         elif name in {'W2GJ', 'FA2J'}:
             # column matrix of (neids,1)
+            # boxid and not dof in the k-set
             assert data.shape[1] == 1, data.shape  # (56,1)
             subcases += (
                 f'SUBCASE {isubcase}\n'
@@ -224,12 +226,27 @@ def _write_subcases_loads(model: BDF,
             raise NotImplementedError(msg)
         isubcase += 1
 
+    for name, dmi in model.dmij.items():
+        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+        msg = f'{name}:\n'
+        msg += str(data)
+        raise NotImplementedError(msg)
+    for name, dmi in model.dmiji.items():
+        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+        msg = f'{name}:\n'
+        msg += str(data)
+        raise NotImplementedError(msg)
+    for name, dmi in model.dmik.items():
+        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+        msg = f'{name}:\n'
+        msg += str(data)
+        raise NotImplementedError(msg)
+
     if not is_subpanel_model:
         # we put this here to test
-        model.log.warning('cannot export "loads" because not a subpanel model')
+        #model.log.warning('cannot export "loads" because not a subpanel model')
         subcases = ''
         loads = ''
-        return subcases, loads
     return subcases, loads
 
 def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
