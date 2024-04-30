@@ -50,6 +50,7 @@ from pyNastran.bdf.mesh_utils.loads import (
     sum_forces_moments, sum_forces_moments_elements,
     get_static_force_vector_from_subcase_id)
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.test.compare import compare
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -613,10 +614,11 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
+def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
+             run_export_caero: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
@@ -630,7 +632,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
     ----------
     fem1 : BDF()
         The BDF object
-    bdf_model : str
+    bdf_filename : str
         The root path of the bdf filename
     out_model : str
         The path to the output bdf
@@ -662,19 +664,26 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
     log = fem1.log
     if crash_cards is None:
         crash_cards = []
-    check_path(bdf_model, 'bdf_model')
-    bdf_model = cast(BDF, bdf_model)
+    check_path(bdf_filename, 'bdf_filename')
+    base, ext = os.path.splitext(out_model)
     try:
-        if '.pch' in bdf_model:
-            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding,
+        if '.pch' in bdf_filename:
+            fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
                           save_file_structure=save_file_structure)
         else:
-            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding,
+            fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
                     raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
+
+            if not stop and run_export_caero and len(fem1.caeros):
+                caero_bdf_filename = base + '.caero.bdf'
+                export_caero_mesh(fem1, caero_bdf_filename,
+                                  is_subpanel_model=True,
+                                  pid_method='caero', write_panel_xyz=True)
+
             if not stop and not xref and run_skin_solids:
                 log.info('fem1-write_skin_solid_faces')
                 skin_filename = 'skin_file.bdf'
@@ -719,42 +728,21 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 elif xref:
                     fem1.cross_reference()
 
-                fem1 = remake_model(bdf_model, fem1, pickle_obj)
+                fem1 = remake_model(bdf_filename, fem1, pickle_obj)
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
     except Exception:
-        print(f'failed reading {bdf_model!r}')
+        print(f'failed reading {bdf_filename!r}')
         raise
 
-    #out_model = bdf_model + '_out'
+    #out_model = bdf_filename + '_out'
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
 
     if hdf5:
         hdf5_filename = f'{out_model}{name}.h5'
-        fem1.export_hdf5_filename(hdf5_filename)
-        fem1a = BDF(log=fem1.log)
-        fem1a.load_hdf5_filename(hdf5_filename)
-        fem1a.validate()
-        bdf_stream = StringIO()
-        fem1a.write_bdf(bdf_stream, encoding=None, size=8,
-                        is_double=False, interspersed=False,
-                        enddata=None, write_header=True, close=True) # hdf5
-        for key, unused_value in fem1.card_count.items():
-            if key in ['ECHOOFF', 'ECHOON']:
-                continue
-            #if key == 'ENDDATA':
-            hdf5_msg = ''
-            if key not in fem1a.card_count:
-                hdf5_msg += f'key={key!r} was not loaded to hdf5\n'
-
-            if hdf5_msg:
-                hdf5_msg += 'expected=%s\nactual=%s' % (
-                    fem1.card_count, fem1a.card_count)
-                fem1a.log.error(hdf5_msg)
-                raise RuntimeError(hdf5_msg)
-        #sys.exit('hdf5')
+        _test_hdf5(fem1, hdf5_filename)
 
     if mesh_form is None:
         pass
@@ -801,6 +789,30 @@ def limit_mesh_optimization(model: BDF):
     _cards = ', '.join(mesh_opt_cards)
     if any(is_mesh_opt):
         raise MeshOptimizationError(f'model contains [{_cards}]; mesh optimization is not supported')
+
+def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
+    fem1.export_hdf5_filename(hdf5_filename)
+    fem1a = BDF(log=fem1.log)
+    fem1a.load_hdf5_filename(hdf5_filename)
+    fem1a.validate()
+    bdf_stream = StringIO()
+    fem1a.write_bdf(bdf_stream, encoding=None, size=8,
+                    is_double=False, interspersed=False,
+                    enddata=None, write_header=True, close=True) # hdf5
+    for key, unused_value in fem1.card_count.items():
+        if key in ['ECHOOFF', 'ECHOON']:
+            continue
+        #if key == 'ENDDATA':
+        hdf5_msg = ''
+        if key not in fem1a.card_count:
+            hdf5_msg += f'key={key!r} was not loaded to hdf5\n'
+
+        if hdf5_msg:
+            hdf5_msg += 'expected=%s\nactual=%s' % (
+                fem1.card_count, fem1a.card_count)
+            fem1a.log.error(hdf5_msg)
+            raise RuntimeError(hdf5_msg)
+    #sys.exit('hdf5')
 
 def _fem_xref_methods_check(fem1: BDF) -> None:
     """
@@ -1470,7 +1482,7 @@ def _check_case_sol_200(sol: int,
                         p0: Any,
                         isubcase: int,
                         subcases: dict[int, Subcase],
-                        log: SimpleLogger) -> int:
+                        log: SimpleLogger) -> None:
     """
     helper method for ``check_case``
 

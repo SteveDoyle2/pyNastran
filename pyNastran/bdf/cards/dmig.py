@@ -272,6 +272,7 @@ class DTI(BaseCard):
         self.fields = fields
         for key, fieldsi in fields.items():
             assert fieldsi is not None, fields
+            assert isinstance(fieldsi, list), fieldsi
             for fieldi in fieldsi:
                 assert not isinstance(fieldi, bytes), fieldsi
         assert len(fields) > 0, fields
@@ -324,6 +325,7 @@ class DTI(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         for irecord, fields in sorted(self.fields.items()):
+            assert isinstance(fields, list), fields
             list_fields = ['DTI', self.name, irecord, ] + fields
             msg += print_card_8(list_fields)
         return msg

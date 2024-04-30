@@ -3233,6 +3233,18 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
+        elif op2.format_code in [1, 2, 3] and op2.num_wide in [52] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPYRAM
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CPYRAM; numwide=52'
+            n = op2._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+        elif op2.format_code in [1, 2, 3] and op2.num_wide in [44] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CTETRA
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CTETRA; numwide=44'
+            n = op2._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         #elif op2.format_code in [2, 3] and op2.num_wide == 76:  # imag
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             # analysis_code = 5   Frequency
@@ -3578,6 +3590,18 @@ class OES(OP2Common2):
             msg = (f'etype={op2.element_name} ({op2.element_type}) '
                    f'{op2.table_name_str}-OES-CSOLID-random-numwide={op2.num_wide} '
                    f'numwide_real=11 numwide_imag=9 result_type={result_type}')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        elif op2.element_type == 306 and op2.num_wide == 52:
+             #HEXALN
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-OES-CSOLID-real-numwide={op2.num_wide} '
+                   f'numwide_real={numwide_real} numwide_imag={numwide_imag} result_type={result_type}')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        elif op2.element_type == 307 and op2.num_wide == 52:
+            # CPENTA
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-OES-CSOLID-real-numwide={op2.num_wide} '
+                   f'numwide_real={numwide_real} numwide_imag={numwide_imag} result_type={result_type}')
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise NotImplementedError(op2.code_information())

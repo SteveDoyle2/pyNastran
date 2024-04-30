@@ -990,6 +990,7 @@ class TestAero(unittest.TestCase):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero1_1.bdf')
         model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                 nxref_errors=0, stop_on_xref_error=True)
 
@@ -1228,6 +1229,10 @@ class TestAero(unittest.TestCase):
 
     def test_spline1(self):
         """checks the SPLINE1 card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline1.bdf')
+
         eid = 1
         caero_id = 100
         box1 = 1
@@ -1239,8 +1244,6 @@ class TestAero(unittest.TestCase):
         spline.validate()
         spline.write_card(size=8, is_double=False)
         spline.raw_fields()
-        log = SimpleLogger(level='warning')
-        model = BDF(log=log)
         model.splines[eid] = spline
 
         pid = 10
@@ -1313,6 +1316,9 @@ class TestAero(unittest.TestCase):
 
     def test_spline2(self):
         """checks the SPLINE2 card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline2.bdf')
         #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
         #|         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
@@ -1349,8 +1355,6 @@ class TestAero(unittest.TestCase):
         ids = [7, 13]
         set_obj = SET1(sid, ids, is_skin=False, comment='set card')
 
-        log = SimpleLogger(level='warning')
-        model = BDF(log=log)
         add_methods = model._add_methods
         add_methods._add_coord_object(coord)
         add_methods._add_caero_object(caero2)
@@ -1390,12 +1394,14 @@ class TestAero(unittest.TestCase):
         #model.uncross_reference()
         #model.safe_cross_reference()
         #model.add_set1(sid+1, ids, is_skin=True)
-        save_load_deck(model, run_test_bdf=False, run_save_load=False, xref=False, run_renumber=False)
+        save_load_deck(model, run_test_bdf=False, run_save_load=False, xref=False,
+                       run_renumber=False, run_export_caero=False)
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero2_1.bdf')
         eid = 1
         pid = 10
         cp = 4
@@ -1578,6 +1584,7 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero3_1.bdf')
         coord = CORD2R.add_card(BDFCard(['CORD2R', cp, 0,
                                          0., 0., 0.,
                                          0., 0., 1.,
@@ -1711,6 +1718,7 @@ class TestAero(unittest.TestCase):
         """checks the CAERO4/PAERO4"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero4_1.bdf')
         pid = 1001
         docs = []
         caocs = []
@@ -1810,12 +1818,14 @@ class TestAero(unittest.TestCase):
         card = ['PAERO5', pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, ] + caoci
 
         model = BDF(debug=False)
+        #model.bdf_filename = os.path.join(TEST_PATH, 'test_caero5_1.bdf')
         model.add_card(card, card[0], comment='', is_list=True,
                        has_none=True)
         paero5 = model.paeros[pid]
         paero5.raw_fields()
 
         model = BDF(debug=None)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero5_1.bdf')
         paero5 = model.add_paero5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
                                   ntaus=0, ltaus=0, comment='paero5')
         paero5.validate()
@@ -1885,6 +1895,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE3 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline3.bdf')
         eid = 100
         pid = 10
         igid = 1
@@ -1991,6 +2002,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE4 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline4.bdf')
         eid = 1
         caero = 10
         aelist = 11
@@ -2048,6 +2060,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE5 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline5.bdf')
         eid = 1
         caero = 10
         aelist = 11
@@ -2916,7 +2929,7 @@ class TestAero(unittest.TestCase):
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
-                       run_test_bdf=False, run_op2_writer=False)
+                       run_test_bdf=False, run_op2_writer=False, run_export_caero=False)
         with self.assertRaises(NotImplementedError):
             model.zona.convert_to_nastran()
 
@@ -2929,7 +2942,7 @@ class TestAero(unittest.TestCase):
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
-                       run_test_bdf=False)
+                       run_export_caero=False, run_test_bdf=False)
         model.zona.convert_to_nastran()
 
     def test_zona_3(self):

@@ -657,7 +657,7 @@ class GEOM2:
     #def _show_geom2_fake(self, data: bytes, n: int):
         #"""
         #ints    = (1, 2, 1, 2, 2, 2, 1, 2, 11, 12, 16, 21, 25, 2, 3, 28, 29, 34, 41, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        #floats  = (1, 2.802596928649634e-45, 1, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 4.203895392974451e-45, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        #floats  = (1, 2.802596928649634e-45, 1, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 3, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         #"""
         #self.show_data(data[n:])
 
@@ -1634,7 +1634,7 @@ class GEOM2:
             29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0,
             9, 14, 13, 8,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            5.605193857299268e-45, 5.605193857299268e-45, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0,
+            5.64.605193857299268e-45, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0,
             2.9431135654449463, 1.056, 0.0, 2.9431135654449463, 1.943, 0.0,
             2.056, 1.943, 0.0, 2.056, 1.056, 0.0, 2.9431135654449463,
             1.056, 0.1, 2.9431135654449463, 1.943, 0.1, 2.056, 1.943, 0.1, 2.056, 1.056, 0.1, -1.0,
@@ -3699,8 +3699,57 @@ class GEOM2:
         return self._run_cquad(CQUADX, data, n)
 
     def read_crbar(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 GA      I Grid point A identification number
+        3 GB      I Grid point B identification number
+        4 LMID1   I Lagrange multiplier identification number
+        5 NDOFS   I Number of DOF for Lagrange multiplier
+        6 CNA     I Component numbers of independent DOFs at end A
+        7 CNB     I Component numbers of independent DOFs at end B
+        8 CMA     I Component numbers of dependent DOFs at end A
+        9 CMB     I Component numbers of dependent DOFs at end B
+        10 ALPHA RS Thermal expansion coefficient
+        ints    = (3, 3, 41, 101000041, 6, 123456, 0, 0,     123456, 2.e-6,
+                   4, 3, 4, 101000004, 6, 123456, 0, 0, 654321, 0)
+        floats  = (3, 3, 41, 101000041, 6, 123456, 0.0, 0.0, 123456, 2.e-6,
+                   4, 3, 4,  101000004, 6, 123456, 0.0, 0.0, 654321, 0.0)
+
+        """
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
-        self.op2.log.info('geom skipping RBAR in GEOM2')
+        op2: OP2Geom = self.op2
+        idata = np.frombuffer(data[n:], op2.idtype8).copy()
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        #op2.show_data(data[n:], types='ifs', endian=None, force=False)
+        nrows = len(idata) // 10
+        ncols = 10
+        idata = idata.reshape(nrows, ncols)
+        fdata = fdata.reshape(nrows, ncols)
+        eids = idata[:, 0]
+        nids = idata[:, [1, 2]]
+        #lagrange_id = idata[:, 3]
+        #ndof_lagrange = idata[:, 4]
+        cnas = idata[:, 5].astype('U6').tolist()
+        cnbs = idata[:, 6].astype('U6').tolist()
+        cmas = idata[:, 7].astype('U6').tolist()
+        cmbs = idata[:, 8].astype('U6').tolist()
+        alphas = fdata[:, 9]
+        for eid, nidsi, cna, cnb, cma, cmb, alpha in zip(eids, nids, cnas, cnbs, cmas, cmbs, alphas):
+            cna = ''.join(sorted(cna))
+            cnb = ''.join(sorted(cnb))
+            cma = ''.join(sorted(cma))
+            cmb = ''.join(sorted(cmb))
+            if cna == '0':
+                cna = ''
+            if cnb == '0':
+                cnb = ''
+            if cma == '0':
+                cma = ''
+            if cna == '0':
+                cmb = ''
+            elem = op2.add_rbar(eid, nidsi, cna, cnb, cma, cmb, alpha=alpha, comment='')
+            str(elem)
         return len(data)
 
     def read_crbe1(self, data: bytes, n: int) -> int:
@@ -3708,20 +3757,107 @@ class GEOM2:
         Word Name Type Description
         1 EID    I Element identification number
         2 NWE    I Number of words for the element
-        3 ELTYPE I Element type: 1-RBE1 2-RBE2 3-RTRPLT
-        4-RTRPLT1
-        4 GN  I Grid point identification number for independent degrees-of-freedom
-        5 CN  I Component numbers of independent degrees-of-freedom
+        3 ELTYPE I Element type: 1-RBE1 2-RBE2 3-RTRPLT 4-RTRPLT1
+        4 GN     I Grid point identification number for independent degrees-of-freedom
+        5 CN     I Component numbers of independent degrees-of-freedom
         Words 4 through 5 repeat until (-2,-2) occurs
-        6 GM  I Grid point identification number for dependent degrees-of-freedom
-        7 CM  I Component numbers of dependent degrees of-freedom
+        6 GM     I Grid point identification number for dependent degrees-of-freedom
+        7 CM     I Component numbers of dependent degrees of-freedom
         Words 6 through 7 repeat until (-3,-3) occurs
         8 ALPHA RS  Thermal expansion coefficient
         9 UNDEF none Not used
         Words 8 through 9 repeat until (-4,-4) occurs
+        10 LMID I Lagrange multiplier identification number
+        11 NDOF I Number of DOF for each Lagrange multiplier identification number
+        Words 10 through 11 repeat until (-1,-1) occurs
+
+        ints   = [35, 22, 2,
+                     3,  123456, -2, -2,
+                     41, 123456, 51, 123456, -3, -3,
+                     990057071, 0, -4, -4,
+                  101000041, 6, 101000051, 6, -1, -1,
+                  46, 22, 2, 3, 123456, -2, -2,
+                  4, 123456, 5, 123456, -3, -3,
+                  906377149, 0, -4, -4,
+                  101000004, 6, 101000005, 6, -1, -1]
+        floats = [4.90454462513686e-44, 3.0828566215145976e-44, 2.802596928649634e-45, 4.203895392974451e-45, 1.7299870321168462e-40, nan, nan, 5.74532370373175e-44, 1.7299870321168462e-40, 7.146622168056567e-44, 1.7299870321168462e-40, nan, nan, 0.0020000000949949026, 0.0, nan, nan, 2.5040535059644284e-35, 8.407790785948902e-45, 2.5040563758236833e-35, 8.407790785948902e-45, nan, nan, 6.445972935894159e-44, 3.0828566215145976e-44, 2.802596928649634e-45, 4.203895392974451e-45, 1.7299870321168462e-40, nan, nan, 5.605193857299268e-45, 1.7299870321168462e-40, 7.006492321624085e-45, 1.7299870321168462e-40, nan, nan, 1.9999999949504854e-06, 0.0, nan, nan, 2.504042887485185e-35, 8.407790785948902e-45, 2.5040431744711106e-35, 8.407790785948902e-45, nan, nan]
+
         """
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
-        self.op2.log.info('geom skipping CRBE1 in GEOM2')
+        op2: OP2Geom = self.op2
+        idata = np.frombuffer(data[n:], op2.idtype8).copy()
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        i = 0
+        nints = len(idata)
+        while i < nints:
+            print('i = ', i)
+            eid = idata[i]
+            nwe = idata[i+1]
+            eltype = idata[i+2]
+            assert eltype in {1, 2, 3, 4}, eltype
+            i += 3
+
+            Gni = []
+            Cni = []
+            while i < nints:
+                gn, cn = idata[i:i+2]
+                i += 2
+                if (gn, cn) == (-2, -2):
+                    break
+                Gni.append(gn)
+                Cni.append(cn)
+            assert len(Gni), Gni
+
+            Gmi = []
+            Cmi = []
+            while i < nints:
+                gm, cm = idata[i:i+2]
+                i += 2
+                if (gm, cm) == (-3, -3):
+                    break
+                Gmi.append(gm)
+                Cmi.append(cm)
+            assert len(Gmi), Gmi
+
+            alphas = []
+            while i < nints:
+                i1, i2 = idata[i:i+2]
+                alpha = fdata[i]
+                # undef
+                i += 2
+                if (i1, i2) == (-4, -4):
+                    break
+                alphas.append(alpha)
+            assert len(alphas) == 1, alphas
+
+
+            #10 LMID I Lagrange multiplier identification number
+            #11 NDOF I Number of DOF for each Lagrange multiplier identification number
+            lmid = []
+            ndof = []
+            while i < nints:
+                lmidi, ndofi = idata[i:i+2]
+                i += 2
+                if (lmidi, ndofi) == (-1, -1):
+                    break
+                lmid.append(lmidi)
+                ndof.append(ndofi)
+            assert len(ndof), ndof
+
+            #cna = ''.join(sorted(cna))
+            #cnb = ''.join(sorted(cnb))
+            #cma = ''.join(sorted(cma))
+            #cmb = ''.join(sorted(cmb))
+            #if cna == '0':
+                #cna = ''
+            #if cnb == '0':
+                #cnb = ''
+            #if cma == '0':
+                #cma = ''
+            #if cna == '0':
+                #cmb = ''
+            elem = op2.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment='')
+            str(elem)
         return len(data)
 
     def read_crbe3(self, data: bytes, n: int) -> int:

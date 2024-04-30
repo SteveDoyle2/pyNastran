@@ -1466,10 +1466,16 @@ class EDOM(GeomCommon):
         [31, 538981700, 538976288, 5, 538976288, 538976288, 0, 3, 0, 5, -1,
          32, 538981444, 538976288, 60, 538976288, 538976288, 0, 3, -1, 4, -1,
          33, 1195984215, 538989640, 1, 538976288, 538976288, 0, 33, -9999, -1]
+
+         data = (11, 'L1      ', 20, '        ', 0, 3, -1, 4, -1,             # flag=20 -> FRDISP
+                 13, 'L2      ', 20, '        ', 0, 2, -140000000.0, 4, -1,
+                 22, 'L3      ', 20, '        ', 0, 3, -1, 5, -1,
+                 23, 'L4      ', 20, '        ', 0, 2, -130000000.0, 5, -1)
         """
         op2: OP2Geom = self.op2
         is_nx = False
         is_msc = False
+        debug = False
         if op2.is_msc:
             is_msc = True
             flag_to_resp = DRESP_FLAG_TO_RESP_NX
@@ -1478,7 +1484,8 @@ class EDOM(GeomCommon):
             is_nx = True
             flag_to_resp = DRESP_FLAG_TO_RESP_NX
 
-        #self.show_data(data[n:], types='qds')
+        op2.show_data(data[n:], types='ifs')
+        #op2.show_data(data[n:], types='qds')
         datan = data[n:]
         #strings = np.frombuffer(datan, '|S4').copy()
         ints = np.frombuffer(datan, op2.idtype8).copy()
@@ -1517,17 +1524,36 @@ class EDOM(GeomCommon):
         #is_nx = True
         size = self.size
 
+        def _get_atti(idresp: int, i0: int, i1: int,
+                      n: int) -> tuple[int, int, int, int,
+                                       list[int]]:
+            atti = ints[i0+9:i1].tolist()
+            if len(atti) == 0:
+                idresp += 1
+                n += (i1 - i0 + 1) * size
+                i0 = istart[idresp]
+                i1 = iend[idresp]
+                atti = ints[i0:i1].tolist()
+                #print('ints', ints[i0:i1])
+                #print('floats', floats[i0:i1])
+            return n, idresp, i0, i1, atti
+
         idresp = 0
         ndresps = len(istart)
         idresps_to_skip = set()
 
+        idresp_old = -1
         while idresp < ndresps:
+            assert idresp != idresp_old
+            idresp_old = idresp
+
             i0 = istart[idresp]
             i1 = iend[idresp]
             assert ints[i1] == -1, ints[i1]
             if idresp in idresps_to_skip:
                 #print(f'skipping idresp={idresp}')
                 n += (i1 - i0 + 1) * self.size
+                idresp += 1
                 continue
             #print(i0, i1)
             #print('ints: ', ints[i0:i1])
@@ -1543,7 +1569,9 @@ class EDOM(GeomCommon):
             except KeyError:
                 op2.show_data(data[n:], types='ifs')
                 raise RuntimeError(f'dresp_id={dresp_id} label={label!r}')
-            #print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
+            if debug:  # pragma: no cover
+                print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
+
             if flag == 1:
                 # WEIGHT
                 # 5 UNDEF(2) None
@@ -1721,16 +1749,7 @@ class EDOM(GeomCommon):
                 attb = floats[i0+8]
                 if np.isnan(attb):
                     attb = None
-                atti = ints[i0+9:i1].tolist()
-                if len(atti) == 0:
-                    # you have to read the next "block", so we need to increment idresp
-                    #DRESP1       993  ElmDen     ERP   PANEL       1                      11+
-                    #+             22
-                    n += (i1 - i0 + 1) * self.size
-                    idresp += 1
-                    i0 = istart[idresp]
-                    i1 = iend[idresp]
-                    atti = ints[i0:i1].tolist()
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
                 #print(f'ERP: dresp_id={dresp_id} atta={atta} attb={attb} atti={atti}')
 
             elif flag == 20 and is_nx: # FRDISP
@@ -1752,9 +1771,13 @@ class EDOM(GeomCommon):
                 #print(floats[i0+6:i1])
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]
-                atti = ints[i0+9:i1].tolist()
-
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
                 attb = _pick_attbi_attbf(attbi, attbf)
+
+                #data = (11, 'L1      ', 20, '        ', 0, 3, -1, 4, -1,             # flag=20 -> FRDISP
+                        #13, 'L2      ', 20, '        ', 0, 2, -140000000.0, 4, -1,
+                        #22, 'L3      ', 20, '        ', 0, 3, -1, 5, -1,
+                        #23, 'L4      ', 20, '        ', 0, 2, -130000000.0, 5, -1)
                 #print(region, atta, attb, atti)
             elif flag == 22 and is_nx: # FRACCL
                 # FLAG = 22 FRACCL
@@ -1772,7 +1795,7 @@ class EDOM(GeomCommon):
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
 
             elif flag in [24, 25] and is_nx: # FRSTRE, FRFORC
                 # FLAG = 24 FRSTRE
@@ -1805,17 +1828,17 @@ class EDOM(GeomCommon):
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
-                print(property_type, region, atta, attb, atti)
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
+                #print(property_type, region, atta, attb, atti)
             elif flag in {20} and is_msc: # PSDDISP
                 # DRESP1       ID   LABEL   RTYPE   PTYPE  REGION    ATTA    ATTB    ATT1
                 # DRESP1        11      L1 PSDDISP      91               3   60.00       3
-                #5 NTUSED CHAR4
-                #6 RPSID I RANDPS ID
-                #7 REGION I
-                #8 ATTA I
-                #9 ATTB RS
-                #10 ATTI I
+                #5 NTUSED  CHAR4
+                #6 RPSID   I RANDPS ID
+                #7 REGION  I
+                #8 ATTA    I
+                #9 ATTB   RS
+                #10 ATTI   I
                 #Word 10 repeats until End of Record
                 property_type_bytes = data[n+4*size:n+6*size]
                 property_type = reshape_bytes_block_size(property_type_bytes, size=size)
@@ -1839,7 +1862,6 @@ class EDOM(GeomCommon):
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
                 print(property_type, region, atta, attb, atti)
-
                 asdf
             elif flag in {29, 30, 31} and is_nx:
                 #FLAG = 29 PSDDISP
@@ -1861,7 +1883,7 @@ class EDOM(GeomCommon):
                 #print(floats[i0+4:i1+5])
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
 
             elif flag == 60 and is_nx:
                 #FLAG = 60 TDISP
@@ -1890,15 +1912,7 @@ class EDOM(GeomCommon):
 
                 #print('ints =', ints[i0+6:i1].tolist())
                 #print('floats =', floats[i0+6:i1].tolist())
-
-                #print('---')
-                # the grids are on the next idresp, so we'll just skip it on the next round
-                i0b = istart[idresp+1]
-                i1b = iend[idresp+1]
-                atti = grids = ints[i0b:i1b].tolist()
-                #print('grids=', grids)
-                del grids
-                idresps_to_skip.add(idresp+1)
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
             elif flag == 84 and is_nx:
                 # nx flutter
                 print('ints =', ints)
@@ -1917,13 +1931,14 @@ class EDOM(GeomCommon):
             if atta is not None:
                 atta = int(atta)
 
-            #print(dresp_id, label,
-                  #response_type, property_type, region,
-                  #atta, attb, atti)
+            if debug:  # pragma: no cover
+                print(dresp_id, label,
+                      response_type, property_type, region,
+                      atta, attb, atti)
             dresp1 = op2.add_dresp1(dresp_id, label,
                                     response_type, property_type, region,
                                     atta, attb, atti, validate=True)
-            print(dresp1)
+            str(dresp1)
             dresp1.write_card_16()
             n += (i1 - i0 + 1) * self.size
             del dresp_id, label, response_type, property_type, region, atta, attb, atti

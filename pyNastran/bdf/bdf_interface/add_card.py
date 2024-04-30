@@ -5530,7 +5530,7 @@ class AddOptimization:
         return topvar
 
     def add_dresp1(self, dresp_id: int, label: str,
-                   response_type: str, property_type: str, region: str,
+                   response_type: str, property_type: str, region: int,
                    atta: Union[int, float, str, None],
                    attb: Union[int, float, str, None],
                    atti: list[Union[int, float, str]],
@@ -5549,7 +5549,7 @@ class AddOptimization:
             response id
         label : str
             Name of the response
-        response_type : str
+        response_type : int
             Response type
         property_type : str
             Element flag (PTYPE = 'ELEM'), or property entry name, or panel
@@ -5616,9 +5616,11 @@ class AddOptimization:
         self._add_methods._add_dresp_object(dresp)
         return dresp
 
-    def add_dresp2(self, dresp_id, label, dequation, region, params,
-                   method='MIN', c1=1., c2=0.005, c3=10.,
-                   validate=True, comment='') -> DRESP2:
+    def add_dresp2(self, dresp_id: int, label: str,
+                   dequation: Union[int, str],
+                   region: int, params,
+                   method: str='MIN', c1: float=1., c2: float=0.005, c3: float=10.,
+                   validate: bool=True, comment: str='') -> DRESP2:
         """
         Creates a DRESP2 card.
 

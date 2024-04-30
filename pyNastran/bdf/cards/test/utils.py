@@ -16,6 +16,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm, mass_properties_breakdown)
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
@@ -33,6 +34,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
+                   run_export_caero=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
                    remove_disabled_cards=True,
                    nastran_format: str='nx',
@@ -118,6 +120,13 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
 
     if model.elements and run_quality:
         element_quality(model)
+
+    if len(model.caeros) and run_export_caero:
+        base = os.path.splitext(model.bdf_filename)[0]
+        caero_bdf_filename = base + '.caero.bdf'
+        export_caero_mesh(model, caero_bdf_filename,
+                          is_subpanel_model=True,
+                          pid_method='caero', write_panel_xyz=True)
 
     read_write_op2_geom(
         model,
