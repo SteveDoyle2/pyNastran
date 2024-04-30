@@ -22,10 +22,14 @@ GUI_MODEL_DIRNAME = os.path.join(PKG_PATH, 'converters', 'nastran', 'models')
 class Tester(unittest.TestCase):
 
     def run_bdf(self, folder: str, bdf_filename: str,
-                xref=False, size=8,
-                mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
-                run_extract_bodies=True,
-                run_skin_solids=True, save_file_structure=False,
+                xref: bool=False, size: int=8,
+                mesh_form: str='combined',
+                dynamic_vars=None,
+                debug: bool=False, quiet: bool=True,
+                run_extract_bodies: bool=True,
+                run_skin_solids: bool=True,
+                run_export_caero: bool=True,
+                save_file_structure: bool=False,
                 validate_case_control=True, log=None):
         #xref = False
         if quiet:
@@ -36,6 +40,7 @@ class Tester(unittest.TestCase):
                        debug=debug, quiet=quiet,
                        sum_load=True, run_extract_bodies=run_extract_bodies,
                        run_skin_solids=run_skin_solids,
+                       run_export_caero=run_export_caero,
                        save_file_structure=save_file_structure,
                        validate_case_control=validate_case_control,
                        log=log)
@@ -749,7 +754,9 @@ class TestBDFUnit(Tester):
         """checks testA.dat"""
         bdf_filename = os.path.join(PKG_PATH, 'bdf', 'test', 'unit', 'testA.bdf')
         (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
-            '', bdf_filename, xref=False, run_extract_bodies=False,
+            '', bdf_filename, xref=False,
+            run_extract_bodies=False,
+            run_export_caero=False,
             #save_file_structure=True,
         )
         diff_cards2 = list(set(diff_cards))

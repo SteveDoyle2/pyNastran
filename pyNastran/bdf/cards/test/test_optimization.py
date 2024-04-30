@@ -452,10 +452,8 @@ class TestOpt(unittest.TestCase):
         dresp1 = model.add_dresp1(dresp1_id, label, response_type,
                                   property_type, region,
                                   atta, attb, atti, validate=True, comment='dresp1')
-        assert dresp1.rtype == dresp1.response_type
-        assert dresp1.ptype == dresp1.property_type
-        dresp1.rtype = response_type
-        dresp1.ptype = property_type
+        dresp1.response_type = response_type
+        dresp1.property_type = property_type
 
         dconstr = model.add_dconstr(dresp1_id, dresp1_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20, comment='dconstr')
