@@ -906,9 +906,11 @@ def _store_dresp1(model: BDF, ids, nids_used, pids_used, dresps_used):
 
         #elif dresp.property_type == 'STRESS':
 
+        elif dresp.property_type in {'PK', 'PKNL'}:
+            assert dresp.response_type == 'FLUTTER', dresp
         elif dresp.property_type is None:
             if dresp.response_type in {'WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
-                                       'FREQ', 'STABDER'}:
+                                       'FREQ', 'STABDER', 'FLUTTER'}:
                 #dresps_used.add(dresp_id)
                 pass
             elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',

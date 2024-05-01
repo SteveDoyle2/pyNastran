@@ -722,7 +722,7 @@ class RealStrainEnergyArray(BaseElement):
             #field6 = self.eigns[itime]
             #field7 = self.cycles[itime]
             field5 = int(field5)
-            assert isinstance(field5, int), type(field5)
+            assert isinstance(field5, integer_types), type(field5)
             #assert isinstance(field6, float), type(field6)
             #assert isinstance(field7, float), type(field7)
             #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
@@ -771,7 +771,7 @@ class RealStrainEnergyArray(BaseElement):
             #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             #field7 = self.eigis[itime]
             #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
-            assert isinstance(field5, int), type(field5)
+            assert isinstance(field5, integer_types), type(field5)
         elif self.analysis_code == 10:  # nonlinear statics
             field5 = self.loadFactors[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step

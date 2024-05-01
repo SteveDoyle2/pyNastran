@@ -705,8 +705,12 @@ NX_RESULT_TABLES: list[bytes] = [
     b'OEDE1', # Elemental energy loss.
 
     # grid point pressure
+    b'OPRATO1',
+    b'OPRCRM1',
     b'OPRNO1',   # SORT1 - NO
+    b'OPRPSD1',  # SORT1 - PSD
     b'OPRRMS1',  # SORT1 - RMS
+
     b'OPRPSD2',  # SORT2 - PSD
     b'OPRATO2',  # SORT2 - AUTO
     b'OPRCRM2',  # SORT2 - CRMS
@@ -765,6 +769,7 @@ NX_RESULT_TABLES: list[bytes] = [
     b'OACPWRI2', # Acoustic incident power - SORT2
     b'OACPWRT2', # Transmitted acoustic power for AML regions and GROUPs of 2D elements - SORT2
     b'OACTRLS2', # Acoustic transmission loss - SORT2
+
 
     # random acoustic
     b'OAPPSD2', # Acoustic power for the PSD function - SORT2

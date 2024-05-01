@@ -296,6 +296,12 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OGS1', 'OGSTR1',
         'OEFIT', 'OESRT',
         'OSPDS1', 'OSPDSI1',
+        'OSLIDE1', 'OSLIDEG1',
+        'OBOLT1',
+        'RAFCONS', 'RAFEATC',
+        'RAGCONS', 'RAGEATC',
+        'RANCONS', 'RANEATC',
+
     ]
     skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
     for table_type in obj.get_table_types():

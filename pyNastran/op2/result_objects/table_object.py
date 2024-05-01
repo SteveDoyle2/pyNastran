@@ -1071,6 +1071,7 @@ class RealTableArray(TableArray):
             'OUGF1',
             'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
+            #'OSLIDEG1',  # grid_type should be dropped
         ]
 
         assert self.table_name in allowed_tables, self.table_name

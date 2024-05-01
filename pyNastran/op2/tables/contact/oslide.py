@@ -330,7 +330,7 @@ class OSLIDE:
             result_name = 'glue_contact_slide_distance'
         elif op2.table_name == b'OSLIDE1':
             result_name = 'contact_slide_distance'
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         if op2._results.is_not_saved(result_name):
             return ndata
@@ -372,7 +372,7 @@ class OSLIDE:
                     obj._times[obj.itime] = obj.nonlinear_factor
                 obj.node_gridtype[:, 0] = node_id
                 obj.data[obj.itime, :, :] = datai
-            else:
+            else:  # pragma: no cover
                 # 5: freq
                 # 6: time step
                 # 10 nonlinear statics
