@@ -13,15 +13,15 @@ This file defines the OUG Table, which contains:
    - DISPLACEMENT = ALL
 """
 from __future__ import annotations
-from struct import Struct
+#from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran import DEV
-from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+#from pyNastran import DEV
+#from pyNastran.utils.numpy_utils import integer_types
+#from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-from pyNastran.op2.tables.oug.oug_displacements import (
-    RealDisplacementArray, ComplexDisplacementArray)
+from pyNastran.op2.tables.contact.slide_objects import (
+    RealGlueSlideDistanceArray, ) # ComplexDisplacementArray
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -343,7 +343,7 @@ class OSLIDE:
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
             auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
+                result_name, nnodes, storage_obj, RealGlueSlideDistanceArray, is_cid=False)
             if auto_return:
                 return ndata
 
@@ -371,6 +371,7 @@ class OSLIDE:
                 if op2.analysis_code not in {1}:
                     obj._times[obj.itime] = obj.nonlinear_factor
                 obj.node_gridtype[:, 0] = node_id
+                obj.node_gridtype[:, 1] = 1
                 obj.data[obj.itime, :, :] = datai
             else:  # pragma: no cover
                 # 5: freq
@@ -382,7 +383,7 @@ class OSLIDE:
             #print(datai)
             #reals = floats[:, [0, 1, 2]]
             #imags = floats[:, [3, 4, 5]]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         #raise NotImplementedError(op2.code_information())
         return ndata

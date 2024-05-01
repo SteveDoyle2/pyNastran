@@ -1,0 +1,468 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                 Copyright 2018 Siemens Product Lifecycle    
+                        Management Software Inc.             
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                 proprietary to Siemens Product Lifecycle    
+                        Management Software Inc.             
+                                                             
+              Siemens and the Siemens logo are registered    
+           trademarks of Siemens AG. Simcenter is a trademark
+              or registered trademark of Siemens Product     
+               Lifecycle Management Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  NASTRAN is a registered trademark   
+                 of the National Aeronautics and Space       
+                 Administration.  All other trademarks,      
+              registered trademarks or service marks belong  
+                      to their respective holders.           
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+              from time to time.  Siemens PLM Software Inc.  
+            5800 Granite Parkway, Suite 600, Plano, TX 75024 
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *     Simcenter Nastran 2019.2    * *
+                * *                                 * *
+                * *       VERSION - 1872.0150       * *
+                * *                                 * *
+                * *          MAY  9, 2019           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 158 Stepp * *
+                * *                                 * *
+                * *MODEL Intel(R) Core(TM) i7-7820H * *
+                * *                                 * *
+                * *           Windows 10            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=32769 $(C:/PROGRAM FILES/SIEMENS/SIMCENTERNASTRAN_2019.2/CONF/N
+     NASTRAN BUFFPOOL=11738                                                          
+     NASTRAN DIAGA=128 DIAGB=0 $(C:/PROGRAM FILES/SIEMENS/SIMCENTERNASTRAN_2019.2/CON
+     NASTRAN REAL=4273602560 $(MEMORY LIMIT FOR MPI AND OTHER SPECIALIZED MODULES)   
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID NX NASTRAN, N401GSH01                                                                
+     $                                                                                       
+     $ DESCRIPTION  - SHELL SUPPORT OF SURFACE GLUE FOR SOL 401.                             
+     $                CANTILEVER WITH TIP LOAD, CQUADR ELEMENTS.                             
+     $                                                                                       
+     $ SOLUTION    - 401                                                                     
+     $                                                                                       
+     $*                                                                                      
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                     
+     $*                                                                                      
+     SOL 401                                                                                 
+     CEND                                                                                    
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      $*                                                                                      
+                  2      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                  3      $*                                                                                      
+                  4      $* CASE CONTROL                                                                         
+                  5      $*                                                                                      
+                  6      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                  7      $*                                                                                      
+                  8      ECHO = NONE                                                                             
+                  9      SPC = 1                                                                                 
+                 10      BGSET = 100                                                                             
+                 11      OUTPUT                                                                                  
+                 12      SET 1 = 29 9 62 42                                                                      
+                 13      DISPLACEMENT(PRINT,REAL) = 1                                                            
+                 14      BGRESULTS(TRACTION,FORCE,SEPDIS,PRINT) = 1                                              
+                 15      $*  STEP: SUBCASE - STATIC LOADS 1                                                      
+                 16      SUBCASE 1                                                                               
+                 17      ANALYSIS=STATICS                                                                        
+                 18      TSTEP=1                                                                                 
+                 19      LABEL = SUBCASE - STATIC LOADS 1                                                        
+                 20      LOAD = 3                                                                                
+                 21      $*                                                                                      
+                 22      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                 23      $*                                                                                      
+                 24      $* BULK DATA                                                                            
+                 25      $*                                                                                      
+                 26      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                 27      $*                                                                                      
+                 28      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =         164
+0                       TOTAL COUNT=       131
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       66
+ 
+ 
+                                   NUMBER OF CQUADR   ELEMENTS =       40
+ 
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4109 (OUTPBN2)
+     THE LABEL IS NX2019.2 FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK IBULK    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       20 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      829 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     3935 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK ICASE    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                30                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       20 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      164 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      746 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 1                 0              1206                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1206 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1232 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                24                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       24 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       50 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM1S   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      729 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      762 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM2S   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 0                 0                 0           4194304                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      563 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      596 WORDS.)
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM3S   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 0                 0                64                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       24 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       57 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM4S   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    104                 0                 0                 0               512                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       27 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       60 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EPTS     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0               512                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       25 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       15 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       48 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BGPDTS   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                66                 0               396                 1                 0                66
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      792 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      954 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK CONTACTS WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               528                 0                 0                 0                 8               256
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       47 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       39 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      121 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                66                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      132 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      294 WORDS.)
+ SML version 2019.2 ILP, build 1872.2011.18, date 03-05-2019                    
+  
+ *** USER INFORMATION MESSAGE 6303 (BGICA)
+     NO BCONP BULK DATA ENTRIES ARE SPECIFIED.
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK TRMBU    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 3                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      160 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      341 WORDS.)
+
+ *************************************************** 
+  Simcenter Nastran Contact Face Refinement (REFINE) 
+            (version 2019.1 )             
+ *************************************************** 
+
+  
+  
+ *** USER INFORMATION MESSAGE 4690 (FOCOEL)
+     CONNECTION STATISTICS
+  
+                             GLUE SUBCASE ID:               1
+                                 GLUE SET ID:             100
+                        NUMBER OF GLUE PAIRS:               1
+             NUMBER OF GLUE ELEMENTS CREATED:             120
+                        NUMBER OF GLUE FACES:              40
+              NUMBER OF EFFECTIVE GLUE FACES:              40
+  
+ ^^^ GLUE STIFFNESS ADDED USING GLUE SET           100 WITH          120 GLUE POINTS 
+ ^^^         
+ ^^^*************************************************************************************************    
+ ^^^*                                STATICS SOLUTION                                               *    
+ ^^^*  SUBCASE ID   :            1                                                                  *  
+ ^^^*  SEQDEP       :           NO                                                                  *    
+ ^^^*  SUBCASE START TIME :   0.000000E+00                                                          *  
+ ^^^*  SUBCASE END TIME   :   1.000000E+00                                                          *  
+ ^^^*************************************************************************************************    
+ ^^^         
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0                                        L I N E A R   I T E R A T I O N   M O D U L E   O U T P U T
+                                                                                                                       
+                                                                                                               SUBCASE        1
+
+                                                                                                                       
+---------------------------------------------------------------------------------------------------------------------------------
+   ITER.       --CONVERGENCE CRITERION--          --CONTACT CONVERGENCE--    STIFF.   NO. OF      NO. OF   -STIFFNESS PARAMETER-
+    NO.      (DISP)       (LOAD)*      (WORK)*     (PRATIO)      (RCTOL)    UPDATES   BISECTS     ITR DIV    CURRENT    % CHANGE
+TOLERANCES: 1.000E-02    1.000E-02    1.000E-06    1.000E+00    1.000E+00
+---------------------------------------------------------------------------------------------------------------------------------
+                                                                                                                       
+   TIME =             1.000000E+00        TIME STEP =       1.000000E+00
+                                                                                                                       
+                                                          LINEAR ANALYSIS. TIME STEP COMPLETE.
+             FOR CONVERGENCE IN CURRENT TIME STEP, ERROR IN RESIDUAL NEEDS TO BE LESS THAN :  1.000000E-02
+  
+                                                            S U B C A S E    S U M M A R Y 
+  
+                                                                      SUBCASE ID :            1
+                                                              SUBCASE START TIME : 0.000000E+00
+                                                                SUBCASE END TIME : 1.000000E+00
+                            NUMBER OF STEPS REQUIRED TO COMPLETE CURRENT SUBCASE :            1
+                         TOTAL NUMBER OF ITERATIONS PERFORMED IN CURRENT SUBCASE :            1
+                            TOTAL NUMBER OF STIFFNESS UPDATES IN CURRENT SUBCASE :            0
+                                NUMBER OF BISECTIONS REQUIRED IN CURRENT SUBCASE :            0
+  
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OQGGF1   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                32                 2                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      208 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OBG1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 0                20                 2                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      196 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OSLIDEG1 WRITTEN ON FORTRAN UNIT  12, TRL =
+                    104                 0                66                 7                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      204 WORDS.)
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     8
+                                                                                                                                    
+0     SUBCASE - STATIC LOADS 1                                                                               SUBCASE 1              
+      TIME =  1.000000E+00
+                               G L U E  F O R C E S
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             9      G      1.547271E+05   5.431404E+02  -7.173568E+02   2.005567E+02   4.307583E+02   1.302444E+03
+            29      G      8.109731E+04   2.845659E+02   3.731474E+04  -1.140207E+02   1.012289E+03   1.625173E+03
+            42      G     -1.547271E+05  -5.431404E+02  -6.367721E+02   2.105316E+02   2.487299E+01  -1.302444E+03
+            62      G     -8.109731E+04  -2.845659E+02  -4.678624E+03   2.047104E+02  -6.596641E+02  -1.625173E+03
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE     9
+                                                                                                                                    
+0     SUBCASE - STATIC LOADS 1                                                                               SUBCASE 1              
+      TIME =  1.000000E+00
+            G L U E  N O R M A L  A N D  I N - P L A N E  T R A C T I O N S 
+ 
+      POINT ID.   TYPE       NORMAL          S1             S2             S3
+             9      G      4.936808E+02   7.522079E+03   8.485452E-02   0.0
+            29      G      7.733701E+02   7.575548E+03   3.598112E+01   0.0
+            42      G     -4.936808E+02  -7.522079E+03  -8.485452E-02   0.0
+            62      G     -7.733701E+02  -7.575548E+03  -3.598112E+01   0.0
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    11
+                                                                                                                                    
+0     SUBCASE - STATIC LOADS 1                                                                               SUBCASE 1              
+      TIME =  1.000000E+00
+                                     G L U E     S L I D E     D I S T A N C E
+                                         INCREMENTAL                                      TOTAL
+      POINT ID.   TYPE          T1             T2             T3             T1             T2             T3
+             9      G     -2.475903E-01  -3.959575E-04   0.0           -2.475903E-01  -3.959575E-04   0.0
+            29      G     -2.511504E-01  -1.864670E-04   0.0           -2.511504E-01  -1.864670E-04   0.0
+            42      G      2.493391E-01  -2.144010E-04   0.0            2.493391E-01  -2.144010E-04   0.0
+            62      G      2.511504E-01   1.864670E-04   0.0            2.511504E-01   1.864670E-04   0.0
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+              LOAD
+    TIME      TYPE       T1            T2            T3            R1            R2            R3
+0 1.00000E+00  FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       1.000000E+05  0.000000E+00 -5.000000E+06     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  1.000000E+05  0.000000E+00 -5.000000E+06  0.000000E+00                             
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                32                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      213 WORDS.)
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    14
+                                                                                                                                    
+0     SUBCASE - STATIC LOADS 1                                                                               SUBCASE 1              
+      TIME =  1.000000E+00
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             9      G     -1.243994E-01  -2.641918E-05   7.087465E+00   3.253735E-05  -2.496761E-01   3.571209E-06
+            29      G     -1.257769E-01  -2.801624E-05   8.342963E+00   1.800621E-05  -2.524653E-01  -2.627448E-05
+            42      G      1.243994E-01   2.641918E-05   7.087483E+00   3.989566E-05  -2.496695E-01  -3.571209E-06
+            62      G      1.257769E-01   2.801624E-05   8.342784E+00   5.011412E-06  -2.523917E-01   2.627448E-05
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4110 (OUTPBN2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1                                                                         SEPTEMBER  27, 2019  SIMCENTER NASTRAN  5/ 9/19   PAGE    16
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     28
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      F      0     F      0            0           F
+     0     0    1    1 '        '    F    F    F    F    F     F      F      F      0     T      1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 

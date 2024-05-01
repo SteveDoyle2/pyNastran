@@ -33,7 +33,7 @@ class RealDisplacementArray(RealTableArray):
         elif self.table_name in ['OCRUG']:
             words += ['                                                 ( OCRUG??? )']
         else:
-            raise NotImplementedError('table_name=%r' % self.table_name)
+            raise NotImplementedError(f'table_name={self.table_name!r}')
         #words += self.get_table_marker()
         write_words = True
         if self.nonlinear_factor not in (None, np.nan):

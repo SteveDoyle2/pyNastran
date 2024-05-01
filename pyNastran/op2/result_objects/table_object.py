@@ -1048,8 +1048,8 @@ class RealTableArray(TableArray):
     def data_type(self) -> str:
         return 'float32'
 
-    def write_op2(self, op2_file, fascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file, fascii, itable: int, new_result,
+                  date, is_mag_phase: bool=False, endian: str='>'):
         """writes an OP2"""
         import inspect
         allowed_tables = [
@@ -1071,7 +1071,6 @@ class RealTableArray(TableArray):
             'OUGF1',
             'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
-            #'OSLIDEG1',  # grid_type should be dropped
         ]
 
         assert self.table_name in allowed_tables, self.table_name

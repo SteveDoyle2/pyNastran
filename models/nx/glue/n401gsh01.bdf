@@ -1,0 +1,204 @@
+ID NX Nastran, n401gsh01
+$                                                                       
+$ DESCRIPTION  - Shell support of surface glue for SOL 401.
+$                Cantilever with tip load, CQUADR elements.
+$
+$ SOLUTION    - 401
+$
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+SOL 401
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* CASE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ECHO = NONE
+SPC = 1
+BGSET = 100
+OUTPUT
+SET 1 = 29 9 62 42
+DISPLACEMENT(print,REAL) = 1
+BGRESULTS(traction,force,sepdis,print) = 1
+$*  Step: Subcase - Static Loads 1
+SUBCASE 1
+  ANALYSIS=STATICS
+  TSTEP=1
+  LABEL = Subcase - Static Loads 1
+  LOAD = 3
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* BULK DATA
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$* SOLUTION CARDS
+$*
+TSTEP1,1,1.0,1,1
+BGADD        100     101
+$*  Simulation Object: Face Gluing(1)
+BGSET        101       1       2     1.5             .01
+$*
+$* PARAM CARDS
+$*
+PARAM     OIBULK     YES
+PARAM    OMACHPR     YES
+PARAM       POST      -1
+PARAM    POSTEXT     YES
+PARAM    UNITSYS   MN-MM
+$*
+$* GRID CARDS
+$*
+GRID           1       0     5.0     0.0      .5       0
+GRID           2       0    10.0     0.0      .5       0
+GRID           3       0    15.0     0.0      .5       0
+GRID           4       0    20.0     0.0      .5       0
+GRID           5       0    25.0     0.0      .5       0
+GRID           6       0    30.0     0.0      .5       0
+GRID           7       0    35.0     0.0      .5       0
+GRID           8       0    40.0     0.0      .5       0
+GRID           9       0    45.0     0.0      .5       0
+GRID          10       0     0.0     0.0      .5       0
+GRID          11       0    45.0    -5.0      .5       0
+GRID          12       0    40.0    -5.0      .5       0
+GRID          13       0    35.0    -5.0      .5       0
+GRID          14       0    30.0    -5.0      .5       0
+GRID          15       0    25.0    -5.0      .5       0
+GRID          16       0    20.0    -5.0      .5       0
+GRID          17       0    15.0    -5.0      .5       0
+GRID          18       0    10.0    -5.0      .5       0
+GRID          19       0     5.0    -5.0      .5       0
+GRID          20       0     5.0     5.0      .5       0
+GRID          21       0    10.0     5.0      .5       0
+GRID          22       0    15.0     5.0      .5       0
+GRID          23       0    20.0     5.0      .5       0
+GRID          24       0    25.0     5.0      .5       0
+GRID          25       0    30.0     5.0      .5       0
+GRID          26       0    35.0     5.0      .5       0
+GRID          27       0    40.0     5.0      .5       0
+GRID          28       0    45.0     5.0      .5       0
+GRID          29       0    50.0     0.0      .5       0
+GRID          30       0     0.0    -5.0      .5       0
+GRID          31       0     0.0     5.0      .5       0
+GRID          32       0    50.0    -5.0      .5       0
+GRID          33       0    50.0     5.0      .5       0
+GRID          34       0     5.0     0.0     -.5       0
+GRID          35       0    10.0     0.0     -.5       0
+GRID          36       0    15.0     0.0     -.5       0
+GRID          37       0    20.0     0.0     -.5       0
+GRID          38       0    25.0     0.0     -.5       0
+GRID          39       0    30.0     0.0     -.5       0
+GRID          40       0    35.0     0.0     -.5       0
+GRID          41       0    40.0     0.0     -.5       0
+GRID          42       0    45.0     0.0     -.5       0
+GRID          43       0     0.0     0.0     -.5       0
+GRID          44       0    45.0    -5.0     -.5       0
+GRID          45       0    40.0    -5.0     -.5       0
+GRID          46       0    35.0    -5.0     -.5       0
+GRID          47       0    30.0    -5.0     -.5       0
+GRID          48       0    25.0    -5.0     -.5       0
+GRID          49       0    20.0    -5.0     -.5       0
+GRID          50       0    15.0    -5.0     -.5       0
+GRID          51       0    10.0    -5.0     -.5       0
+GRID          52       0     5.0    -5.0     -.5       0
+GRID          53       0     5.0     5.0     -.5       0
+GRID          54       0    10.0     5.0     -.5       0
+GRID          55       0    15.0     5.0     -.5       0
+GRID          56       0    20.0     5.0     -.5       0
+GRID          57       0    25.0     5.0     -.5       0
+GRID          58       0    30.0     5.0     -.5       0
+GRID          59       0    35.0     5.0     -.5       0
+GRID          60       0    40.0     5.0     -.5       0
+GRID          61       0    45.0     5.0     -.5       0
+GRID          62       0    50.0     0.0     -.5       0
+GRID          63       0     0.0    -5.0     -.5       0
+GRID          64       0     0.0     5.0     -.5       0
+GRID          65       0    50.0    -5.0     -.5       0
+GRID          66       0    50.0     5.0     -.5       0
+$*
+$* ELEMENT CARDS
+$*
+$*  Mesh Collector: ThinShell(1)
+$*  Mesh: 2d_mesh(1)
+CQUADR         1       1      30      10       1      19
+CQUADR         2       1      10      31      20       1
+CQUADR         3       1       1      20      21       2
+CQUADR         4       1       2      21      22       3
+CQUADR         5       1       3      22      23       4
+CQUADR         6       1       4      23      24       5
+CQUADR         7       1       5      24      25       6
+CQUADR         8       1       6      25      26       7
+CQUADR         9       1       7      26      27       8
+CQUADR        10       1       8      27      28       9
+CQUADR        11       1       9      28      33      29
+CQUADR        12       1      11       9      29      32
+CQUADR        13       1      12       8       9      11
+CQUADR        14       1      13       7       8      12
+CQUADR        15       1      14       6       7      13
+CQUADR        16       1      15       5       6      14
+CQUADR        17       1      16       4       5      15
+CQUADR        18       1      17       3       4      16
+CQUADR        19       1      18       2       3      17
+CQUADR        20       1      19       1       2      18
+$*  Mesh Collector: ThinShell(2)
+$*  Mesh: 2d_mesh(2)
+CQUADR        21       2      63      43      34      52
+CQUADR        22       2      43      64      53      34
+CQUADR        23       2      34      53      54      35
+CQUADR        24       2      35      54      55      36
+CQUADR        25       2      36      55      56      37
+CQUADR        26       2      37      56      57      38
+CQUADR        27       2      38      57      58      39
+CQUADR        28       2      39      58      59      40
+CQUADR        29       2      40      59      60      41
+CQUADR        30       2      41      60      61      42
+CQUADR        31       2      42      61      66      62
+CQUADR        32       2      44      42      62      65
+CQUADR        33       2      45      41      42      44
+CQUADR        34       2      46      40      41      45
+CQUADR        35       2      47      39      40      46
+CQUADR        36       2      48      38      39      47
+CQUADR        37       2      49      37      38      48
+CQUADR        38       2      50      36      37      49
+CQUADR        39       2      51      35      36      50
+CQUADR        40       2      52      34      35      51
+$*
+$* PROPERTY CARDS
+$*
+$*  Property: PSHELL1
+PSHELL         1       1     1.0       1     1.0       1 .833333     0.0
+$*  Property: PSHELL2
+PSHELL         2       1     1.0       1     1.0       1 .833333     0.0
+$*
+$* MATERIAL CARDS
+$*
+$*  Material: Aluminum_2014
+MAT1           1 7.312+7             .33 2.794-6  2.16-5
+$*
+$* LOAD AND CONSTRAINT CARDS
+$*
+$*  Constraint: Fixed(1)
+SPC            1      10  123456     0.0
+SPC            1      30  123456     0.0
+SPC            1      31  123456     0.0
+SPC            1      43  123456     0.0
+SPC            1      63  123456     0.0
+SPC            1      64  123456     0.0
+$*  Region: Region1
+BSURF          1       1    THRU      20
+BCRPARA        1     TOP     0.0    FLEX
+$*  Region: Region2
+BSURF          2      21    THRU      40
+BCRPARA        2     TOP     0.0    FLEX
+$*  Load: Force(1)
+FORCE          3      29       0 50000.0     0.0     0.0     1.0
+FORCE          3      32       0 25000.0     0.0     0.0     1.0
+FORCE          3      33       0 25000.0     0.0     0.0     1.0
+ENDDATA bf1a5a0a
