@@ -451,7 +451,7 @@ class DSCMCOL:
         response_groups_order = [
             'weight_volume', 'static', 'eigenvalue',
             'buckling',
-            '???', 'psd',
+            '???', 'psd', 'aero',
             '2',
         ]
         responses_groups = {key: [] for key in response_groups_order}
@@ -478,6 +478,7 @@ class DSCMCOL:
             'frequency response displacement': '???',
             'frequency response stress?': '???',
             'ceig': '???',  #  complex eigenvalues
+            'aeroelastic flutter damping': 'aero',
         }
         response_name_to_f06_response_type = {
             # weight/volume
@@ -505,6 +506,7 @@ class DSCMCOL:
             # ???
             'frequency response displacement': '???',
             'frequency response stress?': '???',
+            'aeroelastic flutter damping': 'FLUTTER',
         }
 
         for i, respi in self.responses.items():
@@ -568,6 +570,29 @@ class DSCMCOL:
                     subcase = respi['subcase']
                     response_type = response_name_to_f06_response_type[name]
                     msg += f'         {i+1:8d}        {external_id:8d}    {response_type:8s}            {mode_num:8d}        {subcase:8d}\n'
+            elif group_name == 'aero':
+                msg += '             ------      AERO RESPONSES  ------\n'
+                msg += (
+                    '          ----------------------------------------------------------------------------------------------------------\n'
+                    '            COLUMN         DRESP1         RESPONSE          MODE            MACH            VELOCITY        SUB  \n'
+                    '              NO.         ENTRY ID          TYPE             NO.             NO.                            CASE \n'
+                    '          ----------------------------------------------------------------------------------------------------------\n'
+                )
+                for i in ids:
+                    #{'name': 'aeroelastic flutter damping', 'subcase': 1,
+                     #'mode': 2, 'density': 1.226991, 'mach': 0.1529329, 'vel': 52.0, 'seid': 0,
+                     #'internal_response_id': 2, 'external_response_id': 3,
+                     #'response_type': 84, 'iresponse': 1, 'response_number': 1}
+                    respi = self.responses[i]
+                    external_id = respi['external_response_id']
+                    name = respi['name']
+                    mode_num = respi['mode']
+                    mach = respi['mach']
+                    vel = respi['vel']
+                    subcase = respi['subcase']
+                    response_type = response_name_to_f06_response_type[name]
+                    msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {mach:8e}      {vel:8e}    {subcase:8d}\n'
+                #print(msg)
             elif group_name == 'psd':
                 msg += self._write_psd(ids, response_name_to_f06_response_type)
             elif group_name == '2':

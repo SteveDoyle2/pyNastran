@@ -1491,7 +1491,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
 
         #'CFAILURE', 'TOTSE',
     ]
-    msg = 'DRESP1 label=%s ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+    msg = 'DRESP1 label=%s property_type=%s response_type=%s atta=%s attb=%s atti=%s' % (
         label, property_type, response_type, atta, attb, atti)
     #print(msg)
     if property_type not in property_types:
@@ -1572,7 +1572,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
         # atti: grid id FRSPCF, FRVELO
         # atti: property id FRSTRE, FRFORC
 
-        assert atta in {12}, msg
+        assert atta in {2, 10, 11, 12}, msg
         assert isinstance(attb, float_types), msg
         assert len(atti) > 0, msg
         for eid in atti:
@@ -1718,6 +1718,7 @@ def _validate_dresp_property_none(label: str,
         assert attb is None, msg
         assert len(atti) == 0, msg
     elif response_type == 'ERP':
+        #if atta is
         assert isinstance(atta, integer_types), msg
         assert len(atti) >= 1, msg  # SET3 ids
         assert attb is None or isinstance(attb, float_types), msg

@@ -243,6 +243,7 @@ class TestOpt(unittest.TestCase):
 
     def test_dresp1s(self):
         model = BDF(debug=False)
+        model.set_as_nx()
 
         pid = 1
         mid = 1
@@ -256,7 +257,7 @@ class TestOpt(unittest.TestCase):
         dresp_id = 1
         label = 'COMPLIA'
         #DRESP1, 12, CMPL1, CMPLNCE
-        response_type = 'Compliance'
+        response_type = 'CMPLNCE' # 'Compliance'
         property_type = None
         region = None
         atta = None
@@ -279,7 +280,13 @@ class TestOpt(unittest.TestCase):
         label = 'FLUTTER'
         response_type = 'FLUTTER'
         atti = [1, 2, 3, 4]
+        property_type = 'PKNL'
         model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        model.add_set1(1, [10]) # nodes
+        model.add_flfact(2, [0.1]) # rho
+        model.add_flfact(3, [0.9]) # mach
+        model.add_flfact(4, [1100.]) # vel
+        property_type = None
         #----------------------------------------------
         # reset
         atti = []
@@ -303,7 +310,6 @@ class TestOpt(unittest.TestCase):
         label = 'EIGN'
         response_type = 'EIGN'
         model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-
         #----------------------------------------------
         # atti only
         dresp_id += 1

@@ -182,7 +182,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     if 'EDT' not in skips:  # aero
         write_edt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'EDOM' not in skips:  # optimization
-        write_edom(op2_file, fop2_ascii, obj, endian=endian)
+        write_edom(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     #if 'DIT' not in skips:  # tables
         #write_dit(op2_file, fop2_ascii, obj, endian=endian)
     #if 'DYNAMIC' not in skips:
