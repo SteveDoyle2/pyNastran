@@ -766,7 +766,7 @@ def dscmcol_dresp1(responses: dict[int, dict[str, Any]],
             vel = floats[idata+7]
             seid = ints[idata+8]
             response= {'name': 'aeroelastic flutter damping', 'subcase': subcase, 'mode': mode,
-                       'density': density, 'mach': mach, 'vel': vel, 'seid': seid}
+                       'density': density, 'mach': mach, 'velocity': vel, 'seid': seid}
 
         else:  # pragma: no cover
             print(f'internal_response_id={internal_response_id} '
@@ -819,6 +819,7 @@ def dscmcol_dresp2(responses: dict[int, dict[str, Any]],
               #f'subcase={subcase} dflag={dflag} freq/time={freqtime} seid={seid}')
         idata += 6
     return
+
 
 def read_hisadd(op2_reader: OP2Reader) -> None:
     """optimization history (SOL200) table"""

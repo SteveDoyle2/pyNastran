@@ -363,6 +363,7 @@ class EDT:
             sid = ints[i0]
             factors = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
+            #print(sid, factors)
             flfact = op2.add_flfact(sid, factors)
             str(flfact)
         return len(data)

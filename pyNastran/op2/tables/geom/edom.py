@@ -11,7 +11,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, 
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from .utils import get_minus1_start_end
 
-from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR
+from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR, DOPTPRM
 from pyNastran.op2.errors import DoubleCardError
 DSCREEN_INT_TO_RTYPE = {
     1: 'WEIGHT',  # goland_final_test.op2
@@ -654,6 +654,177 @@ class EDOM(GeomCommon):
         return n
 
     def read_doptprm(self, data: bytes, n: int) -> int:
+        op2: OP2Geom = self.op2
+        card_name = 'DOPTPRM'
+        card_obj = DOPTPRM
+        methods = {
+            184 : self.read_doptprm_nx_46,    # nx_old
+            196 : self.read_doptprm_nx_49,    # nx_new
+            #296 : self.read_doptprm_msc_74,  # msc
+        }
+        try:
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj,
+                op2._add_methods._add_doptprm_object,
+                methods, data, n)
+        except DoubleCardError:  # pragma: no cover
+            raise
+            #self.op2.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, op2.add_op2_element)
+        return n
+
+    def read_doptprm_msc_74(self, data: bytes, n: int) -> int:
+        """MSC"""
+        raise NotImplementedError()
+
+    def read_doptprm_nx_49(self, unused_card, data: bytes,
+                           n: int) -> int:
+        """
+        Record – DOPTPRM(4306,43,364)
+
+        I think this has 3 extra fields that are integers...
+        undocumented
+
+
+        196:
+        #DOPTPRM   DESMAX     100      P1       1      P2       1
+        #ints = (2, 0,   100, 1, 0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0,
+        #0.05, 1.e-4, 981668463, 0.001, 0.001, 1, 1, -0.03, 0.003, 0, 0.001,
+        #0.1, 0, 0.01, 0, 0, 40, 2,
+        #6, 0, 20, 2, 0, 0, 0, 0, 1.0, 0, 0.9, 1, 0, 0, 0,
+        #0.001, 5, 0, 1, 0)
+        0.0 could be 0...
+        floats  = (2, 0.0, 100, 1, 0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0,
+        0.05, 1.e-4, 0.001, 0.001, 0.001, 1, 1, -0.03, 0.003, 0.0, 0.001,
+        0.1, 0.0, 0.01, 0.0, 0.0, 40, 2,
+        6, 0.0, 20, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.9, 1, 0.0, 0.0, 0.0,
+        0.001, 5, 0.0, 1, 0.0)
+
+        data  = (
+          #4i
+          2, 0.0, 100, 1,
+          #12f
+          0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0, 0.05, 1.e-4, 0.001, 0.001, 0.001,
+          #2i
+          1, 1,
+          # 8f
+          -0.03, 0.003, 0.0, 0.001, 0.1, 0.0, 0.01, 0.0,
+          11i
+          0.0, 40, 2, 6, 0.0, 20, 2, 0.0, 0.0, 0.0, 0.0,
+          # f
+          1.0,
+          # i
+          0.0,
+          # f
+          0.9,
+          # 4i
+          1, 0.0, 0.0, 0.0,
+          # f
+          0.001,
+          # i
+          5,
+          # 3i ???
+          0.0, 1, 0.0)
+
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+        ntotal = 49 * size # 49 * 4
+        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i 3i', size))
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        doptprms = []
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (aprcod, iprint, desmax, method, # ints
+             delp, dpmin, ptol, conv1, conv2, gmax, delx, dxmin, delb, gscal, convdv, convpr, # floats
+             p1, p2, # ints
+             ct, ctmin, dabobj, delobj, dobj1, dobj2, dx1, dx2, # floats
+             iscal, itmax, itrmop, iwrite, igmax, jtmax, itrmst, jprint, iprnt1, iprnt2, jwrite, # ints
+             stpscl, # float
+             fsdmax, # int
+             fsdalp, # float
+             discod, disbeg, plviol, p2rset, # ints
+             edvout, # float
+             mxcrtrsp, a, b, c) = out # int
+            assert (a, b, c) == (0, 1, 0), (a, b, c)
+            params = {
+                # ints
+                'APRCOD' : aprcod,
+                'IPRINT' : iprint,
+                'DESMAX' : desmax,
+                'METHOD' : method,
+                # floats
+                'DELP' : delp,
+                'DPMIN' : dpmin,
+                'PTOL' : ptol,
+                'CONV1' : conv1,
+                'CONV2' : conv2,
+                'GMAX' : gmax,
+                'DELX' : delx,
+                'DXMIN' : dxmin,
+                'DELB' : delb,
+                'GSCAL' : gscal,
+                'CONVDV' : convdv,
+                'CONVPR' : convpr,
+                #  ints
+                'P1' : p1,
+                'P2' : p2,
+                # floats
+                'CT' : ct,
+                'CTMIN' : ctmin,
+                'DABOBJ' : dabobj,
+                'DELOBJ' : delobj,
+                'DOBJ1' : dobj1,
+                'DOBJ2' : dobj2,
+                'DX1' : dx1,
+                'DX2' : dx2,
+                # ints
+                'ISCAL' : iscal,
+                'ITMAX' : itmax,
+                'ITRMOP' : itrmop,
+                'IWRITE' : iwrite,
+                'IGMAX' : igmax,
+                'JTMAX' : jtmax,
+                'ITRMST' : itrmst,
+                'JPRINT' : jprint,
+                'IPRNT1' : iprnt1,
+                'IPRNT2' : iprnt2,
+                'JWRITE' : jwrite,
+                'STPSCL' : stpscl, # float
+                'FSDMAX' : fsdmax,
+                'FSDALP' : fsdalp, # float
+                'DISCOD' : discod,
+                'DISBEG' : disbeg,
+                'PLVIOL' : plviol,
+                'P2RSET' : p2rset,
+                'EDVOUT' : edvout, # float
+                'MXCRTRSP' : mxcrtrsp,
+            }
+            doptprm = DOPTPRM(params)
+            for key, default_value in doptprm.defaults.items():
+                if default_value is None:
+                    continue
+                if key not in params:
+                    continue
+                value_actual = params[key]
+                assert isinstance(default_value, type(value_actual)), f'key={key!r} value={default_value!r} value_actual={value_actual!r}'
+                if isinstance(value_actual, int) and value_actual == default_value:
+                    del doptprm.params[key]
+                elif isinstance(default_value, float) and np.allclose(value_actual, default_value):
+                    del doptprm.params[key]
+            str(doptprm)
+            n += ntotal
+            doptprms.append(doptprm)
+        return n, doptprms
+
+    def read_doptprm_nx_46(self, unused_card, data: bytes,
+                           n: int) -> tuple[int, list[DOPTPRM]]:
         """
         Record – DOPTPRM(4306,43,364)
         Design optimization parameters.
@@ -719,12 +890,14 @@ class EDOM(GeomCommon):
 
         """
         op2: OP2Geom = self.op2
-        #if self.size == 4:
-        ntotal = 184 * self.factor # 46 * 4
-        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i', self.size))
+        size = self.size
+        ntotal = 46 * size # 46 * 4
+        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i', size))
         ndatai = len(data) - n
         ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
 
+        doptprms = []
         for unused_icard in range(ncards):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -792,7 +965,7 @@ class EDOM(GeomCommon):
                 'EDVOUT' : edvout, # float
                 'MXCRTRSP' : mxcrtrsp,
             }
-            doptprm = op2.add_doptprm(params)
+            doptprm = DOPTPRM(params)
             for key, default_value in doptprm.defaults.items():
                 if default_value is None:
                     continue
@@ -806,8 +979,8 @@ class EDOM(GeomCommon):
                     del doptprm.params[key]
             str(doptprm)
             n += ntotal
-        op2.card_count['DOPTPRM'] = ncards
-        return n
+            doptprms.append(doptprm)
+        return n, doptprms
 
     def read_dtable(self, data: bytes, n: int) -> int:
         """

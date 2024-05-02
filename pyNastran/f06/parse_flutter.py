@@ -23,7 +23,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 from cpylog import get_logger2, SimpleLogger
-from pyNastran.f06.flutter_response import FlutterResponse
+from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils.numpy_utils import float_types
 
 
@@ -48,8 +48,8 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
         value : FlutterResponse()
 
     """
-    f06_units = _get_units(f06_units)
-    out_units = _get_units(out_units)
+    f06_units = get_flutter_units(f06_units)
+    out_units = get_flutter_units(out_units)
 
     if log is None:
         log = get_logger2(log=None, debug=True, encoding='utf-8')
@@ -252,40 +252,6 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                                   make_alt=make_alt)
         flutters[subcase] = flutter
     return flutters
-
-def _get_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
-    """gets the units"""
-    if units is None:
-        units = 'english_in'
-        #units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
-                 #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-
-    if isinstance(units, str):
-        units = units.lower()
-        # https://www.dynasupport.com/howtos/general/consistent-units
-        # mm, Mg, s / si_ton
-        # mm, Mg, s
-        #units = {'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
-                 #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
-        if units == 'si':
-            units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
-                     'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
-        elif units == 'english_in':
-            units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
-        elif units == 'english_ft':
-            units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-        elif units == 'english_kt':
-            units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
-        else:
-            raise NotImplementedError('units=%r must be in [si, english_in, '
-                                      'english_ft, english_kt]' % units)
-    else:
-        assert isinstance(units, dict), 'units=%r' % (units)
-    return units
-
 
 def plot_flutter_f06(f06_filename: str,
                      f06_units: Optional[dict[str, str]]=None,

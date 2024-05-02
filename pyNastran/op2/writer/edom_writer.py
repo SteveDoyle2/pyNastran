@@ -151,7 +151,7 @@ def _write_dresp1(model: Union[BDF, OP2Geom], name: str,
                   nastran_format: str='nx') -> int:
     key = (3806, 38, 359)
     log = model.log
-    debug = True
+    debug = False
     #structi = Struct(endian + b'i8s ffff i')
 
     #nvalues = 8 * ncards

@@ -3591,7 +3591,7 @@ class OES(OP2Common2):
                    f'{op2.table_name_str}-OES-CSOLID-random-numwide={op2.num_wide} '
                    f'numwide_real=11 numwide_imag=9 result_type={result_type}')
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        elif op2.element_type == 306 and op2.num_wide == 52:
+        elif op2.element_type == 306 and op2.num_wide in {52, 101}:
              #HEXALN
             msg = (f'etype={op2.element_name} ({op2.element_type}) '
                    f'{op2.table_name_str}-OES-CSOLID-real-numwide={op2.num_wide} '

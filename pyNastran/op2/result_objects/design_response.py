@@ -573,10 +573,15 @@ class DSCMCOL:
             elif group_name == 'aero':
                 msg += '             ------      AERO RESPONSES  ------\n'
                 msg += (
-                    '          ----------------------------------------------------------------------------------------------------------\n'
-                    '            COLUMN         DRESP1         RESPONSE          MODE            MACH            VELOCITY        SUB  \n'
-                    '              NO.         ENTRY ID          TYPE             NO.             NO.                            CASE \n'
-                    '          ----------------------------------------------------------------------------------------------------------\n'
+                    '          --------------------------------------------------------------------------------------------------------------------------'
+                    '            COLUMN         DRESP1         RESPONSE         SUBCASE           MODE         DENSITY            MACH         VELOCITY'
+                    '              NO.         ENTRY ID          TYPE              ID              NO.                             NO.                 '
+                    '          --------------------------------------------------------------------------------------------------------------------------'
+
+                    #'          ----------------------------------------------------------------------------------------------------------\n'
+                    #'            COLUMN         DRESP1         RESPONSE          MODE            MACH            VELOCITY        SUB  \n'
+                    #'              NO.         ENTRY ID          TYPE             NO.             NO.                            CASE \n'
+                    #'          ----------------------------------------------------------------------------------------------------------\n'
                 )
                 for i in ids:
                     #{'name': 'aeroelastic flutter damping', 'subcase': 1,
@@ -588,11 +593,14 @@ class DSCMCOL:
                     name = respi['name']
                     mode_num = respi['mode']
                     mach = respi['mach']
-                    vel = respi['vel']
+                    velocity = respi['velocity']
+                    density = respi['density']
                     subcase = respi['subcase']
                     response_type = response_name_to_f06_response_type[name]
-                    msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {mach:8e}      {vel:8e}    {subcase:8d}\n'
-                #print(msg)
+                    msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {density:8e}     {mach:8e}      {vel:8e}\n'
+                    #msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {density:8e}     {mach:8e}      {vel:8e}    {subcase:8d}\n'
+                print(msg)
+                asdf
             elif group_name == 'psd':
                 msg += self._write_psd(ids, response_name_to_f06_response_type)
             elif group_name == '2':

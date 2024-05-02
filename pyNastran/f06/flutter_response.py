@@ -78,6 +78,85 @@ class FlutterResponse:
         )
         return msg
 
+    @classmethod
+    def from_nx(cls, method: str, fdata: np.ndarray,
+                subcase_id: int=1, cref: float=1.0,
+                is_xysym: bool=False, is_xzsym: bool=False):
+        """
+        cref : chord
+           Reference length for reduced frequency
+           used to compute b (reference semi-chord)
+        """
+        b = cref / 2.0
+        configuration = 'AEROSG2D' #  TODO: what is this?
+        xysym = '???'
+        xzsym = '???'
+        #[mach, rho, velocity, damping, freq]
+        modes = None
+        mach = 0.0
+        density_ratio = 1.0
+        assert method == 'PKNL', method
+        nmodes, npoints, five = fdata.shape
+        assert five == 5, fdata.shape
+
+        #fdata   [                rho,     mach, velocity, damping, freq]
+        #results [kfreq, 1/kfreq, density, mach, velocity, damping, freq, eigr, eigi]
+        #
+        # kfreq = omega*b / V
+        results = np.zeros((nmodes, npoints, 9), dtype=fdata.dtype)
+        #rhos = fdata[:, :, 0]
+        #machs = fdata[:, :, 1]
+        vels = fdata[:, :, 2]
+        damps = fdata[:, :, 3]
+        freqs = fdata[:, :, 4]
+        omegas = 2 * np.pi * freqs
+        kfreqs = omegas * b / vels
+
+        # lambda = omega*(zeta + 1j)
+        eigr = omegas * damps / 2
+        eigc = omegas
+
+        results[:, :, 0] = kfreqs
+        results[:, :, 1] = 1 / kfreqs
+        results[:, :, 7] = eigr  # real part of eigenvalue
+        results[:, :, 8] = eigc  # complex part of eigenvalue
+        results[:, :, [2, 3, 4, 5, 6]] = fdata[:, :, [0, 1, 2, 3, 4]]
+        modes = np.arange(nmodes, dtype='int32') + 1
+
+        f06_units = get_flutter_units('english_in')
+        #{
+            #'altitude': 'ft',
+            #'density': 'slinch/in^3',
+            #'velocity': 'in/s',
+            #'eas': 'in/s',
+            #'dynamic_pressure': 'psi',
+        #}
+        out_units = get_flutter_units('english_kt')
+        #{
+            #'altitude': 'ft',
+            #'density': 'slug/ft^3',
+            #'velocity': 'knots',
+            #'eas': 'knots',
+            #'dynamic_pressure': 'psf',
+        #}
+        resp = FlutterResponse(
+            subcase_id, configuration, xysym, xzsym, mach, density_ratio,
+            method, modes, results, f06_units=f06_units, out_units=out_units)
+        if 0: # pragma: no cover
+            resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None, show=False,
+                                 clear=False, close=False, legend=True, png_filename=None)
+            resp.plot_vg_vf(fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
+                            clear=False, close=False, legend=True, xlim=None,
+                            ylim_damping=None, ylim_freq=None, vd_limit=None,
+                            damping_limit=None, nopoints=False, noline=False, png_filename=None, show=False)
+            resp.plot_kfreq_damping(modes=None, plot_type='tas', fig=None, damp_axes=None, freq_axes=None,
+                                    xlim=None, show=False, clear=False, close=False, legend=True, png_filename=None,
+                                    ylim_damping=None, ylim_kfreq=None, vd_limit=None, damping_limit=None,
+                                    nopoints=False, noline=False)
+            resp.plot_kfreq_damping2(modes=None, fig=None, xlim=None, ylim=None, show=True,
+                                     clear=False, close=False, legend=True, png_filename=None)
+        return resp
+
     def __init__(self, subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
@@ -146,11 +225,14 @@ class FlutterResponse:
         self.f06_units = f06_units
         self.out_units = out_units
         required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
-        for key in required_keys:
-            assert key in f06_units, 'key=%r not in f06_units=%s' % (key, f06_units)
-            assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
-        for key in f06_units:
-            assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
+        if f06_units is None and out_units is None:
+            pass
+        else:
+            for key in required_keys:
+                assert key in f06_units, 'key=%r not in f06_units=%s' % (key, f06_units)
+                assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
+            for key in f06_units:
+                assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
 
 
         self.subcase = subcase
@@ -201,7 +283,7 @@ class FlutterResponse:
             self.iq = 10
             self.ialt = 11
             self.set_pknl_results(results)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(method)
 
         # c - cyan
@@ -570,7 +652,13 @@ class FlutterResponse:
             title += '\n%s' % png_filename
         fig.suptitle(title)
         if legend:
-            axes1.legend(handles=legend_elements, **kwargs)
+            legend_kwargs = {}
+            for key, value in kwargs.items():
+                if key in {'ylim'}:
+                    continue
+                legend_kwargs[key] = value
+
+            axes1.legend(handles=legend_elements, **legend_kwargs)
 
         if show:
             plt.show()
@@ -1190,3 +1278,36 @@ def _add_vd_limit(plot_type: str,
                       linewidth=linewidth, label=label2)
     freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
                       linewidth=linewidth)
+
+def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
+    """gets the units"""
+    if units is None:
+        units = 'english_in'
+        #units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                 #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+
+    if isinstance(units, str):
+        units = units.lower()
+        # https://www.dynasupport.com/howtos/general/consistent-units
+        # mm, Mg, s / si_ton
+        # mm, Mg, s
+        #units = {'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
+                 #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
+        if units == 'si':
+            units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
+                     'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
+        elif units == 'english_in':
+            units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
+        elif units == 'english_ft':
+            units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+        elif units == 'english_kt':
+            units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
+        else:
+            raise NotImplementedError('units=%r must be in [si, english_in, '
+                                      'english_ft, english_kt]' % units)
+    else:
+        assert isinstance(units, dict), 'units=%r' % (units)
+    return units

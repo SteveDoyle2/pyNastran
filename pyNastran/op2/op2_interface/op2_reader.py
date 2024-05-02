@@ -51,8 +51,9 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
+from pyNastran.f06.flutter_response import FlutterResponse
 
+from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 #from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.result_objects.matrix_dict import MatrixDict
@@ -80,6 +81,7 @@ from pyNastran.op2.op2_interface.read_optimization import (
     read_dbcopt, read_descyc, read_destab, read_dscmcol,
     read_hisadd, read_r1tabrg)
 from pyNastran.op2.op2_interface.read_trmbu_trmbd import read_trmbu, read_trmbd
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -148,6 +150,8 @@ class OP2Reader:
             b'DESTAB' :  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
 
             #b'MEFF' : self.read_meff,
+            b'OVG': (partial(read_ovg, self), 'aeroelastic velocity'),
+
             b'INTMOD' : (self.read_intmod, '???'),
             b'HISADD' : (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
             #b'MEF1' : (self.read_extdb, 'external superlelement matrix'),
@@ -390,6 +394,7 @@ class OP2Reader:
         reads the MKLIST table and puts it in:
            - op2.op2_results.mklist
         """
+        read_mklisti
         op2: OP2 = self.op2
         size = self.size
         unused_table_name = self._read_table_name(rewind=False)
@@ -4141,3 +4146,194 @@ def get_read_skip_record(op2_reader: OP2Reader,
     else:
         read_record = op2_reader._read_record
     return read_record
+
+
+def read_ovg(op2_reader: OP2Reader) -> None:
+    """
+    V-g or V-f curves
+    NX specific table
+    """
+    op2: OP2 = op2_reader.op2
+    #log = op2.log
+    endian = op2_reader._endian
+    size = op2_reader.size
+    #factor: int = op2_reader.factor
+    assert size == 4, size
+
+    result_name = 'flutter_response'
+    if 0:
+        is_saved_result = op2._results.is_saved(result_name)
+        #read_mode = self.read_mode
+        if is_saved_result:
+            op2._results._found_result(result_name)
+        else:
+            op2_reader._skip_table('OVG', warn=False)
+            return
+        is_not_saved_result = not is_saved_result
+
+    #responses = op2.op2_results.responses
+    op2.table_name = op2_reader._read_table_name(rewind=False)
+
+    #if op2.read_mode == 1 or is_not_saved_result:
+    op2_reader.read_markers([-1])
+
+    #(101, 1, 0, 0, 0, 0, 0)
+    data = op2_reader._read_record(debug=False)
+
+    #n = 8
+    #'OVGX    '
+    #op2_reader._skip_record()
+    op2_reader.read_3_markers([-2, 1, 0])
+    data = op2_reader._read_record(debug=False)
+    assert data == b'OVGX    ', data
+
+    #print('id,mach,rho,velocity???')
+    #print('id?,kfreq?,damping,velocity')
+    itable = -3
+    if op2_reader.read_mode == 1:
+        while 1:
+            op2_reader.read_3_markers([itable, 1, 0])
+            itablei = op2_reader.get_marker1()
+            if itablei == 0:
+                break
+
+            data = op2_reader._skip_record()  # table 3
+
+            op2_reader.read_3_markers([itable-1, 1, 0])
+            data = op2_reader._read_record()  # table 4
+            itable -= 2
+        op2_reader.read_markers([0])
+        return
+
+    imode_old = 1
+    modes = [imode_old]
+    datafs = []
+    dataf = []
+    structi = Struct(endian + b'5i 3f 3i 156s 128s 128s 128s')
+    while 1:
+        op2_reader.read_3_markers([itable, 1, 0])
+        itablei = op2_reader.get_marker1()
+        if itablei == 0:
+            break
+
+        data = op2_reader._read_record(debug=False)  # table 3
+        out = structi.unpack(data)
+
+        #1  ACODE(C)    I Device code + 10*Approach Code
+        #2  TCODE(C)    I 2002
+        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
+        #4  SUBCASE     I Subcase identification number
+        #5  POINTID     I Device code + 10*Point identification number
+        #6  MACHNUMBER RS Mach number   – METHOD = K, KE, PK, or PKNL
+        #7  DENSRATIO  RS Density ratio – METHOD = K, KE, PK, or PKNL
+        #8  KFREQ      RS Reduced frequency – METHOD = K
+        #9  FCODE       I Format Code = '1'
+        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
+        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
+        # 12 UNDEF(39)    None
+        #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
+        (acode, tcode, method_int, subcase_id, point_device, mach, rho, kfreq, fcode, numwide, imode,
+         b, title, subtitle, subcase) = out
+        device_code = acode % 10
+        imode10 = point_device
+        assert device_code == 0, (acode, device_code)
+        #point_id = point_device // 10
+
+        b = b.strip()
+        title = title.strip()
+        subtitle = subtitle.strip()
+        subcase = subcase.strip()
+
+        #print(f'a = {a!r}')
+        #print(f'b = {b!r}')
+        #print(f'title = {title!r}')
+        #print(f'subtitle = {subtitle!r}')
+        #print(f'subcase = {subcase!r}')
+        assert len(b) == 0, b
+
+        assert acode == 60, acode
+        assert tcode == 2002, tcode
+        if method_int == 1:
+            method = 'K'
+        elif method_int == 2:
+            method = 'KE'
+        elif method_int == 3:
+            method = 'PK'
+        elif method_int == 4:
+            method = 'PKNL'
+        else:  # pragma: no cover
+            raise NotImplementedError(method_int)
+
+        assert fcode == 1, fcode
+        assert numwide == 4, numwide
+        try:
+            assert imode10 == imode * 10, (imode10, imode)
+            assert kfreq == 0.0, kfreq
+        except AssertionError:  # pragma: no cover
+            print(out)
+            raise
+        #print(f'method={method}; imode={imode} point_id={point_id}; mach={mach:.3f} rho={rho:.5f}')
+
+        op2_reader.read_3_markers([itable-1, 1, 0])
+        data = op2_reader._read_record(debug=False)  # table 4
+        fdata = np.frombuffer(data, dtype=op2.fdtype8)
+        idata = np.frombuffer(data, dtype=op2.idtype8)
+        velocity, is_complexf, damping, freq = fdata
+        is_complex = idata[1]
+        assert is_complex in {0, 1}, f'fdata={fdata} idata={idata} is_complex={is_complex}'
+        #print(velocity, damping, freq)
+
+        if imode != imode_old:
+            datafs.append(dataf)
+            modes.append(imode)
+            imode_old = imode
+            dataf = []
+        dataf.append([rho, mach, velocity, damping, freq])
+        itable -= 2
+    datafs.append(dataf)
+    op2_reader.read_markers([0])
+
+    # (20, 11, 4) = (nmodes, npoints, [mach, rho, velocity, damping, freq])
+    fdata2 = np.array(datafs)
+
+    cref = 1.0
+    is_xysym = False
+    is_xzsym = False
+
+    if hasattr(op2, 'aero') and op2.aero is not None:
+        aero = op2.aero
+        cref = aero.cref
+        is_xysym = aero.is_symmetric_xy
+        is_xzsym = aero.is_symmetric_xz
+    resp = FlutterResponse.from_nx(method, fdata2,
+                                   subcase_id=subcase_id, cref=cref,
+                                   is_xysym=is_xysym, is_xzsym=is_xzsym)
+    if not hasattr(op2.op2_results, 'vg_vf_response'):
+        op2.op2_results.vg_vf_response = {}
+    op2.op2_results.vg_vf_response[subcase_id] = resp
+        #subcase, configuration, xysym, xzsym, mach, density_ratio, method, modes, results,
+        #f06_units=None)
+
+    # FLFACTs:
+    # density:  101 [1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227]
+    # mach:     102 [0.118 0.124 0.129 0.135 0.141 0.147 0.153 0.159 0.165 0.171 0.176]
+    # velocity: 103 [40. 42. 44. 46. 48. 50. 52. 54. 56. 58. 60.]
+
+    #EIGRL          1                      20               0      0.    MASS
+    #AEROS          0       0     .23    2.15      .5       1
+    #AERO           0     50.     .23      1.       1
+    #FLUTTER        1    PKNL     101     102     103       L       0    .001
+    #$ density
+    #FLFACT       1011.2269911.2269911.2269911.2269911.2269911.2269911.226991
+    #    1.2269911.2269911.2269911.226991
+    #$ mach
+    #FLFACT       102.1176407.1235227.1294047.1352868.1411688.1470508.1529329
+    #    .1588149.1646969 .170579 .176461
+    #$ velocity
+    #FLFACT       103     40.     42.     44.     46.     48.     50.     52.
+    #    54.     56.     58.     60.
+    #MKAERO1       .1
+    #    .001     .01     .05      .1     .25      .5      1.      5.
+
+    #(40.0, 0.0, -0.2185760885477066, 3.1334753036499023)
+    return
