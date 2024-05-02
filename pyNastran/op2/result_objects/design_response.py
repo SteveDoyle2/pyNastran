@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_10e
 
 class Responses:
     """Defines SOL 200 responses from the R1TABRG table"""
@@ -451,7 +452,7 @@ class DSCMCOL:
         response_groups_order = [
             'weight_volume', 'static', 'eigenvalue',
             'buckling',
-            '???', 'psd', 'aero',
+            '???', 'psd', 'aeroelastic flutter',
             '2',
         ]
         responses_groups = {key: [] for key in response_groups_order}
@@ -478,7 +479,7 @@ class DSCMCOL:
             'frequency response displacement': '???',
             'frequency response stress?': '???',
             'ceig': '???',  #  complex eigenvalues
-            'aeroelastic flutter damping': 'aero',
+            'aeroelastic flutter damping': 'aeroelastic flutter',
         }
         response_name_to_f06_response_type = {
             # weight/volume
@@ -497,15 +498,15 @@ class DSCMCOL:
             'buckling': 'BUCK',
 
             # complex eigenvalues
-            'ceig': '???',
+            'ceig': 'CEIG?',
 
             # psd
             'psd displacement': 'DISP',
             'psd acceleration': 'ACCE',
 
             # ???
-            'frequency response displacement': '???',
-            'frequency response stress?': '???',
+            'frequency response displacement': 'FRDISP?',
+            'frequency response stress?': 'FRSTRES?',
             'aeroelastic flutter damping': 'FLUTTER',
         }
 
@@ -570,49 +571,21 @@ class DSCMCOL:
                     subcase = respi['subcase']
                     response_type = response_name_to_f06_response_type[name]
                     msg += f'         {i+1:8d}        {external_id:8d}    {response_type:8s}            {mode_num:8d}        {subcase:8d}\n'
-            elif group_name == 'aero':
-                msg += '             ------      AERO RESPONSES  ------\n'
-                msg += (
-                    '          --------------------------------------------------------------------------------------------------------------------------'
-                    '            COLUMN         DRESP1         RESPONSE         SUBCASE           MODE         DENSITY            MACH         VELOCITY'
-                    '              NO.         ENTRY ID          TYPE              ID              NO.                             NO.                 '
-                    '          --------------------------------------------------------------------------------------------------------------------------'
-
-                    #'          ----------------------------------------------------------------------------------------------------------\n'
-                    #'            COLUMN         DRESP1         RESPONSE          MODE            MACH            VELOCITY        SUB  \n'
-                    #'              NO.         ENTRY ID          TYPE             NO.             NO.                            CASE \n'
-                    #'          ----------------------------------------------------------------------------------------------------------\n'
-                )
-                for i in ids:
-                    #{'name': 'aeroelastic flutter damping', 'subcase': 1,
-                     #'mode': 2, 'density': 1.226991, 'mach': 0.1529329, 'vel': 52.0, 'seid': 0,
-                     #'internal_response_id': 2, 'external_response_id': 3,
-                     #'response_type': 84, 'iresponse': 1, 'response_number': 1}
-                    respi = self.responses[i]
-                    external_id = respi['external_response_id']
-                    name = respi['name']
-                    mode_num = respi['mode']
-                    mach = respi['mach']
-                    velocity = respi['velocity']
-                    density = respi['density']
-                    subcase = respi['subcase']
-                    response_type = response_name_to_f06_response_type[name]
-                    msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {density:8e}     {mach:8e}      {vel:8e}\n'
-                    #msg += f'         {i+1:8d}        {external_id:8d}         {response_type:8s}     {mode_num:8d}         {density:8e}     {mach:8e}      {vel:8e}    {subcase:8d}\n'
-                print(msg)
-                asdf
+            elif group_name == 'aeroelastic flutter':
+                msg += _write_dscmcol_flutter(self.responses, ids, response_name_to_f06_response_type)
             elif group_name == 'psd':
                 msg += self._write_psd(ids, response_name_to_f06_response_type)
             elif group_name == '2':
                 msg += self._write_dresp2(ids)
             else:
-                warnings.warn(f'skipping DSCMCOL group_name={group_name}')
+                warnings.warn(f'skipping DSCMCOL group_name={group_name!r}')
                 for i in ids:
                     respi = self.responses[i]
                     warnings.warn(str(respi))
                 continue
             msg += '\n\n'
         str(msg)
+        return msg
 
     @property
     def external_ids(self) -> list[int]:
@@ -786,6 +759,33 @@ class DSCMCOL:
             return f'responses.dscmcol ({len(self.responses)})\n'
         return self.__repr__() + '\n'
 
+def _write_dscmcol_flutter(responses, ids,
+                           response_name_to_f06_response_type: dict[str, str]) -> str:
+    """flutter response writer"""
+    msg = '             -----  AEROELASTIC FLUTTER RESPONSES  -----\n'
+    msg += (
+        '          --------------------------------------------------------------------------------------------------------------------------\n'
+        '            COLUMN         DRESP1         RESPONSE         SUBCASE           MODE         DENSITY            MACH         VELOCITY\n'
+        '              NO.         ENTRY ID          TYPE              ID              NO.                             NO.                 \n'
+        '          --------------------------------------------------------------------------------------------------------------------------\n'
+    )
+    for i in ids:
+        #{'name': 'aeroelastic flutter damping', 'subcase': 1,
+         #'mode': 2, 'density': 1.226991, 'mach': 0.1529329, 'vel': 52.0, 'seid': 0,
+         #'internal_response_id': 2, 'external_response_id': 3,
+         #'response_type': 84, 'iresponse': 1, 'response_number': 1}
+        respi = responses[i]
+        external_id = respi['external_response_id']
+        name = respi['name']
+        mode_num = respi['mode']
+        mach = respi['mach']
+        velocity = respi['velocity']
+        density = respi['density']
+        subcase = respi['subcase']
+        response_type = response_name_to_f06_response_type[name]
+        msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {subcase:8d}        {mode_num:8d}        {density:8.3f}        {mach:8.3f}        {velocity:8.3f}\n'
+    #print(msg)
+    return msg
 
 class Desvars:
     def __init__(self, desvars):

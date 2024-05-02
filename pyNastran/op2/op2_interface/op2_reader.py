@@ -394,7 +394,6 @@ class OP2Reader:
         reads the MKLIST table and puts it in:
            - op2.op2_results.mklist
         """
-        read_mklisti
         op2: OP2 = self.op2
         size = self.size
         unused_table_name = self._read_table_name(rewind=False)

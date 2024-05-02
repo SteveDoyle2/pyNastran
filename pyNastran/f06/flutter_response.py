@@ -111,6 +111,10 @@ class FlutterResponse:
         freqs = fdata[:, :, 4]
         omegas = 2 * np.pi * freqs
         kfreqs = omegas * b / vels
+        #print(f'b = {b}')
+        #print('omega:\n', omegas)
+        #print('V:\n', vels)
+        #print('kfreq:\n', kfreqs)
 
         # lambda = omega*(zeta + 1j)
         eigr = omegas * damps / 2
@@ -131,7 +135,8 @@ class FlutterResponse:
             #'eas': 'in/s',
             #'dynamic_pressure': 'psi',
         #}
-        out_units = get_flutter_units('english_kt')
+        #out_units = get_flutter_units('english_kt')
+        out_units = get_flutter_units('english_in')
         #{
             #'altitude': 'ft',
             #'density': 'slug/ft^3',
@@ -958,32 +963,38 @@ class FlutterResponse:
                       modes: Optional[list[int]]=None,
                       page_stamp: Optional[str]=None,
                       page_num: int=1) -> int:
+        with open(f06_filename, 'w') as f06_file:
+            page_num = self.export_to_f06_file(
+                f06_file, modes=modes,
+                page_stamp=page_stamp, page_num=page_num)
+        return page_num
+
+    def export_to_f06_file(self, f06_file: str,
+                           modes: Optional[list[int]]=None,
+                           page_stamp: Optional[str]=None,
+                           page_num: int=1) -> int:
+        imodes = self._imodes(modes)
         if page_stamp is None:
             page_stamp = 'PAGE %i'
-        # nmodes, vel, res
-        imodes = self._imodes(modes)
+        for imode in imodes:
+            #'      MACH 0.0                                                                                                                      '
+            f06_file.write(f'0                                                                                                            SUBCASE {self.subcase:d}\n')
+            f06_file.write('0                                                       FLUTTER  SUMMARY\n')
+            f06_file.write('                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC\n')
+            f06_file.write('       POINT = %4i     METHOD = %s\n' % (imode + 1, self.method))
+            f06_file.write('\n')
+            f06_file.write('\n')
 
-        with open(f06_filename, 'w') as f06_file:
-            for imode in imodes:
-                #'      MACH 0.0                                                                                                                      '
-                f06_file.write('0                                                                                                            SUBCASE %i\n' % self.subcase)
-                f06_file.write('0                                                       FLUTTER  SUMMARY\n')
-                f06_file.write('                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC\n')
-                f06_file.write('       POINT = %4i     METHOD = %s\n' % (imode + 1, self.method))
-                f06_file.write('\n')
-                f06_file.write('\n')
-
-                f06_file.write('    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE\n')
-                for res in self.results[imode, :, :9]:
-                    #print(res)
-                    kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi = res
-                    #                 kfreq      ikfreq  rho      mach     vel    damp   freq    eigr       eigi
-                    f06_file.write(' %8.4f      %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E\n' % (
-                        kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi,
-                    ))
-                #'1                                                                          DECEMBER  14, 2018  MSC.NASTRAN  6/17/05   PAGE    12\n'
-                f06_file.write(page_stamp % page_num)
-                page_num += 1
+            f06_file.write('    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE\n')
+            for res in self.results[imode, :, :9]:
+                kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi = res
+                #                 kfreq      ikfreq  rho      mach     vel    damp   freq    eigr       eigi
+                f06_file.write(' %8.4f      %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E\n' % (
+                    kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi,
+                ))
+            #'1                                                                          DECEMBER  14, 2018  MSC.NASTRAN  6/17/05   PAGE    12\n'
+            f06_file.write(page_stamp % page_num)
+            page_num += 1
         return page_num
 
     def export_to_zona(self, zona_filename: str,
