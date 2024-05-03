@@ -9,10 +9,10 @@ from pyNastran.bdf.cards.bdf_tables import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
-model = BDF(debug=False)
 class TestTables(unittest.TestCase):
 
     def test_tabdmp1_01(self):
+        model = BDF(debug=False)
         lines = ['TABDMP1,100,,,,,,,,+',
                  '+,1e-3,.02,200.,.02,ENDT',]
         card = model._process_card(lines)
@@ -59,7 +59,13 @@ class TestTables(unittest.TestCase):
         for actual, expected in zip(lines_actual, lines_expected):
             self.assertEqual(actual, expected, msg)
 
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        model.add_tabdmp1(100, x, y)
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
     def test_tabled1(self):
+        model = BDF(debug=False)
         lines = [
             'TABLED1, 32',
             ',-2.0, 6.0, 2.0, 5.0, 3.0, 5.6, ENDT',
@@ -79,6 +85,7 @@ class TestTables(unittest.TestCase):
         interp = table.interpolate([0., 5.])
 
     def test_tabled2(self):
+        model = BDF(debug=False)
         lines = [
             'TABLED2, 15, -10.5',
             ',1.0, -4.5, 2.0, -4.2, 2.0, 2.8, 7.0, 6.5',
@@ -99,6 +106,7 @@ class TestTables(unittest.TestCase):
         interp = table.interpolate([0., 5.])
 
     def test_tabled3(self):
+        model = BDF(debug=False)
         lines = [
             'TABLED3, 62, 126.9, 30.0',
             ',2.9, 2.9, 3.6, 4.7, 5.2, 5.7, ENDT',
@@ -114,6 +122,7 @@ class TestTables(unittest.TestCase):
         #assert np.allclose(interp, [5.5]), interp
 
     def test_tabled4(self):
+        model = BDF(debug=False)
         lines = [
             'TABLED4, 28, 0.0, 1.0, 0.0, 100.',
             ',2.91, -0.0329, 6.51-5, 0.0, -3.4-7, ENDT',
@@ -142,6 +151,7 @@ class TestTables(unittest.TestCase):
         #card2 = TABLEHT.add_card(card)
 
     def test_tableh1(self):
+        model = BDF(debug=False)
         lines = [
             'TABLEH1, 32',
             '-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
@@ -158,6 +168,7 @@ class TestTables(unittest.TestCase):
         save_load_deck(model)
 
     def test_tablem1(self):
+        model = BDF(debug=False)
         lines = [
             'TABLEM1, 32',
             '-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
@@ -174,6 +185,7 @@ class TestTables(unittest.TestCase):
         #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem2(self):
+        model = BDF(debug=False)
         lines = [
             'TABLEM2, 15, -10.5',
             ',1.0, -4.5, 2.0, -4.5, 2.0, 2.8, 7.0, 6.5',
@@ -194,6 +206,7 @@ class TestTables(unittest.TestCase):
         #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem3(self):
+        model = BDF(debug=False)
         lines = [
             'TABLEM3, 62, 126.9, 30.0',
             ',2.9, 2.9, 3.6, 4.7, 5.2, 5.7, ENDT',
@@ -214,6 +227,7 @@ class TestTables(unittest.TestCase):
         #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem4(self):
+        model = BDF(debug=False)
         lines = [
             'TABLEM4, 28, 0.0, 1.0, 0.0, 100.',
             ',2.91, -0.0329, 6.51-5, 0.0, -3.4-7, ENDT',

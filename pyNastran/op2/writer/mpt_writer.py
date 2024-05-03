@@ -5,7 +5,8 @@ from struct import pack, Struct
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header
 
-def write_mpt(op2_file, op2_ascii, model, endian=b'<'):
+def write_mpt(op2_file, op2_ascii, model, endian=b'<',
+              nastran_format: str='nx'):
     """writes the MPT/MPTS table"""
     if not hasattr(model, 'materials'):
         return

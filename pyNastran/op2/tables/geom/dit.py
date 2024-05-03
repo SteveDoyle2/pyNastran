@@ -127,11 +127,13 @@ class DIT:
         struct_2i2f4i = Struct('2i2f4i')
         #struct_ff = Struct('ff')
         #struct_2i = op2.struct_2i
+        #ntotal = 32
         while ndata - n >= 32:
             edata = data[n:n + 32]
             out = struct_2i2f4i.unpack(edata)
             (tid, table_type, lu, wg, unused_dunno_a,
              unused_dunno_b, unused_dunno_c, unused_dunno_d) = out
+            assert (unused_dunno_a, unused_dunno_b, unused_dunno_c, unused_dunno_d) == (0, 0, 0, 0), out
             if tid > 100000000:
                 tid = -(tid - 100000000)
             n += 32

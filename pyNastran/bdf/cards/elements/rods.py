@@ -773,19 +773,6 @@ class CONROD(RodElement):
             raise RuntimeError(msg)
         return self.mid_ref.G()
 
-    #def write_code_aster(self):
-        #msg = ''
-        #msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" % self.eid
-        #msg += "              SECTION='CERCLE',  # circular section\n"
-        #if self.Thickness():
-            #msg += "              CARA=('R','EP'),   # radius, thickness\n"
-            #msg += "              VALE=(%g,%g),\n" % (
-                #self.Radius(), self.Thickness())
-        #else:
-            #msg += "              CARA=('R')   # radius\n"
-            #msg += "              VALE=(%g),\n" % self.Radius()
-        #return msg
-
     def raw_fields(self):
         list_fields = [
             'CONROD', self.eid] + self.node_ids + [
