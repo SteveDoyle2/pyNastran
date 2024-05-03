@@ -34,15 +34,11 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     #print(card_types)
 
     cards_to_skip = [
-        #'DVCREL1',
-        #'DVMREL1',
-        #'DVPREL1',
-        'DVCREL2',
+        #'DVCREL2',  # disabled b/c no reader
         'DOPTPRM',
         'DCONADD',
 
         'DLINK',
-        'DVGRID',
     ]
     out = defaultdict(list)
 
@@ -116,10 +112,10 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
-                   dscreens: list[Any], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx') -> int:
+def write_dscreen(model: Union[BDF, OP2Geom], name: str,
+                  dscreens: list[Any], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     DSCREEN(4206, 42, 363)
     Design constraint screening data.
@@ -145,10 +141,10 @@ def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_dresp1(model: Union[BDF, OP2Geom], name: str,
-                  dresp1_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+def write_dresp1(model: Union[BDF, OP2Geom], name: str,
+                 dresp1_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
     key = (3806, 38, 359)
     log = model.log
     debug = False
@@ -472,10 +468,10 @@ def _write_dresp1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(data_bytesi)
     return nbytes
 
-def _write_desvar(model: Union[BDF, OP2Geom], name: str,
-                  desvar_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+def write_desvar(model: Union[BDF, OP2Geom], name: str,
+                 desvar_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
     """
     (3106, 31, 352)
     NX 2019.2
@@ -521,10 +517,10 @@ def _write_desvar(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
-                   dconstrs: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx') -> int:
+def write_dconstr(model: Union[BDF, OP2Geom], name: str,
+                  dconstrs: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     Record – DCONSTR(4106,41,362)
     Design constraints.
@@ -575,10 +571,10 @@ def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx'):
+def write_dvprel2(model: Union[BDF, OP2Geom], name: str,
+                  dvprel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Record – DVPREL2(3406,34,355)
     Design variable to property relation based on a user-supplied equation.
@@ -659,10 +655,10 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx'):
+def write_dvprel1(model: Union[BDF, OP2Geom], name: str,
+                  dvprel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Word Name Type Description
     1 ID          I Unique identification number
@@ -757,10 +753,78 @@ def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx'):
+def write_dvcrel1(model: Union[BDF, OP2Geom], name: str,
+                  dvcrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
+    """
+    Record – DVCREL1(6100,61,429)
+    Design variable to connectivity property relation.
+    Word Name   Type Description
+    1 ID        I     Unique identification number
+    2 TYPE(2)   CHAR4 Name of an element connectivity entry
+    4 EID       I     Element identification number
+    5 FID       I     Entry is 0
+    6 CPMIN     RS    Minimum value allowed for this property
+    7 CPMAX     RS    Maximum value allowed for this property
+    8 C0        RS    Constant term of relation
+    9 CPNAME(2) CHAR4 Name of connectivity property
+    11 DVIDi    I     DESVAR entry identification number
+    12 COEFi    RS    Coefficient of linear relation
+    Words 11 and 12 repeat until -1 occurs
+    """
+    key = (6100, 61, 429)
+    #structi = Struct(endian + b'ii 4f ii')
+
+    ncoeffs = 0
+    for dvcrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvcrel_id]
+        ncoeffs += len(dvcrel.coeffs)
+        #print(dvprel.get_stats())
+
+    nvalues = 11 * ncards + ncoeffs * 2 # nbytes(data)
+    ndata = 9 * ncards + ncoeffs * 2  # len(data)
+
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    data_all = []
+    for dvmrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvmrel_id]
+        #print(dvcrel.get_stats())
+        # TODO: doesn't handle fid = float
+        #fid = 0
+        #if isinstance(dvprel.pname_fid, str):
+        fmt = b'i 8s 2i 2fi 8s'
+        cp_name_bytes = b'%-8s' % dvcrel.cp_name.encode('latin1')
+
+        elem_type_bytes = b'%-8s' % dvcrel.element_type.encode('latin1')
+
+        c0 = dvcrel.c0
+        cp_min, cp_max = _get_dvcrel_coeffs(dvcrel)
+        if c0 is None:
+            c0 = 0.
+
+        fid = 0
+        data = [dvmrel_id, elem_type_bytes, dvcrel.eid, fid, cp_min, cp_max, c0, cp_name_bytes]
+        ncoeffs = len(dvcrel.coeffs)
+        fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
+        for desvar, coeff in zip(dvcrel.desvar_ids, dvcrel.coeffs):
+            data.extend([desvar, coeff])
+        data.append(-1)
+
+        assert None not in data, data
+        structi = Struct(endian + fmt)
+        op2_ascii.write(f'  DVCREL1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+        data_all += data
+    #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
+    assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
+    return nbytes
+
+def write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
+                  dvmrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Word Name Type Description
     1 ID          I Unique identification number
@@ -795,20 +859,6 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
     ndata = 9 * ncards + ncoeffs * 2  # len(data)
 
     nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
-    #dvprel_id = ints[i0]
-    #type_bytes = data[n+size:n+3*size]
-    #property_name_bytes = data[n+8*size:n+10*size]
-    #prop_type = reshape_bytes_block_size(type_bytes, size=size)
-
-    #pid, fid = ints[i0+3:i0+5]
-    #pmin, pmax, c0 = floats[i0+5:i0+8]
-    #if fid == 0:
-        #fid = reshape_bytes_block_size(property_name_bytes, size=size)
-
-    ## fid = fidi
-    ##print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
-    #desvar_ids = ints[i0+10:i1:2]
-    #coeffs = floats[i0+11:i1:2]
 
     data_all = []
     for dvmrel_id in dvmrel_ids:
@@ -821,7 +871,6 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
         material_name_bytes = b'%-8s' % dvmrel.mp_name.encode('latin1')
 
         mat_type_bytes = b'%-8s' % dvmrel.mat_type.encode('latin1')
-        #property_name_bytes = b'%-8s' % dvprel.property_name.encode('latin1')
 
         c0 = dvmrel.c0
         mp_min, mp_max = _get_dvmrel_coeffs(dvmrel)
@@ -832,18 +881,15 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
         data = [dvmrel_id, mat_type_bytes, dvmrel.mid, fid, mp_min, mp_max, c0, material_name_bytes]
         ncoeffs = len(dvmrel.coeffs)
         fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
-        #print(data)
         for desvar, coeff in zip(dvmrel.desvar_ids, dvmrel.coeffs):
             data.extend([desvar, coeff])
         data.append(-1)
 
         assert None not in data, data
         structi = Struct(endian + fmt)
-        op2_ascii.write(f'  DVMREL2 data={data}\n')
+        op2_ascii.write(f'  DVMREL1 data={data}\n')
         op2_file.write(structi.pack(*data))
         data_all += data
-        #break
-    #print(data_all)
     #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
@@ -872,7 +918,16 @@ def _get_dvprel_coeffs(dvprel):
         p_max = 1e+20
     return p_min, p_max
 
-def _get_dvmrel_coeffs(dvmrel):
+def _get_dvcrel_coeffs(dvcrel) -> tuple[float, float]:
+    """probably wrong"""
+    cp_min, cp_max = dvcrel.cp_min, dvcrel.cp_max
+    if cp_min is None:
+        cp_min = 1e-20
+    if cp_max is None:
+        cp_max = 1e+20
+    return cp_min, cp_max
+
+def _get_dvmrel_coeffs(dvmrel) -> tuple[float, float]:
     """probably wrong"""
     mp_min, mp_max = dvmrel.mp_min, dvmrel.mp_max
     if mp_min is None:
@@ -894,10 +949,10 @@ def _get_dvmrel_coeffs(dvmrel):
         mp_max = 1e+20
     return mp_min, mp_max
 
-def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx'):
+def write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
+                  dvmrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Record – DVMREL2(6400,64,432)
     Design variable to material relation based on a user-supplied equation.
@@ -967,17 +1022,17 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvcrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes,
-                   nastran_format: str='nx'):
+def write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
+                  dvcrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     key = (6200, 62, 430)
     structi = Struct(endian + b'ii 4f ii')
 
     ndata = 9 * ncards
     nvalues = 11 * ncards
     for dvcrel_id in dvcrel_ids:
-        dvcrel = model.dvcrels[dvmrel_id]
+        dvcrel = model.dvcrels[dvcrel_id]
         if len(dvcrel.dvids):
             nvalues += len(dvcrel.dvids) + 2
             ndata += len(dvcrel.dvids) + 2
@@ -1010,10 +1065,10 @@ def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
             # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
             cp_min = 1e-20
 
-        mat_type_bytes = ('%-8s' % dvcrel.mat_type).encode('ascii')
-        cp_name_bytes = ('%-8s' % dvcrel.mp_name).encode('ascii')
+        mat_type_bytes = ('%-8s' % dvcrel.element_type).encode('ascii')
+        cp_name_bytes = ('%-8s' % dvcrel.cp_name).encode('ascii')
         data = [dvcrel_id, mat_type_bytes, dvcrel.eid, fid,
-                cp_min, dvccel.cp_max, dvcrel.dequation, cp_name_bytes]
+                cp_min, dvcrel.cp_max, dvcrel.dequation, cp_name_bytes]
         fmt += _write_dvxrel2_flag(dvcrel, data)
 
         assert None not in data, data
@@ -1042,10 +1097,10 @@ def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: list[Any]) -> by
     data.append(-1)
     return fmt
 
-def _write_dtable(model: Union[BDF, OP2Geom], name: str,
-                  dtables: list[DTABLE], ncards: int,
-                  op2_file, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+def write_dtable(model: Union[BDF, OP2Geom], name: str,
+                 dtables: list[DTABLE], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
     """
     Record – DTABLE(3706,37,358)
     Table constants.
@@ -1083,23 +1138,70 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 
-EDOM_MAP = {
-    'DVPREL1': _write_dvprel1,
-    'DVMREL1': _write_dvmrel1,
-    # 'DVCREL1': _write_dvcrel1,
-    'DVPREL2': _write_dvprel2, 'DVMREL2': _write_dvmrel2, '#DVCREL2': _write_dvcrel2,
 
-    'DESVAR': _write_desvar,
+def write_dvgrid(model: Union[BDF, OP2Geom], name: str,
+                 dvgrid_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
+    """
+    (4406, 44, 372)
+    NX 2019.2
+
+    Design variable to grid point relation.
+    Word Name Type Description
+    1 DVID   I DESVAR entry identification number
+    2 GID    I Grid point or geometric point identification number
+    3 CID    I Coordinate system identification number
+    4 COEFF RS Multiplier of the vector defined by N(3)
+    5 N1    RS Component of the vector measured in the coordinate system defined by CID
+    6 N2    RS Component of the vector measured in the coordinate system defined by CID
+    7 N3    RS Component of the vector measured in the coordinate system defined by CID
+
+    """
+    key = (4406, 44, 372)
+    structi = Struct(endian + b'3i 4f')
+
+    ncards = 0
+    for dvgrid_id in dvgrid_ids:
+        dvgrids = model.dvgrids[dvgrid_id]
+        ncards += len(dvgrids)
+    nvalues = 7 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    for dvgrid_id in dvgrid_ids:
+        dvgrids = model.dvgrids[dvgrid_id]
+        for dvgrid in dvgrids:
+
+            dvgrid_id = dvgrid.desvar_id
+            cid = dvgrid.coord_id
+            coeff = dvgrid.coeff
+            nid = dvgrid.nid
+            dxyz = dvgrid.dxyz
+
+            data = [dvgrid_id, nid, cid, coeff, *dxyz]
+            assert None not in data, data
+            #print(data)
+            op2_ascii.write(f'  DVGRID data={data}\n')
+            op2_file.write(structi.pack(*data))
+    return nbytes
+
+EDOM_MAP = {
+    'DVPREL1': write_dvprel1,
+    'DVMREL1': write_dvmrel1,
+    'DVCREL1': write_dvcrel1,
+    'DVPREL2': write_dvprel2, 'DVMREL2': write_dvmrel2, # 'DVCREL2': write_dvcrel2,
+
+    'DESVAR': write_desvar,
     #'DOPTPRM': _write_doptprm,
-    'DTABLE': _write_dtable,
-    'DCONSTR': _write_dconstr,
+    'DTABLE': write_dtable,
+    'DCONSTR': write_dconstr,
     #'DCONADD': _write_dconadd,
 
     #'DLINK': _write_dlink,
-    'DESVAR': _write_desvar,
-    #'DVGRID': _write_dvgrid,
-    'DSCREEN': _write_dscreen,
-    'DRESP1': _write_dresp1,
+    'DESVAR': write_desvar,
+    'DVGRID': write_dvgrid,
+    'DSCREEN': write_dscreen,
+    'DRESP1': write_dresp1,
 
     #(3206, 32, 353) : ['DLINK', self._read_fake],
     #(3306, 33, 354) : ['DVPREL1', self._read_dvprel1],

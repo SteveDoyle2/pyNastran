@@ -914,15 +914,8 @@ class FlutterResponse:
         damping_modes = []
         omega_modes = []
         for mode in modes:
-            if mode < 10:
-                gmode = '   G,MODE--%d' % mode
-                wmode = ' WHZ,MODE--%d' % mode
-            elif mode < 100:
-                gmode = '   G,MODE-%2d' % mode
-                wmode = ' WHZ,MODE-%2d' % mode
-            else:
-                gmode = '   G,MODE%3d' % mode
-                wmode = ' WHZ,MODE%3d' % mode
+            gmode = f'   G,MODE{mode:->3}'  # 3 characters; pad with -
+            wmode = f' WHZ,MODE{mode:->3}'
             damping_modes.append(gmode)
             omega_modes.append(wmode)
 

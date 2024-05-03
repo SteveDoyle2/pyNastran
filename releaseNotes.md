@@ -9,7 +9,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.2 (2024/4/xx)
+v1.4.2 (2024/5/xx)
 ------------------
  
 BDF:
@@ -18,6 +18,7 @@ BDF:
    - MATT11
  - changed:
    - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
+   - DRESP1, DRESP2, DRESP3 region=None is now stored as 0
  - fixed:
    - SPLINE5 add_card out of range bug
    - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
@@ -32,14 +33,20 @@ BDF:
    - NLPARM:
      - eps_u and eps_w can now be negative
    - DRESP1:
-     - ERP supported
+     - ERP, FRSPCF, FRVELO, FRSTRE, FRFORC supported
 
 
 OP2:
  - added:
+   - adding flutter design response (type=84)
+   - vg_vf_response (from OVG table)
  - changed:
+   - Glue forces f06 writing now listed under "glue forces" and not "contact forces"
+   - RealSlideDistanceArray object used by contact_slide_distance
+     and glue_contact_slide_distance inherits from RealTableArray now;
  - fixed:
-   - CSTM doesn't print out when it's empty
+   - CSTM no longer print out when it's empty
+   - rms cpyram_stress/strain no longer cause crashes
 
 OP2Geom:
  - added:
@@ -47,13 +54,31 @@ OP2Geom:
    - NX acoustic: PAABSF, MATPOR-JCA
    - other: ACCEL, PAERO4, PBUSH2D-CROSS, CBUSH2D, BNDGRID, MATT11, BNDGRID
    - DRESP1-NX:
-     - PSDVELO, ERP now supported
+     - PSDVELO, ERP, FLUTTER now supported
+   - adding DOPTPRM-NX-196
  - changed:
  - fixed:
    - fixed SPLINE5-MSC ftype reading bug
    - fixed MONPNT2-NX parsing
    - TODO: fix EIGC kstep bug (is set to the BDF incorrectly and then writes followed by reading poorly) 
 
+F06:
+ - added:
+    - DSCMCOL f06 writing
+    - CDDATA (cambell diagrams) f06 writing
+    - contact_slide_distance/glue_contact_slide_distance f06 writing
+    - DESVAR f06 writing
+    - Convergence f06 writing
+ - changed:
+ - fixed:
+    - fixed bug in complex eigenvector f06 writing (left off mode id from table header)
+
+op2_writer:
+ - adding:
+    - DRESP1, DVCREL1, DVGRID
+    - contact_slide_distance/glue_contact_slide_distance
+ - fixed:
+   - fixed bug for RBAR where blank component values had issues
 
 nastran_to_vtk:
  - added:
@@ -313,7 +338,7 @@ OP2 Geom:
 
 OP2 writer:
  - SET1
- - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx, AEFORCE, AEPRESS,  DVPREL1, DVMREL1
+ - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx, AEFORCE, AEPRESS, DVPREL1, DVMREL1
  - vectorized op2 writing for most objects
  - support for downcasting of ids (op2 requires 32-bit ids)
  - fixed:

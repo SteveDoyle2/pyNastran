@@ -717,6 +717,8 @@ class TestOpt(unittest.TestCase):
         desvar_id = 11
         desvar_ids = 11
         coeffs = 1.0
+
+        mass = 2.0
         dvcrel1 = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
                                     cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
         dvcrel1.Type = 'CONM2'
@@ -734,9 +736,9 @@ class TestOpt(unittest.TestCase):
         nid1 = 100
         nid2 = 101
         unused_conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
-                                comment='conm2')
-        model.add_grid(100, [1., 2., 3.])
-        model.add_grid(101, [2., 2., 4.])
+                                       comment='conm2')
+        model.add_grid(nid1, [1., 2., 3.])
+        model.add_grid(nid2, [2., 2., 4.])
 
         eid = 101
         pid = 102
@@ -770,12 +772,14 @@ class TestOpt(unittest.TestCase):
         dxyz = [1., 2., 3.]
         dvgrid1 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                    comment='dvgrid')
+        model.add_desvar(dvid, 'X10000', 0.127, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='desvar10000')
 
         nid = 101
         dvid = 10001
         dxyz = np.array([1., 2., 3.])
         unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                           comment='dvgrid')
+        model.add_desvar(dvid, 'X10001', 0.127, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='desvar10001')
 
         model.pop_parse_errors()
 
@@ -830,7 +834,7 @@ class TestOpt(unittest.TestCase):
                          #comment='conm2')
         #model2.add_grid(100, [1., 2., 3.])
         #model2.add_grid(101, [2., 2., 4.])
-        #save_load_deck(model2)
+        save_load_deck(model, run_renumber=False, run_convert=False)
 
     def test_break_words(self):
         """tests break_word_by_trailing_integer"""
