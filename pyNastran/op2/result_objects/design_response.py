@@ -1,4 +1,5 @@
 import warnings
+from typing import TextIO
 import numpy as np
 from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_10e
 
@@ -828,6 +829,29 @@ class Desvars:
         msg += '  dunno = %s\n' % self.dunno
         return msg
 
+    def write_f06(self, f06_file: TextIO) -> None:
+        msg = (
+            '                                                  -----   DESIGN VARIABLES   -----\n'
+            '\n'
+            '     ---------------------------------------------------------------------------------------------------------\n'
+            '            INTERNAL       DESVAR                         LOWER                               UPPER   \n'
+            '               ID            ID          LABEL            BOUND             VALUE             BOUND   \n'
+            '     ---------------------------------------------------------------------------------------------------------\n'
+            #'                   1        300002      T101            5.0800E-03        5.0800E-03        2.0000E-02\n'
+        )
+        for internal, desvar, label, lower, upper, delxv, dunno in zip(self.internal_id, self.desvar_id, self.label, self.lower, self.upper, self.delxv, self.dunno):
+            msg += f'            {internal:8d}      {desvar:8d}  {label:8s}            {lower:10.8e}        {delxv:10.8e}        {upper:10.8e}\n'
+
+        f06_file.write(msg)
+        #'                                                       DESIGN VARIABLE HISTORY'
+        #' ----------------------------------------------------------------------------------------------------------------------------------'
+        #'  INTERNAL |   EXTERNAL   |             |                                                                                          '
+        #'   DV. ID. |    DV. ID.   |    LABEL    |   INITIAL    :      1       :      2       :      3       :      4       :      5       :'
+        #' ----------------------------------------------------------------------------------------------------------------------------------'
+        #'         1 |     300002   |  T101       |   5.0800E-03 :'
+        return msg
+
+
     def get_stats(self, short: bool=False):
         if short:
             return f'responses.desvars ({len(self.internal_id)})\n'
@@ -897,7 +921,90 @@ class Convergence:
         self.desvar_values[n, :] = desvar_values
         self._n += 1
 
-    def __repr__(self):
+    def write_f06(self, f06: TextIO) -> None:
+        niterations = len(self.design_iter)
+
+        conv_result = self.conv_result[-1]
+        if conv_result == 'hard':
+            conv_msg = '\n                                                      (HARD CONVERGENCE ACHIEVED)\n'
+        elif conv_result == 'best_design':
+            conv_msg = '\n                                                      (HARD CONVERGENCE ACHIEVED)\n'
+            #conv_msg += '* CONVERGENCE ACHEIVED: BEST FEASIBLE DESIGN\n'
+        #elif conv_result == 'soft':
+            #conv_msg += '                                                      (SOFT CONVERGENCE ACHIEVED)\n'
+        elif conv_result == 'no':
+            conv_msg = ''
+        else: # pragma: no cover
+            raise NotImplementedError(conv_result)
+
+        msg = (
+            '                                   ***************************************************************\n'
+            '                                   S U M M A R Y   O F   D E S I G N    C Y C L E    H I S T O R Y\n'
+            '                                   ***************************************************************\n'
+            f'{conv_msg}'
+            '\n'
+            '\n'
+            f'                                       NUMBER OF FINITE ELEMENT ANALYSES COMPLETED           {niterations}\n'
+            '                                       NUMBER OF OPTIMIZATIONS W.R.T. APPROXIMATE MODELS     ?\n'
+            '\n'
+            '\n'
+            '                                              OBJECTIVE AND MAXIMUM CONSTRAINT HISTORY\n'
+            '           ---------------------------------------------------------------------------------------------------------------\n'
+            '                              OBJECTIVE FROM           OBJECTIVE FROM          FRACTIONAL ERROR          MAXIMUM VALUE  \n'
+            '             CYCLE              APPROXIMATE                 EXACT                    OF                       OF\n'
+            '             NUMBER            OPTIMIZATION               ANALYSIS              APPROXIMATION             CONSTRAINT   \n'
+            '           ---------------------------------------------------------------------------------------------------------------\n'
+            '\n'
+            #'             INITIAL                                      4.690397E-01                                      9.000000E+00\n'
+            #'           ---------------------------------------------------------------------------------------------------------------\n'
+
+            #'                                                       DESIGN VARIABLE HISTORY\n'
+            #' ----------------------------------------------------------------------------------------------------------------------------------\n'
+            #'  INTERNAL |   EXTERNAL   |             |                                                                                          \n'
+            #'   DV. ID. |    DV. ID.   |    LABEL    |   INITIAL    :      1       :      2       :      3       :      4       :      5       :\n'
+            #' ----------------------------------------------------------------------------------------------------------------------------------\n'
+            #'         1 |     300002   |  T101       |   5.0800E-03 :'
+
+            #'                                                       CONVERGENCE HISTORY\n'
+            #' ----------------------------------------------------------------------------------------------------------------------------------\n'
+            #'  INTERNAL |   EXTERNAL   |             |                                                                                          \n'
+            #'   DV. ID. |    DV. ID.   |    LABEL    |   INITIAL    :      1       :      2       :      3       :      4       :      5       :\n'
+            #' ----------------------------------------------------------------------------------------------------------------------------------\n'
+            #'DESIGN_ITER  iconvergence  conv_result  obj_initial  obj_final  constraint_max  iconstraint_max  DESVAR_value\n'
+            #'===========  ============  ===========  ===========  =========  ==============  ===============  ============\n'
+            #'         1 |     300002   |  T101       |   5.0800E-03 :'
+
+        )
+        #iconvergence = HARD
+        #conv_result = NO
+        stop = False
+        for design_iter, iconvergence, conv_result, obj_initial, obj_final, constraint_max, iconstraint_max, desvar_values in zip(
+            self.design_iter, self.iconvergence, self.conv_result, self.obj_initial, self.obj_final,
+            self.constraint_max, self.row_constraint_max, self.desvar_values):
+            constraint_max_str = f'{constraint_max:13.6e}'
+            if '.' not in constraint_max_str:
+                constraint_max_str = '    N/A      '
+
+            if design_iter == 1:
+                design_iter_str = 'INITIAL'
+                obj_initial = ''
+                msg += f'             {design_iter_str:7s}         {obj_initial  :13s}                 {obj_final:13.6e}                                      {constraint_max_str}\n'
+            else:
+                design_iter_str = str(design_iter)
+                obj_initial = ''
+                msg += f'             {design_iter_str:7s}         {obj_initial  :13s}                 {obj_final:13.6e}                                      {constraint_max_str}\n'
+
+            #msg += f'{design_iter:8d} {iconvergence:8s} {conv_result:8d} {obj_initial:8e} {obj_final:8e} {constraint_max:8e} {iconstraint_max:8d} {desvar_value:8e} \n'
+        msg += '           ---------------------------------------------------------------------------------------------------------------\n'
+        if conv_result not in {'hard', 'no', 'best_design'}:  # pragma: no cover
+            stop = True
+        if stop:  # pragma: no cover
+            print(msg)
+            asdf
+        f06.write(msg)
+
+
+    def __repr__(self) -> str:
         msg = 'Convergence()\n'
         msg += '  design_iter = %s\n' % self.design_iter
         msg += '  icovergence = %s\n' % self.iconvergence
@@ -909,7 +1016,7 @@ class Convergence:
         msg += f'  desvar_values; shape=({self.n}, {self.ndesign_variables}):\n{self.desvar_values}'
         return msg
 
-    def get_stats(self, short: bool=False):
+    def get_stats(self, short: bool=False) -> str:
         if short:
             return 'responses.convergence_data (%s, %s)\n' % (self.n, self.ndesign_variables)
         return self.__repr__() + '\n'

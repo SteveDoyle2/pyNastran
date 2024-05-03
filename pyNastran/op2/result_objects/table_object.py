@@ -1832,7 +1832,7 @@ class ComplexTableArray(TableArray):
                         print('words =', words)
                         raise
 
-                if '%' in words[0]:
+                if '%' in words[1]:
                     try:
                         words[1] = words[1] % (itime + 1)
                     except TypeError:

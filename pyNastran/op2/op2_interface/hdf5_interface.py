@@ -28,7 +28,7 @@ from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
 
 from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
-from pyNastran.op2.tables.contact.slide_objects import RealGlueSlideDistanceArray
+from pyNastran.op2.tables.contact.slide_objects import RealSlideDistanceArray
 
 
 
@@ -1018,12 +1018,12 @@ TABLE_OBJ_MAP = {
 
     # ----------------------------------------------------------
     # contact
-    'contact_slide_distance': (RealGlueSlideDistanceArray, ),
+    'contact_slide_distance': (RealSlideDistanceArray, ),
     'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
 
     'contact_forces' : (RealContactForcesArray, ),
     'glue_forces' : (RealContactForcesArray, ),
-    'glue_contact_slide_distance': (RealGlueSlideDistanceArray, ),
+    'glue_contact_slide_distance': (RealSlideDistanceArray, ),
 
     # ----------------------------------------------------------
     'thermal_load.conv_thermal_load' : (RealConvHeatFluxArray,),

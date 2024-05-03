@@ -731,7 +731,7 @@ class TestSATKOP2(Tester):
 
 class TestNX(Tester):
     def test_nx_flutter(self):
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         op2_filename = os.path.join(MODEL_PATH, 'aero', 'flutter_bug', 'wing_b1.op2')
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,

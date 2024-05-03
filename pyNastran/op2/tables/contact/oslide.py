@@ -21,7 +21,7 @@ import numpy as np
 #from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
 from pyNastran.op2.tables.contact.slide_objects import (
-    RealGlueSlideDistanceArray, ) # ComplexDisplacementArray
+    RealSlideDistanceArray, ) # ComplexDisplacementArray
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -337,13 +337,12 @@ class OSLIDE:
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
 
-        #ndata = len(data)
         if op2.num_wide == 7:
             factor = op2.factor
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
             auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealGlueSlideDistanceArray, is_cid=False)
+                result_name, nnodes, storage_obj, RealSlideDistanceArray, is_cid=False)
             if auto_return:
                 return ndata
 

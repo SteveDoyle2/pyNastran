@@ -83,6 +83,7 @@ class Results:
         self.cstm = None
         self.trmbd = {}
         self.trmbu = {}
+        self.vg_vf_response = {}
         self.superelement_tables = {}
 
     def _get_sum_objects_map(self):

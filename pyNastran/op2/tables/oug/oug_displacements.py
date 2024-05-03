@@ -14,6 +14,7 @@ class RealDisplacementArray(RealTableArray):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        write_words = True
         if self.table_name in ['OUGV1', 'OUGV2', 'BOUGV1', 'OUPV1', 'OUGV1PAT', 'OUG1', 'OUG2']:
             pass
         elif  self.table_name in ['OUXY1', 'OUXY2']:
@@ -32,10 +33,15 @@ class RealDisplacementArray(RealTableArray):
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
         elif self.table_name in ['OCRUG']:
             words += ['                                                 ( OCRUG??? )']
-        else:
+        elif self.table_name in ['OBOLT1']:
+            words = [
+                '                                                         B O L T   R E S U L T S\n',
+                '        ELEMENT ID    AXIAL FORCE    SHEAR FORCE-1    SHEAR FORCE-2    BENDING MOMENT-1    BENDING MOMENT-2    AXIAL PRELOAD STRAIN\n'
+            ]
+            write_words = False
+        else:  # pragma: no cover
             raise NotImplementedError(f'table_name={self.table_name!r}')
         #words += self.get_table_marker()
-        write_words = True
         if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, write_words,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)

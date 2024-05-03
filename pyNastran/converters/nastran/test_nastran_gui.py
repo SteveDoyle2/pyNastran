@@ -1211,7 +1211,14 @@ class TestNastranGUI(unittest.TestCase):
 
         assert os.path.exists(vtu_filename), vtu_filename
 
-    def test_gui_elements_01_vtk1(self):
+    def _test_gui_vtk(self):  # pragma: no cover
+        dirname = r'pyNastran\pyNastran\converters\nastran\models'
+        bdf_filename = os.path.join(dirname, 'demo.bdf')
+        op2_filename = os.path.join(dirname, 'demo.op2')
+        vtu_filename = os.path.join(dirname, 'demo.vtu')
+        nastran_to_vtk(bdf_filename, op2_filename, vtu_filename, log_level='error')
+
+    def test_gui_vtk1_elements_01(self):
         """tests forces/pressure in SOL 101 using an op2 model object"""
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements0.vtu')
@@ -1220,7 +1227,7 @@ class TestNastranGUI(unittest.TestCase):
         nastran_to_vtk(model, model, vtu_filename, log_level='error')
         nastran_to_vtk(model, model, vtk_filename, log_level='error')
 
-    def test_gui_elements_01_vtk2(self):
+    def test_gui_vtk2_elements_01(self):
         """tests forces/pressure in SOL 101 using a Path object"""
         op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements9.vtu')

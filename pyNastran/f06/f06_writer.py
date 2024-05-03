@@ -16,6 +16,8 @@ from typing import Union, Optional, cast, TextIO, TYPE_CHECKING
 import numpy as np
 
 import pyNastran
+from pyNastran.utils import object_attributes
+
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -459,14 +461,24 @@ class F06Writer(OP2_F06_Common):
     def write_matrices(self, f06, matrix_filename: str, page_stamp: str,
                        page_num: int, quiet: bool=True):
         """writes the f06 matrices"""
-        names = ['mklist']
         results = self.op2_results
-        #from pyNastran.utils import object_attributes
         #print(object_attributes(results))
-        for key in names: # object_attributes(results):
-            if not hasattr(results, key):
-                continue
+        #names = ['mklist']
+        #for key in names: # object_attributes(results):
+            #if not hasattr(results, key):
+                #continue
+        for key in object_attributes(results):
             resi = getattr(results, key)
+            if key == 'cddata':
+                f06.write(f'{key}:\n')
+                msg = ''
+                for isub, resii in enumerate(resi):
+                    for ii, resiii in resii.items():
+                        msg += f'{isub},{ii}: {resiii.tolist()}\n'
+                f06.write(msg)
+                print(msg)
+                continue
+
             if resi is None or isinstance(resi, dict) and len(resi) == 0:
                 continue
             if isinstance(resi, list):
@@ -476,7 +488,8 @@ class F06Writer(OP2_F06_Common):
                         np.savetxt(f06, resii)
                     else:
                         raise RuntimeError(resii)
-                    print('----')
+                    #print('----')
+                #print('--------')
                     #f06.write(str(resii) + '\n')
             #print(key, type(resi))
 
@@ -817,13 +830,12 @@ def _get_file_obj(self: F06Writer,
 def _write_responses1(op2: OP2, f06: TextIO,
                       page_stamp: str, page_num: int):
     op2_results = op2.op2_results
-    if hasattr(op2_results, 'vg_vf_response'):
-        for subcase, res in op2_results.vg_vf_response.items():
-            page_num = res.export_to_f06_file(
-                f06,
-                #modes: Optional[list[int]]=None,
-                page_stamp=page_stamp,
-                page_num=page_num)
+    for subcase, res in op2_results.vg_vf_response.items():
+        page_num = res.export_to_f06_file(
+            f06,
+            #modes: Optional[list[int]]=None,
+            page_stamp=page_stamp,
+            page_num=page_num)
     return page_num
 
 def _write_responses2(op2: OP2, f06: TextIO,
@@ -835,9 +847,10 @@ def _write_responses2(op2: OP2, f06: TextIO,
     dscmcol = op2_results.responses.dscmcol
 
     if desvars is not None:
-        asdf
+        desvars.write_f06(f06)
+
     if convergence_data is not None:
-        asdf
+        convergence_data.write_f06(f06)
 
     if dscmcol is not None:
         msg = dscmcol.get_responses_by_group()

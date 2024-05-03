@@ -1924,6 +1924,16 @@ class OP2Reader:
             #self.show(200)
 
         elif method == 2:
+            dict_map = {
+                1: 'RPM',
+                2: 'eigenfreq',
+                3: 'Lehr',
+                4: 'real eig',
+                5: 'imag eig',
+                6: 'whirl_dir',
+                7: 'converted_freq',
+                8: 'whirl_code',
+            }
             while 1:
                 self.read_3_markers([marker, 1, 0])
                 nfields = self.get_marker1(rewind=True)
@@ -1954,16 +1964,6 @@ class OP2Reader:
                 # 4 VALS(NVAL) RS list of values
                 # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
-                #dict_map = {
-                    #1: 'RPM',
-                    #2: 'eigenfreq',
-                    #3: 'Lehr',
-                    #4: 'real eig',
-                    #5: 'imag eig',
-                    #6: 'whirl_dir',
-                    #7: 'converted_freq',
-                    #8: 'whirl_code',
-                #}
                 i = 0
                 data_out = {}
                 while i < nints:
@@ -1977,23 +1977,13 @@ class OP2Reader:
                     values = floats[i+3:i+3+nvalues]
                     if datatype in [6, 8]:
                         values = values.astype('int32')
-                    #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {dict_map[datatype]:14s} {values}')
-                    data_out[datatype] = values
+                    datatype_str = dict_map[datatype]
+                    #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {datatype_str:14s} {values}')
+                    data_out[datatype_str] = values
                     i += 3 + nvalues
                 marker -= 1
                 cddata_list.append(data_out)
                 #import matplotlib.pyplot as plt
-
-                #dict_map = {
-                    #1: 'RPM',
-                    #2: 'eigenfreq',
-                    #3: 'Lehr',
-                    #4: 'real eig',
-                    #5: 'imag eig',
-                    #6: 'whirl_dir',
-                    #7: 'converted_freq',
-                    #8: 'whirl_code',
-                #}
 
                 #plt.figure(2)
                 #plt.plot(data_out[1], data_out[2]) # RPM vs. eigenfreq
@@ -4307,32 +4297,6 @@ def read_ovg(op2_reader: OP2Reader) -> None:
     resp = FlutterResponse.from_nx(method, fdata2,
                                    subcase_id=subcase_id, cref=cref,
                                    is_xysym=is_xysym, is_xzsym=is_xzsym)
-    if not hasattr(op2.op2_results, 'vg_vf_response'):
-        op2.op2_results.vg_vf_response = {}
+
     op2.op2_results.vg_vf_response[subcase_id] = resp
-        #subcase, configuration, xysym, xzsym, mach, density_ratio, method, modes, results,
-        #f06_units=None)
-
-    # FLFACTs:
-    # density:  101 [1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227 1.227]
-    # mach:     102 [0.118 0.124 0.129 0.135 0.141 0.147 0.153 0.159 0.165 0.171 0.176]
-    # velocity: 103 [40. 42. 44. 46. 48. 50. 52. 54. 56. 58. 60.]
-
-    #EIGRL          1                      20               0      0.    MASS
-    #AEROS          0       0     .23    2.15      .5       1
-    #AERO           0     50.     .23      1.       1
-    #FLUTTER        1    PKNL     101     102     103       L       0    .001
-    #$ density
-    #FLFACT       1011.2269911.2269911.2269911.2269911.2269911.2269911.226991
-    #    1.2269911.2269911.2269911.226991
-    #$ mach
-    #FLFACT       102.1176407.1235227.1294047.1352868.1411688.1470508.1529329
-    #    .1588149.1646969 .170579 .176461
-    #$ velocity
-    #FLFACT       103     40.     42.     44.     46.     48.     50.     52.
-    #    54.     56.     58.     60.
-    #MKAERO1       .1
-    #    .001     .01     .05      .1     .25      .5      1.      5.
-
-    #(40.0, 0.0, -0.2185760885477066, 3.1334753036499023)
     return
