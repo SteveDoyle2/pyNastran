@@ -216,7 +216,7 @@ class TABLED1(Table):
 
     def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
-                 extrap=None, comment: str=''):
+                 extrap: int=0, comment: str=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -270,7 +270,7 @@ class TABLED1(Table):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
-        extrap = integer_or_blank(card, 4, 'extrap')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
 
         x, y = read_table(card, table_id, 'TABLED1')
         return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
@@ -289,24 +289,21 @@ class TABLED1(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
-        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
-        extrap = integer_or_blank(card, 4, 'yaxis', 0)
+        xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
+        extrap = integer_or_blank(card, 4, 'yaxis', default=0)
 
         x, y = read_table_lax(card, table_id, 'TABLED1')
         return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
-        table_id = data[0]
-        xaxis = _map_axis(data[1])
-        yaxis = _map_axis(data[2])
-        xy = data[3:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        table_id, extrap, xcode, ycode, xs, ys = data
+        xaxis = _map_axis(xcode)
+        yaxis = _map_axis(ycode)
+        x = np.array(xs, dtype='float64')
+        y = np.array(ys, dtype='float64')
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -614,12 +611,10 @@ class TABLED3(Table):
         table_id = data[0]
         x1 = data[1]
         x2 = data[2]
-        xy = data[3:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        return TABLED3(table_id, x1, x2, x, y, comment=comment)
+        extrap = data[3]
+        x = np.array(data[4], dtype='float64')
+        y = np.array(data[5], dtype='float64')
+        return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -710,12 +705,7 @@ class TABLED4(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        table_id = data[0]
-        x1 = data[1]
-        x2 = data[2]
-        x3 = data[3]
-        x4 = data[4]
-        a = data[5:]
+        table_id, x1, x2, x3, x4, a = data
         return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     def raw_fields(self):
@@ -971,7 +961,32 @@ class TABLEM1(Table):
         return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
 
     def __init__(self, tid: int, x, y, xaxis: str='LINEAR', yaxis: str='LINEAR',
-                 extrap=None, comment: str=''):
+                 extrap: int=0, comment: str=''):
+        """
+        Creates a TABLEM1, which is a dynamic load card that is applied
+        by the DAREA card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        x : list[float]
+            nvalues
+        y : list[float]
+            nvalues
+        xaxis : str
+            LINEAR, LOG
+        yaxis : str
+            LINEAR, LOG
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
+        comment : str; default=''
+            a comment for the card
+
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -983,7 +998,7 @@ class TABLEM1(Table):
         self.extrap = extrap
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TABLEM1 card from ``BDF.add_card(...)``
 
@@ -998,12 +1013,12 @@ class TABLEM1(Table):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
-        extrap = integer_or_blank(card, 4, 'extrap')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
         x, y = read_table(card, table_id, 'TABLEM1')
         return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
         """
         Adds a TABLEM1 card from ``BDF.add_card(...)``
 
@@ -1018,19 +1033,18 @@ class TABLEM1(Table):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
-        extrap = integer_or_blank(card, 4, 'extrap')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
         x, y = read_table_lax(card, table_id, 'TABLEM1')
         return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        table_id = data[0]
-        xy = data[1:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        return TABLEM1(table_id, x, y, comment=comment)
+        table_id, extrap, xcode, ycode, x, y = data
+        xaxis = _map_axis(xcode)
+        yaxis = _map_axis(ycode)
+        x = np.array(x, dtype='float64')
+        y = np.array(y, dtype='float64')
+        return TABLEM1(table_id, x, y, extrap=extrap, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1043,10 +1057,11 @@ class TABLEM1(Table):
     def repr_fields(self):
         xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
         yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
+        extrap = set_blank_if_default(self.extrap, 0)
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM1', self.tid, xaxis, yaxis, self.extrap, None,
+        list_fields = ['TABLEM1', self.tid, xaxis, yaxis, extrap, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
@@ -1246,12 +1261,10 @@ class TABLEM3(Table):
         table_id = data[0]
         x1 = data[1]
         x2 = data[2]
-        xy = data[3:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        return TABLEM3(table_id, x1, x2, x, y, comment=comment)
+        extrap = data[3]
+        x = np.array(data[4], dtype='float64')
+        y = np.array(data[5], dtype='float64')
+        return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1356,12 +1369,7 @@ class TABLEM4(Table):
             a comment for the card
 
         """
-        table_id = data[0]
-        x1 = data[1]
-        x2 = data[2]
-        x3 = data[3]
-        x4 = data[4]
-        a = data[3:]
+        table_id, x1, x2, x3, x4, a = data
         return TABLEM4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     def raw_fields(self):
@@ -1504,27 +1512,30 @@ class TABLES1(Table):
 
 class TABLEST(Table):
     """
-    +---------+-------+-------+-------+--------+------+------+------+------+
-    |    1    |   2   |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
-    +=========+=======+=======+=======+========+=====+=======+======+======+
-    | TABLEST |  TID  |       |       |        |      |      |      |      |
-    +---------+-------+-------+-------+--------+------+------+------+------+
-    |         |   x1  |  y1   |   x2  |   y2   |  x3  |  y3  | etc. | ENDT |
-    +---------+-------+-------+-------+--------+------+------+------+------+
-    | TABLEST |   32  |       |       |        |      |      |      |      |
-    +---------+-------+-------+-------+--------+------+------+------+------+
-    |         | 150.0 |  10.0 | 175.0 |  20.   | ENDT |      |      |      |
-    +---------+-------+-------+-------+--------+------+------+------+------+
+    +---------+-------+--------+-------+--------+------+------+------+------+
+    |    1    |   2   |    3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+=======+========+=======+========+=====+=======+======+======+
+    | TABLEST |  TID  | EXTRAP |       |        |      |      |      |      |
+    +---------+-------+--------+-------+--------+------+------+------+------+
+    |         |   x1  |   y1   |   x2  |   y2   |  x3  |  y3  | etc. | ENDT |
+    +---------+-------+--------+-------+--------+------+------+------+------+
+    | TABLEST |   32  |        |       |        |      |      |      |      |
+    +---------+-------+--------+-------+--------+------+------+------+------+
+    |         | 150.0 |  10    | 175.0 |   20   | ENDT |      |      |      |
+    +---------+-------+--------+-------+--------+------+------+------+------+
+
+    Extrap is an NX specific flag
     """
     type = 'TABLEST'
 
-    def __init__(self, tid, x, y, comment=''):
+    def __init__(self, tid: int, x, y, extrap: int=0, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
-        self.y = np.asarray(y, dtype='float64')  # TODO: shouldn't this be integers
+        self.y = np.asarray(y, dtype='int64')
+        self.extrap = extrap
         self.yref = []
 
     @classmethod
@@ -1541,8 +1552,9 @@ class TABLEST(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        x, y = read_table(card, table_id, 'TABLEST')
-        return TABLEST(table_id, x, y, comment=comment)
+        x, y = read_tablest(card, table_id, 'TABLEST')
+        extrap = integer_or_blank(card, 2, 'extrap', default=0)
+        return TABLEST(table_id, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card, comment=''):
@@ -1558,11 +1570,12 @@ class TABLEST(Table):
 
         """
         table_id = integer(card, 1, 'tid')
+        extrap = integer_or_blank(card, 2, 'extrap', default=0)
         x, y = read_table_lax(card, table_id, 'TABLEST')
-        return TABLEST(table_id, x, y, comment=comment)
+        return TABLEST(table_id, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABLEST card from the OP2
 
@@ -1575,12 +1588,10 @@ class TABLEST(Table):
 
         """
         table_id = data[0]
-        xy = data[1:]
-        xy = np.array(xy, dtype='float64')  # TODO: shouldn't this be integers
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        return TABLEST(table_id, x, y, comment=comment)
+        extrap = data[1]
+        x = np.array(data[2], dtype='float64')
+        y = np.array(data[3], dtype='int64')
+        return TABLEST(table_id, x, y, extrap=extrap, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         self.yref = []
@@ -1592,7 +1603,8 @@ class TABLEST(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEST', self.tid, None, None, None, None,
+        extrap = None if self.extrap == 0 else self.extrap
+        list_fields = ['TABLEST', self.tid, extrap, None, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
@@ -1692,12 +1704,14 @@ class TABLEH1(Table):
             a comment for the card
 
         """
-        table_id = data[0]
-        xy = data[1:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
+        table_id, extrap, xcode, ycode, xs, ys = data
+        assert extrap == 0, extrap
+        assert xcode == 0, xcode
+        assert ycode == 0, ycode
+        #xaxis = _map_axis(xcode)
+        #yaxis = _map_axis(ycode)
+        x = np.array(xs, dtype='float64')
+        y = np.array(ys, dtype='float64')
         return TABLEH1(table_id, x, y, comment=comment)
 
     def raw_fields(self):
@@ -2009,7 +2023,7 @@ def _map_axis(axis):
     elif axis == 1:
         axis_type = 'LOG'
     else: # pragma: no cover
-        raise ValueError('axis=%r' % axis)
+        raise ValueError(f'axis={axis!r}')
     return axis_type
 
 def read_table(card: BDFCard, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
@@ -2048,6 +2062,27 @@ def read_table_lax(card: BDFCard, table_id: int,
             break
         xi = force_double_or_string(card, n, 'x' + str(i + 1))
         yi = force_double_or_string(card, n + 1, 'y' + str(i + 1))
+        if xi == 'SKIP' or yi == 'SKIP':
+            continue
+        xy.append([xi, yi])
+    string(card, nfields, 'ENDT')
+    x, y = make_xy(table_id, table_type, xy)
+    return x, y
+
+def read_tablest(card: BDFCard, table_id: int, table_type: str) -> tuple[np.ndarray, np.ndarray]:
+    """common method for reading tables that handles SKIP"""
+    nfields = len(card) - 1
+    nterms = (nfields - 9) // 2
+    if nterms < 0:
+        raise SyntaxError('%r card is too short' % table_type)
+
+    xy = []
+    for i in range(nterms):
+        n = 9 + i * 2
+        if card.field(n) == 'ENDT' or card.field(n+1) == 'ENDT':
+            break
+        xi = double_or_string(card, n, 'x' + str(i + 1))
+        yi = integer_or_string(card, n + 1, 'y' + str(i + 1))
         if xi == 'SKIP' or yi == 'SKIP':
             continue
         xy.append([xi, yi])

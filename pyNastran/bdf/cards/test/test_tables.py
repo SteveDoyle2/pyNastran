@@ -25,6 +25,25 @@ class TestTables(unittest.TestCase):
         str(table)
         save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
 
+    def test_tables1(self):
+        model = BDF(debug=False)
+        tid = 101
+        #1 : von Karman
+        #2 : Dryden
+        Type = 1
+        LU = 2.17
+        WG = 3.14
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        table = model.add_tables1(tid, x, y, Type=1, comment='tables1')
+        str(table)
+        tid = 110
+        y = [10, 20, 30]
+        table = model.add_tablest(tid, x, y, comment='tablest')
+        str(table)
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False, run_save_load_hdf5=False)
+
+
     def test_tabdmp1_01(self):
         model = BDF(debug=False)
         lines = ['TABDMP1,100,,,,,,,,+',
@@ -126,6 +145,14 @@ class TestTables(unittest.TestCase):
         assert np.allclose(interp, [-5.875]), interp
         interp = table.interpolate([0., 5.])
 
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        x1 = 2.0
+        model.add_tabled2(101, x1, x, y, extrap=0, comment='')
+        x1 = 3.0
+        model.add_tabled2(102, x1, x, y, extrap=1, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
     def test_tabled3(self):
         model = BDF(debug=False)
         lines = [
@@ -141,6 +168,16 @@ class TestTables(unittest.TestCase):
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
         #assert np.allclose(interp, [5.5]), interp
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        x1 = 2.0
+        x2 = 3.0
+        model.add_tabled3(101, x1, x2, x, y, extrap=0, comment='')
+        x1 = 12.0
+        x2 = 13.0
+        model.add_tabled3(102, x1, x2, x, y, extrap=1, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
 
     def test_tabled4(self):
         model = BDF(debug=False)
@@ -170,6 +207,21 @@ class TestTables(unittest.TestCase):
         #card = model._process_card(lines)
         #card = BDFCard(card)
         #card2 = TABLEHT.add_card(card)
+        x1 = 2.0
+        x2 = 3.0
+        x3 = 4.0
+        x4 = 5.0
+        a = [4., 5., 6.]
+        model.add_tabled4(101, x1, x2, x3, x4, a, comment='tabled4')
+
+        x1 = 12.0
+        x2 = 13.0
+        x3 = 14.0
+        x4 = 15.0
+        a = [40., 50., 60.]
+        model.add_tabled4(102, x1, x2, x3, x4, a, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
 
     def test_tableh1(self):
         model = BDF(debug=False)
@@ -186,6 +238,11 @@ class TestTables(unittest.TestCase):
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+
+        x = [1., 2., 3.]
+        y = [4., 5., 6.]
+        model.add_tableh1(101, x, y, comment='tableh1')
+        model.add_tableht(102, x, y, comment='tableht')
         save_load_deck(model)
 
     def test_tablem1(self):
@@ -226,6 +283,15 @@ class TestTables(unittest.TestCase):
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        x1 = 2.0
+        model.add_tablem2(101, x1, x, y, extrap=0, comment='')
+        x1 = 3.0
+        model.add_tablem2(102, x1, x, y, extrap=1, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
         save_load_deck(model)
 
         #interp = table.interpolate(0.)
@@ -247,6 +313,17 @@ class TestTables(unittest.TestCase):
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        x1 = 2.0
+        x2 = 3.0
+        model.add_tabled3(101, x1, x2, x, y, extrap=0, comment='')
+        x1 = 12.0
+        x2 = 13.0
+        model.add_tabled3(102, x1, x2, x, y, extrap=1, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
         save_load_deck(model)
 
         #interp = table.interpolate(0.)
@@ -268,6 +345,24 @@ class TestTables(unittest.TestCase):
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+
+        x1 = 2.0
+        x2 = 3.0
+        x3 = 4.0
+        x4 = 5.0
+        a = [4., 5., 6.]
+        model.add_tablem4(101, x1, x2, x3, x4, a, comment='tabled4')
+
+        x1 = 12.0
+        x2 = 13.0
+        x3 = 14.0
+        x4 = 15.0
+        a = [40., 50., 60.]
+        model.add_tablem4(102, x1, x2, x3, x4, a, comment='')
+
         save_load_deck(model)
 
         #interp = table.interpolate(0.)

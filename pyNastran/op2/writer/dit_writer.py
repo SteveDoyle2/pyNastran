@@ -1,19 +1,19 @@
 """writes the MPT/MPTS table"""
 from __future__ import annotations
-from copy import deepcopy
+#from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
-import numpy as np
+#import numpy as np
 
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
 from .edt_writer import remove_unsupported_cards
 
-from pyNastran.utils.numpy_utils import integer_types
+#from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
-    from cpylog import SimpleLogger
+    #from cpylog import SimpleLogger
     #from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, PAERO1, PAERO2, AESURF, AESURFS
     #from pyNastran.bdf.cards.aero.static_loads import AEROS, AESTAT # , CSSCHD, DIVERG, TRIM, TRIM2
     from pyNastran.bdf.cards.aero.dynamic_loads import GUST
@@ -27,9 +27,12 @@ def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     card_types = [
         'GUST',
         'TABDMP1',
-        'TABLED1',
-        'TABLEM1',
+        'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+        'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
         'TABRNDG',
+        'TABLES1', 'TABLEST',
+        'TABLEH1',
+        #'TABLEHT',
     ]
 
     cards_to_skip = [
@@ -102,7 +105,8 @@ def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
 
 def write_tabdmp1(model: Union[BDF, OP2Geom], name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     TABDMP1(15, 21, 162)
 
@@ -139,7 +143,8 @@ def write_tabdmp1(model: Union[BDF, OP2Geom], name: str,
 
 def write_tabrndg(model: Union[BDF, OP2Geom], name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     TABRNDG(56, 26, 303)
     Power spectral density for gust loads in aeroelastic analysis.
@@ -181,7 +186,8 @@ def write_tabrndg(model: Union[BDF, OP2Geom], name: str,
 
 def write_tabled1(model: Union[BDF, OP2Geom], name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     nbytes = _write_table1(
         model, name, table_ids, ncards,
         model.tables_d, 'TABLED1',
@@ -189,9 +195,11 @@ def write_tabled1(model: Union[BDF, OP2Geom], name: str,
         op2_file, op2_ascii, endian,
         nastran_format=nastran_format)
     return nbytes
+
 def write_tablem1(model: Union[BDF, OP2Geom], name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     nbytes = _write_table1(
         model, name, table_ids, ncards,
         model.tables_m, 'TABLEM1',
@@ -200,11 +208,84 @@ def write_tablem1(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
+def write_tabled2(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table2(
+        model, name, table_ids, ncards,
+        model.tables_d, 'TABLED2',
+        (1205, 12, 134),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def write_tablem2(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table2(
+        model, name, table_ids, ncards,
+        model.tables_m, 'TABLEM2',
+        (205, 2, 94),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def write_tabled3(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table3(
+        model, name, table_ids, ncards,
+        model.tables_d, 'TABLED3',
+        (1305, 13, 140),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def write_tablem3(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table3(
+        model, name, table_ids, ncards,
+        model.tables_m, 'TABLEM3',
+        (305, 3, 95),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def write_tabled4(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table4(
+        model, name, table_ids, ncards,
+        model.tables_d, 'TABLED4',
+        (1405, 14, 141),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def write_tablem4(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    nbytes = _write_table4(
+        model, name, table_ids, ncards,
+        model.tables_m, 'TABLEM4',
+        (405, 4, 96),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
 def _write_table1(model: Union[BDF, OP2Geom], name: str,
                   table_ids: list[int], ncards: int,
                   table_dict: dict[int, Any], table_name: str,
                   key: tuple[int, int, int],
-                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     TABLED1(1105,11,133)
 
@@ -245,8 +326,7 @@ def _write_table1(model: Union[BDF, OP2Geom], name: str,
                 raise ValueError('axis=%r' % axis_type)
             data.append(axis)
 
-        extrap = 0 if table.extrap is None else table.extrap
-        data += [extrap, locut, hicut, 0, 0] + xys + [-1, -1]
+        data += [table.extrap, locut, hicut, 0, 0] + xys + [-1, -1]
         assert None not in data, data
         #print(data)
         datas.extend(data)
@@ -259,9 +339,280 @@ def _write_table1(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
+def _write_table2(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  table_dict: dict[int, Any], table_name: str,
+                  key: tuple[int, int, int],
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """
+    1 ID       I  Table identification number
+    2 X1      RS X-axis shift
+    3 EXTRAP   I  Extrapolation on/off flag
+    4 UNDEF    I  None
+    9  X RS    X  value
+    10 Y RS    Y  value
+    Words 9 through 10 repeat until (-1,-1) occurs
+    """
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    #locut = 0.
+    #hicut = 0.
+    for table_id in table_ids:
+        table = table_dict[table_id]
+        nx = len(table.x)
+        fmt += b'if 2i ' + b'2f' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        data = [table_id, table.x1, table.extrap, 0] + xys + [-1, -1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  {table_name} data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def _write_table3(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  table_dict: dict[int, Any], table_name: str,
+                  key: tuple[int, int, int],
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """
+    Record – TABLEM3(305,3,95)
+
+    Word Name Type Description
+    1 ID      I Table identification number
+    2 X1     RS X-axis shift
+    3 X2     RS X-axis normalization
+    4 EXTRAP  I Extrapolation on/off flag
+    5 UNDEF(4)  None
+    9  X     RS X value
+    10 Y     RS Y value
+    Words 9 through 10 repeat until (-1,-1) occurs
+    """
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    #locut = 0.
+    #hicut = 0.
+    for table_id in table_ids:
+        table = table_dict[table_id]
+        nx = len(table.x)
+        fmt += b'i2fi 4i ' + b'2f' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        data = [table_id, table.x1, table.x2, table.extrap, 0, 0, 0, 0] + xys + [-1, -1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  {table_name} data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def _write_table4(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  table_dict: dict[int, Any], table_name: str,
+                  key: tuple[int, int, int],
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """
+    TABLED4(1405,14,141)
+
+    Word Name Type Description
+    1 ID        I Table identification number
+    2 X1       RS X-axis shift
+    3 X2       RS X-axis normalization
+    4 X3       RS X value when x is less than X3
+    5 X4       RS X value when x is greater than X4
+    6 UNDEF(3)    None
+    9 A        RS
+    10 MINUS1   I End of record flag
+    """
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    #locut = 0.
+    #hicut = 0.
+    for table_id in table_ids:
+        table = table_dict[table_id]
+        na = len(table.a)
+        fmt += b'i 4f 3i ' + b'f' * na + b' i'
+
+        data = [table_id, table.x1, table.x2, table.x3, table.x4, 0, 0, 0] + table.a.tolist() + [-1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  {table_name} data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tables1(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """
+    TABLES1(3105, 31, 97)
+    Word Name Type Description
+    1 ID   I   Table identification number
+    2 UNDEF(7) None
+    9  X  RS X value
+    10 Y  RS Y value
+    Words 9 through 10 repeat until (-1,-1) occurs
+
+    TYPE is unique to MSC and is not documented...
+    """
+    key = (3105, 31, 97)
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    #locut = 0.
+    #hicut = 0.
+    for table_id in table_ids:
+        table = model.tables[table_id]
+        assert table.Type == 1, table.get_stats()
+        nx = len(table.x)
+        fmt += b'8i ' + b'2f' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        data = [table_id, 0, 0, 0, 0, 0, 0, 0] + xys + [-1, -1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  TABLES1 data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tablest(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """
+    Record – TABLEST(1905,19,178)
+    Word Name Type Description
+    1 ID        I Table identification number
+    2 EXTRAP    I Extrapolation on/off flag
+    3 UNDEF(6)    None
+    9 TI       RS Temperature
+    10 TIDI     I TABLES1 Bulk Data entry identification number
+    Words 9 through 10 repeat until (-1,-1) occurs
+
+    EXTRAP is unique to NX
+    """
+    key = (1905, 19, 178)
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    for table_id in table_ids:
+        table = model.tables[table_id]
+        nx = len(table.x)
+        fmt += b'8i ' + b'fi' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        extrap = table.extrap
+        data = [table_id, extrap, 0, 0, 0, 0, 0, 0] + xys + [-1, -1]
+        #print(data)
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  TABLEST data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tableh1(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
+    """MSC-specific card"""
+    key = (14605, 146, 617)
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    #locut = 0.
+    #hicut = 0.
+    for table_id in table_ids:
+        table = model.tables[table_id]
+        nx = len(table.x)
+        fmt += b'8i ' + b'2f' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        data = [table_id, 0, 0, 0, 0, 0, 0, 0] + xys + [-1, -1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  TABLEH1 data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tableht(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:  # pragma: no cover
+    """(14705, 147, 618)"""
+    nbytes = _write_tablet_sh(
+        model, name, table_ids, ncards,
+        model.tables, 'TABLEHT',
+        (14705, 147, 618),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
 def write_gust(model: Union[BDF, OP2Geom], name: str,
                gust_ids: list[GUST], ncards: int,
-               op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+               op2_file, op2_ascii, endian: bytes,
+               nastran_format: str='nx') -> int:
     """
     GUST(1005,10,174) - the marker for Record 1
     """
@@ -285,7 +636,20 @@ def write_gust(model: Union[BDF, OP2Geom], name: str,
 DIT_MAP = {
     'TABDMP1': write_tabdmp1,
     'TABLED1': write_tabled1,
+    'TABLED2': write_tabled2,
+    'TABLED3': write_tabled3,
+    'TABLED4': write_tabled4,
+
     'TABLEM1': write_tablem1,
+    'TABLEM2': write_tablem2,
+    'TABLEM3': write_tablem3,
+    'TABLEM4': write_tablem4,
+
     'TABRNDG': write_tabrndg,
+    'TABLES1': write_tables1,
+    'TABLEST': write_tablest,
+
+    'TABLEH1': write_tableh1,
+    #'TABLEHT': write_tableht,
     'GUST': write_gust,
 }

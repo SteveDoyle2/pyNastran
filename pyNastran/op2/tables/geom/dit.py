@@ -10,7 +10,7 @@ import numpy as np
 from pyNastran.bdf.cards.aero.dynamic_loads import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABRND1, TABDMP1, TABLES1,
+                                            TABRND1, TABDMP1, TABLES1, TABLEST,
                                             TABLEH1, TABLEHT)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
@@ -62,7 +62,7 @@ class DIT:
             (14605, 146, 617) : ['TABLEH1', self.read_tableh1],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
-            (1905, 19, 178) : ['TABLEST', self.read_fake],
+            (1905, 19, 178) : ['TABLEST', self.read_tablest],
 
             (505, 5, 644) : ['TABLEM5', self.read_fake],
             (1605, 16, 117) : ['TABLED6', self.read_fake],
@@ -159,6 +159,61 @@ class DIT:
                               add_codes=False)
         return n
 
+    def read_tablest(self, data: bytes, n: int) -> int:
+        """
+        Record – TABLEST(1905,19,178)
+        Word Name Type Description
+        1 ID        I Table identification number
+        2 EXTRAP    I Extrapolation on/off flag
+        3 UNDEF(6)    None
+        9 TI       RS Temperature
+        10 TIDI     I TABLES1 Bulk Data entry identification number
+        Words 9 through 10 repeat until (-1,-1) occurs
+        """
+        op2: OP2Geom = self.op2
+        nentries = 0
+        ndata = len(data)
+        size = self.size
+        struct_8i2f = Struct(mapfmt('8ifi', size))
+        struct_fi = Struct(mapfmt('fi', size))
+        struct_2i = op2.struct_2i
+        ntotal1 = 10 * size
+        ntotal2 = 2 * size
+
+        while ndata - n >= ntotal1:
+            edata = data[n:n + ntotal1]
+            out = struct_8i2f.unpack(edata)
+            (tid, code_x, code_y, extrap, unused_b, unused_c, unused_d, unused_e,
+             x, y) = out
+            assert (unused_b, unused_c, unused_d, unused_e) == (0, 0, 0, 0), (unused_b, unused_c, unused_d, unused_e)
+            if tid > 100000000:
+                tid = -(tid - 100000000)
+
+            n += ntotal1
+            xs = [x]
+            ys = [y]
+            data_in = [tid, extrap, xs, ys]
+            while 1:
+                (xint, yint) = struct_2i.unpack(data[n:n + ntotal2])
+                (x, y) = struct_fi.unpack(data[n:n + ntotal2])
+
+                n += ntotal2
+                if [xint, yint] == [-1, -1]:
+                    break
+                else:
+                    xs.append(x)
+                    ys.append(y)
+
+            #print('data_in =', data_in)
+            table = TABLEST.add_op2_data(data_in)
+            #if tid in self.tables:
+                #assert table == slot[tid]
+            #else:
+            op2._add_methods._add_table_object(table)
+            nentries += 1
+        op2.increase_card_count('TABLEST', nentries)
+        return n
+
     def read_gust(self, data: bytes, n: int) -> int:
         """
         GUST(1005,10,174) - the marker for Record 1
@@ -217,12 +272,17 @@ class DIT:
             out = struct_8i2f.unpack(edata)
             (tid, code_x, code_y, extrap, unused_b, unused_c, unused_d, unused_e,
              x, y) = out
+            assert (unused_b, unused_c, unused_d, unused_e) == (0, 0, 0, 0), (unused_b, unused_c, unused_d, unused_e)
             if tid > 100000000:
                 tid = -(tid - 100000000)
+
+            xs = []
+            ys = []
             if add_codes:
-                data_in = [tid, code_x, code_y, x, y]
+                data_in = [tid, extrap, code_x, code_y, xs, ys]
             else:
-                data_in = [tid, x, y]
+                assert extrap == 0, extrap
+                data_in = [tid, xs, ys]
 
             n += ntotal1
             while 1:
@@ -233,7 +293,8 @@ class DIT:
                 if [xint, yint] == [-1, -1]:
                     break
                 else:
-                    data_in += [x, y]
+                    xs.append(x)
+                    ys.append(y)
 
             #print('data_in =', data_in)
             table = cls.add_op2_data(data_in)
@@ -311,7 +372,7 @@ class DIT:
 
     def read_tabled4(self, data: bytes, n: int) -> int:
         """
-        TABLED4 - the marker for Record 7
+        TABLED4(1405, 14, 141) - the marker for Record 7
         """
         op2: OP2Geom = self.op2
         n = self._read_table4(TABLED4, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED4')
@@ -399,10 +460,13 @@ class DIT:
         while ndata - n >= ntotal1:
             edata = data[n:n + ntotal1]
             out = struct1.unpack(edata)
-            (tid, x1, x2, unused_a, unused_b, unused_c, unused_d, unused_e,
+            (tid, x1, x2, extrap, unused_a, unused_b, unused_c, unused_d,
              x, y) = out
-            data_in = [tid, x1, x2, x, y]
+            assert (unused_a, unused_b, unused_c, unused_d) == (0, 0, 0, 0), (unused_a, unused_b, unused_c, unused_d)
             n += ntotal1
+            xs = [x]
+            ys = [y]
+            data_in = [tid, x1, x2, extrap, xs, ys]
             while 1:
                 (xint, yint) = struct_2i.unpack(data[n:n + ntotal2])
                 (x, y) = struct_ff.unpack(data[n:n + ntotal2])
@@ -411,7 +475,8 @@ class DIT:
                 if [xint, yint] == [-1, -1]:
                     break
                 else:
-                    data_in += [x, y]
+                    xs.append(x)
+                    ys.append(y)
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
@@ -420,14 +485,14 @@ class DIT:
 
     def _read_table4(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
         """
-        1 ID I Table identification number
-        2 X1 RS X-axis shift
-        3 X2 RS X-axis normalization
-        4 X3 RS X value when x is less than X3
-        5 X4 RS X value when x is greater than X4
-        6 UNDEF(3 ) None
-        9 A RS
-        Word 9 repeats until End of Record (-1)
+        1 ID        I Table identification number
+        2 X1       RS X-axis shift
+        3 X2       RS X-axis normalization
+        4 X3       RS X value when x is less than X3
+        5 X4       RS X value when x is greater than X4
+        6 UNDEF(3)    None
+        9  A       RS Response
+        10 MINUS1   I End of record flag
         """
         op2: OP2Geom = self.op2
         n0 = n
@@ -444,7 +509,10 @@ class DIT:
                 edata = data[n:n + ntotal1]
                 out = struct1.unpack(edata)
                 (tid, x1, x2, x3, x4, unused_a, unused_b, unused_c, x, test_minus1) = out
-                data_in = [tid, x1, x2, x3, x4, x]
+                assert (unused_a, unused_b, unused_c) == (0, 0, 0), (unused_a, unused_b, unused_c)
+
+                a = []
+                data_in = [tid, x1, x2, x3, x4, a]
                 n += ntotal2
                 if test_minus1 == -1:
                     n += size
@@ -457,7 +525,7 @@ class DIT:
                         if xint == -1:
                             break
                         else:
-                            data_in.append(x)
+                            a.append(x)
                 table = cls.add_op2_data(data_in)
                 add_method(table)
                 nentries += 1
@@ -468,6 +536,7 @@ class DIT:
             #n = n0 + ndata
             raise
         op2.increase_card_count(table_name, nentries)
+        assert n == len(data)
         return n
 
     def _read_table5(self, cls, slot, add_method,
