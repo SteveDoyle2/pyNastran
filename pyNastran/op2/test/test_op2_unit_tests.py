@@ -742,14 +742,29 @@ class TestNX(Tester):
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_nx_glue_slide_distance(self):
-        """test MSC 2014 version"""
+        """test NX 2020 version"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(MODEL_PATH, 'nx', 'glue', 'n401gsh01.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'nx', 'glue', 'n401gsh01.op2')
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
-            op2_filename1, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_bolt(self):
+        """test NX 2020 version"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'bolt', 's402bolt304.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nx', 'bolt', 's402bolt304.op2')
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,

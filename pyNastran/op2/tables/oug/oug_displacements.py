@@ -33,12 +33,6 @@ class RealDisplacementArray(RealTableArray):
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
         elif self.table_name in ['OCRUG']:
             words += ['                                                 ( OCRUG??? )']
-        elif self.table_name in ['OBOLT1']:
-            words = [
-                '                                                         B O L T   R E S U L T S\n',
-                '        ELEMENT ID    AXIAL FORCE    SHEAR FORCE-1    SHEAR FORCE-2    BENDING MOMENT-1    BENDING MOMENT-2    AXIAL PRELOAD STRAIN\n'
-            ]
-            write_words = False
         else:  # pragma: no cover
             raise NotImplementedError(f'table_name={self.table_name!r}')
         #words += self.get_table_marker()
