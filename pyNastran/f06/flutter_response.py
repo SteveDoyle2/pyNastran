@@ -19,7 +19,7 @@ from pyNastran.utils.atmosphere import (
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import float_types
 
-if TYPE_CHECKING and IS_MATPLOTLIB:
+if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
     from matplotlib.axes import Axes
 
 
