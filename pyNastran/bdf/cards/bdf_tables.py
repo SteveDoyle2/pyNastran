@@ -216,7 +216,7 @@ class TABLED1(Table):
 
     def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
-                 extrap: int=0, comment: str=''):
+                 extrap=None, comment: str=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -268,9 +268,9 @@ class TABLED1(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
-        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
-        extrap = integer_or_blank(card, 4, 'yaxis', 0)
+        xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
+        extrap = integer_or_blank(card, 4, 'extrap')
 
         x, y = read_table(card, table_id, 'TABLED1')
         return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
@@ -297,7 +297,7 @@ class TABLED1(Table):
         return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         xaxis = _map_axis(data[1])
         yaxis = _map_axis(data[2])
@@ -970,7 +970,8 @@ class TABLEM1(Table):
         y = [0., 1.]
         return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
 
-    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+    def __init__(self, tid: int, x, y, xaxis: str='LINEAR', yaxis: str='LINEAR',
+                 extrap=None, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -979,6 +980,7 @@ class TABLEM1(Table):
         self.yaxis = yaxis # linear/log
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
+        self.extrap = extrap
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -994,10 +996,11 @@ class TABLEM1(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
-        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
+        extrap = integer_or_blank(card, 4, 'extrap')
         x, y = read_table(card, table_id, 'TABLEM1')
-        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card, comment=''):
@@ -1015,8 +1018,9 @@ class TABLEM1(Table):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        extrap = integer_or_blank(card, 4, 'extrap')
         x, y = read_table_lax(card, table_id, 'TABLEM1')
-        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1032,7 +1036,7 @@ class TABLEM1(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM1', self.tid, self.xaxis, self.yaxis, None, None,
+        list_fields = ['TABLEM1', self.tid, self.xaxis, self.yaxis, self.extrap, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
@@ -1042,7 +1046,7 @@ class TABLEM1(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM1', self.tid, xaxis, yaxis, None, None,
+        list_fields = ['TABLEM1', self.tid, xaxis, yaxis, self.extrap, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 

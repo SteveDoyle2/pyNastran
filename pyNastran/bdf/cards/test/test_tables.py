@@ -11,6 +11,20 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestTables(unittest.TestCase):
 
+    def test_tabrndg(self):
+        model = BDF(debug=False)
+        tid = 101
+        #1 : von Karman
+        #2 : Dryden
+        Type = 1
+        LU = 2.17
+        WG = 3.14
+        table = model.add_tabrndg(tid, Type, LU, WG, comment='')
+        str(table)
+        table = model.add_tabrndg(tid+1, Type+1, LU, WG, comment='')
+        str(table)
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
+
     def test_tabdmp1_01(self):
         model = BDF(debug=False)
         lines = ['TABDMP1,100,,,,,,,,+',
@@ -83,6 +97,13 @@ class TestTables(unittest.TestCase):
         interp = table.interpolate(0.)
         assert np.allclose(interp, [5.5]), interp
         interp = table.interpolate([0., 5.])
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        model.add_tabled1(101, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        model.add_tabled1(102, x, y, xaxis='LOG', yaxis='LOG', extrap=0, comment='')
+        model.add_tabled1(103, x, y, xaxis='LINEAR', yaxis='LOG', extrap=1, comment='')
+        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
 
     def test_tabled2(self):
         model = BDF(debug=False)
@@ -178,6 +199,12 @@ class TestTables(unittest.TestCase):
         table = TABLEM1.add_card(card, comment='table')
         table.raw_fields()
         str(table)
+
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        model.add_tablem1(101, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        model.add_tablem1(102, x, y, xaxis='LOG', yaxis='LOG', extrap=0, comment='')
+        model.add_tablem1(103, x, y, xaxis='LINEAR', yaxis='LOG', extrap=1, comment='')
         save_load_deck(model)
 
         #interp = table.interpolate(0.)

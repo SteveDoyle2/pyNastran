@@ -26,11 +26,13 @@ def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
         return
     card_types = [
         'GUST',
-        # 'TABDMP1', # op2 is bugged?
+        'TABDMP1',
+        'TABLED1',
+        'TABLEM1',
+        'TABRNDG',
     ]
 
     cards_to_skip = [
-        'TABDMP1', # op2 is bugged?
     ]
     out = defaultdict(list)
     # geometry
@@ -42,8 +44,11 @@ def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
         out[table.type].append(table_id)
     for table_id, table in sorted(model.tables_sdamping.items()):
         out[table.type].append(table_id)
+    for table_id, table in sorted(model.random_tables.items()):
+        out[table.type].append(table_id)
     for gust_id, gust in sorted(model.gusts.items()):
         out[gust.type].append(gust_id)
+
 
     remove_unsupported_cards(out, card_types, model.log)
     # other
@@ -114,16 +119,138 @@ def write_tabdmp1(model: Union[BDF, OP2Geom], name: str,
     for table_id in table_ids:
         table = model.tables_sdamping[table_id]
         nx = len(table.x)
-        fmt += b'i ' + b'2f' * nx + b' 2i'
+        fmt += b'8i ' + b'2f' * nx + b' 2i'
         xys = []
         for x, y in zip(table.x, table.y):
             xys.append(x)
             xys.append(y)
-        data = [table_id] + xys + [-1, -1]
+        data = [table_id, 0, 0, 0, 0, 0, 0, 0] + xys + [-1, -1]
         assert None not in data, data
         #print(data)
         datas.extend(data)
         op2_ascii.write(f'  TABDMP1 data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tabrndg(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    """
+    TABRNDG(56, 26, 303)
+    Power spectral density for gust loads in aeroelastic analysis.
+
+    1 ID        I   Table identification number
+    2 TYPE      I   Power spectral density type
+    3 LU        RS  Scale of turbulence divided by velocity
+    4 WG        RS  Root-mean-square gust velocity
+    5 UNDEF(4) none Not used
+    Words 1 through 8 repeat until (-1,-1) occurs
+
+    """
+    key = (56, 26, 303)
+    nvalues = 0
+    datas = []
+
+    fmt = endian + b'2i 2f 4i 2i' * ncards
+    for table_id in table_ids:
+        table = model.random_tables[table_id]
+
+        data = (table_id, table.Type,
+                table.LU, table.WG,
+                0, 0, 0, 0, -1, -1)
+        assert None not in data, data
+        #assert (unused_dunno_a, unused_dunno_b, unused_dunno_c, unused_dunno_d) == (0, 0, 0, 0), out
+        #if tid > 100000000:
+            #tid = -(tid - 100000000)
+        #op2.add_tabrndg(tid, table_type, lu, wg, comment='')
+        assert table_id > 0, table
+        datas.extend(data)
+        op2_ascii.write(f'  TABDMP1 data={data}\n')
+        nvalues += len(data)
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    data_bytes = Struct(fmt).pack(*datas)
+    op2_file.write(data_bytes)
+    return nbytes
+
+def write_tabled1(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    nbytes = _write_table1(
+        model, name, table_ids, ncards,
+        model.tables_d, 'TABLED1',
+        (1105, 11, 133),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+def write_tablem1(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    nbytes = _write_table1(
+        model, name, table_ids, ncards,
+        model.tables_m, 'TABLEM1',
+        (105, 1, 93),
+        op2_file, op2_ascii, endian,
+        nastran_format=nastran_format)
+    return nbytes
+
+def _write_table1(model: Union[BDF, OP2Geom], name: str,
+                  table_ids: list[int], ncards: int,
+                  table_dict: dict[int, Any], table_name: str,
+                  key: tuple[int, int, int],
+                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    """
+    TABLED1(1105,11,133)
+
+    Word Name Type Description
+    1 ID     I Table identification number
+    2 CODEX  I Type of interpolation for the x-axis
+    3 CODEY  I Type of interpolation for the y-axis
+    4 FLAG   I Extrapolation on/off flag
+    5 LOCUT RS Low cutoff value
+    6 HICUT RS High cutoff value
+    7 UNDEF(2) None
+    9  X    RS X tabular value
+    10 Y    RS Y tabular value
+    Words 9 through 10 repeat until (-1,-1) occurs
+    """
+    nvalues = 0
+    datas = []
+
+    fmt = endian
+    locut = 0.
+    hicut = 0.
+    for table_id in table_ids:
+        table = table_dict[table_id]
+        nx = len(table.x)
+        fmt += b'4i 2f 2i ' + b'2f' * nx + b' 2i'
+        xys = []
+        for x, y in zip(table.x, table.y):
+            xys.append(x)
+            xys.append(y)
+
+        data = [table_id]
+        for axis_type in [table.xaxis, table.yaxis]:
+            if axis_type == 'LINEAR':
+                axis = 0
+            elif axis_type == 'LOG':
+                axis = 1
+            else: # pragma: no cover
+                raise ValueError('axis=%r' % axis_type)
+            data.append(axis)
+
+        extrap = 0 if table.extrap is None else table.extrap
+        data += [extrap, locut, hicut, 0, 0] + xys + [-1, -1]
+        assert None not in data, data
+        #print(data)
+        datas.extend(data)
+        op2_ascii.write(f'  {table_name} data={data}\n')
         nvalues += len(data)
 
     assert nvalues > 0, nvalues
@@ -157,5 +284,8 @@ def write_gust(model: Union[BDF, OP2Geom], name: str,
 
 DIT_MAP = {
     'TABDMP1': write_tabdmp1,
+    'TABLED1': write_tabled1,
+    'TABLEM1': write_tablem1,
+    'TABRNDG': write_tabrndg,
     'GUST': write_gust,
 }

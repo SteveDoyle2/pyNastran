@@ -79,6 +79,11 @@ class DIT:
         9 F     RS Natural frequency
         10 G    RS Damping
         Words 9 through 10 repeat until (-1,-1) occurs
+
+        [100, 0, 0, 0, 0, 0, 0, 0,
+         0., 0.02, 200., 0.02, -1, -1]
+
+        data = []
         """
         op2: OP2Geom = self.op2
         #nfields = (ndata - n) // 4
@@ -122,25 +127,28 @@ class DIT:
 
         """
         op2: OP2Geom = self.op2
-        ndata = len(data)# - n
-        assert ndata == 52, ndata
-        struct_2i2f4i = Struct('2i2f4i')
+        ndata = len(data) - n
+        ntotal = 40
+        ntables = ndata // ntotal
+        assert ndata % ntotal == 0, (ndata, ntotal)
+
+        struct_2i2f4i = Struct('2i2f4i 2i')
         #struct_ff = Struct('ff')
         #struct_2i = op2.struct_2i
-        #ntotal = 32
-        while ndata - n >= 32:
-            edata = data[n:n + 32]
+        nentries = 0
+        for itable in range(ntables):
+            edata = data[n:n + ntotal]
             out = struct_2i2f4i.unpack(edata)
             (tid, table_type, lu, wg, unused_dunno_a,
-             unused_dunno_b, unused_dunno_c, unused_dunno_d) = out
-            assert (unused_dunno_a, unused_dunno_b, unused_dunno_c, unused_dunno_d) == (0, 0, 0, 0), out
+             unused_dunno_b, unused_dunno_c, unused_dunno_d, m1, m2) = out
+            assert (unused_dunno_a, unused_dunno_b, unused_dunno_c, unused_dunno_d,
+                    m1, m2) == (0, 0, 0, 0, -1, -1), out
             if tid > 100000000:
                 tid = -(tid - 100000000)
-            n += 32
             op2.add_tabrndg(tid, table_type, lu, wg, comment='')
-            #nentries += 1
-        #op2.increase_card_count('TABRNDG', nentries)
-        n += 8  #  for the (-1,-1)
+            n += ntotal
+            nentries += 1
+        op2.increase_card_count('TABRNDG', nentries)
         return n
 
     def read_tables1(self, data: bytes, n: int) -> int:
@@ -181,26 +189,33 @@ class DIT:
 
     def _read_table1(self, cls, slot, add_method, data: bytes, n: int, table_name: str,
                      add_codes: bool=True) -> int:
+        """
+        Word Name Type Description
+        1 ID     I Table identification number
+        2 CODEX  I Type of interpolation for the x-axis
+        3 CODEY  I Type of interpolation for the y-axis
+        4 FLAG   I Extrapolation on/off flag
+        5 LOCUT RS Low cutoff value
+        6 HICUT RS High cutoff value
+        7 UNDEF(2) None
+        9  X    RS X tabular value
+        10 Y    RS Y tabular value
+        Words 9 through 10 repeat until (-1,-1) occurs
+        """
         op2: OP2Geom = self.op2
         nentries = 0
         ndata = len(data)
-        if self.size == 4:
-            struct_8i2f = Struct('8iff')
-            struct_ff = Struct('ff')
-            struct_2i = op2.struct_2i
-            ntotal1 = 40
-            ntotal2 = 8
-        else:
-            struct_8i2f = Struct('8qdd')
-            struct_ff = Struct('dd')
-            struct_2i = op2.struct_2q
-            ntotal1 = 80
-            ntotal2 = 16
+        size = self.size
+        struct_8i2f = Struct(mapfmt('8iff', size))
+        struct_ff = Struct(mapfmt('2f', size))
+        struct_2i = op2.struct_2i
+        ntotal1 = 10 * size
+        ntotal2 = 2 * size
 
         while ndata - n >= ntotal1:
             edata = data[n:n + ntotal1]
             out = struct_8i2f.unpack(edata)
-            (tid, code_x, code_y, unused_a, unused_b, unused_c, unused_d, unused_e,
+            (tid, code_x, code_y, extrap, unused_b, unused_c, unused_d, unused_e,
              x, y) = out
             if tid > 100000000:
                 tid = -(tid - 100000000)
