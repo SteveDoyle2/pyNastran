@@ -783,6 +783,7 @@ class TableArray(ScalarObject):  # displacement style table
             field5 = self.lsdvmns[itime] # load set number
         elif self.analysis_code == 8:  # post-buckling
             field5 = self.lsdvmns[itime] # load set number
+            field5 = int(field5)
             if hasattr(self, 'eigns'):
                 field6 = self.eigns[itime]
             elif hasattr(self, 'eigrs'):
@@ -796,6 +797,11 @@ class TableArray(ScalarObject):  # displacement style table
             if hasattr(self, 'eigns'):
                 field6 = self.eigns[itime]
                 ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #elif hasattr(self, 'eigrs'):
+                #field6 = self.eigrs[itime]
+                #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #else:  # pragma: no cover
+                #raise NotImplementedError('cant find eigns or eigrs on analysis_code=9')
             field7 = self.eigis[itime]
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 10:  # nonlinear statics
@@ -1065,14 +1071,14 @@ class RealTableArray(TableArray):
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1', # acceleration
                                   'OPGNO1',            'OPGRMS1', # load vector
             'OPRATO1', 'OPRCRM1', 'OPRNO1', 'OPRPSD1',            # pressure
-                       'OQGRMS1', 'OQGNO1', 'OQGPSD1',
+                                  'OQGNO1', 'OQGPSD1', 'OQGRMS1',
+                       'OQMCRM1',           'OQMPSD1', # 'OQMRMS1',#'OQMNO1',
             'OCRPG', 'OCRUG', 'OUG1', 'OVG1', 'OAG1',
             'OUGV1PAT',
             'OUGF1',
             'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
         ]
-
         assert self.table_name in allowed_tables, self.table_name
 
         frame = inspect.currentframe()
@@ -1114,9 +1120,6 @@ class RealTableArray(TableArray):
 
         #print(node_gridtype_floats)
         #node_gridtype_floats = nodedevice_gridtype.view(fdtype) # .reshape(nnodes, 2)
-
-        #format_table4_1 = Struct(self._endian + b'15i')
-        #format_table4_2 = Struct(self._endian + b'3i')
 
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
         ntotal = nnodes * (2 + 6)

@@ -428,8 +428,11 @@ def _write_lseq(load_type, loads, nloads, op2_file, op2_ascii, endian):
     for load in loads:
         #(sid, darea, load_id, temperature_id, undef) = out
         tid = 0 if load.tid is None else load.tid
-        datai = [load.sid, load.excite_id, load.lid, tid, 0]
+        lid = 0 if load.lid is None else load.lid
+        assert tid > 0 or lid > 0, (tid, lid)
+        datai = [load.sid, load.excite_id, lid, tid, 0]
         op2_ascii.write('  LSEQ data=%s\n' % str(datai))
+        assert None not in datai, datai
         op2_file.write(spack.pack(*datai))
     return nbytes
 

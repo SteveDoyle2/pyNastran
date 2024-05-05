@@ -341,7 +341,7 @@ def _convert_elements(model: BDF,
         'CQUADX4', 'CQUADX8',
 
         # acoustic
-        'CHACAB', 'CAABSF',
+        'CHACAB', 'CAABSF', 'CHACBR',
     }
     skip_masses = {'CMASS1', 'CMASS3'}
 

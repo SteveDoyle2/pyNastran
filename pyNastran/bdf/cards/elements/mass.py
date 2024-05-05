@@ -244,6 +244,11 @@ class CMASS1(PointMassElement):
     def center_of_mass(self):
         return self.Centroid()
 
+    def grid_component(self) -> list[int, int, int, int]:
+        g1 = 0 if self.nodes[0] is None else self.G1()
+        g2 = 0 if self.nodes[1] is None else self.G2()
+        return [(g1, self.c1), (g2, self.c2)]
+
     @property
     def node_ids(self):
         g1 = self.G1()
@@ -424,10 +429,10 @@ class CMASS2(PointMassElement):
         assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
         assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
 
-    def node_component(self) -> list[int, int, int, int]:
+    def grid_component(self) -> list[int, int, int, int]:
         g1 = 0 if self.nodes[0] is None else self.G1()
         g2 = 0 if self.nodes[1] is None else self.G2()
-        return [g1, self.c1, g2, self.c2]
+        return [(g1, self.c1), (g2, self.c2)]
 
     @property
     def node_ids(self):

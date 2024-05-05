@@ -1378,7 +1378,8 @@ class EDOM(GeomCommon):
 
             #print(dvmrel_id, mat_type, (mid, fid), (mp_min, mp_max), deqation, mp_name, flag)
             iend, dvids, labels = _read_dvxrel2_flag(data, n0, i0, i1, size, ints)
-
+            if 'TOPOPEN' in labels:
+                asdf
             #labels = labels.
             #print(dvids, labels)
             card_name = cls.type

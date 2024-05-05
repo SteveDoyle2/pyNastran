@@ -426,20 +426,28 @@ class TestOpt(unittest.TestCase):
         dvprel2 = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=p_max,
                                     validate=True, comment='dvprel2')
+
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']
         model.add_deqatn(equation_id, eqs, comment='deqatn')
 
         deqation2 = 101
-        dvprel2b_id = dvprel1_id + 2
         labels = ['CAT']
-        dvprel2b = model.add_dvprel2(dvprel2b_id, prop_type, pid, pname_fid, deqation2,
+        dvprel2b = model.add_dvprel2(dvprel2_id+1, prop_type, pid, pname_fid, deqation2,
                                      dvids, labels, p_min=None, p_max=p_max,
                                      validate=True, comment='dvprel2')
+
+        dvids = []
+        labels = ['TVAL']
+        dvprel2 = model.add_dvprel2(dvprel2_id+2, prop_type, pid, pname_fid, deqation,
+                                    dvids, labels, p_min=None, p_max=p_max,
+                                    validate=True, comment='dvprel2')
+
         equation_id = 101
         eqs = ['fstress(x,y) = x * y + 10.']
         model.add_deqatn(equation_id, eqs, comment='deqatn')
-        default_values = {'CAT': 42.0}
+        default_values = {'CAT': 42.0,
+                          'TVAL': 0.3,}
         model.add_dtable(default_values, comment='dtable')
 
 
@@ -651,6 +659,13 @@ class TestOpt(unittest.TestCase):
                                       dvids, labels, mp_min=None, mp_max=1e20,
                                       validate=True,
                                       comment='dvmrel')
+        dvids = []
+        labels = ['NUVAL']
+        mp_name = 'NU'
+        model.add_dvmrel2(oid+1, mat_type, mid1, mp_name, deqation, dvids,
+                          labels, mp_min=None, mp_max=1e20, validate=True, comment='')
+        model.add_dtable({'NUVAL': 0.3,})
+
         E = 30.e7
         G = None
         nu = 0.3

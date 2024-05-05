@@ -382,9 +382,9 @@ class CTRSHL(TriShell):
             integer(card, 7, 'n5'),
             integer(card, 8, 'n6'),
         ]
-        theta = double_or_blank(card, 9, 'theta', 0.0)
+        theta = double_or_blank(card, 9, 'theta', default=0.0)
         if len(card) > 6:
-            assert len(card) <= 9, f'len(CTRSHL card) = {len(card):d}\ncard={card}'
+            assert len(card) <= 10, f'len(CTRSHL card) = {len(card):d}\ncard={card}'
 
         return CTRSHL(eid, pid, nids, theta=theta, comment=comment)
 
@@ -419,6 +419,18 @@ class CTRSHL(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         #if isinstance(self.theta_mcid, integer_types):
             #self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.theta_mcid = self.Theta_mcid()
+        self.pid_ref = None
+        self.nodes_ref = None
+        self.theta_mcid_ref = None
+
+    def Theta_mcid(self) -> float:
+        return self.theta
 
     @property
     def node_ids(self):

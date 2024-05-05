@@ -377,13 +377,16 @@ def write_caero3(model: Union[BDF, OP2Geom], name: str,
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for caero_id in caero_ids:
-        caero = model.caeros[caero_id] # type: CAERO3
+        caero: CAERO3 = model.caeros[caero_id]
         x1, y1, z1 = caero.p1
         x4, y4, z4 = caero.p4
         #print(caero.get_stats())
+        list_w = 0 if caero.list_w is None else caero.list_w
+        list_c1 = 0 if caero.list_c1 is None else caero.list_c1
+        list_c2 = 0 if caero.list_c2 is None else caero.list_c2
         data = [
             caero.eid, caero.pid, caero.cp,
-            caero.list_w, caero.list_c1, caero.list_c2,
+            list_w, list_c1, list_c2,
             0, 0,
             x1, y1, z1, caero.x12,
             x4, y4, z4, caero.x43,]

@@ -89,8 +89,86 @@ class TestAcoustic(unittest.TestCase):
         comment = 'matpor'
         model.add_matpor_craggs(mid, rho, c, resistivity,
                                 porosity, tortuosity, comment=comment)
+        mid += 1
+
+        frame = 'FRAME?'
+        mu = 0.1
+        gamma = 1.4
+        prandtl_number = 0.27
+        L1 = 532.
+        L2 = 234.
+        model.add_matpor_delmiki(mid, rho, c, resistivity, porosity, frame, density=0.0, comment='matpor')
+        mid += 1
+
+        model.add_matpor_jca(mid, rho, c, resistivity, porosity, tortuosity,
+                             frame, gamma, prandtl_number, mu, L1, L2, density=0.0, comment='')
         save_load_deck(model, run_remove_unused=False)
 
+    def test_chacab(self):
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        eid = 10
+        pid = 11
+        nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        for nid in nodes:
+            model.add_grid(nid+1, [float(nid), 0., 0.])
+        elem = model.add_chacab(eid, pid, nodes, comment='chacbr')
+        str(elem)
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model, run_remove_unused=False, run_test_bdf=False, run_save_load_hdf5=False)
+
+    def test_chacbr(self):
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        eid = 10
+        pid = 11
+        nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        for nid in nodes:
+            model.add_grid(nid+1, [float(nid), 0., 0.])
+        elem = model.add_chacbr(eid, pid, nodes, comment='chacbr')
+        str(elem)
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model, run_remove_unused=False, run_test_bdf=False, run_save_load_hdf5=False)
+
+    def test_caabsf_paabsf(self):
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        eid = 10
+        pid = 11
+        nodes = [1, 2, 3, 4]
+        for nid in nodes:
+            model.add_grid(nid+1, [float(nid), 0., 0.])
+        elem = model.add_caabsf(eid, pid, nodes, comment='caabsf')
+        prop = model.add_paabsf(pid, tzreid=None, tzimid=None,
+                                s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment='paabsf')
+        str(elem)
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model, run_remove_unused=False, run_test_bdf=False, run_save_load_hdf5=False, run_convert=False)
+
+    def test_pacbar(self):
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        eid = 10
+        pid = 11
+        nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        for nid in nodes:
+            model.add_grid(nid+1, [float(nid), 0., 0.])
+        mback = 1.0
+        mseptm = 2.0
+        freson = 3.0
+        kreson = 4.0
+        elem = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+        str(elem)
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model, run_remove_unused=False, run_test_bdf=False, run_save_load_hdf5=False, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

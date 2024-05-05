@@ -814,18 +814,21 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
     elif name == 'CMASS1':
         for eid in sorted(eids):
             elem = obj.masses[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             pid = elem.pid
             #(eid, pid, g1, g2, c1, c2)
-            data = [eid, pid, n1, n2, elem.c1, elem.c2]
+            gc = []
+            gc1, gc2 = elem.grid_component()
+            data = [eid, pid, gc1[0], gc2[0], gc1[1], gc2[1]]
             #print(name, data)
-            op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
+            op2_ascii.write('  eid=%s pid=%s gc=[%s, %s]\n' % (eid, pid, gc1, gc2))
             op2_file.write(spack.pack(*data))
     elif name == 'CMASS2':
         for eid in sorted(eids):
             elem = obj.masses[eid]
             #(eid, mass, g1, g2, c1, c2) = out
-            data = [eid, elem.mass] + elem.node_component()
+            gc1, gc2 = elem.grid_component()
+            data = [eid, pid]
+            data = [eid, elem.mass, gc1[0], gc2[0], gc1[1], gc2[1]]
             assert None not in data, data
             #print(name, data)
             op2_ascii.write(f'  eid={eid} data={data}\n')

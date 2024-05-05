@@ -3354,32 +3354,31 @@ class AddAcoustic:
         return mat
 
     def add_chacab(self, eid, pid, nodes, comment='') -> CHACAB:
-        #acoustic
         chacab = CHACAB(eid, pid, nodes, comment=comment)
         self._add_methods._add_element_object(chacab)
         return chacab
 
+
     def add_caabsf(self, eid, pid, nodes, comment='') -> CHACAB:
-        #acoustic
         caabsf = CAABSF(eid, pid, nodes, comment=comment)
         self._add_methods._add_element_object(caabsf)
         return caabsf
 
     def add_chacbr(self, eid, pid, nodes, comment='') -> CHACBR:
-        #acoustic
         chacbr = CHACBR(eid, pid, nodes, comment=comment)
         self._add_methods._add_element_object(chacbr)
         return chacbr
 
     def add_paabsf(self, pid, tzreid=None, tzimid=None,
                    s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment=''):
-        #acoustic
         paabsf = PAABSF(pid, tzreid=tzreid, tzimid=tzimid,
                         s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
         self._add_methods._add_acoustic_property_object(paabsf)
         return paabsf
 
-    def add_pacbar(self, pid, mback, mseptm, freson, kreson, comment='') -> PACBAR:
+    def add_pacbar(self, pid: int, mback: float, mseptm: float,
+                   freson: float, kreson: float,
+                   comment: str='') -> PACBAR:
         """
         Creates a PACBAR card
 
@@ -3397,7 +3396,6 @@ class AddAcoustic:
             Resonant stiffness of the sandwich construction.
 
         """
-        #acoustic
         pacbar = PACBAR(pid, mback, mseptm, freson, kreson, comment=comment)
         self._add_methods._add_acoustic_property_object(pacbar)
         return pacbar
@@ -3427,7 +3425,6 @@ class AddAcoustic:
 
         ..note:: tables are defined as a function of frequency in cycles/time
         """
-        #acoustic
         pacabs = PACABS(pid, cutfr, b, k, m,
                         synth=synth, tid_resistance=tid_resistance,
                         tid_reactance=tid_reactance, tid_weight=tid_weight,

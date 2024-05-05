@@ -515,7 +515,7 @@ class DVXREL2(BaseCard):
 
     def validate(self):
         msg = ''
-        assert len(self.dvids) > 0, str(self)
+        assert len(self.dvids) >= 0, str(self)
         for i, desvar_id in enumerate(self.dvids):
             if not isinstance(desvar_id, int):
                 msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (

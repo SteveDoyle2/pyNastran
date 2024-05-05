@@ -1806,12 +1806,7 @@ class TABLEHT(Table):
             a comment for the card
 
         """
-        table_id = data[0]
-        xy = data[1:]
-        xy = np.array(xy, dtype='float64')
-        xy = xy.reshape(xy.size // 2, 2)
-        x = xy[:, 0]
-        y = xy[:, 1]
+        table_id, extrap, code_x, code_y, x, y = data
         return TABLEHT(table_id, x, y, comment=comment)
 
     def raw_fields(self):

@@ -29,6 +29,7 @@ SKIP_ETYPES = {
     'CPLSTN3', 'CPLSTN4', 'CPLSTN8', 'CPLSTN6',
     'CPLSTS3', 'CPLSTS4', 'CPLSTS8', 'CPLSTS6',
     'CHACAB', 'CAABSF',
+    'CTRSHL',
 }
 
 def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None,

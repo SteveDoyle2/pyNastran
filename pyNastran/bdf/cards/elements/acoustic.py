@@ -194,6 +194,9 @@ class CHACBR(Element):
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         return CHACAB(eid, pid, nids, comment=comment)
 
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
     def raw_fields(self):
         nodes1 = self.nodes[:12]
         nodes2 = self.nodes[16:]
