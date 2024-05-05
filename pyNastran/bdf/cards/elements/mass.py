@@ -241,13 +241,15 @@ class CMASS1(PointMassElement):
         c = (p1 + p2) / factor
         return c
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
     def grid_component(self) -> list[int, int, int, int]:
         g1 = 0 if self.nodes[0] is None else self.G1()
         g2 = 0 if self.nodes[1] is None else self.G2()
-        return [(g1, self.c1), (g2, self.c2)]
+        c1 = 0 if self.c1 is None else self.c1
+        c2 = 0 if self.c2 is None else self.c2
+        return [(g1, c1), (g2, c2)]
 
     @property
     def node_ids(self):
@@ -260,7 +262,7 @@ class CMASS1(PointMassElement):
             nodes.append(g2)
         return nodes
 
-    def Pid(self):
+    def Pid(self) -> int:
         if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
@@ -412,10 +414,10 @@ class CMASS2(PointMassElement):
         #assert 0 <= c2 <= 123456, 'c2=%s data=%s' % (c2, data)
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
-    def validate(self):
+    def validate(self) -> None:
         assert len(self.nodes) == 2, self.nodes
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool):
         eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
@@ -432,7 +434,9 @@ class CMASS2(PointMassElement):
     def grid_component(self) -> list[int, int, int, int]:
         g1 = 0 if self.nodes[0] is None else self.G1()
         g2 = 0 if self.nodes[1] is None else self.G2()
-        return [(g1, self.c1), (g2, self.c2)]
+        c1 = 0 if self.c1 is None else self.c1
+        c2 = 0 if self.c2 is None else self.c2
+        return [(g1, c1), (g2, c2)]
 
     @property
     def node_ids(self):

@@ -174,9 +174,9 @@ class DIT:
         nentries = 0
         ndata = len(data)
         size = self.size
-        struct_8i2f = Struct(mapfmt('8ifi', size))
-        struct_fi = Struct(mapfmt('fi', size))
-        struct_2i = op2.struct_2i
+        struct_8i2f = Struct(mapfmt(b'8ifi', size))
+        struct_fi = Struct(mapfmt(b'fi', size))
+        struct_2i = Struct(mapfmt(b'2i', size))
         ntotal1 = 10 * size
         ntotal2 = 2 * size
 
@@ -282,6 +282,8 @@ class DIT:
                 data_in = [tid, extrap, code_x, code_y, xs, ys]
             else:
                 assert extrap == 0, extrap
+                assert code_x == 0, code_x
+                assert code_y == 0, code_y
                 data_in = [tid, xs, ys]
 
             n += ntotal1
