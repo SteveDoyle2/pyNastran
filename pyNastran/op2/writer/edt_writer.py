@@ -1400,6 +1400,9 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
                   op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
     """
     Record 59 - MONPNT2(8204,82,621)
+
+    MSC
+    ===
     Word Name Type Description
     1 NAME(2)   CHAR4
     3 LABEL(14) CHAR4
@@ -1408,11 +1411,25 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
     21 ITEM(2)  CHAR4
     23 EID      I
 
+    NX
+    ==
+    Word Name Type Description
+    1 NAME(2)   CHAR4
+    3 LABEL(14) CHAR4
+    17 TABLE(2) CHAR4
+    19 ELTYP(2) CHAR4
+    21 ITEM(2)  CHAR4
+    23 EID      I
+    Words 17 thru 23 repeat until -1 occurs
+    Words 1 thru 23 repeat until (-2,-2) occurs
+
     """
     key = (8204, 82, 621)
-    nfields = 23
-    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
-    structi = Struct(endian + b'8s 56s 8s8s8s i')  # msc
+    nvalues = 0
+    #nfields = 23
+    #nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+    #structi = Struct(endian + b'8s 56s 8s8s8s i')  # msc
+    fmt = endian
     for monpnt_id in monpnt_ids:
         monitor = model.monitor_points[monpnt_id]
         #print(monitor.get_stats())
@@ -1420,6 +1437,7 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
         label_bytes = ('%-56s' % monitor.label).encode('latin1')
         data = [name_bytes, label_bytes]
 
+        fmt = endian
         if nastran_format == 'msc':
             assert len(monitor.tables) == 1, monitor.tables
             assert len(monitor.element_types) == 1, monitor.element_types
@@ -1431,18 +1449,33 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
                 eltype_bytes = ('%-8s' % element_type).encode('latin1')
                 item_bytes = ('%-8s' % nddl_item).encode('latin1')
                 data.extend([table_bytes, eltype_bytes, item_bytes]+eids)
+                fmt += b'8s 56s 8s8s8s i'
+                nvalues += 23
+                Struct(fmt).pack(*data)
+            assert len(data) == 6, f'data={data} ndata={len(data)}'
         else:
             # TODO: should have -1 and -2 flags, but I need to update nbytes for the header...
-            assert len(monitor.tables) == 1, monitor.tables
-            assert len(monitor.element_types) == 1, monitor.element_types
-            assert len(monitor.nddl_items) == 1, monitor.nddl_items
-            assert len(monitor.eids) == 1, monitor.eids
+            #assert len(monitor.tables) == 1, monitor.tables
+            #assert len(monitor.element_types) == 1, monitor.element_types
+            #assert len(monitor.nddl_items) == 1, monitor.nddl_items
+            #assert len(monitor.eids) == 1, monitor.eids
+            fmt = b'8s 56s'
+            nvalues += 16
             for table, element_type, nddl_item, eids in zip(monitor.tables, monitor.element_types, monitor.nddl_items, monitor.eids):
                 assert len(eids) == 1, eids
                 table_bytes = ('%-8s' % table).encode('latin1')
                 eltype_bytes = ('%-8s' % element_type).encode('latin1')
                 item_bytes = ('%-8s' % nddl_item).encode('latin1')
-                data.extend([table_bytes, eltype_bytes, item_bytes]+eids)
+                data.extend([table_bytes, eltype_bytes, item_bytes]+eids+[-1])
+                neids = len(eids)
+                nvalues += (3 * 2) + neids + 1
+
+                fmt += b'8s8s8s i ' + neids * b'i'
+                Struct(fmt).pack(*data)
+            fmt += b'2i'
+            data.extend([-2, -2])
+            nvalues += 2
+            Struct(fmt).pack(*data)
         #name_bytes, label_bytes, table_bytes, eltype_bytes, item_bytes, eid = out
         #name = reshape_bytes_block_size(name_bytes, self.size)
         #label = reshape_bytes_block_size(label_bytes, self.size)
@@ -1450,13 +1483,14 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
         #Type = reshape_bytes_block_size(eltype_bytes, self.size)
         #nddl_item = reshape_bytes_block_size(item_bytes, self.size)
 
-        assert len(data) == 6, f'data={data} ndata={len(data)}'
+        assert nvalues > 0, nvalues
+        nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
         assert None not in data, data
         op2_ascii.write(f'  MONPNT2 data={data}\n')
         #print(f'  MONPNT2 data={data}\n')
-        #print('npaero2', len(data), data)
+        structi = Struct(fmt)
         op2_file.write(structi.pack(*data))
-        #all_data.extend(data)
     return nbytes
 
 def write_monpnt3(model: Union[BDF, OP2Geom], name: str,

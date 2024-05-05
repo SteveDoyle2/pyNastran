@@ -827,7 +827,6 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
             elem = obj.masses[eid]
             #(eid, mass, g1, g2, c1, c2) = out
             gc1, gc2 = elem.grid_component()
-            data = [eid, pid]
             data = [eid, elem.mass, gc1[0], gc2[0], gc1[1], gc2[1]]
             assert None not in data, data
             #print(name, data)
