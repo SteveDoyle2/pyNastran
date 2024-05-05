@@ -210,7 +210,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     table_order = [
         'OUGV1', 'BOUGV1',
         'OUGF1', 'OUG1F', 'BOUGF1',
-        'TOUGV1', 'OTEMP1',
+        'TOUGV1', 'OTEMP1', 'OUG1S',
 
         'OAG1', 'OVG1', 'OUG1', 'OUGV1PAT',
 

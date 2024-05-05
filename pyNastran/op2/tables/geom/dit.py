@@ -261,9 +261,9 @@ class DIT:
         nentries = 0
         ndata = len(data)
         size = self.size
-        struct_8i2f = Struct(mapfmt('8iff', size))
-        struct_ff = Struct(mapfmt('2f', size))
-        struct_2i = op2.struct_2i
+        struct_8i2f = Struct(mapfmt(b'8iff', size))
+        struct_ff = Struct(mapfmt(b'2f', size))
+        struct_2i = Struct(mapfmt(b'2i', size))
         ntotal1 = 10 * size
         ntotal2 = 2 * size
 
