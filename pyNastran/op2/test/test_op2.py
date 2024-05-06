@@ -398,7 +398,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #print(op2.case_control_deck.get_op2_data())
         #print(op2.case_control_deck.get_op2_data())
         is_passed = True
-    except MemoryError:
+    except MemoryError:  # pragma: no cover
         raise
     except UnsupportedCard:
         is_passed = True

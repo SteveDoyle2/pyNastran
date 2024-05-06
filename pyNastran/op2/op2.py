@@ -708,7 +708,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     try:
                         obj.build_dataframe()
                         assert obj.data_frame is not None
-                    except MemoryError:
+                    except MemoryError:  # pragma: no cover
                         raise
                     except Exception:
                         self.log.error(obj)
@@ -726,9 +726,9 @@ class OP2(OP2_Scalar, OP2Writer):
                 #except TypeError:
                     #self.log.error(obj)
                     #self.log.error('build_dataframe is broken with a TypeError for %s' % class_name)
-                except MemoryError:
+                except MemoryError:  # pragma: no cover
                     raise
-                except NotImplementedError:
+                except NotImplementedError:  # pragma: no cover
                     self.log.warning(obj)
                     self.log.warning(f'build_dataframe is broken for {class_name}')
                     raise

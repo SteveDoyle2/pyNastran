@@ -358,7 +358,7 @@ class OBOLT:
                 if op2.read_mode == 1:
                     return ndata
 
-            print(op2.code, op2.nonlinear_factor, nnodes)
+            #print(op2.code, op2.nonlinear_factor, nnodes)
             assert op2.format_code == 2, op2.code_information
             ints = np.frombuffer(data, dtype=op2.idtype8)
             nfields = len(ints)

@@ -63,7 +63,7 @@ def write_casecc(op2_file, op2_ascii, obj, endian: bytes=b'<',
     subcases = obj.subcases
     if nastran_format == 'msc':
         for subcase_id, subcase in sorted(subcases.items()):
-            print(subcase)
+            #print(subcase)
             write_msc_casecc(subcase_id, subcase, obj)
     else:
         asdf

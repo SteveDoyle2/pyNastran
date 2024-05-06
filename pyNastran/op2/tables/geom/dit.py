@@ -572,7 +572,7 @@ class DIT:
             while ndata - n >= ntotal1:
                 edata = data[n:n + ntotal1]
                 out = struct1.unpack(edata)
-                print(out)
+                #print(out)
                 (tid, x1, x2, x3, x4, unused_a, unused_b, unused_c) = out
                 #print(f'tid = {tid}')
                 data_in = [tid, x1, x2, x3, x4]

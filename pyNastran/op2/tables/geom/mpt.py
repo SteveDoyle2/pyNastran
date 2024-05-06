@@ -504,11 +504,11 @@ class MPT:
         #return len(data)
         materials = []
         ndatai = len(data) - n
-        s2 = Struct(op2._endian + b'i 30f iiii')
-        ntotal = 140
+        size = self.size
+        s2 = Struct(mapfmt(op2._endian + b'i 30f iifi', size))
+        ntotal = 35 * size
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
-
         if op2.is_debug_file:
             op2.binary_debug.write(
                 '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
@@ -529,11 +529,14 @@ class MPT:
             assert blank2 == 0, blank2
             assert blank3 == 0, blank3
             assert blank4 == 0, blank4
-            data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
-                             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
-                       rho, [a1, a2, a3, a4, a5, a6],
-                       tref, ge]
+            g = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                 g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21]
+            a = [a1, a2, a3, a4, a5, a6]
+            data_in = [mid, g, rho, a, tref, ge]
+            #print(f'mid={mid} g={g} rho={rho} a={a} tref={tref} ge={ge}')
+
             mat = MAT9.add_op2_data(data_in)
+            #print(mat)
             materials.append(mat)
             n += ntotal
         return n, materials
@@ -544,8 +547,9 @@ class MPT:
         #return len(data)
         materials = []
         ndatai = len(data) - n
-        ntotal = (35 + 21) * 4 # 56*4
-        s2 = Struct(op2._endian + b'i 30f iiii 21f')
+        size = self.size
+        ntotal = (35 + 21) * size # 56*4
+        s2 = Struct(mapfmt(op2._endian + b'i 30f iiii 21f', size))
         #s2 = Struct(op2._endian + b'i 30f iiii 3f 3i 2f 3i f 3i f 2i f if')
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'

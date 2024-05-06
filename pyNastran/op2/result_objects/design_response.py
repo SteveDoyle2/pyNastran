@@ -593,7 +593,7 @@ class DSCMCOL:
         external_ids = []
         for resp in self.responses.values():
             external_ids.append(resp['external_response_id'])
-            print(resp)
+            #print(resp)
         return external_ids
 
     @property

@@ -2355,7 +2355,7 @@ class EPT:
             lam = 'SYM' if is_symmetrical else ''
             try:
                 ft = map_failure_theory_int(ft_int)
-            except NotImplementedError:
+            except NotImplementedError:  # pragma: no cover
                 raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
                                f'\nPCOMP = {data_in}')
 

@@ -465,8 +465,8 @@ class WriteMesh(BDFAttributes):
         if (write_aero_in_gust and self.aero) or self.gusts:
             bdf_file.write('$GUST\n')
             if write_aero_in_gust:
-                if model.aero is not None:
-                    bdf_file.write(model.aero.write_card(size, is_double))
+                if self.aero is not None:
+                    bdf_file.write(self.aero.write_card(size, is_double))
             for (unused_id, gust) in sorted(self.gusts.items()):
                 bdf_file.write(gust.write_card(size, is_double))
 

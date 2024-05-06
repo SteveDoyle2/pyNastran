@@ -3790,7 +3790,7 @@ class GEOM2:
         i = 0
         nints = len(idata)
         while i < nints:
-            print('i = ', i)
+            #print('i = ', i)
             eid = idata[i]
             nwe = idata[i+1]
             eltype = idata[i+2]
