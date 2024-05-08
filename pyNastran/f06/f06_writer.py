@@ -16,6 +16,8 @@ from typing import Union, Optional, cast, TextIO, TYPE_CHECKING
 import numpy as np
 
 import pyNastran
+from pyNastran.utils import object_attributes
+
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -208,7 +210,10 @@ class F06Writer(OP2_F06_Common):
             self.log)
 
     def get_all_results(self) -> list[str]:
-        all_results = ['stress', 'strain', 'element_forces', 'constraint_forces', 'thermal_load'] + self.get_table_types()
+        all_results = [
+            'stress', 'strain', 'stressa',
+            'element_forces', 'constraint_forces', 'thermal_load',
+            ] + self.get_table_types()
         return all_results
 
     def clear_results(self) -> None:
@@ -436,6 +441,9 @@ class F06Writer(OP2_F06_Common):
                 str(self.oload_resultant)
             assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
+        self.page_num = _write_responses1(self, f06, page_stamp, self.page_num)
+        self.page_num = _write_responses2(self, f06, page_stamp, self.page_num)
+
         # writes all results for
         self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
@@ -453,10 +461,41 @@ class F06Writer(OP2_F06_Common):
     def write_matrices(self, f06, matrix_filename: str, page_stamp: str,
                        page_num: int, quiet: bool=True):
         """writes the f06 matrices"""
+        results = self.op2_results
+        #print(object_attributes(results))
+        #names = ['mklist']
+        #for key in names: # object_attributes(results):
+            #if not hasattr(results, key):
+                #continue
+        for key in object_attributes(results):
+            resi = getattr(results, key)
+            if key == 'cddata':
+                f06.write(f'{key}:\n')
+                msg = ''
+                for isub, resii in enumerate(resi):
+                    for ii, resiii in resii.items():
+                        msg += f'{isub},{ii}: {resiii.tolist()}\n'
+                f06.write(msg)
+                print(msg)
+                continue
+
+            if resi is None or isinstance(resi, dict) and len(resi) == 0:
+                continue
+            if isinstance(resi, list):
+                f06.write(f'{key}:\n')
+                for resii in resi:
+                    if isinstance(resii, np.ndarray):
+                        np.savetxt(f06, resii)
+                    else:
+                        raise RuntimeError(resii)
+                    #print('----')
+                #print('--------')
+                    #f06.write(str(resii) + '\n')
+            #print(key, type(resi))
+
         if len(self.matrices) == 0:
             return
         log = self.log
-        results = self.op2_results
         if results.monitor1 is not None:
             page_num = results.monitor1.write(
                 f06, page_stamp=page_stamp, page_num=page_num)
@@ -787,3 +826,34 @@ def _get_file_obj(self: F06Writer,
         if not quiet:
             print('f06_filename =', f06_filename)
     return f06, f06_filename, matrix_filename
+
+def _write_responses1(op2: OP2, f06: TextIO,
+                      page_stamp: str, page_num: int):
+    op2_results = op2.op2_results
+    for subcase, res in op2_results.vg_vf_response.items():
+        page_num = res.export_to_f06_file(
+            f06,
+            #modes: Optional[list[int]]=None,
+            page_stamp=page_stamp,
+            page_num=page_num)
+    return page_num
+
+def _write_responses2(op2: OP2, f06: TextIO,
+                      page_stamp: str, page_num: int):
+    op2_results = op2.op2_results
+
+    desvars = op2_results.responses.desvars
+    convergence_data = op2_results.responses.convergence_data
+    dscmcol = op2_results.responses.dscmcol
+
+    if desvars is not None:
+        desvars.write_f06(f06)
+
+    if convergence_data is not None:
+        convergence_data.write_f06(f06)
+
+    if dscmcol is not None:
+        msg = dscmcol.get_responses_by_group()
+        f06.write(msg)
+    return page_num
+

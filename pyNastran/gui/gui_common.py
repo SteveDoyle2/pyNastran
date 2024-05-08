@@ -2289,7 +2289,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
-        self.create_groups_by_model_group()
+        #self.create_groups_by_model_group()
 
     def _set_methods_by_icase(self, icase: Optional[int]) -> bool:
         """

@@ -117,7 +117,7 @@ def compare_materials(fem1: BDF, fem2: BDF) -> None:
         card2 = fem2.creep_materials[key]
         assert_fields(card1, card2)
 
-def compare_card_content(fem1, fem2):
+def compare_card_content(fem1: BDF, fem2: BDF) -> None:
     check_obj_names = [
         'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
         #'elements', 'rigid_elements',

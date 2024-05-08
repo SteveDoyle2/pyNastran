@@ -13,15 +13,15 @@ This file defines the OUG Table, which contains:
    - DISPLACEMENT = ALL
 """
 from __future__ import annotations
-from struct import Struct
+#from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran import DEV
-from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+#from pyNastran import DEV
+#from pyNastran.utils.numpy_utils import integer_types
+#from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-from pyNastran.op2.tables.oug.oug_displacements import (
-    RealDisplacementArray, ComplexDisplacementArray)
+from pyNastran.op2.tables.contact.slide_objects import (
+    RealSlideDistanceArray, ) # ComplexDisplacementArray
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -330,20 +330,19 @@ class OSLIDE:
             result_name = 'glue_contact_slide_distance'
         elif op2.table_name == b'OSLIDE1':
             result_name = 'contact_slide_distance'
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         if op2._results.is_not_saved(result_name):
             return ndata
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
 
-        #ndata = len(data)
         if op2.num_wide == 7:
             factor = op2.factor
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
             auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
+                result_name, nnodes, storage_obj, RealSlideDistanceArray, is_cid=False)
             if auto_return:
                 return ndata
 
@@ -371,8 +370,9 @@ class OSLIDE:
                 if op2.analysis_code not in {1}:
                     obj._times[obj.itime] = obj.nonlinear_factor
                 obj.node_gridtype[:, 0] = node_id
+                obj.node_gridtype[:, 1] = 1
                 obj.data[obj.itime, :, :] = datai
-            else:
+            else:  # pragma: no cover
                 # 5: freq
                 # 6: time step
                 # 10 nonlinear statics
@@ -382,7 +382,7 @@ class OSLIDE:
             #print(datai)
             #reals = floats[:, [0, 1, 2]]
             #imags = floats[:, [3, 4, 5]]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         #raise NotImplementedError(op2.code_information())
         return ndata

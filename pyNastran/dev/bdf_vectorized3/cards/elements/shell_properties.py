@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank,
     #integer_double_or_blank,
     string_or_blank, # blank,
-    integer_types,
+    integer_types, float_types,
 )
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.bdf.cards.properties.shell import map_failure_theory_int
@@ -998,13 +998,23 @@ class PCOMP(CompositeProperty):
         if lam is None:
             lam = ''
 
-        if thetas is None:
-            thetas = [0.] * len(mids)
-        if souts is None:
-            souts = ['YES'] * len(mids)
+        nmids = len(mids)
+        if isinstance(thicknesses, float_types):
+            thicknesses = [thicknesses] * nmids
 
-        assert len(souts) == len(mids)
-        assert len(thetas) == len(mids)
+        if thetas is None:
+            thetas = [0.] * nmids
+        elif isinstance(thetas, float_types):
+            thetas = [thetas] * nmids
+
+        if souts is None:
+            souts = ['YES'] * nmids
+        elif isinstance(souts, str):
+            souts = [souts] * nmids
+
+        assert len(thicknesses) == nmids, thicknesses
+        assert len(souts) == nmids, souts
+        assert len(thetas) == nmids, thetas
         self.cards.append((pid, nsm, sb, ft, tref, ge, lam, z0,
                            mids, thicknesses, thetas, souts, comment))
         #self.property_id = np.hstack([self.property_id, pid])
@@ -1231,6 +1241,59 @@ class PCOMP(CompositeProperty):
             total_thickness = self.total_thickness()
             self.z0[inan] = -total_thickness[inan] / 2
         #x = 1
+
+    def update_layers(self, property_id: np.ndarray,
+                      thickness: Optional[np.ndarray]=None,
+                      theta: Optional[np.ndarray]=None,
+                      ilayer: Optional[np.ndarray]=None) -> None:
+        assert thickness is not None or theta is not None, (thickness, theta)
+        if isinstance(property_id, integer_types):
+            property_id = np.array([property_id])
+            if thickness is not None:
+                thickness = np.array([thickness])
+            if theta is not None:
+                theta = np.array([theta])
+
+        if theta is not None and thickness is not None:
+            assert theta.shape == thickness.shape, (theta.shape, thickness.shape)
+
+        uproperty_id = np.unique(property_id)
+        assert len(property_id) == len(uproperty_id), f'property_id={property_id} uproperty_id={uproperty_id}'
+        ipid = np.searchsorted(self.property_id, property_id)
+        assert np.array_equal(self.property_id[ipid], property_id)
+
+        if thickness is not None:
+            assert thickness.ndim == 2, thickness.shape
+            nlayer = self.nlayer[ipid]
+            min_layers = nlayer.min()
+            ndimensions = thickness.shape[1]
+            if min_layers < ndimensions:
+                imin = np.where(nlayer == min_layers)[0]
+                pidi = property_id[imin]
+                raise RuntimeError(f'too many dimensions for pid={pidi} '
+                                   f'min(layers)={min_layers}; thickness.shape={thickness.shape}')
+
+            ilayer_ = self.ilayer[ipid, :]
+            for pid, (i0, i1), thicknessi in zip(property_id, ilayer_, thickness):
+                thicknesses = self.thickness[i0:i1]
+                if ilayer is None:
+                    assert len(thicknesses) == len(thicknessi), (thicknesses, thicknessi)
+                    thicknesses[:] = thicknessi
+                else:
+                    assert len(ilayer) == len(thicknessi), (ilayer, thicknessi)
+                    thicknesses[ilayer] = thicknessi
+
+        if theta is not None:
+            assert theta.ndim == 2, theta.shape
+            ilayer_ = self.ilayer[ipid, :]
+            for pid, (i0, i1), thetai in zip(property_id, ilayer_, theta):
+                thetas = self.theta[i0:i1]
+                if ilayer is None:
+                    assert len(thetas) == len(thicknessi), (thetas, thicknessi)
+                    thetas[:] = thetai
+                else:
+                    assert len(ilayer) == len(thicknessi), (ilayer, thicknessi)
+                    thetas[ilayer] = thetai
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['material_id'].append(self.material_id)

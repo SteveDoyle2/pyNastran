@@ -66,7 +66,7 @@ class RealSolidArrayNx(OES_Object):
         node = self.element_node[:, 1].reshape(nelements, nnodes_nx)
 
         element_centroid = element[:, 0].reshape((nelements, 1))
-        node_centroid = np.zeros((nelements, 1), dtype='int32')
+        node_centroid = np.zeros((nelements, 1), dtype=idtype)
         element2 = np.block([element_centroid, element]).ravel()
         node2 = np.block([node_centroid, node]).ravel()
         element_node = np.vstack([element2, node2]).T

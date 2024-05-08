@@ -1,10 +1,12 @@
 """tests the NastranIO class"""
+from __future__ import annotations
 import os
+from typing import Union, TYPE_CHECKING
 
-#from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkIOLegacy import vtkUnstructuredGridWriter
 
 from cpylog import SimpleLogger
 
@@ -23,6 +25,9 @@ from pyNastran.converters.nastran.gui.result_objects.force_results import ForceR
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2_geom import OP2
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -51,22 +56,22 @@ def save_nastran_results(gui: NastranGUI,
             continue
 
         if isinstance(case, ForceTableResults):
-            _save_force_table_results(case, key, index_name, used_titles,
+            _save_force_table_results(icase, case, key, index_name, used_titles,
                                       point_data, cell_data, log)
             continue
 
         elif isinstance(case, DisplacementResults):
-            _save_displacement_results(case, key, index_name, used_titles,
+            _save_displacement_results(icase, case, key, index_name, used_titles,
                                        point_data, cell_data, log)
             continue
 
         elif isinstance(case, SimpleTableResults):
-            _save_simple_table_results(case, key, index_name, used_titles,
+            _save_simple_table_results(icase, case, key, index_name, used_titles,
                                        point_data, cell_data, log)
             continue
 
         if isinstance(case, LayeredTableResults):
-            vtk_array = _save_layered_table_results(case,
+            vtk_array = _save_layered_table_results(icase, case,
                                                     key, index_name, used_titles,
                                                     point_data, cell_data, log)
             location = case.location
@@ -82,7 +87,7 @@ def save_nastran_results(gui: NastranGUI,
         elif isinstance(case, (CompositeStrainStressResults2, PlateStrainStressResults2, SolidStrainStressResults2)):
             fringe = case.get_fringe_result(*index_name)
             titlei = f'icase={icase}; ' + case.get_annotation(*index_name).replace(' = ', '=')
-            check_title(titlei, used_titles)
+            titlei = check_title(titlei, used_titles)
             vtk_array = numpy_to_vtk(fringe, deep=0, array_type=None)
             vtk_array.SetName(titlei)
             location = case.get_location(*index_name)
@@ -95,10 +100,11 @@ def save_nastran_results(gui: NastranGUI,
                 return
             assert isinstance(case, GuiResult), case
             location = case.location
-            vtk_array = case.save_vtk_result(used_titles)
+            vtk_array = case.save_vtk_result(icase, used_titles)
         add_vtk_array(location, point_data, cell_data, vtk_array)
 
-def _save_force_table_results(case: ForceTableResults,
+def _save_force_table_results(icase: int,
+                              case: ForceTableResults,
                               key: int,
                               index_name: tuple[int, tuple[int, int, str]],
                               used_titles: set[str],
@@ -111,9 +117,8 @@ def _save_force_table_results(case: ForceTableResults,
 
     if dxyz.ndim == 2:
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        assert title not in used_titles, title
-        titlei =  f'{title}_subcase={case.subcase_id}'
-        check_title(title, used_titles)
+        titlei =  f'icase={icase}; {title}_subcase={case.subcase_id}'
+        titlei = check_title(title, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
     elif dxyz.ndim == 3:
@@ -121,14 +126,15 @@ def _save_force_table_results(case: ForceTableResults,
             header = case.headers[itime].replace(' = ', '=')
             dxyz = case.dxyz[itime, :, :]
             vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-            titlei =  f'{header}_subcase={case.subcase_id}'
-            check_title(titlei, used_titles)
+            titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
+            titlei = check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
             add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
         log.warning(f'cannot add {str(case)!r}')
 
-def _save_displacement_results(case: DisplacementResults,
+def _save_displacement_results(icase: int,
+                               case: DisplacementResults,
                                key: int,
                                index_name: tuple[int, tuple[int, int, str]],
                                used_titles: set[str],
@@ -145,12 +151,13 @@ def _save_displacement_results(case: DisplacementResults,
         dxyz = case.dxyz[itime, :, :]
         assert dxyz.ndim == 2, dxyz.shape
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        titlei =  f'{header}_subcase={case.subcase_id}'
-        check_title(titlei, used_titles)
+        titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
+        titlei = check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
-def _save_simple_table_results(case: SimpleTableResults,
+def _save_simple_table_results(icase: int,
+                               case: SimpleTableResults,
                                key: int,
                                index_name: tuple[int, tuple[int, int, str]],
                                used_titles: set[str],
@@ -177,12 +184,12 @@ def _save_simple_table_results(case: SimpleTableResults,
     (itime, imethod, header) = name
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
-    titlei =  f'{case.uname}: {method}_{header2}_subcase={case.subcase_id}'
+    titlei =  f'icase={icase}; {case.uname}: {method}_{header2}_subcase={case.subcase_id}'
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
     # form_name = case.form_names[itime, ilayer, imethod]
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
 
@@ -190,9 +197,9 @@ def _save_simple_table_results(case: SimpleTableResults,
     add_vtk_array(case.location, point_data, cell_data, vtk_array)
     #log.warning(f'skipping SimpleTableResults {case}')
 
-def _save_layered_table_results(case: LayeredTableResults,
+def _save_layered_table_results(icase, case: LayeredTableResults,
                                 key: int,
-                                index_name: tuple[int, tuple[int, int, str]],
+                                index_name: tuple[int, tuple[int, int, int, str]],
                                 used_titles: set[str],
                                 point_data: vtkPointData, cell_data: vtkCellData,
                                 log: SimpleLogger) -> vtkFloatArray:
@@ -208,35 +215,99 @@ def _save_layered_table_results(case: LayeredTableResults,
     #form_index = case.get_form_index(key, name)
     form_name = case.form_names[itime, ilayer, imethod]
     #for method in case.methods:
-    titlei =  f'{form_name}_subcase={case.subcase_id}'
+    titlei =  f'icase={icase}; {form_name}_subcase={case.subcase_id}'
     method = case.get_methods(key, name)[0]
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
-    check_title(titlei, used_titles)
+    titlei = check_title(titlei, used_titles)
     vtk_array = numpy_to_vtk(res, deep=0, array_type=None)
     vtk_array.SetName(titlei)
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(bdf_filename: str,
-                   op2_filename: str,
-                   vtk_filename: str) -> None:
-    """kind of a hack, but it will always work assuming the GUI works"""
+def nastran_to_vtk(bdf_filename: Union[str, BDF],
+                   op2_filename: Union[str, OP2],
+                   vtu_filename: str,
+                   log_level: str='error',
+                   compression_level: int=5) -> vtkUnstructuredGrid:
+    """
+    Converts a Natsran geometry/results to vtk *.vtu
+
+    Parameters
+    ----------
+    bdf_filename: str, BDF, OP2Geom
+        the geometry
+    op2_filename: str, OP2, OP2Geom
+        the results; can be '' for no op2
+    vtu_filename : str
+        the vtk output filename; expected to be a:
+         - *.vtu file (preferred; xml file)
+         - *.vtk file (binary legacy format)
+    log_level : str; default='warning'
+        'debug', 'info', 'warning', 'error'
+    compression_level : int; default=5
+        applies only to vtu
+        LZMA compression level (0-9)
+        5 is balanced performance and used by Paraview
+
+    Returns
+    -------
+    vtk_ugrid : vtkUnstructuredGrid
+        the unstructured grid object and all the results
+
+    Examples
+    --------
+    bdf_filename = 'fem.bdf'
+    op2_filename = 'fem.op2'
+    vtk_filename = 'fem.vtu'
+
+    bdf_model = read_bdf(bdf_filename)
+    op2_model = read_op2(op2_filename)
+    model = read_op2_geom(op2_filename)
+
+    nastran_to_vtk(bdf_model, op2_model, vtk_filename)
+    nastran_to_vtk(bdf_filename, op2_filename, vtk_filename)
+    nastran_to_vtk(model, model, vtk_filename)
+
+    Note
+    ----
+    Kind of a hack, but it will always work assuming the GUI works
+
+    Legacy - use *.vtk
+    It’s a serial formats that are easy to read and write either
+    by hand or programmatically.
+
+    XML - use *.vtu (preferred)
+    More flexible but more complex than the legacy file format, it
+    supports random access, parallel I/O, and portable data compression
+    and are preferred to the serial VTK file formats whenever possible.
+
+    VTKHDF - not supported
+    This is a file format using the same concepts as the XML formats
+    described above but relying on HDF5 for actual storage. It is
+    simpler than the XML. It provides good I/O performance as well as
+    robust and flexible parallel I/O capabilities and may to replace
+    others file formats once it will be complete. It can be read/written
+    using either hdf5 directly or the vtkhdf implementation in VTK.
+
+    """
+    filename = str(vtu_filename).lower()
+    assert filename.endswith(('.vtu', '.vtk')), vtu_filename
+
     gui = NastranGUI()
     gui.create_secondary_actors = False
 
     log = gui.log
-    log.level = 'error'
-    log.level = 'warning'
-    #log.set_level('error')
-    #log.set_level('warning')
+    log.level = log_level
 
     gui.load_nastran_geometry(bdf_filename)
-    gui.load_nastran_results(op2_filename)
     vtk_ugrid = gui.grid
     if vtk_ugrid is None:
         raise RuntimeError('vtk_ugrid is None')
+
+    if op2_filename:
+        gui.load_nastran_results(op2_filename)
 
     save_nastran_results(gui, vtk_ugrid)
     #root = vtkMultiBlockDataSet()
@@ -248,10 +319,23 @@ def nastran_to_vtk(bdf_filename: str,
     #for coord_id, axes_actor in test.axes.items():
         #coords_branch.SetBlock(0, axes)
 
-    writer = vtkXMLUnstructuredGridWriter()
-    writer.SetFileName(vtk_filename)
-    writer.SetInputData(vtk_ugrid)
-    out = writer.Write()
+    if filename.endswith('.vtk'):
+        writer = vtkUnstructuredGridWriter()
+        writer.SetFileName(str(vtu_filename)+'.vtk')
+        writer.SetFileTypeToBinary()
+        writer.SetInputData(vtk_ugrid)
+        out = writer.Write()
+    elif filename.endswith('.vtu'):
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(vtu_filename)
+        writer.SetCompressorTypeToLZMA()
+        writer.SetCompressionLevel(compression_level)
+        writer.SetInputData(vtk_ugrid)
+        out = writer.Write()
+    else:  # pragma: no cover
+        raise ValueError(f'expected vtu/vtk file; filename={filename!r}')
+    assert out == 1, out
+
     #print('done', out)
 
 

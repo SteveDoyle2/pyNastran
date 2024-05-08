@@ -28,94 +28,113 @@ class DYNAMICS(GeomCommon):
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
+
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.dynamics_map = {
-            (5307, 53, 379) : ['ACSRCE', self._read_acsrce], # 1
-            (27, 17, 182): ['DAREA', self._read_darea],  # 2
+            (5307, 53, 379) : ['ACSRCE', self.read_acsrce], # 1
+            (27, 17, 182): ['DAREA', self.read_darea],  # 2
 
-            (37, 18, 183): ['DELAY', self._read_delay],  # 3
-            (57, 5, 123): ['DLOAD', self._read_dload],  # 4
-            (77, 19, 184): ['DPHASE', self._read_dphase],  # 5
-            (107, 1, 86): ['EIGB', self._read_eigb],   # 7
-            (207, 2, 87): ['EIGC', self._read_eigc],   # 8
-            (257, 4, 158): ['EIGP', self._read_eigp],   # 9
-            (307, 3, 85): ['EIGR', self._read_eigr],   # 10
+            (37, 18, 183): ['DELAY', self.read_delay],  # 3
+            (57, 5, 123): ['DLOAD', self.read_dload],  # 4
+            (77, 19, 184): ['DPHASE', self.read_dphase],  # 5
+            (107, 1, 86): ['EIGB', self.read_eigb],   # 7
+            (207, 2, 87): ['EIGC', self.read_eigc],   # 8
+            (257, 4, 158): ['EIGP', self.read_eigp],   # 9
+            (307, 3, 85): ['EIGR', self.read_eigr],   # 10
 
-            (308, 8, 348): ['EIGRL', self._read_eigrl],  # 11
-            (707, 7, 124): ['EPOINT', self._read_epoint],  # 12
-            (1307, 13, 126): ['FREQ', self._read_freq],   # 13
-            (1007, 10, 125): ['FREQ1', self._read_freq1],  # 14
-            (1107, 11, 166): ['FREQ2', self._read_freq2],  # 15
-            (1407, 14, 39): ['FREQ3', self._read_freq3],  # 16
-            (1507, 15, 40): ['FREQ4', self._read_freq4],  # 17
-            (1607, 16, 41): ['FREQ5', self._read_freq5],  # 18
+            (308, 8, 348): ['EIGRL', self.read_eigrl],  # 11
+            (707, 7, 124): ['EPOINT', self.read_epoint],  # 12
+            (1307, 13, 126): ['FREQ', self.read_freq],   # 13
+            (1007, 10, 125): ['FREQ1', self.read_freq1],  # 14
+            (1107, 11, 166): ['FREQ2', self.read_freq2],  # 15
+            (1407, 14, 39): ['FREQ3', self.read_freq3],  # 16
+            (1507, 15, 40): ['FREQ4', self.read_freq4],  # 17
+            (1607, 16, 41): ['FREQ5', self.read_freq5],  # 18
 
-            (3707, 37, 556) : ['NLRGAP', self._read_nrlgap], # 19
+            (3707, 37, 556) : ['NLRGAP', self.read_nrlgap], # 19
 
-            (3107, 31, 127): ['NOLIN1', self._read_nolin1], # 20
-            (3207, 32, 128): ['NOLIN2', self._read_nolin2], # 21
-            #(3207, 33, 129): ['NOLIN3', self._read_fake], # 22
-            (3307, 33, 129) : ['NOLIN3', self._read_nolin3],
-            (3407, 34, 130): ['NOLIN4', self._read_nolin4], # 23
-            (2107, 21, 195): ['RANDPS', self._read_randps], # 24
-            (2207, 22, 196): ['RANDT1', self._read_randt1], # 25
-            (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
-            (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
-            (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
-            (8210, 82, 599): ['ROTORD', self._read_rotord],  # 29
-            (8410, 84, 600): ['ROTORG', self._read_rotorg],  # 30
-            (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
-            (6207, 62, 136): ['TF', self._read_tf],  # 32
-            (6607, 66, 137): ['TIC', self._read_tic],  # 33
-            (7107, 71, 138): ['TLOAD1', self._read_tload1],  # 37
-            (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
-            (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
-            (17500, 175, 618): ['TSTEP', self._read_tstep1],
+            (3107, 31, 127): ['NOLIN1', self.read_nolin1], # 20
+            (3207, 32, 128): ['NOLIN2', self.read_nolin2], # 21
+            #(3207, 33, 129): ['NOLIN3', self.read_fake], # 22
+            (3307, 33, 129) : ['NOLIN3', self.read_nolin3],
+            (3407, 34, 130): ['NOLIN4', self.read_nolin4], # 23
+            (2107, 21, 195): ['RANDPS', self.read_randps], # 24
+            (2207, 22, 196): ['RANDT1', self.read_randt1], # 25
+            (5107, 51, 131): ['RLOAD1', self.read_rload1],  # 26
+            (5207, 52, 132): ['RLOAD2', self.read_rload2],  # 27
+            (8910, 89, 606): ['ROTORB', self.read_fake],  # 28
+            (8210, 82, 599): ['ROTORD', self.read_rotord],  # 29
+            (8410, 84, 600): ['ROTORG', self.read_rotorg],  # 30
+            (5707, 57, 135): ['SEQEP', self.read_fake],  # 31
+            (6207, 62, 136): ['TF', self.read_tf],  # 32
+            (6607, 66, 137): ['TIC', self.read_tic],  # 33
+            (7107, 71, 138): ['TLOAD1', self.read_tload1],  # 37
+            (7207, 72, 139): ['TLOAD2', self.read_tload2],  # 38
+            (8307, 83, 142): ['TSTEP', self.read_tstep],  # 39
+            (17500, 175, 618): ['TSTEP', self.read_tstep1],
 
-            (10701, 107, 117) : ['RGYRO', self._read_rgyro],
-            (10801, 108, 242) : ['ROTORG', self._read_fake],
-            (3807, 38, 505) : ['NLRSFD', self._read_nlrsfd],
-            (4807, 48, 306) : ['DYNRED', self._read_dynred],
-            (11001, 110, 310) : ['RSPINT', self._read_rspint],
-            (10901, 109, 260) : ['RSPINR', self._read_fake],
-            (11101, 111, 368) : ['UNBALNC', self._read_fake],
+            (10701, 107, 117) : ['RGYRO', self.read_rgyro],
+            (10801, 108, 242) : ['ROTORG', self.read_fake],
+            (3807, 38, 505) : ['NLRSFD', self.read_nlrsfd],
+            (4807, 48, 306) : ['DYNRED', self.read_dynred],
+            (11001, 110, 310) : ['RSPINT', self.read_rspint],
+            (10901, 109, 260) : ['RSPINR', self.read_fake],
+            (11101, 111, 368) : ['UNBALNC', self.read_fake],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\nlttlhxb.op2
-            (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self._read_fake],
+            (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self.read_fake],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
-            (3201, 24, 54) : ['RCROSS', self._read_rcross],
+            (3201, 24, 54) : ['RCROSS', self.read_rcross],
 
-            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
 
-            (9010, 90, 569): ['CBEAR', self._read_fake],
-            (9110, 91, 570): ['PBEAR', self._read_fake],
-            (9310, 93, 633): ['ROTPARM', self._read_fake],
-            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
+            (9110, 91, 570): ['PBEAR', self.read_fake],
+            (9310, 93, 633): ['ROTPARM', self.read_fake],
+            (9010, 90, 569): ['CBEAR', self.read_fake],
 
-            (9407, 94, 659): ['ACADAPT', self._read_fake],
-            (11701, 117, 656): ['CAMPBLL', self._read_campbll],
+            (9407, 94, 659): ['ACADAPT', self.read_fake],
+            (11701, 117, 656): ['CAMPBLL', self.read_campbll],
 
-            (9607, 96, 660): ['ACORDER', self._read_fake],
-            (2601, 26, 58): ['FRFFLEX', self._read_fake],
-            (3501, 35, 56): ['RCROSSC', self._read_fake],
-            (5807, 59, 653): ['ACPLNW', self._read_fake],
-            (2807, 28, 79): ['FRFOMAP', self._read_fake],
-            (7307, 73, 647): ['TLOAD3', self._read_fake],
-            (5407, 54, 649): ['ALOAD', self._read_fake],
-            (2701, 27, 62): ['FRFOTM', self._read_fake],
-            #(9407, 94, 659): ['???', self._read_fake],
-            #(9407, 94, 659): ['???', self._read_fake],
-            #(9407, 94, 659): ['???', self._read_fake],
-            #(9407, 94, 659): ['???', self._read_fake],
-            #(9407, 94, 659): ['???', self._read_fake],
+            (2601, 26, 58): ['FRFFLEX', self.read_fake],
+            (2807, 28, 79): ['FRFOMAP', self.read_fake],
+            (2701, 27, 62): ['FRFOTM', self.read_fake],
+            (3501, 35, 56): ['RCROSSC', self.read_fake],
+            (5407, 54, 649): ['ALOAD', self.read_fake],
+            (5807, 59, 653): ['ACPLNW', self.read_acplnw],
+            (7307, 73, 647): ['TLOAD3', self.read_fake],
+            (9607, 96, 660): ['ACORDER', self.read_fake],
+            (11801, 118, 657): ['NLHARM', self.read_fake],
+            (12001, 120, 661): ['NLFREQ1', self.read_nlfreq1],
+            (12201, 122, 667): ['JCONADD', self.read_fake],
+            (13207, 132, 697): ['DAMPING', self.read_fake],
+            (13007, 130, 676): ['FRFXIT1', self.read_fake],
+
+            (12607, 126, 672): ['???-1', self.read_fake],
+            (14207, 142, 1001): ['NLFREQ1?', self.read_fake],
+
+            (12707, 127, 673): ['SPC?', self.read_fake],
+            (12907, 129, 675): ['FRFXIT', self.read_fake],
+            #(12607, 126, 672): ['???', self.read_stop],
         }
 
-    def _read_campbll(self, data: bytes, n: int) -> int:
+    def read_nlfreq1(self, data: bytes, n: int) -> int:
+        """
+        NLFREQ1, 20, 0.0, 0.01, 150
+        data = (20, 0.0, 0.01, 150)
+        """
+        op2: OP2Geom = self.op2
+        op2.log.warning('geom skipping NLFREQ1')
+        return len(data)
+
+    def read_campbll(self, data: bytes, n: int) -> int:
         """
         CAMPBLL
         CAMPBLL CID    VPARM DDVALID TYPE
@@ -126,7 +145,7 @@ class DYNAMICS(GeomCommon):
 
                   (15, 1, 22, 'FREQ    ', 1, 0.85, 0, 0, 1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert self.size == 4, f'CAMPBLL size={self.size}'
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -149,12 +168,87 @@ class DYNAMICS(GeomCommon):
             # darea = DAREA.add_op2_data(data=out)
             # op2._add_methods._add_darea_object(darea)
             n += ntotal
-        op2.log.warning('skipping CAMPBLL')
+        op2.log.warning('geom skipping CAMPBLL')
         return n
 
-    def _read_acsrce(self, data: bytes, n: int) -> int:
+    def _read_aload(self, data: bytes, n: int) -> int:
+        """
+        Record - ALOAD(5407,54,649)
+        Combination of acoustic loads
+        Word Name Type Description
+        1 SID         I Load set identification number
+        2 UNDEF(3) None N/A
+        5 LI          I Load set identification number i
+        Word 5 repeats until -1 occurs
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        asdf
+        return len(data)
+
+    def read_acplnw(self, data: bytes, n: int) -> int:
+        """
+        Record - ACPLNW(5807,59,653)
+
+        Acoustic plane wave source
+        Word      Name Type Description
+        1 SID      I Load set identification number
+        2 FORM     I Complex format: 0 for real/imaginary, 1 for magnitude/phase
+        3 A1      RS Scale factor 1
+        4 TRTM    RS Real part or magnitude of plane wave
+        5 TIDTRTM  I TABLEDi bulk entry identification number for real part or magnitude of plane wave
+        6 TITP    RS Imaginary part or phase (in degrees) of plane wave
+        7 TIDTITP  I TABLEDi bulk entry identification number for imaginary part or phase (in degrees) of plane wave
+        8 CID1     I Coordinate system identification number for location of plane wave source
+        9  X      RS X-coordinate of plane wave source
+        10 Y      RS Y-coordinate of plane wave source
+        11 Z      RS Z-coordinate of plane wave source
+        12 CID2    I Coordinate system identification number for direction of plane wave
+        13 NX     RS Direction cosine between plane wave direction and X-axis
+        14 NY     RS Direction cosine between plane wave direction and Y-axis
+        15 NZ     RS Direction cosine between plane wave direction and Z-axis
+        16 UNDEF(3) None
+        """
+        op2: OP2Geom = self.op2
+
+        ntotal = 18 * self.size
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'ACPLNW'
+
+        loads = []
+        struc = Struct(mapfmt(op2._endian + b'2i 2f if 2i 3f i 3f 3i', self.size))
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, form, scale, real_float, tid_real, imag_float, tid_imag,
+             cid1, x, y, z, cid2, nx, ny, nz, dummy1, dummy2, dummy3) = out
+            assert sid > 0, sid
+            assert form in {0, 1}, form
+
+            form_str = 'REAL' if form == 0 else 'PHASE'
+
+            real = real_float if tid_real == 0 else tid_real
+            imag = imag_float if tid_imag == 0 else tid_imag
+
+            assert cid1 >= 0, cid1
+            assert cid2 >= 0, cid2
+            assert cid2 >= 0, cid2
+            assert (dummy1, dummy2, dummy3) == (0, 0, 0), (dummy1, dummy2, dummy3)
+            xyz = [x, y, z]
+            nxyz = [nx, ny, nz]
+
+
+            # ACPLNW SID  FORM A  TR/TM TI/TP
+            #        CID1 X1   X2 X3    CID2 N1 N2 N3
+            op2.add_acplnw(sid, form_str, scale, real, imag, cid1, xyz, cid2, nxyz)
+            #acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            #loads.append(acsrce)
+        return n # , loads
+
+    def read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
                                              'ACSRCE', op2._add_methods._add_dload_entry)
         return n
@@ -176,7 +270,7 @@ class DYNAMICS(GeomCommon):
         8 T     RS Time delay
         9 PH    RS Phase lead
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
@@ -217,7 +311,7 @@ class DYNAMICS(GeomCommon):
         10 TCR    RS If TCI     = 0, constant value for C(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
@@ -242,7 +336,7 @@ class DYNAMICS(GeomCommon):
             loads.append(acsrce)
         return n, loads
 
-    def _read_darea(self, data: bytes, n: int) -> int:
+    def read_darea(self, data: bytes, n: int) -> int:
         """
         DAREA(27,17,182) - the marker for Record 2
 
@@ -252,7 +346,7 @@ class DYNAMICS(GeomCommon):
         4 A   RS Scale factor
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DAREA', nentries)
@@ -266,7 +360,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_delay(self, data: bytes, n: int) -> int:
+    def read_delay(self, data: bytes, n: int) -> int:
         """
         DELAY(37,18,183) - Record 3
 
@@ -276,7 +370,7 @@ class DYNAMICS(GeomCommon):
         4 T   RS Time delay
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DELAY', nentries)
@@ -292,7 +386,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dload(self, data: bytes, n: int) -> int:
+    def read_dload(self, data: bytes, n: int) -> int:
         """
         DLOAD(57,5,123) - Record 4
 
@@ -303,7 +397,7 @@ class DYNAMICS(GeomCommon):
         Words 3 through 4 repeat until (-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ndata = len(data)
         #nfields = (ndata - n) // 4
 
@@ -339,7 +433,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('DLOAD', nentries)
         return len(data)
 
-    def _read_dphase(self, data: bytes, n: int) -> int:
+    def read_dphase(self, data: bytes, n: int) -> int:
         """
         DPHASE(77,19,184) - Record 5
 
@@ -349,7 +443,7 @@ class DYNAMICS(GeomCommon):
         4 TH  RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('DPHASE', nentries)
@@ -365,7 +459,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dynred(self, data: bytes, n: int) -> int:
+    def read_dynred(self, data: bytes, n: int) -> int:
         """
         DYNRED(4807,48,306)
 
@@ -378,7 +472,7 @@ class DYNAMICS(GeomCommon):
         6 NQDES I Number of generalized degrees-of-freedom
         7 UNDEF(2 ) none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n2h39.op2
         #DYNRED  202     1000.
 
@@ -411,7 +505,7 @@ class DYNAMICS(GeomCommon):
         return n
 
 
-    def _read_eigb(self, data: bytes, n: int) -> int:
+    def read_eigb(self, data: bytes, n: int) -> int:
         """EIGB(107,1,86) - Record 7
 
         NX
@@ -429,7 +523,7 @@ class DYNAMICS(GeomCommon):
         13 C            I Component number
         14 UNDEF(5) None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 60 * self.factor  # 4*15
         ntotal = 72 * self.factor  # 4*18
         nentries = (len(data) - n) // ntotal
@@ -456,7 +550,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigc(self, data: bytes, n: int) -> int:
+    def read_eigc(self, data: bytes, n: int) -> int:
         """
         EIGC(207,2,87) - Record 8
 
@@ -484,7 +578,7 @@ class DYNAMICS(GeomCommon):
         data  = (2, CLAN, '', MAX, '', 0,     0, 1e-08, 32, -1,
                  3, HESS, '', MAX, '', 0,     0, 1e-08, 32, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if 0:
             ntotal = 60
             nentries = (len(data) - n) // ntotal
@@ -611,13 +705,14 @@ class DYNAMICS(GeomCommon):
                 assert component == 0, component
                 component = None
 
-            eigc = op2.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
-                                 mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
-                                 alphaAjs=alphaAjs, omegaAjs=omegaAjs,
-                                 alphaBjs=alphaBjs, omegaBjs=omegaBjs,
-                                 LJs=LJs, NEJs=NEJs, NDJs=NDJs,
-                                 shift_r1=None, shift_i1=None, isrr_flag=None,
-                                 nd1=None, comment='')
+            eigc = op2.add_eigc(
+                sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+                alphaAjs=alphaAjs, omegaAjs=omegaAjs,
+                alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+                LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                shift_r1=None, shift_i1=None, isrr_flag=None,
+                nd1=None, comment='')
             eigc.validate()
 
             #while intsi != (-1, -1, -1):
@@ -633,7 +728,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EIGC', nentries)
         return len(data)
 
-    def _read_eigp(self, data: bytes, n: int) -> int:
+    def read_eigp(self, data: bytes, n: int) -> int:
         """
         EIGP(257,4,158) - Record 9
 
@@ -643,7 +738,7 @@ class DYNAMICS(GeomCommon):
         4 M      I Multiplicity of complex root at pole
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('EIGP', nentries)
@@ -659,7 +754,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigr(self, data: bytes, n: int) -> int:
+    def read_eigr(self, data: bytes, n: int) -> int:
         """
         EIGR(307,3,85) - Record 10
 
@@ -676,7 +771,7 @@ class DYNAMICS(GeomCommon):
         14 UNDEF(5 ) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor
         nentries = (len(data) - n) // ntotal
         if self.size == 4:
@@ -700,7 +795,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EIGR', nentries)
         return n
 
-    def _read_eigrl(self, data: bytes, n: int) -> int:
+    def read_eigrl(self, data: bytes, n: int) -> int:
         """
         EIGRL(308,8,348) - Record 11
 
@@ -730,15 +825,16 @@ class DYNAMICS(GeomCommon):
             floats  = (5, 0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 907333664768.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data[n:], types='ifs')
         ndata = len(data)
-        if self.size == 4:
+        size = self.size
+        if size == 4:
             s = Struct('i 2f 3i f 2i 8s f i')
             nbytes = 52
             types = 'if'
         else:
-            s = Struct('q 2d 3q d 2q 16s d i')
+            s = Struct('q 2d 3q d 2q 16s d i') #  TODO: why is there an i?
             nbytes = 100
             types = 'qds'
 
@@ -749,21 +845,30 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+nbytes] # 13*4 = 52
             out = s.unpack(edata)
             sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
+
+            #large: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=0
+            #small: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=538976288
+
+            #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                            #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+
             norm = norm.decode('latin1').rstrip('\x00 ')
             #print('self._nastran_format =', self._nastran_format)
             if nums == 0: # and self._nastran_format == 'nx':
-                op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
-                                f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
-                nums = None
+                #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+                #pass
+                nums = 14
                 is_none = True
 
-            if nums is None:
-                nums = 14
-                nums_total = nums * 4
-                edata2 = data[n+nbytes:n+nbytes+nums_total]
-                op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+            #elif nums is None:
+                #nums = 14
+                #nums_total = nums * 4
+                #assert len(data) == nbytes, f'ndata={len(data)} nbytes={nbytes} size={size}'
+                #edata2 = data[n+nbytes:n+nbytes+nums_total]
+                #op2.show_data(edata2, types=types)
+                #fi = unpack(mapfmt('%if' % nums, size), edata2)
+                #print(out, fi)
                 #nbytes += nums_total
 
             elif nums != 538976288:
@@ -773,14 +878,20 @@ class DYNAMICS(GeomCommon):
                 #edata2 = data[n+46:n+46+nums*4]
                 edata2 = data[n+nbytes:n+nbytes+nums*4]
                 op2.show_data(edata2, types=types)
-                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
-                print(out, fi)
+                fi = unpack(mapfmt('%if' % nums, size), edata2)
+                op2.log.warning(f'  frequencies={fi}')
                 raise NotImplementedError(nums)
 
             if op2.is_debug_file:
                 op2.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
+
+            assert flag1 in {-1, 0}, (flag1, flag2)
+            assert flag2 in {-1, 0}, (flag1, flag2)
+            v1 = v1 if flag1 == 0 else None
+            v2 = v2 if flag2 == 0 else None
+
             op2.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
                            maxset=maxset, shfscl=shfscl,
                            norm=norm, options=options, values=values)
@@ -795,9 +906,9 @@ class DYNAMICS(GeomCommon):
             assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
-    def _read_epoint(self, data: bytes, n: int) -> int:
+    def read_epoint(self, data: bytes, n: int) -> int:
         """EPOINT(707,7,124) - Record 12"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         npoints = (len(data) - n) // 4
         fmt = op2._endian + b'%ii' % npoints
         nids = unpack(fmt, data[n:])
@@ -808,9 +919,9 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('EPOINT', count_num=npoints)
         return len(data)
 
-    def _read_freq(self, data: bytes, n: int) -> int:
+    def read_freq(self, data: bytes, n: int) -> int:
         """FREQ(1307,13,126) - Record 13"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
@@ -823,7 +934,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ', count_num=len(iminus1))
         return len(data)
 
-    def _read_freq1(self, data: bytes, n: int) -> int:
+    def read_freq1(self, data: bytes, n: int) -> int:
         """
         FREQ1(1007,10,125) - Record 14
 
@@ -833,7 +944,7 @@ class DYNAMICS(GeomCommon):
         4 NDF I  Number of frequency increments
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
@@ -850,7 +961,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ1', nentries)
         return n
 
-    def _read_freq2(self, data: bytes, n: int) -> int:
+    def read_freq2(self, data: bytes, n: int) -> int:
         """
         FREQ2(1107,11,166) - Record 15
 
@@ -859,7 +970,7 @@ class DYNAMICS(GeomCommon):
         3 F2  RS Last frequency
         4 NF   I Number of logarithmic intervals
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
@@ -875,7 +986,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ2', nentries)
         return n
 
-    def _read_freq3(self, data: bytes, n: int) -> int:
+    def read_freq3(self, data: bytes, n: int) -> int:
         """
         FREQ3(1407,14,39) - Record 16
 
@@ -887,7 +998,7 @@ class DYNAMICS(GeomCommon):
         6 BIAS    RS Clustering bias parameter
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 2f 4s if')
@@ -907,7 +1018,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ3', nentries)
         return n
 
-    def _read_freq4(self, data: bytes, n: int) -> int:
+    def read_freq4(self, data: bytes, n: int) -> int:
         """
         FREQ4(1507,15,40) - Record 17
 
@@ -918,7 +1029,7 @@ class DYNAMICS(GeomCommon):
         5 NFM   I Number of evenly spaced frequencies per spread
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 3f i')
@@ -933,7 +1044,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('FREQ4', nentries)
         return n
 
-    def _read_freq5(self, data: bytes, n: int) -> int:
+    def read_freq5(self, data: bytes, n: int) -> int:
         """
         FREQ5(1607,16,41) - Record 18
 
@@ -943,7 +1054,7 @@ class DYNAMICS(GeomCommon):
         4 FRI RS Fractions of natural frequencies
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data, dtype='int32').copy()
         floats = np.frombuffer(data, dtype='float32').copy()
         i_minus_1s = np.where(ints == -1)[0]
@@ -977,7 +1088,7 @@ class DYNAMICS(GeomCommon):
             #n += ntotal
         #op2.increase_card_count('FREQ5', nentries)
 
-    def _read_nrlgap(self, data: bytes, n: int) -> int:
+    def read_nrlgap(self, data: bytes, n: int) -> int:
         r"""
         C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
         NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
@@ -988,7 +1099,7 @@ class DYNAMICS(GeomCommon):
          500, 1, 2, 200, 501, 520, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 # 4*8
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -1002,7 +1113,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return len(data)
 
-    def _read_nlrsfd(self, data: bytes, n: int) -> int:
+    def read_nlrsfd(self, data: bytes, n: int) -> int:
         """this card is faked..."""
         card_name = 'NLRSFD'
         card_obj = None
@@ -1012,7 +1123,7 @@ class DYNAMICS(GeomCommon):
         }
         #try:
         #n = self._read_rgyro_52(RGYRO, data, n)
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.op2.reader_geom3._add_op2_rigid_element,
@@ -1048,7 +1159,7 @@ class DYNAMICS(GeomCommon):
         data = (1, 101, 103, 'XY      ', 6.44, 0.727, 0.003, 'SHORT   ', 7.0e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0)
         """
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 80 * self.factor # 4*20
         struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
@@ -1112,7 +1223,7 @@ class DYNAMICS(GeomCommon):
           floats  = (1, 901, 1600, 'XY      ', 7.6, 0.4, 0.003, 'SHORT   ', 7.e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.401298464324817e-45, 1.4026997627891419e-42, 2.1019476964872256e-42, 1.358208852320992e-19, 1.3563156426940112e-19, 6.400000095367432, 0.7269999980926514, 0.003000000026077032, 222567907328.0, 1.3563223635364882e-19, 6.999999868639861e-07, 0.0, 1.401298464324817e-45, 0.0, 270.0, 0.0, 0.0, 4.344025239406933e-44, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 128 * self.factor # 4*32
         struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8f')
@@ -1153,7 +1264,7 @@ class DYNAMICS(GeomCommon):
         return n, []
 
 
-    def _read_nolin1(self, data: bytes, n: int) -> int:
+    def read_nolin1(self, data: bytes, n: int) -> int:
         """
         NOLIN1(3107,31,127)
 
@@ -1168,7 +1279,7 @@ class DYNAMICS(GeomCommon):
         8 UNDEF none
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN1 SID GI CI S GJ CJ TID
         #NOLIN1  115     2               -1.0    2               2
@@ -1189,7 +1300,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN1', nentries)
         return n
 
-    def _read_nolin2(self, data: bytes, n: int) -> int:
+    def read_nolin2(self, data: bytes, n: int) -> int:
         """
         NOLIN2(3207,32,128)
 
@@ -1204,7 +1315,7 @@ class DYNAMICS(GeomCommon):
         8 CK  I Component number for GK
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n12905b.op2
         #NOLIN2  SID     GI      CI         S    GJ      CJ      GK      CK
         #NOLIN2  400     2       1       -.01    3       0       2       1
@@ -1226,7 +1337,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN2', nentries)
         return n
 
-    def _read_nolin3(self, data: bytes, n: int) -> int:
+    def read_nolin3(self, data: bytes, n: int) -> int:
         """
         NOLIN3(3307,33,129)
 
@@ -1240,7 +1351,7 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN3  115     4               -3.5+3  4       10      2.
         #NOLIN3  115     11              -3.5+3  11      10      2.
@@ -1260,7 +1371,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN3', nentries)
         return n
 
-    def _read_nolin4(self, data: bytes, n: int) -> int:
+    def read_nolin4(self, data: bytes, n: int) -> int:
         """
         NOLIN4(3407,34,130)
 
@@ -1274,7 +1385,7 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN4  115     4               -3.5+3  4       10      2.
         #NOLIN4  115     11              -3.5+3  11      10      2.
@@ -1294,9 +1405,9 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NOLIN4', nentries)
         return n
 
-    def _read_randps(self, data: bytes, n: int) -> int:
+    def read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
@@ -1315,7 +1426,7 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
@@ -1359,7 +1470,7 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
@@ -1378,7 +1489,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RANDPS', nentries)
         return n, []
 
-    def _read_randt1(self, data: bytes, n: int) -> int:
+    def read_randt1(self, data: bytes, n: int) -> int:
         """
         RANDT1(2207,22,196)
 
@@ -1389,7 +1500,7 @@ class DYNAMICS(GeomCommon):
         4 TMAX RS Maximum time lag
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16  # 4*4
         struct1 = Struct(op2._endian + b'2i 2f')
         nentries = (len(data) - n) // ntotal
@@ -1403,9 +1514,9 @@ class DYNAMICS(GeomCommon):
         op2.card_count['RANDT1'] = nentries
         return n
 
-    def _read_rload1(self, data: bytes, n: int) -> int:
+    def read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
@@ -1428,7 +1539,7 @@ class DYNAMICS(GeomCommon):
         11 TDR    RS If TDI = 0, constant value for D(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -1476,7 +1587,7 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -1500,9 +1611,9 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_rload2(self, data: bytes, n: int) -> int:
+    def read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rload2_nx, self._read_rload2_msc,
@@ -1526,7 +1637,7 @@ class DYNAMICS(GeomCommon):
         11 TPR    RS If TPI = 0, constant value for PHI(f)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 44 * self.factor
         ndatai = len(data) - n
@@ -1576,7 +1687,7 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         dloads = []
         ntotal = 36
         ndatai = len(data) - n
@@ -1598,7 +1709,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_rgyro(self, data: bytes, n: int) -> int:
+    def read_rgyro(self, data: bytes, n: int) -> int:
         """this card is faked..."""
         card_name = 'RGYRO'
         card_obj = None
@@ -1608,7 +1719,7 @@ class DYNAMICS(GeomCommon):
         }
         #try:
         #n = self._read_rgyro_52(RGYRO, data, n)
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.op2.reader_geom3._add_op2_rigid_element,
@@ -1633,7 +1744,7 @@ class DYNAMICS(GeomCommon):
               WR3WRL WR4WRL WRHWRL
         RGYRO    1       SYNC      4      RPM                   1000.0
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 # 4*9
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 8s i 8s 3f')
@@ -1676,7 +1787,7 @@ class DYNAMICS(GeomCommon):
         floats  = (1, 206.349, 1.3563e-19, 4, 1.7390e-19, 1.3563e-19, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0, 0.0)
         """
         cards = []
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 # 4*13
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 8s i 8s 3f i3f')
@@ -1694,7 +1805,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RGYRO', nentries)
         return n, cards
 
-    def _read_rotord(self, data: bytes, n: int) -> int:
+    def read_rotord(self, data: bytes, n: int) -> int:
         """
         ROTORD(8210, 82, 599)
 
@@ -1713,7 +1824,7 @@ class DYNAMICS(GeomCommon):
         17 SYNC             I Synchronous analysis selection flag
         18 ETYPE            I Excitation type
         19 EORDER          RS Excitation order
-        20–21                 (not used)
+        20-21                 (not used)
         22+8*(i-1) RIDi     I Rotor ID for ith rotor
         23+8*(i-1) RSETi    I Set number for rotor speed for multiple rotors
         24+8*(i-1) RSPEEDi RS Relative rotor speed for multiple rotors
@@ -1725,7 +1836,7 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
 
         # up to EORDER
@@ -1779,7 +1890,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('ROTORD', nentries)
         return n
 
-    def _read_rotorg(self, data: bytes, n: int) -> int:
+    def read_rotorg(self, data: bytes, n: int) -> int:
         """
         ROTORG(8410, 84, 600)
 
@@ -1788,7 +1899,7 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nentries = 0
         ints = np.frombuffer(data[12:], dtype=op2.idtype)
         izero = np.where(ints==-1)[0]
@@ -1807,8 +1918,8 @@ class DYNAMICS(GeomCommon):
 
 #RSPINR
 
-    def _read_rspint(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+    def read_rspint(self, data: bytes, n: int) -> int:
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rspint_32, self._read_rspint_56,
@@ -1839,7 +1950,7 @@ class DYNAMICS(GeomCommon):
                    may be floats
                    0, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
@@ -1921,7 +2032,7 @@ class DYNAMICS(GeomCommon):
             Identification number of the superelement in which the rotor specified in the
             ROTORID field is defined.
         WR3R : float; default=0.0
-            Specifies “average” excitation frequency for calculation of rotor damping and
+            Specifies 'average' excitation frequency for calculation of rotor damping and
             circulation terms for rotor structural damping specified through GR field.
         RSPINT ROTORID GRIDA   GRIDB   SPDUNT SPTID SPDOUT ROTSEID
                GR      ALPHAR1 ALPHAR2 WR3R   WR4R  WRHR
@@ -1932,7 +2043,7 @@ class DYNAMICS(GeomCommon):
         floats=['0.1', '0.01', '1e-06']
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
@@ -1976,9 +2087,9 @@ class DYNAMICS(GeomCommon):
 
 #SEQEP(5707,57,135)
 
-    def _read_tf(self, data: bytes, n: int) -> int:
+    def read_tf(self, data: bytes, n: int) -> int:
         """TF"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # subtract of the header (sid, nid, component, b0, b1, b2)
         # divide by 5 (nid1, component1, a0, a1, a2)
         #nrows = (nfields - 6) // 5
@@ -2025,7 +2136,7 @@ class DYNAMICS(GeomCommon):
             n = n3
         return n
 
-    def _read_tic(self, data: bytes, n: int) -> int:
+    def read_tic(self, data: bytes, n: int) -> int:
         """
         TIC(6607,66,137)
 
@@ -2036,7 +2147,7 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 *self.factor  # 5*4
         struct1 = Struct(mapfmt(op2._endian + b'3i 2f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -2051,7 +2162,7 @@ class DYNAMICS(GeomCommon):
         return n
 
 #TIC3
-    def _read_tload1(self, data: bytes, n: int) -> int:
+    def read_tload1(self, data: bytes, n: int) -> int:
         """
         common method for reading NX/MSC TLOAD1
 
@@ -2065,7 +2176,7 @@ class DYNAMICS(GeomCommon):
         100000010, 14, 0, 0, 100000003, 0, 0, 0, 0,
         100000011, 16, 0, 0, 100000003, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # NX - 24
         # MSC - 32
         #$       sid excite  delay    type    tid/f us vs
@@ -2074,7 +2185,7 @@ class DYNAMICS(GeomCommon):
         #ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         #floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
 
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'TLOAD1'
         card_obj = TLOAD1
         methods = {
@@ -2110,7 +2221,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         """
-        Record – TLOAD1(7107,71,138)
+        Record - TLOAD1(7107,71,138)
 
         Word Name Type Description
         1 SID     I Load set identification number
@@ -2121,7 +2232,7 @@ class DYNAMICS(GeomCommon):
         6 DELAYR RS If DELAYI = 0, constant value for delay
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2167,7 +2278,7 @@ class DYNAMICS(GeomCommon):
         ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 8*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2219,7 +2330,7 @@ class DYNAMICS(GeomCommon):
         TLOAD1         2       2             45.       2
         data = (2, 2, 0, 0, 0, 2.0, 0.0, 0.0, f=45.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor # 8*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -2249,9 +2360,9 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tload2(self, data: bytes, n: int) -> int:
+    def read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_tload2_nx, self._read_tload2_msc,
@@ -2290,7 +2401,7 @@ class DYNAMICS(GeomCommon):
         12 US0    RS not documented in NX
         13 VS0    RS not documented in NX
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2333,7 +2444,7 @@ class DYNAMICS(GeomCommon):
         12 V0   RS Initial velocity factor for enforced motion
         13 T    RS Time delay
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2358,7 +2469,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tstep(self, data: bytes, n: int) -> int:
+    def read_tstep(self, data: bytes, n: int) -> int:
         """TSTEP(8307,83,142) - Record 38
 
         Word Name Type Description
@@ -2368,7 +2479,7 @@ class DYNAMICS(GeomCommon):
         4 NO   I Skip factor for output
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data)
         ndata = len(data)
         nfields = (ndata - n) // self.size
@@ -2407,7 +2518,7 @@ class DYNAMICS(GeomCommon):
             op2.add_tstep(sid, ntimes, dt, no)
         return len(data)
 
-    def _read_tstep1(self, data: bytes, n: int) -> int:
+    def read_tstep1(self, data: bytes, n: int) -> int:
         """
         Record - TSTEP1(17500,175,618)
 
@@ -2419,7 +2530,7 @@ class DYNAMICS(GeomCommon):
         =-3, ALL
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('skipping TSTEP1 in DYNAMICS')
         if op2.is_debug_file:
             op2.binary_debug.write('skipping TSTEP1 in DYNAMICS\n')
@@ -2427,7 +2538,7 @@ class DYNAMICS(GeomCommon):
 
 #UNBALNC
 
-    def _read_rcross(self, data: bytes, n: int) -> int:
+    def read_rcross(self, data: bytes, n: int) -> int:
         """
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\rcross01.op2
@@ -2476,7 +2587,7 @@ class DYNAMICS(GeomCommon):
         #RCROSS  100     SPCF    3305    3       DISP    3306    3       4641306
         #RCROSS  100     DISP    3306    3       SPCF    3305    3       4641308
         #RCROSS  200     SPCF    4444    2       DISP    9999    1       9999999
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         #op2.show_data(data[n:])
         ntotal = 32 # 4*8

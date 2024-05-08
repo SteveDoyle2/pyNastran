@@ -33,7 +33,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string,
-    interpret_value, parse_components, components_or_blank)
+    interpret_value, parse_components, components_or_blank, blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
@@ -3108,26 +3108,26 @@ class CAERO4(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        cp = integer_or_blank(card, 3, 'cp', 0)
-        nspan = integer_or_blank(card, 4, 'nspan', 0)
-        lspan = integer_or_blank(card, 5, 'lspan', 0)
+        cp = integer_or_blank(card, 3, 'cp', default=0)
+        nspan = integer_or_blank(card, 4, 'nspan', default=0)
+        lspan = integer_or_blank(card, 5, 'lspan', default=0)
 
         p1 = np.array([
-            double_or_blank(card, 9, 'x1', 0.0),
-            double_or_blank(card, 10, 'y1', 0.0),
-            double_or_blank(card, 11, 'z1', 0.0)])
-        x12 = double_or_blank(card, 12, 'x12', 0.)
+            double_or_blank(card, 9, 'x1', default=0.0),
+            double_or_blank(card, 10, 'y1', default=0.0),
+            double_or_blank(card, 11, 'z1', default=0.0)])
+        x12 = double_or_blank(card, 12, 'x12', default=0.)
 
         p4 = np.array([
-            double_or_blank(card, 13, 'x4', 0.0),
-            double_or_blank(card, 14, 'y4', 0.0),
-            double_or_blank(card, 15, 'z4', 0.0)])
-        x43 = double_or_blank(card, 16, 'x43', 0.)
+            double_or_blank(card, 13, 'x4', default=0.0),
+            double_or_blank(card, 14, 'y4', default=0.0),
+            double_or_blank(card, 15, 'z4', default=0.0)])
+        x43 = double_or_blank(card, 16, 'x43', default=0.)
         assert len(card) <= 17, f'len(CAERO4 card) = {len(card):d}\ncard={card}'
         return CAERO4(eid, pid, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, comment=comment)
 
-    def get_points(self):
+    def get_points(self) -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + np.array([self.x12, 0., 0.])
@@ -3836,23 +3836,45 @@ class MONPNT2(BaseCard):
         label = 'Wing Integrated Load to Butline'
         table = 'MYTABLE'
         Type = 'CAT'
-        nddl_item = 42
+        nddl_item = 'dog'
         eid = 2
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
 
-    def __init__(self, name, label, table, Type, nddl_item, eid, comment=''):
+    def __init__(self, name: str, label: str,
+                 tables: list[str],
+                 element_types: list[str],
+                 nddl_items: list[str],
+                 eids: list[list[int]],
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.name = name
+        if isinstance(tables, str):
+            tables = [tables]
+        if isinstance(element_types, str):
+            element_types = [element_types]
+        if isinstance(nddl_items, str):
+            nddl_items = [nddl_items]
+        elif isinstance(nddl_items, int):  # pragma: no cover
+            raise TypeError(nddl_items)
+
+        if isinstance(eids, int):
+            eids = [[eids]]
+        assert isinstance(tables, list), tables
+        assert isinstance(element_types, list), element_types
+        assert isinstance(nddl_items, list), nddl_items
+        assert isinstance(eids, list), eids
+
         self.label = label
-        self.table = table
-        self.Type = Type
-        self.nddl_item = nddl_item
-        self.eid = eid
+        self.tables = tables
+        self.element_types = element_types
+        self.nddl_items = nddl_items
+        self.eids = eids
 
     def validate(self):
-        assert self.table in ['STRESS', 'FORCE', 'STRAIN'], self.table
+        for table in self.tables:
+            assert table in ['STRESS', 'FORCE', 'STRAIN'], self.tables
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -3862,12 +3884,31 @@ class MONPNT2(BaseCard):
         label = ''.join(label_fields).strip()
         assert len(label) <= 56, label
 
-        table = string(card, 9, 'table')
-        Type = string(card, 10, 'type')
-        nddl_item = integer_or_string(card, 11, 'nddl_item')
-        #nddl_item = integer_or_blank(card, 11, 'nddl_item')
-        eid = integer_or_blank(card, 12, 'eid')
-        return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
+        tables = []
+        element_types = []
+        nddl_items = []
+        eids = []
+        ifield = 9
+        i = 1
+        while ifield < len(card):
+            table = string(card, ifield, f'table{i}')
+            element_type = string(card, ifield+1, f'type{i}')
+            nddl_item = integer_or_string(card, ifield+2, f'nddl_item{i}')
+            #nddl_item = integer_or_blank(card, 11, 'nddl_item')
+            eid = integer_or_blank(card, ifield+3, f'eid{i}')
+            tables.append(table)
+            element_types.append(element_type)
+            nddl_items.append(nddl_item)
+            eids.append([eid])
+
+            blank(card, ifield+4, f'eid-b{i}')
+            blank(card, ifield+5, f'eid-c{i}')
+            blank(card, ifield+6, f'eid-d{i}')
+            blank(card, ifield+7, f'eid-e{i}')
+            ifield += 8
+        return MONPNT2(name, label,
+                       tables, element_types, nddl_items, eids,
+                       comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
@@ -3881,15 +3922,19 @@ class MONPNT2(BaseCard):
 
     def raw_fields(self):
         list_fields = [
-            'MONPNT2', self.name, self.label.strip(),
-            self.table, self.Type, self.nddl_item, self.eid]
+            'MONPNT2', self.name, self.label.strip()]
+        for table, element_type, nddl_item, eids in zip(self.tables, self.element_types, self.nddl_items, self.eids):
+            list_fields += [table, element_type, nddl_item] + eids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = 'MONPNT2 %-8s%s\n' % (self.name, self.label)
-        msg += ('        %-8s%-8s%-8s%-8s\n' % (
-            self.table, self.Type, self.nddl_item, self.eid
-        ))
+        for table, element_type, nddl_item, eids in zip(self.tables, self.element_types, self.nddl_items, self.eids):
+            assert len(eids) == 1, eids
+            #list_fields += [table, element_type, nddl_item] + eids
+            msg += ('        %-8s%-8s%-8s%-8s\n' % (
+                table, element_type, nddl_item, eids[0]
+            ))
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
 
@@ -3898,7 +3943,39 @@ class MONPNT2(BaseCard):
 
 
 class MONPNT3(BaseCard):
-    """MSC Nastran specific card"""
+    """
+    MSC
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |    1    |    2    |    3    |    4    |  5  |   6   |   7  |   8   | 9  |
+    +=========+=========+=========+=========+=====+=======+======+=======+====+
+    | MONPNT3 |  NAME   |                   LABEL                        |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |  AXES   | GRIDSET | ELEMSET |  X  |   Y   |   Z  | XFLAG |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |   CD    |         |         |      |      |      |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    | MONPNT3 | WING155 |    Wing Integrated Load to Butline 155              |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |    34   |    37   |         | 0.0 | 155.0 | 15.0 |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+
+    NX
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |    1    |    2    |    3    |    4    |  5  |   6   |   7  |   8   | 9  |
+    +=========+=========+=========+=========+=====+=======+======+=======+====+
+    | MONPNT3 |  NAME   |                   LABEL                        |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |  AXES   | GRIDGRP | ELEMGRP |  X  |   Y   |   Z  | XFLAG |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |   CD    |         |         |      |      |      |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    | MONPNT3 | WING155 |    Wing Integrated Load to Butline 155              |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+    |         |    34   |    37   |         | 0.0 | 155.0 | 15.0 |       |    |
+    +---------+---------+---------+---------+-----+-------+------+-------+----+
+
+    Note: the GRIDSET/ELEMSET and GRIDGRP/ELEMGRP is different
+    """
     type = 'MONPNT3'
 
     @classmethod
@@ -3912,8 +3989,50 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                        cp=0, cd=None, xflag=None, comment='')
 
-    def __init__(self, name, label, axes, grid_set, elem_set, xyz,
-                 cp=0, cd=None, xflag=None, comment=''):
+    def __init__(self, name: str, label: str, axes: str,
+                 grid_set_group: Union[int, str],
+                 elem_set_group: Union[int, str],
+                 xyz: list[float],
+                 cp: int=0, cd=None, xflag=None, comment=''):
+        """
+        Parameters
+        ----------
+        name : str
+            A unique character string that identifies the monitor point.
+            (8 characters maximum)
+        label : str
+            A string that identifies and labels the monitor point.
+            (56 characters maximum)
+        axes : str
+            Component axes about which to sum. (Integer; Any unique combination
+            of the integers 1 through 6 with no embedded blanks)
+        grid_set: int
+            Refers to a SET1 entry that has a list of grids to be included in the monitored point.
+        elem_set: int; default=0
+            Refers to a SET1 entry that has a list of elements to include at the monitored point.
+            optional
+        grid_group : str
+            GROUP entry that has a list of grids to be included in the monitor point.
+        elem_group : str; default=''
+            GROUP entry that has a list of elements to process at the monitor point.
+        cp : int; default=0
+            The identification number of a coordinate system in which the X1, X2,
+            and X3 coordinates are defined.
+        xyz: list[float]
+            The coordinates in the CP coordinate system about which the forces
+            are to be summed.
+        xflag : str; deault=None -> no types excluded
+            Exclusion flag excludes the indicated Grid Point Force types from
+            summation at the monitor point.
+            - "S": SPC forces are excluded.
+            - "M": MPC forces are excluded.
+            - "A", "L", or "P": applied loads (including thermal loads), are excluded.
+            - "D": DMIGs at the monitored point are excluded.
+            - C contact forces (MSC-SOL 400 only)
+        cd : int; default=None -> cp
+            The identification number of a coordinate system in which the results
+            are output.
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -3925,8 +4044,8 @@ class MONPNT3(BaseCard):
         self.label = label
         self.axes = axes
         #self.comp = comp
-        self.grid_set = grid_set
-        self.elem_set = elem_set
+        self.grid_set = grid_set_group
+        self.elem_set = elem_set_group
         self.xyz = xyz
         self.xflag = xflag
         self.cp = cp
@@ -3943,8 +4062,11 @@ class MONPNT3(BaseCard):
         assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        grid_set = integer(card, 10, 'grid_set')
-        elem_set = integer_or_blank(card, 11, 'elem_set')
+        grid_set = integer_or_string(card, 10, 'grid_set')
+        if isinstance(grid_set, int):
+            elem_set = integer_or_blank(card, 11, 'elem_set', default=0)
+        else:
+            elem_set = string_or_blank(card, 11, 'elem_set', default='')
         cp = integer_or_blank(card, 12, 'cp', default=0)
         xyz = [
             double_or_blank(card, 13, 'x', default=0.0),
@@ -4125,7 +4247,8 @@ class MONDSP1(BaseCard):
         # assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        comp = str(integer(card, 10, 'comp'))
+        #comp = str(integer(card, 10, 'comp'))
+        comp = str(integer_or_string(card, 10, 'comp'))
         cp = integer_or_blank(card, 11, 'cp', default=0)
         xyz = [
             double_or_blank(card, 12, 'x', default=0.0),
@@ -6278,8 +6401,8 @@ class SPLINE5(Spline):
         ftype = string_or_blank(card, 15, 'ftype', default='WF2')
         rcore = double_or_blank(card, 16, 'rcore')
 
-        usage = string_or_blank(card, 12, 'usage', default='BOTH')
-        assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
+        #usage = string_or_blank(card, 12, 'usage', default='BOTH')  # ???
+        assert len(card) <= 17, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
                        usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
     @property

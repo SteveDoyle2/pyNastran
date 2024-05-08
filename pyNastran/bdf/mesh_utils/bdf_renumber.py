@@ -886,6 +886,7 @@ def _create_mid_map(model, mid):
         #model.MATT7,
         model.MATT8,
         model.MATT9,
+        model.MATT11,
         model.MATS1,
         model.MATS3,
         model.MATS8,

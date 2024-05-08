@@ -32,12 +32,13 @@ SKIP_FLAGS = [
 ]
 def read_f06_matrices(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000) -> tuple[dict[str, np.ndarray],
-                                                          dict[str, np.ndarray]]:
+                      nlines_max: int=1_000_000,
+                      load_eigenvalues: bool=True) -> tuple[dict[str, np.ndarray],
+                                                            dict[str, np.ndarray]]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     with open(f06_filename, 'r') as f06_file:
-        tables, matrices = _read_f06_matrices(f06_file, log, nlines_max)
+        tables, matrices = _read_f06_matrices(f06_file, log, nlines_max, load_eigenvalues)
     if len(tables):
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
@@ -46,11 +47,12 @@ def read_f06_matrices(f06_filename: str,
 
 def _read_f06_matrices(f06_file: TextIO,
                        log: SimpleLogger,
-                       nlines_max: int) -> dict[str, np.ndarray]:
+                       nlines_max: int,
+                       load_eigenvalues: bool) -> dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}
-    matrices = defaultdict(list)
+    matrices = {} # defaultdict(list)
     iblank_count = 0
     while True:
         line = f06_file.readline()
@@ -78,7 +80,7 @@ def _read_f06_matrices(f06_file: TextIO,
             #log.debug(f'line = {line.rstrip()}')
             continue
 
-        if 'R E A L   E I G E N V A L U E S' in line:
+        if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
             Mhh, Bhh, Khh = _read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
             matrices['MHH'].append(np.diag(Mhh[isort]))
@@ -94,6 +96,10 @@ def _read_f06_matrices(f06_file: TextIO,
             debug = False
         elif line.startswith('0      MATRIX '):
             matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
+            assert isinstance(matrix, scipy.sparse.coo_matrix)
+
+            if matrix_name not in matrices:
+                matrices[matrix_name] = []
             matrices[matrix_name].append(matrix)
             del matrix_name, matrix
         else:
@@ -120,7 +126,20 @@ def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.nd
         if len(list_matrices) == 1:
             matrix = list_matrices[0]
         else:
-            matrix = np.stack(list_matrices, axis=2)
+            matrix0 = list_matrices[0]
+            if isinstance(matrix0, np.ndarray):
+                try:
+                    matrix = np.stack(list_matrices, axis=2)
+                except ValueError:  # pragma: no cover
+                    for i, lst in enumerate(list_matrices):
+                        print(i, lst, len(lst))
+                    raise
+            elif isinstance(matrix0, scipy.sparse.coo_matrix):
+                # list of sparse matrices
+                matrix = list_matrices
+            else:  # pragma: no cover
+                raise TypeError(type(matrix0))
+
             #print(key, matrix.shape)
         matrices2[key] = matrix
     return matrices2
@@ -130,10 +149,14 @@ def _read_real_eigenvalues(f06_file: TextIO,
                            line: str, i: int) -> tuple[np.ndarray,
                                                        np.ndarray,
                                                        np.ndarray]:
-    line = f06_file.readline()
-    line = f06_file.readline()
-    line = f06_file.readline()
-    line_strip = line.strip()
+    line1 = f06_file.readline()
+    if '(' in line1 and ')' in line1:
+        # (ACTUAL MODES USED IN THE DYNAMIC ANALYSIS)
+        line1 = f06_file.readline()
+
+    line2 = f06_file.readline()
+    line3 = f06_file.readline()
+    line_strip = line3.strip()
     i += 3
 
     #line_strip = '1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01'
@@ -148,7 +171,7 @@ def _read_real_eigenvalues(f06_file: TextIO,
     log.debug("mode_num, extraction_order, eigenvalue, radians, cycles, gen_mass, gen_stiffness")
     while len(line_strip):
         sline = line_strip.split()
-        if 'NASTRAN' in sline:
+        if 'NASTRAN' in sline or 'PAGE' in sline:
             break
         log.debug(f'eigenvalue: {line_strip}')
         assert len(sline) == 7, sline
@@ -185,18 +208,23 @@ def _read_matrix(f06_file: TextIO,
     # (GINO NAME 101 )
     # IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
     # IS A REAL               4 COLUMN X           4 ROW SQUARE   MATRIX.
+    # IS A DB  PREC           7 COLUMN X           7 ROW SYMMETRC MATRIX.
+
     header_mid, header_right = header_midright.split(')')
     del header_midright
 
-    is_complex = ('COMPLEX' in header_right)
-    is_real = ('REAL' in header_right)
+    is_complex = ('COMPLEX' in header_right) or ('CMP D.P.' in header_right)
+    is_real = ('REAL' in header_right) or ('DB  PREC' in header_right)
     assert 'COLUMN' in header_right, header_right
     assert 'ROW' in header_right, header_right
-    assert is_complex or is_real
-    header_sline_right = header_right.split()
 
+    # one must be True
+    assert is_complex ^ is_real
+    assert is_complex or is_real
+
+    header_sline_right = header_right.split()
     matrix_shape_str = header_sline_right[-2]
-    assert matrix_shape_str in {'SQUARE', 'RECTANG'}, matrix_shape_str
+    assert matrix_shape_str in {'SQUARE', 'RECTANG', 'SYMMETRC'}, matrix_shape_str
     icolumn = header_sline_right.index('COLUMN')
     irow = header_sline_right.index('ROW')
 
@@ -300,8 +328,11 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
     row_index_list = []
     data_list = []
     for line in lines:
-        row_id_str, data_str = line.split(')')
-        pairs = [line[10:35], line[35:61], line[61:84], line[84:110], line[110:135]]
+        line2 = line.replace('D', 'E')
+        row_id_str, data_str = line2.split(')')
+
+        pairs = data_str.replace('  ', '!').split('!')
+        #pairs = [line2[10:35], line2[35:61], line2[61:84], line2[84:110], line2[110:135]]
         row_i = int(row_id_str)
         for pair in pairs:
             if len(pair) == 0:
@@ -335,7 +366,7 @@ def _parse_real_row_lines(lines: list[str]) -> tuple[int, int]:
     for line in lines:
         row_id_str, data_str = line.split(')')
         # pairs = [line[10:35], line[35:61], line[61:84], line[84:110], line[110:135]]
-        reals_str = data_str.split()
+        reals_str = data_str.replace('D', 'E').split()
         reals = [float(val) for val in reals_str]
         nreals = len(reals)
         row_i = int(row_id_str)
@@ -442,3 +473,22 @@ def _parse_table_records(table_name: str, records: list[str], log: SimpleLogger)
             #shape=(mrows, ncols), dtype='f')
     #log.debug(str(matrix))
     return matrix
+
+def main():  # pragma: no cover
+    import sys
+    print(sys.argv)
+    f06_filename = sys.argv[1]
+    tables, matrices = read_f06_matrices(
+        f06_filename, log=None, nlines_max=1_000_000)
+    for key, mat in matrices.items():
+        print(f'{key}:')
+        if 1:
+            mat2 = mat.todense()
+            for row in mat2:
+                print(row.tolist())
+        if 0:
+            for row, col, value in zip(mat.row, mat.col, mat.data):
+                print(f'{row}, {col}, {value}')
+
+if __name__ == '__main__':
+    main()

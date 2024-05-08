@@ -9,44 +9,183 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.1 (2024/3/xx)
+v1.4.2 (2024/5/xx)
 ------------------
-This is a bug fix release primarily focused on the GUI.
-
-The force/bending moment diagrams have also been improved with visuals to indicate the location of the cutting planes.  Element ids may also be explicitly limited now.
-
+ 
 BDF:
  - added:
-   - CBUSH centroid to fix grid point forces bug
-   - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
+   - added PBUSH2D-MSC, add_pbush2d_cross (only CROSS is saupported)
+   - MATT11
+ - changed:
+   - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
+   - DRESP1, DRESP2, DRESP3 region=None is now stored as 0
  - fixed:
-   - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
-   - RBE3s have a bug in MSC Nastran where double precision causes an issue if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
-   - fixing TEMP writing when ntemperatures > 3
+   - SPLINE5 add_card out of range bug
+   - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
+   - MATS1: NLEAS and NLEAST are the same thing 
+   - PBUSH: -2 field is supported
+   - MONPNT3 is now an NX card as well and references GROUPs instead of SETs
+   - TSTEPNL:
+     - maxqn >= 0 used now (instead of > 0)
+     - eps_u and eps_w can now be negative
+     - max_bisect can now be -9 to 0
+     - kstep can now be 1
+   - NLPARM:
+     - eps_u and eps_w can now be negative
+   - DRESP1:
+     - ERP, FRSPCF, FRVELO, FRSTRE, FRFORC supported
+
+
 OP2:
+ - added:
+   - adding flutter design response (type=84)
+   - vg_vf_response (from OVG table)
+ - changed:
+   - Glue forces f06 writing now listed under "glue forces" and not "contact forces"
+   - RealSlideDistanceArray object used by contact_slide_distance
+     and glue_contact_slide_distance inherits from RealTableArray now;
+ - fixed:
+   - CSTM no longer print out when it's empty
+   - rms cpyram_stress/strain no longer cause crashes
+
+OP2Geom:
+ - added:
+   - thermal: VIEW, VIEW3D
+   - NX acoustic: PAABSF, MATPOR-JCA
+   - other: ACCEL, PAERO4, PBUSH2D-CROSS, CBUSH2D, BNDGRID, MATT11, BNDGRID
+   - DRESP1-NX:
+     - PSDVELO, ERP, FLUTTER now supported
+   - adding DOPTPRM-NX-196
+ - changed:
+ - fixed:
+   - fixed SPLINE5-MSC ftype reading bug
+   - fixed MONPNT2-NX parsing
+   - TODO: fix EIGC kstep bug (is set to the BDF incorrectly and then writes followed by reading poorly) 
+
+F06:
+ - added:
+    - DSCMCOL f06 writing
+    - CDDATA (cambell diagrams) f06 writing
+    - contact_slide_distance/glue_contact_slide_distance f06 writing
+    - DESVAR f06 writing
+    - Convergence f06 writing
+ - changed:
+ - fixed:
+    - fixed bug in complex eigenvector f06 writing (left off mode id from table header)
+
+op2_writer:
+ - adding:
+    - DRESP1, DVCREL1, DVGRID
+    - contact_slide_distance/glue_contact_slide_distance
+ - fixed:
+   - fixed bug for RBAR where blank component values had issues
+
+nastran_to_vtk:
+ - added:
+   - vtk/vtu support depending on filename
+   - added log_level argument (debug, info, warning, error; default='error')
+   - added LZMA compression_level argument (0-9; default=5)
+ - changed:
+   - renaming vtk_filename -> vtu_filename for clarity (vtu is preferred)
+   - added icase to every result to avoid -1, -2, ... at the end of the result name
+ - fixed:
+   - passing in an op2/op2geom for bdf_filename no longer fails the bdf_filename = '' check
+
+GUI:
+ - added:
+ - changed:
+ - fixed:
+   - fixed CONM2 updating bug (vtkPoints were missing)
+   - TODO: add highlight to SMT window
+   - TODO: figure out who SMT axes takes over the global axis
+
+ - known issues:
+    - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
+    - Groups:
+      - node id picking for active groups is buggy (area_pick, highlight menu)
+      - legend doesn't limit min/max when group is active
+      - extra arrows (e.g., load_vectors) are shown when group is active
+
+
+v1.4.1 (2024/3/25)
+------------------
+This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.
+
+The force/bending moment diagrams have also been improved:
+ - Loads popup
+ - Visuals to indicate the location of the cutting planes
+ - Element ids may also be explicitly limited now
+ - You can pick the plot x-axis (global x/y/z vs. distance)
+
+BDF:
+ - changed (trivial):
+   - moving ACMODL writing to dynamics
+   - reorg on AddCard class to make it easier to find cards
+ - added:
+   - PLOAD2s now support 7+ values (requires MSC >= 2018; NX doesn't support this)
+   - CBUSH centroid to fix grid point forces bug
+   - acoustic: PMIC, ACPLNW, AMLREG, MATPOR, MICPNT
+   - is_acoustic() flag
+ - fixed:
+   - add_tempbc was named incorrectly (was tempbc)
+   - MONDSP1 comp field can be a string (e.g., PLATE)
+   - CBUSH x-vector normalization bug; was a min/max equality check, so [1,1,1] failed; now a norm check)
+   - RBE3s have a bug in MSC Nastran where double precision causes an issue in MSC Nastran if there is a single weight that is greater than or equal to 2.0; RBE3s now always use single precision
+   - fixing TEMP writing when ntemperatures > 3
+   - ACMODL for NX wrote/expected ctype in the wrong field
+
+OP2:
+ - added:
+   - op2_results.stressa (for MSC)
+   - support for more Simcenter and Optistruct versions
+   - adding OES1A table; stores results in stressa. for MSC Nastran
  - fixed:
    - trmbd/trmbu results read in properly
    - strain.ctetra/cpenta_strain hdf5 results read in properly
+   - fixing 64-bit MSC version bug by settig is_interlaced = False
+   - fixing 64-bit support for stress/strain-CSHEAR
+
+OP2Geom:
+   - changed:
+     - explicitly stopping on mesh adaptation cards
+       (e.g., PVAL, PCURV, PINT, GMSURF, ADAPT, ...)
+   - added:
+     - acoustic PMIC, AMLREG, ACPLNW, CHEXA/CROD, MICPNT, MATPOR-CRAGGS
+   - fixed reading:
+     - CFAST-NX reading should always work now
+       (ida, idb, gs, xyzs added to reader)
+     - FORCE, MOMENT 64-bit support
+
+other:
+ - nastran_to_vtk:
+   - now supports op2_filename='' to only convert geometry
+   - fixed bug when result names are duplicated
+
 GUI:
- - Shear-Moment-Torque menu:
-   - remove unused time box
-   - added icase flag to allow changing case
-   - added line/points to indicate start/end and intermediate plane locations
-   - added length scale/unit
-   - added scripting message
-   - added Station Label to more clearly indicate location for 2D plots
-   - added analysis element_ids
-   - added popup for SMT results
- - Groups / GroupsMenu
-   - active element ids are now copyable
-   - added node ids to groups for informational purposes
-   - groups menu delete sorted bug (can't sort int/str)
+ - preferences menu split out into nastran and non-nastran specific parameters
+ - added:
+   - Shear-Moment-Torque menu:
+     - remove unused time box
+     - added icase flag to allow changing case
+     - added line/points to indicate start/end and intermediate plane locations
+     - added length scale/unit
+     - added scripting message
+     - added Station Label to more clearly indicate location for 2D plots
+     - added analysis element_ids
+     - added popup for SMT results
+   - Groups / GroupsMenu
+     - active element ids are now copyable
+     - added node ids to groups for informational purposes
+     - groups menu delete sorted bug (can't sort int/str)
  - fixed:
+   - fixed Nastran results bug von mises for plate stress/strain
    - fixed corner text min/max bug (should be default, not same as legend)
    - fixed legend disappearing when previous result is GridPointForces
    - fixed issue with GUI not loading if json file doesn't exist
+ - nastran reader:
+   - fixed acoustic PMIC crash (property was expected and not found without PMIC)
 
-  - known issues:
+ - known issues:
     - area_picker picks all nodes associated with picked elements (not just boxed nodes); highlight menu works though
     - Groups:
       - node id picking for active groups is buggy (area_pick, highlight menu)
@@ -199,7 +338,7 @@ OP2 Geom:
 
 OP2 writer:
  - SET1
- - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx, AEFORCE, AEPRESS,  DVPREL1, DVMREL1
+ - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx, AEFORCE, AEPRESS, DVPREL1, DVMREL1
  - vectorized op2 writing for most objects
  - support for downcasting of ids (op2 requires 32-bit ids)
  - fixed:
@@ -208,6 +347,16 @@ OP2 writer:
  
 OP4:
  - MATPOOL objects are now stored in a Matrix object
+
+Additional Formats:
+ - AVL:
+   - sine/cosine/equal spacing
+   - proper classes
+ - Abaqus:
+   - many more cards supported and more accurately
+   - halfway decent abaqus_to_nastran converter
+ - Tecplot:
+   - binary Tecplot support
 
 GUI:
  - removed PyQt6/PySide6 support (they're buggy)
@@ -224,11 +373,6 @@ GUI:
    - minor speedups for loading geometry
    - CPYRAM13 fixed
    - xoffset finite bug
- - AVL support:
-   - sine/cosine/equal spacing
-   - proper classes
- - Tecplot support:
-   - binary Tecplot support
  - general gui support:
    - new icons
    - "Probe All" support to probe values across all results

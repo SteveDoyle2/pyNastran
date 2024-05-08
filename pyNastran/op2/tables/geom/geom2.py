@@ -8,6 +8,7 @@ from functools import partial
 from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
@@ -174,8 +175,11 @@ class GEOM2:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
+
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
 
     def read_geom2_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.geom2_map, data, ndata)
@@ -184,248 +188,247 @@ class GEOM2:
         self.op2 = op2
         self.geom2_map = {
             # per dmap-nx-10.pdf or nx12.pdf
-            (15200, 152, 9912): ['ACFACE3', self._read_fake],
-            (15500, 155, 9913): ['ACFACE4', self._read_fake],
-            (15600, 156, 9914): ['ACFACE6', self._read_fake],
-            (15700, 157, 9915): ['ACFACE8', self._read_fake],
-            (2601, 26, 0): ['BEAMAERO', self._read_fake],
-            (2708, 27, 59): ['CAABSF', self._read_caabsf],
-            (2108, 21, 224): ['CAXIF2', self._read_fake],
-            (2208, 22, 225): ['CAXIF3', self._read_fake],
-            (2308, 23, 226): ['CAXIF4', self._read_fake],
+            (15200, 152, 9912): ['ACFACE3', self.read_fake],
+            (15500, 155, 9913): ['ACFACE4', self.read_fake],
+            (15600, 156, 9914): ['ACFACE6', self.read_fake],
+            (15700, 157, 9915): ['ACFACE8', self.read_fake],
+            (2601, 26, 0): ['BEAMAERO', self.read_fake],
+            (2708, 27, 59): ['CAABSF', self.read_caabsf],
+            (2108, 21, 224): ['CAXIF2', self.read_fake],
+            (2208, 22, 225): ['CAXIF3', self.read_fake],
+            (2308, 23, 226): ['CAXIF4', self.read_fake],
 
-            (2408, 24, 180): ['CBAR', self._read_cbar],         # record 8
-            (4001, 40, 275): ['CBARAO', self._read_cbarao],     # record 9  - not done
-            (5408, 54, 261): ['CBEAM', self._read_cbeam],       # record 10
-            (11401, 114, 9016): ['CBEAMP', self._read_cbeamp],  # record 11 - not done
-            (4601, 46, 298): ['CBEND', self._read_cbend],     # record 12 - not done
-            (2608, 26, 60): ['CBUSH', self._read_cbush],      # record 13
-            (5608, 56, 218): ['CBUSH1D', self._read_cbush1d], # record 14 - not done
-            (5609, 60, 9899): ['CBUSH1DNL', self._read_fake],
-            (14801, 148, 956): ['CCHOCK3', self._read_fake],
-            (14901, 149, 957): ['CCHOCK4', self._read_fake],
-            (15001, 150, 958): ['CCHOCK6', self._read_fake],
-            (15101, 151, 959): ['CCHOCK8', self._read_fake],
-            (2315, 23, 146): ['CCONE-10', self._read_ccone],  # nx10
-            (2315, 23, 0): ['CCONE-12', self._read_fake],     # nx12
-            (201, 2, 69): ['CDAMP1', self._read_cdamp1],
-            (301, 3, 70): ['CDAMP2', self._read_cdamp2],
-            (401, 4, 71): ['CDAMP3', self._read_cdamp3],
-            (501, 5, 72): ['CDAMP4', self._read_cdamp4],
-            (10608, 106, 404): ['CDAMPS', self._read_cdamp5],
-            (6208, 62, 108): ['CDUM2', self._read_fake],
-            (6308, 63, 109): ['CDUM3', self._read_fake],
-            (6408, 64, 110): ['CDUM4', self._read_fake],
-            (6508, 65, 111): ['CDUM5', self._read_fake],
-            (6608, 66, 112): ['CDUM6', self._read_fake],
-            (6708, 67, 113): ['CDUM7', self._read_fake],
-            (6808, 68, 114): ['CDUM8', self._read_cdum8],
-            (6908, 69, 115): ['CDUM9', self._read_cdum9],
-            (601, 6, 73): ['CELAS1', self._read_celas1],
-            (6010, 53, 9900): ['CELAS1NL', self._read_fake],
-            (701, 7, 74): ['CELAS2', self._read_celas2],
-            (7010, 20, 9898): ['CELAS2NL', self._read_fake],
-            (801, 8, 75): ['CELAS3', self._read_celas3],
-            (901, 9, 76): ['CELAS4', self._read_celas4],
+            (2408, 24, 180): ['CBAR', self.read_cbar],         # record 8
+            (4001, 40, 275): ['CBARAO', self.read_cbarao],     # record 9  - not done
+            (5408, 54, 261): ['CBEAM', self.read_cbeam],       # record 10
+            (11401, 114, 9016): ['CBEAMP', self.read_cbeamp],  # record 11 - not done
+            (4601, 46, 298): ['CBEND', self.read_cbend],     # record 12 - not done
+            (2608, 26, 60): ['CBUSH', self.read_cbush],      # record 13
+            (5608, 56, 218): ['CBUSH1D', self.read_cbush1d], # record 14 - not done
+            (5609, 60, 9899): ['CBUSH1DNL', self.read_fake],
+            (14801, 148, 956): ['CCHOCK3', self.read_fake],
+            (14901, 149, 957): ['CCHOCK4', self.read_fake],
+            (15001, 150, 958): ['CCHOCK6', self.read_fake],
+            (15101, 151, 959): ['CCHOCK8', self.read_fake],
+            (2315, 23, 146): ['CCONE-10', self.read_ccone],  # nx10
+            (2315, 23, 0): ['CCONE-12', self.read_fake],     # nx12
+            (201, 2, 69): ['CDAMP1', self.read_cdamp1],
+            (301, 3, 70): ['CDAMP2', self.read_cdamp2],
+            (401, 4, 71): ['CDAMP3', self.read_cdamp3],
+            (501, 5, 72): ['CDAMP4', self.read_cdamp4],
+            (10608, 106, 404): ['CDAMPS', self.read_cdamp5],
+            (6208, 62, 108): ['CDUM2', self.read_fake],
+            (6308, 63, 109): ['CDUM3', self.read_fake],
+            (6408, 64, 110): ['CDUM4', self.read_fake],
+            (6508, 65, 111): ['CDUM5', self.read_fake],
+            (6608, 66, 112): ['CDUM6', self.read_fake],
+            (6708, 67, 113): ['CDUM7', self.read_fake],
+            (6808, 68, 114): ['CDUM8', self.read_cdum8],
+            (6908, 69, 115): ['CDUM9', self.read_cdum9],
+            (601, 6, 73): ['CELAS1', self.read_celas1],
+            (6010, 53, 9900): ['CELAS1NL', self.read_fake],
+            (701, 7, 74): ['CELAS2', self.read_celas2],
+            (7010, 20, 9898): ['CELAS2NL', self.read_fake],
+            (801, 8, 75): ['CELAS3', self.read_celas3],
+            (901, 9, 76): ['CELAS4', self.read_celas4],
 
             (9801, 98, 506): ['CFAST-nx10', self._read_cfast_msc_nx10],  # nx10
-            (13801, 138, 566): ['CFAST-nx12', self._read_cfast], # nx12
+            (13801, 138, 566): ['CFAST-nx12', self.read_cfast], # nx12
 
-            (8515, 85, 209): ['CFLUID2-nx10', self._read_cfluid2],  # nx10
-            (8615, 86, 210): ['CFLUID3-nx10', self._read_cfluid3],  # nx10
-            (8715, 87, 211): ['CFLUID4-nx10', self._read_cfluid4],  # nx10
-            (8515, 85, 0): ['CFLUID2-nx12', self._read_cfluid2], # nx12
-            (8615, 86, 0): ['CFLUID3-nx12', self._read_cfluid3], # nx12
-            (8715, 87, 0): ['CFLUID4-nx12', self._read_cfluid4], # nx12
+            (8515, 85, 209): ['CFLUID2-nx10', self.read_cfluid2],  # nx10
+            (8615, 86, 210): ['CFLUID3-nx10', self.read_cfluid3],  # nx10
+            (8715, 87, 211): ['CFLUID4-nx10', self.read_cfluid4],  # nx10
+            (8515, 85, 0): ['CFLUID2-nx12', self.read_cfluid2], # nx12
+            (8615, 86, 0): ['CFLUID3-nx12', self.read_cfluid3], # nx12
+            (8715, 87, 0): ['CFLUID4-nx12', self.read_cfluid4], # nx12
 
-            (1908, 19, 104): ['CGAP', self._read_cgap],
-            #(13101, 131, 9901): ['CGPLSTN3', self._read_fake],
-            #(13401, 134, 9904): ['CGPLSTN8', self._read_fake],
-            #(13301, 133, 9903): ['CGPLSTN6', self._read_fake],
-            #(13201, 132, 9902): ['CGPLSTN4', self._read_fake],
-            (8308, 83, 405): ['CHBDYE', self._read_chbdye],
-            (10808, 108, 406): ['CHBDYG', self._read_chbdyg],
-            (10908, 109, 407): ['CHBDYP', self._read_chbdyp],
-            #(7308, 73, 253): ['CHEXA', self._read_fake],
-            #(16300, 163, 9989): ['CHEXA20F', self._read_fake],
-            #(14100, 141, 9990): ['CHEXAF', self._read_fake],
-            #(14000, 140, 9990): ['CHEXAFD', self._read_fake],
-            #(7708, 77, 9944): ['CHEXAL', self._read_fake],
-            (11801, 118, 907): ['CHEXCZ', self._read_chexa_cz],
-            #(12001, 120, 9011): ['CHEXP', self._read_fake],
-            #(7409, 74, 9991): ['CHEXPR', self._read_fake],
-            (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 52
-            (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 53
-            (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 54
-            (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 55
-            (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 56 - not done
-            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57
-            (1501, 15, 64): ['CONM2', self._read_conm2],      # record 58
-            (1601, 16, 47): ['CONROD', self._read_conrod],    # record 59
-            (12701, 127, 408): ['CONV', self._read_conv],
-            (8908, 89, 422): ['CONVM', self._read_convm],
-            (12101, 121, 9012): ['CPENP', self._read_fake],
-            (4108, 41, 280): ['CPENTA', self._read_cpenta],
-            (14200, 142, 9906): ['CPENTAF', self._read_cpenta],
-            #(7108, 71, 9943): ['CPENTAL', self._read_fake],
-            (7509, 75, 9992): ['CPENPR', self._read_fake],
-            #(16500, 165, 9987): ['CPENT15F', self._read_fake],
-            #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
-            (11901, 119, 908): ['CPENTCZ', self._read_cpenta_cz],
-            (1701, 17, 980): ['CPLSTN3', self._read_cplstn3],
-            (5701, 57, 981): ['CPLSTN4', self._read_cplstn4],
-            (5801, 58, 982): ['CPLSTN6', self._read_cplstn6],
-            (7201, 72, 983): ['CPLSTN8', self._read_cplstn8],
-            (8801, 88, 984): ['CPLSTS3', self._read_cplsts3],
-            (8401, 84, 985): ['CPLSTS4', self._read_cplsts4],
-            (1801, 18, 986): ['CPLSTS6', self._read_cplsts6],
-            (3601, 36, 987): ['CPLSTS8', self._read_cplsts8],
-            (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
-            (14400, 144, 9908): ['CPYRAMF', self._read_cpyram], # nx-specific
-            (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific
-            (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram], # nx-specific
-            (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram], # nx-specific
-            (17000, 170, 9980): ['CQDX4FD', self._read_cquad],
-            (17100, 171, 9979): ['CQDX9FD', self._read_cquadx],
-            #(25110, 170, 9951): ['CQDX4FDN', self._read_fake],
-            #(25310, 171, 9949): ['CQDX8FDN', self._read_fake],
-            (9108, 91, 507): ['CQUAD', self._read_cquad],
-            (2958, 51, 177): ['CQUAD4', self._read_cquad4],
-            #(14600, 146, 9910): ['CQUADF', self._read_fake],
-            (13900, 139, 9984): ['CQUAD4FD', self._read_cquad],
-            #(4701, 47, 326): ['CQUAD8', self._read_fake],
-            #(3302, 33, 1694): ['CQUAD8L', self._read_fake],
-            #(15901, 159, 9956): ['CQUAD8N', self._read_fake],
-            (16400, 164, 9983): ['CQUAD9FD', self._read_cquad],
-            #(11101, 111, 9014): ['CQUADP', self._read_fake],
-            #(8009, 80, 367): ['CQUADR', self._read_fake],
-            #(13002, 130, 1692): ['CQUADRL', self._read_fake],
-            #(15401, 154, 9954): ['CQUADRN', self._read_fake],
-            #(9008, 90, 508): ['CQUADX', self._read_fake],
-            (6112, 61, 997): ['CQUADX4', self._read_fake],
-            (6114, 61, 999): ['CQUADX8', self._read_cquadx8],
-            (3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            (14500, 145, 9909): ['CRODF', self._read_fake],
-            (3501, 35, 1): ['CSBOLT', self._read_fake],
-            (3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
-            (4408, 44, 227): ['CSLOT3', self._read_fake],
-            (4508, 45, 228): ['CSLOT4', self._read_fake],
-            #(12201, 122, 9013): ['CTETP', self._read_fake],
-            #(5508, 55, 217): ['CTETRA', self._read_fake],
-            (14300, 143, 9907): ['CTETRAF', self._read_ctetra],
-            #(7609, 76, 9993): ['CTETPR', self._read_fake],
-            #(16600, 166, 9985): ['CTETR10F', self._read_fake],
-            #(16100, 161, 9986): ['CTETR4FD', self._read_fake],
-            #(25010, 168, 9952): ['CTRAX3FDN', self._read_fake],
-            #(25210, 169, 9950): ['CTRAX6FDN', self._read_fake],
-            #(5959, 59, 282): ['CTRIA3', self._read_fake],
-            #(14700, 147, 9911): ['CTRIAF', self._read_fake],
-            #(16200, 162, 9982): ['CTRIA3FD', self._read_fake],
-            #(4801, 48, 327): ['CTRIA6', self._read_fake],
-            #(16700, 167, 9981): ['CTRIA6FD', self._read_fake],
-            #(3202, 32, 1693): ['CTRIA6L', self._read_fake],
-            (15801, 158, 9955): ['CTRIA6N', self._read_ctria6],
-            #(11301, 113, 9015): ['CTRIAP', self._read_fake],
-            #(9200, 92, 385): ['CTRIAR', self._read_fake],
-            #(12902, 129, 1691): ['CTRIARL', self._read_fake],
-            #(15301, 153, 9953): ['CTRIARN', self._read_fake],
-            #(10108, 101, 512): ['CTRIAX', self._read_fake],
-            #(6108, 61, 107): ['CTRIAX6', self._read_fake],
-            (6111, 61, 996): ['CTRAX3', self._read_ctrax3],
-            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
-            #(16800, 168, 9978): ['CTRIX3FD', self._read_fake],
-            #(16900, 169, 9977): ['CTRIX6FD', self._read_fake],
-            (3701, 37, 49): ['CTUBE', self._read_ctube], # record 104
-            (3901, 39, 50): ['CVISC', self._read_cvisc], # record 105
-            #(11701, 117, 559): ['CWELD', self._read_fake],
-            #(13501, 135, 564): ['CWELDC', self._read_fake],
-            (13701, 137, 565): ['CWELDP', self._read_fake],
-            #(13601, 136, 562): ['CWELDG', self._read_fake], # This record is no longer used
-            (4301, 43, 28): ['GENEL', self._read_genel],
-            #(3201, 32, 478): ['GMBNDC', self._read_fake],
-            (12901, 129, 482): ['GMBNDS', self._read_gmbnds],
-            (3301, 33, 479): ['GMINTC', self._read_fake],
-            (13001, 130, 483): ['GMINTS', self._read_fake],
-            #(2801, 28, 630): ['MICPNT', self._read_fake],
-            (5201, 52, 11): ['PLOTEL', self._read_plotel],
-            #(5202, 52, 669): ['PLOTEL3', self._read_fake],
-            (5203, 52, 670): ['PLOTEL4', self._read_fake],
-            #(5204, 52, 671): ['PLOTEL6', self._read_fake],
-            #(5205, 52, 672): ['PLOTEL8', self._read_fake],
-            #(5206, 52, 673): ['PLOTHEX', self._read_fake],
-            #(5208, 52, 675): ['PLOTPEN', self._read_fake],
-            #(5209, 52, 676): ['PLOTPYR', self._read_fake],
-            #(5207, 52, 674): ['PLOTTET', self._read_fake],
-            #(3002, 46, 0): ['Q4AERO', self._read_fake],
-            (12801, 128, 417): ['RADBC', self._read_radbc],
-            (7801, 78, 8883): ['SINT', self._read_sint],
-            (5551, 49, 105): ['SPOINT', self._read_spoint], # record 119
-            #(2701, 27, 0): ['T3AERO', self._read_fake],
-            #(11601, 116, 9942): ['VUBEAM', self._read_fake],
-            #(12301, 123, 145): ['VUHEXA', self._read_fake],
-            #(12401, 124, 146): ['VUPENTA', self._read_fake],
-            #(11201, 112, 9940): ['VUQUAD4', self._read_fake],
-            #(12501, 125, 147): ['VUTETRA', self._read_fake],
-            #(11501, 115, 9941): ['VUTRIA3', self._read_fake],
-            #(65535, 65535, 65535): ['EODB', self._read_fake],
+            (1908, 19, 104): ['CGAP', self.read_cgap],
+            #(13101, 131, 9901): ['CGPLSTN3', self.read_fake],
+            #(13401, 134, 9904): ['CGPLSTN8', self.read_fake],
+            #(13301, 133, 9903): ['CGPLSTN6', self.read_fake],
+            #(13201, 132, 9902): ['CGPLSTN4', self.read_fake],
+            (8308, 83, 405): ['CHBDYE', self.read_chbdye],
+            (10808, 108, 406): ['CHBDYG', self.read_chbdyg],
+            (10908, 109, 407): ['CHBDYP', self.read_chbdyp],
+            #(7308, 73, 253): ['CHEXA', self.read_fake],
+            #(16300, 163, 9989): ['CHEXA20F', self.read_fake],
+            #(14100, 141, 9990): ['CHEXAF', self.read_fake],
+            #(14000, 140, 9990): ['CHEXAFD', self.read_fake],
+            #(7708, 77, 9944): ['CHEXAL', self.read_fake],
+            (11801, 118, 907): ['CHEXCZ', self.read_chexa_cz],
+            #(12001, 120, 9011): ['CHEXP', self.read_fake],
+            #(7409, 74, 9991): ['CHEXPR', self.read_fake],
+            (1001, 10, 65): ['CMASS1', self.read_cmass1],    # record 52
+            (1101, 11, 66): ['CMASS2', self.read_cmass2],    # record 53
+            (1201, 12, 67): ['CMASS3', self.read_cmass3],    # record 54
+            (1301, 13, 68): ['CMASS4', self.read_cmass4],    # record 55
+            (2508, 25, 0): ['CMFREE', self.read_cmfree],     # record 56 - not done
+            (1401, 14, 63): ['CONM1', self.read_conm1],      # record 57
+            (1501, 15, 64): ['CONM2', self.read_conm2],      # record 58
+            (1601, 16, 47): ['CONROD', self.read_conrod],    # record 59
+            (12701, 127, 408): ['CONV', self.read_conv],
+            (8908, 89, 422): ['CONVM', self.read_convm],
+            (12101, 121, 9012): ['CPENP', self.read_fake],
+            (4108, 41, 280): ['CPENTA', self.read_cpenta],
+            (14200, 142, 9906): ['CPENTAF', self.read_cpenta],
+            #(7108, 71, 9943): ['CPENTAL', self.read_fake],
+            (7509, 75, 9992): ['CPENPR', self.read_fake],
+            #(16500, 165, 9987): ['CPENT15F', self.read_fake],
+            #(16000, 160, 9988): ['CPENT6FD', self.read_fake],
+            (11901, 119, 908): ['CPENTCZ', self.read_cpenta_cz],
+            (1701, 17, 980): ['CPLSTN3', self.read_cplstn3],
+            (5701, 57, 981): ['CPLSTN4', self.read_cplstn4],
+            (5801, 58, 982): ['CPLSTN6', self.read_cplstn6],
+            (7201, 72, 983): ['CPLSTN8', self.read_cplstn8],
+            (8801, 88, 984): ['CPLSTS3', self.read_cplsts3],
+            (8401, 84, 985): ['CPLSTS4', self.read_cplsts4],
+            (1801, 18, 986): ['CPLSTS6', self.read_cplsts6],
+            (3601, 36, 987): ['CPLSTS8', self.read_cplsts8],
+            (17200, 172, 1000) : ['CPYRAM', self.read_cpyram], # nx-specific
+            (14400, 144, 9908): ['CPYRAMF', self.read_cpyram], # nx-specific
+            (25700, 257, 9948) : ['CPYRA5FD', self.read_cpyram], # nx-specific
+            (25800, 258, 9947) : ['CPYRA13F', self.read_cpyram], # nx-specific
+            (7909, 79, 9946) : ['CPYRAMPR', self.read_cpyram], # nx-specific
+            (17000, 170, 9980): ['CQDX4FD', self.read_cquad],
+            (17100, 171, 9979): ['CQDX9FD', self.read_cquadx],
+            #(25110, 170, 9951): ['CQDX4FDN', self.read_fake],
+            #(25310, 171, 9949): ['CQDX8FDN', self.read_fake],
+            (9108, 91, 507): ['CQUAD', self.read_cquad],
+            (2958, 51, 177): ['CQUAD4', self.read_cquad4],
+            #(14600, 146, 9910): ['CQUADF', self.read_fake],
+            (13900, 139, 9984): ['CQUAD4FD', self.read_cquad],
+            #(4701, 47, 326): ['CQUAD8', self.read_fake],
+            #(3302, 33, 1694): ['CQUAD8L', self.read_fake],
+            #(15901, 159, 9956): ['CQUAD8N', self.read_fake],
+            (16400, 164, 9983): ['CQUAD9FD', self.read_cquad],
+            #(11101, 111, 9014): ['CQUADP', self.read_fake],
+            #(8009, 80, 367): ['CQUADR', self.read_fake],
+            #(13002, 130, 1692): ['CQUADRL', self.read_fake],
+            #(15401, 154, 9954): ['CQUADRN', self.read_fake],
+            #(9008, 90, 508): ['CQUADX', self.read_fake],
+            (6112, 61, 997): ['CQUADX4', self.read_fake],
+            (6114, 61, 999): ['CQUADX8', self.read_cquadx8],
+            (3001, 30, 48): ['CROD', self.read_crod],         # record 81
+            (14500, 145, 9909): ['CRODF', self.read_crod],
+            (3501, 35, 1): ['CSBOLT', self.read_fake],
+            (3101, 31, 61): ['CSHEAR', self.read_cshear],     # record 84
+            (4408, 44, 227): ['CSLOT3', self.read_fake],
+            (4508, 45, 228): ['CSLOT4', self.read_fake],
+            #(12201, 122, 9013): ['CTETP', self.read_fake],
+            #(5508, 55, 217): ['CTETRA', self.read_fake],
+            (14300, 143, 9907): ['CTETRAF', self.read_ctetra],
+            #(7609, 76, 9993): ['CTETPR', self.read_fake],
+            #(16600, 166, 9985): ['CTETR10F', self.read_fake],
+            #(16100, 161, 9986): ['CTETR4FD', self.read_fake],
+            #(25010, 168, 9952): ['CTRAX3FDN', self.read_fake],
+            #(25210, 169, 9950): ['CTRAX6FDN', self.read_fake],
+            #(5959, 59, 282): ['CTRIA3', self.read_fake],
+            #(14700, 147, 9911): ['CTRIAF', self.read_fake],
+            #(16200, 162, 9982): ['CTRIA3FD', self.read_fake],
+            #(4801, 48, 327): ['CTRIA6', self.read_fake],
+            #(16700, 167, 9981): ['CTRIA6FD', self.read_fake],
+            #(3202, 32, 1693): ['CTRIA6L', self.read_fake],
+            (15801, 158, 9955): ['CTRIA6N', self.read_ctria6],
+            #(11301, 113, 9015): ['CTRIAP', self.read_fake],
+            #(9200, 92, 385): ['CTRIAR', self.read_fake],
+            #(12902, 129, 1691): ['CTRIARL', self.read_fake],
+            #(15301, 153, 9953): ['CTRIARN', self.read_fake],
+            #(10108, 101, 512): ['CTRIAX', self.read_fake],
+            #(6108, 61, 107): ['CTRIAX6', self.read_fake],
+            (6111, 61, 996): ['CTRAX3', self.read_ctrax3],
+            (6113, 61, 998): ['CTRAX6', self.read_ctrax6],
+            #(16800, 168, 9978): ['CTRIX3FD', self.read_fake],
+            #(16900, 169, 9977): ['CTRIX6FD', self.read_fake],
+            (3701, 37, 49): ['CTUBE', self.read_ctube], # record 104
+            (3901, 39, 50): ['CVISC', self.read_cvisc], # record 105
+            #(11701, 117, 559): ['CWELD', self.read_fake],
+            #(13501, 135, 564): ['CWELDC', self.read_fake],
+            (13701, 137, 565): ['CWELDP', self.read_fake],
+            #(13601, 136, 562): ['CWELDG', self.read_fake], # This record is no longer used
+            (4301, 43, 28): ['GENEL', self.read_genel],
+            #(3201, 32, 478): ['GMBNDC', self.read_fake],
+            (12901, 129, 482): ['GMBNDS', self.read_gmbnds],
+            (3301, 33, 479): ['GMINTC', self.read_fake],
+            (13001, 130, 483): ['GMINTS', self.read_fake],
+            (2801, 28, 630): ['MICPNT', self.read_micpnt],
+            (5201, 52, 11): ['PLOTEL', self.read_plotel],
+            #(5202, 52, 669): ['PLOTEL3', self.read_fake],
+            (5203, 52, 670): ['PLOTEL4', self.read_fake],
+            #(5204, 52, 671): ['PLOTEL6', self.read_fake],
+            #(5205, 52, 672): ['PLOTEL8', self.read_fake],
+            #(5206, 52, 673): ['PLOTHEX', self.read_fake],
+            #(5208, 52, 675): ['PLOTPEN', self.read_fake],
+            #(5209, 52, 676): ['PLOTPYR', self.read_fake],
+            #(5207, 52, 674): ['PLOTTET', self.read_fake],
+            #(3002, 46, 0): ['Q4AERO', self.read_fake],
+            (12801, 128, 417): ['RADBC', self.read_radbc],
+            (7801, 78, 8883): ['SINT', self.read_sint],
+            (5551, 49, 105): ['SPOINT', self.read_spoint], # record 119
+            #(2701, 27, 0): ['T3AERO', self.read_fake],
+            #(11601, 116, 9942): ['VUBEAM', self.read_fake],
+            #(12301, 123, 145): ['VUHEXA', self.read_fake],
+            #(12401, 124, 146): ['VUPENTA', self.read_fake],
+            #(11201, 112, 9940): ['VUQUAD4', self.read_fake],
+            #(12501, 125, 147): ['VUTETRA', self.read_fake],
+            #(11501, 115, 9941): ['VUTRIA3', self.read_fake],
+            #(65535, 65535, 65535): ['EODB', self.read_fake],
 
 
             #------------------------------------------------------------------------------
             # MSC - DMAP 2016.1
-            (2002, 20, 0): ['AEROQ4', self._read_fake], # 2
-            (1801, 18, 0): ['AEROT3', self._read_fake], # 3
-            (1701, 17, 0): ['BEAMAERO', self._read_fake], # 4
-            (2708, 27, 59): ['CAABSF', self._read_caabsf], # 5
-            (2108, 21, 224): ['CAXIF2', self._read_fake], # 6
-            (2208, 22, 225): ['CAXIF3', self._read_fake], # 7
-            (2308, 23, 226): ['CAXIF4', self._read_fake], # 8
-            #(2408, 24, 180): ['CBAR', self._read_fake], # record 9
+            (2002, 20, 0): ['AEROQ4', self.read_fake], # 2
+            (1801, 18, 0): ['AEROT3', self.read_fake], # 3
+            (1701, 17, 0): ['BEAMAERO', self.read_fake], # 4
+            (2708, 27, 59): ['CAABSF', self.read_caabsf], # 5
+            (2108, 21, 224): ['CAXIF2', self.read_fake], # 6
+            (2208, 22, 225): ['CAXIF3', self.read_fake], # 7
+            (2308, 23, 226): ['CAXIF4', self.read_fake], # 8
 
-            #(4001, 40, 275): ['CBARAO', self._read_fake],    # record 10
-            #(5408, 54, 261): ['CBEAM', self._read_fake],     # record 11
-            #(11401, 114, 9016): ['CBEAMP', self._read_fake], # record 12
-            #(4601, 46, 298): ['CBEND', self._read_fake],   # record 13
-            #(2608, 26, 60): ['CBUSH', self._read_fake],    # record 14
-            #(5608, 56, 218): ['CBUSH1D', self._read_fake], # record 15
-            (2315, 23, 0): ['CCONE-msc', self._read_fake],  # record 16
+            #(4001, 40, 275): ['CBARAO', self.read_fake],    # record 10
+            #(5408, 54, 261): ['CBEAM', self.read_fake],     # record 11
+            #(11401, 114, 9016): ['CBEAMP', self.read_fake], # record 12
+            #(4601, 46, 298): ['CBEND', self.read_fake],   # record 13
+            #(2608, 26, 60): ['CBUSH', self.read_fake],    # record 14
+            #(5608, 56, 218): ['CBUSH1D', self.read_fake], # record 15
+            (2315, 23, 0): ['CCONE-msc', self.read_fake],  # record 16
             #(201, 2, 69): ['CDAMP1', self._read_cdamp1], # record 17
             #(301, 3, 70): ['CDAMP2', self._read_cdamp2], # record 18
             #(401, 4, 71): ['CDAMP3', self._read_cdamp3], # record 19
             #(501, 5, 72): ['CDAMP4', self._read_cdamp4],      # record 20
             #(10608, 106, 404): ['CDAMP5', self._read_cdamp5], # record 21
-            #(6208, 62, 108): ['CDUM2', self._read_fake], # 22
-            #(6308, 63, 109): ['CDUM3', self._read_fake], # 23
-            #(6408, 64, 110): ['CDUM4', self._read_fake], # 24
-            #(6508, 65, 111): ['CDUM5', self._read_fake], # 25
-            #(6608, 66, 112): ['CDUM6', self._read_fake], # 26
-            #(6708, 67, 113): ['CDUM7', self._read_fake], # 27
+            #(6208, 62, 108): ['CDUM2', self.read_fake], # 22
+            #(6308, 63, 109): ['CDUM3', self.read_fake], # 23
+            #(6408, 64, 110): ['CDUM4', self.read_fake], # 24
+            #(6508, 65, 111): ['CDUM5', self.read_fake], # 25
+            #(6608, 66, 112): ['CDUM6', self.read_fake], # 26
+            #(6708, 67, 113): ['CDUM7', self.read_fake], # 27
             #(6808, 68, 114): ['CDUM8', self._read_cdum8], # 28
             #(6908, 69, 115): ['CDUM9', self._read_cdum9], # 29
 
-            #(601, 6, 73): ['CELAS1', self._read_fake], # record 30
-            #(701, 7, 74): ['CELAS2', self._read_fake], # record 31
-            #(801, 8, 75): ['CELAS3', self._read_fake], # record 32
-            #(901, 9, 76): ['CELAS4', self._read_fake], # record 33
-            #(9801, 98, 506): ['CFAST', self._read_fake], # record 34
-            (9301, 93, 607): ['CFASTP', self._read_cfastp],    # 35
+            #(601, 6, 73): ['CELAS1', self.read_fake], # record 30
+            #(701, 7, 74): ['CELAS2', self.read_fake], # record 31
+            #(801, 8, 75): ['CELAS3', self.read_fake], # record 32
+            #(901, 9, 76): ['CELAS4', self.read_fake], # record 33
+            #(9801, 98, 506): ['CFAST', self.read_fake], # record 34
+            (9301, 93, 607): ['CFASTP', self.read_cfastp],    # 35
             #(8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
             #(8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
             #(8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
-            (7701, 77, 8881): ['CINT', self._read_cint],      # record 39 - not done
+            (7701, 77, 8881): ['CINT', self.read_cint],      # record 39 - not done
 
             #(1908, 19, 104): ['CGAP', self._read_cgap],      # record 40 - buggy
-            (8100, 81, 381): ['CHACAB', self._read_chacab],    # 41
-            (8200, 82, 383): ['CHACBR', self._read_chacbr],    # 42 - not done
+            (8100, 81, 381): ['CHACAB', self.read_chacab],    # 41
+            (8200, 82, 383): ['CHACBR', self.read_chacbr],    # 42 - not done
             #(8308, 83, 405): ['CHBDYE', self._read_chbdye],  # record 43
-            #(10808, 108, 406): ['CHBDYG', self._read_fake],  # 44
-            #(10908, 109, 407): ['CHBDYP', self._read_fake],  # 45
-            (7308, 73, 253): ['CHEXA', self._read_chexa],    # record 46
-            (16300, 163, 9999): ['CHEXA20F', self._read_fake], # 47
-            (14000, 140, 9990): ['CHEXAFD', self._read_chexa], # record 48
-            (7908, 79, 369): ['CHEXAL', self._read_fake],     # 49
+            #(10808, 108, 406): ['CHBDYG', self.read_fake],  # 44
+            #(10908, 109, 407): ['CHBDYP', self.read_fake],  # 45
+            (7308, 73, 253): ['CHEXA', self.read_chexa],    # record 46
+            (16300, 163, 9999): ['CHEXA20F', self.read_fake], # 47
+            (14000, 140, 9990): ['CHEXAFD', self.read_chexa], # record 48
+            (7908, 79, 369): ['CHEXAL', self.read_fake],     # 49
 
-            (12001, 120, 9011): ['CHEXP', self._read_fake],  # record 50
-            (7409, 74, 9991): ['CHEXPR', self._read_chexpr],  # record 51
+            (12001, 120, 9011): ['CHEXP', self.read_fake],  # record 50
+            (7409, 74, 9991): ['CHEXPR', self.read_chexpr],  # record 51
             #(1001, 10, 65): ['CMASS1', self._read_cmass1],   # record 52
             #(1101, 11, 66): ['CMASS2', self._read_cmass2],   # record 53
             #(1201, 12, 67): ['CMASS3', self._read_cmass3],   # record 54
@@ -437,137 +440,191 @@ class GEOM2:
 
             #(12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
             #(8908, 89, 422): ['CONVM', self._read_convm],     # record 61 - not tested
-            #(12101, 121, 9012): ['CPENP', self._read_fake],   # 62
+            #(12101, 121, 9012): ['CPENP', self.read_fake],   # 62
             #(4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 63
-            #(7509, 75, 9992): ['CPENPR', self._read_fake],    # 64
-            (16500, 165, 9999): ['CPENT15F', self._read_fake], # 65
-            (16000, 160, 9999): ['CPENT6FD', self._read_fake], # 66
-            (17000, 170, 9999): ['CQDX4FD', self._read_fake],  # 67
-            (17100, 171, 9999) : ['CQDX9FD', self._read_cquadx],  # record 68
+            #(7509, 75, 9992): ['CPENPR', self.read_fake],    # 64
+            (16500, 165, 9999): ['CPENT15F', self.read_fake], # 65
+            (16000, 160, 9999): ['CPENT6FD', self.read_fake], # 66
+            (17000, 170, 9999): ['CQDX4FD', self.read_fake],  # 67
+            (17100, 171, 9999) : ['CQDX9FD', self.read_cquadx],  # record 68
             #(9108, 91, 507): ['CQUAD', self._read_cquad],        # record 69 - not tested
 
             #(2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70
-            (13900, 139, 9989): ['CQUAD4FD', self._read_cquad4], # record 71
-            (4701, 47, 326): ['CQUAD8', self._read_cquad8], # record 72
-            (16400, 164, 9999): ['CQUAD9FD', self._read_fake], # 73
-            (11101, 111, 9014): ['CQUADP', self._read_fake], # 74
-            (8009, 80, 367): ['CQUADR', self._read_cquadr], # record 75
-            (9008, 90, 508): ['CQUADX', self._read_cquadx], # record 76
-            (14700, 147, 6662): ['CRBAR', self._read_crbar], # 77
-            (17300, 173, 6664): ['CRBE1', self._read_crbe1], # 78
-            (17200, 172, 6663): ['CRBE3', self._read_crbe3], # 79
+            (13900, 139, 9989): ['CQUAD4FD', self.read_cquad4], # record 71
+            (4701, 47, 326): ['CQUAD8', self.read_cquad8], # record 72
+            (16400, 164, 9999): ['CQUAD9FD', self.read_fake], # 73
+            (11101, 111, 9014): ['CQUADP', self.read_fake], # 74
+            (8009, 80, 367): ['CQUADR', self.read_cquadr], # record 75
+            (9008, 90, 508): ['CQUADX', self.read_cquadx], # record 76
+            (14700, 147, 6662): ['CRBAR', self.read_crbar], # 77
+            (17300, 173, 6664): ['CRBE1', self.read_crbe1], # 78
+            (17200, 172, 6663): ['CRBE3', self.read_crbe3], # 79
 
-            (11000, 110, 6667): ['CRJOINT', self._read_crjoint],  # 80
+            (11000, 110, 6667): ['CRJOINT', self.read_crjoint],  # 80
             #(3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            (12600, 126, 6661): ['CRROD', self._read_crrod],    # 82
-            (13801, 138, 570): ['CSEAM', self._read_fake],     # 83
+            (12600, 126, 6661): ['CRROD', self.read_crrod],    # 82
+            (13801, 138, 570): ['CSEAM', self.read_fake],     # 83
             #(3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
-            #(4408, 44, 227): ['CSLOT3', self._read_fake],      # 85
-            #(4508, 45, 228): ['CSLOT4', self._read_fake],      # 86
-            (12201, 122, 9013): ['CTETP', self._read_ctetrap], # record 87
-            (5508, 55, 217): ['CTETRA', self._read_ctetra],    # record 88
-            (7609, 76, 9993): ['CTETPR', self._read_ctetra],   # record 89
+            #(4408, 44, 227): ['CSLOT3', self.read_fake],      # 85
+            #(4508, 45, 228): ['CSLOT4', self.read_fake],      # 86
+            (12201, 122, 9013): ['CTETP', self.read_ctetrap], # record 87
+            (5508, 55, 217): ['CTETRA', self.read_ctetra],    # record 88
+            (7609, 76, 9993): ['CTETPR', self.read_ctetra],   # record 89
 
-            (16600, 166, 9999): ['CTETR10F', self._read_ctetra], # record 90
-            (16100, 161, 9999): ['CTETR4FD', self._read_ctetra], # record 91
-            (14801, 148, 643): ['CTQUAD', self._read_fake], # 92
-            (14901, 149, 644): ['CTTRIA', self._read_fake], # 93
-            (5959, 59, 282): ['CTRIA3', self._read_ctria3], # record 94
-            (16200, 162, 9999): ['CTRIA3FD', self._read_fake], # 95
-            (4801, 48, 327): ['CTRIA6', self._read_ctria6], # record 96 - buggy
-            (16700, 167, 9999): ['CTRIA6FD', self._read_ctria6], # 97
-            (11301, 113, 9015): ['CTRIAP', self._read_fake], # 98
-            (9200, 92, 385): ['CTRIAR', self._read_ctriar], # record 99
+            (16600, 166, 9999): ['CTETR10F', self.read_ctetra], # record 90
+            (16100, 161, 9999): ['CTETR4FD', self.read_ctetra], # record 91
+            (14801, 148, 643): ['CTQUAD', self.read_fake], # 92
+            (14901, 149, 644): ['CTTRIA', self.read_fake], # 93
+            (5959, 59, 282): ['CTRIA3', self.read_ctria3], # record 94
+            (16200, 162, 9999): ['CTRIA3FD', self.read_fake], # 95
+            (4801, 48, 327): ['CTRIA6', self.read_ctria6], # record 96 - buggy
+            (16700, 167, 9999): ['CTRIA6FD', self.read_ctria6], # 97
+            (11301, 113, 9015): ['CTRIAP', self.read_fake], # 98
+            (9200, 92, 385): ['CTRIAR', self.read_ctriar], # record 99
 
-            (6108, 61, 107): ['CTRIAX6', self._read_ctriax6], # 101
-            (16800, 168, 9978): ['CTRIX3FD', self._read_fake], # 102
-            (16900, 169, 9977): ['CTRIX6FD', self._read_fake], # 103
-            #(3701, 37, 49): ['CTUBE', self._read_ctube], # record 104
-            #(3901, 39, 50): ['CVISC', self._read_cvisc], # record 105
-            (11701, 117, 559): ['CWELD', self._read_fake], # 106; same as cfast
-            (13501, 135, 564): ['CWELDC', self._read_fake], # 107
-            (13601, 136, 562): ['CWELDG', self._read_fake], # 108
-            (14600, 146, 630): ['CWSEAM', self._read_fake], # 109
+            (6108, 61, 107): ['CTRIAX6', self.read_ctriax6], # 101
+            (16800, 168, 9978): ['CTRIX3FD', self.read_fake], # 102
+            (16900, 169, 9977): ['CTRIX6FD', self.read_fake], # 103
+            #(3701, 37, 49): ['CTUBE', self.read_ctube], # record 104
+            #(3901, 39, 50): ['CVISC', self.read_cvisc], # record 105
+            (11701, 117, 559): ['CWELD', self.read_fake], # 106; same as cfast
+            (13501, 135, 564): ['CWELDC', self.read_fake], # 107
+            (13601, 136, 562): ['CWELDG', self.read_fake], # 108
+            (14600, 146, 630): ['CWSEAM', self.read_fake], # 109
 
-            #(4301, 43, 28): ['GENEL', self._read_genel],     # 110
-            (3201, 32, 478): ['GMBNDC', self._read_gmbndc],   # 111
+            #(4301, 43, 28): ['GENEL', self.read_genel],     # 110
+            (3201, 32, 478): ['GMBNDC', self.read_gmbndc],   # 111
             #(12901, 129, 482): ['GMBNDS', self.read_gmbnds], # 112
-            #(3301, 33, 479): ['GMINTC', self._read_fake],   # 113
-            #(13001, 130, 483): ['GMINTS', self._read_fake], # 114
-            #(5201, 52, 11): ['PLOTEL', self._read_plotel],  # record 115
-            #(12801, 128, 417): ['RADBC', self._read_radbc], # record 116
-            (15501, 155, 634): ['RADINT', self._read_fake], # 117
-            #(7801, 78, 8883): ['SINT', self._read_fake],    # 118
-            #(5551, 49, 105): ['SPOINT', self._read_spoint], # record 119
+            #(3301, 33, 479): ['GMINTC', self.read_fake],   # 113
+            #(13001, 130, 483): ['GMINTS', self.read_fake], # 114
+            #(5201, 52, 11): ['PLOTEL', self.read_plotel],  # record 115
+            #(12801, 128, 417): ['RADBC', self.read_radbc], # record 116
+            (15501, 155, 634): ['RADINT', self.read_fake], # 117
+            #(7801, 78, 8883): ['SINT', self.read_fake],    # 118
+            #(5551, 49, 105): ['SPOINT', self.read_spoint], # record 119
 
-            (11601, 116, 9942): ['VUBEAM', self._read_vubeam], # record 120
-            (12301, 123, 145): ['VUHEXA', self._read_fake],    # 121
-            (11201, 112, 9940): ['VUQUAD4', self._read_vuquad4],  # 122
-            (12401, 124, 146): ['VUPENTA', self._read_fake],   # 123
-            (12501, 125, 147): ['VUTETRA', self._read_fake],   # 124
-            (11501, 115, 9941): ['VUTRIA3', self._read_vutria3],  # 125
-            (13701, 137, 569): ['WELDP', self._read_fake],     # 126; same as CFASTP
+            (11601, 116, 9942): ['VUBEAM', self.read_vubeam], # record 120
+            (12301, 123, 145): ['VUHEXA', self.read_fake],    # 121
+            (11201, 112, 9940): ['VUQUAD4', self.read_vuquad4],  # 122
+            (12401, 124, 146): ['VUPENTA', self.read_fake],   # 123
+            (12501, 125, 147): ['VUTETRA', self.read_fake],   # 124
+            (11501, 115, 9941): ['VUTRIA3', self.read_vutria3],  # 125
+            (13701, 137, 569): ['WELDP', self.read_fake],     # 126; same as CFASTP
 
             #----------------------------------------------
 
             # unorganized
-            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
-            (10108, 101, 512) : ['CTRIAX', self._read_ctriax],
-            (2108, 21, 224): ['CAXIF2', self._read_fake],
-            (5601, 56, 296): ['SESET', self._read_fake],
-            (7509, 75, 9992): ['CPENPR', self._read_cpenta],
-            (16000, 160, 9988): ['CPENTA6FD', self._read_cpenta],
-            (16100, 161, 9986): ['CTETRAFD', self._read_ctetra],
-            (16300, 163, 9989): ['CHEXA20F', self._read_chexa],
-            (16700, 167, 9981): ['CTRI6FD', self._read_ctria6fd],
-            (16800, 168, 9978): ['CTRIAX3FD', self._read_ctriax3fd],  # same as ctria6fd
-            (16500, 165, 9987): ['CPENT15F', self._read_cpenta],
-            (5008, 50, 258): ['CNGRET', self._read_cngret],
-            (12301, 123, 9921): ['ADAPT card', self._read_adapt],
-            (12401, 124, 9922): ['FEFACE/PVAL?', self._read_feface_pval],
-            (7309, 73, 0): ['CaseControl SET?', self._read_fake],
-            (12501, 125, 9923): ['ADAPT card 2', self._read_adapt],    # record
-            (3401, 34, 9600): ['GMCONV?', self._read_fake],    # record
-            (2901, 29, 9601): ['FEEDGE', self._read_feedge2],  # record
-            (16600, 166, 9985) : ['CTETRA?', self._read_ctetra],  # record
-            (16200, 162, 9982) : ['CTRIA3', self._read_ctria3fd],  # record
-            (16900, 169, 9977) : ['CTRIAX', self._read_ctriax],  # record
-            (23500, 235, 6662) : ['', self._read_fake],  # record
-            (23800, 238, 6665) : ['', self._read_fake],  # record
-            (23900, 239, 6666) : ['', self._read_fake],  # record
+            (6113, 61, 998): ['CTRAX6', self.read_ctrax6],
+            (10108, 101, 512) : ['CTRIAX', self.read_ctriax],
+            (2108, 21, 224): ['CAXIF2', self.read_fake],
+            (5601, 56, 296): ['SESET', self.read_fake],
+            (7509, 75, 9992): ['CPENPR', self.read_cpenta],
+            (16000, 160, 9988): ['CPENTA6FD', self.read_cpenta],
+            (16100, 161, 9986): ['CTETRAFD', self.read_ctetra],
+            (16300, 163, 9989): ['CHEXA20F', self.read_chexa],
+            (16700, 167, 9981): ['CTRI6FD', self.read_ctria6fd],
+            (16800, 168, 9978): ['CTRIAX3FD', self.read_ctriax3fd],  # same as ctria6fd
+            (16500, 165, 9987): ['CPENT15F', self.read_cpenta],
+            (5008, 50, 258): ['CNGRET', self.read_cngret],
+            (12301, 123, 9921): ['ADAPT card', self.read_adapt],
+            (12401, 124, 9922): ['FEFACE/PVAL?', self.read_feface_pval],
+            (7309, 73, 0): ['CaseControl SET?', self.read_fake],
+            (12501, 125, 9923): ['ADAPT card 2', self.read_adapt],    # record
+            (3401, 34, 9600): ['GMCONV?', self.read_fake],    # record
+            (2901, 29, 9601): ['FEEDGE', self.read_feedge2],  # record
+            (16600, 166, 9985) : ['CTETRA?', self.read_ctetra],  # record
+            (16200, 162, 9982) : ['CTRIA3', self.read_ctria3fd],  # record
+            (16900, 169, 9977) : ['CTRIAX', self.read_ctriax],  # record
+            (23500, 235, 6662) : ['', self.read_fake],  # record
+            (23800, 238, 6665) : ['', self.read_fake],  # record
+            (23900, 239, 6666) : ['', self.read_fake],  # record
 
-            (1976, 1, 1996) : ['', self._read_fake],  # record
-            (6120, 1, 60434) : ['', self._read_fake],  # record
-            (2024, 1001, 2024) : ['', self._read_fake],  # record
-            (801, 1, 572) : ['', self._read_fake],  # record
+            (1976, 1, 1996) : ['', self.read_fake],  # record
+            (6120, 1, 60434) : ['', self.read_fake],  # record
+            (2024, 1001, 2024) : ['', self.read_fake],  # record
+            (801, 1, 572) : ['', self.read_fake],  # record
 
-            (1001, 100, 10000) : ['', self._read_fake],  # record
-            (1118, 1, 1874) : ['', self._read_fake],  # record
+            (1001, 100, 10000) : ['', self.read_fake],  # record
+            (1118, 1, 1874) : ['', self.read_fake],  # record
 
-            (2801, 28, 630) : ['MICPNT', self._read_fake],  # record
-            (7708, 77, 9944): ['CHEXAL', self._read_fake],  # record
-            (7108, 71, 9943): ['CPENTAL', self._read_fake],  # record
-            (11001, 110, 8881): ['???', self._read_fake],
-            (15301, 153, 9953): ['CTRIARN', self._read_ctria3],
-            (15401, 154, 9954): ['CQUADRN', self._read_cquad4],
+            (7708, 77, 9944): ['CHEXAL', self.read_fake],  # record
+            (7108, 71, 9943): ['CPENTAL', self.read_fake],  # record
+            (11001, 110, 8881): ['???', self.read_fake],
+            (15301, 153, 9953): ['CTRIARN', self.read_ctria3],
+            (15401, 154, 9954): ['CQUADRN', self.read_cquad4],
 
-            (9508, 95, 9801): ['CQUADX', self._read_cquadx_9508],
+            (9508, 95, 9801): ['CQUADX', self.read_cquadx_9508],
 
-            (15418, 154, 610): ['CBEAM3', self._read_cbeam3],
-            (15901, 159, 9956): ['CQUAD8N', self._read_cquad8],
-            (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
-            (7908, 79, 9702): ['CSEAM?', self._read_cseam_maybe],
+            (15418, 154, 610): ['CBEAM3', self.read_cbeam3],
+            (15901, 159, 9956): ['CQUAD8N', self.read_cquad8],
+            (14600, 146, 9910): ['CQUAD4F', self.read_cquad4],
+            (7908, 79, 9702): ['CSEAM?', self.read_cseam_maybe],
 
-            (14100, 141, 9905): ['???', self._read_fake],
-            (14700, 147, 9911): ['CTRIAF', self._read_ctria3],
-            (9301, 93, 690): ['CJOINT', self._read_fake],
-            #(14200, 142, 9906): ['???', self._read_fake],
-            #(15801, 158, 9955): ['???', self._read_fake],
-            #(15801, 158, 9955): ['???', self._read_fake],
+            (14100, 141, 9905): ['CHEXA', self.read_chexa20],
+            (14700, 147, 9911): ['CTRIAF', self.read_ctria3],
+            (9301, 93, 690): ['CJOINT', self.read_fake],
+            #(14200, 142, 9906): ['???', self.read_fake],
+            #(15801, 158, 9955): ['???', self.read_fake],
+            #(15801, 158, 9955): ['???', self.read_fake],
+            (17608, 176, 993): ['CPYRAM', self.read_cpyram15],
+            (8408, 84, 994): ['CPYRAM', self.read_cpyram15],
 
+            #C:\MSC.Software\msc_nastran_runs\sl_1blk.op2
+           (11908, 119, 469): ['CSEAM-a', self.read_fake],
+           (15701, 157, 639): ['CSEAM-b', self.read_fake],
+           (15601, 156, 635): ['CBUSH2D', self.read_cbush2d],
         }
 
-    def _read_cquadx_9508(self, data: bytes, n: int) -> int:
+    def read_cpyram15(self, data: bytes, n: int) -> int:
+        """15 fields"""
+        op2: OP2Geom = self.op2
+        ntotal = 15 * self.size
+        struct_15i = Struct(mapfmt(op2._endian + b'15i', self.size))
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_15i.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPENTA=%s\n' % str(out))
+            (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13) = out
+
+            data_in = [eid, pid, g1, g2, g3, g4, g5]
+            big_nodes = [g6, g7, g8, g9, g10, g11, g12, g13]
+            if sum(big_nodes) > 0:
+                elem = CPYRAM13.add_op2_data(data_in + big_nodes)
+            else:
+                elem = CPYRAM5.add_op2_data(data_in)
+            self.add_op2_element(elem)
+            n += ntotal
+        op2.card_count['CPYRAM'] = nelements
+        return n
+
+    def read_chexa20(self, data: bytes, n: int) -> int:
+        """
+        ints    = (14100, 141, 9905,
+                   8013, 4, 6035, 6034, 6036, 6037, 6039, 6038, 6040, 6041,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        ]
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        nfields = len(ints)
+        nelements = nfields // 22
+        ints = ints.reshape(nelements, 22)
+        for eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, *big_nodes in ints:
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ]
+            #big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
+                         #g17, g18, g19, g20]
+            if sum(big_nodes) > 0:
+                elem = CHEXA20.add_op2_data(data_in + big_nodes)
+            else:
+                elem = CHEXA8.add_op2_data(data_in)
+            self.add_op2_element(elem)
+        op2.card_count['CHEXA'] = nelements
+        return len(data)
+
+    def read_cquadx_9508(self, data: bytes, n: int) -> int:
         r"""
         ints    = (1, 1, [1, 2,  8,  7], [0, 0, 0, 0, 0, 0, -1],
                    2, 1, [2, 3,  9,  8], [0, 0, 0, 0, 0, 0, -1],
@@ -576,7 +633,7 @@ class GEOM2:
                    5, 1, [5, 6, 12, 11], [0, 0, 0, 0, 0, 0, -1])
         C:\MSC.Software\msc_nastran_runs\axh101a2.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 16*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'2i 4i 7i', self.size))
@@ -600,13 +657,13 @@ class GEOM2:
     #def _show_geom2_fake(self, data: bytes, n: int):
         #"""
         #ints    = (1, 2, 1, 2, 2, 2, 1, 2, 11, 12, 16, 21, 25, 2, 3, 28, 29, 34, 41, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        #floats  = (1, 2.802596928649634e-45, 1, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 4.203895392974451e-45, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        #floats  = (1, 2.802596928649634e-45, 1, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 3, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         #"""
         #self.show_data(data[n:])
 
     def add_op2_element(self, elem):
         """checks that eids are positive and that -1 node ids become None"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if elem.eid <= 0:
             op2.log.debug(str(elem))
             raise ValueError(elem)
@@ -629,7 +686,7 @@ class GEOM2:
 # 1-AEROQ4 (???)
 # AEROT3   (???)
 # 1-BEAMAERO (1701,17,0)
-    def _read_caabsf(self, data: bytes, n: int) -> int:
+    def read_caabsf(self, data: bytes, n: int) -> int:
         """2-CAABSF (2708,27,59)
 
         Word Name Type Description
@@ -646,7 +703,7 @@ class GEOM2:
 # 4-CAXIF3 (2208,22,225)
 # 5-CAXIF4 (2308,23,226)
 
-    def _read_cbar(self, data: bytes, n: int) -> int:
+    def read_cbar(self, data: bytes, n: int) -> int:
         r"""
         CBAR(2408,24,180) - the marker for Record 8
 
@@ -684,7 +741,7 @@ class GEOM2:
         16 W3B RS T3 component of offset vector from GB
         F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sebload1.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 16*4
         fe1 = 28 * self.factor
         fe2 = 32 * self.factor
@@ -751,7 +808,7 @@ class GEOM2:
         op2.card_count['CBAR'] = nelements
         return n
 
-    def _read_cbarao(self, data: bytes, n: int) -> int:
+    def read_cbarao(self, data: bytes, n: int) -> int:
         """
         CBARAO(4001,40,275) - the marker for Record 9
 
@@ -765,7 +822,7 @@ class GEOM2:
         8 X6 RS 6th intermediate station for data recovery
         9 UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 36
         s = Struct(op2._endian + b'2i7f')
         for unused_i in range(nelements):
@@ -784,7 +841,7 @@ class GEOM2:
         op2.card_count['CBARAO'] = nelements
         return n
 
-    def _read_cbeam3(self, data: bytes, n: int) -> int:
+    def read_cbeam3(self, data: bytes, n: int) -> int:
         """Common method for reading CBEAM3s"""
         card_name = 'CBEAM3'
         card_obj = CBEAM3
@@ -842,7 +899,7 @@ class GEOM2:
           $       W3C
           +       1.0
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 104 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
@@ -954,7 +1011,7 @@ class GEOM2:
         floats  = (2901, 2901, 2901, 2902, 2903, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                    3901, 2901, 3901, 3903, 3904, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.467866607795436e-42, 2901, 3903, 5.467866607795436e-42, 5.4720705031884107e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.867763773655928e-42, 2901, 6.867763773655928e-42, 6.871967669048903e-42, 6.870566370584578e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.869165072120253e-42, 2901, 6.871967669048903e-42, 6.874770265977553e-42, 6.873368967513228e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.870566370584578e-42, 2901, 6.874770265977553e-42, 6.869165072120253e-42, 6.876171564441877e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8078151488254465e-41, 2901, 1.8078151488254465e-41, 1.807955278671879e-41, 1.8080954085183115e-41, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 108 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
@@ -1003,17 +1060,18 @@ class GEOM2:
         #self.show_data(data[n:])
         return n, elements
 
-    def _read_cbeam(self, data: bytes, n: int) -> int:
+    def read_cbeam(self, data: bytes, n: int) -> int:
         """CBEAM(5408,54,261) - the marker for Record 10"""
-        op2 = self.op2
-        ntotal = 72 * self.factor  # 18*4
-        fe1 = 40 * self.factor
-        fe2 = 44 * self.factor
+        op2: OP2Geom = self.op2
+        size = self.size
+        ntotal = 18 * size  # 18*4
+        fe1 = 10 * size
+        fe2 = 11 * size
         nelements = (len(data) - n) // ntotal
-        struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        struct_i = op2.struct_i if size == 4 else self.struct_q
         #print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
-        s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', size))
+        s3 = Struct(mapfmt(op2._endian + b'12i6f', size))
 
         list_warnings = []
         for unused_i in range(nelements):
@@ -1091,6 +1149,7 @@ class GEOM2:
                 raise
             elem.offt = offt
 
+            elem.validate()
             self.add_op2_element(elem)
             n += ntotal
         if len(list_warnings):
@@ -1098,14 +1157,14 @@ class GEOM2:
         op2.card_count['CBEAM'] = nelements
         return n
 
-    def _read_cbeamp(self, data: bytes, n: int) -> int:
+    def read_cbeamp(self, data: bytes, n: int) -> int:
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
         self.op2.log.info('geom skipping CBEAMP in GEOM2')
         return len(data)
 
-    def _read_cbend(self, data: bytes, n: int) -> int:
+    def read_cbend(self, data: bytes, n: int) -> int:
         """
         CBEND(4601,46,298) - the marker for Record 12
 
@@ -1132,7 +1191,7 @@ class GEOM2:
         9 UNDEF(4) None
         13 GEOM I Element geometry option
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 4*13
         nentries = (len(data) - n) // ntotal
         fstruc = Struct(op2._endian + b'4i 3f 6i')
@@ -1172,11 +1231,11 @@ class GEOM2:
         self.op2.increase_card_count('CBEND', nentries)
         return n
 
-    def _read_cbush(self, data: bytes, n: int) -> int:
+    def read_cbush(self, data: bytes, n: int) -> int:
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor
         nelements = (len(data) - n) // ntotal
         struct_obj1 = Struct(mapfmt(op2._endian + b'4i iii i ifi3f', self.size))
@@ -1215,7 +1274,7 @@ class GEOM2:
         op2.card_count['CBUSH'] = nelements
         return n
 
-    def _read_cbush1d(self, data: bytes, n: int) -> int:
+    def read_cbush1d(self, data: bytes, n: int) -> int:
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
 
@@ -1226,7 +1285,7 @@ class GEOM2:
         6 UNDEF(3) none
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 4*8
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
@@ -1243,21 +1302,56 @@ class GEOM2:
         op2.card_count['CBUSH1D'] = nelements
         return n
 
-    def _read_ccone(self, data: bytes, n: int) -> int:
+    def read_cbush2d(self, data: bytes, n: int) -> int:
+        """
+        CBUSH2D
+
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(2) I Grid point identification numbers
+        5 CID  I Coordinate system identification number
+        6 UNDEF(3) none
+
+        CBUSH2D  EID  PID  GA   GB  CID PLANE
+        CBUSH2D  201  202  101  100  0  XY
+        (201, 202, 101, 100, 0, 1, 0, 0)
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 8 * self.size # 4*8
+        nelements = (len(data) - n) // ntotal
+        struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_6i.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CBUSH2D=%s\n' % str(out))
+            (eid, pid, n1, n2, cid, plane_int, undef1, undef2) = out
+            assert (undef1, undef2) == (0, 0), (undef1, undef2)
+            assert plane_int == 1, plane_int
+            plane = 'XY'
+            assert cid >= 0, cid
+            sptid = None
+            nids = [n1, n2]
+            op2.add_cbush2d(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment='')
+            n += ntotal
+        op2.card_count['CBUSH2D'] = nelements
+        return n
+
+    def read_ccone(self, data: bytes, n: int) -> int:
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CCONE in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CCONE in GEOM2\n')
         return len(data)
 
-    def _read_cdamp1(self, data: bytes, n: int) -> int:
+    def read_cdamp1(self, data: bytes, n: int) -> int:
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -1273,11 +1367,11 @@ class GEOM2:
         op2.card_count['CDAMP1'] = nelements
         return n
 
-    def _read_cdamp2(self, data: bytes, n: int) -> int:
+    def read_cdamp2(self, data: bytes, n: int) -> int:
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'if4i', self.size))
@@ -1293,11 +1387,11 @@ class GEOM2:
         op2.card_count['CDAMP2'] = nelements
         return n
 
-    def _read_cdamp3(self, data: bytes, n: int) -> int:
+    def read_cdamp3(self, data: bytes, n: int) -> int:
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1312,11 +1406,11 @@ class GEOM2:
         op2.card_count['CDAMP3'] = nelements
         return n
 
-    def _read_cdamp4(self, data: bytes, n: int) -> int:
+    def read_cdamp4(self, data: bytes, n: int) -> int:
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'ifii')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1331,11 +1425,11 @@ class GEOM2:
         op2.card_count['CDAMP4'] = nelements
         return n
 
-    def _read_cdamp5(self, data: bytes, n: int) -> int:
+    def read_cdamp5(self, data: bytes, n: int) -> int:
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -1357,23 +1451,23 @@ class GEOM2:
 # CDUM6
 # CDUM7
 
-    def _read_cdum8(self, data: bytes, n: int) -> int:
+    def read_cdum8(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM8', ints)
         return n
 
-    def _read_cdum9(self, data: bytes, n: int) -> int:
+    def read_cdum9(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM9', ints)
         return n
 
-    def _read_celas1(self, data: bytes, n: int) -> int:
+    def read_celas1(self, data: bytes, n: int) -> int:
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         struct_4i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -1389,11 +1483,11 @@ class GEOM2:
         op2.card_count['CELAS1'] = nelements
         return n
 
-    def _read_celas2(self, data: bytes, n: int) -> int:
+    def read_celas2(self, data: bytes, n: int) -> int:
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s1 = Struct(mapfmt(op2._endian + b'if4iff', self.size))
         ntotal = 32 * self.factor # 8*4
         nelements = (len(data) - n) // ntotal
@@ -1409,11 +1503,11 @@ class GEOM2:
         op2.card_count['CELAS2'] = nelements
         return n
 
-    def _read_celas3(self, data: bytes, n: int) -> int:
+    def read_celas3(self, data: bytes, n: int) -> int:
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         ndatai = len(data) - n
@@ -1430,11 +1524,11 @@ class GEOM2:
         op2.card_count['CELAS3'] = nelements
         return n
 
-    def _read_celas4(self, data: bytes, n: int) -> int:
+    def read_celas4(self, data: bytes, n: int) -> int:
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         s = Struct(mapfmt(op2._endian + b'ifii', self.size))
         ndatai = len(data) - n
@@ -1451,9 +1545,9 @@ class GEOM2:
         op2.card_count['CELAS4'] = nelements
         return n
 
-    def _read_cfastp(self, data: bytes, n: int) -> int:
+    def read_cfastp(self, data: bytes, n: int) -> int:
         """MSC 2020"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 328 * self.factor  # 82*4
         s = Struct(mapfmt(op2._endian + b'40i 8f 8i 26i', self.size))
         ndatai = len(data) - n
@@ -1475,9 +1569,10 @@ class GEOM2:
         #raise RuntimeError('CFASTP')
         return n
 
-    def _read_cfast(self, data: bytes, n: int) -> int:
+    def read_cfast(self, data: bytes, n: int) -> int:
         r"""
         RECORD – CFAST(13801,138,566) - NX
+
         Word Name Type Description
         1 EID       I Element identification number
         2 PID       I Property identification number
@@ -1497,6 +1592,23 @@ class GEOM2:
         155 GHA(12)   RS Coordinates of 4 GHA points
         167 GHB(12)   RS Coordinates of 4 GHB points
         179 TAVG      RS Average shell thickness
+        FORMAT=9 ELPAT
+        180 EIDUP  I Element ID of upper shell
+        181 EIDLOW I Element ID of lower shell
+        FORMAT=PARTPAT PARTPAT
+        180 PIDUP  I Property ID of upper shell
+        181 PIDLOW I Property ID of lower shell
+        END FORMAT
+        182 TMIN RS Minimum shell thickness
+        183 XS   RS X coordinate of spot weld location
+        184 YS   RS Y coordinate of spot weld location
+        185 ZS   RS Z coordinate of spot weld location
+        186 XGA  RS X coordinate of point ga
+        187 YGA  RS Y coordinate of point ga
+        188 ZGA  RS Z coordinate of point ga
+        189 XGB  RS X coordinate of point gb
+        190 YGB  RS Y coordinate of point gb
+        191 ZGB  RS Z coordinate of point gb
         ints = (
             101, 3, 100, 9, 0,   0,   44,  0,
             9, 14, 13, 8,   0,   0,   0,   0,
@@ -1522,7 +1634,7 @@ class GEOM2:
             29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0,
             9, 14, 13, 8,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            5.605193857299268e-45, 5.605193857299268e-45, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0,
+            5.64.605193857299268e-45, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0,
             2.9431135654449463, 1.056, 0.0, 2.9431135654449463, 1.943, 0.0,
             2.056, 1.943, 0.0, 2.056, 1.056, 0.0, 2.9431135654449463,
             1.056, 0.1, 2.9431135654449463, 1.943, 0.1, 2.056, 1.943, 0.1, 2.056, 1.056, 0.1, -1.0,
@@ -1535,35 +1647,119 @@ class GEOM2:
         CFAST        101       3    PROP       1       2             100     101
         CFAST        102       3    PROP       1       2     200
 
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cfast01.op2
+        ints    = (eid=101, pid3, gs=100, format=9, ga=0, gb=0,
+                   44, 0,
+                   gupper=9, 14,  13, 8,  0, 0, 0, 0,
+                   glower=29, 34, 33, 28, 0, 0, 0, 0,
+                   # guact
+                   5,  10,  9,  4, 15, 20, 19, 14,
+                   18, 17, 12, 13,  8,  7, 2,   3,
+                   0,   0,  0,  0,  0,  0, 0,   0,
+                   0,   0,   0, 0,  0,  0, 0,   0,
+                   # glact
+                   25, 30, 29, 24, 35, 40, 39, 34,
+                   38, 37, 32, 33, 28, 27, 22, 23,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   0,   0, 0,   0,  0,  0,  0,   0,
+                   # nug, nlg
+                   16, 16,
+                   #guele
+                   5,  10,  9,  4, 0, 0, 0, 0,
+                   15, 20, 19, 14, 0, 0, 0, 0,
+                   18, 17, 12, 13, 0, 0, 0, 0,
+                   8,   7,  2,  3, 0, 0, 0, 0,
+                   # glele
+                   25, 30, 29, 24, 0, 0, 0, 0,
+                   35, 40, 39, 34, 0, 0, 0, 0,
+                   38, 37, 32, 33, 0, 0, 0, 0,
+                   28, 27, 22, 23, 0, 0, 0, 0,
+                   # gba/ghb
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0,
+                   1078069239, 1064820772, 1036831949, 1078069239, 1073874935, 1036831949, 1073475602, 1073874935, 1036831949, 1073475602, 1064820772, 1036831949, -1082130432,
+                   upper=7, lower=19,
+                   981668463, 1075838976, 1069547520, 1036831949, 1075838976, 1069547520, 0, 1075838976, 1069547520, 1036831949)
+        floats  = (101, 3, 100, 9, 0, 0,
+                   44, 0, 9, 14, 13, 8, 0, 0, 0, 0,
+                   29, 34, 33, 28, 0, 0, 0, 0,
+                   5, 10, 9, 4, 15, 20, 19, 14, 18, 17, 12, 13, 8, 7, 2,
+                   3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 35, 40, 39, 34, 38,
+                   37, 32, 33, 28, 27, 22, 23,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   16, 16, 5, 10, 9, 4, 0.0, 0.0, 0.0, 0.0,
+                   15, 20, 19, 14, 0.0, 0.0, 0.0, 0.0,
+                   18, 17, 12, 13, 0.0, 0.0, 0.0, 0.0,
+                   8, 7, 2, 3, 0.0, 0.0, 0.0, 0.0,
+                   25, 30, 29, 24, 0.0, 0.0, 0.0, 0.0,
+                   35, 40, 39, 34, 0.0, 0.0, 0.0, 0.0,
+                   38, 37, 32, 33, 0.0, 0.0, 0.0, 0.0,
+                   28, 27, 22, 23, 0.0, 0.0, 0.0, 0.0,
+                   3.03178, 0.9682, 0.0, 3.031, 2.031, 0.0,
+                   1.968, 2.031, 0.0, 1.968, 0.968, 0.0, 3.031, 0.968, 0.10, 3.031, 2.031, 0.10, 1.968263864517212, 2.031736135482788, 0.10, 1.968263864517212, 0.9682638645172119, 0.10, -1.0,
+                   upper=7, lower=19,
+                   tmin=0.10,
+                   xs=2.5, 1.5, 0.10,
+                   xga=2.5, 1.5, 0.0,
+                   xgb=2.5, 1.5, 0.10)
+        CFAST        101       3    ELEM       7      19     100
+
         """
-        op2 = self.op2
-        op2.show_data(data[12:], 'if')
-        ntotal = 764 * self.factor  # 191*4
-        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', self.size))
+        op2: OP2Geom = self.op2
+        size = self.size
+
+        #op2.show_data(data[n:], 'if')
+        ntotal = 191 * size  # 191*4
+        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', size))
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai}'
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
+            #op2.show_data(edata, 'if')
+
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CFAST=%s\n' % str(out))
             eid, pid, gs, elem_grid_flag, ga, gb, *other = out
+            gupper = out[8:16]
+            glower = out[16:24]
+            guact = out[24:56]
+            glact = out[56:88]
+            nug, nlg = out[88:90]
+
+            guele = out[90:122]
+            glele = out[122:154]
+            gha = out[154:166]
+            ghb = out[166:178]
+            tavg, = out[178:179]
+            upper, lower = out[179:181]
+            tmin, = out[181:182]
+            xs, ys, zs = out[182:185]
+            xga, yga, zga = out[185:188]
+            xgb, ygb, zgb = out[188:191]
+
             if elem_grid_flag == 9:
                 elem_grid_flag = 'ELEM'
             elif elem_grid_flag == 10:
                 elem_grid_flag = 'PROP'
                 #ida, idb
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(elem_grid_flag)
+            ida = upper
+            idb = lower
             #print(out)
-            ida = None
-            idb = None
+            id_gs = None if gs == 0 else gs
     #def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
                   #gs=None, ga=None, gb=None,
                   #xs=None, ys=None, zs=None, comment: str='') -> CFAST:
             assert eid > 0, eid
-            op2.add_cfast(eid, pid, elem_grid_flag, ida, idb)
+            element = op2.add_cfast(
+                eid, pid, elem_grid_flag, ida, idb, gs=id_gs,
+                xs=xs, ys=ys, zs=zs)
+            #print(element)
+            element.validate()
             #elem = CFAST.add_op2_data(out)
             #self.add_op2_element(elem)
             n += ntotal
@@ -1612,7 +1808,7 @@ class GEOM2:
 
 # CFASTP
 
-    def _read_cfluid2(self, data: bytes, n: int) -> int:
+    def read_cfluid2(self, data: bytes, n: int) -> int:
         """
         CFLUID2(8515,85,209) - the marker for Record 35
 
@@ -1623,7 +1819,7 @@ class GEOM2:
         5 B        RS Bulk modulus
         6 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'3i2fi')
         ntotal = 24 * self.factor
         ndatai = len(data) - n
@@ -1639,7 +1835,7 @@ class GEOM2:
         op2.card_count['CFLUID2'] = nelements
         return n
 
-    def _read_cfluid3(self, data: bytes, n: int) -> int:
+    def read_cfluid3(self, data: bytes, n: int) -> int:
         """
         CFLUID3(8615,86,210) - the marker for Record 36
 
@@ -1651,7 +1847,7 @@ class GEOM2:
         6 B        RS Bulk modulus
         7 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'4i2fi')
         ntotal = 28 * self.factor
         ndatai = len(data) - n
@@ -1667,7 +1863,7 @@ class GEOM2:
         op2.card_count['CFLUID3'] = nelements
         return n
 
-    def _read_cfluid4(self, data: bytes, n: int) -> int:
+    def read_cfluid4(self, data: bytes, n: int) -> int:
         """
         CFLUID4(8715,87,211) - the marker for Record 37
 
@@ -1680,7 +1876,7 @@ class GEOM2:
         7 B        RS Bulk modulus
         8 HARMINDX  I Harmonic index
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'5i2fi')
         ntotal = 32 * self.factor
         ndatai = len(data) - n
@@ -1696,7 +1892,7 @@ class GEOM2:
         op2.card_count['CFLUID4'] = nelements
         return n
 
-    def _read_cint(self, data: bytes, n: int) -> int:
+    def read_cint(self, data: bytes, n: int) -> int:  # pragma: no cover
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -1715,17 +1911,18 @@ class GEOM2:
         Words 7 through 13 repeat 6 times
         14 UNDEF(2 ) none
         """
+        raise UnsupportedCard('CINT')
         self.op2.log.info('geom skipping CINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
         # doesn't seem to be a card, more of a general info on the geometry...
         #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
         return len(data)
 
-    def _read_cgap(self, data: bytes, n: int) -> int:
+    def read_cgap(self, data: bytes, n: int) -> int:
         """
         CGAP(1908,19,104) - the marker for Record 39
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         s1 = Struct(mapfmt(op2._endian + b'4i3fii', self.size))
         struct_i = op2.struct_i if self.size == 4 else self.struct_q
@@ -1767,11 +1964,11 @@ class GEOM2:
         op2.card_count['CGAP'] = nelements
         return n
 
-    def _read_chacab(self, data: bytes, n: int) -> int:
+    def read_chacab(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
         return self._run_20nodes(CHACAB, data, n)
 
-    def _read_chacbr(self, data: bytes, n: int) -> int:
+    def read_chacbr(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
         return self._run_20nodes(CHACBR, data, n)
 
@@ -1783,7 +1980,7 @@ class GEOM2:
         2 PID I Property identification number
         3 G(20) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 88
         s = Struct(op2._endian + b'22i')
         #if op2.is_debug_file:
@@ -1810,11 +2007,11 @@ class GEOM2:
 
 # CHACBR
 
-    def _read_chbdye(self, data: bytes, n: int) -> int:
+    def read_chbdye(self, data: bytes, n: int) -> int:
         """
         CHBDYE(8308,83,405) - the marker for Record ???
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor  # 7*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -1833,11 +2030,11 @@ class GEOM2:
         op2.card_count['CHBDYE'] = nelements
         return n
 
-    def _read_chbdyg(self, data: bytes, n: int) -> int:
+    def read_chbdyg(self, data: bytes, n: int) -> int:
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -1858,11 +2055,11 @@ class GEOM2:
         op2.card_count['CHBDYG'] = nelements
         return n
 
-    def _read_chbdyp(self, data: bytes, n: int) -> int:
+    def read_chbdyp(self, data: bytes, n: int) -> int:
         """
         CHBDYP(10908,109,407)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60  # 16*4
         s = Struct(op2._endian + b'12i 3f')
         ndatai = len(data) - n
@@ -1884,18 +2081,18 @@ class GEOM2:
         return n
 
     def _add_thermal_element_object_safe(self, obj):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if obj.eid in op2.elements:
             op2.reject_lines.append(obj.write_card(size=16))
         else:
             op2._add_methods._add_element_object(obj)
         #raise RuntimeError('this should be overwritten by the BDF class')
 
-    def _read_chexa(self, data: bytes, n: int) -> int:
+    def read_chexa(self, data: bytes, n: int) -> int:
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'22i', self.size))
         ntotal = 88 * self.factor  # 22*4
         nelements = (len(data) - n) // ntotal
@@ -1919,11 +2116,11 @@ class GEOM2:
         op2.card_count['CHEXA'] = nelements
         return n
 
-    def _read_chexa_cz(self, data: bytes, n: int) -> int:
+    def read_chexa_cz(self, data: bytes, n: int) -> int:
         """
         CHEXCZ(11801,118,907)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'22i 2i', self.size))
         ntotal = 96 * self.factor  # 24*4
         nelements = (len(data) - n) // ntotal
@@ -1961,17 +2158,17 @@ class GEOM2:
             #op2.binary_debug.write('geom skipping CHEXP in GEOM2\n')
         #return len(data)
 
-    def _read_chexpr(self, data: bytes, n: int) -> int:
+    def read_chexpr(self, data: bytes, n: int) -> int:
         """
         CHEXPR(7409,74,9991) - the marker for Record 48
         """
-        return self._read_chexa(data, n)
+        return self.read_chexa(data, n)
 
-    def _read_cmass1(self, data: bytes, n: int) -> int:
+    def read_cmass1(self, data: bytes, n: int) -> int:
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
@@ -1987,11 +2184,11 @@ class GEOM2:
         op2.card_count['CMASS1'] = nelements
         return n
 
-    def _read_cmass2(self, data: bytes, n: int) -> int:
+    def read_cmass2(self, data: bytes, n: int) -> int:
         """
         CMASS2(1101,11,66) - the marker for Record 52
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'if4i', self.size))
@@ -2007,11 +2204,11 @@ class GEOM2:
         op2.card_count['CMASS2'] = nelements
         return n
 
-    def _read_cmass3(self, data: bytes, n: int) -> int:
+    def read_cmass3(self, data: bytes, n: int) -> int:
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
@@ -2026,11 +2223,11 @@ class GEOM2:
         op2.card_count['CMASS3'] = nelements
         return n
 
-    def _read_cmass4(self, data: bytes, n: int) -> int:
+    def read_cmass4(self, data: bytes, n: int) -> int:
         """
         CMASS4(1301,13,68) - the marker for Record 54
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 16
         struct_if2i = Struct(op2._endian + b'ifii')
         for unused_i in range(nelements):
@@ -2043,7 +2240,7 @@ class GEOM2:
         op2.card_count['CMASS4'] = nelements
         return n
 
-    def _read_cmfree(self, data: bytes, n: int) -> int:
+    def read_cmfree(self, data: bytes, n: int) -> int:
         """
         CMFREE(2508,25,0) - the marker for Record 55
 
@@ -2053,7 +2250,7 @@ class GEOM2:
         4   Y RS
         5   N  I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert n == 12, n
         nelements = (len(data) - n) // 20
         assert (len(data) - n) % 20 == 0
@@ -2067,11 +2264,11 @@ class GEOM2:
         op2.card_count['CMFREE'] = nelements
         return n
 
-    def _read_conm1(self, data: bytes, n: int) -> int:
+    def read_conm1(self, data: bytes, n: int) -> int:
         """
         CONM1(1401,14,63) - the marker for Record 56
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 96 * self.factor   # 24*4
         s = Struct(mapfmt(op2._endian + b'3i21f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2088,11 +2285,11 @@ class GEOM2:
         op2.card_count['CONM1'] = nelements
         return n
 
-    def _read_conm2(self, data: bytes, n: int) -> int:
+    def read_conm2(self, data: bytes, n: int) -> int:
         """
         CONM2(1501,15,64) - the marker for Record 57
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         nelements = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
@@ -2108,11 +2305,11 @@ class GEOM2:
         op2.card_count['CONM2'] = nelements
         return n
 
-    def _read_conrod(self, data: bytes, n: int) -> int:
+    def read_conrod(self, data: bytes, n: int) -> int:
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 *self.factor  # 8*4
         s = Struct(mapfmt(op2._endian + b'4i4f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2128,14 +2325,14 @@ class GEOM2:
         op2.card_count['CONROD'] = nelements
         return n
 
-    def _read_conv(self, data: bytes, n: int) -> int:
+    def read_conv(self, data: bytes, n: int) -> int:
         """
         The CONV card is different between MSC and NX Nastran.
         The MSC version is 8 fields longer.
         """
         n0 = n
         assert self.factor == 1, self.factor
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.is_nx:
             try:
                 n, elements = self._read_conv_nx(data, n)
@@ -2159,7 +2356,7 @@ class GEOM2:
         generalization of multi read methods for different
         versions of MSC Nastran
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n0 = n
         try:
             n, elements = read1(card_obj, data, n)
@@ -2188,7 +2385,7 @@ class GEOM2:
     def _read_dual_card_load(self, data, n,
                              nx_read, msc_read) -> tuple[int, list[Any]]:
         n0 = n
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if op2.is_nx:
             try:
                 n, elements = nx_read(data, n0)
@@ -2208,7 +2405,7 @@ class GEOM2:
         """
         CONV(12701,127,408) - the marker for Record 59
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(op2._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
@@ -2239,7 +2436,7 @@ class GEOM2:
         """
         CONV(12701,127,408) - the marker for Record 60
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80 * self.factor  # 20*4
         s = Struct(op2._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
@@ -2263,7 +2460,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_convm(self, data: bytes, n: int) -> int:
+    def read_convm(self, data: bytes, n: int) -> int:
         """
         CONVM(8908,89,422) - the marker for Record 60
 
@@ -2343,7 +2540,7 @@ class GEOM2:
         CONVM EID PCONID FLMND CNTMDOT TA1 TA2
         106, 105, 0,     50003, 99999, 99999, 1.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
         ntotal6 = 24  # 6*4
         ntotal7 = 28  # 7*4
@@ -2377,7 +2574,7 @@ class GEOM2:
         return n
 
     def read_convm6(self, data, nelements, n):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6i')
         elements = []
         for unused_i in range(nelements):
@@ -2399,7 +2596,7 @@ class GEOM2:
         return elements, n
 
     def read_convm7(self, data, nelements, n):
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6if')
         elements = []
         for unused_i in range(nelements):
@@ -2420,7 +2617,7 @@ class GEOM2:
             elements.append(elem)
         return elements, n
 
-    def _read_cplsts3(self, data: bytes, n: int) -> int:
+    def read_cplsts3(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTS3(8801,88,984)
         Word Name Type Description
@@ -2434,7 +2631,7 @@ class GEOM2:
         13 T(3) RS Membrane thickness of element at grid points
         16 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data[n:], types='if')
         op2.to_nx(' because CPLSTS3 was found')
         ntotal = 64 * self.factor  # 16*4
@@ -2462,7 +2659,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplsts4(self, data: bytes, n: int) -> int:
+    def read_cplsts4(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTS4(8401,84,985)
 
@@ -2475,7 +2672,7 @@ class GEOM2:
         12 TFLAG I Flag signifying meaning of T(4) values
         13 T(4) RS Membrane thickness of element at grid points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS4-NX was found')
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(op2._endian + b'6i f 4i i4f', self.size))
@@ -2502,7 +2699,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplsts6(self, data: bytes, n: int) -> int:
+    def read_cplsts6(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTS6(1801,18,986)
         Word Name Type Description
@@ -2518,7 +2715,7 @@ class GEOM2:
         """
         #1728 / 4 = 432
         #432 = 16 * 27
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS6-NX was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
@@ -2553,7 +2750,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplsts8(self, data: bytes, n: int) -> int:
+    def read_cplsts8(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTS8(3601,36,987)
 
@@ -2571,7 +2768,7 @@ class GEOM2:
           ints    = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0, 0,     -1.0, -1.0, -1.0, -1.0)
           floats  = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS8 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
@@ -2602,7 +2799,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplstn3(self, data: bytes, n: int) -> int:
+    def read_cplstn3(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTN3(1701,17,980)
 
@@ -2614,7 +2811,7 @@ class GEOM2:
         7 UNDEF(10) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN3 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 3i f 10i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2639,7 +2836,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplstn4(self, data: bytes, n: int) -> int:
+    def read_cplstn4(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTN4(5701,57,981)
         Word Name Type Description
@@ -2650,7 +2847,7 @@ class GEOM2:
         8 UNDEF(9) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN4 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 4i f 9i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2675,7 +2872,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplstn6(self, data: bytes, n: int) -> int:
+    def read_cplstn6(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTN6(5801,58,982)
 
@@ -2687,7 +2884,7 @@ class GEOM2:
         10 UNDEF(7) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN6 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 6i f 7i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2712,7 +2909,7 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cplstn8(self, data: bytes, n: int) -> int:
+    def read_cplstn8(self, data: bytes, n: int) -> int:
         """
         RECORD - CPLSTN8(7201,72,983)
 
@@ -2724,7 +2921,7 @@ class GEOM2:
         12 UNDEF(5) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTN8 was found')
         struct_16i = Struct(mapfmt(op2._endian + b'2i 8i f 5i', self.size))
         ntotal = 64 * self.factor  # 16*4
@@ -2748,13 +2945,13 @@ class GEOM2:
             n += ntotal
         return n
 
-    def _read_cpyram(self, data: bytes, n: int) -> int:
+    def read_cpyram(self, data: bytes, n: int) -> int:
         """
         CPYRAM(17200,172,1000) - the marker for Record ???
 
         Specific to NX Nastran
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(op2._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2779,14 +2976,14 @@ class GEOM2:
 
 # CPENP
 
-    def _read_cpenta(self, data: bytes, n: int) -> int:
+    def read_cpenta(self, data: bytes, n: int) -> int:
         """
         CPENTA(4108,41,280)      - the marker for Record 63
         CPENPR(7509,75,9992)     - the marker for Record 64
         CPENT15F(16500,165,9999) - the marker for Record 65
         CPENT6FD(16000,160,9999) - the marker for Record 66
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2809,11 +3006,11 @@ class GEOM2:
         op2.card_count['CPENTA'] = nelements
         return n
 
-    def _read_cpenta_cz(self, data: bytes, n: int) -> int:
+    def read_cpenta_cz(self, data: bytes, n: int) -> int:
         """
         CPENTCZ
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 96 * self.factor  # 19*4
         s = Struct(mapfmt(op2._endian + b'17i 7i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2844,7 +3041,7 @@ class GEOM2:
 # CQDX4FD
 # CQDX9FD - same as CQDX4FD
 
-    def _read_cquad(self, data: bytes, n: int) -> int:
+    def read_cquad(self, data: bytes, n: int) -> int:
         """CQUAD(9108,91,507)  - the marker for Record 69"""
         return self._run_cquad(CQUAD, data, n)
 
@@ -2861,7 +3058,7 @@ class GEOM2:
                    351, 5, 13, 329, 330, 14, 0, 0, 0, 0, 0, 0, 0,
                    352, 5, 14, 330, 331, 15, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 52 * self.factor  # 13*4
         nelements = (len(data) - n) // ntotal
@@ -2923,7 +3120,7 @@ class GEOM2:
         assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
-    def _read_cquad4(self, data: bytes, n: int) -> int:
+    def read_cquad4(self, data: bytes, n: int) -> int:
         """
         CQUAD4(2958,51,177)    - the marker for Record 70
         CQUAD4(13900,139,9989) - the marker for Record 71
@@ -2953,7 +3150,7 @@ class GEOM2:
 
     def _read_double_card(self, card_name: str, card_obj, add_method,
                           methods, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n, elements = self._read_double_card_load(
             card_name, card_obj,
             methods, data, n)
@@ -2966,7 +3163,7 @@ class GEOM2:
 
     def _read_double_card_load(self, card_name: str, card_obj,
                                methods, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert isinstance(data, bytes), type(data)
         ndatai = (len(data) - n) // self.factor
         keys = np.array(list(methods.keys()))
@@ -3009,16 +3206,16 @@ class GEOM2:
             raise EmptyCardError()
         return n, elements
 
-    def _read_vutria3(self, data: bytes, n: int) -> int:
+    def read_vutria3(self, data: bytes, n: int) -> int:
         return self._run_3nodes(CTRIA3, data, n)
 
-    def _read_vuquad4(self, data: bytes, n: int) -> int:
+    def read_vuquad4(self, data: bytes, n: int) -> int:
         """VUQUAD4(11201,112,9940)"""
         return self._run_4nodes(CQUAD4, data, n)
 
     def _run_cquad(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'11i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3041,7 +3238,7 @@ class GEOM2:
 
     def _run_2nodes(self, element, data: bytes, n: int) -> int:
         """common method for VUBEAM"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 16
         s = Struct(op2._endian + b'4i')
         #if op2.is_debug_file:
@@ -3069,7 +3266,7 @@ class GEOM2:
 
     def _run_3nodes(self, element: CTRIA3, data: bytes, n: int) -> int:
         """common method for CTRIA3, VUTRIA3"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 20
         s = Struct(op2._endian + b'5i')
         #if op2.is_debug_file:
@@ -3097,7 +3294,7 @@ class GEOM2:
 
     def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 24
         s = Struct(op2._endian + b'6i')
         #if op2.is_debug_file:
@@ -3148,7 +3345,7 @@ class GEOM2:
             1003, 20, 20002, 20003, 20103, 20102, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, 42,
             1004, 20, 20100, 20101, 20201, 20200, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 60 * self.factor  # 15*4
         nelements = (len(data) - n) // ntotal
@@ -3230,7 +3427,7 @@ class GEOM2:
             3, 1, 3, 4, 10, 9, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
         )
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         ntotal = 56 * self.factor  # 14*4
         nelements = (len(data) - n) // ntotal
@@ -3275,7 +3472,7 @@ class GEOM2:
 
 # CQUAD4FD
 
-    def _read_cquad8(self, data: bytes, n: int) -> int:
+    def read_cquad8(self, data: bytes, n: int) -> int:
         """common method for reading CQUAD8s"""
         card_name = 'CQUAD8'
         card_obj = CQUAD8
@@ -3314,7 +3511,7 @@ class GEOM2:
                     reference plane
         17 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 17*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -3357,7 +3554,7 @@ class GEOM2:
         16 ZOFFS RS Offset from the surface of grid points
                     reference plane
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         #self.show_data(data, types='if')
 
@@ -3402,7 +3599,7 @@ class GEOM2:
             1303, 20, 10200, 10202, 10402, 10400, 10201, 10302, 10401, 10300, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
             1304, 20, 10202, 10204, 10404, 10402, 10203, 10304, 10403, 10302, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         elements = []
         #self.show_data(data, types='if')
         #ss
@@ -3465,7 +3662,7 @@ class GEOM2:
 # CQUAD9FD
 # CQUADP
 
-    def _read_cquadr(self, data: bytes, n: int) -> int:
+    def read_cquadr(self, data: bytes, n: int) -> int:
         """CQUADR(8009,80,367)  - the marker for Record 75
 
         ints    = (8009, 80, 367,
@@ -3497,21 +3694,173 @@ class GEOM2:
                 card_name, self.add_op2_element)
         return n
 
-    def _read_cquadx(self, data: bytes, n: int) -> int:
+    def read_cquadx(self, data: bytes, n: int) -> int:
         """CQUADX(9008,90,508)  - the marker for Record 76"""
         return self._run_cquad(CQUADX, data, n)
 
-    def _read_crbar(self, data: bytes, n: int) -> int:
+    def read_crbar(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 GA      I Grid point A identification number
+        3 GB      I Grid point B identification number
+        4 LMID1   I Lagrange multiplier identification number
+        5 NDOFS   I Number of DOF for Lagrange multiplier
+        6 CNA     I Component numbers of independent DOFs at end A
+        7 CNB     I Component numbers of independent DOFs at end B
+        8 CMA     I Component numbers of dependent DOFs at end A
+        9 CMB     I Component numbers of dependent DOFs at end B
+        10 ALPHA RS Thermal expansion coefficient
+        ints    = (3, 3, 41, 101000041, 6, 123456, 0, 0,     123456, 2.e-6,
+                   4, 3, 4, 101000004, 6, 123456, 0, 0, 654321, 0)
+        floats  = (3, 3, 41, 101000041, 6, 123456, 0.0, 0.0, 123456, 2.e-6,
+                   4, 3, 4,  101000004, 6, 123456, 0.0, 0.0, 654321, 0.0)
+
+        """
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
-        self.op2.log.info('geom skipping RBAR in GEOM2')
+        op2: OP2Geom = self.op2
+        idata = np.frombuffer(data[n:], op2.idtype8).copy()
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        #op2.show_data(data[n:], types='ifs', endian=None, force=False)
+        nrows = len(idata) // 10
+        ncols = 10
+        idata = idata.reshape(nrows, ncols)
+        fdata = fdata.reshape(nrows, ncols)
+        eids = idata[:, 0]
+        nids = idata[:, [1, 2]]
+        #lagrange_id = idata[:, 3]
+        #ndof_lagrange = idata[:, 4]
+        cnas = idata[:, 5].astype('U6').tolist()
+        cnbs = idata[:, 6].astype('U6').tolist()
+        cmas = idata[:, 7].astype('U6').tolist()
+        cmbs = idata[:, 8].astype('U6').tolist()
+        alphas = fdata[:, 9]
+        for eid, nidsi, cna, cnb, cma, cmb, alpha in zip(eids, nids, cnas, cnbs, cmas, cmbs, alphas):
+            cna = ''.join(sorted(cna))
+            cnb = ''.join(sorted(cnb))
+            cma = ''.join(sorted(cma))
+            cmb = ''.join(sorted(cmb))
+            if cna == '0':
+                cna = ''
+            if cnb == '0':
+                cnb = ''
+            if cma == '0':
+                cma = ''
+            if cna == '0':
+                cmb = ''
+            elem = op2.add_rbar(eid, nidsi, cna, cnb, cma, cmb, alpha=alpha, comment='')
+            str(elem)
         return len(data)
 
-    def _read_crbe1(self, data: bytes, n: int) -> int:
+    def read_crbe1(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 NWE    I Number of words for the element
+        3 ELTYPE I Element type: 1-RBE1 2-RBE2 3-RTRPLT 4-RTRPLT1
+        4 GN     I Grid point identification number for independent degrees-of-freedom
+        5 CN     I Component numbers of independent degrees-of-freedom
+        Words 4 through 5 repeat until (-2,-2) occurs
+        6 GM     I Grid point identification number for dependent degrees-of-freedom
+        7 CM     I Component numbers of dependent degrees of-freedom
+        Words 6 through 7 repeat until (-3,-3) occurs
+        8 ALPHA RS  Thermal expansion coefficient
+        9 UNDEF none Not used
+        Words 8 through 9 repeat until (-4,-4) occurs
+        10 LMID I Lagrange multiplier identification number
+        11 NDOF I Number of DOF for each Lagrange multiplier identification number
+        Words 10 through 11 repeat until (-1,-1) occurs
+
+        ints   = [35, 22, 2,
+                     3,  123456, -2, -2,
+                     41, 123456, 51, 123456, -3, -3,
+                     990057071, 0, -4, -4,
+                  101000041, 6, 101000051, 6, -1, -1,
+                  46, 22, 2, 3, 123456, -2, -2,
+                  4, 123456, 5, 123456, -3, -3,
+                  906377149, 0, -4, -4,
+                  101000004, 6, 101000005, 6, -1, -1]
+        floats = [4.90454462513686e-44, 3.0828566215145976e-44, 2.802596928649634e-45, 4.203895392974451e-45, 1.7299870321168462e-40, nan, nan, 5.74532370373175e-44, 1.7299870321168462e-40, 7.146622168056567e-44, 1.7299870321168462e-40, nan, nan, 0.0020000000949949026, 0.0, nan, nan, 2.5040535059644284e-35, 8.407790785948902e-45, 2.5040563758236833e-35, 8.407790785948902e-45, nan, nan, 6.445972935894159e-44, 3.0828566215145976e-44, 2.802596928649634e-45, 4.203895392974451e-45, 1.7299870321168462e-40, nan, nan, 5.605193857299268e-45, 1.7299870321168462e-40, 7.006492321624085e-45, 1.7299870321168462e-40, nan, nan, 1.9999999949504854e-06, 0.0, nan, nan, 2.504042887485185e-35, 8.407790785948902e-45, 2.5040431744711106e-35, 8.407790785948902e-45, nan, nan]
+
+        """
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
-        self.op2.log.info('geom skipping RBE1 in GEOM2')
+        op2: OP2Geom = self.op2
+        idata = np.frombuffer(data[n:], op2.idtype8).copy()
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        i = 0
+        nints = len(idata)
+        while i < nints:
+            print('i = ', i)
+            eid = idata[i]
+            nwe = idata[i+1]
+            eltype = idata[i+2]
+            assert eltype in {1, 2, 3, 4}, eltype
+            i += 3
+
+            Gni = []
+            Cni = []
+            while i < nints:
+                gn, cn = idata[i:i+2]
+                i += 2
+                if (gn, cn) == (-2, -2):
+                    break
+                Gni.append(gn)
+                Cni.append(cn)
+            assert len(Gni), Gni
+
+            Gmi = []
+            Cmi = []
+            while i < nints:
+                gm, cm = idata[i:i+2]
+                i += 2
+                if (gm, cm) == (-3, -3):
+                    break
+                Gmi.append(gm)
+                Cmi.append(cm)
+            assert len(Gmi), Gmi
+
+            alphas = []
+            while i < nints:
+                i1, i2 = idata[i:i+2]
+                alpha = fdata[i]
+                # undef
+                i += 2
+                if (i1, i2) == (-4, -4):
+                    break
+                alphas.append(alpha)
+            assert len(alphas) == 1, alphas
+
+
+            #10 LMID I Lagrange multiplier identification number
+            #11 NDOF I Number of DOF for each Lagrange multiplier identification number
+            lmid = []
+            ndof = []
+            while i < nints:
+                lmidi, ndofi = idata[i:i+2]
+                i += 2
+                if (lmidi, ndofi) == (-1, -1):
+                    break
+                lmid.append(lmidi)
+                ndof.append(ndofi)
+            assert len(ndof), ndof
+
+            #cna = ''.join(sorted(cna))
+            #cnb = ''.join(sorted(cnb))
+            #cma = ''.join(sorted(cma))
+            #cmb = ''.join(sorted(cmb))
+            #if cna == '0':
+                #cna = ''
+            #if cnb == '0':
+                #cnb = ''
+            #if cma == '0':
+                #cma = ''
+            #if cna == '0':
+                #cmb = ''
+            elem = op2.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment='')
+            str(elem)
         return len(data)
 
-    def _read_crbe3(self, data: bytes, n: int) -> int:
+    def read_crbe3(self, data: bytes, n: int) -> int:
         """
         This card is an internal RBE3 that's used for Langrage elements.
         It's not what the user entered.
@@ -3545,7 +3894,7 @@ class GEOM2:
                 101000041, 6, -3,
                 4, 14, 4,  123456, 1.0, 123456, 3, -1, -2, -4, 2.0e-6, -5, 101000004, 6, -3)
           """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
         idata = np.frombuffer(data[n:], op2.idtype8).copy()
         fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -3634,7 +3983,7 @@ class GEOM2:
             #self._add_op2_rigid_element(rbe3)
         return len(data)
 
-    def _read_crjoint(self, data: bytes, n: int) -> int:
+    def read_crjoint(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID   I Element identification number
@@ -3649,11 +3998,11 @@ class GEOM2:
         self.op2.log.info('geom skipping RJOINT in GEOM2')
         return len(data)
 
-    def _read_crod(self, data: bytes, n: int) -> int:
+    def read_crod(self, data: bytes, n: int) -> int:
         """
         CROD(3001,30,48)    - the marker for Record 81
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3673,7 +4022,7 @@ class GEOM2:
         op2.card_count['CROD'] = nelements
         return n
 
-    def _read_crrod(self, data: bytes, n: int) -> int:
+    def read_crrod(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -3684,7 +4033,7 @@ class GEOM2:
         6 CMB    I Component numbers of dependent DOFs at end B
         7 ALPHA RS Thermal expansion cofficient
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         structi = Struct(op2._endian + b'6if')
         nelements = (len(data) - n) // 28  # 7*4
         #is_long_ids = False
@@ -3711,11 +4060,11 @@ class GEOM2:
 
 # CSEAM
 
-    def _read_cshear(self, data: bytes, n: int) -> int:
+    def read_cshear(self, data: bytes, n: int) -> int:
         """
         CSHEAR(3101,31,61)    - the marker for Record 84
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3734,12 +4083,12 @@ class GEOM2:
 # CSLOT3
 # CSLOT4
 
-    def _read_ctetrap(self, data: bytes, n: int) -> int:
+    def read_ctetrap(self, data: bytes, n: int) -> int:
         """
         CTETP(12201,122,9013)    - the marker for Record 87
         .. todo:: needs work
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('poor reading of CTETRAP in GEOM2')
         nelements = (len(data) - n) // 108  # 27*4
         struct_27i = Struct(op2._endian + b'27i')
@@ -3749,7 +4098,7 @@ class GEOM2:
             if op2.is_debug_file:
                 op2.binary_debug.write('  CTETP=%s\n' % str(out))
 
-            print(out)
+            #print(out)
             eid, pid, n1, n2, n3, n4 = out[:6]
             #(eid, pid, n1, n2, n3, n4,
              #e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
@@ -3769,14 +4118,14 @@ class GEOM2:
             n += 108
         return n
 
-    def _read_ctetra(self, data: bytes, n: int) -> int:
+    def read_ctetra(self, data: bytes, n: int) -> int:
         """
         CTETRA(5508,55,217)      - the marker for Record 88
         CTETPR(7609,76,9993)     - the marker for Record 89
         CTETR10F(16600,166,9999) - the marker for Record 90
         CTETR4FD(16100,161,9999) - the marker for Record 91
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(mapfmt(op2._endian + b'12i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -3807,7 +4156,7 @@ class GEOM2:
 # CTQUAD - 92
 # CTTRIA - 93
 
-    def _read_ctria3(self, data: bytes, n: int) -> int:
+    def read_ctria3(self, data: bytes, n: int) -> int:
         """Common method for reading CTRIA3s"""
         card_name = 'CTRIA3'
         card_obj = CTRIA3
@@ -3827,7 +4176,7 @@ class GEOM2:
         CTRIA3(5959,59,282) - the marker for Record 94
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n)// ntotal
@@ -3869,7 +4218,7 @@ class GEOM2:
             205, 35, 50002, 50003, 50103, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1, ...)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5i f 4i 3f i', self.size))
         nelements = (len(data) - n)// ntotal
@@ -3908,7 +4257,7 @@ class GEOM2:
 
 # CTRIAFD - 95
 
-    def _read_ctria6(self, data: bytes, n: int) -> int:
+    def read_ctria6(self, data: bytes, n: int) -> int:
         """
         common method for reading CTRIA6
 
@@ -3950,7 +4299,7 @@ class GEOM2:
                                   #'CTRIA6', CTRIA6, self.add_op2_element)
         return n
 
-    def _read_ctria3fd(self, data: bytes, n: int) -> int:
+    def read_ctria3fd(self, data: bytes, n: int) -> int:
         """
         data= (
             16200, 16201, 16201, 16202, 16203, 0, 0, 0, 0, -1,
@@ -3975,7 +4324,7 @@ class GEOM2:
         return n
 
     def _read_ctria3fd_40(self, card_obj, data: bytes, n: int) -> int:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 10*4
         assert (len(data) - n) % ntotal == 0
@@ -4007,7 +4356,7 @@ class GEOM2:
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -4030,7 +4379,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctriax3fd(self, data: bytes, n: int) -> int:
+    def read_ctriax3fd(self, data: bytes, n: int) -> int:
         """
         Common method for reading CTRIAX3
         """
@@ -4057,7 +4406,7 @@ class GEOM2:
         (331, 111, 331, 332, 333, 0, 0, 0,
          332, 11, 331, 333, 334, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'8i')
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4092,7 +4441,7 @@ class GEOM2:
                    16800, 16801, 16801, 16802, 16803, 0, 0, 0, 0, -1,
                    16801, 16801, 16801, 16803, 16804, 0, 0, 0, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -4116,7 +4465,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctria6fd(self, data: bytes, n: int) -> int:
+    def read_ctria6fd(self, data: bytes, n: int) -> int:
         """
         Common method for reading CTRIA6s
         """
@@ -4147,7 +4496,7 @@ class GEOM2:
                    16700, 16701, 16701, 16702, 16703, 16705, 16706, 16709, 0, -1,
                    16701, 16701, 16701, 16703, 16704, 16709, 16707, 16708, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor
         s = Struct(op2._endian + b'10i')
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4177,7 +4526,7 @@ class GEOM2:
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor
         s = Struct(op2._endian + b'8i')
         nelements = (len(data) - n) // ntotal  # 8*4
@@ -4213,7 +4562,7 @@ class GEOM2:
         14 TFLAG  I Relative thickness flag
         -1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 15*4
         s = Struct(mapfmt(op2._endian + b'8i 5f i i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4255,7 +4604,7 @@ class GEOM2:
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor # 14*4
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4292,7 +4641,7 @@ class GEOM2:
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor
         s = Struct(op2._endian + b'8i 5f')
         nelements = (len(data) - n) // ntotal # 13*4
@@ -4317,7 +4666,7 @@ class GEOM2:
 # CTRIA6FD
 # CTRIAP
 
-    def _read_ctriar(self, data: bytes, n: int) -> int:
+    def read_ctriar(self, data: bytes, n: int) -> int:
         """
         CTRIAR(9200,92,385) - the marker for Record 99
         """
@@ -4345,7 +4694,7 @@ class GEOM2:
         return n
 
     def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4371,7 +4720,7 @@ class GEOM2:
 
     def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
         """same as ``read_ctriar_13`` but with a -1 to change the format"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 56 * self.factor  # 14*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f i', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4419,7 +4768,7 @@ class GEOM2:
         #op2.card_count['CTRIAX'] = nentries
         #return n
 
-    def _read_ctriax(self, data: bytes, n: int) -> int:
+    def read_ctriax(self, data: bytes, n: int) -> int:
         """common method for reading CTRIAXs"""
         card_name = 'CTRIAX'
         card_obj = CTRIAX
@@ -4446,7 +4795,7 @@ class GEOM2:
 
     def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor  # 9*4
         struc = Struct(op2._endian + b'8i')
 
@@ -4469,7 +4818,7 @@ class GEOM2:
 
     def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         struc = Struct(op2._endian + b'9i')
 
@@ -4499,7 +4848,7 @@ class GEOM2:
         16900, 16901, 16901, 16902, 16903, 16905, 16906, 16909, 0, -1,
         16901, 16901, 16901, 16903, 16904, 16909, 16907, 16908, 0, -1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor  # 10*4
         struc = Struct(op2._endian + b'10i')
 
@@ -4522,9 +4871,9 @@ class GEOM2:
             n += ntotal
         return n, elems
 
-    def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
+    def read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4544,7 +4893,7 @@ class GEOM2:
 # CTRIX3FD - 102
 # CTRIX6FD - 103
 
-    def _read_gmbndc(self, data: bytes, n: int) -> int:
+    def read_gmbndc(self, data: bytes, n: int) -> int:
         """
         GMBNDC(3201,32,478)
 
@@ -4556,38 +4905,39 @@ class GEOM2:
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
-        op2 = self.op2
-        op2.log.info('geom skipping GMBNDC in GEOM2')
-        #self.show_data(data)
-        #(1, 31, 32, GRID____, -1,
-         #2, 41, 42, GRID____, -1)
+        raise UnsupportedCard('GMNBDC')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDC in GEOM2')
+        ##self.show_data(data)
+        ##(1, 31, 32, GRID____, -1,
+         ##2, 41, 42, GRID____, -1)
 
-        #ints= (3201, 32, 478,
-        # 2, 41, 42, 1145390406, 538985799, 41, -1,
-        # 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
-        ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
-        isplit = np.where(ints == -1)[0]
-        nelements = len(isplit)
+        ##ints= (3201, 32, 478,
+        ## 2, 41, 42, 1145390406, 538985799, 41, -1,
+        ## 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
+        #ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
+        #isplit = np.where(ints == -1)[0]
+        #nelements = len(isplit)
 
-        i0 = 0
-        for ispliti in isplit:
-            eid, gridi, gridf = ints[i0:i0+3]
-            #print(eid, gridi, gridf)
-            s0 = n + (i0 + 3) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            eids = ints[i0+5:ispliti]
-            assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
-            #print(eids)
-            i0 = ispliti + 1
-        op2.card_count['GMBNDC'] = nelements
-        return len(data)
+        #i0 = 0
+        #for ispliti in isplit:
+            #eid, gridi, gridf = ints[i0:i0+3]
+            ##print(eid, gridi, gridf)
+            #s0 = n + (i0 + 3) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #eids = ints[i0+5:ispliti]
+            #assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
+            ##print(eids)
+            #i0 = ispliti + 1
+        #op2.card_count['GMBNDC'] = nelements
+        #return len(data)
 
-    def _read_ctube(self, data: bytes, n: int) -> int:
+    def read_ctube(self, data: bytes, n: int) -> int:
         """
         CTUBE(3701,37,49) - the marker for Record 104
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4605,9 +4955,9 @@ class GEOM2:
         op2.card_count['CTUBE'] = nelements
         return n
 
-    def _read_cvisc(self, data: bytes, n: int) -> int:
+    def read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -4625,26 +4975,26 @@ class GEOM2:
         op2.card_count['CVISC'] = nelements
         return n
 
-    def _read_cweld(self, data: bytes, n: int) -> int:
+    def read_cweld(self, data: bytes, n: int) -> int:
         """
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELD in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELD in GEOM2\n')
         return len(data)
 
-    def _read_cweldc(self, data: bytes, n: int) -> int:  # 107
-        op2 = self.op2
+    def read_cweldc(self, data: bytes, n: int) -> int:  # 107
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELDC in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELDC in GEOM2\n')
         return len(data)
 
-    def _read_cweldg(self, data: bytes, n: int) -> int:  # 108
-        op2 = self.op2
+    def read_cweldg(self, data: bytes, n: int) -> int:  # 108
+        op2: OP2Geom = self.op2
         op2.log.info('geom skipping CWELDG in GEOM2')
         if op2.is_debug_file:
             op2.binary_debug.write('geom skipping CWELDG in GEOM2\n')
@@ -4653,7 +5003,7 @@ class GEOM2:
 # TDOO: above are checked by DMAP...
 #-------------------------------
 # CWSEAM
-    def _read_genel(self, data: bytes, n: int) -> int:
+    def read_genel(self, data: bytes, n: int) -> int:
         r"""
         Word Name Type Description
         1 EID I Element identification number
@@ -4786,10 +5136,37 @@ class GEOM2:
 # GMBNDS
 # GMINTC
 # GMINTS
+    def read_micpnt(self, data: bytes, n: int) -> int:
+        """
+        RECORD – MICPNT(2801,28,630)
+        Word Name Type Description
+        1 EID I Element identification number
+        2 GID I Fluid grid identification number
+        3 DESC(12) CHAR4 Description - 48 characters maximum
+        """
+        op2: OP2Geom = self.op2
+        #size = self.size
+        struc = Struct(op2._endian + b'2i 48s')
+        ntotal = 8 + 48
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = struc.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MICPNT=%s\n' % str(out))
+            #(eid,n1,n2) = out
+            eid, node_id, name_bytes = out
+            name = name_bytes.decode('latin1').rstrip()
+            op2.add_micpnt(eid, node_id, name)
+            n += ntotal
+        op2.card_count['MICPNT'] = nelements
+        return n
 
-    def _read_plotel(self, data: bytes, n: int) -> int:  # 114
+    def read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_3i = Struct(op2._endian + b'3i')
         ntotal = 12 * self.factor
         nelements = (len(data) - n) // ntotal
@@ -4807,7 +5184,7 @@ class GEOM2:
         op2.card_count['PLOTEL'] = nelements
         return n
 
-    def _read_radbc(self, data: bytes, n: int) -> int:
+    def read_radbc(self, data: bytes, n: int) -> int:
         """
         RADBC(12801,128,417)
 
@@ -4817,7 +5194,7 @@ class GEOM2:
         3 CNTRLND  I Control point for radiation boundary condition
         4 NODAMB   I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\ht15339.op2
         #(-99, 1.0, 0, 101)
         #radbc   101     1.0             -99
@@ -4841,7 +5218,7 @@ class GEOM2:
         return n
 
 # RADINT
-    def _read_sint(self, data: bytes, n: int) -> int:
+    def read_sint(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -4870,11 +5247,11 @@ class GEOM2:
         #print(ints.tolist())
         return len(data)
 
-    def _read_spoint(self, data: bytes, n: int) -> int:
+    def read_spoint(self, data: bytes, n: int) -> int:
         """
         (5551,49,105)    - the marker for Record 118
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 4 * self.factor
         npoints = (len(data) - n) // ntotal
         nids = np.frombuffer(data[n:], op2.idtype8).tolist()
@@ -4885,7 +5262,7 @@ class GEOM2:
         op2.card_count['SPOINT'] = npoints
         return len(data)
 
-    def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
+    def read_vubeam(self, data: bytes, n: int) -> int:  # 119
         """(11601, 116, 9942)"""
         deltae = 100000000
         #deltan = 111000000 # 111001002
@@ -4910,7 +5287,7 @@ class GEOM2:
 # VUQUAD4
 # WELDP
 
-    def _read_ctrax3(self, data: bytes, n: int) -> int:
+    def read_ctrax3(self, data: bytes, n: int) -> int:
         """
         RECORD - CTRAX3(6111,61,996)
 
@@ -4920,7 +5297,7 @@ class GEOM2:
         3 G(3)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor  # 6*4
         s = Struct(mapfmt(op2._endian + b'5if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4941,7 +5318,7 @@ class GEOM2:
         #op2.log.info('geom skipping CQUADX4 in GEOM2')
         #return len(data)
 
-    def _read_ctrax6(self, data: bytes, n: int) -> int:
+    def read_ctrax6(self, data: bytes, n: int) -> int:
         """
         RECORD - CTRAX6(6113, 61, 998)
 
@@ -4951,7 +5328,7 @@ class GEOM2:
         3 G(6)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 36 * self.factor  # 9*4
         s = Struct(mapfmt(op2._endian + b'8if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4968,7 +5345,7 @@ class GEOM2:
         op2.card_count['CTRAX6'] = nelements
         return n
 
-    def _read_cquadx8(self, data: bytes, n: int) -> int:
+    def read_cquadx8(self, data: bytes, n: int) -> int:
         """
         RECORD - CQUADX8(6114, 61, 999)
 
@@ -4978,7 +5355,7 @@ class GEOM2:
         3 G(8)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'10if', self.size))
         nelements = (len(data) - n)// ntotal
@@ -4995,7 +5372,7 @@ class GEOM2:
         op2.card_count['CQUADX8'] = nelements
         return n
 
-    def _read_feface_pval(self, data: bytes, n: int) -> int:
+    def read_feface_pval(self, data: bytes, n: int) -> int:
         r"""
         C:\NASA\m4\formats\git\examples\move_tpl\pshp02.bdf
         ints = (
@@ -5030,7 +5407,7 @@ class GEOM2:
         #self.show_data(data[12:])
         return len(data)
 
-    def _read_feedge2(self, data: bytes, n: int) -> int:
+    def read_feedge2(self, data: bytes, n: int) -> int:
         """
         (2901, 29, 9601)
 
@@ -5043,7 +5420,7 @@ class GEOM2:
         6 GEOMID1    I Identification number of a POINT or GMCURV entry
         7 GEOMID2    I Identification number of a POINT or GMCURV entry
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
@@ -5126,7 +5503,7 @@ class GEOM2:
         op2.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmbnds(self, data: bytes, n: int) -> int:
+    def read_gmbnds(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 BID           I Boundary identification number
@@ -5135,37 +5512,39 @@ class GEOM2:
         8 EID           I Entity identification numbers for boundary of subdomain
         Word 8 repeats until End of Record
         """
-        op2 = self.op2
-        op2.log.info('geom skipping GMBNDS in GEOM2')
-        #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
-        ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-        i0 = 0
-        for iminus1i in iminus1:
-            bid, n1, n2, n3, n4 = ints[i0:i0+5]
-            s0 = n + (i0 + 5) * 4
-            s1 = s0 + 8
-            entity = data[s0:s1].decode('latin1').rstrip()
-            assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
-            assert bid >= 0, (bid, n1, n2, n3, n4, entity)
-            eids = ints[i0+7:iminus1i]
-            #print(bid, n1, n2, n3, n4)
-            #print('entity = %r' % entity)
-            #print(eid)
-            #print('-----')
-            i0 = iminus1i + 1
-        return len(data)
+        raise UnsupportedCard('GMBNDS')
+        #op2: OP2Geom = self.op2
+        #op2.log.info('geom skipping GMBNDS in GEOM2')
+        ##(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
+        #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
+        #iminus1 = np.where(ints == -1)[0]
+        #i0 = 0
+        #for iminus1i in iminus1:
+            #bid, n1, n2, n3, n4 = ints[i0:i0+5]
+            #s0 = n + (i0 + 5) * 4
+            #s1 = s0 + 8
+            #entity = data[s0:s1].decode('latin1').rstrip()
+            #assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
+            #assert bid >= 0, (bid, n1, n2, n3, n4, entity)
+            #eids = ints[i0+7:iminus1i]
+            ##print(bid, n1, n2, n3, n4)
+            ##print('entity = %r' % entity)
+            ##print(eid)
+            ##print('-----')
+            #i0 = iminus1i + 1
+        #return len(data)
 
-    def _read_cngret(self, data: bytes, n: int) -> int:
+    def read_cngret(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\bpas101.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\pass8.op2
         return len(data)
 
-    def _read_adapt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping adapt card in GEOM2')
+    def read_adapt(self, data: bytes, n: int) -> int:  # pragma: no cover
+        raise UnsupportedCard('GMCORD')
+        self.op2.log.info('geom skipping ADAPT card in GEOM2')
         return len(data)
 
-    def _read_cseam_maybe(self, data: bytes, n: int) -> int:
+    def read_cseam_maybe(self, data: bytes, n: int) -> int:
         """
         564 / 4 = 141
         141

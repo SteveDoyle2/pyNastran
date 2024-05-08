@@ -2,6 +2,22 @@
 References:
 https://www.oasys-software.com/help/gsa/9.0/GSA_Theory.pdf
 https://download.strusoft.com/FEM-Design/inst110x/theory.pdf
+
+Newton Rhapson
+--------------
+https://www.youtube.com/watch?v=uXvoN4OleeE&ab_channel=Dr.ClaytonPettit
+[K][x] = {F0}
+[Kt][dx] = {F0} - {F_xi}
+{x} += {dx}
+{F0}: is the starting force
+{Kt}: tangent stiffness
+
+force convergence:
+|({F_xi} - {F0})| / |{F0}| < Ftol; Ftol=0.05%
+
+displacement convergence:
+|{dx}| / |{dxi}| < utol; utol=
+
 """
 import os
 import copy

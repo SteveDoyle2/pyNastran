@@ -25,7 +25,8 @@ from pyNastran.bdf.errors import (
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF, read_bdf
 from pyNastran.bdf.test.test_bdf import get_test_bdf_usage_args_examples
-from pyNastran2.bdf.test.compare import divide, get_matrix_stats, compare_card_content
+#from pyNastran2.bdf.test.compare import divide, get_matrix_stats, compare_card_content
+from pyNastran.bdf.test.compare import divide, get_matrix_stats, compare_card_content
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 import pyNastran.bdf.test

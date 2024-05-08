@@ -304,7 +304,22 @@ class MAT1(Material):
             bdf_file.write(print_card(list_fields))
         return
 
-    def s33(self):
+    def s66(self) -> np.ndarray:
+        nmaterial = len(self.material_id)
+        s66 = np.zeros((nmaterial, 6, 6), dtype='float64')
+        E = self.E
+        nu = self.nu
+        G = self.G
+        s11 = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu))
+        s12 = nu * s00
+        s66[:, 0, 0] = s66[:, 1, 1] = s66[:, 2, 2] = s11
+
+        s66[:, 1, 0] = s66[:, 0, 1] = s12
+        s66[:, 2, 0] = s66[:, 0, 2] = s12
+        s66[:, 1, 2] = s66[:, 2, 1] = s12
+        return s66
+
+    def s33(self) -> np.ndarray:
         """
         ei2 = [
             [  1 / e, -nu / e,    0.],

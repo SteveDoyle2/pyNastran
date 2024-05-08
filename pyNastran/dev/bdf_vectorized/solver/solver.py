@@ -2255,7 +2255,7 @@ class Solver(OP2):
 
 
     def assemble_forces(self, model, ndofs, case, Dofs, xyz_cid0):
-        """very similar to write_code_aster loads"""
+        """builds loads"""
         self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
         #print(model.loads)

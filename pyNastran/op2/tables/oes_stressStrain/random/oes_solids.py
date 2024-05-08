@@ -63,8 +63,8 @@ class RandomSolidArray(OES_Object):
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((ntotal, 2), dtype='int32')
-        self.element_cid = zeros((nelements, 2), dtype='int32')
+        self.element_node = zeros((ntotal, 2), dtype=idtype)
+        self.element_cid = zeros((nelements, 2), dtype=idtype)
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4

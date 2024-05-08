@@ -320,6 +320,9 @@ def validate_dvprel(prop_type, pname_fid, validate):
                    14, 24, 34, 44,
                    15, 25, 75, 85]
         _check_dvprel_options(pname_fid, prop_type, options)
+    elif prop_type == 'GPLY':
+        options = ['T', 'THETA']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBUSH':
         #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
@@ -329,7 +332,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                    'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
                    'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                    'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
-                   -13]
+                   -2, -13]
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBUSH1D':
@@ -402,7 +405,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         raise NotImplementedError(msg)
     return pname_fid
 
-def _check_dvcrel_options(cp_name, element_type, options):
+def _check_dvcrel_options(cp_name: str, element_type: str, options):
     if cp_name not in options:
         soptions = [str(val) for val in options]
         msg = (
@@ -418,7 +421,8 @@ def _check_dvmrel_options(mp_name, material_type, options):
             'valid: [%s]' % (mp_name, material_type, ', '.join(soptions)))
         raise ValueError(msg)
 
-def _check_dvprel_options(pname_fid, prop_type, options):
+def _check_dvprel_options(pname_fid: Union[str, int],
+                          prop_type: str, options):
     if pname_fid not in options:
         soptions = [str(val) for val in options]
         msg = (
@@ -511,7 +515,7 @@ class DVXREL2(BaseCard):
 
     def validate(self):
         msg = ''
-        assert len(self.dvids) > 0, str(self)
+        assert len(self.dvids) >= 0, str(self)
         for i, desvar_id in enumerate(self.dvids):
             if not isinstance(desvar_id, int):
                 msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (
@@ -1487,7 +1491,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
 
         #'CFAILURE', 'TOTSE',
     ]
-    msg = 'DRESP1 label=%s ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+    msg = 'DRESP1 label=%s property_type=%s response_type=%s atta=%s attb=%s atti=%s' % (
         label, property_type, response_type, atta, attb, atti)
     #print(msg)
     if property_type not in property_types:
@@ -1557,9 +1561,18 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
         assert len(atti) > 0, msg
         for eid in atti:
             assert isinstance(eid, int), msg
-    elif response_type in {'PSDDISP', 'PSDACCL'}:
+    elif response_type in {'PSDDISP', 'PSDVELO', 'PSDACCL'}:
         #RuntimeError: DRESP1 ptype=91 rtype=PSDDISP atta=3 attb=60.0 atti=[3]
         assert atta in {3}, msg
+        assert attb in {'ALL', 'SUM', 'AVG', 'SSQ', 'RSS', 'MAX', 'MIN'} or isinstance(attb, float_types), msg
+        assert len(atti) > 0, msg
+        for eid in atti:
+            assert isinstance(eid, int), msg
+    elif response_type in {'FRSPCF', 'FRVELO', 'FRSTRE', 'FRFORC'}:
+        # atti: grid id FRSPCF, FRVELO
+        # atti: property id FRSTRE, FRFORC
+
+        assert atta in {2, 10, 11, 12}, msg
         assert isinstance(attb, float_types), msg
         assert len(atti) > 0, msg
         for eid in atti:
@@ -1658,7 +1671,11 @@ def _validate_dresp_property_none(label: str,
         if attb is None:
             attb = 'ALPHA'
         assert isinstance(atta, integer_types), msg
-        assert atta > 0, msg
+        assert atta > 0, msg  # mode number
+        # the allowable character inputs are:
+        # - ALPHA (for the real component)
+        # - OMEGA (for the imaginary component)
+        # with ALPHA being the default.
         assert attb in ['ALPHA', 'OMEGA'], msg
         assert len(atti) == 0, msg
 
@@ -1700,6 +1717,12 @@ def _validate_dresp_property_none(label: str,
         assert atta is None, msg
         assert attb is None, msg
         assert len(atti) == 0, msg
+    elif response_type == 'ERP':
+        #if atta is
+        assert isinstance(atta, integer_types), msg
+        assert len(atti) >= 1, msg  # SET3 ids
+        assert attb is None or isinstance(attb, float_types), msg
+
     elif response_type in {'STRESS', 'STRAIN', 'FORCE', 'CFAILURE'}:
         raise RuntimeError(f'response_type={response_type!r} and property_type must not be None...{msg}')
     else:
@@ -1817,8 +1840,14 @@ class DRESP1(OptConstraint):
         #return DRESP1(dresp_id, label, response_type, property_type,
                       #region, atta, attb, atti, comment='', validate=False)
 
-    def __init__(self, dresp_id, label, response_type, property_type, region,
-                 atta, attb, atti, comment='', validate=False):
+    def __init__(self, dresp_id: int, label: str,
+                 response_type: str,
+                 property_type: str,
+                 region: int,
+                 atta: Optional[Union[int, float, str]],
+                 attb: Optional[Union[int, float, str]],
+                 atti: list[int],
+                 comment: str='', validate: bool=False):
         """
         Creates a DRESP1 card.
 
@@ -1942,6 +1971,10 @@ class DRESP1(OptConstraint):
         response_type = response_type_dict.get(response_type.lower(), response_type)
         self.response_type = response_type
 
+        if region is None:
+            region = 0
+        assert region >= 0, region
+
         # PSHELL, PCOMP, PBAR, etc.
         self.property_type = property_type
         self.region = region
@@ -1963,39 +1996,12 @@ class DRESP1(OptConstraint):
         self.atti_ref = None
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str) -> None:
         """exports the dresps in a vectorized way"""
         _export_dresps_to_hdf5(h5_file, model, encoding)
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['rtype', 'ptype']
-        return super(DRESP1, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-            filter_properties=filter_properties)
-
-    @property
-    def rtype(self):
-        return self.response_type
-
-    @rtype.setter
-    def rtype(self, response_type):
-        self.response_type = response_type
-
-    @property
-    def ptype(self):
-        return self.property_type
-
-    @ptype.setter
-    def ptype(self, property_type):
-        self.property_type = property_type
-
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DRESP1 card from ``BDF.add_card(...)``
 
@@ -2010,11 +2016,11 @@ class DRESP1(OptConstraint):
         oid = integer(card, 1, 'oid')
         label = string(card, 2, 'label')
         #label = loose_string(card, 2, 'label')
-        response_type = string(card, 3, 'rtype')
+        response_type = string(card, 3, 'response_type')
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-        property_type = integer_string_or_blank(card, 4, 'ptype')
-        region = integer_or_blank(card, 5, 'region')
+        property_type = integer_string_or_blank(card, 4, 'property_type')
+        region = integer_or_blank(card, 5, 'region', default=0)
         atta = integer_double_string_or_blank(card, 6, 'atta')
         attb = integer_double_string_or_blank(card, 7, 'attb')
 
@@ -2025,7 +2031,7 @@ class DRESP1(OptConstraint):
         return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
                       comment=comment, validate=False)
 
-    def _verify(self, model: BDF, xref):
+    def _verify(self, model: BDF, xref: bool) -> None:
         if not xref:
             return
         node_types = {
@@ -2063,7 +2069,7 @@ class DRESP1(OptConstraint):
             print(self.get_stats())
             raise NotImplementedError(self.response_type)
 
-    def calculate(self, op2_model, subcase_id):
+    def calculate(self, op2_model: OP2, subcase_id: int):
         rtype = self.rtype
         property_type = self.property_type
         if rtype == 'DISP' and property_type is None:
@@ -2099,10 +2105,10 @@ class DRESP1(OptConstraint):
             raise NotImplementedError(msg)
         return out
 
-    def OptID(self):
+    def OptID(self) -> int:
         return self.DRespID()
 
-    def DRespID(self):
+    def DRespID(self) -> int:
         return self.dresp_id
 
     def cross_reference(self, model: BDF) -> None:
@@ -2351,21 +2357,21 @@ class DRESP1(OptConstraint):
             raise NotImplementedError(msg)
         return data
 
-    def _nodes(self):
+    def _nodes(self) -> list[int]:
         """helper method"""
         data = [node if isinstance(node, integer_types) else node.nid
                 for node in self.atti_ref]
         #self.atti = data
         return data
 
-    def _elements(self):
+    def _elements(self) -> list[int]:
         """helper method"""
         data = [eid if elem is None else elem.eid
                 for (eid, elem) in zip(self.atti, self.atti_ref)]
         #self.atti = data
         return data
 
-    def _properties(self):
+    def _properties(self) -> list[int]:
         """helper method"""
         data = [pid if prop is None else prop.pid
                 for (pid, prop) in zip(self.atti, self.atti_ref)]
@@ -2374,8 +2380,10 @@ class DRESP1(OptConstraint):
         return data
 
     def raw_fields(self):
-        list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.Atta(), self.attb] + self.atti_values()
+        region = None if self.region == 0 else self.region
+        list_fields = ['DRESP1', self.dresp_id, self.label,
+                       self.response_type, self.property_type,
+                       region, self.Atta(), self.attb] + self.atti_values()
         return list_fields
 
     def repr_fields(self):
@@ -2391,8 +2399,10 @@ class DRESP1(OptConstraint):
         label = self.label.strip()
         if len(label) <= 6:
             label = ' %6s ' % label
-        list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.Atta(), self.attb] + self.atti_values()
+        region = None if self.region == 0 else self.region
+        list_fields = ['DRESP1', self.dresp_id, self.label,
+                       self.response_type, self.property_type,
+                       region, self.Atta(), self.attb] + self.atti_values()
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -2566,9 +2576,12 @@ class DRESP2(OptConstraint):
     """
     type = 'DRESP2'
 
-    def __init__(self, dresp_id, label, dequation, region, params,
-                 method='MIN', c1=1., c2=0.005, c3=10., comment='',
-                 validate=False):
+    def __init__(self, dresp_id: int, label: str,
+                 dequation: Union[int, str],
+                 region: int, params,
+                 method: str='MIN',
+                 c1: float=1., c2: float=0.005, c3: float=10.,
+                 validate: bool=False, comment: str=''):
         """
         Creates a DRESP2 card.
 
@@ -2632,6 +2645,9 @@ class DRESP2(OptConstraint):
         self.dresp_id = dresp_id
         self.label = label
         self.dequation = dequation
+        if region is None:
+            region = 0
+        assert region >= 0, region
         self.region = region
         self.method = method
 
@@ -2650,11 +2666,11 @@ class DRESP2(OptConstraint):
                 #property_type, response_type, atta, attb, atti)
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the dresps in a vectorized way"""
         _export_dresps_to_hdf5(h5_file, model, encoding)
 
-    def _validate(self):
+    def _validate(self) -> None:
         assert isinstance(self.params, dict), self.params
         if len(self.params) == 0:
             msg = (
@@ -2699,7 +2715,7 @@ class DRESP2(OptConstraint):
             ikey += 1
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DRESP2 card from ``BDF.add_card(...)``
 
@@ -2714,7 +2730,7 @@ class DRESP2(OptConstraint):
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         dequation = integer_or_string(card, 3, 'dequation_id')
-        region = integer_or_blank(card, 4, 'region')
+        region = integer_or_blank(card, 4, 'region', default=0)
         method = string_or_blank(card, 5, 'method', default='MIN')
 
         # MSC 2005   Defaults: C1=100., C2=.005)
@@ -2742,19 +2758,19 @@ class DRESP2(OptConstraint):
         return DRESP2(dresp_id, label, dequation, region, params,
                       method, c1, c2, c3, comment=comment)
 
-    def OptID(self):
+    def OptID(self) -> int:
         return self.DRespID()
 
-    def DRespID(self):
+    def DRespID(self) -> int:
         return self.dresp_id
 
-    def _verify(self, model, xref):
+    def _verify(self, model: BDF, xref: bool) -> None:
         pass
         #for (j, name), value_list in sorted(self.params.items()):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
                 #self._get_values(name, value_list)))
 
-    def calculate(self, op2_model, subcase_id):
+    def calculate(self, op2_model: OP2, subcase_id: int):
         argsi = []
         for key, vals in sorted(self.params_ref.items()):
             unused_j, name = key
@@ -2859,7 +2875,7 @@ class DRESP2(OptConstraint):
         else:
             raise NotImplementedError(self.dequation)
 
-    def safe_cross_reference(self, model: BDF, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -2878,7 +2894,7 @@ class DRESP2(OptConstraint):
         self.dequation = self.DEquation()
         self.dequation_ref = None
 
-    def DEquation(self):
+    def DEquation(self) -> Union[int, str]:
         if self.dequation_ref is None:
             return self.dequation
         return self.dequation_ref.equation_id
@@ -2906,8 +2922,9 @@ class DRESP2(OptConstraint):
         return list_fields
 
     def raw_fields(self):
+        region = None if self.region == 0 else self.region
         list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
-                       self.region, self.method, self.c1, self.c2, self.c3]
+                       region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
 
@@ -2924,8 +2941,9 @@ class DRESP2(OptConstraint):
                 c2 = set_blank_if_default(self.c2, 0.005)
                 c3 = set_blank_if_default(self.c3, 10.)
 
+        region = None if self.region == 0 else self.region
         list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
-                       self.region, method, c1, c2, c3]
+                       region, method, c1, c2, c3]
         list_fields += self._pack_params()
         return list_fields
 
@@ -3000,8 +3018,9 @@ class DRESP3(OptConstraint):
     """
     type = 'DRESP3'
 
-    def __init__(self, dresp_id, label, group, Type, region, params,
-                 validate=False, comment=''):
+    def __init__(self, dresp_id: int, label: str,
+                 group, Type, region: int, params,
+                 validate: bool=False, comment=''):
         """
         Creates a DRESP3 card.
 
@@ -3030,7 +3049,7 @@ class DRESP3(OptConstraint):
         Type : str
             Refers to a specific user-created response calculation type
             in the external function evaluator
-        region : str
+        region : int
             Region identifier for constraint screening
         params : dict[(index, card_type)] = values
             the storage table for the response function
@@ -3060,6 +3079,9 @@ class DRESP3(OptConstraint):
         self.label = label
         self.group = group
         self.Type = Type
+        if region is None:
+            region = 0
+        assert region >= 0, region
         self.region = region
         self.params = params
         if validate:
@@ -4721,10 +4743,13 @@ class DVPREL1(DVXREL1):
             #raise NotImplementedError('prop_type=%r is not supported in '
                                       #'update_model' % self.prop_type)
 
-    def _update_by_dvprel(self, prop, value):
-        if self.prop_type == 'PCOMP' and prop.type == 'PCOMPG':
+    def _update_by_dvprel(self, prop, value: float) -> None:
+        prop_type = self.prop_type
+        if prop_type == 'PCOMP' and prop.type == 'PCOMPG':
             pass
-        elif self.prop_type != prop.type:
+        elif prop_type == 'GPLY':
+            pass
+        elif prop_type != prop.type:
             raise RuntimeError('prop_type=%s is not the same as the property type (%s)\n%s%s' % (
                 self.prop_type, prop.type, str(self), str(prop)))
 
@@ -4842,22 +4867,27 @@ class DVPREL1(DVXREL1):
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
-    def _get_property(self, model, pid, msg=''):
+    def _get_property(self, model: BDF, pid: int, msg: str=''):
         assert isinstance(self.pid, int), type(self.pid)
-        if self.prop_type in self.allowed_properties:
+        prop_type = self.prop_type
+        if prop_type in self.allowed_properties:
             pid_ref = model.Property(pid, msg=msg)
         #elif self.prop_type in self.allowed_elements:
             #pid_ref = model.Element(pid, msg=msg)
         #elif self.prop_type in self.allowed_masses:
             #pid_ref = model.masses[pid]
-        elif self.prop_type in self.allowed_properties_mass:
+        elif prop_type in self.allowed_properties_mass:
             pid_ref = model.properties_mass[pid]
-        elif self.prop_type == 'PBUSHT':
+        elif prop_type == 'PBUSHT':
             pid_ref = model.pbusht[pid]
-        elif self.prop_type == 'PELAST':
+        elif prop_type == 'PELAST':
             pid_ref = model.pelast[pid]
-        elif self.prop_type in ['PFAST', 'PBRSECT']:
+        elif prop_type in {'PFAST', 'PBRSECT'}:
             pid_ref = model.properties[pid]
+        elif prop_type == 'GPLY':
+            # TODO: should be the global layer...it's not really a property tho...
+            pid_ref = None
+            return pid_ref
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         assert pid_ref.type not in ['PBEND'], pid_ref
@@ -5752,6 +5782,11 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+    elif prop_type == 'GPLY':
+        if var_to_change in ['T', 'THETA']:
+            pass
+        else:
+            raise ValueError(var_to_change)
 
     elif prop_type == 'PBAR':
         pbar_var_map = {

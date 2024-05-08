@@ -5,7 +5,8 @@ from struct import pack, Struct
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header
 
-def write_mpt(op2_file, op2_ascii, model, endian=b'<'):
+def write_mpt(op2_file, op2_ascii, model, endian=b'<',
+              nastran_format: str='nx'):
     """writes the MPT/MPTS table"""
     if not hasattr(model, 'materials'):
         return
@@ -19,6 +20,7 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<'):
         'MATT3', 'MATT9',
         #  other
         'NLPARM', 'NLPCI', 'TSTEPNL', 'MAT3D',
+        'MATPOR',
         'RADBC',
     ]
     # these are specifically for material dependency objects (e.g., model.MATS1)
@@ -506,16 +508,23 @@ def _write_matt8(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
         #print(mat.get_stats())
         data = [
             mat.mid,
-            mat.e1_table, mat.e2_table, mat.nu12_table,
-            mat.g12_table, mat.g1z_table, mat.g2z_table,
-            mat.rho_table,
-            mat.a1_table, mat.a2_table,
+            mat.e1_table if mat.e1_table else 0,
+            mat.e2_table if mat.e2_table else 0,
+            mat.nu12_table if mat.nu12_table else 0,
+            mat.g12_table if mat.g12_table else 0,
+            mat.g1z_table if mat.g1z_table else 0,
+            mat.g2z_table if mat.g2z_table else 0,
+            mat.rho_table if mat.rho_table else 0,
+            mat.a1_table if mat.a1_table else 0,
+            mat.a2_table if mat.a2_table else 0,
             0,
-            mat.xt_table, mat.xc_table,
-            mat.yt_table, mat.yc_table,
-            mat.s_table,
-            mat.ge_table,
-            mat.f12_table,
+            mat.xt_table if mat.xt_table else 0,
+            mat.xc_table if mat.xc_table else 0,
+            mat.yt_table if mat.yt_table else 0,
+            mat.yc_table if mat.yc_table else 0,
+            mat.s_table if mat.s_table else 0,
+            mat.ge_table if mat.ge_table else 0,
+            mat.f12_table if mat.f12_table else 0,
             0,
         ]
         assert None not in data, f'MATT8 data={data}'

@@ -4,18 +4,24 @@ from collections import defaultdict
 from struct import pack, Struct
 from typing import Union, Any, TYPE_CHECKING
 
-from pyNastran.op2.tables.geom.edom import DSCREEN_RTYPE_TO_INT
+from pyNastran.op2.tables.geom.edom import (
+    DSCREEN_RTYPE_TO_INT, DRESP_FLAG_TO_RESP_MSC, DRESP_FLAG_TO_RESP_NX)
 from .geom1_writer import write_geom_header, close_geom_table
-from .geom4_writer import write_header, write_header_nvalues
+from .geom4_writer import write_header_nvalues # write_header,
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.optimization import DVPREL2, DVMREL2, DTABLE
     #from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
     #from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
-integer_types = int
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
-def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
+DRESP_MSC_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_MSC.items()}
+DRESP_NX_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_NX.items()}
+
+def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
+               endian: bytes=b'<',
+               nastran_format: str='nx') -> None:
     """writes the EDOM table"""
     if not hasattr(model, 'loads'):  # OP2
         return
@@ -28,15 +34,11 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'
     #print(card_types)
 
     cards_to_skip = [
-        #'DVCREL1',
-        #'DVMREL1',
-        #'DVPREL1',
-        'DVCREL2',
+        #'DVCREL2',  # disabled b/c no reader
         'DOPTPRM',
         'DCONADD',
 
         'DLINK',
-        'DVGRID',
     ]
     out = defaultdict(list)
 
@@ -94,7 +96,8 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'
         except KeyError:  # pragma: no cover
             raise NotImplementedError(name)
 
-        nbytes = func(model, name, ids, ncards, op2_file, op2_ascii, endian)
+        nbytes = func(model, name, ids, ncards, op2_file, op2_ascii, endian,
+                      nastran_format=nastran_format)
         op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
@@ -109,9 +112,10 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
-                   dscreens: list[Any], ncards: int,
-                   op2_file, op2_ascii, endian: bytes) -> int:
+def write_dscreen(model: Union[BDF, OP2Geom], name: str,
+                  dscreens: list[Any], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     DSCREEN(4206, 42, 363)
     Design constraint screening data.
@@ -137,9 +141,337 @@ def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_desvar(model: Union[BDF, OP2Geom], name: str,
-                  desvar_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes) -> int:
+def write_dresp1(model: Union[BDF, OP2Geom], name: str,
+                 dresp1_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
+    key = (3806, 38, 359)
+    log = model.log
+    debug = False
+    #structi = Struct(endian + b'i8s ffff i')
+
+    #nvalues = 8 * ncards
+
+    nbytes = 0
+    struct0 = Struct(endian + b'i8si')
+
+    nvalues = 0
+    data_bytes = []
+    struct6i = Struct(endian + b'6i')
+    for dresp_id in dresp1_ids:
+        #1 ID           I Unique entry identifier
+        #2 LABEL(2) CHAR4 User-defined label
+        #4 FLAG         I Flag indicating response type
+        dresp = model.dresps[dresp_id]
+        #print(dresp.get_stats())
+
+        response_type = dresp.response_type
+        if response_type not in DRESP_NX_TO_FLAG:
+            continue
+
+        flag = DRESP_NX_TO_FLAG[response_type]
+        label_bytes = ('%-8s' % dresp.label).encode('ascii')
+        data0 = (dresp.dresp_id, label_bytes, flag)
+
+        region = dresp.region
+        property_type = dresp.property_type
+        atta = dresp.atta
+        attb = dresp.attb
+        atti = dresp.atti
+        natti = len(atti)
+
+        nvaluesi = 0
+        if response_type == 'CMPLNCE':
+            #   5 UNDEF(2) None
+            #   7 UNDEF I Reserved for SEID for compliance DRESP1
+            #   8 UNDEF(2) None
+            #   10 MONE I Entry is -1 (MONE=MINUS ONE)
+            assert atta is None, msg
+            assert attb is None, msg
+            assert region == 0, msg
+            data = (0, 0, 0, 0, 0, -1)
+            structi = struct6i
+        elif response_type == 'WEIGHT':
+            # 5 UNDEF(2) None
+            # 7 REGION I Region identifier for constraint screening
+            # 8 ATTA   I Response attribute
+            #   -10 for DWEIGHT which is the topology optimization design weight
+            # 9 ATTB   I Response attribute
+            # 10 MONE  I Entry is -1 (MONE=MINUS ONE)
+            if atta is None:  atta = 33
+            if attb is None:  attb = -9999
+            data = (0, 0, region, atta, attb, -1)
+            structi = struct6i
+        elif response_type == 'VOLUME':
+            #   5 UNDEF(2) None
+            #   7 REGION I Region identifier for constraint screening
+            #   8 ATTA   I Response attribute
+            #   9 ATTB   I Response attribute
+            #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
+            assert atta is None, dresp.get_stats()
+            assert attb is None, dresp.get_stats()
+            atta = 0
+            attb = -9999
+            data = (0, 0, region, atta, attb, -1)
+            structi = struct6i
+
+
+        elif response_type in {'LAMA', 'EIGN'}:
+            #FLAG = 3 LAMA
+              #5 UNDEF(2) None
+              #7 REGION I Region identifier for constraint screening
+              #8 ATTA   I Response attribute
+              #9 ATTB   I Response attribute
+              #10 MONE  I Entry is -1
+            atta = 1
+            if attb is None:  attb = 0
+            data = (0, 0, region, atta, attb, -1)
+            structi = struct6i
+        elif response_type == 'CEIG':
+            #   5 UNDEF(2) None
+            #   7 REGION I Region identifier for constraint screening
+            #   8 ATTA   I Response attribute
+            #   9 ATTB   I Response attribute
+            #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
+
+            #if atta is None:  atta = 0
+            #if attb is None:  attb = 0
+            if attb == 'ALPHA':
+                attb = 1
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+            data = (0, 0, region, atta, attb, -1)
+            structi = struct6i
+        elif response_type == 'DISP':
+            # 5 UNDEF(2) None
+            # 7 REGION I Region identifier for constraint screening
+            # 8 ATTA   I Response attribute
+            # 9 ATTB   I Response attribute -> None
+            # 10 ATTi  I Grid point IDs
+            # Word 10 repeats until -1 occurs
+            assert atta is not None, atta
+            assert attb is None, attb
+            atta = int(atta)
+            attb = 0
+            data = (0, 0, region, atta, attb, *atti, -1)
+
+            fmt = endian + b'6i ' + f'{natti}i'.encode('ascii')
+            structi = Struct(fmt)
+            nvaluesi = 10 + natti  # 4 + local = 4 + 6 + nattai
+
+        elif response_type in {'STRESS', 'STRAIN', 'CSTRESS', 'CSTRAIN', 'CFAILURE', 'FORCE'}:
+            #5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
+            #7 REGION       I Region identifier for constraint screening
+            #8 ATTA         I Response attribute
+            #9 ATTB         I Response attribute
+            #10 ATTi        I Element numbers (if Word 5 is ELEM) or composite property IDs
+            #Word 10 repeats until -1 occurs
+            property_type_bytes = f'{property_type:<8s}'.encode('ascii')
+            if response_type in {'STRESS', 'STRAIN', 'FORCE'} and attb is None:  attb = 0
+
+            fmt = endian + b'8s 3i ' + f'{natti+1}i'.encode('ascii')
+            data = (property_type_bytes, region, atta, attb, *atti, -1)
+            structi = Struct(fmt)
+            nvaluesi = 10 + natti
+        elif response_type == 'FREQ':
+            #   5 UNDEF(2) None
+            #   7 REGION I Region identifier for constraint screening
+            #   8 ATTA   I Response attribute
+            #   9 ATTB   I Response attribute
+            #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
+            assert atta is not None, dresp.get_stats()
+            assert attb is None, dresp.get_stats()
+            attb = 0
+            data = (0, 0, region, atta, attb, -1)
+            structi = struct6i
+
+        elif response_type in {'FRDISP', 'FRACCL'}:
+            # FLAG = 20 FRDISP
+            #   5 UNDEF(2) None
+            #   7 REGION I Region identifier for constraint screening
+            #   8 ATTA   I Response attribute
+            #   9 ATTB  RS Frequency value; -1 (integer) spawn for all
+            #   frequencies in set; -1.10000E+08 for SUM;
+            #   -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+            #   -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+            #   -1.60000E+08 for MIN
+            #   10 ATTi I Grid point IDs
+            #   Word 10 repeats until -1 occurs
+            assert atta is not None, atta
+            assert len(atti) > 0, atti
+            if isinstance(attb, float_types):
+                fmt = endian + b'4i f ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, attb, *atti, -1)
+            elif attb is None:
+                fmt = endian + b'4i i ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, -1, *atti, -1)
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+            structi = Struct(fmt)
+            nvaluesi = 10 + natti
+
+        elif response_type in {'FRSTRE', 'FRFORC'}:
+            #FLAG = 24 FRSTRE
+            #  5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+            #  7 REGION  I Region identifier for constraint screening
+            #  8 ATTA    I Response attribute
+            #  9 ATTB   RS Frequency value; -1 (integer) spawn for all
+            #  frequencies in set; -1.10000E+08 for SUM;
+            #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+            #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+            #  -1.60000E+08 for MIN
+            #  10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+            #  Word 10 repeats until -1 occurs
+            property_type_bytes = f'{property_type:<8s}'.encode('ascii')
+            assert atta is not None, atta
+            assert len(atti) > 0, atti
+            if isinstance(attb, float_types):
+                fmt = endian + b'8s 2i f ' + f'{natti}i i'.encode('ascii')
+                data = (property_type_bytes, region, atta, attb, *atti, -1)
+                structi = Struct(fmt)
+                nvaluesi = 10 + natti
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+        elif response_type in {'TDISP'}:
+            #FLAG = 60 TDISP
+            #  5 UNDEF(2) None
+            #  7 REGION  I Region identifier for constraint screening
+            #  8 ATTA    I Response attribute
+            #  9 ATTB   RS Time value; -1 (integer) spawn for all time steps in set;
+            #              -1.10000E+08 for SUM
+            #              -1.20000E+08 for AVG
+            #              -1.30000E+08 for SSQ
+            #              -1.40000E+08 for RSS
+            #              -1.50000E+08 for MAX
+            #              -1.60000E+08 for MIN
+            #  10 ATTi   I Grid point IDs
+            #  Word 10 repeats until -1 occurs
+            assert atta is not None, atta
+            attai = int(atta)
+            assert len(atti) > 0, atti
+            if isinstance(attb, float_types):
+                fmt = endian + b'4i f ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, attai, attb, *atti, -1)
+            elif attb is None:
+                fmt = endian + b'4i i ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, attai, -1, *atti, -1)
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+            nvaluesi = 10 + natti
+            structi = Struct(fmt)
+
+        elif response_type in {'PSDDISP', 'PSDVELO', 'PSDACCL'}:
+            #FLAG = 29 PSDDISP
+            #FLAG = 30 PSDVELO
+            #FLAG = 31 PSDACCL
+            #  5 UNDEF     None
+            #  6 PTYPE   I Random ID
+            #  7 REGION  I Region identifier for constraint screening
+            #  8 ATTA    I Response attribute
+            #  9 ATTB   RS Time value; -1 (integer) spawn for all time steps in set;
+            #              -1.10000E+08 for SUM
+            #              -1.20000E+08 for AVG
+            #              -1.30000E+08 for SSQ
+            #              -1.40000E+08 for RSS
+            #              -1.50000E+08 for MAX
+            #              -1.60000E+08 for MIN
+            #  10 ATTi I Grid point IDs
+            #  Word 10 repeats until -1 occurs
+            assert atta is not None, atta
+            assert len(atti) > 0, atti
+            if isinstance(attb, float_types):
+                fmt = endian + b'4i f ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, attb, *atti, -1)
+            elif attb == 'ALL':
+                fmt = endian + b'4i i ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, -1, *atti, -1)
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+            structi = Struct(fmt)
+            nvaluesi = 10 + natti
+
+        elif response_type == 'ERP':
+            # FLAG = 19 ERP
+            #   5 UNDEF(2) None
+            #   7 REGION I Region identifier
+            #   8 ATTA   I Response attribute
+            #   9 ATTB   I Frequency or real code for character input, or -1=spawn)
+            #   10 ATTi  I Panel SET3 IDs
+            #   Word 10 repeats until -1 occurs
+            assert atta is not None, atta
+            assert len(atti) > 0, atti
+            if isinstance(attb, float_types):
+                fmt = endian + b'4i f ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, attb, *atti, -1)
+                structi = Struct(fmt)
+            elif attb is None:
+                fmt = endian + b'4i i ' + f'{natti+1}i'.encode('ascii')
+                data = (0, 0, region, atta, -1, *atti, -1)
+                structi = Struct(fmt)
+            else:  # pragma: no cover
+                raise NotImplementedError(dresp.get_stats())
+            nvaluesi = 10 + natti
+
+        #elif response_type in {'FORCE', }:
+            #continue
+        elif response_type == 'FLUTTER':
+            # RTYPE=84 Aeroelastic flutter damping
+            # 5 METHOD CHAR4 Analysis type: PK or PKNL
+            # 6 UNDEF        None
+            # 7 REGION     I Region identifier for constraint screening
+            # 8 ATTA       I Response attribute
+            # 9 ATTB       I Response attribute
+            # 10 ATTi      I ATT1 is the identification number of a SET1 entry that specifies a set of modes
+            #                ATT2 is the identification number of an FLFACT entry that specifies a list of densities;
+            #                ATT3 is the identification number of an FLFACT entry that specifies a list of Mach numbers
+            #                ATT4 is the identification number of an FLFACT entry that specifies a list of velocities
+            assert atta is None, atta
+            assert attb is None, attb
+            atta = 0
+            attb = 0
+            assert len(atti) == 4, atti
+            assert property_type in {'PK', 'PKNL'}, property_type
+            property_type_bytes = f'{property_type:<8s}'.encode('ascii')
+
+            fmt = endian + b'8s 2i f ' + f'{natti+1}i'.encode('ascii')
+            data = (property_type_bytes, region, atta, attb, *atti, -1)
+            structi = Struct(fmt)
+            nvaluesi = 10 + natti
+
+        else:  # pragma: no cover
+            #log.warning(f'skipping response_type={response_type}\n{dresp}')
+            #continue
+            raise NotImplementedError(dresp.get_stats())
+        assert None not in data, data
+
+        if nvaluesi == 0:
+            nvalues += 4 + len(data)
+        else:
+            nvalues += nvaluesi
+
+        if debug:
+            print(data0+data, response_type, nvalues)
+        op2_ascii.write(f'  DRESP1 data={data0+data}\n')
+        msg0 = struct0.pack(*data0)
+        msg1 = structi.pack(*data)
+        data_bytes.append(msg0)
+        data_bytes.append(msg1)
+        if debug:
+            data_bytesi = b''.join(data_bytes)
+            assert len(data_bytesi) == nvalues * 4, f'ndata_bytesi={len(data_bytesi)}; nvalues*4={nvalues*4}'
+
+
+    data_bytesi = b''.join(data_bytes)
+    assert len(data_bytesi) == nvalues * 4
+    if nvalues:
+        nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+        op2_file.write(data_bytesi)
+    return nbytes
+
+def write_desvar(model: Union[BDF, OP2Geom], name: str,
+                 desvar_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
     """
     (3106, 31, 352)
     NX 2019.2
@@ -185,9 +517,10 @@ def _write_desvar(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
-                   dconstrs: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes) -> int:
+def write_dconstr(model: Union[BDF, OP2Geom], name: str,
+                  dconstrs: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx') -> int:
     """
     Record – DCONSTR(4106,41,362)
     Design constraints.
@@ -238,9 +571,10 @@ def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes):
+def write_dvprel2(model: Union[BDF, OP2Geom], name: str,
+                  dvprel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Record – DVPREL2(3406,34,355)
     Design variable to property relation based on a user-supplied equation.
@@ -321,9 +655,10 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes):
+def write_dvprel1(model: Union[BDF, OP2Geom], name: str,
+                  dvprel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Word Name Type Description
     1 ID          I Unique identification number
@@ -418,9 +753,78 @@ def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes):
+def write_dvcrel1(model: Union[BDF, OP2Geom], name: str,
+                  dvcrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
+    """
+    Record – DVCREL1(6100,61,429)
+    Design variable to connectivity property relation.
+    Word Name   Type Description
+    1 ID        I     Unique identification number
+    2 TYPE(2)   CHAR4 Name of an element connectivity entry
+    4 EID       I     Element identification number
+    5 FID       I     Entry is 0
+    6 CPMIN     RS    Minimum value allowed for this property
+    7 CPMAX     RS    Maximum value allowed for this property
+    8 C0        RS    Constant term of relation
+    9 CPNAME(2) CHAR4 Name of connectivity property
+    11 DVIDi    I     DESVAR entry identification number
+    12 COEFi    RS    Coefficient of linear relation
+    Words 11 and 12 repeat until -1 occurs
+    """
+    key = (6100, 61, 429)
+    #structi = Struct(endian + b'ii 4f ii')
+
+    ncoeffs = 0
+    for dvcrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvcrel_id]
+        ncoeffs += len(dvcrel.coeffs)
+        #print(dvprel.get_stats())
+
+    nvalues = 11 * ncards + ncoeffs * 2 # nbytes(data)
+    ndata = 9 * ncards + ncoeffs * 2  # len(data)
+
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    data_all = []
+    for dvmrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvmrel_id]
+        #print(dvcrel.get_stats())
+        # TODO: doesn't handle fid = float
+        #fid = 0
+        #if isinstance(dvprel.pname_fid, str):
+        fmt = b'i 8s 2i 2fi 8s'
+        cp_name_bytes = b'%-8s' % dvcrel.cp_name.encode('latin1')
+
+        elem_type_bytes = b'%-8s' % dvcrel.element_type.encode('latin1')
+
+        c0 = dvcrel.c0
+        cp_min, cp_max = _get_dvcrel_coeffs(dvcrel)
+        if c0 is None:
+            c0 = 0.
+
+        fid = 0
+        data = [dvmrel_id, elem_type_bytes, dvcrel.eid, fid, cp_min, cp_max, c0, cp_name_bytes]
+        ncoeffs = len(dvcrel.coeffs)
+        fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
+        for desvar, coeff in zip(dvcrel.desvar_ids, dvcrel.coeffs):
+            data.extend([desvar, coeff])
+        data.append(-1)
+
+        assert None not in data, data
+        structi = Struct(endian + fmt)
+        op2_ascii.write(f'  DVCREL1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+        data_all += data
+    #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
+    assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
+    return nbytes
+
+def write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
+                  dvmrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Word Name Type Description
     1 ID          I Unique identification number
@@ -455,20 +859,6 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
     ndata = 9 * ncards + ncoeffs * 2  # len(data)
 
     nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
-    #dvprel_id = ints[i0]
-    #type_bytes = data[n+size:n+3*size]
-    #property_name_bytes = data[n+8*size:n+10*size]
-    #prop_type = reshape_bytes_block_size(type_bytes, size=size)
-
-    #pid, fid = ints[i0+3:i0+5]
-    #pmin, pmax, c0 = floats[i0+5:i0+8]
-    #if fid == 0:
-        #fid = reshape_bytes_block_size(property_name_bytes, size=size)
-
-    ## fid = fidi
-    ##print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
-    #desvar_ids = ints[i0+10:i1:2]
-    #coeffs = floats[i0+11:i1:2]
 
     data_all = []
     for dvmrel_id in dvmrel_ids:
@@ -481,7 +871,6 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
         material_name_bytes = b'%-8s' % dvmrel.mp_name.encode('latin1')
 
         mat_type_bytes = b'%-8s' % dvmrel.mat_type.encode('latin1')
-        #property_name_bytes = b'%-8s' % dvprel.property_name.encode('latin1')
 
         c0 = dvmrel.c0
         mp_min, mp_max = _get_dvmrel_coeffs(dvmrel)
@@ -492,18 +881,15 @@ def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
         data = [dvmrel_id, mat_type_bytes, dvmrel.mid, fid, mp_min, mp_max, c0, material_name_bytes]
         ncoeffs = len(dvmrel.coeffs)
         fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
-        #print(data)
         for desvar, coeff in zip(dvmrel.desvar_ids, dvmrel.coeffs):
             data.extend([desvar, coeff])
         data.append(-1)
 
         assert None not in data, data
         structi = Struct(endian + fmt)
-        op2_ascii.write(f'  DVMREL2 data={data}\n')
+        op2_ascii.write(f'  DVMREL1 data={data}\n')
         op2_file.write(structi.pack(*data))
         data_all += data
-        #break
-    #print(data_all)
     #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
@@ -532,7 +918,16 @@ def _get_dvprel_coeffs(dvprel):
         p_max = 1e+20
     return p_min, p_max
 
-def _get_dvmrel_coeffs(dvmrel):
+def _get_dvcrel_coeffs(dvcrel) -> tuple[float, float]:
+    """probably wrong"""
+    cp_min, cp_max = dvcrel.cp_min, dvcrel.cp_max
+    if cp_min is None:
+        cp_min = 1e-20
+    if cp_max is None:
+        cp_max = 1e+20
+    return cp_min, cp_max
+
+def _get_dvmrel_coeffs(dvmrel) -> tuple[float, float]:
     """probably wrong"""
     mp_min, mp_max = dvmrel.mp_min, dvmrel.mp_max
     if mp_min is None:
@@ -554,9 +949,10 @@ def _get_dvmrel_coeffs(dvmrel):
         mp_max = 1e+20
     return mp_min, mp_max
 
-def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes):
+def write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
+                  dvmrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     """
     Record – DVMREL2(6400,64,432)
     Design variable to material relation based on a user-supplied equation.
@@ -626,16 +1022,17 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvcrel_ids: list[int], ncards: int,
-                   op2_file, op2_ascii, endian: bytes):
+def write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
+                  dvcrel_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes,
+                  nastran_format: str='nx'):
     key = (6200, 62, 430)
     structi = Struct(endian + b'ii 4f ii')
 
     ndata = 9 * ncards
     nvalues = 11 * ncards
     for dvcrel_id in dvcrel_ids:
-        dvcrel = model.dvcrels[dvmrel_id]
+        dvcrel = model.dvcrels[dvcrel_id]
         if len(dvcrel.dvids):
             nvalues += len(dvcrel.dvids) + 2
             ndata += len(dvcrel.dvids) + 2
@@ -668,10 +1065,10 @@ def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
             # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
             cp_min = 1e-20
 
-        mat_type_bytes = ('%-8s' % dvcrel.mat_type).encode('ascii')
-        cp_name_bytes = ('%-8s' % dvcrel.mp_name).encode('ascii')
+        mat_type_bytes = ('%-8s' % dvcrel.element_type).encode('ascii')
+        cp_name_bytes = ('%-8s' % dvcrel.cp_name).encode('ascii')
         data = [dvcrel_id, mat_type_bytes, dvcrel.eid, fid,
-                cp_min, dvccel.cp_max, dvcrel.dequation, cp_name_bytes]
+                cp_min, dvcrel.cp_max, dvcrel.dequation, cp_name_bytes]
         fmt += _write_dvxrel2_flag(dvcrel, data)
 
         assert None not in data, data
@@ -700,9 +1097,10 @@ def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: list[Any]) -> by
     data.append(-1)
     return fmt
 
-def _write_dtable(model: Union[BDF, OP2Geom], name: str,
-                  dtables: list[DTABLE], ncards: int,
-                  op2_file, op2_ascii, endian: bytes) -> int:
+def write_dtable(model: Union[BDF, OP2Geom], name: str,
+                 dtables: list[DTABLE], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
     """
     Record – DTABLE(3706,37,358)
     Table constants.
@@ -740,22 +1138,70 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 
-EDOM_MAP = {
-    'DVPREL1': _write_dvprel1,
-    'DVMREL1': _write_dvmrel1,
-    # 'DVCREL1': _write_dvcrel1,
-    'DVPREL2': _write_dvprel2, 'DVMREL2': _write_dvmrel2, '#DVCREL2': _write_dvcrel2,
 
-    'DESVAR': _write_desvar,
+def write_dvgrid(model: Union[BDF, OP2Geom], name: str,
+                 dvgrid_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
+    """
+    (4406, 44, 372)
+    NX 2019.2
+
+    Design variable to grid point relation.
+    Word Name Type Description
+    1 DVID   I DESVAR entry identification number
+    2 GID    I Grid point or geometric point identification number
+    3 CID    I Coordinate system identification number
+    4 COEFF RS Multiplier of the vector defined by N(3)
+    5 N1    RS Component of the vector measured in the coordinate system defined by CID
+    6 N2    RS Component of the vector measured in the coordinate system defined by CID
+    7 N3    RS Component of the vector measured in the coordinate system defined by CID
+
+    """
+    key = (4406, 44, 372)
+    structi = Struct(endian + b'3i 4f')
+
+    ncards = 0
+    for dvgrid_id in dvgrid_ids:
+        dvgrids = model.dvgrids[dvgrid_id]
+        ncards += len(dvgrids)
+    nvalues = 7 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    for dvgrid_id in dvgrid_ids:
+        dvgrids = model.dvgrids[dvgrid_id]
+        for dvgrid in dvgrids:
+
+            dvgrid_id = dvgrid.desvar_id
+            cid = dvgrid.coord_id
+            coeff = dvgrid.coeff
+            nid = dvgrid.nid
+            dxyz = dvgrid.dxyz
+
+            data = [dvgrid_id, nid, cid, coeff, *dxyz]
+            assert None not in data, data
+            #print(data)
+            op2_ascii.write(f'  DVGRID data={data}\n')
+            op2_file.write(structi.pack(*data))
+    return nbytes
+
+EDOM_MAP = {
+    'DVPREL1': write_dvprel1,
+    'DVMREL1': write_dvmrel1,
+    'DVCREL1': write_dvcrel1,
+    'DVPREL2': write_dvprel2, 'DVMREL2': write_dvmrel2, # 'DVCREL2': write_dvcrel2,
+
+    'DESVAR': write_desvar,
     #'DOPTPRM': _write_doptprm,
-    'DTABLE': _write_dtable,
-    'DCONSTR': _write_dconstr,
+    'DTABLE': write_dtable,
+    'DCONSTR': write_dconstr,
     #'DCONADD': _write_dconadd,
 
     #'DLINK': _write_dlink,
-    'DESVAR': _write_desvar,
-    #'DVGRID': _write_dvgrid,
-    'DSCREEN': _write_dscreen,
+    'DESVAR': write_desvar,
+    'DVGRID': write_dvgrid,
+    'DSCREEN': write_dscreen,
+    'DRESP1': write_dresp1,
 
     #(3206, 32, 353) : ['DLINK', self._read_fake],
     #(3306, 33, 354) : ['DVPREL1', self._read_dvprel1],

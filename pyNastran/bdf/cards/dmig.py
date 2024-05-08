@@ -272,6 +272,7 @@ class DTI(BaseCard):
         self.fields = fields
         for key, fieldsi in fields.items():
             assert fieldsi is not None, fields
+            assert isinstance(fieldsi, list), fieldsi
             for fieldi in fieldsi:
                 assert not isinstance(fieldi, bytes), fieldsi
         assert len(fields) > 0, fields
@@ -324,6 +325,7 @@ class DTI(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         for irecord, fields in sorted(self.fields.items()):
+            assert isinstance(fields, list), fields
             list_fields = ['DTI', self.name, irecord, ] + fields
             msg += print_card_8(list_fields)
         return msg
@@ -654,7 +656,11 @@ class NastranMatrix(BaseCard):
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
-    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True):
+    def get_matrix(self, is_sparse: bool=False,
+                   apply_symmetry: bool=True) -> tuple[np.ndarray | scipy.coomatrix,
+                                                       dict[int, tuple[int, int]],
+                                                       dict[int, tuple[int, int]],
+                                                       ]:
         """
         Builds the Matrix
 

@@ -113,7 +113,7 @@ BULK_DATA_CARDS = {
     'MATG', 'MATHE', 'MATHP',
 
     ## Material dependence - MATT1/MATT2/etc.
-    'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+    'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
     'MATS1', #'MATS3', 'MATS8',
     # 'MATHE'
     'EQUIV',

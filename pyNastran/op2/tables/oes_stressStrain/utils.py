@@ -1348,7 +1348,7 @@ def oes_cshear_real_4(op2: OP2, data: bytes,
                       obj: Union[RealShearStressArray, RealShearStrainArray],
                       ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'3f')
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'3f', op2.size))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -1357,6 +1357,7 @@ def oes_cshear_real_4(op2: OP2, data: bytes,
             op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
         (eid_device, max_strain, avg_strain, margin) = out
+        #print(eid_device, max_strain, avg_strain, margin)
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
         add_sort_x(dt, eid, max_strain, avg_strain, margin)

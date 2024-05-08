@@ -125,7 +125,7 @@ def remove_unused(bdf_filename: str,
         'FORCEAX',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PMIC', 'MATPOR', 'AMLREG', 'CAABSF', 'MICPNT',
 
         # superelements
         'SELOC', 'SEEXCLD', 'SENQSET',
@@ -247,7 +247,7 @@ def remove_unused(bdf_filename: str,
             # todo: MATS1, MATT1, etc.
             pass
         elif card_type in ['MATS1', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
-                           'MATT8', 'MATT9', 'MATHE', 'MATHP', 'CREEP']:
+                           'MATT8', 'MATT9', 'MATT11', 'MATHE', 'MATHP', 'CREEP']:
             mids_used.update(ids)
 
         elif card_type in masses:
@@ -372,7 +372,7 @@ def remove_unused(bdf_filename: str,
             for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
 
-        elif card_type in ['PBUSH']:
+        elif card_type in {'PBUSH', 'PBUSH2D'}:
             pass
             #for pid in ids:
                 #prop = model.properties[pid]
@@ -906,9 +906,11 @@ def _store_dresp1(model: BDF, ids, nids_used, pids_used, dresps_used):
 
         #elif dresp.property_type == 'STRESS':
 
+        elif dresp.property_type in {'PK', 'PKNL'}:
+            assert dresp.response_type == 'FLUTTER', dresp
         elif dresp.property_type is None:
             if dresp.response_type in {'WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
-                                       'FREQ', 'STABDER'}:
+                                       'FREQ', 'STABDER', 'FLUTTER'}:
                 #dresps_used.add(dresp_id)
                 pass
             elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',

@@ -2,6 +2,7 @@
 defines readers for BDF objects in the OP2 CONTACT/CONTACTS table
 """
 from __future__ import annotations
+from struct import Struct
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -21,8 +22,11 @@ class CONTACT:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
+
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
 
     def read_contact_4(self, data: bytes, ndata: int):
         """
@@ -49,21 +53,21 @@ class CONTACT:
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sline5.op2
         self.contact_map = {
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\femao8rand.op2
-            (7110, 71, 588) : ['BSURFS', self._read_bsurfs],
-            (724, 7, 441) : ['BSURF', self._read_fake],
-            (224, 2, 436) : ['BLSEG', self._read_fake],
-            (1224, 12, 446) : ['BGSET', self._read_fake],
-            (7210, 72, 589) : ['BCPROP', self._read_fake],
-            (7410, 74, 591) : ['BCTSET', self._read_fake],
-            (7510, 75, 592) : ['BCTADD', self._read_fake],
-            (8810, 88, 603) : ['BGADD', self._read_fake],
-            (8920, 89, 614) : ['BEDGE', self._read_fake],
-            (124, 1, 435) : ['BCONP', self._read_fake],
-            (7710, 77, 594) : ['BCRPARA', self._read_fake],
-            (8110, 81, 598) : ['BCTPARM', self._read_bctparm],
-            (8301, 83, 605) : ['BCPROPS', self._read_fake],
+            (7110, 71, 588) : ['BSURFS', self.read_bsurfs],
+            (724, 7, 441) : ['BSURF', self.read_fake],
+            (224, 2, 436) : ['BLSEG', self.read_fake],
+            (1224, 12, 446) : ['BGSET', self.read_fake],
+            (7210, 72, 589) : ['BCPROP', self.read_fake],
+            (7410, 74, 591) : ['BCTSET', self.read_fake],
+            (7510, 75, 592) : ['BCTADD', self.read_fake],
+            (8810, 88, 603) : ['BGADD', self.read_fake],
+            (8920, 89, 614) : ['BEDGE', self.read_fake],
+            (124, 1, 435) : ['BCONP', self.read_fake],
+            (7710, 77, 594) : ['BCRPARA', self.read_fake],
+            (8110, 81, 598) : ['BCTPARM', self.read_bctparm],
+            (8301, 83, 605) : ['BCPROPS', self.read_fake],
 
-            #(124, 1, 435) : ['???', self._read_fake],
+            #(124, 1, 435) : ['???', self.read_fake],
 
             # Record – ACTRAD(5907,60,654)
             # Record – AMLREG(811,8,628)  .
@@ -83,47 +87,116 @@ class CONTACT:
             # Record – PACTRAD(6581,61,658)
             # Record – TMCPARA (7910,79,989)
             # Record – VATVFS(6801,68,680)
-            (8710, 87, 449) : ['???', self._read_fake],
-            (424, 4, 438) : ['???', self._read_fake],
+            (8710, 87, 449) : ['???', self.read_fake],
+            (424, 4, 438) : ['???', self.read_fake],
 
-            (624, 6, 440) : ['???', self._read_fake],
-            (1124, 11, 445) : ['BCPARA', self._read_fake],
-            (20029, 29, 493) : ['BCPROP', self._read_fake],
-            (1024, 10, 444) : ['BCBODY', self._read_fake],
-            (811, 8, 628) : ['AMLREG', self._read_fake],
+            (624, 6, 440) : ['???', self.read_fake],
+            (1124, 11, 445) : ['BCPARA', self.read_fake],
+            (20029, 29, 493) : ['BCPROP', self.read_fake],
+            (1024, 10, 444) : ['BCBODY', self.read_fake],
+            (811, 8, 628) : ['AMLREG', self.read_amlreg],
 
-            (6621, 66, 662) : ['BCTPAR2', self._read_fake],
-            (7610, 76, 593) : ['BGPARA', self._read_bgpara],
-            (9101, 91, 693) : ['FLXSLI', self._read_fake],
-            (5524, 55, 897) : ['BCONPRG', self._read_fake],
-            (924, 9, 443) : ['???', self._read_fake],
+            (6621, 66, 662) : ['BCTPAR2', self.read_fake],
+            (7610, 76, 593) : ['BGPARA', self.read_bgpara],
+            (9101, 91, 693) : ['FLXSLI', self.read_fake],
+            (5524, 55, 897) : ['BCONPRG', self.read_fake],
+            (924, 9, 443) : ['???', self.read_fake],
 
-            (6571, 65, 657) : ['???', self._read_fake],
-            (4624, 46, 888) : ['BCONPRP', self._read_fake],
-            (4524, 45, 887) : ['BCONECT', self._read_fake],
-            (4424, 44, 886) : ['BCTABL1', self._read_fake],
-            (7124, 71, 992) : ['BCAUTOP', self._read_fake],
-            (4724, 47, 889) : ['BCBODY1', self._read_fake],
-            (4824, 48, 890) : ['BCBDPRP', self._read_fake],
-            (6724, 67, 948) : ['BCSCAP', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
-            #(4824, 48, 890) : ['???', self._read_fake],
+            (6571, 65, 657) : ['???', self.read_fake],
+            (4624, 46, 888) : ['BCONPRP', self.read_fake],
+            (4524, 45, 887) : ['BCONECT', self.read_fake],
+            (4424, 44, 886) : ['BCTABL1', self.read_fake],
+            (7124, 71, 992) : ['BCAUTOP', self.read_fake],
+            (4724, 47, 889) : ['BCBODY1', self.read_fake],
+            (4824, 48, 890) : ['BCBDPRP', self.read_fake],
+            (6724, 67, 948) : ['BCSCAP', self.read_fake],
+            (4924, 49, 891) : ['???', self.read_fake],
+            (5024, 50, 892) : ['BCRGSRF', self.read_fake],
+            (5424, 54, 896) : ['BCNURBS', self.read_fake],
+            (5724, 57, 899) : ['BCTRIM', self.read_fake],
+            (7324, 73, 996) : ['BCSURF', self.read_fake],
+            (7424, 74, 997) : ['BSURF', self.read_fake],
+            (3824, 38, 742) : ['BCBMRAD', self.read_fake],
+            (7224, 72, 995) : ['BCGRID', self.read_fake],
+            (20032, 32, 496) : ['GMNURB', self.read_fake],
+
+            (5224, 52, 894) : ['BCBZIER', self.read_fake],
+            (5324, 53, 895) : ['BCNURB2', self.read_fake],
+            (5124, 51, 893) : ['BCPATCH', self.read_fake],
         }
 
-    #def _read_924(self, data: bytes, n: int) -> int:
-        #self.show_data(data[n:])
-        #sds
+    def read_amlreg(self, data: bytes, n: int) -> int:
+        """
+        Record – AMLREG(811,8,628)
 
-    #def _read_bcrpara(self, data: bytes, n: int) -> int:
+        Word Name Type Description
+        1 RID          I AML region ID
+        2 SID          I BSURFS ID for surface definition
+        3 DESC(12) CHAR4 Description - 48 character maximum
+        15 NLAY        I Number of layers
+        16 RADTYPE     I Radiation surface type:
+                           0=None
+                           1=AML
+                           2=Physical boundary
+        17 INFID1      I Infinite plane-1 ID
+        18 INFID2      I Infinite plane-2 ID
+        19 INFID3      I Infinite plane-3 ID
+        20 UNDEF(3) None
+
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+
+        ntotal = 22 * size
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'AMLREG'
+
+        #loads = []
+        if size == 4:
+            struc = Struct(op2._endian + b'2i 48s 5i 3i')
+        else:
+            raise RuntimeError('size=8 AMLREG')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (rid, sid, name_bytes, nlayers, radtype,
+             infid1, infid2, infid3,
+             dummy1, dummy2, dummy3) = out
+            assert rid > 0, rid
+            assert sid > 0, sid
+
+            if radtype == 0:
+                radsurf = 'NONE'
+            elif radtype == 1:
+                radsurf = 'AML'
+            elif radtype == 2:
+                radsurf = 'PHYB'
+            else:
+                raise NotImplementedError(radtype)
+
+            name = name_bytes.decode('utf8').rstrip()
+            assert (dummy1, dummy2, dummy3) == (0, 0, 0), (dummy1, dummy2, dummy3)
+
+            infid = [infid1, infid2, infid3]
+            # AMLREG RID SID     Name/Descriptor
+            #        NL  RADSURF INFID1 INFID2 INFID3
+            op2.add_amlreg(rid, sid, name,
+                           infid,
+                           nlayers=nlayers, radsurf=radsurf)
+            #acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            #loads.append(acsrce)
+        return n # , loads
+
+    #def read_bcrpara(self, data: bytes, n: int) -> int:
         #return self._read_bc_param(data, n, 'BCRPARA')
 
-    def _read_bgpara(self, data: bytes, n: int) -> int:
+    def read_bgpara(self, data: bytes, n: int) -> int:
+        """BGPARA"""
         return self._read_bc_param(data, n, 'BGPARA')
 
-    def _read_bctparm(self, data: bytes, n: int) -> int:
+    def read_bctparm(self, data: bytes, n: int) -> int:
+        """BCTPARM"""
         return self._read_bc_param(data, n, 'BCTPARM')
 
     def _read_bc_param(self, data: bytes, n: int, name: str) -> int:
@@ -222,11 +295,11 @@ class CONTACT:
             # 4 TYPE           I Parameter data type
             # 5 Value(i)    I/RS Parameter value (See Note 1 below)
             #self.add_bctparm(contact_id, params)
-            print(contact_id, params)
-        op2.log.warning(f'skipping {name}')
+            #print(contact_id, params)
+        op2.log.warning(f'skipping {name}; id={contact_id} params={params}')
         return len(data)
 
-    def _read_bsurfs(self, data: bytes, n: int) -> int:
+    def read_bsurfs(self, data: bytes, n: int) -> int:
         """
         BSURFS
 

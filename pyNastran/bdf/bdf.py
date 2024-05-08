@@ -89,9 +89,10 @@ from pyNastran.bdf.cards.elements.shell_nasa95 import (
 
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
-    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
+    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
+    ACMODL, PMIC, ACPLNW, AMLREG, MATPOR, MICPNT)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
+from .cards.properties.bush import PBUSH, PBUSH1D, PBUSH2D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5)
 from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -131,7 +132,7 @@ from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MATG, MATHE, MATHP, MATEV,
                               CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
 from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -438,7 +439,7 @@ MISSING_CARDS = {
     'SWLDPRM', 'PLOTOPT', 'PLOTE', 'PLOTG',
     'FTGEVNT', 'RADBND', 'RADMT', 'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',
     'NLFREQ1', 'NLRGAP',
-    'ACADAPT', 'ACORDER', 'AMLREG'
+    'ACADAPT', 'ACORDER', 'AMLREG',
     'NLCNTL', 'NLCNTLG', 'NLCNTL2', 'NLSTRAT', 'NLRSFD', 'NLHARM',
     'DMRLAW',
     'TABLE3D', 'TABL3D0',
@@ -650,7 +651,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## properties
             'PMASS',
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
-            'PBUSH', 'PBUSH1D',
+            'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
             'PBEAML', 'PBMSECT', # not fully supported
@@ -659,6 +660,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
+            'PMIC',
 
             #  nastran 95
             'PTRSHL', 'PQUAD1',
@@ -688,7 +690,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATG', 'MATHE', 'MATHP', 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
             'MATS1', #'MATS3', 'MATS8',
             'MATDMG',
             # 'MATHE'
@@ -726,6 +728,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
+
+            ## acoustic
+            'ACPLNW', 'AMLREG', 'MATPOR', 'MICPNT',
 
             # msgmesh
             #'GMLOAD',  # loads
@@ -2137,12 +2142,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CSUPEXT' : (CSUPEXT, add_methods._add_csupext_object),
             'SELOAD' : (SELOAD, add_methods._add_seload_object),
 
+            ## acoustic
             'CHACAB': (CHACAB, add_methods._add_element_object),
             'CHACBR': (CHACBR, add_methods._add_element_object),
             'CAABSF': (CAABSF, add_methods._add_element_object),
             'PACABS': (PACABS, add_methods._add_acoustic_property_object),
             'PAABSF': (PAABSF, add_methods._add_acoustic_property_object),
             'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
+            'PMIC': (PMIC, add_methods._add_property_object),
+            'ACPLNW': (ACPLNW, add_methods._add_acplnw_object),
+            'AMLREG': (AMLREG, add_methods._add_amlreg_object),
+            'MATPOR': (MATPOR, add_methods._add_structural_material_object),
+            'MICPNT': (MICPNT, add_methods._add_micpnt_object),
             #'PANEL' : (Crash, None),
 
             'BCONP' : (BCONP, add_methods._add_bconp_object),
@@ -2332,6 +2343,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBUSH2D' : (CBUSH2D, add_methods._add_damper_object),
             'PBUSH' : (PBUSH, add_methods._add_property_object),
             'PBUSH1D' : (PBUSH1D, add_methods._add_property_object),
+            'PBUSH2D' : (PBUSH2D, add_methods._add_property_object),
 
             'CRAC2D' : (CRAC2D, add_methods._add_element_object),
             'PRAC2D' : (PRAC2D, add_methods._add_property_object),
@@ -2390,6 +2402,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATT5' : (MATT5, add_methods._add_material_dependence_object),
             'MATT8' : (MATT8, add_methods._add_material_dependence_object),
             'MATT9' : (MATT9, add_methods._add_material_dependence_object),
+            'MATT11' : (MATT11, add_methods._add_material_dependence_object),
 
             'MATDMG': (MATDMG, add_methods._add_material_dependence_object),
 
@@ -3543,6 +3556,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
+
+    def is_acoustic(self) -> bool:
+        card_names = ['ACPLNW', 'AMLREG', 'CAABSF', 'PMIC', 'MATPOR', 'MICPNT']
+        nacoustics = [self.card_count.get(card_name, 0) for card_name in card_names]
+        nacoustic = sum(nacoustics)
+        is_acoustic = nacoustic > 0
+        return is_acoustic
 
     def get_bdf_stats(self, return_type: str='string') -> Union[str, list[str]]:
         """

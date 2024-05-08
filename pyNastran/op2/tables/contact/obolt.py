@@ -13,15 +13,14 @@ This file defines the OUG Table, which contains:
    - DISPLACEMENT = ALL
 """
 from __future__ import annotations
-from struct import Struct
+#from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran import DEV
-from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+#from pyNastran.utils.numpy_utils import integer_types
+#from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-from pyNastran.op2.tables.oug.oug_displacements import (
-    RealDisplacementArray, ComplexDisplacementArray)
+from pyNastran.op2.tables.contact.bolt_objects import RealBoltArray
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -352,7 +351,7 @@ class OBOLT:
             load_obj = True
             if load_obj:
                 auto_return = op2._create_table_vector(
-                    result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
+                    result_name, nnodes, storage_obj, RealBoltArray, is_cid=False)
                 if auto_return:
                     return ndata
             else:

@@ -744,6 +744,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         """
         eid = integer(card, 1, 'eid')
+        assert 'UM' in card, card
         ium = card.index('UM')
         if ium > 0:
             assert string(card, ium, 'UM') == 'UM', 'RBE1=%s must contain UM' % str(card)

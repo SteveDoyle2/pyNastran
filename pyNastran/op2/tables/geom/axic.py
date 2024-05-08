@@ -44,14 +44,14 @@ class AXIC:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
         self.axic_map = { # per NX
-            (515, 5, 144) : ['AXIC', self._read_fake], # per NX
-            (2115, 21, 156) : ['FORCEAX', self._read_fake], # per NX
-            (2315, 23, 146) : ['CCONEAX', self._read_fake], # per NX
-            (5615, 56, 145) : ['RINGAX', self._read_fake], # per NX
+            (515, 5, 144) : ['AXIC', self.read_fake], # per NX
+            (2115, 21, 156) : ['FORCEAX', self.read_fake], # per NX
+            (2315, 23, 146) : ['CCONEAX', self.read_fake], # per NX
+            (5615, 56, 145) : ['RINGAX', self.read_fake], # per NX
         }

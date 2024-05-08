@@ -666,7 +666,7 @@ class RealNonlinearBeamArray(OES_Object):
         #       DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
         #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
         #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
-        #self.xxb = zeros(self.ntotal, dtype='float32')
+        #self.xxb = zeros(self.ntotal, dtype=fdtype)
         self.data = np.full((self.ntimes, self.ntotal, 5), np.nan, dtype=fdtype)
 
     def get_stats(self, short: bool=False) -> list[str]:

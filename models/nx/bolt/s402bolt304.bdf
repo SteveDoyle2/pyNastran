@@ -1,0 +1,138 @@
+NASTRAN SYSTEM(674)=1
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$ DESCRIPTION - TEST BOLT TYPE 3 WITH IMPOSED BOLT AXIS
+$               BOLT PRELOAD ANALYSIS WITH CPENTA ELEMENTS.
+$               LOAD: FORCE/BOLTFOR
+$                                                               
+$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+SOL 402,106
+TIME      60
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  CASE CONTROL        
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+TITLE    = BOLT WITH IMPOSED BOLT AXIS
+ECHO = SORT  
+SPC = 1 
+DISPLACEMENT(PRINT,PLOT) = ALL 
+BOLTRESULT(PRINT,PLOT) = ALL
+SUBCASE 1
+  TSTEP=1
+  ANALYSIS=preload
+  BOLTLD = 1
+  NLCNTL = 1
+SUBCASE 2
+  TSTEP=2
+  ANALYSIS=STATICS
+  LOAD=1
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  BULK DATA           
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+PARAM       POST      -2
+PARAM    OMACHPR     YES
+NLCNTL2,1,SUBCNCAS,100
+TSTEP1         1     0.0       1     yes
+TSTEP1         2     1.0       1       1
+$*
+$*  PARAM CARDS
+$*
+PARAM   AUTOSPC YES 
+PARAM   GRDPNT         0
+PARAM   K6ROT   100.0000
+PARAM   POSTEXT YES 
+PARAM   PRGPST  NO
+$*
+$*
+$*  GRID CARDS
+$*
+GRID           1       0     0.0     0.0     0.0       0
+GRID           2       0 250.000     0.0     0.0       0
+GRID           3       0 500.000     0.0     0.0       0
+GRID           4       0     0.0 200.000     0.0       0
+GRID           5       0 250.000 200.000     0.0       0
+GRID           6       0 500.000 200.000     0.0       0
+GRID           7       0 505.000     0.0-5.00000       0
+GRID           8       0 505.000     0.0 5.00000       0
+GRID           9       0 495.000     0.0 5.00000       0
+GRID          10       0 495.000     0.0-5.00000       0
+GRID          11       0 505.000 200.000-5.00000       0
+GRID          12       0 505.000 200.000 5.00000       0
+GRID          13       0 495.000 200.000 5.00000       0
+GRID          14       0 495.000 200.000-5.00000       0
+GRID          15       0 505.000 85.0000-5.00000       0
+GRID          16       0 505.000 85.0000 5.00000       0
+GRID          17       0 495.000 90.0000 5.00000       0
+GRID          18       0 495.000 90.0000-5.00000       0
+GRID          19       0 505.000 145.000-5.00000       0
+GRID          20       0 505.000 145.000 5.00000       0
+GRID          21       0 495.000 140.000 5.00000       0
+GRID          22       0 495.000 140.000-5.00000       0
+$*
+$*  ELEMENT CARDS
+$*
+CBAR           2       1       1       2     0.01.000000     0.0
+CBAR           3       1       2       3     0.01.000000     0.0
+CBAR           4       1       4       5     0.01.000000     0.0
+CBAR           5       1       5       6     0.01.000000     0.0
+RBE2           7       3  123456       7      10       9       8
+RBE2           8       6  123456      11      14      13      12
+CPENTA         9       3       9       7      10      17      15      18
+CPENTA        10       3       9       8       7      17      16      15
+CPENTA        11       3      17      15      18      21      19      22
+CPENTA        12       3      16      15      17      20      19      21
+CPENTA        13       3      21      19      22      13      11      14
+CPENTA        14       3      21      20      19      13      12      11
+$
+CORD2R       100             0.0     0.0     0.0     0.0     1.0     0.0+
++            1.0     0.0     0.0
+$
+BOLT           1       3     100       3      18
+               9      10      11      12      13      14
+$*
+BOLTFOR        1    1.E5       1
+$*
+$*  MATERIAL CARDS
+$*
+$*
+$*  I-DEAS Material: 1  name: GENERIC_ISOTROPIC_STEEL
+MAT1           12.0680+88.0155+7.29000007.8200-61.1700-521.85000     0.0+ 
++       150000.0150000.068000.00
+$*
+$*  I-DEAS Material: 3  name: 2 - 1 - GENERIC_ISOTROPIC_STEEL
+MAT1           32.0680+88.0155+7.29000007.8200-61.1700-521.85000.0200000+ 
++       150000.0150000.068000.00
+$*
+$*  PROPERTY CARDS
+$*
+$*
+$*  I-DEAS property: 1  name: BEAM1
+$*  Fore Section   : 1  name: RECTANGLE 0.05 X 0.02
+PBAR           1       32500.000520833.3520833.3880195.3     0.0        + 
++       25.0000025.0000025.00000-25.0000-25.0000-25.0000-25.000025.00000+ 
++       .8333333.8333333
+$*
+$*  I-DEAS property: 3  name: SOLID3
+PSOLID         3       1       0
+$*
+$*  RESTRAINT CARDS
+$*
+SPC            1       1  123456     0.0
+SPC            1       4  123456     0.0
+$*
+$*  LOAD CARDS
+$*
+FORCE          1       6       01.000000     0.0100000.0     0.0
+$*
+NLCNTLG  STRMEAS       0  STROUT       0
+ENDDATA

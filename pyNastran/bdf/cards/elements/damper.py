@@ -143,6 +143,8 @@ class CDAMP1(LineDamper):
         """
         eid, pid, g1, g2, c1, c2 = data
         nids = [g1, g2]
+        assert 0 <= c1 < 7
+        assert 0 <= c2 < 7
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     def validate(self):
@@ -341,6 +343,8 @@ class CDAMP2(LineDamper):
         nids = [data[2], data[3]]
         c1 = data[4]
         c2 = data[5]
+        assert 0 <= c1 < 7
+        assert 0 <= c2 < 7
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     def validate(self):

@@ -981,15 +981,16 @@ def _get_plate_msg(self):
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                             '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
 
-        cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
-        cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
-        cquadr_msg = ['                        S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
+        oes1a = ' - OES1A' if self.table_name_str == 'OES1A' else ''
+        cquad4_msg = [f'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 ){oes1a}\n'] + tri_msg_temp
+        cquad8_msg = [f'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 ){oes1a}\n'] + tri_msg_temp
+        cquadr_msg = [f'                        S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R ){oes1a}\n'] + tri_msg_temp
         #cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
-        cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
+        cquad4_bilinear_msg = [f'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 ){oes1a}        OPTION = BILIN  \n \n'] + quad_msg_temp
 
-        ctria3_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
-        ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
-        ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
+        ctria3_msg = [f'                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 ){oes1a}\n'] + tri_msg_temp
+        ctria6_msg = [f'                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 ){oes1a}\n'] + tri_msg_temp
+        ctriar_msg = [f'                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R ){oes1a}\n'] + tri_msg_temp
     else:
         if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',

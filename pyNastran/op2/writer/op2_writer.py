@@ -19,7 +19,7 @@ from .ept_writer import write_ept
 from .mpt_writer import write_mpt
 from .edt_writer import write_edt
 from .edom_writer import write_edom
-#from .dit_writer import write_dit
+from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -177,14 +177,14 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     if 'EPT' not in skips:    # properties
         write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'MPT' not in skips:    # materials
-        write_mpt(op2_file, fop2_ascii, obj, endian=endian)
+        write_mpt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
 
     if 'EDT' not in skips:  # aero
         write_edt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'EDOM' not in skips:  # optimization
-        write_edom(op2_file, fop2_ascii, obj, endian=endian)
-    #if 'DIT' not in skips:  # tables
-        #write_dit(op2_file, fop2_ascii, obj, endian=endian)
+        write_edom(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'DIT' not in skips:  # tables
+        write_dit(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     #if 'DYNAMIC' not in skips:
         #write_dynamic(op2_file, fop2_ascii, obj)
     if 'grid_point_weight' not in skips:
@@ -210,7 +210,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     table_order = [
         'OUGV1', 'BOUGV1',
         'OUGF1', 'OUG1F', 'BOUGF1',
-        'TOUGV1', 'OTEMP1',
+        'TOUGV1', 'OTEMP1', 'OUG1S',
 
         'OAG1', 'OVG1', 'OUG1', 'OUGV1PAT',
 
@@ -265,6 +265,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         # stress
         'OESNLXD', 'OESNLXR', 'OESNL1X',
         'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1', 'OESVM1C',
+        'OES1A',
         'OES2', 'OESVM2',
         'OESCP',
         'OESNL1',
@@ -295,6 +296,12 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OGS1', 'OGSTR1',
         'OEFIT', 'OESRT',
         'OSPDS1', 'OSPDSI1',
+        'OSLIDE1', 'OSLIDEG1',
+        'OBOLT1',
+        'RAFCONS', 'RAFEATC',
+        'RAGCONS', 'RAGEATC',
+        'RANCONS', 'RANEATC',
+
     ]
     skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
     for table_type in obj.get_table_types():

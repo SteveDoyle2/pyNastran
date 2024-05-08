@@ -47,8 +47,10 @@ class Results:
         self.failure_indices = FailureIndices()
         self.force = Force()
         self.thermal_load = ThermalLoad()
-        self.stress = Stress()
+        self.stress = Stress('stress')
         self.strain = Strain()
+        self.stressa = Stress('stressa')
+
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
         self.ROQGM1 = ROQGM1()   # relative mpc forces???
@@ -78,9 +80,10 @@ class Results:
         self.abs = ABS()
         self.nrl = NRL()
 
-        self.cstm = CSTM()
+        self.cstm = None
         self.trmbd = {}
         self.trmbu = {}
+        self.vg_vf_response = {}
         self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
@@ -92,6 +95,7 @@ class Results:
             'strain_energy' : self.strain_energy,
             'stress': self.stress,
             'strain': self.strain,
+            'stressa': self.stressa,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -113,7 +117,9 @@ class Results:
             self.acoustic,
             self.responses,
             self.force, self.thermal_load,
-            self.stress, self.strain, self.strain_energy,
+            self.stress, self.strain,
+            self.stressa,
+            self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
@@ -556,7 +562,11 @@ class ThermalLoad(Load):
         return tables
 
 class Stress:
-    def __init__(self):
+    def __init__(self, word: str):
+        """word : str
+            'stress', 'stressa'
+        """
+        self.word = word
         self.celas1_stress = {}
         self.celas2_stress = {}
         self.celas3_stress = {}
@@ -667,7 +677,7 @@ class Stress:
             'hyperelastic_cquad4_stress',
         ]
         if include_class:
-            return ['stress.' + table for table in tables]
+            return [f'{self.word}.' + table for table in tables]
         return tables
 
 class Strain:

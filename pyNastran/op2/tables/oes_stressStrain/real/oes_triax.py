@@ -66,10 +66,10 @@ class RealTriaxArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element_node = zeros((self.ntotal, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
-        data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

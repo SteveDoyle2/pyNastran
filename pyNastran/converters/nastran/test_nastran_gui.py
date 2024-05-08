@@ -2,6 +2,7 @@
 # encoding: utf8
 import os
 import sys
+from pathlib import Path
 from copy import deepcopy
 from collections import defaultdict
 import unittest
@@ -22,7 +23,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
@@ -35,7 +36,7 @@ USE_OLD_TERMS = not USE_NEW_TERMS
 from pyNastran.gui.testing_methods import FakeGUIMethods
 
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
-from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
+from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk, save_nastran_results
 from pyNastran.converters.nastran.gui.stress import get_composite_sort
 
 from pyNastran.gui.qt_files.gui_attributes import IS_CUTTING_PLANE
@@ -74,6 +75,8 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.stop_on_failure = True
         super().load_nastran_results(op2_filename)
         self.validate_result_object_methods()
+        vtk_ugrid = self.grid
+        save_nastran_results(self.gui, vtk_ugrid)
 
     def write_result_cases(self):  # pramga: no cover
         case_id0 = 0
@@ -283,9 +286,9 @@ class NastranGUI(NastranIO, FakeGUIMethods):
             checks[key] = True
         return
 
-PKG_PATH = pyNastran.__path__[0]
-STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+STL_PATH = PKG_PATH / 'converters' / 'stl'
+MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestNastranGUI(unittest.TestCase):
@@ -388,12 +391,15 @@ class TestNastranGUI(unittest.TestCase):
 
         p2 = [0., 1., 0.]
         zaxis = [0., 0., 1.]
+
+        test.shear_moment_torque_obj.setup_model_data(model_name)
         force_sum, moment_sum = test.shear_moment_torque_obj.plot_shear_moment_torque(
-            model_name, gpforce,
+            icase_gpforce,
             p1, p2, p3, zaxis,
             method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-            nplanes=5, plane_color=None, plane_opacity=0.5,
+            nplanes=5,
+            #plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
         assert np.allclose(np.abs(force_sum).max(), 0.000732421875), np.abs(force_sum).max()
         assert np.allclose(np.abs(moment_sum).max(), 0.000244140625), np.abs(moment_sum).max()
@@ -404,11 +410,12 @@ class TestNastranGUI(unittest.TestCase):
         zaxis = np.array([0., 0., 1.])
         #idir = 0
         test.shear_moment_torque_obj.plot_shear_moment_torque(
-            model_name, gpforce,
+            icase_gpforce,
             p1, p2, p3, zaxis,
             method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-            nplanes=5, plane_color=None, plane_opacity=0.5,
+            nplanes=5,
+            #plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
 
         if IS_CUTTING_PLANE:
@@ -1034,6 +1041,19 @@ class TestNastranGUI(unittest.TestCase):
             assert len(test.result_cases) == 236, len(test.result_cases)
         #print(test.result_cases)
 
+    def test_vba1(self):
+        """vibroacoustics"""
+        test = NastranGUI()
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'test_vba.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'ac108vatv5tc.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'acssn108presvar.bdf'
+        test.load_nastran_geometry(bdf_filename)
+
     def test_aero(self):
         """tests the bah_plane"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
@@ -1186,9 +1206,46 @@ class TestNastranGUI(unittest.TestCase):
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
-        vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
-        nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
-        assert os.path.exists(vtk_filename), vtk_filename
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, log_level='error')
+
+        assert os.path.exists(vtu_filename), vtu_filename
+
+    def _test_gui_vtk(self):  # pragma: no cover
+        dirname = r'pyNastran\pyNastran\converters\nastran\models'
+        bdf_filename = os.path.join(dirname, 'demo.bdf')
+        op2_filename = os.path.join(dirname, 'demo.op2')
+        vtu_filename = os.path.join(dirname, 'demo.vtu')
+        nastran_to_vtk(bdf_filename, op2_filename, vtu_filename, log_level='error')
+
+    def test_gui_vtk1_elements_01(self):
+        """tests forces/pressure in SOL 101 using an op2 model object"""
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements0.vtu')
+        vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtk')
+        model = read_op2(op2_filename, load_geometry=True, combine=False, debug=False)
+        nastran_to_vtk(model, model, vtu_filename, log_level='error')
+        nastran_to_vtk(model, model, vtk_filename, log_level='error')
+
+    def test_gui_vtk2_elements_01(self):
+        """tests forces/pressure in SOL 101 using a Path object"""
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
+        vtu_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements9.vtu')
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, compression_level=9)
+
+        vtu_filename = MODEL_PATH / 'elements' / 'static_elements0.vtu'
+        nastran_to_vtk(op2_filename, op2_filename, vtu_filename, compression_level=0)
+
+    def test_bdf_op2_64_bit(self):
+        """
+        checks d173.bdf, which tests MSC Nastran 64-bit without the
+        op2.is_interlaced flag
+        """
+        dirname = MODEL_PATH / 'msc' / '64_bit'
+        bdf_filename = os.path.join(dirname, 'd173.bdf')
+        op2_filename = os.path.join(dirname, 'd173.op2')
+        vtk_filename = os.path.join(dirname, 'd173.vtu')
+        nastran_to_vtk(bdf_filename, op2_filename, vtk_filename)
 
     def test_gui_elements_01_missing_eids(self):
         """

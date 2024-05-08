@@ -26,7 +26,11 @@ from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, Co
 from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
+
 from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
+from pyNastran.op2.tables.contact.slide_objects import RealSlideDistanceArray
+from pyNastran.op2.tables.contact.bolt_objects import RealBoltArray
+
 
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
@@ -1015,12 +1019,13 @@ TABLE_OBJ_MAP = {
 
     # ----------------------------------------------------------
     # contact
-    'contact_slide_distance': (RealDisplacementArray, ),
+    'contact_slide_distance': (RealSlideDistanceArray, ),
     'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
 
     'contact_forces' : (RealContactForcesArray, ),
     'glue_forces' : (RealContactForcesArray, ),
-    'glue_contact_slide_distance': (RealDisplacementArray, ),
+    'glue_contact_slide_distance': (RealSlideDistanceArray, ),
+    'bolt_results': (RealBoltArray, ),
 
     # ----------------------------------------------------------
     'thermal_load.conv_thermal_load' : (RealConvHeatFluxArray,),
@@ -1075,6 +1080,12 @@ TABLE_OBJ_MAP = {
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
 }
+keya = ''
+for key, data in list(TABLE_OBJ_MAP.items()):
+    if key.startswith('stress.'):
+       keya = key.replace('stress.', 'stressa.')
+       TABLE_OBJ_MAP[keya] = data
+del keya
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 

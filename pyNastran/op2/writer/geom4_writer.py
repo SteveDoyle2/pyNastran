@@ -463,10 +463,10 @@ def _write_rbar(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     if nastran_format == 'msc':
         fmt = endian + b'7if' * ncards
         for rbar in cards:
-            cna = int(rbar.cna)
-            cma = int(rbar.cma)
+            cna = int(rbar.cna) if rbar.cna != '' else 0
+            cma = int(rbar.cma) if rbar.cma != '' else 0
             cnb = int(rbar.cnb) if rbar.cnb != '' else 0
-            cmb = int(rbar.cmb)
+            cmb = int(rbar.cmb) if rbar.cmb != '' else 0
             fields += [
                 rbar.eid, rbar.ga, rbar.gb,
                 cna, cnb,

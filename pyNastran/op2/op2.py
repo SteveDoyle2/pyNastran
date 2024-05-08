@@ -37,7 +37,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
                                   FortranMarkerError, SixtyFourBitError,
-                                  OverwriteTableError)
+                                  OverwriteTableError, EmptyRecordError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.types import NastranKey
@@ -97,6 +97,7 @@ class OP2(OP2_Scalar, OP2Writer):
         if mode is not None:
             self.set_mode(mode)
         make_geom = False
+        self.is_interlaced = True
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
@@ -184,7 +185,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.log.level = backup_level
         return out
 
-    def __eq__(self, op2_model) -> bool:
+    def __eq__(self, op2_model: OP2) -> bool:
         """
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
@@ -1072,7 +1073,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         skip_tables = ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
-                       'monitor1', 'monitor3']
+                       'monitor1', 'monitor3', 'cstm']
         for table_type in sorted(table_types):
             if table_type in skip_tables or table_type.startswith('responses.'):
                 continue

@@ -32,8 +32,11 @@ class EDT:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
+
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
 
     def read_edt_4(self, data: bytes, ndata: int):
         """
@@ -52,90 +55,179 @@ class EDT:
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_weld01i.op2
         # F:\work\pyNastran\examples\Dropbox\move_tpl\ac10901a_new.op2
         self.edt_map = {
-            (5201, 52, 373) : ['ACMODL', self._read_acmodl],
-            (6301, 63, 397) : ['ADAPT', self._read_fake],
-            (7801, 78, 582) : ['AECOMP', self._read_aecomp],
-            (7901, 79, 583) : ['AECOMPL', self._read_aecompl],
-            (7301, 73, 574) : ['AEDW', self._read_fake],
-            (4002, 40, 273) : ['AEFACT', self._read_aefact],
-            (7501, 75, 576) : ['AEFORCE', self._read_aeforce],
-            (2602, 26, 386) : ['AELINK', self._read_aelink],
-            (2302, 23, 341) : ['AELIST', self._read_aelist],
-            (7001, 70, 571) : ['AEPARM', self._read_aeparm],
-            (7401, 74, 575) : ['AEPRESS', self._read_aepress],
-            (3202, 32, 265) : ['AERO', self._read_aero],
-            (2202, 22, 340) : ['AEROS', self._read_aeros],
-            (2102, 21, 339) : ['AESTAT', self._read_aestat],
-            (2002, 20, 338) : ['AESURF', self._read_aesurf],
-            (7701, 77, 581) : ['AESURFS', self._read_aesurfs],
-            (3002, 30, 263) : ['CAERO1', self._read_caero1],
-            (4301, 43, 167) : ['CAERO2', self._read_caero2],
-            (4401, 44, 168) : ['CAERO3', self._read_caero3],
-            (4501, 45, 169) : ['CAERO4', self._read_caero4],
-            (5001, 50, 175) : ['CAERO5', self._read_caero5],
-            (6201, 62, 143) : ['CLOAD', self._read_fake],
-            (6401, 64, 307) : ['CSSCHD', self._read_csschd],
-            (104, 1, 81) : ['DEFORM', self._read_deform],
-            (2702, 27, 387) : ['DIVERG', self._read_diverg],
-            (4102, 41, 274) : ['FLFACT', self._read_flfact],
-            (3902, 39, 272) : ['FLUTTER', self._read_flutter],
-            (17400, 174, 616) : ['GROUP', self._read_group],
-            (3802, 38, 271) : ['MKAERO1', self._read_mkaero1],
-            (3702, 37, 270) : ['MKAERO2', self._read_mkaero2],
-            (7601, 76, 577) : ['MONPNT1', self._read_monpnt1],
-            (3102, 31, 264) : ['PAERO1', self._read_paero1],
-            (4601, 46, 170) : ['PAERO2', self._read_paero2],
-            (4701, 47, 171) : ['PAERO3', self._read_paero3],
-            (4801, 48, 172) : ['PAERO4', self._read_fake],
-            (5101, 51, 176) : ['PAERO5', self._read_paero5],
-            (5301, 53, 378) : ['PANEL', self._read_panel],
-            (3502, 35, 268) : ['SET1', self._read_set1],
-            (3602, 36, 269) : ['SET2', self._read_set2],
-            (4302, 43, 607) : ['SET3', self._read_set3],
-            (3302, 33, 266) : ['SPLINE1', self._read_spline1],
-            (3402, 34, 267) : ['SPLINE2', self._read_spline2],
-            (4901, 49, 173) : ['SPLINE3', self._read_spline3],
-            (6501, 65, 308) : ['SPLINE4', self._read_spline4],
-            (6601, 66, 309) : ['SPLINE5', self._read_spline5],
-            (2402, 24, 342) : ['TRIM', self._read_trim],
-            (7201, 72, 573) : ['UXVEC', self._read_uxvec],
-            (7108, 822, 51) : ['BOLT', self._read_fake],
-            (7108, 71, 251) : ['???', self._read_fake],
-            (5808, 58, 220) : ['ITER', self._read_fake],
-            (14000, 140, 568) : ['SWLDPRM', self._read_fake],
-            (11001, 110, 581) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
-            #(10500, 105, 14) : ['???', self._read_fake],
+            (5201, 52, 373) : ['ACMODL', self.read_acmodl],
+            (6301, 63, 397) : ['ADAPT', self.read_fake],
+            (7801, 78, 582) : ['AECOMP', self.read_aecomp],
+            (7901, 79, 583) : ['AECOMPL', self.read_aecompl],
+            (7301, 73, 574) : ['AEDW', self.read_fake],
+            (4002, 40, 273) : ['AEFACT', self.read_aefact],
+            (7501, 75, 576) : ['AEFORCE', self.read_aeforce],
+            (2602, 26, 386) : ['AELINK', self.read_aelink],
+            (2302, 23, 341) : ['AELIST', self.read_aelist],
+            (7001, 70, 571) : ['AEPARM', self.read_aeparm],
+            (7401, 74, 575) : ['AEPRESS', self.read_aepress],
+            (3202, 32, 265) : ['AERO', self.read_aero],
+            (2202, 22, 340) : ['AEROS', self.read_aeros],
+            (2102, 21, 339) : ['AESTAT', self.read_aestat],
+            (2002, 20, 338) : ['AESURF', self.read_aesurf],
+            (7701, 77, 581) : ['AESURFS', self.read_aesurfs],
+            (3002, 30, 263) : ['CAERO1', self.read_caero1],
+            (4301, 43, 167) : ['CAERO2', self.read_caero2],
+            (4401, 44, 168) : ['CAERO3', self.read_caero3],
+            (4501, 45, 169) : ['CAERO4', self.read_caero4],
+            (5001, 50, 175) : ['CAERO5', self.read_caero5],
+            (6201, 62, 143) : ['CLOAD', self.read_fake],
+            (6401, 64, 307) : ['CSSCHD', self.read_csschd],
+            (104, 1, 81) : ['DEFORM', self.read_deform],
+            (2702, 27, 387) : ['DIVERG', self.read_diverg],
+            (4102, 41, 274) : ['FLFACT', self.read_flfact],
+            (3902, 39, 272) : ['FLUTTER', self.read_flutter],
+            (17400, 174, 616) : ['GROUP', self.read_group],
+            (3802, 38, 271) : ['MKAERO1', self.read_mkaero1],
+            (3702, 37, 270) : ['MKAERO2', self.read_mkaero2],
+            (7601, 76, 577) : ['MONPNT1', self.read_monpnt1],
+            (3102, 31, 264) : ['PAERO1', self.read_paero1],
+            (4601, 46, 170) : ['PAERO2', self.read_paero2],
+            (4701, 47, 171) : ['PAERO3', self.read_paero3],
+            (4801, 48, 172) : ['PAERO4', self.read_paero4],
+            (5101, 51, 176) : ['PAERO5', self.read_paero5],
+            (5301, 53, 378) : ['PANEL', self.read_panel],
+            (3502, 35, 268) : ['SET1', self.read_set1],
+            (3602, 36, 269) : ['SET2', self.read_set2],
+            (4302, 43, 607) : ['SET3', self.read_set3],
+            (3302, 33, 266) : ['SPLINE1', self.read_spline1],
+            (3402, 34, 267) : ['SPLINE2', self.read_spline2],
+            (4901, 49, 173) : ['SPLINE3', self.read_spline3],
+            (6501, 65, 308) : ['SPLINE4', self.read_spline4],
+            (6601, 66, 309) : ['SPLINE5', self.read_spline5],
+            (2402, 24, 342) : ['TRIM', self.read_trim],
+            (7201, 72, 573) : ['UXVEC', self.read_uxvec],
+            (7108, 822, 51) : ['BOLT', self.read_fake],
+            (7108, 71, 251) : ['???', self.read_fake],
+            (5808, 58, 220) : ['ITER', self.read_fake],
+            (14000, 140, 568) : ['SWLDPRM', self.read_fake],
+            (11001, 110, 581) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
+            #(10500, 105, 14) : ['???', self.read_fake],
 
-            (7108, 82, 251): ['BOLT', self._read_fake],
+            (7108, 82, 251): ['BOLT', self.read_fake],
 
             # MSC
             #(1247, 12, 667): ['MONPNT2', self._read_monpnt2],
-            (11204, 112, 821): ['ERPPNL', self._read_fake],
-            (8001, 80, 511): ['SET3', self._read_set3],
-            (9400, 94, 641): ['MDLPRM', self._read_mdlprm],
-            (11004, 110, 1820_720): ['HADACRI', self._read_fake],
-            (8804, 88, 628): ['MONDSP1', self._read_mondsp1],
+            (11204, 112, 821): ['ERPPNL', self.read_fake],
+            (8001, 80, 511): ['SET3', self.read_set3],
+            (9400, 94, 641): ['MDLPRM', self.read_mdlprm],
+            (11004, 110, 1820_720): ['HADACRI', self.read_fake],
+            (8804, 88, 628): ['MONDSP1', self.read_mondsp1],
 
-            (10904, 109, 719): ['HADAPTL', self._read_fake],
-            (8204, 82, 621): ['MONPNT2', self._read_monpnt2],
-            (8304, 83, 622): ['MONPNT3', self._read_monpnt3],
-            #(8001, 80, 511): ['???', self._read_fake],
-            #(8001, 80, 511): ['???', self._read_fake],
-            #(8001, 80, 511): ['???', self._read_fake],
-            #(8001, 80, 511): ['???', self._read_fake],
-            #(8001, 80, 511): ['???', self._read_fake],
+            (10904, 109, 719): ['HADAPTL', self.read_fake],
+            (8204, 82, 621): ['MONPNT2', self.read_monpnt2],
+            (8304, 83, 622): ['MONPNT3', self.read_monpnt3],
+            (1247, 12, 667): ['MONPNT2', self.read_monpnt2], # nx
+            #(8001, 80, 511): ['???', self.read_fake],
+            #(8001, 80, 511): ['???', self.read_fake],
+            #(8001, 80, 511): ['???', self.read_fake],
+            #(8001, 80, 511): ['???', self.read_fake],
+            #(8001, 80, 511): ['???', self.read_fake],
+            (8104, 81, 620): ['SPLINE7', self.read_fake],
+            (9004, 90, 619): ['MASSSET', self.read_massset],
+            (9102, 91, 629): ['MONGRP', self.read_fake],
+            (9200, 92, 632): ['FBODYLD', self.read_fake],
+            (9300, 93, 631): ['FBODYSB', self.read_stop],
+            (9604, 96, 678): ['AEGRID', self.read_fake],
+            (9804, 98, 680): ['AEQUAD4', self.read_fake],
+            (10004, 100, 682): ['SPLINRB', self.read_fake],
+            (10104, 101, 683): ['SPBLND1', self.read_sblnd1],
+            (10404, 104, 686): ['MONSUM', self.read_fake],
+            (10504, 105, 687): ['MONCNCM', self.read_fake],
+            (12004, 120, 880): ['TRIM2', self.read_fake],
+            (12704, 127, 932): ['MONSUM1', self.read_fake],
+            (12804, 128, 945): ['MONSUMT', self.read_fake],
+            (12904, 129, 954): ['CONCTL', self.read_fake],
+            (12504, 125, 912): ['SET4', self.read_fake],
+            (12604, 126, 913): ['UDNAME', self.read_fake],
+
+            (9300, 93, 631) : ['FBODYSB', self.read_fake],
+            (14402, 144, 690): ['???', self.read_stop],
+            #(14402, 144, 690): ['???', self.read_stop],
 
         }
-    def _read_aeforce(self, data: bytes, n: int) -> int:
+    def read_sblnd1(self, data: bytes, n: int) -> int:
+        """
+        24 - SPBLND1(10104,101,683)
+        Word Name Type Description
+        1 EID           I Identification of Blended Spline
+        2 EID1          I Ident. of 1st Spline to be Blended
+        3 EID2          I Ident. of 2nd Spline to be Blended
+        4 OPTION(2) CHAR4 Blending Option: WAVG, LIN, CUB
+        6 W1           RS Weight for 1st Spline
+        7 GID           I Aerodynamic Reference Grid
+        8 D1           RS Blending Depth of 1st Spline
+        9 D2           RS Blending Depth of 2nd Spline
+        10 X1          RS X1 Component of Direction Vector
+        11 X2          RS X2 Component of Direction Vector
+        12 X3          RS X3 Component of Direction Vector
+        13 CID          I Coordinate System Identification Number
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 13 * self.size # 4*13
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert self.factor == 1, self.factor
+        structi = Struct(op2._endian + b'3i 8s fi 5fi')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+
+            eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x1, x2, x3, cid = out
+            option = reshape_bytes_block_size(option_bytes, size=self.size)
+            x = [x1, x2, x3]
+            spline_blend = op2.add_sblnd1(eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid)
+            str(spline_blend)
+            n += ntotal
+        return n
+
+    def read_massset(self, data: bytes, n: int) -> int:
+        """
+        51 - MASSSET(9004,90,602)
+        Word Name Type Description
+        1 MID     I massset id
+        2 S      RS Overall scale factor
+        3 SI     RS massid scale factor
+        4 MASSID  I massid
+        Words 3 through 4 repeat until (-1,-1) occurs
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        #ncards = 0
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            mid = ints[i0]
+            scale = floats[i0+1]
+            scales = floats[i0+2:i1:2].tolist()
+            massids = ints[i0+3:i1:2].tolist()
+            assert len(scales) == len(massids)
+            assert len(scales) > 0, scales
+            op2.add_massset(mid, scale, scales, massids)
+        return len(data)
+
+    def read_aeforce(self, data: bytes, n: int) -> int:
         """Word Name Type Description
         1 MACH     RS
         2 SYMXZ(2) CHAR4
@@ -146,7 +238,7 @@ class EDT:
         10 DMIK(2) CHAR4
         12 PERQ(2) CHAR4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 52 * self.factor # 4*13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -172,7 +264,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aepress(self, data: bytes, n: int) -> int:
+    def read_aepress(self, data: bytes, n: int) -> int:
         """
         Parametric pressure loading for aerodynamics.
         Word Name Type Description
@@ -187,7 +279,7 @@ class EDT:
         9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
                          interference element downwashes
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 40 * self.factor # 4*10
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -211,10 +303,10 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_mkaero2(self, data: bytes, n: int) -> int:
+    def read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
 
-    def _read_csschd(self, data: bytes, n: int) -> int:
+    def read_csschd(self, data: bytes, n: int) -> int:
         """
         (6401, 64, 307,
          10, 510, 10, 20, 30,
@@ -232,7 +324,7 @@ class EDT:
             self.op2.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach)
         return len(data)
 
-    def _read_diverg(self, data: bytes, n: int) -> int:
+    def read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)
         Divergence analysis data.
@@ -242,7 +334,7 @@ class EDT:
         3 M       RS   Mach number
         Word 3 repeats until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -256,13 +348,13 @@ class EDT:
             str(diverg)
         return len(data)
 
-    def _read_flfact(self, data: bytes, n: int) -> int:
+    def read_flfact(self, data: bytes, n: int) -> int:
         """
         data = (1, 0.206, -1,
                 2, 1.3, -1,
                 3, 14400.0, 15600.0, 16800.0, 18000.0, 19200.0, 20400.0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -271,11 +363,12 @@ class EDT:
             sid = ints[i0]
             factors = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
+            #print(sid, factors)
             flfact = op2.add_flfact(sid, factors)
             str(flfact)
         return len(data)
 
-    def _read_mkaero1(self, data: bytes, n: int) -> int:
+    def read_mkaero1(self, data: bytes, n: int) -> int:
         """
         (3802, 38, 271)
         Kinda brilliant way to write the card.  Weird to parse though.
@@ -283,7 +376,7 @@ class EDT:
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
                 0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #assert len(data) == 76, len(data)
         nvalues = (len(data) - n) // 4
         nrows = nvalues // 16
@@ -306,7 +399,7 @@ class EDT:
             str(mkaero1)
         return len(data)
 
-    def _read_group(self, data: bytes, n: int) -> int:
+    def read_group(self, data: bytes, n: int) -> int:
         """
         GROUP(17400,174,616) - NX specific
 
@@ -393,7 +486,7 @@ class EDT:
           -4, 14, -1, -1, 2, 6, 2413766, 742102857, 231216032, 23997572, 23192817, 23453545,
           -5, 1, 0,   10, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #print('reading group')
         #assert self.factor == 1, self.factor
         nentries = 0
@@ -560,7 +653,7 @@ class EDT:
         assert nentries > 0, nentries
         return n
 
-    def _read_aero(self, data: bytes, n: int) -> int:
+    def read_aero(self, data: bytes, n: int) -> int:
         """
         (3202, 32, 265)
 
@@ -573,7 +666,7 @@ class EDT:
         6 SYMXY     I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert len(data) == 36, len(data)
         struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
@@ -585,7 +678,7 @@ class EDT:
         n = 36
         return n
 
-    def _read_aeros(self, data: bytes, n: int) -> int:
+    def read_aeros(self, data: bytes, n: int) -> int:
         """
         AEROS(2202, 22, 340)
 
@@ -593,7 +686,7 @@ class EDT:
         data = (0, 100, 36.0, 360.0, 12960.0, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         assert len(data) == 40 * self.factor, len(data)
         struct = Struct(mapfmt(op2._endian + b'2i 3f 2i', self.size))
         out = struct.unpack(data[n:])
@@ -604,7 +697,7 @@ class EDT:
         n = 40 * self.factor
         return n
 
-    def _read_deform(self, data: bytes, n: int) -> int:
+    def read_deform(self, data: bytes, n: int) -> int:
         """
         (104, 1, 81)
         NX 2019.2
@@ -615,7 +708,7 @@ class EDT:
         3 D RS Deformation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4*3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -630,7 +723,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aeparm(self, data: bytes, n: int) -> int:
+    def read_aeparm(self, data: bytes, n: int) -> int:
         """
         MSC 2020
 
@@ -639,7 +732,7 @@ class EDT:
         data = (601, 'PLOAD   ', 'LBS.    ')
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 4*5
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -654,7 +747,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_uxvec(self, data: bytes, n: int) -> int:
+    def read_uxvec(self, data: bytes, n: int) -> int:
         """
         MSC 2020
 
@@ -666,7 +759,7 @@ class EDT:
 
         data  = (5001, 'PLOAD   ', 1.0, 'INTERCPT', 0.0, -1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal1 = 4 * self.factor # 4*1
         ntotal_end = 8 * self.factor # 4*2
         ntotal2 = 12 * self.factor # 4*3
@@ -705,7 +798,7 @@ class EDT:
             str(uxvec)
         return n # len(data)
 
-    def _read_caero1(self, data: bytes, n: int) -> int:
+    def read_caero1(self, data: bytes, n: int) -> int:
         """
         (3002, 30, 263)
         MSC 2018.2
@@ -735,7 +828,7 @@ class EDT:
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         add_methods = op2._add_methods
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
@@ -762,7 +855,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero2(self, data: bytes, n: int) -> int:
+    def read_caero2(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -783,7 +876,7 @@ class EDT:
 
         data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -803,7 +896,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero3(self, data: bytes, n: int) -> int:
+    def read_caero3(self, data: bytes, n: int) -> int:
         """
         Aerodynamic panel element configuration.
 
@@ -827,7 +920,7 @@ class EDT:
         15 Z4   RS Z-coordinate of point 4 in coordinate system CP
         16 X43  RS Edge chord length in aerodynamic coordinate system
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -861,7 +954,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero4(self, data: bytes, n: int) -> int:
+    def read_caero4(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID   I Element identification number
@@ -880,7 +973,7 @@ class EDT:
         15 Z4  RS Z-coordinate of point 4 in coordinate system CP
         16 X43 RS Edge chord length in aerodynamic coordinate system
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -900,7 +993,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_caero5(self, data: bytes, n: int) -> int:
+    def read_caero5(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -923,7 +1016,7 @@ class EDT:
         16 X43      RS
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -946,7 +1039,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_paero1(self, data: bytes, n: int) -> int:
+    def read_paero1(self, data: bytes, n: int) -> int:
         r"""
         (3102, 31, 264)
         MSC 2018.2
@@ -969,7 +1062,7 @@ class EDT:
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\adb144_2.op2
         PAERO1      1000   74000   74510   84610
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -992,7 +1085,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_paero2(self, data: bytes, n: int) -> int:
+    def read_paero2(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1019,7 +1112,7 @@ class EDT:
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 4 * 15
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1049,7 +1142,7 @@ class EDT:
             str(paero2)
         return n
 
-    def _read_paero3(self, data: bytes, n: int) -> int:
+    def read_paero3(self, data: bytes, n: int) -> int:
         """
         NX 2019.2
         Record – PAERO3(4701,47,171)
@@ -1103,7 +1196,7 @@ class EDT:
                    1, 11, 0.0, 4, 0.0, 0.0, 0.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data, types='ifs', endian=None, force=False)
         #asdf
         #ntotal = 60 * self.factor # 4 * 15
@@ -1176,7 +1269,40 @@ class EDT:
             #ncards += 1
         return n
 
-    def _read_paero5(self, data: bytes, n: int) -> int:
+    def read_paero4(self, data: bytes, n: int) -> int:
+        """
+        67 - PAERO4(4801,48,172)
+        1 PID   I
+        2 CLA   I
+        3 LCLA  I
+        4 CIRC  I
+        5 LCIRC I
+        6 DOCI   RS
+        7 CAOCI  RS
+        8 GAPOCI RS
+        Words 6 through 8 repeat until End of Record
+        """
+        op2: OP2Geom = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+
+        for (i0, i1) in zip(istart, iend):
+            pid, cla, lcla, circ, lcirc = ints[i0:i0+5]
+            doci_caoci_gapoci = floats[i0+5:i1]
+            nrow = len(doci_caoci_gapoci) // 3
+            doci_caoci_gapoci = doci_caoci_gapoci.reshape(nrow, 3)
+            assert ints[i1] == -1, ints[i1]
+            docs = doci_caoci_gapoci[:, 0].tolist()
+            caocs = doci_caoci_gapoci[:, 1].tolist()
+            gapocs = doci_caoci_gapoci[:, 2].tolist()
+            paero4 = op2.add_paero4(
+                pid, docs, caocs, gapocs,
+                cla=cla, lcla=lcla, circ=circ, lcirc=lcirc)
+            str(paero4)
+        return len(data)
+
+    def read_paero5(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1192,7 +1318,7 @@ class EDT:
         Word 8 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1209,7 +1335,7 @@ class EDT:
             str(paero5)
         return len(data)
 
-    def _read_panel(self, data: bytes, n: int) -> int:
+    def read_panel(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1220,7 +1346,7 @@ class EDT:
 
         ('PANEL1', 1, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -1240,9 +1366,9 @@ class EDT:
             str(panel)
         return len(data)
 
-    def _read_acmodl(self, data: bytes, n: int) -> int:
+    def read_acmodl(self, data: bytes, n: int) -> int:
         """Reads the ACMODL card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'ACMODL'
         card_obj = ACMODL
         methods = {
@@ -1298,7 +1424,7 @@ class EDT:
         ACMODL,IDENT,,,,1.0-4
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1388,7 +1514,7 @@ class EDT:
         |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1452,7 +1578,7 @@ class EDT:
             n += ntotal
         return n, acmodls
 
-    def _read_aelist(self, data: bytes, n: int) -> int:
+    def read_aelist(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1462,7 +1588,7 @@ class EDT:
         Word 2 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1475,7 +1601,7 @@ class EDT:
             #n += ntotal
         return len(data)
 
-    def _read_set1(self, data: bytes, n: int) -> int:
+    def read_set1(self, data: bytes, n: int) -> int:
         """
         SET1: (3502, 35, 268)
         MSC 2018.2
@@ -1486,7 +1612,7 @@ class EDT:
         Word 2 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
@@ -1498,7 +1624,7 @@ class EDT:
             op2.add_set1(sid, elements, is_skin=False)
         return len(data)
 
-    def _read_set2(self, data: bytes, n: int) -> int:
+    def read_set2(self, data: bytes, n: int) -> int:
         """
         SET2
         MSC 2018.2
@@ -1523,7 +1649,7 @@ class EDT:
         data = (3602, 36, 269,
                 200, 101, -0.10, 1.10, -0.10, 1.0, 1.0, -0.10)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.show_data(data, types='if', endian=None, force=False)
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
@@ -1541,7 +1667,7 @@ class EDT:
         op2.to_nx(' because SET2 was found')
         return n
 
-    def _read_set3(self, data: bytes, n: int) -> int:
+    def read_set3(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
         Word Name Type Description
@@ -1561,7 +1687,7 @@ class EDT:
                 2, 1, 71, ..., 189, -1,
                 4, 1, 309, ..., ..., 378, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # this is setup for NX
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1591,7 +1717,7 @@ class EDT:
             str(set3)
         return len(data)
 
-    def _read_aelink(self, data: bytes, n: int) -> int:
+    def read_aelink(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1603,7 +1729,7 @@ class EDT:
         Words 4 through 6 repeat until (-1,-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct1 = Struct(op2._endian + b'i8s')
         struct2 =Struct(op2._endian + b'8sf')
         struct_end = Struct(op2._endian + b'3i')
@@ -1638,7 +1764,7 @@ class EDT:
             str(aelink)
         return len(data)
 
-    def _read_aecomp(self, data: bytes, n: int) -> int:
+    def read_aecomp(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1649,7 +1775,7 @@ class EDT:
         Word 5 repeats until End of Record
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         #floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1672,7 +1798,7 @@ class EDT:
         """
         return len(data)
 
-    def _read_aecompl(self, data: bytes, n: int) -> int:
+    def read_aecompl(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -1681,7 +1807,7 @@ class EDT:
         3 LABEL(2) CHAR4
         Words 3 through 4 repeat until (-1,-1) occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct1 = Struct(op2._endian + b'8s')
         struct2 = Struct(op2._endian + b'8s')
         struct_end = Struct(op2._endian + b'2i')
@@ -1705,7 +1831,7 @@ class EDT:
             str(aecompl)
         return len(data)
 
-    def _read_spline1(self, data: bytes, n: int) -> int:
+    def read_spline1(self, data: bytes, n: int) -> int:
         """reads the SPLINE1 card"""
         n = self._read_spline1_nx(data, n)
         return n
@@ -1725,7 +1851,7 @@ class EDT:
         12 MELEM I Number of elements for FPS on y-axis
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1757,7 +1883,7 @@ class EDT:
         #op2.to_nx()
         return n
 
-    def _read_spline2(self, data: bytes, n: int) -> int:
+    def read_spline2(self, data: bytes, n: int) -> int:
         """
         Reads the SPLINE2 card
 
@@ -1775,7 +1901,7 @@ class EDT:
         11 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1809,15 +1935,15 @@ class EDT:
         #n = self._read_spline2_nx(data, n)
         return n
 
-    def _read_spline3(self, data: bytes, n: int) -> int:
+    def read_spline3(self, data: bytes, n: int) -> int:
         """reads the SPLINE3 card"""
         spline3
         #n = self._read_spline2_nx(data, n)
         return n
 
-    def _read_spline4(self, data: bytes, n: int) -> int:
+    def read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'SPLINE4'
         card_obj = SPLINE4
         methods = {
@@ -1853,7 +1979,7 @@ class EDT:
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 44 # 4 * 11
@@ -1897,7 +2023,7 @@ class EDT:
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 52 # 4 * 13
@@ -1927,9 +2053,9 @@ class EDT:
         op2.to_msc(' because SPLINE4-MSC was found')
         return n, splines
 
-    def _read_spline5(self, data: bytes, n: int) -> int:
+    def read_spline5(self, data: bytes, n: int) -> int:
         """reads the SPLINE5 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'SPLINE5'
         card_obj = SPLINE5
         methods = {
@@ -1966,7 +2092,7 @@ class EDT:
         17 RCORE        RS Radius of radial interpolation function     (not in NX)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1982,7 +2108,7 @@ class EDT:
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             #ftype, rcore
-            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy, ftype, rcore = out
+            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy, ftype_int, rcore = out
             method = reshape_bytes_block_size(method_bytes, self.size)
             usage = reshape_bytes_block_size(usage_bytes, self.size)
             #print(f'eid={eid} caero={caero} aelist={aelist} setg={setg} dz={dz} '
@@ -1993,12 +2119,15 @@ class EDT:
             thx = dthx
             thy = dthy
             dtor = dtorzy
+            if ftype_int == 2:
+                ftype = 'WF2'
             spline = SPLINE5(
                 eid, caero, aelist, setg, thx, thy,
                 dz=dz, dtor=dtor, cid=cid,
                 usage=usage, method=method,
                 ftype=ftype, rcore=rcore,  # not in NX
             )
+            spline.validate()
             str(spline)
             splines.append(spline)
             n += ntotal
@@ -2027,7 +2156,7 @@ class EDT:
         17 RCORE        RS Radius of radial interpolation function     (not in NX?)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 60 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2064,9 +2193,9 @@ class EDT:
         op2.to_nx(' because SPLINE5-NX was found')
         return n, splines
 
-    def _read_monpnt1(self, data: bytes, n: int) -> int:
+    def read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MONPNT1'
         card_obj = MONPNT1
         methods = {
@@ -2097,7 +2226,7 @@ class EDT:
         23 Z           RS
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 92 # 4 * 23
         ndatai = len(data) - n
@@ -2139,7 +2268,7 @@ class EDT:
         24 CD           I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 96 # 4 * 23
         ndatai = len(data) - n
@@ -2165,7 +2294,107 @@ class EDT:
         #op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
-    def _read_monpnt2(self, data: bytes, n: int) -> int:
+
+    def read_monpnt2(self, data: bytes, n: int) -> int:
+        """Reads the MONPNT2 card"""
+        op2: OP2Geom = self.op2
+        card_name = 'MONPNT2'
+        card_obj = MONPNT2
+
+        ndatai = len(data) - n
+        ntotal_msc = 23 * self.size
+        if ndatai // ndatai > 0 and ndatai % ntotal_msc == 0:
+            n = self.read_monpnt2_msc(data, n)
+        else:
+            n = self.read_monpnt2_nx(data, n)
+        return n
+
+    def read_monpnt2_nx(self, data: bytes, n: int) -> int:
+        """
+        MONPNT2(1247,12,667)
+        Word Name Type Description
+
+        1 NAME(2)   CHAR4 Character string identifying the monitor point
+        3 LABEL(14) CHAR4 Character string identifying and labeling the monitor point
+        17 TABLE(2) CHAR4 Stress, strain, or force
+        19 ELTYP(2) CHAR4 Element type
+        21 ITEM(2)  CHAR4 NDDL item
+        23 EID         I Element identification number
+        Words 17 thru 23 repeat until -1 occurs
+        Words 1 thru 23 repeat until (-2,-2) occurs
+
+        strings = (b'LOCR    TESTING18       \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00STRAIN  CTRIAR  EX1     \x01\x00\x00\x00\xff\xff\xff\xffSTRESS  CTRIAR  SX1     \x01\x00\x00\x00\xff\xff\xff\xffFORCE   CTRIAR  MX      \x01\x00\x00\x00\xff\xff\xff\xff\xfe\xff\xff\xff\xfe\xff\xff\xff',)
+        ints    = (1380142924, 538976288, 1414743380, 826756681, 538976312, 538976288, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1095914579, 538988105, 1230132291, 538989121, 540104773, 538976288, 1, -1,
+                   1163023443, 538989395, 1230132291, 538989121, 540104787, 538976288, 1, -1,
+                   1129467718, 538976325, 1230132291, 538989121, 538990669, 538976288, 1, -1, -2, -2)
+        floats  = (209712250880.0, 1.3563156426940112e-19, 3629604929536.0, 2.900281126372306e-09, 1.3563187446213083e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.145586967468262, 1.357842954146908e-19, 861508.1875, 1.3579742690691507e-19, 1.5021689104372773e-19, 1.3563156426940112e-19, 1.401298464324817e-45, nan,
+                   3365.270263671875, 1.3580096827391256e-19, 861508.1875, 1.3579742690691507e-19, 1.5021707198948673e-19, 1.3563156426940112e-19, 1.401298464324817e-45, nan,
+                   210.30966186523438, 1.3563204248319275e-19, 861508.1875, 1.3579742690691507e-19, 1.358174343379812e-19, 1.3563156426940112e-19, 1.401298464324817e-45, -1, -2, -2)
+        """
+        op2: OP2Geom = self.op2
+        assert self.size == 4, self.size
+        struct0 = Struct(op2._endian + b'8s 56s')
+        structi = op2.struct_i
+
+        struct1i = Struct(op2._endian + b'8s 8s 8s')
+        struct2i = op2.struct_2i
+        ntotal0 = 16 * self.size
+        ntotal1 = 6 * self.size
+        ntotal2 = 2 * self.size
+        monpnts = []
+        while n < len(data):
+            edata = data[n:n+ntotal0]
+            n += ntotal0
+            name_bytes, label_bytes = struct0.unpack(edata)
+            label_bytes_strip1 = label_bytes.rstrip(b'\x00')
+            label_bytes_strip2 = b'%-56s' % label_bytes_strip1
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes_strip2, self.size)
+
+            #print('monpnt2', n, name, label)
+            tables = []
+            element_types = []
+            nddl_items = []
+            all_eids = []
+            while n < len(data): # -2
+                edatai = data[n:n+ntotal1]
+                table_bytes, eltype_bytes, item_bytes = struct1i.unpack(edatai)
+                table = reshape_bytes_block_size(table_bytes, self.size)
+                element_type = reshape_bytes_block_size(eltype_bytes, self.size)
+                nddl_item = reshape_bytes_block_size(item_bytes, self.size)
+                tables.append(table)
+                element_types.append(element_type)
+                nddl_items.append(nddl_item)
+                n += ntotal1
+
+                eid = 0
+                eids = []
+                #print(f'table={table!r} Type={element_type!r} nddl_item={nddl_item!r}')
+                while eid != -1: # -1
+                    data_stop = data[n:n+self.size]
+                    eid, = structi.unpack(data_stop)
+                    n += self.size
+
+                    if eid == -1:
+                        #print(f'breaking...eid={eid}')
+                        break
+                    #print(f'n={n}; eid={eid}')
+                    eids.append(eid)
+                all_eids.append(eids)
+                edatai2 = data[n:n+ntotal2]
+                value1, value2 = struct2i.unpack(edatai2)
+                if (value1, value2) == (-2, -2):
+                    n += ntotal2
+                    break
+
+            monpnt = MONPNT2(name, label, tables, element_types, nddl_items, all_eids, comment='')
+            op2._add_methods._add_monpnt_object(monpnt)
+            str(monpnt)
+            #print(monpnt)
+            monpnts.append(monpnt)
+        return n
+
+    def read_monpnt2_msc(self, data: bytes, n: int) -> int:
         """
         Record 59 - MONPNT2(8204,82,621)
         Word Name Type Description
@@ -2175,9 +2404,8 @@ class EDT:
         19 ELTYP(2) CHAR4
         21 ITEM(2)  CHAR4
         23 EID      I
-
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 4 * 23
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2202,7 +2430,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_monpnt3(self, data: bytes, n: int) -> int:
+    def read_monpnt3(self, data: bytes, n: int) -> int:
         """
         Record 60 - MONPNT3(8304,83,622)
         Word Name    Type   Description
@@ -2219,7 +2447,7 @@ class EDT:
         25 CD        I
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 100 * self.factor # 4 * 25
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2281,7 +2509,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_mondsp1(self, data: bytes, n: int) -> int:
+    def read_mondsp1(self, data: bytes, n: int) -> int:
         """
         Record 56 - MONDSP1(8804,88,628)
         Word Name Type Description
@@ -2296,7 +2524,7 @@ class EDT:
         24 CD      I
         25 INDDOF  I
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 100 * self.factor # 4 * 25
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2320,7 +2548,7 @@ class EDT:
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
-    def _read_mdlprm(self, data: bytes, n: int) -> int:
+    def read_mdlprm(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 NAME(2) CHAR4 User defined parameter
@@ -2331,7 +2559,7 @@ class EDT:
           floats  = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0.0, b'SPBLNDX ', -107374184.0)
           MDLPRM, nsgrds4, 20, pexts4, 50., spblndx, 3.1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4 * 3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2372,7 +2600,6 @@ class EDT:
             data_dict[name] = value
             n += ntotal
 
-
         if 'SPBLNDX' in data_dict:
             raise RuntimeError(f'SPBLNDX exists and has the wrong value...{data_dict}')
 
@@ -2385,7 +2612,7 @@ class EDT:
         #op2._add_methods._add_monpnt_object(monpnt)
         return n # , monpnt1s
 
-    def _read_aestat(self, data: bytes, n: int) -> int:
+    def read_aestat(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -2394,7 +2621,7 @@ class EDT:
         2 LABEL(2) CHAR4
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4 * 8
         if self.size == 4:
             structi = Struct(op2._endian + b'i 8s')
@@ -2414,7 +2641,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_flutter(self, data: bytes, n: int) -> int:
+    def read_flutter(self, data: bytes, n: int) -> int:
         r"""
         (3902, 39, 272)
         MSC 2018.2
@@ -2447,7 +2674,7 @@ class EDT:
         data  = (3, 'PKS     ', 1, 2, 3, 'L       ', 5.0,       0.01,  1, -1,
                  4, 'K       ', 1, 2, 4, 'L       ', 3,         0.001, 0, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -2518,7 +2745,7 @@ class EDT:
             #n += ntotal
         #return n
 
-    def _read_trim(self, data: bytes, n: int) -> int:
+    def read_trim(self, data: bytes, n: int) -> int:
         """
         (2402, 24, 342)
         MSC 2018.2
@@ -2534,7 +2761,7 @@ class EDT:
         Words 5 through 7 repeat until (-1,-1,-1) occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal1 = 16 * self.factor # 4 * 4
         ntotal2 = 12 * self.factor # 4 * 3
         #ndatai = len(data) - n
@@ -2567,7 +2794,7 @@ class EDT:
             str(trim)
         return n
 
-    def _read_aesurf(self, data: bytes, n: int) -> int:
+    def read_aesurf(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -2590,7 +2817,7 @@ class EDT:
         17 TQULIM     RS Upper deflection   Limit for the control surface as fct(q), >0, default=no limit
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 *  self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2653,7 +2880,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aesurfs(self, data: bytes, n: int) -> int:
+    def read_aesurfs(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID       I     Identification of an aerodynamic trim variable degree
@@ -2664,7 +2891,7 @@ class EDT:
         5 LIST2    I     Identification of a SET1 that contains the grids ids
                          associated with this control surface
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 *  self.factor # 4 * 5
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2686,7 +2913,7 @@ class EDT:
             n += ntotal
         return n
 
-    def _read_aefact(self, data: bytes, n: int) -> int:
+    def read_aefact(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
 
@@ -2700,7 +2927,7 @@ class EDT:
         )
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)

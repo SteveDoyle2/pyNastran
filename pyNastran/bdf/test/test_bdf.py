@@ -50,6 +50,7 @@ from pyNastran.bdf.mesh_utils.loads import (
     sum_forces_moments, sum_forces_moments_elements,
     get_static_force_vector_from_subcase_id)
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.test.compare import compare
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -271,6 +272,7 @@ def run_bdf(folder: str, bdf_filename: str,
             run_mass: bool=True,
             run_extract_bodies: bool=False,
             run_skin_solids: bool=True,
+            run_export_caero: bool=True,
             save_file_structure: bool=False,
             nerrors=0, dev: bool=False, crash_cards=None,
             safe_xref: bool=False, pickle_obj: bool=False,
@@ -368,6 +370,7 @@ def run_bdf(folder: str, bdf_filename: str,
         limit_mesh_opt=limit_mesh_opt,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
+        run_export_caero=run_export_caero,
         run_mass=run_mass,
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
@@ -408,6 +411,7 @@ def run_and_compare_fems(
         safe_xref: bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
+        run_export_caero: bool=True,
         run_mass: bool=True,
         pickle_obj: bool=False,
         validate_case_control: bool=True,
@@ -443,6 +447,7 @@ def run_and_compare_fems(
             size, is_double,
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
+            run_export_caero=run_export_caero,
             save_file_structure=save_file_structure,
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
@@ -613,10 +618,11 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
+def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
+             run_export_caero: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
@@ -630,7 +636,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
     ----------
     fem1 : BDF()
         The BDF object
-    bdf_model : str
+    bdf_filename : str
         The root path of the bdf filename
     out_model : str
         The path to the output bdf
@@ -662,19 +668,26 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
     log = fem1.log
     if crash_cards is None:
         crash_cards = []
-    check_path(bdf_model, 'bdf_model')
-    bdf_model = cast(BDF, bdf_model)
+    check_path(bdf_filename, 'bdf_filename')
+    base, ext = os.path.splitext(out_model)
     try:
-        if '.pch' in bdf_model:
-            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding,
+        if '.pch' in bdf_filename:
+            fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
                           save_file_structure=save_file_structure)
         else:
-            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding,
+            fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
                     raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
+
+            if not stop and run_export_caero and len(fem1.caeros):
+                caero_bdf_filename = base + '.caero.bdf'
+                export_caero_mesh(fem1, caero_bdf_filename,
+                                  is_subpanel_model=True,
+                                  pid_method='caero', write_panel_xyz=True)
+
             if not stop and not xref and run_skin_solids:
                 log.info('fem1-write_skin_solid_faces')
                 skin_filename = 'skin_file.bdf'
@@ -719,42 +732,21 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 elif xref:
                     fem1.cross_reference()
 
-                fem1 = remake_model(bdf_model, fem1, pickle_obj)
+                fem1 = remake_model(bdf_filename, fem1, pickle_obj)
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
     except Exception:
-        print(f'failed reading {bdf_model!r}')
+        print(f'failed reading {bdf_filename!r}')
         raise
 
-    #out_model = bdf_model + '_out'
+    #out_model = bdf_filename + '_out'
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
 
     if hdf5:
         hdf5_filename = f'{out_model}{name}.h5'
-        fem1.export_hdf5_filename(hdf5_filename)
-        fem1a = BDF(log=fem1.log)
-        fem1a.load_hdf5_filename(hdf5_filename)
-        fem1a.validate()
-        bdf_stream = StringIO()
-        fem1a.write_bdf(bdf_stream, encoding=None, size=8,
-                        is_double=False, interspersed=False,
-                        enddata=None, write_header=True, close=True) # hdf5
-        for key, unused_value in fem1.card_count.items():
-            if key in ['ECHOOFF', 'ECHOON']:
-                continue
-            #if key == 'ENDDATA':
-            hdf5_msg = ''
-            if key not in fem1a.card_count:
-                hdf5_msg += f'key={key!r} was not loaded to hdf5\n'
-
-            if hdf5_msg:
-                hdf5_msg += 'expected=%s\nactual=%s' % (
-                    fem1.card_count, fem1a.card_count)
-                fem1a.log.error(hdf5_msg)
-                raise RuntimeError(hdf5_msg)
-        #sys.exit('hdf5')
+        _test_hdf5(fem1, hdf5_filename)
 
     if mesh_form is None:
         pass
@@ -801,6 +793,30 @@ def limit_mesh_optimization(model: BDF):
     _cards = ', '.join(mesh_opt_cards)
     if any(is_mesh_opt):
         raise MeshOptimizationError(f'model contains [{_cards}]; mesh optimization is not supported')
+
+def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
+    fem1.export_hdf5_filename(hdf5_filename)
+    fem1a = BDF(log=fem1.log)
+    fem1a.load_hdf5_filename(hdf5_filename)
+    fem1a.validate()
+    bdf_stream = StringIO()
+    fem1a.write_bdf(bdf_stream, encoding=None, size=8,
+                    is_double=False, interspersed=False,
+                    enddata=None, write_header=True, close=True) # hdf5
+    for key, unused_value in fem1.card_count.items():
+        if key in ['ECHOOFF', 'ECHOON']:
+            continue
+        #if key == 'ENDDATA':
+        hdf5_msg = ''
+        if key not in fem1a.card_count:
+            hdf5_msg += f'key={key!r} was not loaded to hdf5\n'
+
+        if hdf5_msg:
+            hdf5_msg += 'expected=%s\nactual=%s' % (
+                fem1.card_count, fem1a.card_count)
+            fem1a.log.error(hdf5_msg)
+            raise RuntimeError(hdf5_msg)
+    #sys.exit('hdf5')
 
 def _fem_xref_methods_check(fem1: BDF) -> None:
     """
@@ -1022,7 +1038,10 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
             fem.log.error(f'Subcase {isubcase:d} is empty')
             continue
         str(subcase)
-        if sol_base is None:
+
+        if fem.is_acoustic():
+            pass
+        elif sol_base is None:
             raise RuntimeError(f'subcase: {subcase}\n')
         #print('case\n%s' % subcase)
         #if sol_base == 200:
@@ -1113,7 +1132,7 @@ def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     # mass matrices
     check_subcase_dmig_matrix(fem, subcase, 'M2GG')
     # mass matrices, which are not included in normal modes.
-    check_subcase_dmig_matrix(fem, subcase, 'M2PP')
+    check_subcase_dmig_matrix(fem, subcase, 'M2PP', is_real=False)
 
     # stiffness matrices
     check_subcase_dmig_matrix(fem, subcase, 'K2GG')
@@ -1141,6 +1160,7 @@ def check_subcase_dmig_matrix(fem: BDF,
         return
 
     #([(1.0, 'MCB')], [(1.0, 'MCB')])
+    #[(1.0, 1.0, 'UMASS')]
     scale_names: list[tuple[float, str]] = subcase.get_parameter(matrix_name)[0]
     print(f'{matrix_name} (scale,names) = {scale_names}')
 
@@ -1188,7 +1208,9 @@ def check_case(sol: int,
 
     msg = f'sol={sol}\n{subcase}'
 
-    if sol == 24:
+    if fem2.is_acoustic():
+        pass
+    elif sol == 24:
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 64:
@@ -1464,7 +1486,7 @@ def _check_case_sol_200(sol: int,
                         p0: Any,
                         isubcase: int,
                         subcases: dict[int, Subcase],
-                        log: SimpleLogger) -> int:
+                        log: SimpleLogger) -> None:
     """
     helper method for ``check_case``
 
@@ -1711,18 +1733,21 @@ def _check_case_parameters(subcase: Subcase,
         loadcase_id = subcase.get_int_parameter('TEMPERATURE(MATERIAL)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
 
-    if 'LOAD' in subcase:
+    is_not_acoustic = not fem.is_acoustic()
+    if 'LOAD' in subcase and is_not_acoustic:
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
         if sum_load:
-            force, moment = sum_forces_moments(fem, p0, loadcase_id,
-                                               cid=cid_new, include_grav=False)
+            force, moment = sum_forces_moments(
+                fem, p0, loadcase_id,
+                cid=cid_new, include_grav=False)
             unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
             eids = None
             nids = None
             force2, moment2 = sum_forces_moments_elements(
-                fem, p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
+                fem, p0, loadcase_id, eids, nids,
+                cid=cid_new, include_grav=False)
             assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
             assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
             print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
@@ -1736,7 +1761,7 @@ def _check_case_parameters(subcase: Subcase,
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
 
-    if 'FREQUENCY' in subcase:
+    if 'FREQUENCY' in subcase and is_not_acoustic:
         # not positive on 107 - complex eigenvalues
         freq_id = subcase.get_int_parameter('FREQUENCY')[0]
         freq = fem.frequencies[freq_id]
@@ -1785,7 +1810,7 @@ def _check_case_parameters(subcase: Subcase,
         unused_lseq = fem.Load(loadset_id)
         fem.get_reduced_loads(loadset_id)
 
-    if 'DLOAD' in subcase:
+    if 'DLOAD' in subcase and is_not_acoustic:
         allowed_sols = [
             26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
             153, 159, 200, 400, 401, 601, 700,

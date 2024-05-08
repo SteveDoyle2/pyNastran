@@ -581,6 +581,28 @@ class TestShells(unittest.TestCase):
         z = p.get_z_locations()
         assert np.allclose(z, z_expected), f'z={z} z_expected={z_expected}'
 
+    def test_pcomp_update(self):
+        model = BDF(debug=False)
+        pid = 1
+        mids = [1, 2, 3]
+        thicknesses = 1.
+        thetas = 0.
+        model.add_pcomp(
+            pid, mids, thicknesses, thetas=None, souts=None,
+            nsm=0., sb=0., ft=None, tref=0., ge=0.,
+            lam=None, z0=None, comment='')
+        model.setup(run_geom_check=False)
+
+        pids = [1]
+        thickness = np.array([
+            [2., 3., 4.],
+        ])
+        theta = np.array([
+            [20., 30., 40.],
+        ])
+        model.pcomp.update_layers(pids, thickness=thickness, theta=theta)
+        print(model.pcomp)
+
     def test_pcomp_02(self):
         """symmetrical, nsm=0.0 and nsm=1.0"""
         pid = 1

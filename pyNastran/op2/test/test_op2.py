@@ -8,8 +8,11 @@ from typing import Optional, Any
 import numpy as np
 
 import pyNastran
+from pyNastran.bdf.errors import UnsupportedCard
 from pyNastran.op2.op2 import (
-    OP2, FatalError, SixtyFourBitError, OverwriteTableError)
+    OP2, FatalError, SixtyFourBitError, OverwriteTableError,
+    EmptyRecordError,
+)
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -397,6 +400,12 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         is_passed = True
     except MemoryError:
         raise
+    except UnsupportedCard:
+        is_passed = True
+    except EmptyRecordError:
+        if not dev:
+            raise
+        is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
@@ -499,7 +508,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
     if not write_bdf:
         return
     assert make_geom, f'write_bdf=False, but make_geom={make_geom!r}; expected make_geom=True'
-    op2._nastran_format = 'msc'
+    #op2._nastran_format = 'msc'
     op2.executive_control_lines = ['CEND\n']
     op2.validate()
     op2.write_bdf(bdf_filename, size=8)

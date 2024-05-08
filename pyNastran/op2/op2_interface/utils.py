@@ -3,19 +3,42 @@ import numpy as np
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 
-def reshape_bytes_block(block: bytes) -> bytes:
+def reshape_bytes_block(block: bytes, is_interlaced_block: bool=True) -> bytes:
     """
     Converts the nonsense 64-bit string to 32-bit format.
+
+    For NX Nastran, is_interlaced_block=True.
+
+    For MSC Nastran, tables and headers seem to have
+    is_interlaced_block=False, but other strings are not interlaced.
+
+    Example
+    -------
+    >>> reshape_bytes_block(b'ABCD    EFGH    ', is_interlaced_block=True)
+    b'ABCDEFGH'
+    >>> reshape_bytes_block(b'ABCD    EFGH    ', is_interlaced_block=False)
+    b'ABCD    '
 
     Note
     ----
     Requires a multiple of 8 characters.
+
     """
-    nwords = len(block) // 2
-    block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
+    # handle table_name
+    nsingle_bytes = len(block) // 2
+    #block_bytes = block.rstrip()
+    #if len(block_bytes) < nsingle_bytes:
+        #return block_bytes
+
+    if is_interlaced_block:
+        block2 = b''.join([block[8*i:8*i+4] for i in range(nsingle_bytes)])
+    else:
+        # MSC, but not table_names
+        block2 = block[:nsingle_bytes]
+    #print(f'block={block.strip()!r} block2={block2.strip()!r}')
     return block2
 
-def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> bytes:
+def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> str:
     """
     Converts the nonsense 64-bit string to 32-bit format.  Right strips
     the output

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
 from pyNastran.bdf.cards.material_deps import (
-    MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
+    MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11)
 from pyNastran.bdf.cards.dynamic import (TSTEPNL,
                                          NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP) # TSTEP
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -28,8 +28,11 @@ class MPT:
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
+
+    def read_stop(self, data: bytes, n: int) -> int:
+        return self.op2.reader_geom1.read_stop(data, n)
 
     def read_mpt_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.mpt_map, data, ndata)
@@ -39,56 +42,66 @@ class MPT:
 
         #F:\work\pyNastran\examples\Dropbox\move_tpl\chkout01.op2
         self.mpt_map = {
-            (1003, 10, 245) : ['CREEP', self._read_creep],  # record 1
-            (103, 1, 77) : ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
-            (203, 2, 78) : ['MAT2', self._read_mat2],       # record 3
-            (1403, 14, 122) : ['MAT3', self._read_mat3],    # record 4
-            (2103, 21, 234) : ['MAT4', self._read_mat4],    # record 5
-            (2203, 22, 235) : ['MAT5', self._read_mat5],    # record 6
-            (2503, 25, 288) : ['MAT8', self._read_mat8],    # record 7
-            (2603, 26, 300) : ['MAT9', self._read_mat9],    # record 8 - buggy
-            (2801, 28, 365) : ['MAT10', self._read_mat10],  # record 9
-            (2903, 29, 371) : ['MAT11', self._read_mat11],  # record ??? - NX specific - buggy?
+            (1003, 10, 245) : ['CREEP', self.read_creep],  # record 1
+            (103, 1, 77) : ['MAT1', self.read_mat1],       # record 3-msc-dmap2014
+            (203, 2, 78) : ['MAT2', self.read_mat2],       # record 3
+            (1403, 14, 122) : ['MAT3', self.read_mat3],    # record 4
+            (2103, 21, 234) : ['MAT4', self.read_mat4],    # record 5
+            (2203, 22, 235) : ['MAT5', self.read_mat5],    # record 6
+            (2503, 25, 288) : ['MAT8', self.read_mat8],    # record 7
+            (2603, 26, 300) : ['MAT9', self.read_mat9],    # record 8 - buggy
+            (2801, 28, 365) : ['MAT10', self.read_mat10],  # record 9
+            (2903, 29, 371) : ['MAT11', self.read_mat11],  # record ??? - NX specific - buggy?
 
-            (4506, 45, 374) : ['MATHP', self._read_mathp],   # record 11
-            (503, 5, 90) : ['MATS1', self._read_mats1],      # record 12
-            (703, 7, 91) : ['MATT1', self._read_matt1],      # record 13 - not done
-            (803, 8, 102) : ['MATT2', self._read_matt2],     # record 14
-            #(1503, 14, 189) : ['MATT3', self._read_matt3],   # record 15 - not done
-            (1503, 15, 189)  : ['MATT3', self._read_matt3],
-            (2303, 23, 237) : ['MATT4', self._read_matt4],   # record 16 - not done
-            (2403, 24, 238) : ['MATT5', self._read_matt5],   # record 17 - not done
-            (2703, 27, 301) : ['MATT9', self._read_matt9],   # record 19 - not done
-            (8802, 88, 413) : ['RADM', self._read_radm],     # record 25 - not done
+            (4506, 45, 374) : ['MATHP', self.read_mathp],   # record 11
+            (503, 5, 90) : ['MATS1', self.read_mats1],      # record 12
+            (703, 7, 91) : ['MATT1', self.read_matt1],      # record 13 - not done
+            (803, 8, 102) : ['MATT2', self.read_matt2],     # record 14
+            #(1503, 14, 189) : ['MATT3', self.read_matt3],   # record 15 - not done
+            (1503, 15, 189)  : ['MATT3', self.read_matt3],
+            (2303, 23, 237) : ['MATT4', self.read_matt4],   # record 16 - not done
+            (2403, 24, 238) : ['MATT5', self.read_matt5],   # record 17 - not done
+            (2703, 27, 301) : ['MATT9', self.read_matt9],   # record 19 - not done
+            (8802, 88, 413) : ['RADM', self.read_radm],     # record 25 - not done
             # record 26
-            (3003, 30, 286) : ['NLPARM', self._read_nlparm],   # record 27
-            (3104, 32, 350) : ['NLPCI', self._read_nlpci],     # record 28
-            (3103, 31, 337) : ['TSTEPNL', self._read_tstepnl], # record 29
-            (3303, 33, 988) : ['MATT11', self._read_matt11],
+            (3003, 30, 286) : ['NLPARM', self.read_nlparm],   # record 27
+            (3104, 32, 350) : ['NLPCI', self.read_nlpci],     # record 28
+            (3103, 31, 337) : ['TSTEPNL', self.read_tstepnl], # record 29
+            (3303, 33, 988) : ['MATT11', self.read_matt11],
 
-            (903, 9, 336) : ['MATT8', self._read_matt8],
-            (8902, 89, 423) : ['RADMT', self._read_radmt],
-            (9002, 90, 410) : ['RADBND', self._read_radbnd],
-            (4801, 48, 961): ['MATPOR', self._read_fake],
-            (5101, 51, 642): ['MATDMG', self._read_fake],
-            (14403, 144, 840): ['NLSTEP', self._read_fake],
-            (4603, 46, 623): ['MATCRP', self._read_fake],
-            (4701, 50, 965): ['MAT10C', self._read_fake],
-            (3403, 34, 902): ['MATFT', self._read_fake],
-            (2008, 20, 249): ['MATTC', self._read_fake],
-            (4201, 42, 966): ['MATSR', self._read_fake],
-            (8310, 83, 403): ['MATG', self._read_fake],
+            (903, 9, 336) : ['MATT8', self.read_matt8],
+            (8902, 89, 423) : ['RADMT', self.read_radmt],
+            (9002, 90, 410) : ['RADBND', self.read_radbnd],
+            (4801, 48, 961): ['MATPOR', self.read_matpor],
+            (5101, 51, 642): ['MATDMG', self.read_fake],
+            (14403, 144, 840): ['NLSTEP', self.read_fake],
+            (4603, 46, 623): ['MATCRP', self.read_fake],
+            (4701, 50, 965): ['MAT10C', self.read_fake],
+            (3403, 34, 902): ['MATFT', self.read_fake],
+            (2008, 20, 249): ['MATTC', self.read_fake],
+            (4201, 42, 966): ['MATSR', self.read_fake],
+            (8310, 83, 403): ['MATG', self.read_fake],
 
-            (5303, 53, 906): ['MATCZ', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-            #(8310, 83, 403): ['???', self._read_fake],
-
+            (5303, 53, 906): ['MATCZ', self.read_fake],
+            (10900, 109, 596): ['MATORT', self.read_matort],
+            (10600, 106, 593): ['MATF', self.read_fake],
+            (11000, 110, 597): ['MATTORT', self.read_fake],
+            (13103, 131, 695): ['NLMOPTS', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            #(8310, 83, 403): ['???', self.read_fake],
+            (15703, 157, 975): ['MAT1F', self.read_fake],
+            (15903, 159, 977): ['MAT2F', self.read_fake],
+            (16303, 163, 981): ['MAT2SP', self.read_fake],
+            (12000, 120, 108): ['CONTRLT', self.read_fake],
+            (15603, 156, 967): ['MONCARL', self.read_fake],
+            (16803, 168, 1019):  ['MAT8', self.read_fake],
+            (16503, 165, 983): ['MAT9', self.read_mat9],
         }
 
     def add_op2_material(self, mat):
@@ -97,11 +110,63 @@ class MPT:
         self.op2._add_methods._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
-    def _read_creep(self, data: bytes, n: int) -> int:
+    def read_matort(self, data: bytes, n: int) -> int:
+        """
+        MATORT(10900,109,596) - SOL 600 only
+
+        Word Name Type Description
+        1 MID      I   Material identification number
+        2 E1      RS   modulus of elasticity in longitudinal direction
+        3 E2      RS   modulus of elasticity in lateral direction
+        4 E3      RS   modulus of elasticity in thickness direction
+        5 NU12    RS   Poisson's ratio
+        6 NU23    RS   Poisson's ratio
+        7 NU31    RS   Poisson's ratio
+        8 RHO     RS   Mass density
+        9 G12     RS   shear modulus in plane 1-2
+        10 G23    RS   shear modulus in plane 2-3
+        11 G31    RS   shear modulus in plane 3-1
+        12 A1     RS   coefficient of thermal expansion in direction 1
+        13 A2     RS   coefficient of thermal expansion in direction 2
+        14 A3     RS   coefficient of thermal expansion in direction 3
+        15 TREF   RS   reference temperature
+        16 GE     RS   structure damping coefficient
+        17 IYLD    I   Yield criteria
+        18 IHARD   I   Work harding rules
+        19 SY     RS   Equivalent (von Mises) tensile yield stress
+        20 SORNL  RS   For ORNL only, 10th cycle equivalent yield stress
+        21 Y1     RS   Hill's yield stress in direction 1
+        22 Y2     RS   Hill's yield stress in direction 2
+        23 Y3     RS   Hill's yield stress in direction 3
+        24 UNDEF  none
+        25 YSHR1  RS   Hill's yield shear stress in direction 1
+        26 YSHR2  RS   Hill's yield shear stress in direction 2
+        27 YSHR3  RS   Hill's yield shear stress in direction 3
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 27 * self.size
+        s = Struct(mapfmt(op2._endian + b'i 15f 2i 5f i 3f', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (mid, e1, e2, e2, nu12, nu23, nu31, rho,
+             g12, g23, g31, a1, a2, a3, tref, ge,
+             iyield, ihard, sy, sornl, y1, y2, y3,
+             undef, yshear1, yshear2, yshear3) = out
+            assert undef == 0, undef
+            #mat = op2.add_matort
+            #self.add_op2_material(mat)
+            n += ntotal
+        op2.log.warning('geom skipping MATORT in MPT')
+        #op2.card_count['MATORT'] = nmaterials
+        return n
+
+    def read_creep(self, data: bytes, n: int) -> int:
         """
         CREEP(1003,10,245) - record 1
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor
         nmaterials = (len(data) - n) // ntotal
         s = Struct(mapfmt(op2._endian + b'i2f4ifi7f', self.size))
@@ -118,11 +183,11 @@ class MPT:
         op2.card_count['CREEP'] = nmaterials
         return n
 
-    def _read_mat1(self, data: bytes, n: int) -> int:
+    def read_mat1(self, data: bytes, n: int) -> int:
         """
         MAT1(103,1,77) - record 2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 48 * self.factor  # 12*4
         s = Struct(mapfmt(op2._endian + b'i10fi', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -136,14 +201,14 @@ class MPT:
         op2.card_count['MAT1'] = nmaterials
         return n
 
-    def _read_mat2(self, data: bytes, n: int) -> int:
+    def read_mat2(self, data: bytes, n: int) -> int:
         """
         MAT2(203,2,78) - record 3
 
         ints    = (100000001, 10101010.0, 1010101.0, 0,   10101010.0, 0,   4545454.5, 0.05, 0.001, 0.001, 0, 0, 0, 0, 0, 0, 0,               -200000001, 0,   0,   0,   0,   0,   0,   0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         floats  = (100000001, 10101010.0, 1010101.0, 0.0, 10101010.0, 0.0, 4545454.5, 0.05, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -200000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MAT2'
         card_obj = MAT2
         methods = {
@@ -158,7 +223,7 @@ class MPT:
             raise
         return n
 
-        #op2 = self.op2
+        #op2: OP2Geom = self.op2
         #ndatai = len(data) - n
         #if ndatai % 68 == 0:
         #    ntotal = 68  # 17*4
@@ -229,7 +294,7 @@ class MPT:
         #return n
 
     def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(op2._endian + mapfmt(b'i15fi', self.size))
         ndatai = len(data) - n
@@ -247,6 +312,9 @@ class MPT:
              #tref, ge, St, Sc, Ss, mcsid) = out
             mid = out[0]
             #print(mid)
+            if mid < 0:
+                n += ntotal
+                continue
             assert mid > 0, mid
             mat = MAT2.add_op2_data(out)
             mats.append(mat)
@@ -294,7 +362,7 @@ class MPT:
         ints    = (1, 1160653210, 1146134036, 1120585646, 1162764288, 1120585646, 1149918413, 814313567, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 100000001, 1161338496, 1146104342, -1029486047, 1162093848, -1029486047, 1149903566, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 200000001, 1161345214, 1146109282, -1024369403, 1162084660, -1024369403, 1149906036, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 400000001, 1069826929, -1472888832, 1064921892, -1077656719, 1064921892, -1491992576, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114)
         floats  = (1.401298464324817e-45, 2786.60009765625, 834.469970703125, 101.38999938964844, 3302.0, 101.38999938964844, 1106.9000244140625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 2.3122342657588655e-35, 2953.90625, 832.6575927734375, -81.64478302001953, 3138.318359375, -81.64478302001953, 1105.087646484375, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 9.081061202086803e-32, 2955.54638671875, 832.9591064453125, -120.68167877197266, 3136.0751953125, -120.68167877197266, 1105.38916015625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 1.3927371822189304e-24, 1.5333081483840942, -1.0075273948473296e-14, 0.9742910861968994, -1.5333081483840942, 0.9742910861968994, -2.0261570199409107e-15, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor  # 23*4
         s = Struct(op2._endian + mapfmt(b'i15fi 6f', self.size))
         ndatai = len(data) - n
@@ -333,11 +401,11 @@ class MPT:
             mats.append(mat)
         return n, mats
 
-    def _read_mat3(self, data: bytes, n: int) -> int:
+    def read_mat3(self, data: bytes, n: int) -> int:
         """
         MAT3(1403,14,122) - record 4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor
         s = Struct(mapfmt(op2._endian + b'i8fi5fi', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -354,11 +422,11 @@ class MPT:
         op2.card_count['MAT3'] = nmaterials
         return n
 
-    def _read_mat4(self, data: bytes, n: int) -> int:
+    def read_mat4(self, data: bytes, n: int) -> int:
         """
         MAT4(2103,21,234) - record 5
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor
         s = Struct(mapfmt(op2._endian + b'i10f', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -371,11 +439,11 @@ class MPT:
         op2.card_count['MAT4'] = nmaterials
         return n
 
-    def _read_mat5(self, data: bytes, n: int) -> int:
+    def read_mat5(self, data: bytes, n: int) -> int:
         """
         MAT5(2203,22,235) - record 6
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'i9f')
         nmaterials = (len(data) - n) // 40
         for unused_i in range(nmaterials):
@@ -389,25 +457,27 @@ class MPT:
         op2.card_count['MAT5'] = nmaterials
         return n
 
-    def _read_mat8(self, data: bytes, n: int) -> int:
+    def read_mat8(self, data: bytes, n: int) -> int:
         """
         MAT8(2503,25,288) - record 7
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor
         s = Struct(mapfmt(op2._endian + b'i18f', self.size))
-        nmaterials = (len(data) - n) // ntotal
-        for unused_i in range(nmaterials):
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
             # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
             mat = MAT8.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
-        op2.card_count['MAT8'] = nmaterials
+        op2.card_count['MAT8'] = nentries
         return n
 
-    def _read_mat9(self, data: bytes, n: int) -> int:
+    def read_mat9(self, data: bytes, n: int) -> int:
         """
         MAT9(2603,26,300) - record 9
         """
@@ -419,7 +489,7 @@ class MPT:
             224 : self._read_mat9_224,
         }
         #try:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             self.add_op2_material,
@@ -429,7 +499,7 @@ class MPT:
         return n
 
     def _read_mat9_140(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
@@ -469,7 +539,7 @@ class MPT:
         return n, materials
 
     def _read_mat9_224(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
@@ -523,7 +593,7 @@ class MPT:
             n += ntotal
         return n, materials
 
-    def _read_mat10(self, data: bytes, n: int) -> int:
+    def read_mat10(self, data: bytes, n: int) -> int:
         """
         MAT10(2801,28,365) - record 9
 
@@ -535,7 +605,7 @@ class MPT:
         5 GE   RS Structural damping coefficient
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MAT10'
         card_obj = MAT10
         methods = {
@@ -556,7 +626,7 @@ class MPT:
         return n
 
     def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(op2._endian + b'i4f', self.size))
         ndatai = (len(data) - n)
@@ -591,7 +661,7 @@ class MPT:
         data = (25, 1.0, 0.1, 3.16, 0.02, 0)
              = (25, 1.0, 0.1, 3.16, 0.02, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24 * self.factor # 6*4
         s = Struct(mapfmt(op2._endian + b'i5f', self.size))
         ndatai = (len(data) - n)
@@ -615,11 +685,11 @@ class MPT:
             materials.append(mat)
         return n, materials
 
-    def _read_mat11(self, data: bytes, n: int) -> int:
+    def read_mat11(self, data: bytes, n: int) -> int:
         """
         MAT11(2903,29,371)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 * self.factor  # 23*4
         struc = Struct(mapfmt(op2._endian + b'i 15f 16i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -642,7 +712,7 @@ class MPT:
         """
         MAT11(2903,29,371)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80  # 20*4
         s = Struct(op2._endian + b'i 15f 4s 4s 4s 4s')
         nmaterials = (len(data) - n) // ntotal
@@ -662,7 +732,7 @@ class MPT:
         op2.card_count['MAT11'] = nmaterials
         return n
 
-    def _read_mathp(self, data: bytes, n: int) -> int:
+    def read_mathp(self, data: bytes, n: int) -> int:
         """
         MATHP(4506,45,374) - Record 11
 
@@ -712,7 +782,7 @@ class MPT:
         CONTFLG =0 Without continuation
         End CONTFLG
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         nmaterials = 0
         s1 = Struct(mapfmt(op2._endian + b'i7f3i23fi', self.size))
         s2 = Struct(mapfmt(op2._endian + b'8i', self.size))
@@ -758,11 +828,11 @@ class MPT:
         op2.card_count['MATHP'] = nmaterials
         return n
 
-    def _read_mats1(self, data: bytes, n: int) -> int:
+    def read_mats1(self, data: bytes, n: int) -> int:
         """
         MATS1(503,5,90) - record 12
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(op2._endian + b'3ifiiff3i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -782,12 +852,12 @@ class MPT:
         op2.card_count['MATS1'] = nmaterials
         return n
 
-    def _read_matt1(self, data: bytes, n: int) -> int:
+    def read_matt1(self, data: bytes, n: int) -> int:
         """
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(mapfmt(op2._endian + b'12i', self.size))
         ntotal = 48 *  self.factor # 12*4
         ncards = (len(data) - n) // ntotal
@@ -803,7 +873,7 @@ class MPT:
         op2.increase_card_count('MATT1', ncards)
         return n
 
-    def _read_matt2(self, data: bytes, n: int) -> int:
+    def read_matt2(self, data: bytes, n: int) -> int:
         card_name = 'MATT2'
         card_obj = MATT2
         methods = {
@@ -811,7 +881,7 @@ class MPT:
             92 : self._read_matt2_92,
         }
         #try:
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
             op2._add_methods._add_material_dependence_object,
@@ -826,7 +896,7 @@ class MPT:
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 68 * self.factor # 17*4
         s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -859,7 +929,7 @@ class MPT:
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor # 23*4
         s = Struct(mapfmt(op2._endian + b'17i 6i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -887,7 +957,7 @@ class MPT:
             n += ntotal
         return n, cards
 
-    def _read_matt3(self, data: bytes, n: int) -> int:
+    def read_matt3(self, data: bytes, n: int) -> int:
         r"""
         Word Name Type Description
         1 MID     I Material identification number
@@ -896,7 +966,7 @@ class MPT:
         test_op2 -g C:\MSC.Software\msc_nastran_runs\varmat4c.op2
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\m402mat3_matt3_ex_ey_nuxy_gxy.op2
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 64 * self.factor # 16*4
         s = Struct(mapfmt(op2._endian + b'16i', self.size))
         ndatai = len(data) - n
@@ -950,12 +1020,12 @@ class MPT:
         op2.card_count['MATT3'] = nmaterials
         return n
 
-    def _read_matt4(self, data: bytes, n: int) -> int:
+    def read_matt4(self, data: bytes, n: int) -> int:
         """
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_7i = Struct(mapfmt(op2._endian + b'7i', self.size))
         ntotal = 28 * self.factor # 7*4
         ncards = (len(data) - n) // ntotal
@@ -972,13 +1042,13 @@ class MPT:
         op2.increase_card_count('MATT4', ncards)
         return n
 
-    def _read_matt5(self, data: bytes, n: int) -> int:
+    def read_matt5(self, data: bytes, n: int) -> int:
         """
         MATT5(2403,24,238)
         checked NX-10.1, MSC-2016
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         s = Struct(op2._endian + b'10i')
         ntotal = 40 # 10*4
         ncards = (len(data) - n) // ntotal
@@ -995,9 +1065,9 @@ class MPT:
         op2.increase_card_count('MATT5', ncards)
         return n
 
-    def _read_matt8(self, data: bytes, n: int) -> int:
+    def read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n, self._read_matt8_18, self._read_matt8_19,
             'MATT8', op2._add_methods._add_material_dependence_object)
@@ -1016,7 +1086,7 @@ class MPT:
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'i18i', self.size))
         ndatai = len(data) - n
@@ -1068,7 +1138,7 @@ class MPT:
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 72 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'18i', self.size))
         ndatai = len(data) - n
@@ -1105,9 +1175,9 @@ class MPT:
 
         return n, matt8s
 
-    def _read_matt9(self, data: bytes, n: int) -> int:
+    def read_matt9(self, data: bytes, n: int) -> int:
         """common method for reading MATT9s"""
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         card_name = 'MATT9'
         card_obj = MATT9
         methods = {
@@ -1168,7 +1238,7 @@ class MPT:
            (1251, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 20, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data, types='if')
         ntotal = 224 * self.factor  # 56*4
         s = Struct(mapfmt(op2._endian + b'56i', self.size))
@@ -1227,7 +1297,7 @@ class MPT:
         32 UNDEF(4) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 140 * self.factor  # 35*4
         s = Struct(mapfmt(op2._endian + b'35i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -1283,7 +1353,7 @@ class MPT:
         17 UNDEF(16) None
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 # 32*4
         struct1 = Struct(mapfmt(op2._endian + b'i 15f 4f 12i', self.size))
         nmaterials = (len(data) - n) // ntotal
@@ -1314,9 +1384,10 @@ class MPT:
         op2.log.warning('geom skipping MAT11 in MPT')
         return n
 
-    def _read_matt11(self, data: bytes, n: int) -> int:
+    def read_matt11(self, data: bytes, n: int) -> int:
         """
         Record – MATT11(3303,33,988)
+
         Solid orthotropic material temperature dependence.
         Defines the temperature dependent material property for a
         3D orthotropic material for isoparametric solid elements.
@@ -1342,7 +1413,7 @@ class MPT:
         17 UNDEF(16) None
         ints = (1, 10, 20, 20, 30, 30, 30, 40, 40, 50, 60, 70, 70, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 128 * self.factor # 32*4
         #self.show_data(data[n:], types='if')
         struct1 = Struct(mapfmt(op2._endian + b'32i', self.size))
@@ -1350,48 +1421,141 @@ class MPT:
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge, *other = out
+            (mid, e1_table, e2_table, e3_table, nu12_table, nu13_table, nu23_table,
+             rho_table, g12_table, g13_table, g23_table,
+             a1_table, a2_table, a3_table, undef, ge_table, *other) = out
+            assert undef == 0, undef
             if op2.is_debug_file:
                 op2.binary_debug.write('  MATT11=%s\n' % str(out))
-            #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
             assert min(other) == 0, other
             assert max(other) == 0, other
-            #assert a == 0, out
-            #assert b == 0, out
-            #assert c == 0, out
-            #assert d == 0, out
-            #assert e == 0, out
-            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                                 #g66_table=None, rho_table=None,
-                                 #a1_table=None, a2_table=None, a3_table=None,
-                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
-            #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
-            #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            assert sum(other) == 0, other
+            mat = MATT11(mid, e1_table=e1_table, e2_table=e2_table, e3_table=e3_table,
+                         nu12_table=nu12_table, nu13_table=nu13_table, nu23_table=nu23_table,
+                         g12_table=g12_table, g13_table=g13_table, g23_table=g23_table,
+                         a1_table=a1_table, a2_table=a2_table, a3_table=a3_table,
+                         rho_table=rho_table, ge_table=ge_table)
+            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         op2.card_count['MATT11'] = nmaterials
-        op2.log.warning('geom skipping MATT11 in MPT')
         return n
+
+    def read_matpor(self, data: bytes, n: int) -> int:
+        """
+        Record – MATPOR(4801,48,961)
+
+        Material properties for porous materials used as acoustic absorbers
+        Word Name Type Description
+        1 MID     I Material identification number
+        2 MODEL   I Absorber model
+        MODEL = 1 Craggs model
+        3 RHO    RS Mass density
+        4 C      RS Speed of sound
+        5 UNDEF(4) None
+        9 RES    RS Flow resistivity
+        10 POR   RS Porosity
+        11 TORT  RS Tortuosity
+        12 UNDEF(5) None
+        MODEL = 2 Delaney-Miki model
+        3 RHO       RS Mass density
+        4 C         RS Speed of sound
+        5 FRAME      I FRAME = 1 for rigid; FRAME = 2 for limp
+        6 UNDEF(3) None
+        9 RES       RS Speed of sound
+        10 POR      RS Porosity
+        11 UNDEF    RS
+        12 DENS     RS Frame density (for limp frames only)
+        13 UNDEF(4) RS
+        MODEL = 3 Johnson-Champoux-Allard model
+        3 RHO       RS Mass density
+        4 C         RS Speed of sound
+        5 FRAME      I FRAME = 1 for rigid; FRAME = 2 for limp
+        6 GAMMA     RS Ratio of constant pressure specific heat to constant volume specific heat
+        7 PR        RS Prandtl number
+        8 MU        RS Dynamic viscosity
+        9 RES       RS Speed of sound
+        10 POR      RS Porosity
+        11 TORT     RS Tortuosity
+        12 DENS     RS Frame density (for limp frames only)
+        13 L1       RS Characteristic viscous length
+        14 L2       RS Characteristic thermal length
+        15 UNDEF(2) None
+        """
+        op2: OP2Geom = self.op2
+        ntotal0 = 2 * self.size # 32*4
+        ntotal = 16 * self.size # 32*4
+        struct0 = Struct(mapfmt(op2._endian + b'2i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i 3f 5i', self.size)) # cragg
+        struct2 = Struct(mapfmt(op2._endian + b'2i 2fi 3i 2fif 4f', self.size))
+        struct3 = Struct(mapfmt(op2._endian + b'2i 2fi 9f 2i', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata0 = data[n:n+ntotal0]
+            edata = data[n:n+ntotal]
+            mid, model = struct0.unpack(edata0)
+            if model == 1:
+                out = struct1.unpack(edata)
+                mid, model, rho, c, dummy1, dummy2, dummy3, dummy4, resistivity, porosity, tortuosity, *dummy = out # cragg
+                assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                assert dummy == [0, 0, 0, 0, 0], dummy
+                op2.add_matpor_craggs(mid, rho, c, resistivity, porosity, tortuosity)
+            elif model == 2:
+                out = struct2.unpack(edata)
+                (mid, model, rho, c, frame_int, dummy1, dummy2, dummy3,
+                 resistivity, porosity, dummy4, density, *dummy) = out # Delaney-Miki
+                if frame_int == 1:
+                    frame = 'RIGID'
+                elif frame_int == 2:
+                    frame = 'LIMP'
+                assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                assert dummy == [0.0, 0.0, 0.0, 0.0], dummy
+                #assert (dummy1, dummy2, dummy3, dummy4) == (0, 0, 0, 0), (dummy1, dummy2, dummy3, dummy4)
+                #assert dummy == (0, 0, 0), dummy
+                op2.add_matpor_delmiki(mid, rho, c, resistivity, porosity, frame, density=density, comment='')
+            elif model == 3:
+                out = struct3.unpack(edata)
+                #MATPOR         2     JCA   1.205   343.0    LIMP     1.4    0.71 1.84E-5+
+                #+        80000.0    0.93     2.5    30.0  1.0E-5  1.0E-4
+                (mid, model, rho, c, frame_int, gamma, prandtl_number,
+                 dynanmic_viscosity, resistivity, porosity, tortuosity, density,
+                 L1, L2, *dummy) = out # johnson
+                assert dummy == [0, 0], dummy
+
+                # FRAME = 1 for rigid
+                # FRAME = 2 for limp
+                if frame_int == 1:
+                    frame = 'RIGID'
+                elif frame_int == 2:
+                    frame = 'LIMP'
+                op2.add_matpor_jca(mid, rho, c, resistivity, porosity, tortuosity, frame,
+                                   gamma, prandtl_number, dynanmic_viscosity,
+                                   L1, L2, density=density)
+            else:  # pragma: no cover
+                raise RuntimeError(model)
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATPOR=%s\n' % str(out))
+            #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
+
+        op2.card_count['MATPOR'] = nmaterials
+        return len(data)
 
 # MBOLT
 # MBOLTUS
 # MSTACK
 # NLAUTO
 
-    def _read_radbnd(self, data: bytes, n: int) -> int:
+    def read_radbnd(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RADBND in MPT')
         return len(data)
 
 
-    def _read_radm(self, data: bytes, n: int) -> int:
+    def read_radm(self, data: bytes, n: int) -> int:
         """
         RADM(8802,88,413) - record 25
         .. todo:: add object
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         struct_i = op2.struct_i
         nmaterials = 0
         ndata = len(data)
@@ -1421,11 +1585,11 @@ class MPT:
         op2.card_count['RADM'] = nmaterials
         return n
 
-    def _read_radmt(self, data: bytes, n: int) -> int:
+    def read_radmt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RADMT in MPT')
         return len(data)
 
-    def _read_nlparm(self, data: bytes, n: int) -> int:
+    def read_nlparm(self, data: bytes, n: int) -> int:
         r"""
         NLPARM(3003,30,286) - record 27
 
@@ -1461,7 +1625,7 @@ class MPT:
         floats  = (10000001, 1, 0.0, 1, 500, 25, 14, 0.0, 0.01, 0.01, 0.01, 5, 25, 0.0, 0.2, 0.5, 5, 20.0, 20.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndatai = (len(data) - n) // self.factor
         ndata_80 = ndatai % 80
         ndata_76 = ndatai % 76
@@ -1509,7 +1673,7 @@ class MPT:
         19 RTOLB   RS Maximum value of incremental rotation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 76 * self.factor  # 19*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff', self.size))
         ndatai = len(data) - n
@@ -1560,7 +1724,7 @@ class MPT:
         19 RTOLB   RS Maximum value of incremental rotation
         20 ZERO  RS/I Dummy field?
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 80 * self.factor  # 20*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff i', self.size))
         ndatai = len(data) - n
@@ -1587,11 +1751,11 @@ class MPT:
             nlparms.append(nlparm)
         return n, nlparms
 
-    def _read_nlpci(self, data: bytes, n: int) -> int:
+    def read_nlpci(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping NLPCI in MPT')
         return len(data)
 
-    def _read_tstepnl(self, data: bytes, n: int) -> int:
+    def read_tstepnl(self, data: bytes, n: int) -> int:
         """Common method to read MSC/NX TSTEPNLs"""
         ndatai = (len(data) - n) * self.factor
         n108 = ndatai % 108 # nx
@@ -1624,7 +1788,7 @@ class MPT:
         27 GAMMA   RS Amplitude decay factor for 2nd order transient integration
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 108 * self.factor  # 27*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f 4if', self.size))
         nentries = (len(data) - n) // ntotal
@@ -1674,7 +1838,7 @@ class MPT:
         22 RTOLB   RS Maximum value of incremental rotation
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 88 * self.factor  # 22*4
         s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -1752,7 +1916,7 @@ class MPT:
         floats  = (100000000, 1, 1.0, 1, 1, 500, 25, 10, 0.001, 0.001, 1.0e-7, 3, 25, 0.0, 0.2, 5, 5, 20, 0.75, 20.0, 0.1, 20.0, 0.0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 92 * self.factor  # 23*4
         #s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
         s = Struct(mapfmt(op2._endian + b'2i f 5i 3f 3i f 3i 4f i', self.size))

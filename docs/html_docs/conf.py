@@ -196,9 +196,9 @@ master_doc = 'index'
 # built documents.
 #
 # The short X.Y version.
-version = '1.4-dev'
+version = '1.5-dev'
 # The full version, including alpha/beta/rc tags.
-release = '1.4-dev'
+release = '1.5-dev'
 
 # General information about the project.
 project = 'pyNastran' + ' ' + version

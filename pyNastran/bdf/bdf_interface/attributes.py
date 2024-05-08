@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Optional, Any, Union, TYPE_CHECKING
 from numpy import array
-from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
+#from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -78,12 +78,16 @@ if TYPE_CHECKING:  # pragma: no cover
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
 
-        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATDMG,
+        CREEP,
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATDMG,
         NXSTRAT,
         PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
 
-
+        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
+        SUPORT, SUPORT1,
+        BOLT, BOLTFOR, BOLTSEQ,
+        PELAST, PDAMPT, PBUSHT, TIC,
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
@@ -497,19 +501,20 @@ class BDFAttributes:
         self.MATT5: dict[int, MATT5] = {}
         self.MATT8: dict[int, MATT8] = {}
         self.MATT9: dict[int, MATT9] = {}
+        self.MATT11: dict[int, MATT11] = {}
         self.MATDMG: dict[int, MATDMG] = {}
         self.nxstrats: dict[int, NXSTRAT] = {}
 
         #: stores the CREEP card
-        self.creep_materials: dict[int, Any] = {}
+        self.creep_materials: dict[int, CREEP] = {}
 
-        self.tics = {}  # type: Optional[Any]
+        self.tics: dict[int, TIC] = {}
 
         # stores DLOAD entries.
-        self.dloads = {}    # type: dict[int, Any]
+        self.dloads: dict[int, Any] = {}
         # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
         #        and QVECT entries.
-        self.dload_entries = {}    # type: dict[int, Any]
+        self.dload_entries: dict[int, Any] = {}
 
         #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
@@ -519,36 +524,35 @@ class BDFAttributes:
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords = {0 : coord}   # type: dict[int, Any]
+        self.coords: dict[int, Any] = {0 : coord}
         self.MATCID = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
-        #self.constraints = {} # suport1, anything else???
-        self.suport = []  # type: list[Any]
-        self.suport1 = {}  # type: dict[int, Any]
-        self.se_suport = []  # type: list[Any]
+        self.suport: list[SUPORT] = []
+        self.suport1: dict[int, SUPORT1] = {}
+        self.se_suport: list[Any] = []
 
         #: stores SPC, SPC1, SPCAX, GMSPC
-        self.spcs = {}  # type: dict[int, list[Any]]
+        self.spcs: dict[int, list[Any]] = {}
         #: stores SPCADD
-        self.spcadds = {}  # type: dict[int, list[Any]]
-        self.spcoffs = {}  # type: dict[int, list[Any]]
+        self.spcadds: dict[int, list[SPCADD]] = {}
+        self.spcoffs: dict[int, list[Any]] = {}
 
-        self.mpcs = {}  # type: dict[int, list[Any]]
-        self.mpcadds = {}  # type: dict[int, list[Any]]
+        self.mpcs: dict[int, list[Any]] = {}
+        self.mpcadds: dict[int, list[MPCADD]] = {}
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
-        self.dareas = {}   # type: dict[int, Any]
-        self.dphases = {}  # type: dict[int, Any]
+        self.dareas: dict[int, DAREA] = {}
+        self.dphases: dict[int, DPHASE] = {}
 
-        self.pbusht = {}  # type: dict[int, Any]
-        self.pdampt = {}  # type: dict[int, Any]
-        self.pelast = {}  # type: dict[int, Any]
+        self.pbusht: dict[int, PBUSHT] = {}
+        self.pdampt: dict[int, PDAMPT] = {}
+        self.pelast: dict[int, PELAST] = {}
 
         #: frequencies
-        self.frequencies = {}  # type: dict[int, list[Any]]
+        self.frequencies: dict[int, list[Any]] = {}
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
@@ -563,20 +567,20 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: SETy
-        self.sets = {}  # type: dict[int, Any]
-        self.asets = []  # type: list[Any]
-        self.omits = []  # type: list[Any]
-        self.bsets = []  # type: list[Any]
-        self.csets = []  # type: list[Any]
-        self.qsets = []  # type: list[Any]
-        self.usets = {}  # type: dict[str, Any]
+        self.sets: dict[int, Any] = {}
+        self.asets: list[Any] = []
+        self.omits: list[Any] = []
+        self.bsets: list[Any] = []
+        self.csets: list[Any] = []
+        self.qsets: list[Any] = []
+        self.usets: dict[str, Any] = {}
 
         #: SExSETy
-        self.se_bsets = []  # type: list[Any]
-        self.se_csets = []  # type: list[Any]
-        self.se_qsets = []  # type: list[Any]
-        self.se_usets = {}  # type: dict[str, Any]
-        self.se_sets = {}  # type: dict[str, Any]
+        self.se_bsets: list[Any] = []
+        self.se_csets: list[Any] = []
+        self.se_qsets: list[Any] = []
+        self.se_usets: dict[str, Any] = {}
+        self.se_sets: dict[str, Any] = {}
 
         # ----------------------------------------------------------------
         #: parametric
@@ -599,15 +603,15 @@ class BDFAttributes:
         self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
 
         #: random_tables
-        self.random_tables = {}  # type: dict[int, Any]
+        self.random_tables: dict[int, Any] = {}
         #: TABDMP1
         self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
-        self.methods = {}  # type: dict[int, Union[EIGR, EIGRL, EIGB]]
+        self.methods: dict[int, Union[EIGR, EIGRL, EIGB]] = {}
         # EIGC, EIGP methods
-        self.cMethods = {}  # type: dict[int, Union[EIGC, EIGP]]
+        self.cMethods: dict[int, Union[EIGC, EIGP]] = {}
 
         # ---------------------------- optimization --------------------------
         # optimization
@@ -637,147 +641,151 @@ class BDFAttributes:
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
-        self.nlpcis = {}  # type: dict[int, NLPCI]
+        self.nlpcis: dict[int, NLPCI] = {}
         #: stores NLPARM
-        self.nlparms = {}  # type: dict[int, NLPARM]
+        self.nlparms: dict[int, NLPARM] = {}
         #: stores TSTEPs, TSTEP1s
-        self.tsteps = {}  # type: dict[int, Union[TSTEP, TSTEP1]]
+        self.tsteps: dict[int, Union[TSTEP, TSTEP1]] = {}
         #: stores TSTEPNL
-        self.tstepnls = {}  # type: dict[int, TSTEPNL]
+        self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
-        self.transfer_functions = {}  # type: dict[int, TF]
+        self.transfer_functions: dict[int, TF] = {}
         #: stores DELAY
-        self.delays = {}  # type: dict[int, DELAY]
+        self.delays: dict[int, DELAY] = {}
 
         #: stores ROTORD, ROTORG
-        self.rotors = {}  # type: dict[int, Union[ROTORD, ROTORG]]
+        self.rotors: dict[int, Union[ROTORD, ROTORG]] = {}
+
+        self.acplnw: dict[int, ACPLNW] = {}
+        self.amlreg: dict[int, AMLREG] = {}
+        self.micpnt: dict[int, MICPNT] = {}
 
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
-        self.caeros = {}  # type: dict[int, Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]]
+        self.caeros: dict[int, Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]] = {}
         #: stores PAEROx
-        self.paeros = {}  # type: dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]]
+        self.paeros: dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]] = {}
         # stores MONPNT1
-        self.monitor_points = []  # type: list[Union[MONPNT1, MONPNT2, MONPNT3]]
+        self.monitor_points: list[Union[MONPNT1, MONPNT2, MONPNT3]] = []
 
         #: stores AECOMP
-        self.aecomps = {}  # type: dict[int, AECOMP]
+        self.aecomps: dict[int, AECOMP] = {}
         #: stores AEFACT
-        self.aefacts = {}  # type: dict[int, AEFACT]
+        self.aefacts: dict[int, AEFACT] = {}
         #: stores AELINK
-        self.aelinks = {}  # type: dict[int, list[AELINK]]
+        self.aelinks: dict[int, list[AELINK]] = {}
         #: stores AELIST
-        self.aelists = {}  # type: dict[int, AELIST]
+        self.aelists: dict[int, AELIST] = {}
         #: stores AEPARM
-        self.aeparams = {}  # type: dict[int, AEPARM]
+        self.aeparams: dict[int, AEPARM] = {}
         #: stores AESURF
-        self.aesurf = {}  # type: dict[int, AESURF]
+        self.aesurf: dict[int, AESURF] = {}
         #: stores AESURFS
-        self.aesurfs = {}  # type: dict[int, AESURFS]
+        self.aesurfs: dict[int, AESURFS] = {}
         #: stores AESTAT
-        self.aestats = {}  # type: dict[int, AESTAT]
+        self.aestats: dict[int, AESTAT] = {}
         #: stores CSSCHD
-        self.csschds = {}  # type: dict[int, CSSCHD]
+        self.csschds: dict[int, CSSCHD] = {}
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines = {}  # type: dict[int, Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]]
+        self.splines: dict[int, Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]] = {}
         self.zona = ZONA(self)
 
         # axisymmetric
-        self.axic = None  # type: Optional[AXIC]
-        self.axif = None  # type: Optional[AXIF]
-        self.ringfl = {}  # type: dict[int, RINGFL]
+        self.axic: Optional[AXIC] = None
+        self.axif: Optional[AXIF] = None
+        self.ringfl: dict[int, RINGFL] = {}
         self._is_axis_symmetric = False
 
         # cyclic
-        self.cyax = None  # type: Optional[CYAX]
-        self.cyjoin = {}  # type: dict[int, CYJOIN]
+        self.cyax: Optional[CYAX] = None
+        self.cyjoin: dict[int, CYJOIN] = {}
 
-        self.modtrak = None  # type: Optional[MODTRAK]
+        self.modtrak: Optional[MODTRAK] = None
 
         # acoustic
-        self.acmodl = None
+        self.acmodl: Optional[ACMODL] = None
 
         # ------ SOL 144 ------
         #: stores AEROS
-        self.aeros = None  # type: Optional[AEROS]
+        self.aeros: Optional[AEROS] = None
 
         #: stores TRIM, TRIM2
-        self.trims = {}  # type: dict[int, Union[TRIM, TRIM2]]
+        self.trims: dict[int, Union[TRIM, TRIM2]] = {}
 
         #: stores DIVERG
-        self.divergs = {}  # type: dict[int, DIVERG]
+        self.divergs: dict[int, DIVERG] = {}
 
         # ------ SOL 145 ------
         #: stores AERO
         self.aero: Optional[AERO] = None
 
         #: stores FLFACT
-        self.flfacts = {}  # type: dict[int, FLFACT]
+        self.flfacts: dict[int, FLFACT] = {}
 
         #: stores FLUTTER
-        self.flutters = {} # type: dict[int, FLUTTER]
+        self.flutters: dict[int, FLUTTER] = {}
 
         #: mkaeros
         self.mkaeros: list[Union[MKAERO1, MKAERO2]] = []
 
         # ------ SOL 146 ------
         #: stores GUST cards
-        self.gusts = {}  # type: dict[int, GUST]
+        self.gusts: dict[int, GUST] = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}  # type: dict[int, Union[CONV, RADBC]]
+        self.bcs: dict[int, Union[CONV, RADBC]] = {}
 
         #: stores PHBDY
-        self.phbdys = {}  # type: dict[int, PHBDY]
+        self.phbdys: dict[int, PHBDY] = {}
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}  # type: dict[int, Union[PCONV, PCONVM]]
+        self.convection_properties: dict[int, Union[PCONV, PCONVM]] = {}
         #: stores TEMPD
-        self.tempds = {}  # type: dict[int, TEMPD]
+        self.tempds: dict[int, TEMPD] = {}
 
         #: stores VIEW
-        self.views = {}  # type: dict[int, VIEW]
+        self.views: dict[int, VIEW] = {}
         #: stores VIEW3D
-        self.view3ds = {}  # type: dict[int, VIEW3D]
+        self.view3ds: dict[int, VIEW3D] = {}
         self.radset = None
-        self.radcavs = {}  # type: dict[int, RADCAV]
-        self.radmtx = {}  # type: dict[int, RADMTX]
+        self.radcavs: dict[int, RADCAV] = {}
+        self.radmtx: dict[int, RADMTX] = {}
 
         # -------------------------contact cards-------------------------------
-        self.bcbodys = {}  # type: dict[int, BCBODY]
-        self.bcparas = {}  # type: dict[int, BCPARA]
-        self.bcrparas = {}  # type: dict[int, BCRPARA]
-        self.bctparas = {}  # type: dict[int, BCTPARA]
+        self.bcbodys: dict[int, BCBODY] = {}
+        self.bcparas: dict[int, BCPARA] = {}
+        self.bcrparas: dict[int, BCRPARA] = {}
+        self.bctparas: dict[int, BCTPARA] = {}
 
-        self.bctadds = {}  # type: dict[int, BCTADD]
-        self.bctsets = {}  # type: dict[int, BCTSET]
-        self.bsurf = {}  # type: dict[int, BSURF]
-        self.bsurfs = {}  # type: dict[int, BSURFS]
-        self.bconp = {}  # type: dict[int, BCONP]
-        self.blseg = {}  # type: dict[int, BLSEG]
-        self.bfric = {}  # type: dict[int, BFRIC]
-        self.bgadds = {}  # type: dict[int, BGADD]
-        self.bgsets = {}  # type: dict[int, BGSET]
-        self.bctparms = {}  # type: dict[int, BCTPARAM]
+        self.bctadds: dict[int, BCTADD] = {}
+        self.bctsets: dict[int, BCTSET] = {}
+        self.bsurf: dict[int, BSURF] = {}
+        self.bsurfs: dict[int, BSURFS] = {}
+        self.bconp: dict[int, BCONP] = {}
+        self.blseg: dict[int, BLSEG] = {}
+        self.bfric: dict[int, BFRIC] = {}
+        self.bgadds: dict[int, BGADD] = {}
+        self.bgsets: dict[int, BGSET] = {}
+        self.bctparms: dict[int, BCTPARAM] = {}
 
         #--------------------------superelements------------------------------
-        self.setree = {}  # type: dict[int, SETREE]
-        self.senqset = {}  # type: dict[int, Union[SENQSET, SENQSET1]]
-        self.sebulk = {}  # type: dict[int, SEBULK]
-        self.sebndry = {}  # type: dict[int, SEBNDRY]
-        self.release = {}  # type: dict[int, RELEASE]
-        self.seloc = {}  # type: dict[int, SELOC]
-        self.sempln = {}  # type: dict[int, SEMPLN]
-        self.seconct = {}  # type: dict[int, SECONCT]
-        self.selabel = {}  # type: dict[int, SELABEL]
-        self.seexcld = {}  # type: dict[int, SEEXCLD]
-        self.seelt = {}  # type: dict[int, SEELT]
-        self.seload = {}  # type: dict[int, SELOAD]
-        self.csuper = {}  # type: dict[int, CSUPER]
-        self.csupext = {}  # type: dict[int, CSUPEXT]
+        self.setree: dict[int, SETREE] = {}
+        self.senqset: dict[int, Union[SENQSET, SENQSET1]] = {}
+        self.sebulk: dict[int, SEBULK] = {}
+        self.sebndry: dict[int, SEBNDRY] = {}
+        self.release: dict[int, RELEASE] = {}
+        self.seloc: dict[int, SELOC] = {}
+        self.sempln: dict[int, SEMPLN] = {}
+        self.seconct: dict[int, SECONCT] = {}
+        self.selabel: dict[int, SELABEL] = {}
+        self.seexcld: dict[int, SEEXCLD] = {}
+        self.seelt: dict[int, SEELT] = {}
+        self.seload: dict[int, SELOAD] = {}
+        self.csuper: dict[int, CSUPER] = {}
+        self.csupext: dict[int, CSUPEXT] = {}
 
         self.bolt: dict[int, BOLT] = {}
         self.boltseq: dict[int, BOLTSEQ] = {}
@@ -843,11 +851,11 @@ class BDFAttributes:
             #'properties_acoustic' : ['PACABS'],
             'properties' : [
                 #  acoustic
-                'PACABS', 'PAABSF', 'PACBAR',
+                'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
 
                 # 0d
                 'PELAS', 'PGAP', 'PFAST',
-                'PBUSH', 'PBUSH1D',
+                'PBUSH', 'PBUSH1D', 'PBUSH2D',
                 'PDAMP', 'PDAMP5',
 
                 # 1d
@@ -868,7 +876,9 @@ class BDFAttributes:
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                           'MAT3D', 'MATG'],
+                           'MAT3D', 'MATG',
+                           # acoustic
+                           'MATPOR'],
             'hyperelastic_materials' : ['MATHE', 'MATHP'],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],
@@ -878,6 +888,7 @@ class BDFAttributes:
             'MATT5' : ['MATT5'], # thermal
             'MATT8' : ['MATT8'],
             'MATT9' : ['MATT9'],
+            'MATT11' : ['MATT11'],
             'MATS1' : ['MATS1'],
             'MATDMG': ['MATDMG'],
             'MATS3' : ['MATS3'],
@@ -1047,6 +1058,11 @@ class BDFAttributes:
             'radcavs' : ['RADCAV', 'RADLST'],
             'radmtx' : ['RADMTX'],
             # SEBSEP
+
+            # acoustic
+            'acplnw' : ['ACPLNW'],
+            'amlreg' : ['AMLREG'],
+            'micpnt' : ['MICPNT'],
 
             # parametric
             'pset' : ['PSET'],
@@ -1351,32 +1367,42 @@ class BDFAttributes:
     # deprecations
     @property
     def dmis(self) -> dict[str, DMI]:
+        self.deprecated('dmis', 'dmi', '1.5')
         return self.dmi
     @property
     def dmigs(self) -> dict[str, DMIG]:
+        self.deprecated('dmig', 'dmigs', '1.5')
         return self.dmig
     @property
     def dmiks(self) -> dict[str, DMIK]:
+        self.deprecated('dmik', 'dmiks', '1.5')
         return self.dmik
     @property
     def dmijs(self) -> dict[str, DMIJ]:
+        self.deprecated('dmij', 'dmijs', '1.5')
         return self.dmij
     @property
     def dmijis(self) -> dict[str, DMIJI]:
+        self.deprecated('dmiji', 'dmiji', '1.5')
         return self.dmiji
 
     @dmis.setter
     def dmis(self, dmi):
+        self.deprecated('dmis', 'dmi', '1.5')
         self.dmi = dmi
     @dmigs.setter
     def dmigs(self, dmig):
+        self.deprecated('dmig', 'dmigs', '1.5')
         self.dmig = dmig
     @dmiks.setter
     def dmiks(self, dmik):
+        self.deprecated('dmik', 'dmiks', '1.5')
         self.dmik = dmik
     @dmijs.setter
     def dmijs(self, dmij):
+        self.deprecated('dmij', 'dmijs', '1.5')
         self.dmij = dmij
     @dmijis.setter
     def dmijis(self, dmiji):
+        self.deprecated('dmiji', 'dmiji', '1.5')
         self.dmiji = dmiji

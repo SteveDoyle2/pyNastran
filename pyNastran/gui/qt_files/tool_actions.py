@@ -509,8 +509,12 @@ class ToolActions:
             self.gui.load_actions._set_last_dir(vtk_filename)
 
         vtk_ugrid = self._get_vtk_ugrid()
+
+        compression_level = 5
         writer = vtkXMLUnstructuredGridWriter()
         writer.SetFileName(vtk_filename)
+        writer.SetCompressorTypeToLZMA()
+        writer.SetCompressionLevel(compression_level)
         writer.SetInputData(vtk_ugrid)
         writer.Write()
 
@@ -537,7 +541,7 @@ class ToolActions:
                 if not isinstance(case, GuiResult):
                     log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is not a GuiResult')
                     continue
-                vtk_array = case.save_vtk_result(used_titles)
+                vtk_array = case.save_vtk_result(icase, used_titles)
                 add_vtk_array(case.location, point_data, cell_data, vtk_array)
         return vtk_ugrid
 

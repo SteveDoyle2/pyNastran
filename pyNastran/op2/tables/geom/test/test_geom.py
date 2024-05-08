@@ -87,7 +87,7 @@ class TestOP2GeomUnit(unittest.TestCase):
                 -5, 90013, -1,
                 -1)
         data_bytes1 = struct.pack(f'{len(data)}i', *data)
-        op2.reader_edt._read_group(data_bytes1, 12)
+        op2.reader_edt.read_group(data_bytes1, 12)
 
         data2 = (
             17400, 174, 616,
@@ -96,7 +96,7 @@ class TestOP2GeomUnit(unittest.TestCase):
             -5, 1, 0, 10, -1,
             -1)
         data_bytes2 = struct.pack(b'5i 20s 2i 16s 7i', *data2)
-        op2.reader_edt._read_group(data_bytes2, 12)
+        op2.reader_edt.read_group(data_bytes2, 12)
 
         data3 = (17400, 174, 616,
                  55, 0,
@@ -109,7 +109,7 @@ class TestOP2GeomUnit(unittest.TestCase):
                  -5, 90013, -1,
                  -1)
         data_bytes3 = struct.pack(f'{len(data)}i', *data3)
-        op2.reader_edt._read_group(data_bytes3, 12)
+        op2.reader_edt.read_group(data_bytes3, 12)
         #print('done...')
 
     def test_uset1(self):
@@ -123,11 +123,11 @@ class TestOP2GeomUnit(unittest.TestCase):
         data = (2110, 21, 194,
                 2.0, 123456, 0, 44, 45, 48, 49, -1)
         data_bytes = struct.pack(b'3i f 7i', *data)
-        op2.reader_geom4._read_uset1(data_bytes, 12)
+        op2.reader_geom4.read_uset1(data_bytes, 12)
 
 
         data_bytes = struct.pack(b'3i f 7i', *data)
-        op2.reader_geom4._read_uset1(data_bytes, 12)
+        op2.reader_geom4.read_uset1(data_bytes, 12)
 
     def test_nsml1_nx(self):
         """tests NSML1-NX"""
@@ -159,7 +159,7 @@ class TestOP2GeomUnit(unittest.TestCase):
             3, 338071, b'THRU    ', 341134, -1,
             -2)
         data_bytes = struct.pack(fmt1, *data)
-        op2.reader_ept._read_nsml1_nx(data_bytes, 12)
+        op2.reader_ept.read_nsml1_nx(data_bytes, 12)
 
     def test_seelt(self):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')

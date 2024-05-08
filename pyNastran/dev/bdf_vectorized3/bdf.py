@@ -2651,6 +2651,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATT5' : partial(self._prepare_card, self.matt5),
             'MATT8' : partial(self._prepare_card, self.matt8),
             'MATT9' : partial(self._prepare_card, self.matt9),
+            #'MATT11' : partial(self._prepare_card, self.matt11),
 
             'MATHE' : partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
             'MATHP' : partial(self._prepare_card, self.mathp),

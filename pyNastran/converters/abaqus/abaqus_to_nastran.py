@@ -347,20 +347,22 @@ def _build_rigid_ties(model: Abaqus,
         #value: key for key, value in
         #elements.element_type_to_elset_name.items()}
 
-    all_nodes_xyz = model.nodes
-    all_nids = model.nids
+    all_nodes_xyz: np.ndarray = model.nodes
+    all_nids: np.ndarray = model.nids
 
     # preallocate to avoid doing some faces multiple times
-    face_to_nids_map = {}
+    face_to_nids_map: dict[tuple[str, str, str], list[int]] = {}
     for tie in ties:
         master_surface = model.surfaces[tie.master]
         slave_surface = model.surfaces[tie.slave]
+        master_surface_type = master_surface.surface_type
+        slave_surface_type = slave_surface.surface_type
         assert master_surface.surface_type == 'element', master_surface
 
         for set_name, face in zip(master_surface.set_names, master_surface.faces):
-            face_to_nids_map[(master_surface.surface_type, set_name, face)] = []
+            face_to_nids_map[(master_surface_type, set_name, face)] = []
         for set_name, face in zip(slave_surface.set_names, slave_surface.faces):
-            face_to_nids_map[(slave_surface.surface_type, set_name, face)] = []
+            face_to_nids_map[(slave_surface_type, set_name, face)] = []
 
     _build_face_to_nids(model, elements, face_to_nids_map)
 
@@ -457,7 +459,7 @@ def _build_face_to_nids(
                 elif etypei == 's8':
                     in1, in2 = quad_face_map[face_int]
                     element_nodes2 = element_nodes[ielement, :][:, [in1, in2]]
-                else:
+                else:  # pragma: no cover
                     raise RuntimeError(etypei)
                 ravel_element_nodes = element_nodes2.ravel()
                 nids_list.append(ravel_element_nodes)
@@ -584,7 +586,7 @@ def build_coord(model: Abaqus,
             cid, origin, zaxis, xzplane,
             rid=0, setup=True, comment=comment)
         #x = 1
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(orient.system)
 
     return cid
@@ -691,7 +693,9 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
 
             #*Shell section, Elset=Base, Orientation=OR1, Material=CF, Offset=0
             #1.
-            t = shell_section.thickness
+            thickness = shell_section.thickness
+            assert len(thickness) == 1, shell_section
+            t = thickness[0]
             nastran_model.add_pshell(
                 pid, mid1=midi, t=t, mid2=midi, twelveIt3=1.0, mid3=None, tst=0.833333,
                 nsm=0.0, z1=None, z2=None, mid4=None, comment=shell_comment)

@@ -45,7 +45,8 @@ dict_int_obj_attrs = [
     #'gusts',
     #'trims',
     #'plotels',
-    'MATS1', 'MATS3', 'MATS8', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+    'MATS1', 'MATS3', 'MATS8', 'MATT1', 'MATT2', 'MATT3',
+    'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
 
     # TODO: don't work
     #'reject_count',

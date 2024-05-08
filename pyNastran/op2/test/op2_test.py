@@ -191,6 +191,10 @@ def run(regenerate=True, make_geom=False, combine=True,
         #files = [filename for filename in files
                  #if 'Siemens' not in filename and 'simcenter' not in filename]
     assert len(files)
+    if regenerate:
+        print('files:')
+        for filename in files:
+            print(filename)
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant

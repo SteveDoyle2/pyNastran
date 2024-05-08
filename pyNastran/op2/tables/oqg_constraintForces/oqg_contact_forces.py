@@ -1,6 +1,7 @@
 import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 
+
 class RealContactForcesArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -9,14 +10,15 @@ class RealContactForcesArray(RealTableArray):
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
-        words = ['                               C O N T A C T  F O R C E S\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OQGCF1']:
             # contact
+            words = ['                               C O N T A C T  F O R C E S\n', ]
             pass
         elif self.table_name in ['OQGGF1']:
             # glue
+            words = ['                               G L U E  F O R C E S\n', ]
             pass
         #elif self.table_name in ['OQGATO1', 'OQGATO2']:
             #words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
@@ -28,7 +30,7 @@ class RealContactForcesArray(RealTableArray):
             #words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
         #elif self.table_name in ['OQGNO1', 'OQGNO2']:
             #words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.table_name)
 
         #words += self.get_table_marker()

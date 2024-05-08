@@ -40,7 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
     from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-    from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
+    from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH2D
     from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                      CDAMP5)
     from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -80,7 +80,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                MATDMG,
                                                NXSTRAT)
     from pyNastran.bdf.cards.material_deps import (
-        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1)
 
     from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
     from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -138,8 +138,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.contact import (
         BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG,
         BFRIC, BCTPARM, BGADD, BGSET, BCBODY)
-    from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
-    from pyNastran.bdf.cards.elements.acoustic import PACABS
+    from pyNastran.bdf.cards.parametric.geometry import (
+        PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF)
+    from pyNastran.bdf.cards.elements.acoustic import (
+        PACABS, CAABSF, CHACAB, CHACBR,
+        ACPLNW, AMLREG, ACMODL, MICPNT)
+
 
 class AddMethods:
     """defines methods to add card objects to the BDF"""
@@ -531,10 +535,37 @@ class AddMethods:
         model.dequations[key] = deqatn
         model._type_to_id_map[deqatn.type].append(key)
 
+    def _add_acplnw_object(self, acplnw: ACPLNW) -> None:
+        """adds an ACPLNW object"""
+        key = acplnw.sid
+        assert key not in self.model.acplnw, '\nacplnw=\n%s old=\n%s' % (
+            acplnw, self.model.acplnw[key])
+        assert key >= 0
+        self.model.acplnw[key] = acplnw
+        self.model._type_to_id_map[acplnw.type].append(key)
+
+    def _add_amlreg_object(self, amlreg: AMLREG) -> None:
+        """adds an ACPLNW object"""
+        key = amlreg.rid
+        assert key not in self.model.acplnw, '\amlreg=\n%s old=\n%s' % (
+            amlreg, self.model.amlreg[key])
+        assert key >= 0
+        self.model.amlreg[key] = amlreg
+        self.model._type_to_id_map[amlreg.type].append(key)
+
+    def _add_micpnt_object(self, micpnt: MICPNT) -> None:
+        """adds an MICPNT object"""
+        key = micpnt.eid
+        assert key not in self.model.micpnt, '\micpnt=\n%s old=\n%s' % (
+            micpnt, self.model.micpnt[key])
+        assert key >= 0
+        self.model.micpnt[key] = micpnt
+        self.model._type_to_id_map[micpnt.type].append(key)
+
     def _add_acoustic_property_object(self, prop: PACABS) -> None:
         self._add_property_object(prop)
 
-    def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, # PBUSH2D,
+    def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, PBUSH2D,
                                                PFAST, PVISC, PGAP, PRAC2D, PRAC3D, # PWELD
                                                PROD, PTUBE,
                                                PBAR, PBARL, PBRSECT, PCONEAX,
@@ -797,14 +828,14 @@ class AddMethods:
             self.model.hyperelastic_materials[key] = material
             self.model._type_to_id_map[material.type].append(key)
 
-    def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
+    def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
                                                               MATS1, MATDMG], # MATS3, MATS8
                                         allow_overwrites: bool=False) -> None:
         """
         adds the following objects:
             MATS1, MATS3, MATS8,
             MATT1, MATT2, MATT3,
-            MATT4, MATT5, MATT8, MATT9,
+            MATT4, MATT5, MATT8, MATT9, MATT11,
             MATDMG
         """
         Type = material.type
@@ -821,6 +852,7 @@ class AddMethods:
             'MATT5' : self.model.MATT5,
             'MATT8' : self.model.MATT8,
             'MATT9' : self.model.MATT9,
+            'MATT11' : self.model.MATT11,
             'MATDMG': self.model.MATDMG,
         }
         slot = mapper[Type]
@@ -1169,7 +1201,7 @@ class AddMethods:
         assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
         self.model.axif = axif
 
-    def _add_acmodl_object(self, acmodl) -> None:
+    def _add_acmodl_object(self, acmodl: ACMODL) -> None:
         """adds a ACMODL object"""
         assert self.model.acmodl is None, self.model.acmodl
         self.model.acmodl = acmodl

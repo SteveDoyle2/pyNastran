@@ -315,10 +315,14 @@ class FakeGUIMethods(GuiVTKCommon):
             #eids = []
             #self.hide_elements_mask(eids)
             elements_pound = self.element_ids[-1]
+            nodes_pound = self.node_ids[-1]
             main_group = Group(
-                'main', '', elements_pound,
+                'main',
+                '', elements_pound,
+                '', nodes_pound,
                 editable=False)
             main_group.element_ids = self.element_ids
+            main_group.node_ids = self.node_ids
             self.groups['main'] = main_group
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))

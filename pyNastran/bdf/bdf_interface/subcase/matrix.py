@@ -127,6 +127,7 @@ class ImagMatrixCard:
     def __init__(self, value: Union[int, list[tuple[float, str]]]):
         """
         Creates an IntCard
+        K2PP = 1
 
         Parameters
         ----------
@@ -135,6 +136,7 @@ class ImagMatrixCard:
 
         """
         super().__init__()
+        #assert isinstance(value, int), value
         self.value = value
 
     def __iter__(self):

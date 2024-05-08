@@ -1501,6 +1501,7 @@ class EPT:
         legacy MSC/NX format
         """
         op2 = self.op2
+        pbush = op2.pbush
         ntotal = 72 * self.factor  # 18*4
         struct1 = Struct(mapfmt(op2._endian + b'i17f', self.size))
         ndata = len(data) - n
@@ -1512,15 +1513,26 @@ class EPT:
                                           size=op2.size, endian=op2._endian)
         property_id = ints[:, 0]
         assert property_id.min() > 0, property_id
-        k = floats[:, [1, 2, 3, 4, 5, 6]]
-        b = floats[:, [7, 8, 9, 10, 11, 12]]
+        k_fields = floats[:, [1, 2, 3, 4, 5, 6]]
+        b_fields = floats[:, [7, 8, 9, 10, 11, 12]]
         g1 = floats[:, 13]
         sa = floats[:, 14]
         st = floats[:, 15]
         ea = floats[:, 16]
         et = floats[:, 17]
+
+        ge_fields = g1
+        #rcv = [sa, st, ea, et]
+        rcv_fields = np.column_stack([sa, st, ea, et])
+
+        _mass = None
+        alpha = None
+        tref = None
+        coincident_length = None
+        pbush._save(property_id, k_fields, b_fields, ge_fields, rcv_fields,
+                    _mass, alpha, tref, coincident_length)
         #prop.set_from_op2(property_id, k, b, sa, st)
-        op2.log.warning('Skipping PBUSH-72')
+        #op2.log.warning('Skipping PBUSH-72')
 
         props = []
         #for unused_i in range(nproperties):

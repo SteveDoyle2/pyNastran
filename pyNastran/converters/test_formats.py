@@ -14,6 +14,7 @@ from pyNastran.converters.usm3d.test_usm3d import TestUsm3d
 
 from pyNastran.converters.aflr.aflr2.test_bedge import TestBEdge
 from pyNastran.converters.aflr.ugrid.test_ugrid import TestUgrid
+from pyNastran.converters.aflr.surf.test_surf import TestSurf
 
 #try:
 from pyNastran.converters.dev.avus.test_avus import TestAvus
@@ -21,7 +22,6 @@ from pyNastran.converters.dev.avus.test_avus import TestAvus
     #pass
 
 try:
-    from pyNastran.converters.dev.code_aster.test_code_aster import TestCodeAster
     from pyNastran.converters.dev.vrml.test_vrml import TestVrml
 except ModuleNotFoundError:  # pragma: no cover
     pass

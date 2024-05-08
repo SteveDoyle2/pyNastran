@@ -3,7 +3,6 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from __future__ import annotations
 from struct import Struct
-from itertools import count
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -12,7 +11,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, 
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from .utils import get_minus1_start_end
 
-from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR
+from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR, DOPTPRM
 from pyNastran.op2.errors import DoubleCardError
 DSCREEN_INT_TO_RTYPE = {
     1: 'WEIGHT',  # goland_final_test.op2
@@ -20,12 +19,13 @@ DSCREEN_INT_TO_RTYPE = {
     4 : 'EIGN',
     5 : 'DISP',
     6 : 'STRESS',
+    #7: 'STRAIN', # ?
     #8: '???a',  force?
     #9: '???b',
     12: 'FREQ',  # goland_final_test.op2
 }
 
-FLAG_TO_RESP_MSC = {
+DRESP_FLAG_TO_RESP_MSC = {
     1 : 'WEIGHT',
     2 : 'VOLUME',
     3 : 'LAMA',
@@ -35,7 +35,7 @@ FLAG_TO_RESP_MSC = {
     7 : 'STRAIN',
     8 : 'FORCE',
 }
-FLAG_TO_RESP_NX = {
+DRESP_FLAG_TO_RESP_NX = {
     1 : 'WEIGHT',
     2 : 'VOLUME',
     3 : 'LAMA',
@@ -51,7 +51,7 @@ FLAG_TO_RESP_NX = {
     13 : 'SPCFORCE',
     14 : 'ESE',
     15 : 'CEIG',
-    17 : 'Compliance',
+    17 : 'CMPLNCE', # Compliance',
     19 : 'ERP',
     20 : 'FRDISP',
     21 : 'FRVELO',
@@ -71,7 +71,7 @@ FLAG_TO_RESP_NX = {
     62 : 'TACCL',
 
     # nx
-    #84 : 'FLUTTER',
+    84 : 'FLUTTER',
 }
 
 DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items()}
@@ -97,7 +97,7 @@ class EDOM(GeomCommon):
     def factor(self) -> int:
         return self.op2.factor
 
-    def _read_fake(self, data: bytes, n: int) -> int:
+    def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
     def __init__(self, op2: OP2Geom):
@@ -119,62 +119,62 @@ class EDOM(GeomCommon):
             #MAT1DOM(103,1,9944)
             #MAT10DOM(2801,28,9945)
             #MODTRAK(6006,60,477)
-            (103, 1, 9944) : ['MAT1DOM', self._read_mat1dom],
-            (304, 3, 276) : ['DSCONS', self._read_dscons],
-            (404, 4, 277) : ['DVAR', self._read_dvar],
-            (504, 5, 246) : ['DVSET', self._read_dvset],
+            (103, 1, 9944) : ['MAT1DOM', self.read_mat1dom],
+            (304, 3, 276) : ['DSCONS', self.read_dscons],
+            (404, 4, 277) : ['DVAR', self.read_dvar],
+            (504, 5, 246) : ['DVSET', self.read_dvset],
 
-            (4106, 41, 362) : ['DCONSTR', self._read_dconstr],
+            (4106, 41, 362) : ['DCONSTR', self.read_dconstr],
             #DDVAL(7000,70,563)
             #DRESP3(6700,67,433)
-            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self.read_fake],
 
-            (3106, 31, 352) : ['DESVAR', self._read_desvar],
-            (3206, 32, 353) : ['DLINK', self._read_dlink],
-            (3306, 33, 354) : ['DVPREL1', self._read_dvprel1],
-            (3406, 34, 355) : ['DVPREL2', self._read_dvprel2],
+            (3106, 31, 352) : ['DESVAR', self.read_desvar],
+            (3206, 32, 353) : ['DLINK', self.read_dlink],
+            (3306, 33, 354) : ['DVPREL1', self.read_dvprel1],
+            (3406, 34, 355) : ['DVPREL2', self.read_dvprel2],
             #DOPTPRM(4306,43,364)
-            (3706, 37, 358) : ['DTABLE', self._read_dtable],
-            #(3806, 38, 359) : ['DRESP1', self._read_fake],
-            (3806, 38, 359) : ['DRESP1', self._read_dresp1],
-            (3906, 39, 360) : ['DRESP2', self._read_fake],
-            (4206, 42, 363) : ['DSCREEN', self._read_dscreen],
-            (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
-            (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
+            (3706, 37, 358) : ['DTABLE', self.read_dtable],
+            #(3806, 38, 359) : ['DRESP1', self.read_fake],
+            (3806, 38, 359) : ['DRESP1', self.read_dresp1],
+            (3906, 39, 360) : ['DRESP2', self.read_fake],
+            (4206, 42, 363) : ['DSCREEN', self.read_dscreen],
+            (4306, 43, 364) : ['DOPTPRM', self.read_doptprm],
+            (4406, 44, 372) : ['DVGRID', self.read_dvgrid],
             #DVSHAP(5006,50,470)
-            (5106, 51, 471) : ['DCONADD', self._read_dconadd],
-            (5806, 58, 474) : ['DVBSHAP', self._read_fake],
+            (5106, 51, 471) : ['DCONADD', self.read_dconadd],
+            (5806, 58, 474) : ['DVBSHAP', self.read_fake],
             #DVGEOM(5906,59,356)
-            (6006, 60, 477) : ['MODTRAK', self._read_fake],
+            (6006, 60, 477) : ['MODTRAK', self.read_fake],
             #DRESP3(6700,67,433)
-            (6100, 61, 429) : ['DVCREL1', self._read_dvcrel1],
-            (6200, 62, 430) : ['DVCREL2', self._read_dvcrel2],
-            (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
-            (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
-            (6006, 60, 477) : ['???', self._read_fake],
-            (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
+            (6100, 61, 429) : ['DVCREL1', self.read_dvcrel1],
+            (6200, 62, 430) : ['DVCREL2', self.read_dvcrel2],
+            (6300, 63, 431) : ['DVMREL1', self.read_dvmrel1],
+            (6400, 64, 432) : ['DVMREL2', self.read_dvmrel2],
+            (6006, 60, 477) : ['???', self.read_fake],
+            (7000, 70, 563) : ['DCONSTR/DDVAL?', self.read_fake],
 
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s200tpgchbc1.op2
-            (6903, 69, 637) : ['DMNCON', self._read_dmncon], # nx
-            (7102, 71, 645) : ['DMRLAW', self._read_fake], # nx
-            (6803, 68, 636) : ['DVTREL1', self._read_dvtrel1], # nx
+            (6903, 69, 637) : ['DMNCON', self.read_dmncon], # nx
+            (7102, 71, 645) : ['DMRLAW', self.read_fake], # nx
+            (6803, 68, 636) : ['DVTREL1', self.read_dvtrel1], # nx
 
 
-            (2801, 28, 9945) : ['MAT10DOM', self._read_fake],
-            (5706, 57, 634) : ['DVEREL1', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
-            #(6903, 69, 637) : ['???', self._read_fake],
+            (2801, 28, 9945) : ['MAT10DOM', self.read_fake],
+            (5706, 57, 634) : ['DVEREL1', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
+            #(6903, 69, 637) : ['???', self.read_fake],
         }
 
-    def _read_dconadd(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+    def read_dconadd(self, data: bytes, n: int) -> int:
+        op2: OP2Geom = self.op2
         datai = np.frombuffer(data[n:], op2.idtype8).copy()
         _read_spcadd_mpcadd(op2, 'DCONADD', datai)
         return len(data)
 
-    def _read_dmncon(self, data: bytes, n: int) -> int:
+    def read_dmncon(self, data: bytes, n: int) -> int:
         """
         Record – DMNCON(6903,69,637)
         NX
@@ -256,7 +256,7 @@ class EDOM(GeomCommon):
         2, 0, 0, 6,
           0.40, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx('; DMNCON found')
         ntotal0 = 16 * self.factor # 4 * 4
         ntotal6 = 24 * self.factor # 6 * 4
@@ -416,7 +416,7 @@ class EDOM(GeomCommon):
         assert n == len(data), f'n={n}; ndata={len(data)}'
         return n
 
-    def _read_dvtrel1(self, data: bytes, n: int) -> int:
+    def read_dvtrel1(self, data: bytes, n: int) -> int:
         """
         Record – DVTREL1(6803,68,636)
         NX
@@ -432,7 +432,7 @@ class EDOM(GeomCommon):
         11 COEF  RS Coefficient in the expression P=COEF*DV (currently inactive)
         12 UNDEF(6) None
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         op2.to_nx('; DVTREL1 found')
         ntotal = 68 * self.factor # 17 * 4
         if self.size == 4:
@@ -459,8 +459,8 @@ class EDOM(GeomCommon):
         op2.card_count['DVTREL1'] = ncards
         return n
 
-    def _read_dconstr(self, data: bytes, n: int) -> int:
-        op2 = self.op2
+    def read_dconstr(self, data: bytes, n: int) -> int:
+        op2: OP2Geom = self.op2
         card_name = 'DCONSTR'
         card_obj = DCONSTR
         methods = {
@@ -497,7 +497,7 @@ class EDOM(GeomCommon):
         ints    = (70002, 4, -1.0e+20, 1.0e+35, 0,   1.0e+20, 0)
         floats  = (70002, 3, -1.0e+20, 1.0e+35, 0.0, 1.0e+20, 0.0)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
 
         ntotal = 28 * self.factor # 7 * 4
         struct1 = Struct(mapfmt(op2._endian + b'ii 4f i', self.size))
@@ -553,7 +553,7 @@ class EDOM(GeomCommon):
         data  = (50, 2, 0.0016, 0.0018, 0.0, 1.0e+20, 0, 0)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 32 * self.factor # 8 * 4
         struct1 = Struct(mapfmt(op2._endian + b'ii 4f ii', self.size))
         ndatai = len(data) - n
@@ -580,7 +580,7 @@ class EDOM(GeomCommon):
         #op2.to_msc('; DCONSTR-32 found')
         return n, dconstrs
 
-    def _read_dscreen(self, data: bytes, n: int) -> int:
+    def read_dscreen(self, data: bytes, n: int) -> int:
         """
         DSCREEN(4206, 42, 363)
         Design constraint screening data.
@@ -592,8 +592,8 @@ class EDOM(GeomCommon):
 
         data = (5, -0.70, 10)
         """
-        op2 = self.op2
-        ntotal = 12 * self.factor # 3*4
+        op2: OP2Geom = self.op2
+        ntotal = 3 * self.size # 3*4
         struct1 = Struct(mapfmt(op2._endian + b'ifi', self.size))
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -653,7 +653,178 @@ class EDOM(GeomCommon):
             raise RuntimeError(msg2)
         return n
 
-    def _read_doptprm(self, data: bytes, n: int) -> int:
+    def read_doptprm(self, data: bytes, n: int) -> int:
+        op2: OP2Geom = self.op2
+        card_name = 'DOPTPRM'
+        card_obj = DOPTPRM
+        methods = {
+            184 : self.read_doptprm_nx_46,    # nx_old
+            196 : self.read_doptprm_nx_49,    # nx_new
+            #296 : self.read_doptprm_msc_74,  # msc
+        }
+        try:
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj,
+                op2._add_methods._add_doptprm_object,
+                methods, data, n)
+        except DoubleCardError:  # pragma: no cover
+            raise
+            #self.op2.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, op2.add_op2_element)
+        return n
+
+    def read_doptprm_msc_74(self, data: bytes, n: int) -> int:
+        """MSC"""
+        raise NotImplementedError()
+
+    def read_doptprm_nx_49(self, unused_card, data: bytes,
+                           n: int) -> int:
+        """
+        Record – DOPTPRM(4306,43,364)
+
+        I think this has 3 extra fields that are integers...
+        undocumented
+
+
+        196:
+        #DOPTPRM   DESMAX     100      P1       1      P2       1
+        #ints = (2, 0,   100, 1, 0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0,
+        #0.05, 1.e-4, 981668463, 0.001, 0.001, 1, 1, -0.03, 0.003, 0, 0.001,
+        #0.1, 0, 0.01, 0, 0, 40, 2,
+        #6, 0, 20, 2, 0, 0, 0, 0, 1.0, 0, 0.9, 1, 0, 0, 0,
+        #0.001, 5, 0, 1, 0)
+        0.0 could be 0...
+        floats  = (2, 0.0, 100, 1, 0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0,
+        0.05, 1.e-4, 0.001, 0.001, 0.001, 1, 1, -0.03, 0.003, 0.0, 0.001,
+        0.1, 0.0, 0.01, 0.0, 0.0, 40, 2,
+        6, 0.0, 20, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.9, 1, 0.0, 0.0, 0.0,
+        0.001, 5, 0.0, 1, 0.0)
+
+        data  = (
+          #4i
+          2, 0.0, 100, 1,
+          #12f
+          0.2, 0.01, 1.0e+35, 1.e-4, 1.e-20, 0.005, 1.0, 0.05, 1.e-4, 0.001, 0.001, 0.001,
+          #2i
+          1, 1,
+          # 8f
+          -0.03, 0.003, 0.0, 0.001, 0.1, 0.0, 0.01, 0.0,
+          11i
+          0.0, 40, 2, 6, 0.0, 20, 2, 0.0, 0.0, 0.0, 0.0,
+          # f
+          1.0,
+          # i
+          0.0,
+          # f
+          0.9,
+          # 4i
+          1, 0.0, 0.0, 0.0,
+          # f
+          0.001,
+          # i
+          5,
+          # 3i ???
+          0.0, 1, 0.0)
+
+        """
+        op2: OP2Geom = self.op2
+        size = self.size
+        ntotal = 49 * size # 49 * 4
+        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i 3i', size))
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        doptprms = []
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (aprcod, iprint, desmax, method, # ints
+             delp, dpmin, ptol, conv1, conv2, gmax, delx, dxmin, delb, gscal, convdv, convpr, # floats
+             p1, p2, # ints
+             ct, ctmin, dabobj, delobj, dobj1, dobj2, dx1, dx2, # floats
+             iscal, itmax, itrmop, iwrite, igmax, jtmax, itrmst, jprint, iprnt1, iprnt2, jwrite, # ints
+             stpscl, # float
+             fsdmax, # int
+             fsdalp, # float
+             discod, disbeg, plviol, p2rset, # ints
+             edvout, # float
+             mxcrtrsp, a, b, c) = out # int
+            assert (a, b, c) == (0, 1, 0), (a, b, c)
+            params = {
+                # ints
+                'APRCOD' : aprcod,
+                'IPRINT' : iprint,
+                'DESMAX' : desmax,
+                'METHOD' : method,
+                # floats
+                'DELP' : delp,
+                'DPMIN' : dpmin,
+                'PTOL' : ptol,
+                'CONV1' : conv1,
+                'CONV2' : conv2,
+                'GMAX' : gmax,
+                'DELX' : delx,
+                'DXMIN' : dxmin,
+                'DELB' : delb,
+                'GSCAL' : gscal,
+                'CONVDV' : convdv,
+                'CONVPR' : convpr,
+                #  ints
+                'P1' : p1,
+                'P2' : p2,
+                # floats
+                'CT' : ct,
+                'CTMIN' : ctmin,
+                'DABOBJ' : dabobj,
+                'DELOBJ' : delobj,
+                'DOBJ1' : dobj1,
+                'DOBJ2' : dobj2,
+                'DX1' : dx1,
+                'DX2' : dx2,
+                # ints
+                'ISCAL' : iscal,
+                'ITMAX' : itmax,
+                'ITRMOP' : itrmop,
+                'IWRITE' : iwrite,
+                'IGMAX' : igmax,
+                'JTMAX' : jtmax,
+                'ITRMST' : itrmst,
+                'JPRINT' : jprint,
+                'IPRNT1' : iprnt1,
+                'IPRNT2' : iprnt2,
+                'JWRITE' : jwrite,
+                'STPSCL' : stpscl, # float
+                'FSDMAX' : fsdmax,
+                'FSDALP' : fsdalp, # float
+                'DISCOD' : discod,
+                'DISBEG' : disbeg,
+                'PLVIOL' : plviol,
+                'P2RSET' : p2rset,
+                'EDVOUT' : edvout, # float
+                'MXCRTRSP' : mxcrtrsp,
+            }
+            doptprm = DOPTPRM(params)
+            for key, default_value in doptprm.defaults.items():
+                if default_value is None:
+                    continue
+                if key not in params:
+                    continue
+                value_actual = params[key]
+                assert isinstance(default_value, type(value_actual)), f'key={key!r} value={default_value!r} value_actual={value_actual!r}'
+                if isinstance(value_actual, int) and value_actual == default_value:
+                    del doptprm.params[key]
+                elif isinstance(default_value, float) and np.allclose(value_actual, default_value):
+                    del doptprm.params[key]
+            str(doptprm)
+            n += ntotal
+            doptprms.append(doptprm)
+        return n, doptprms
+
+    def read_doptprm_nx_46(self, unused_card, data: bytes,
+                           n: int) -> tuple[int, list[DOPTPRM]]:
         """
         Record – DOPTPRM(4306,43,364)
         Design optimization parameters.
@@ -718,13 +889,15 @@ class EDOM(GeomCommon):
         46 MXCRTRSP I Flag to handle CSV output
 
         """
-        op2 = self.op2
-        #if self.size == 4:
-        ntotal = 184 * self.factor # 46 * 4
-        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i', self.size))
+        op2: OP2Geom = self.op2
+        size = self.size
+        ntotal = 46 * size # 46 * 4
+        struct1 = Struct(mapfmt(op2._endian + b'4i 12f 2i 8f 11i f i f 4i f i', size))
         ndatai = len(data) - n
         ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
 
+        doptprms = []
         for unused_icard in range(ncards):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -792,7 +965,7 @@ class EDOM(GeomCommon):
                 'EDVOUT' : edvout, # float
                 'MXCRTRSP' : mxcrtrsp,
             }
-            doptprm = op2.add_doptprm(params)
+            doptprm = DOPTPRM(params)
             for key, default_value in doptprm.defaults.items():
                 if default_value is None:
                     continue
@@ -806,10 +979,10 @@ class EDOM(GeomCommon):
                     del doptprm.params[key]
             str(doptprm)
             n += ntotal
-        op2.card_count['DOPTPRM'] = ncards
-        return n
+            doptprms.append(doptprm)
+        return n, doptprms
 
-    def _read_dtable(self, data: bytes, n: int) -> int:
+    def read_dtable(self, data: bytes, n: int) -> int:
         """
         Record – DTABLE(3706,37,358)
         Table constants.
@@ -819,7 +992,7 @@ class EDOM(GeomCommon):
         Words 1 thru 3 repeat until -1 occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if self.size == 4:
             struct1 = Struct(op2._endian + b'8s f')
         else:
@@ -852,7 +1025,7 @@ class EDOM(GeomCommon):
         op2.card_count['DTABLE'] = ncards
         return n
 
-    def _read_mat1dom(self, data: bytes, n: int) -> int:
+    def read_mat1dom(self, data: bytes, n: int) -> int:
         """
         If one or more properties from a MAT1 entry are used as design
         variables, the MAT1DOM record is written to the EDOM data block.
@@ -869,7 +1042,7 @@ class EDOM(GeomCommon):
         assert len(data) == 28, len(data)
         return len(data)
 
-    def _read_dvgrid(self, data: bytes, n: int) -> int:
+    def read_dvgrid(self, data: bytes, n: int) -> int:
         """
         Design variable to grid point relation.
         Word Name Type Description
@@ -882,7 +1055,7 @@ class EDOM(GeomCommon):
         7 N3    RS Component of the vector measured in the coordinate system defined by CID
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 28 * self.factor # 7*4
         struct1 = Struct(mapfmt(op2._endian + b'3i 4f', self.size))
 
@@ -898,7 +1071,7 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dvprel1(self, data: bytes, n: int) -> int:
+    def read_dvprel1(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID          I Unique identification number
@@ -920,7 +1093,7 @@ class EDOM(GeomCommon):
         12 COEFi RS Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
@@ -970,7 +1143,7 @@ class EDOM(GeomCommon):
         op2.card_count['DVPREL1'] = ncards
         return n
 
-    def _read_dvcrel1(self, data: bytes, n: int) -> int:
+    def read_dvcrel1(self, data: bytes, n: int) -> int:
         """
         Record – DVCREL1(6100,61,429)
         Design variable to connectivity property relation.
@@ -987,7 +1160,7 @@ class EDOM(GeomCommon):
         12 COEFi    RS    Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1014,10 +1187,10 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvcrel2(self, data: bytes, n: int) -> int:
+    def read_dvcrel2(self, data: bytes, n: int) -> int:
         read_dvcrel2
 
-    def _read_dvmrel1(self, data: bytes, n: int) -> int:
+    def read_dvmrel1(self, data: bytes, n: int) -> int:
         """
         Design variable to material relation.
         Word Name Type Description
@@ -1033,7 +1206,7 @@ class EDOM(GeomCommon):
         12 COEFi       RS Coefficient of linear relation
         Words 11 and 12 repeat until -1 occurs
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1062,7 +1235,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvprel2(self, data: bytes, n: int) -> int:
+    def read_dvprel2(self, data: bytes, n: int) -> int:
         """
         Record – DVPREL2(3406,34,355)
         Design variable to property relation based on a user-supplied equation.
@@ -1095,7 +1268,7 @@ class EDOM(GeomCommon):
         data = (2, PROD, 101, 4, -1.0e+35, 1.0e+20, 2, '', 1000, 2, -1000,
                                                            2000, L1, -2000)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #return  self._read_dvxrel2(data, n, DVPREL2)
 
         n0 = n
@@ -1145,7 +1318,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dvmrel2(self, data: bytes, n: int) -> int:
+    def read_dvmrel2(self, data: bytes, n: int) -> int:
         """
         Record – DVMREL2(6400,64,432)
         Design variable to material relation based on a user-supplied equation.
@@ -1168,11 +1341,11 @@ class EDOM(GeomCommon):
         End flag when -1 occurs
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         cls = DVMREL2
         #return  self._read_dvxrel2(data, n, DVMREL2)
 
-    #def _read_dvxrel2(self, data: bytes, n: int, cls) -> int:
+    #def read_dvxrel2(self, data: bytes, n: int, cls) -> int:
         n0 = n
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
@@ -1205,7 +1378,8 @@ class EDOM(GeomCommon):
 
             #print(dvmrel_id, mat_type, (mid, fid), (mp_min, mp_max), deqation, mp_name, flag)
             iend, dvids, labels = _read_dvxrel2_flag(data, n0, i0, i1, size, ints)
-
+            if 'TOPOPEN' in labels:
+                asdf
             #labels = labels.
             #print(dvids, labels)
             card_name = cls.type
@@ -1236,7 +1410,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         return n
 
-    def _read_dresp1(self, data: bytes, n: int) -> int:
+    def read_dresp1(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 ID           I Unique entry identifier
@@ -1296,25 +1470,24 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 9 CFAILURE
           5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB   I Response attribute
-          10 ATTi I Element numbers (if Word 5 is ELEM) or composite property IDs
+          7 REGION       I Region identifier for constraint screening
+          8 ATTA         I Response attribute
+          9 ATTB         I Response attribute
+          10 ATTi        I Element numbers (if Word 5 is ELEM) or composite property IDs
           Word 10 repeats until -1 occurs
         FLAG = 10 CSTRESS
           5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB I Response attribute
-          10 ATTi I Element numbers (if Word 5 is ELEM) or composite property IDs
+          7 REGION       I Region identifier for constraint screening
+          8 ATTA         I Response attribute
+          9 ATTB         I Response attribute
+          10 ATTi        I Element numbers (if Word 5 is ELEM) or composite property IDs
           Word 10 repeats until -1 occurs
         FLAG = 11 CSTRAIN
-          5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry
-          name
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB   I Response attribute
-          10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
+          7 REGION       I Region identifier for constraint screening
+          8 ATTA         I Response attribute
+          9 ATTB         I Response attribute
+          10 ATTi        I Element numbers (if Word 5 is ELEM) or composite property IDs
           Word 10 repeats until -1 occurs
         FLAG = 12 FREQ
           5 UNDEF(2) None
@@ -1339,14 +1512,14 @@ class EDOM(GeomCommon):
         FLAG = 15 CEIG
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB I Response attribute
-          10 MONE I Entry is -1
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
         FLAG = 20 FRDISP
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1355,9 +1528,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 21 FRVELO
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1366,9 +1539,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 22 FRACCL
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1377,9 +1550,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 23 FRSPCF
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1388,9 +1561,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 24 FRSTRE
           5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
-          7 REGION I Region identifier for constraint screening
-          8 ATTA   I Response attribute
-          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1399,9 +1572,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 25 FRFORC
           5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          7 REGION       I Region identifier for constraint screening
+          8 ATTA         I Response attribute
+          9 ATTB        RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1411,42 +1584,30 @@ class EDOM(GeomCommon):
         FLAG = 26 RMSDISP
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB I Random ID
-          10 ATTi I Grid point IDs
+          8 ATTA   I Response attribute
+          9 ATTB   I Random ID
+          10 ATTi  I Grid point IDs
           Word 10 repeats until -1 occurs
         FLAG = 27 RMSVELO
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB I Random ID
-          10 ATTi I Grid point IDs
+          8 ATTA   I Response attribute
+          9 ATTB   I Random ID
+          10 ATTi  I Grid point IDs
           Word 10 repeats until -1 occurs
         FLAG = 28 RMSACCL
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB I Random ID
-          10 ATTi I Grid point IDs
+          8 ATTA   I Response attribute
+          9 ATTB   I Random ID
+          10 ATTi  I Grid point IDs
           Word 10 repeats until -1 occurs
         FLAG = 29 PSDDISP
           5 UNDEF None
-          6 PTYPE I Random ID
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Frequency value; -1 (integer) spawn for all
-          frequencies in set; -1.10000E+08 for SUM;
-          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-          -1.60000E+08 for MIN
-          10 ATTi I Grid point IDs
-          Word 10 repeats until -1 occurs
-        FLAG = 30 PSDVELO
-          5 UNDEF None
-          6 PTYPE I Random ID
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          6 PTYPE   I Random ID
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Frequency value; -1 (integer) spawn for all
           frequencies in set; -1.10000E+08 for SUM;
           -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
           -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1455,9 +1616,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 60 TDISP
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Time value; -1 (integer) spawn for all time steps
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Time value; -1 (integer) spawn for all time steps
           in set; -1.10000E+08 for SUM; -1.20000E+08 for
           AVG; -1.30000E+08 for SSQ; -1.40000E+08 for
           RSS; -1.50000E+08 for MAX; -1.60000E+08 for MIN
@@ -1465,9 +1626,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 61 TVELO
           5 UNDEF(2) None
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Time value; -1 (integer) spawn for all time steps
+          7 REGION  I Region identifier for constraint screening
+          8 ATTA    I Response attribute
+          9 ATTB   RS Time value; -1 (integer) spawn for all time steps
           in set; -1.10000E+08 for SUM; -1.20000E+08 for
           AVG; -1.30000E+08 for SSQ; -1.40000E+08 for
           RSS; -1.50000E+08 for MAX; -1.60000E+08 for MIN
@@ -1478,19 +1639,26 @@ class EDOM(GeomCommon):
         [31, 538981700, 538976288, 5, 538976288, 538976288, 0, 3, 0, 5, -1,
          32, 538981444, 538976288, 60, 538976288, 538976288, 0, 3, -1, 4, -1,
          33, 1195984215, 538989640, 1, 538976288, 538976288, 0, 33, -9999, -1]
+
+         data = (11, 'L1      ', 20, '        ', 0, 3, -1, 4, -1,             # flag=20 -> FRDISP
+                 13, 'L2      ', 20, '        ', 0, 2, -140000000.0, 4, -1,
+                 22, 'L3      ', 20, '        ', 0, 3, -1, 5, -1,
+                 23, 'L4      ', 20, '        ', 0, 2, -130000000.0, 5, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         is_nx = False
         is_msc = False
+        debug = False
         if op2.is_msc:
             is_msc = True
-            flag_to_resp = FLAG_TO_RESP_NX
+            flag_to_resp = DRESP_FLAG_TO_RESP_NX
         else:
             # NX
             is_nx = True
-            flag_to_resp = FLAG_TO_RESP_NX
+            flag_to_resp = DRESP_FLAG_TO_RESP_NX
 
-        #self.show_data(data[n:], types='qds')
+        #op2.show_data(data[n:], types='ifs')
+        #op2.show_data(data[n:], types='qds')
         datan = data[n:]
         #strings = np.frombuffer(datan, '|S4').copy()
         ints = np.frombuffer(datan, op2.idtype8).copy()
@@ -1528,13 +1696,33 @@ class EDOM(GeomCommon):
 
         #is_nx = True
         size = self.size
-        idresps_to_skip = set()
-        for (idresp, i0, i1) in zip(count(), istart, iend):
+
+        def _get_atti(idresp: int, i0: int, i1: int,
+                      n: int) -> tuple[int, int, int, int,
+                                       list[int]]:
+            atti = ints[i0+9:i1].tolist()
+            if len(atti) == 0:
+                idresp += 1
+                n += (i1 - i0 + 1) * size
+                i0 = istart[idresp]
+                i1 = iend[idresp]
+                atti = ints[i0:i1].tolist()
+                #print('ints', ints[i0:i1])
+                #print('floats', floats[i0:i1])
+            return n, idresp, i0, i1, atti
+
+        idresp = 0
+        ndresps = len(istart)
+
+        idresp_old = -1
+        while idresp < ndresps:
+            assert idresp != idresp_old
+            idresp_old = idresp
+
+            i0 = istart[idresp]
+            i1 = iend[idresp]
+            #i00 = i0
             assert ints[i1] == -1, ints[i1]
-            if idresp in idresps_to_skip:
-                #print(f'skipping idresp={idresp}')
-                n += (i1 - i0 + 1) * self.size
-                continue
             #print(i0, i1)
             #print('ints: ', ints[i0:i1])
             dresp_id = ints[i0]
@@ -1543,21 +1731,23 @@ class EDOM(GeomCommon):
             flag = ints[i0+3]
             #d0 = i0 * size
             d1 = i1 * size + size
-            op2.show_data(data[n:n+d1], types='ifs')
+            #op2.show_data(data[n:n+d1], types='ifs')
             try:
                 response_type = flag_to_resp[flag]
             except KeyError:
                 op2.show_data(data[n:], types='ifs')
                 raise RuntimeError(f'dresp_id={dresp_id} label={label!r}')
-            print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
-            if flag == 1:
+            if debug:  # pragma: no cover
+                print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
+
+            if response_type == 'WEIGHT': # flag == 1:
                 # WEIGHT
                 # 5 UNDEF(2) None
                 # 7 REGION I Region identifier for constraint screening
                 # 8 ATTA   I Response attribute
                 #   -10 for DWEIGHT which is the topology optimization design weight
                 # 9 ATTB   I Response attribute
-                # 10 MONE  I Entry is -1
+                # 10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 #
                 #
                 #ints    = (13, 'WGT     ', 1, '        ', 0,   -10, -9999, -1)
@@ -1576,24 +1766,26 @@ class EDOM(GeomCommon):
                 atta = None
                 attb = None
                 atti = None
-            elif flag == 2:
+            elif response_type == 'VOLUME':  # flag == 2:
                 # FLAG = 2 VOLUME
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
                 #   8 ATTA   I Response attribute
                 #   9 ATTB   I Response attribute
-                #   10 MONE  I Entry is -1
+                #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
+                assert atta == 0, msg
+                assert attb == -9999, msg
                 atti = None
                 attb = None
-            elif flag == 3:
+            elif response_type == 'LAMA': # flag == 3:
                 # FLAG = 3 LAMA
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
                 #   8 ATTA   I Response attribute
                 #   9 ATTB   I Response attribute
-                #   10 MONE  I Entry is -1
+                #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 #print(response_type, ints[i0+6:i1], floats[i0+6:i1])
                 region, atta, attb = ints[i0+6:i0+9]
                 property_type = None
@@ -1602,13 +1794,13 @@ class EDOM(GeomCommon):
                 assert attb == 0, attb
                 atti = None
 
-            elif flag == 4:
+            elif response_type == 'EIGN': # flag == 4:
                 # FLAG = 4 EIGN
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
                 #   8 ATTA   I Response attribute
                 #   9 ATTB   I Response attribute
-                #   10 MONE  I Entry is -1
+                #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 region, atta, attb = ints[i0+6:i0+9]
                 property_type = None
                 #response_type = 'EIGN'
@@ -1617,12 +1809,12 @@ class EDOM(GeomCommon):
                 atti = None
                 #atta = None
                 #attb = None
-            elif flag == 5:
+            elif response_type == 'DISP': # flag == 5:
                 # DISP
                 # 5 UNDEF(2) None
                 # 7 REGION I Region identifier for constraint screening
                 # 8 ATTA   I Response attribute
-                # 9 ATTB   I Response attribute
+                # 9 ATTB   I Response attribute -> 0
                 # 10 ATTi  I Grid point IDs
                 # Word 10 repeats until -1 occurs
                 property_type = None
@@ -1630,14 +1822,18 @@ class EDOM(GeomCommon):
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = ints[i0+9:i1].tolist()
 
-            elif flag in [6, 7, 9, 11]:
+            elif response_type in {'STRESS', 'STRAIN', 'FORCE', 'CFAILURE', 'CSTRESS', 'CSTRAIN'}: # flag in [6, 7, 8,9, 10, 11]:
                 # FLAG = 6 STRESS
-                #FLAG = 9 CFAILURE
+                # FLAG = 7 STRAIN
+                # FLAG = 9 CFAILURE
+                # FLAG = 10 CSTRESS
+                # FLAG = 11 CSTRAIN
+                #
                 #  5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
-                #  7 REGION I Region identifier for constraint screening
-                #  8 ATTA   I Response attribute
-                #  9 ATTB   I Response attribute
-                #  10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+                #  7 REGION       I Region identifier for constraint screening
+                #  8 ATTA         I Response attribute
+                #  9 ATTB         I Response attribute
+                #  10 ATTi        I Element numbers (if Word 5 is ELEM) or property IDs
                 #  Word 10 repeats until -1 occurs
                 property_type_bytes = data[n+4*size:n+6*size]
                 property_type = reshape_bytes_block_size(property_type_bytes, size=size)
@@ -1658,41 +1854,46 @@ class EDOM(GeomCommon):
             #elif flag == 11:
                 # FLAG = 11 CSTRAIN
                 #   5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
-                #   7 REGION I Region identifier for constraint screening
-                #   8 ATTA   I Response attribute
-                #   9 ATTB   I Response attribute
-                #   10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
+                #   7 REGION       I Region identifier for constraint screening
+                #   8 ATTA         I Response attribute
+                #   9 ATTB         I Response attribute
+                #   10 ATTi        I Element numbers (if Word 5 is ELEM) or composite property IDs
                 #   Word 10 repeats until -1 occurs
 
-            elif flag == 12: # FREQ; no is_nx
+            elif response_type == 'FREQ':  # flag == 12: # FREQ; no is_nx
                 # FLAG = 12 FREQ
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
                 #   8 ATTA   I Response attribute
                 #   9 ATTB   I Response attribute
-                #   10 MONE  I Entry is -1
+                #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
+                assert attb == 0, attb
                 atti = None
-            elif flag == 15 and is_nx: # CEIG
+            elif response_type == 'CEIG' and is_nx: # flag == 15: # CEIG
                 # FLAG = 15 CEIG
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
-                #   8 ATTA I Response attribute
-                #   9 ATTB I Response attribute
-                #   10 MONE I Entry is -1
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 MONE  I Entry is -1 (MONE=MINUS ONE)
                 #print(ints[i0+6:i1])
                 #print(floats[i0+6:i1])
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
+                if attb == 1:
+                    attb = 'ALPHA'
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'is_nx; CEIG attb={attb}')
                 atti = None
-            elif flag == 17 and is_nx: # Compliance
+            elif response_type == 'CMPLNCE' and is_nx: # Compliance; flag == 17
                 ## TODO: is this right?
                 # FLAG = 17 Compliance
                 #   5 UNDEF(2) None
                 #   7 UNDEF I Reserved for SEID for compliance DRESP1
                 #   8 UNDEF(2) None
-                #   10 MONE I Entry is -1
+                #   10 MONE I Entry is -1 (MONE=MINUS ONE)
                 #
                 # DRESP1, 12, CMPL1, CMPLNCE
                 property_type = None
@@ -1703,7 +1904,7 @@ class EDOM(GeomCommon):
                 atti = None
                 #print(17, region, atta, attb)
 
-            elif flag == 19 and is_nx: # ERP
+            elif response_type == 'ERP' and is_nx:  # flag == 19: # ERP
                 # FLAG = 19 ERP
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier
@@ -1711,34 +1912,24 @@ class EDOM(GeomCommon):
                 #   9 ATTB   I Frequency or real code for character input, or -1=spawn)
                 #   10 ATTi  I Panel SET3 IDs
                 #   Word 10 repeats until -1 occurs
+                #DRESP1       991  PCOMPG     ERP   PANEL                    10.0      11
+                #region = 0
+                #atta = 3
+                #atti = [11]
+                #DRESP1       992   PCOMP     ERP   PANEL                    10.0      22
+
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
-                atti = ints[i0+9:i1].tolist()
+                del attb  # not an integer...
+                attb = floats[i0+8]
+                if np.isnan(attb):
+                    attb = None
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
+                #print(f'ERP: dresp_id={dresp_id} atta={atta} attb={attb} atti={atti}')
 
-            elif flag == 20 and is_nx: # FRDISP
+            elif response_type in {'FRDISP', 'FRACCL'} and is_nx:  # flag == 20: # FRDISP
                 property_type = None
                 # FLAG = 20 FRDISP
-                #   5 UNDEF(2) None
-                #   7 REGION I Region identifier for constraint screening
-                #   8 ATTA   I Response attribute
-                #   9 ATTB  RS Frequency value; -1 (integer) spawn for all
-                #   frequencies in set; -1.10000E+08 for SUM;
-                #   -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-                #   -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-                #   -1.60000E+08 for MIN
-                #   10 ATTi I Grid point IDs
-                #   Word 10 repeats until -1 occurs
-                #print(ints[i0+5:i1])
-                #print(floats[i0+5:i1])
-                #print(ints[i0+6:i1])
-                #print(floats[i0+6:i1])
-                region, atta, attbi = ints[i0+6:i0+9]
-                attbf = floats[i0+8]
-                atti = ints[i0+9:i1].tolist()
-
-                attb = _pick_attbi_attbf(attbi, attbf)
-                #print(region, atta, attb, atti)
-            elif flag == 22 and is_nx: # FRACCL
                 # FLAG = 22 FRACCL
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
@@ -1750,13 +1941,18 @@ class EDOM(GeomCommon):
                 #   -1.60000E+08 for MIN
                 #   10 ATTi I Grid point IDs
                 #   Word 10 repeats until -1 occurs
-                property_type = None
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
 
-            elif flag in [24, 25] and is_nx: # FRSTRE, FRFORC
+                #data = (11, 'L1      ', 20, '        ', 0, 3, -1, 4, -1,             # flag=20 -> FRDISP
+                        #13, 'L2      ', 20, '        ', 0, 2, -140000000.0, 4, -1,
+                        #22, 'L3      ', 20, '        ', 0, 3, -1, 5, -1,
+                        #23, 'L4      ', 20, '        ', 0, 2, -130000000.0, 5, -1)
+                #print(region, atta, attb, atti)
+
+            elif response_type in {'FRSTRE', 'FRFORC'} and is_nx:  # flag in [24, 25]: # FRSTRE, FRFORC
                 # FLAG = 24 FRSTRE
                 #   5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
                 #   7 REGION I Region identifier for constraint screening
@@ -1769,35 +1965,23 @@ class EDOM(GeomCommon):
                 #   10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
                 #   Word 10 repeats until -1 occurs
                 #
-                # FRDISP
-                #  5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
-                #  7 REGION I Region identifier for constraint screening
-                #  8 ATTA   I Response attribute
-                #  9 ATTB  RS Frequency value; -1 (integer) spawn for all
-                #  frequencies in set; -1.10000E+08 for SUM;
-                #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-                #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-                #  -1.60000E+08 for MIN
-                #  10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
-                #  Word 10 repeats until -1 occurs
-                #
                 property_type_bytes = data[n+4*size:n+6*size]
                 property_type = reshape_bytes_block_size(property_type_bytes, size=size)
 
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
-                print(property_type, region, atta, attb, atti)
-            elif flag in {20} and is_msc: # PSDDISP
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
+                #print(property_type, region, atta, attb, atti)
+            elif flag in {} and is_msc: # flga=20; PSDDISP; response_type == 'PSDDISP'
                 # DRESP1       ID   LABEL   RTYPE   PTYPE  REGION    ATTA    ATTB    ATT1
                 # DRESP1        11      L1 PSDDISP      91               3   60.00       3
-                #5 NTUSED CHAR4
-                #6 RPSID I RANDPS ID
-                #7 REGION I
-                #8 ATTA I
-                #9 ATTB RS
-                #10 ATTI I
+                #5 NTUSED  CHAR4
+                #6 RPSID   I RANDPS ID
+                #7 REGION  I
+                #8 ATTA    I
+                #9 ATTB   RS
+                #10 ATTI   I
                 #Word 10 repeats until End of Record
                 property_type_bytes = data[n+4*size:n+6*size]
                 property_type = reshape_bytes_block_size(property_type_bytes, size=size)
@@ -1811,7 +1995,7 @@ class EDOM(GeomCommon):
                 print(f'property_type={property_type!r} randps_id={randps_id} '
                       f'region={region} atta={atta} attb={attb} atti={atti}')
                 raise RuntimeError('not done...')
-            elif flag in {29} and is_msc: # PSDDISP
+            elif flag in {} and is_msc: # flag=29; PSDDISP
                 # DRESP1       ID   LABEL   RTYPE   PTYPE  REGION    ATTA    ATTB    ATT1
                 # DRESP1        11      L1 PSDDISP      91               3   60.00       3
                 property_type, region, atta, attbi = ints[i0+5:i0+9]
@@ -1821,34 +2005,16 @@ class EDOM(GeomCommon):
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
                 print(property_type, region, atta, attb, atti)
-
                 asdf
-            elif flag in {29} and is_nx: # PSDDISP
+            elif response_type in {'PSDDISP', 'PSDVELO', 'PSDACCL'} and is_nx: # flag in {29, 30, 31}
                 #FLAG = 29 PSDDISP
-                #  5 UNDEF None
-                #  6 PTYPE  I Random ID
-                #  7 REGION I Region identifier for constraint screening
-                #  8 ATTA   I Response attribute
-                #  9 ATTB  RS Frequency value; -1 (integer) spawn for all
-                #  frequencies in set; -1.10000E+08 for SUM;
-                #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-                #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-                #  -1.60000E+08 for MIN
-                #  10 ATTi I Grid point IDs
-                #  Word 10 repeats until -1 occurs
-                property_type, region, atta, attbi = ints[i0+5:i0+9]
-                #print(ints[i0+4:i1+5])
-                #print(floats[i0+4:i1+5])
-                attbf = floats[i0+8]
-                attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
-            elif flag == 31 and is_nx:
+                #FLAG = 30 PSDVELO
                 #FLAG = 31 PSDACCL
-                #  5 UNDEF None
-                #  6 PTYPE I Random ID
-                #  7 REGION I Region identifier for constraint screening
-                #  8 ATTA I Response attribute
-                #  9 ATTB RS Frequency value; -1 (integer) spawn for all
+                #  5 UNDEF     None
+                #  6 PTYPE   I Random ID
+                #  7 REGION  I Region identifier for constraint screening
+                #  8 ATTA    I Response attribute
+                #  9 ATTB   RS Frequency value; -1 (integer) spawn for all
                 #  frequencies in set; -1.10000E+08 for SUM;
                 #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
                 #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
@@ -1860,10 +2026,9 @@ class EDOM(GeomCommon):
                 #print(floats[i0+4:i1+5])
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
-                atti = ints[i0+9:i1].tolist()
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
 
-
-            elif flag == 60 and is_nx:
+            elif response_type == 'TDISP' and is_nx:  # flag == 60
                 #FLAG = 60 TDISP
                 #  5 UNDEF(2) None
                 #  7 REGION I Region identifier for constraint screening
@@ -1890,22 +2055,35 @@ class EDOM(GeomCommon):
 
                 #print('ints =', ints[i0+6:i1].tolist())
                 #print('floats =', floats[i0+6:i1].tolist())
+                n, idresp, i0, i1, atti = _get_atti(idresp, i0, i1, n)
+            elif response_type == 'FLUTTER' and is_nx: #  flag == 84
+                # RTYPE=84 Aeroelastic flutter damping
+                # 5 METHOD CHAR4 Analysis type: PK or PKNL
+                # 6 UNDEF        None
+                # 7 REGION     I Region identifier for constraint screening
+                # 8 ATTA       I Response attribute
+                # 9 ATTB       I Response attribute
+                # 10 ATTi      I ATT1 is the identification number of a SET1 entry that specifies a set of modes
+                #                ATT2 is the identification number of an FLFACT entry that specifies a list of densities;
+                #                ATT3 is the identification number of an FLFACT entry that specifies a list of Mach numbers
+                #                ATT4 is the identification number of an FLFACT entry that specifies a list of velocities
+                method_bytes = data[n+4*size:n+6*size]
+                method = reshape_bytes_block_size(method_bytes, size=size)
+                property_type = method.rstrip()
 
-                #print('---')
-                # the grids are on the next idresp, so we'll just skip it on the next round
-                i0b = istart[idresp+1]
-                i1b = iend[idresp+1]
-                atti = grids = ints[i0b:i1b].tolist()
-                #print('grids=', grids)
-                del grids
-                idresps_to_skip.add(idresp+1)
-            elif flag == 84 and is_nx:
+                region, atta, attb = ints[i0+6:i0+9]
+                #print(method, region, atta, attb)
+                assert atta == 0, atta
+                assert attb == 0, attb
+                atti = ints[i0+9:i1].tolist()
+                assert len(atti), atta
+
                 # nx flutter
-                print('ints =', ints)
-                print('floats =', floats)
-                continue
-            else:
-                raise NotImplementedError((flag, is_nx))
+                #print('ints =', ints)
+                #print('floats =', floats)
+                #continue
+            else:  # pragma: no cover
+                raise NotImplementedError(f'dresp_id={dresp_id} label={label!r} response_type={response_type!r}; flag={flag} is_nx={is_nx}')
 
             #print(response_type)
             if property_type == '':
@@ -1917,16 +2095,18 @@ class EDOM(GeomCommon):
             if atta is not None:
                 atta = int(atta)
 
-            #print(dresp_id, label,
-                  #response_type, property_type, region,
-                  #atta, attb, atti)
+            if debug:  # pragma: no cover
+                print(dresp_id, label,
+                      response_type, property_type, region,
+                      atta, attb, atti)
             dresp1 = op2.add_dresp1(dresp_id, label,
                                     response_type, property_type, region,
                                     atta, attb, atti, validate=True)
-            print(dresp1)
+            str(dresp1)
             dresp1.write_card_16()
             n += (i1 - i0 + 1) * self.size
             del dresp_id, label, response_type, property_type, region, atta, attb, atti
+            idresp += 1
 
         #for i in range(10):
             #edata = data[n:n+ntotal1]
@@ -1938,7 +2118,7 @@ class EDOM(GeomCommon):
         #ddd
         return n
 
-    def _read_dvset(self, data: bytes, n: int) -> int:
+    def read_dvset(self, data: bytes, n: int) -> int:
         """
         DVSET   13013   PSHELL  4       .02     1.0     13013
         DVSET   13016   PSHELL  4       .02     1.0     13016
@@ -2002,7 +2182,7 @@ class EDOM(GeomCommon):
         999, 5402, 54, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
         999, 902, 9, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         #self.show_data(data[12:50], types='ifs')
         #n0 = n
         size = self.size
@@ -2069,7 +2249,7 @@ class EDOM(GeomCommon):
         #op2.log.info(f'geom skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return n
 
-    def _read_dvar(self, data: bytes, n: int) -> int:
+    def read_dvar(self, data: bytes, n: int) -> int:
         """
         DVAR    13013   SPARPNL .01     13013
 
@@ -2077,7 +2257,7 @@ class EDOM(GeomCommon):
           11013, 'SPARPNL ', 0.01, 11013, -1)
 
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 24
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2101,12 +2281,12 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dscons(self, data: bytes, n: int) -> int:
+    def read_dscons(self, data: bytes, n: int) -> int:
         """DSCONS
 
         DSCONS  110131  SPRCAPS STRESS  11013   2       25000.  MAX
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ndatai = len(data) - n
         # !12
         ntotal = 32
@@ -2154,7 +2334,7 @@ class EDOM(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dlink(self, data: bytes, n: int) -> int:
+    def read_dlink(self, data: bytes, n: int) -> int:
         """
         DLINK(3206,32,353)
 
@@ -2170,7 +2350,7 @@ class EDOM(GeomCommon):
         ints    = (1, 2, 0,   1.0, 1, 1.0, -1)
         floats  = (1, 2, 0.0, 1.0, 1, 1.0, nan)
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -2193,7 +2373,7 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * self.size
         return n
 
-    def _read_desvar(self, data: bytes, n: int) -> int:
+    def read_desvar(self, data: bytes, n: int) -> int:
         """
         (3106, 31, 352)
         Word Name  Type  Description
@@ -2207,7 +2387,7 @@ class EDOM(GeomCommon):
         8 DDVAL    I     ID of a DDVAL entry that provides a set of allowable
                          discrete values
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         if self.size == 4:
             ntotal = 32  # 8*4
             structi = Struct(op2._endian + b'i8s ffff i')
@@ -2242,7 +2422,7 @@ class EDOM(GeomCommon):
 def _read_dvxrel2_flag(data: bytes, n0: int,
                        i0: int, i1: int,
                        size: int,
-                       ints: np.ndarray) -> tuple[list[int], list[str]]:
+                       ints: np.ndarray) -> tuple[int, list[int], list[str]]:
     """reads the DVxREL2 flag table"""
     flag = ints[i0+10]
     #print(ints[i0+11:])
@@ -2286,7 +2466,7 @@ def _read_dvxrel2_flag(data: bytes, n0: int,
                 assert 1 <= len(str(label)) <= 8, f'label={label}; labels_bytesi={labels_bytesi} labels_bytes={labels_bytes2}'
                 labels.append(label)
             #print(labels)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(flag)
         iflag = iend + 1
         flag = ints[iflag]

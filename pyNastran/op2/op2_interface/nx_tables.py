@@ -1,7 +1,7 @@
 from collections import Counter
 import numpy as np
 
-NX_VERSIONS = [
+NX_VERSIONS: list[str] = [
     '7.0', '7.1',
     '8.0', '8.1', '8.2', '8.3', '8.4', '8.5',
     '9.0', '9.1',
@@ -14,11 +14,11 @@ NX_VERSIONS = [
     '2022.0', '2022.1', '2022.2',
     #'2023.0', '2023.1', '2023.2',  #  not checked
     #'2024.0', '2024.1', '2024.2',  #  not checked
-    '2206', '2212',
+    '2206', '2206.5', '2212',
     '2306', '2312',
 ]
 
-NX_ELEMENTS = {
+NX_ELEMENTS: dict[int, str] = {
     0 : 'GRID',
     1 : 'CROD',
     2 : 'CBEAM',
@@ -399,7 +399,7 @@ NX_ELEMENTS = {
     406 : 'CVISC - Basic System',
 }
 
-NX_GEOM_TABLES = [
+NX_GEOM_TABLES: list[bytes] = [
     b'CASECC',
     b'PVT', b'PVT0', b'PVTS',
     #b'GPLS',
@@ -419,9 +419,9 @@ NX_GEOM_TABLES = [
 
     # ???
     b'GEOM1ATV', b'GEOM2ATV', b'EPTATV', b'PTMIC', b'ATVMAP',
-]  # type: list[bytes]
+]
 
-NX_MATRIX_TABLES = [
+NX_MATRIX_TABLES: list[bytes] = [
     b'ATV',
     b'XSOP2DIR',
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
@@ -464,9 +464,9 @@ NX_MATRIX_TABLES = [
     b'DSCM2',
     b'MEF1', b'MUG1B',
     b'MATK', b'MATM', b'MATV',
-]  # type: list[bytes]
+]
 
-NX_EXTRA_TABLES = [
+NX_EXTRA_TABLES: list[bytes] = [
     # geometry, but buggy in the geometry block...
     b'ICASE',
 
@@ -515,10 +515,11 @@ NX_EXTRA_TABLES = [
     b'OPMPF2M',
     b'OLMPF2M',
     b'OEKE1',
-]  # type: list[bytes]
+]
 
-NX_RESULT_TABLES = [
+NX_RESULT_TABLES: list[bytes] = [
     # ???
+    b'XSOP',
     b'OSTR1THC',
     b'OSTR1PLC',
     b'OSTR1CRC',
@@ -704,8 +705,12 @@ NX_RESULT_TABLES = [
     b'OEDE1', # Elemental energy loss.
 
     # grid point pressure
+    b'OPRATO1',
+    b'OPRCRM1',
     b'OPRNO1',   # SORT1 - NO
+    b'OPRPSD1',  # SORT1 - PSD
     b'OPRRMS1',  # SORT1 - RMS
+
     b'OPRPSD2',  # SORT2 - PSD
     b'OPRATO2',  # SORT2 - AUTO
     b'OPRCRM2',  # SORT2 - CRMS
@@ -764,6 +769,7 @@ NX_RESULT_TABLES = [
     b'OACPWRI2', # Acoustic incident power - SORT2
     b'OACPWRT2', # Transmitted acoustic power for AML regions and GROUPs of 2D elements - SORT2
     b'OACTRLS2', # Acoustic transmission loss - SORT2
+
 
     # random acoustic
     b'OAPPSD2', # Acoustic power for the PSD function - SORT2

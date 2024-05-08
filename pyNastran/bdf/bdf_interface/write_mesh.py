@@ -509,9 +509,6 @@ class WriteMesh(BDFAttributes):
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        if self.acmodl:
-            bdf_file.write(self.acmodl.write_card(size, is_double))
-
 
     def _write_constraints(self, bdf_file: Any, size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:
@@ -648,7 +645,8 @@ class WriteMesh(BDFAttributes):
         is_dynamic = (self.dareas or self.dphases or self.nlparms or self.frequencies or
                       self.methods or self.cMethods or self.tsteps or self.tstepnls or
                       self.transfer_functions or self.delays or self.rotors or self.tics or
-                      self.nlpcis)
+                      self.nlpcis or self.acmodl is not None)
+
         if is_dynamic:
             bdf_file.write('$DYNAMIC\n')
             for (unused_id, method) in sorted(self.methods.items()):
@@ -680,6 +678,14 @@ class WriteMesh(BDFAttributes):
             for (unused_id, tfs) in sorted(self.transfer_functions.items()):
                 for transfer_function in tfs:
                     bdf_file.write(transfer_function.write_card(size, is_double))
+            if self.acmodl:
+                bdf_file.write(self.acmodl.write_card(size, is_double))
+            for key, acplnw in self.acplnw.items():
+                bdf_file.write(acplnw.write_card(size, is_double))
+            for key, amlreg in self.amlreg.items():
+                bdf_file.write(amlreg.write_card(size, is_double))
+            for key, micpnt in self.micpnt.items():
+                bdf_file.write(micpnt.write_card(size, is_double))
 
     def _write_mesh_long_ids_size(self, size: bool, is_long_ids: bool) -> tuple[int, bool]:
         """helper method"""

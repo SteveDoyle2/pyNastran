@@ -410,6 +410,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
     b'OESNL1X', b'OESRT',
+    b'OES1A',
     #----------------------
     # strain
     b'OSTR1', b'OSTR1X', b'OSTR1C',

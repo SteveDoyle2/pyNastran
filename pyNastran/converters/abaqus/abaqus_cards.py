@@ -149,7 +149,7 @@ class ShellSection:
     """
     def __init__(self, log: SimpleLogger,
                  material_name: str, elset: str,
-                 thickness: float,
+                 thickness: list[float],
                  orientation: int=-1,
                  offset: float=0.0):
         #self.data_lines = data_lines
@@ -180,15 +180,15 @@ class ShellSection:
                 #name of the orientation to be used for this layer (optional)
                 sline = line.split(',')
                 if len(sline) == 3:
-                    thicknessi, junk, material_namei = sline
+                    thickness_stri, junk, material_namei = sline
                     orientation_namei = None
                 else:
-                    thicknessi, junk, material_namei, orientation_namei = sline
+                    thickness_stri, junk, material_namei, orientation_namei = sline
                     ## TODO: how does orientation work (from the flags)
                     ##       with the orientation name in this table?
                     raise RuntimeError(sline)
                 material_namei = material_namei.strip().lower()
-                thicknessi = float(thicknessi)
+                thicknessi = float(thickness_stri)
                 thickness.append(thicknessi)
                 material_name.append(material_namei)
                 orientation_name.append(orientation_namei)
@@ -199,17 +199,18 @@ class ShellSection:
 
             #if len(data_lines) == 0:
                 #pass
-            thickness = 0.
+            thicknessi = 0.0
             if len(data_lines) == 1:
                 assert len(data_lines) == 1, data_lines
                 line0 = data_lines[0].split()
                 assert len(line0) == 1, data_lines
-                thickness = float(line0[0])
-            else:
+                thicknessi = float(line0[0])
+            else:  # pragma: no cover
                 raise RuntimeError(data_lines)
+            thickness = [thicknessi]
 
         for line in data_lines:
-            log.debug('shell - %r' % line)
+            log.debug(f'shell - {line!r}')
         return ShellSection(log,
                             material_name, elset, thickness,
                             orientation=orientation,

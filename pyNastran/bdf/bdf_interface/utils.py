@@ -111,6 +111,45 @@ def _monpnt_line2_to_fields(line2: str) -> list[str]:
         ]
     return fields
 
+def _to_fields_micpnt(card_lines: list[str]) -> list[str]:
+    """splits a MICPNT"""
+    line1 = card_lines[0]
+    fields = _expand_2_values_name(line1)
+    return fields
+
+def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
+    """splits an AMLREG"""
+    line1 = card_lines[0]
+    line2 = card_lines[1]
+    fields = _expand_2_values_name(line1)
+    fields += _monpnt_line2_to_fields(line2)
+    return fields
+
+def _expand_2_values_name(line1: str) -> list[str]:
+    """helper for AMLREG, MICPNT"""
+    line1 = line1.rstrip()
+    if '\t' in line1:
+        line1 = line1.expandtabs()
+        assert ',' not in line1[:16], line1
+    while ',' in line1[:24]:
+        line1 = line1.replace(',', '\t', 1)
+        line1 = line1.expandtabs()
+    label = line1[24:72]
+    unused_comment = line1[24:]  # len=56 max
+    #assert ',' not in label, f'base={label!r}'
+    #assert '\t' not in label, f'base={label!r}'
+
+    fields = [
+        line1[0:8],
+        line1[8:16], line1[16:24],
+
+        label,
+        #line1[24:32], line1[32:40], line1[40:48],
+        #line1[48:56], line1[56:64], line1[64:72],
+    ]
+
+    return fields
+
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
@@ -140,12 +179,16 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
        ['GRID', '1', '', '1.0', '2.0', '3.0']
 
     """
-    fields = []  # type: list[str]
+    fields: list[str] = []
 
     if card_name in ['MONPNT1', 'MONDSP1']:
         return _to_fields_mntpnt1(card_lines)
     elif card_name in ['MONPNT3', 'MONSUMT']:
         return _to_fields_mntpnt3(card_lines)
+    elif card_name == 'AMLREG':
+        return _to_fields_amlreg(card_lines)
+    elif card_name == 'MICPNT':
+        return _to_fields_micpnt(card_lines)
 
     # first line
     line = card_lines[0].rstrip()

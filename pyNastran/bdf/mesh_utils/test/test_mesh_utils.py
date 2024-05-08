@@ -329,6 +329,40 @@ class TestMeshUtils(unittest.TestCase):
         with self.assertRaises(SystemExit):
             cmd_line(argv=['bdf', 'export_mcids'])
 
+    def test_export_caero_mesh_caero5_wtfact(self):
+        """tests multiple ``bdf`` tools"""
+        path = MODEL_PATH / 'aero'
+        bdf_filename = str(path / 'ha145z.bdf')
+        #bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
+        #is_subpanel_model : bool; default=True
+        #    True : write the subpanels as CQUAD4s
+        #    False : write the macro elements as CQUAD4s
+        #pid_method : str; default='aesurf'
+        #    'aesurf' : write the referenced AESURF as the property ID
+        #               main structure will be pid=1
+        #    'caero' : write the CAERO1 as the property id
+        #    'paero' : write the PAERO1 as the property id
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf', '--pid', 'aesurf', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf', '--pid', 'aesurf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.caero.bdf', '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf', '--pid', 'paero']
+        cmd_line(argv=argv, quiet=True)
+
+    def test_export_caero_mesh_w2gj(self):
+        path = MODEL_PATH / 'aero'
+        bdf_filename = str(path / 'cpmopt.bdf')
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')

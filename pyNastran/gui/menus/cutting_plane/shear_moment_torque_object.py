@@ -436,11 +436,12 @@ class ShearMomentTorqueObject(BaseGui):
         ]
         data = np.column_stack([xyz_stations, origins, force_sum, moment_sum])
 
-        # automatically detroy when the window is closed by referencing
-        # an object in the window
-        parent = self._smt_window.p1_label
-        dlg = ResultsDialog(parent, data, labels,
-                            title='Shear, Moment, Torque Results')
+        if self._smt_window is not None:
+            # automatically detroy when the window is closed by referencing
+            # an object in the window
+            parent = self._smt_window.p1_label
+            dlg = ResultsDialog(parent, data, labels,
+                                title='Shear, Moment, Torque Results')
 
         if csv_filename:
             root_filename = os.path.splitext(csv_filename)[0]

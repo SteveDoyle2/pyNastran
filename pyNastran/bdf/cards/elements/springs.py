@@ -145,6 +145,8 @@ class CELAS1(SpringElement):
         nids = [data[2], data[3]]
         c1 = data[4]
         c2 = data[5]
+        assert 0 <= c1 < 7
+        assert 0 <= c2 < 7
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     def validate(self):
@@ -356,6 +358,8 @@ class CELAS2(SpringElement):
         c2 = data[5]
         ge = data[6]
         s = data[7]
+        assert 0 <= c1 < 7
+        assert 0 <= c2 < 7
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     def validate(self):

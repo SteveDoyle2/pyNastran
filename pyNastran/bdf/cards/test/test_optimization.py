@@ -243,6 +243,7 @@ class TestOpt(unittest.TestCase):
 
     def test_dresp1s(self):
         model = BDF(debug=False)
+        model.set_as_nx()
 
         pid = 1
         mid = 1
@@ -256,7 +257,7 @@ class TestOpt(unittest.TestCase):
         dresp_id = 1
         label = 'COMPLIA'
         #DRESP1, 12, CMPL1, CMPLNCE
-        response_type = 'Compliance'
+        response_type = 'CMPLNCE' # 'Compliance'
         property_type = None
         region = None
         atta = None
@@ -279,7 +280,13 @@ class TestOpt(unittest.TestCase):
         label = 'FLUTTER'
         response_type = 'FLUTTER'
         atti = [1, 2, 3, 4]
+        property_type = 'PKNL'
         model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        model.add_set1(1, [10]) # nodes
+        model.add_flfact(2, [0.1]) # rho
+        model.add_flfact(3, [0.9]) # mach
+        model.add_flfact(4, [1100.]) # vel
+        property_type = None
         #----------------------------------------------
         # reset
         atti = []
@@ -303,7 +310,6 @@ class TestOpt(unittest.TestCase):
         label = 'EIGN'
         response_type = 'EIGN'
         model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-
         #----------------------------------------------
         # atti only
         dresp_id += 1
@@ -420,20 +426,28 @@ class TestOpt(unittest.TestCase):
         dvprel2 = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=p_max,
                                     validate=True, comment='dvprel2')
+
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']
         model.add_deqatn(equation_id, eqs, comment='deqatn')
 
         deqation2 = 101
-        dvprel2b_id = dvprel1_id + 2
         labels = ['CAT']
-        dvprel2b = model.add_dvprel2(dvprel2b_id, prop_type, pid, pname_fid, deqation2,
+        dvprel2b = model.add_dvprel2(dvprel2_id+1, prop_type, pid, pname_fid, deqation2,
                                      dvids, labels, p_min=None, p_max=p_max,
                                      validate=True, comment='dvprel2')
+
+        dvids = []
+        labels = ['TVAL']
+        dvprel2 = model.add_dvprel2(dvprel2_id+2, prop_type, pid, pname_fid, deqation,
+                                    dvids, labels, p_min=None, p_max=p_max,
+                                    validate=True, comment='dvprel2')
+
         equation_id = 101
         eqs = ['fstress(x,y) = x * y + 10.']
         model.add_deqatn(equation_id, eqs, comment='deqatn')
-        default_values = {'CAT': 42.0}
+        default_values = {'CAT': 42.0,
+                          'TVAL': 0.3,}
         model.add_dtable(default_values, comment='dtable')
 
 
@@ -452,10 +466,8 @@ class TestOpt(unittest.TestCase):
         dresp1 = model.add_dresp1(dresp1_id, label, response_type,
                                   property_type, region,
                                   atta, attb, atti, validate=True, comment='dresp1')
-        assert dresp1.rtype == dresp1.response_type
-        assert dresp1.ptype == dresp1.property_type
-        dresp1.rtype = response_type
-        dresp1.ptype = property_type
+        dresp1.response_type = response_type
+        dresp1.property_type = property_type
 
         dconstr = model.add_dconstr(dresp1_id, dresp1_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20, comment='dconstr')
@@ -647,6 +659,13 @@ class TestOpt(unittest.TestCase):
                                       dvids, labels, mp_min=None, mp_max=1e20,
                                       validate=True,
                                       comment='dvmrel')
+        dvids = []
+        labels = ['NUVAL']
+        mp_name = 'NU'
+        model.add_dvmrel2(oid+1, mat_type, mid1, mp_name, deqation, dvids,
+                          labels, mp_min=None, mp_max=1e20, validate=True, comment='')
+        model.add_dtable({'NUVAL': 0.3,})
+
         E = 30.e7
         G = None
         nu = 0.3
@@ -713,6 +732,8 @@ class TestOpt(unittest.TestCase):
         desvar_id = 11
         desvar_ids = 11
         coeffs = 1.0
+
+        mass = 2.0
         dvcrel1 = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
                                     cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
         dvcrel1.Type = 'CONM2'
@@ -730,9 +751,9 @@ class TestOpt(unittest.TestCase):
         nid1 = 100
         nid2 = 101
         unused_conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
-                                comment='conm2')
-        model.add_grid(100, [1., 2., 3.])
-        model.add_grid(101, [2., 2., 4.])
+                                       comment='conm2')
+        model.add_grid(nid1, [1., 2., 3.])
+        model.add_grid(nid2, [2., 2., 4.])
 
         eid = 101
         pid = 102
@@ -766,12 +787,14 @@ class TestOpt(unittest.TestCase):
         dxyz = [1., 2., 3.]
         dvgrid1 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                    comment='dvgrid')
+        model.add_desvar(dvid, 'X10000', 0.127, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='desvar10000')
 
         nid = 101
         dvid = 10001
         dxyz = np.array([1., 2., 3.])
         unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                           comment='dvgrid')
+        model.add_desvar(dvid, 'X10001', 0.127, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='desvar10001')
 
         model.pop_parse_errors()
 
@@ -826,7 +849,7 @@ class TestOpt(unittest.TestCase):
                          #comment='conm2')
         #model2.add_grid(100, [1., 2., 3.])
         #model2.add_grid(101, [2., 2., 4.])
-        #save_load_deck(model2)
+        save_load_deck(model, run_renumber=False, run_convert=False)
 
     def test_break_words(self):
         """tests break_word_by_trailing_integer"""

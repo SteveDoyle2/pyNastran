@@ -311,9 +311,12 @@ class CBEAM(LineElement):
 
     def validate(self):
         msg = ''
+        #assert self.g0 is None or self.x is None, (self.g0, self.x)
+        #assert self.g0 is not None or self.x is not None, (self.g0, self.x)
+
         if self.x is None:
             if not isinstance(self.g0, integer_types):
-                msg += 'CBEAM eid=%s: x is None, so g0=%s must be an integer' % (self.eid, self.g0)
+                msg += f'CBEAM eid={self.eid}: x is None, so g0={self.g0} must be an integer'
         else:
             if not isinstance(self.x, (list, np.ndarray)):
                 msg += 'CBEAM eid=%s: x=%s and g0=%s, so x must be a list; type(x)=%s' % (
@@ -324,11 +327,19 @@ class CBEAM(LineElement):
         if self.g0 is not None:
             assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
         if self.g0 in [self.ga, self.gb]:
-            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            msg = f'G0={self.g0} cannot be GA={self.ga} or GB={self.gb}'
             raise RuntimeError(msg)
 
+        if self.x is not None:
+            xlen = np.linalg.norm(self.x)
+            if xlen == 0.0:
+                msg = f'Eid={self.eid:d}; X={self.x} has no length'
+                raise RuntimeError(msg)
+
+        #print(f'CBEAM validate: eid={self.eid} g0={self.g0} x={self.x}')
+
         if self.bit is None and self.offt is None:
-            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
+            msg = f'OFFT/BIT must not be None; offt={self.offt!r} bit={self.bit}'
             raise RuntimeError(msg)
 
         if self.offt is not None:
