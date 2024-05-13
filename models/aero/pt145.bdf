@@ -1,0 +1,123 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element PT145.DAT
+$ *1    15-JUN-1990 20:38:15 CMSMGR "66B PLUS/G 66B/ Initial installation of TPL test problems"
+$ DEC/CMS REPLACEMENT HISTORY, Element PT145.DAT
+ID MSC, PT145    $
+$ID MSC,PATH75 $ MODIFIED BY EDB 23 FEB 84
+$ MODDED BY MG TO GET RID OF DUMMY S.E.  3 FEB 81
+$ ID   FIFTEEN,SWEEP
+$ FIRST RUN FOR DMAP10A
+TIME 5
+$DIAG   8,13
+$DIAG   19,20
+$SOL 75 $ NEW FLUTTER SOLUTION SEQUENCE
+SOL 145
+CEND
+TITLE=AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145
+SUBT = MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)
+LABEL = KE METHOD FLUTTER SOLUTION  --- INITIAL RUN
+SEALL = ALL
+SPC   = 1
+METHOD  = 10
+FMETHOD = 30
+OUTPUT(PLOT)
+CSCALE 1.4
+PTITLE = AERODYNAMIC ELEMENTS
+ SET 1 = AERO1
+VIEW 0.,90.,0.
+FIND
+PLOT SET 1 LABEL GRID
+OUTPUT (XYOUT)
+CSCALE 1.4
+CURVELINESYMBOL = -1
+YTTITLE = DAMPING  G
+YBTITLE = FREQUENCY  F  HZ
+XTITLE  = VELOCITY  V (IN/SEC)
+XTGRID LINES = YES
+XBGRID LINES = YES
+YTGRID LINES = YES
+YBGRID LINES = YES
+UPPER TICS = -1
+TRIGHT TICS = -1
+BRIGHT TICS = -1
+XYPLOT VG / 1(G,F) 2(G,F) 3(G,F)
+$ LAST MODIFIED 29-JUN-1988
+BEGIN BULK
+$***                                                                        ***$
+$***    15 DEG SWEPT WING GRID POINTS AND CONSTRAINTS                       ***$
+$***                                                                        ***$
+GRID    1       1       .0      0.000   .0      1       126
+GRID    2       1       .0      0.572   .0      1       126
+GRID    3       1       .0      1.144   .0      1       126
+GRID    4       1       .0      1.716   .0      1       126
+GRID    5       1       .0      2.288   .0      1       126
+GRID    6       1       .0      2.860   .0      1       126
+GRID    7       1       .0      3.432   .0      1       126
+GRID    8       1       .0      4.004   .0      1       126
+GRID    9       1       .0      4.576   .0      1       126
+GRID    10      1       .0      5.148   .0      1       126
+GRID    11      1       .0      5.720   .0      1       126
+$***                                                                        ***$
+$***    15 DEG SWEPT WING COORDINATE SYSTEM AND ROOT CONSTRAINTS            ***$
+$***                                                                        ***$
+CORD2R  1               .0      .0      .0      .0      .0      1.      +C1
++C1     .96593  -.25882 .0
+SPC1    1       345     1
+$***                                                                        ***$
+$***    15 DEG SWEPT WING STRUCTURAL ELEMENTS                               ***$
+$***                                                                        ***$
+CBAR    1       1       1       2       .0      .0      1.0     1
+CBAR    2       1       2       3       .0      .0      1.0     1
+CBAR    3       1       3       4       .0      .0      1.0     1
+CBAR    4       1       4       5       .0      .0      1.0     1
+CBAR    5       1       5       6       .0      .0      1.0     1
+CBAR    6       1       6       7       .0      .0      1.0     1
+CBAR    7       1       7       8       .0      .0      1.0     1
+CBAR    8       1       8       9       .0      .0      1.0     1
+CBAR    9       1       9       10      .0      .0      1.0     1
+CBAR    10      1       10      11      .0      .0      1.0     1
+PBAR    1       1       7.175-2 9.83-6          36.8-6
+$***                                                                        ***$
+$***    15 DEG SWEPT WING MATERIAL PROPERTIES  ( ALUMINIUM )                ***$
+$***                                                                        ***$
+MAT1    1       10.4+6  3.9+6           2.61-4                          ALUMINUM
+$***                                                                        ***$
+$***    15 DEG SWEPT WING MASS PROPERTIES                                   ***$
+$***                                                                        ***$
+CMASS2  12      2.8-6   2       5
+CMASS2  13      2.8-6   3       5
+CMASS2  14      2.8-6   4       5
+CMASS2  15      2.8-6   5       5
+CMASS2  16      2.8-6   6       5
+CMASS2  17      2.8-6   7       5
+CMASS2  18      2.8-6   8       5
+CMASS2  19      2.8-6   9       5
+CMASS2  20      2.8-6   10      5
+CMASS2  21      1.4-6   11      5
+PARAM   COUPMASS1
+$***                                                                        ***$
+$***    15 DEG SWEPT WING AERODYNAMIC ELEMENT DESCRIPTION                   ***$
+$***                                                                        ***$
+AERO    0               2.0706  1.145-7
+CAERO1  101     1       1       6       4                       1       +CA101
++CA101  -1.0    -.26795 .0      2.0706  -1.     5.45205 0.0     2.0706
+MKAERO1 .45                                                             +MK
++MK     .001    0.1     0.2
+PAERO1  1
+SET1    100     1       THRU    11
+SPLINE2 100     101     101     124     100     .0      1.0     1       +SP
++SP     .0      .0
+$***                                                                        ***$
+$***    15 DEG SWEPT WING EIGENVALUE AND FLUTTER CONTROL DATA               ***$
+$***                                                                        ***$
+EIGR    10      GIV     .0      .1              6                       +ER
++ER     MAX
+FLFACT  1       0.967                                                   DENS
+FLFACT  2       .45                                                     MACH
+FLFACT  3       .10000  .11111  .1250   .14286  .16667  .2      .25     KFREQ
++FREQ   .33333  .5
+FLUTTER 30      KE      1       2       3       L       3
+PARAM   LMODES  3
+PARAM   GUSTAERO-1
+PARAM,POST,-1
+ENDDATA
+ENDDATA

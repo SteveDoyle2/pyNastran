@@ -1,0 +1,352 @@
+1
+ 
+ 
+ 
+ 
+                      Warning: This computer program is protected by copyright law and international treaties.       
+                  Unauthorized use, reproduction or distribution of this computer program, or any portion of it, may 
+                                          result in severe civil and criminal penalties.                             
+                         Copyright (C) 2020 MSC Software Corporation and its licensors. All rights reserved.         
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC Software          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C   N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *      Version 2020-CL726340      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          MAY  1, 2020           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * * MODEL Xeon/3033 (runner)        * *
+                                              * *     Windows 10 Pro 6.2 9200     * *
+                                              * * Compiled for 8664 (SINGLE Mode) * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1                                                                          OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE     1
+                                                                                                                                    
+ ^^^     
+ ^^^ >>> IFP OPERATIONS COMPLETE <<< 
+ ^^^     
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT    12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+                (TOTAL DATA WRITTEN FOR LABEL =         17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM168, TRL =
+                    101                 0              2048                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          91 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         142 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM201, TRL =
+                    102                32               256                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         163 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         261 WORDS.)
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE     7
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM4705, TRL =
+                    104                 0                 0                 0                64                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =           8 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          39 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR EPT01, TRL =
+                    105                 0              4096                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT     
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          22 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          53 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR MPT, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPT     
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK DYNAMICS WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR DYNAMICS, TRL =
+                    103              8192                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS DYNAMICS
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          21 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          52 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EDTS     WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR EDT, TRL =
+                    105                 0                 7             26240                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EDT     
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          20 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          55 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         183 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASES    WRITTEN ON FORTRAN UNIT    12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR CASECC, TRL =
+                    101                 1                 0              1000                 1                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS CASECC  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1000 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1024 WORDS.)
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE     8
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+                                  ERROR MESSAGES FROM THE PLOT SET DEFINITION MODULE (PLTSET)                                     
+
+                              AERO1    ELEMENTS CANNOT BE PLOTTED BY THE STRUCTURAL PLOTTER
+                              NO SETS EXIST IN PLOT PACKAGE
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE     9
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+                                                  MESSAGES FROM THE PLOT MODULE                                                   
+
+                    *** NO SETS EXIST - PLOTS SKIPPED ***
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    10
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+                                  ERROR MESSAGES FROM THE PLOT SET DEFINITION MODULE (PLTSET)                                     
+
+                              AERO1    ELEMENTS CANNOT BE PLOTTED BY THE STRUCTURAL PLOTTER
+                              NO SETS EXIST IN PLOT PACKAGE
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    11
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+                                                  MESSAGES FROM THE PLOT MODULE                                                   
+
+                    *** NO SETS EXIST - PLOTS SKIPPED ***
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    12
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT OR MODULE BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT OR MODULE BASIC COORDINATE SYSTEM IN SUPERELEMENT OR MODULE
+     BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     REGULAR GIVENS METHOD IS SELECTED .
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    13
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (BEFORE AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1        20        6.304383E+04        2.510853E+02        3.996147E+01        2.677916E-05        1.688261E+00
+        2        30        2.206505E+06        1.485431E+03        2.364137E+02        1.400000E-05        3.089107E+01
+        3        19        2.476140E+06        1.573575E+03        2.504423E+02        2.677572E-05        6.630043E+01
+        4        18        1.942194E+07        4.407033E+03        7.014011E+02        1.420850E-05        2.759567E+02
+        5        29        1.953390E+07        4.419717E+03        7.034198E+02        1.400000E-05        2.734745E+02
+        6        28        5.249255E+07        7.245174E+03        1.153105E+03        1.400000E-05        7.348957E+02
+        7        17        7.468511E+07        8.642055E+03        1.375426E+03        0.0                 0.0
+        8        27        9.785625E+07        9.892232E+03        1.574398E+03        0.0                 0.0
+        9        26        1.511845E+08        1.229571E+04        1.956923E+03        0.0                 0.0
+       10        16        2.047278E+08        1.430831E+04        2.277239E+03        0.0                 0.0
+       11        25        2.072571E+08        1.439643E+04        2.291262E+03        0.0                 0.0
+       12        24        2.605853E+08        1.614265E+04        2.569183E+03        0.0                 0.0
+       13        23        3.059490E+08        1.749140E+04        2.783842E+03        0.0                 0.0
+       14        22        3.389077E+08        1.840944E+04        2.929954E+03        0.0                 0.0
+       15        21        3.562351E+08        1.887419E+04        3.003921E+03        0.0                 0.0
+       16        15        4.594797E+08        2.143548E+04        3.411562E+03        0.0                 0.0
+       17        14        9.045066E+08        3.007502E+04        4.786588E+03        0.0                 0.0
+       18        13        1.623464E+09        4.029223E+04        6.412708E+03        0.0                 0.0
+       19        12        2.714134E+09        5.209735E+04        8.291552E+03        0.0                 0.0
+       20        11        4.194444E+09        6.476453E+04        1.030759E+04        0.0                 0.0
+       21        10        7.430218E+09        8.619871E+04        1.371895E+04        0.0                 0.0
+       22         9        1.084491E+10        1.041389E+05        1.657422E+04        0.0                 0.0
+       23         8        1.593668E+10        1.262406E+05        2.009181E+04        0.0                 0.0
+       24         7        2.321477E+10        1.523639E+05        2.424947E+04        0.0                 0.0
+       25         6        3.352112E+10        1.830877E+05        2.913932E+04        0.0                 0.0
+       26         5        4.794976E+10        2.189743E+05        3.485085E+04        0.0                 0.0
+       27         4        6.754207E+10        2.598886E+05        4.136255E+04        0.0                 0.0
+       28         3        9.205614E+10        3.034075E+05        4.828881E+04        0.0                 0.0
+       29         2        1.167388E+11        3.416706E+05        5.437856E+04        0.0                 0.0
+       30         1        1.828389E+11        4.275967E+05        6.805413E+04        0.0                 0.0
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KYY      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    5.400000E+01
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    14
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (AFTER AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        6.304383E+04        2.510853E+02        3.996147E+01        2.677916E-05        1.688261E+00
+        2         2        2.206505E+06        1.485431E+03        2.364137E+02        1.400000E-05        3.089107E+01
+        3         3        2.476140E+06        1.573575E+03        2.504423E+02        2.677572E-05        6.630043E+01
+        4         4        1.942194E+07        4.407033E+03        7.014011E+02        1.420850E-05        2.759567E+02
+        5         5        1.953390E+07        4.419717E+03        7.034198E+02        1.400000E-05        2.734745E+02
+        6         6        5.249255E+07        7.245174E+03        1.153105E+03        1.400000E-05        7.348957E+02
+        7         7        7.676654E+07        8.761651E+03        1.394460E+03        1.000000E+00        7.676654E+07
+        8         8        1.156851E+08        1.075570E+04        1.711823E+03        1.000000E+00        1.156851E+08
+        9         9        3.823938E+08        1.955489E+04        3.112258E+03        1.000000E+00        3.823938E+08
+ *** USER INFORMATION MESSAGE 7588 (GKAM)
+     BASED ON THE USER PARAMETERS LMODES, LFREQ OR HFREQ, ONLY        3 OF THE        9 COMPUTED STRUCTURE MODES
+     (MODES        1 THROUGH        3) WILL BE USED IN THIS MODAL COMPLEX EIGENVALUE ANALYSIS
+     (DETAILS OF THE EIGENVALUE DATA FOR THE MODES USED ARE GIVEN BELOW)
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    15
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                        (ACTUAL MODES USED IN THE DYNAMIC ANALYSIS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        6.304383E+04        2.510853E+02        3.996147E+01        2.677916E-05        1.688261E+00
+        2         2        2.206505E+06        1.485431E+03        2.364137E+02        1.400000E-05        3.089107E+01
+        3         3        2.476140E+06        1.573575E+03        2.504423E+02        2.677572E-05        6.630043E+01
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    16
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    1     MACH NUMBER =  0.4500     DENSITY RATIO =  9.6700E-01     METHOD = KE  
+
+
+       KFREQ            1./KFREQ         VELOCITY            DAMPING         FREQUENCY            COMPLEX   EIGENVALUE
+        0.1000       1.0000000E+01     2.8699957E+03    -2.5238915E-01     4.4119966E+01    -3.4844482E+02     2.8044642E+03
+        0.1111       9.0000900E+00     2.5226876E+03    -2.0643088E-01     4.3089410E+01    -2.5367005E+02     2.4835849E+03
+        0.1250       8.0000000E+00     2.1989038E+03    -1.7008944E-01     4.2254226E+01    -1.8369900E+02     2.1755396E+03
+        0.1429       6.9998600E+00     1.8933191E+03    -1.4006482E-01     4.1580372E+01    -1.3099263E+02     1.8795864E+03
+        0.1667       5.9998800E+00     1.6018100E+03    -1.1433733E-01     4.1041418E+01    -9.0832745E+01     1.5940314E+03
+        0.2000       5.0000000E+00     1.3211585E+03    -9.1635831E-02     4.0619898E+01    -6.0217125E+01     1.3170235E+03
+        0.2500       4.0000000E+00     1.0487575E+03    -7.1124387E-02     4.0305936E+01    -3.7178667E+01     1.0467753E+03
+        0.3333       3.0000300E+00     7.8235288E+02    -5.2161663E-02     4.0089534E+01    -2.0369790E+01     7.8155621E+02
+        0.5000       2.0000000E+00     5.1991414E+02    -3.4244468E-02     3.9962767E+01    -8.8955730E+00     5.1968570E+02
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    17
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    2     MACH NUMBER =  0.4500     DENSITY RATIO =  9.6700E-01     METHOD = KE  
+
+
+       KFREQ            1./KFREQ         VELOCITY            DAMPING         FREQUENCY            COMPLEX   EIGENVALUE
+        0.1000       1.0000000E+01     6.4385398E+03     1.3658872E-01     9.8978600E+01     4.3466290E+02     6.3940982E+03
+        0.1111       9.0000900E+00     6.3919643E+03     8.6104242E-02     1.0917958E+02     2.7391988E+02     6.3742887E+03
+        0.1250       8.0000000E+00     6.2908529E+03     4.5013048E-02     1.2088529E+02     1.4140622E+02     6.2860801E+03
+        0.1429       6.9998600E+00     6.1129079E+03     1.0861521E-02     1.3424942E+02     3.3195290E+01     6.1126375E+03
+        0.1667       5.9998800E+00     5.8317574E+03    -1.7230888E-02     1.4942071E+02    -5.0233859E+01     5.8311082E+03
+        0.2000       5.0000000E+00     5.4124678E+03    -3.8924506E-02     1.6640993E+02    -1.0523919E+02     5.4093960E+03
+        0.2500       4.0000000E+00     4.8098698E+03    -5.2856106E-02     1.8485332E+02    -1.2689402E+02     4.8048409E+03
+        0.3333       3.0000300E+00     3.9744120E+03    -5.6485791E-02     2.0365787E+02    -1.1202562E+02     3.9696677E+03
+        0.5000       2.0000000E+00     2.8705623E+03    -4.7289154E-02     2.2064338E+02    -6.7778534E+01     2.8681589E+03
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    18
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    3     MACH NUMBER =  0.4500     DENSITY RATIO =  9.6700E-01     METHOD = KE  
+
+
+       KFREQ            1./KFREQ         VELOCITY            DAMPING         FREQUENCY            COMPLEX   EIGENVALUE
+        0.1000       1.0000000E+01     1.7339353E+04    -1.2539420E-01     2.6655499E+02    -1.0765742E+03     1.7238271E+04
+        0.1111       9.0000900E+00     1.5394083E+04    -1.0969243E-01     2.6294255E+02    -8.3801732E+02     1.5325225E+04
+        0.1250       8.0000000E+00     1.3520469E+04    -9.5176038E-02     2.5980990E+02    -6.3979541E+02     1.3474842E+04
+        0.1429       6.9998600E+00     1.1707994E+04    -8.1658724E-02     2.5712663E+02    -4.7604809E+02     1.1678859E+04
+        0.1667       5.9998800E+00     9.9475742E+03    -6.8990294E-02     2.5487576E+02    -3.4212607E+02     9.9298804E+03
+        0.2000       5.0000000E+00     8.2306873E+03    -5.7052865E-02     2.5305797E+02    -2.3431571E+02     8.2206644E+03
+        0.2500       4.0000000E+00     6.5489576E+03    -4.5761068E-02     2.5169008E+02    -1.4964786E+02     6.5438227E+03
+        0.3333       3.0000300E+00     4.8936412E+03    -3.5018105E-02     2.5076126E+02    -8.5617415E+01     4.8913929E+03
+        0.5000       2.0000000E+00     3.2557977E+03    -2.4619376E-02     2.5025418E+02    -4.0062680E+01     3.2550580E+03
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    19
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+0                             X Y - O U T P U T  S U M M A R Y  ( R E S P O N S E )
+0 SUBCASE  CURVE FRAME    CURVE ID./       XMIN-FRAME/    XMAX-FRAME/    YMIN-FRAME/      X FOR        YMAX-FRAME/      X FOR
+     ID     TYPE   NO.  PANEL  : GRID ID     ALL DATA       ALL DATA       ALL DATA       YMIN           ALL DATA       YMAX
+0       1  LOAD      1        1(  3,--)   5.199141E+02   1.733935E+04  -2.523892E-01   2.869996E+03  -3.424447E-02   5.199141E+02
+                                          5.199141E+02   1.733935E+04  -2.523892E-01   2.869996E+03  -3.424447E-02   5.199141E+02
+0       1  LOAD      1        2(  3,--)   5.199141E+02   1.733935E+04  -5.648579E-02   3.974412E+03   1.365887E-01   6.438540E+03
+                                          5.199141E+02   1.733935E+04  -5.648579E-02   3.974412E+03   1.365887E-01   6.438540E+03
+0       1  LOAD      1        3(  3,--)   5.199141E+02   1.733935E+04  -1.253942E-01   1.733935E+04  -2.461938E-02   3.255798E+03
+                                          5.199141E+02   1.733935E+04  -1.253942E-01   1.733935E+04  -2.461938E-02   3.255798E+03
+0       1  LOAD      1        1(--,  4)   5.199141E+02   1.733935E+04   3.996277E+01   5.199141E+02   4.411997E+01   2.869996E+03
+                                          5.199141E+02   1.733935E+04   3.996277E+01   5.199141E+02   4.411997E+01   2.869996E+03
+0       1  LOAD      1        2(--,  4)   5.199141E+02   1.733935E+04   9.897860E+01   6.438540E+03   2.206434E+02   2.870562E+03
+                                          5.199141E+02   1.733935E+04   9.897860E+01   6.438540E+03   2.206434E+02   2.870562E+03
+0       1  LOAD      1        3(--,  4)   5.199141E+02   1.733935E+04   2.502542E+02   3.255798E+03   2.665550E+02   1.733935E+04
+                                          5.199141E+02   1.733935E+04   2.502542E+02   3.255798E+03   2.665550E+02   1.733935E+04
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT    12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1   AERO DEMO 3  15-DEGREE SWEPT WING (DOUBLET-LATTICE)      PT145         OCTOBER   12, 2023  MSC Nastran  5/ 1/20   PAGE    20
+      MACH IS 0.45  MODEL D OF NASA TN D-1824  (UNCOUPLED MODES)                                                                    
+0     KE METHOD FLUTTER SOLUTION  --- INITIAL RUN                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     71
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     T      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
+ No Symbolic Replacement variables or values were specified.
+

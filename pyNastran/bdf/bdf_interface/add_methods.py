@@ -556,8 +556,7 @@ class AddMethods:
     def _add_micpnt_object(self, micpnt: MICPNT) -> None:
         """adds an MICPNT object"""
         key = micpnt.eid
-        assert key not in self.model.micpnt, '\micpnt=\n%s old=\n%s' % (
-            micpnt, self.model.micpnt[key])
+        assert key not in self.model.micpnt, rf'\micpnt=\n{micpnt} old=\n{self.model.micpnt[key]}'
         assert key >= 0
         self.model.micpnt[key] = micpnt
         self.model._type_to_id_map[micpnt.type].append(key)

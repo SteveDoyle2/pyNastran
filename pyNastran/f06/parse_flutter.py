@@ -27,7 +27,10 @@ from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils.numpy_utils import float_types
 
 
-def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt=False, log=None):
+def make_flutter_response(f06_filename: str,
+                          f06_units=None, out_units=None,
+                          make_alt: bool=False,
+                          log: Optional[SimpleLogger]=None) -> list[FlutterResponse]:
     """
     Creates the FlutterResponse object
 
@@ -190,7 +193,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                 #print(iline, mode, method)
                 f06_file.readline()
                 iline += 1
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(f'method={method!r} point_sline={point_sline}')
 
             found_existing_mode = mode in modes
@@ -218,7 +221,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                 #KFREQ       1./KFREQ       VELOCITY          DAMPING       FREQUENCY          COMPLEX   EIGENVALUE
                     #0.5500  1.8181818E+00   2.2589194E+01  -2.4541089E-03   3.3374373E+00  -5.6140173E-01     4.5752050E+02
                 nvalues = 7
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(method)
 
             sline = [None] * nvalues
@@ -397,7 +400,7 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
                        kfreq_damping_filename: Optional[str]=None,
                        subcases: Optional[list[int]]=None,
                        show: bool=True, clear: bool=False, close: bool=False,
-                       log: SimpleLogger=None) -> None:
+                       log: Optional[SimpleLogger]=None) -> None:
     """actually makes the flutter plots"""
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
@@ -461,7 +464,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                root_locus_filename: Optional[str]=None,
                                kfreq_damping_filename: Optional[str]=None,
                                show: bool=True, clear: bool=False, close: bool=False,
-                               log: SimpleLogger=None):
+                               log: Optional[SimpleLogger]=None):
         #_remove_neutrinos(flutter, log)
         if plot_vg:
             filenamei = None if vg_filename is None else (vg_filename % subcase)
@@ -502,7 +505,8 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
 
 def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
     str(flutter)
-    isave, ifilter = _find_modes_to_keep(flutter, log, tol=1e-8)
+    isave, ifilter = (
+        _find_modes_to_keep(flutter, log, tol=1e-8))
 
     # fix mode switching
     results = flutter.results

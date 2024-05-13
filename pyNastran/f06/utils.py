@@ -4,7 +4,13 @@ defines:
 
 """
 from __future__ import annotations
+import sys
 from typing import Optional, TYPE_CHECKING
+
+from docopt import docopt, __version__ as docopt_version
+import pyNastran
+
+
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.matplotlib_backend import  matplotlib_backend
@@ -25,13 +31,12 @@ USAGE_200 = (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+    from pyNastran.f06.flutter_response import FlutterResponse
 
-def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
+def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
+                          log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """the interface to ``f06 plot_145`` on the command line"""
-    import sys
     import os
-    from docopt import docopt, __version__ as docopt_version
-    import pyNastran
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:
         argv = sys.argv
@@ -186,25 +191,27 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
-    plot_flutter_f06(f06_filename, modes=modes,
-                     plot_type=plot_type,
-                     f06_units=in_units,
-                     out_units=out_units,
-                     plot_root_locus=plot_root_locus, plot_vg_vf=True, plot_vg=False,
-                     plot_kfreq_damping=plot_kfreq_damping,
-                     xlim=xlim,
-                     ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                     vd_limit=vd_limit,
-                     damping_limit=damping_limit,
-                     nopoints=nopoints,
-                     noline=noline,
-                     export_veas_filename=export_veas_filename,
-                     export_zona_filename=export_zona_filename,
-                     export_f06_filename=export_f06_filename,
-                     vg_filename=vg_filename,
-                     vg_vf_filename=vg_vf_filename,
-                     root_locus_filename=root_locus_filename,
-                     kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
+    flutter_responses = plot_flutter_f06(
+        f06_filename, modes=modes,
+        plot_type=plot_type,
+        f06_units=in_units,
+        out_units=out_units,
+        plot_root_locus=plot_root_locus, plot_vg_vf=True, plot_vg=False,
+        plot_kfreq_damping=plot_kfreq_damping,
+        xlim=xlim,
+        ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+        vd_limit=vd_limit,
+        damping_limit=damping_limit,
+        nopoints=nopoints,
+        noline=noline,
+        export_veas_filename=export_veas_filename,
+        export_zona_filename=export_zona_filename,
+        export_f06_filename=export_f06_filename,
+        vg_filename=vg_filename,
+        vg_vf_filename=vg_vf_filename,
+        root_locus_filename=root_locus_filename,
+        kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
+    return flutter_responses
 
 def get_cmd_line_float(data: dict[str, str], key: str) -> float:
     try:
@@ -243,7 +250,8 @@ def split_float_colons(string_values: str) -> list[float]:
         values = None # all values
     return values
 
-def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> list[int]:
+def split_int_colon(modes: str, nmax: int=1000,
+                    start_value: int=0) -> list[int]:
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
     Blanks are interpreted as 0 unless start_value is specified.
@@ -276,7 +284,7 @@ def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> list[int]
                         assert len(smode) == 2, smode
                     else:
                         iend = int(smode[1])
-                        assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                        assert iend > istart, f'smode={smode}; istart={istart} iend={iend}'
                         modes2 += list(range(istart, iend + 1))
                 elif len(smode) == 3:
                     #start_str, stop_str, step_str = smode
@@ -293,11 +301,11 @@ def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> list[int]
                         modes2 += list(range(istart, nmax, istep))
                     else:
                         iend = int(smode[1]) + 1
-                        assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                        assert iend > istart, f'smode={smode}; istart={istart} iend={iend}'
                         modes2 += list(range(istart, iend, istep))
 
                 else:
-                    raise NotImplementedError('mode=%r; len=%s' % (mode, len(smode)))
+                    raise NotImplementedError(f'mode={mode!r}; len={len(smode)}')
             else:
                 imode = int(mode)
                 modes2.append(imode)
@@ -313,12 +321,9 @@ def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> list[int]
         pass
     return modes
 
-def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True, log: Optional[SimpleLogger]=None):
+def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
+                               log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_145`` on the command line"""
-    import sys
-    #import os
-    from docopt import docopt
-    import pyNastran
     from pyNastran.f06.dev.read_sol_200 import plot_sol_200
     if argv is None:
         argv = sys.argv
@@ -383,9 +388,9 @@ def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True, log:
 
     plot_sol_200(f06_filename, show=True)
 
-def cmd_line(argv=None, plot=True, show=True, log=None):
+def cmd_line(argv=None, plot: bool=True, show: bool=True,
+             log: Optional[SimpleLogger]=None) -> None:
     """the interface to ``f06`` on the command line"""
-    import sys
     if argv is None:
         argv = sys.argv
 
@@ -401,7 +406,6 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
         sys.exit(msg)
 
     #assert sys.argv[0] != 'bdf', msg
-
     if argv[1] == 'plot_145':
         cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
     elif argv[1] == 'plot_200':

@@ -1,0 +1,58 @@
+ID MSC, MDB200  $ V69 KLK 23-OCT-1996
+SOL 200
+CEND
+param,nasprt,1
+TITLE=MINI-DATABASE COLD START - SOL 200                       MDB200
+SPC    = 100
+DESOBJ(MIN) = 20
+DESSUB      = 21
+ANALYSIS = STATICS
+SUBCASE 1
+   LABEL = LOAD CONDITION 1
+   LOAD  = 300
+SUBCASE 2
+   LABEL = LOAD CONDITION 2
+   LOAD  = 310
+BEGIN BULK
+GRID,   1,      ,       -10.0 ,   0.0,  0.0
+GRID,   2,      ,         0.0 ,   0.0,  0.0
+GRID,   3,      ,        10.0 ,   0.0,  0.0
+GRID,   4,      ,         0.0 , -10.0,  0.0
+GRID,   44,     ,         0.0 , -10.0,  0.0
+SPC,    100,    1,      123456, ,       2,      123456
+SPC,    100,    3,      123456, ,       4,      3456
+CROD,   1,      11,     1,      44
+CROD,   2,      12,     2,      44
+CROD,   3,      13,     3,      44
+rbar	44	4	44	123456
+PROD,   11,     1,      1.0
+PROD,   12,     1,      2.0
+PROD,   13,     1,      1.0
+MAT1,   1,      1.0E+7, ,       0.33,   0.1
+FORCE,  300,    4,      ,       20000.,  0.8,   -0.6
+FORCE,  310,    4,      ,       20000., -0.8,   -0.6
+DESVAR, 1,      A1,     1.0,    0.1,    100.0
+DESVAR, 2,      A2,     2.0,    0.1,    100.0
+DESVAR, 3,      A3,     1.0,    0.1,    100.0
+DLINK,  1,      3,      0.0,    1.0,    1,      1.00
+DVPREL1,10,     PROD,   11,     4,      ,       ,       ,       ,       +DP1
++DP1,   1,      1.0
+DVPREL1,20,     PROD,   12,     4,      ,       ,       ,       ,       +DP2
++DP2,   2,      1.0
+DVPREL1,30,     PROD,   13,     4,      ,       ,       ,       ,       +DP3
++DP3,   3,      1.0
+DRESP1, 20,     W ,     WEIGHT
+DRESP1, 21,     U4,     DISP  , ,       ,       1,      ,       4
+DRESP1, 22,     V4,     DISP  , ,       ,       2,      ,       4
+DRESP1, 23,     S1,     STRESS, PROD,   ,       2,      ,       11
+DRESP1, 24,     S2,     STRESS, PROD,   ,       2,      ,       12
+DRESP1, 25,     S3,     STRESS, PROD,   ,       2,      ,       13
+DCONSTR,21,     21,     -0.20  ,0.20
+DCONSTR,21,     22,     -0.20  ,0.20
+DCONSTR,21,     23,     -15000.,20000.
+DCONSTR,21,     24,     -15000.,20000.
+DCONSTR,21,     25,     -15000.,20000.
+DOPTPRM,IPRINT, 5,      DESMAX, 10,     DELP,   0.5,    P1,     1,      +
++,      P2,     15
+PARAM,POST,-1
+ENDDATA

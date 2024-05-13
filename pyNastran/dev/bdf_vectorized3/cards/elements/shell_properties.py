@@ -1360,7 +1360,7 @@ class PCOMP(CompositeProperty):
             souts.append(sout)
             try:
                 ft = map_failure_theory_int(ft_int)
-            except NotImplementedError:
+            except NotImplementedError:  # pragma: no cover
                 raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
                                f'\nPCOMP = {data}')
         self.add(pid, mids, thicknesses, thetas=thetas, souts=souts,

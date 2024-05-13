@@ -317,7 +317,7 @@ class FlutterResponse:
         self._colors = []  # type: list[str]
         self.generate_symbols()
 
-    def set_pknl_results(self, results):
+    def set_pknl_results(self, results: np.ndarray):
         density_units_in = self.f06_units['density']
 
         # in/s
@@ -405,7 +405,7 @@ class FlutterResponse:
             factor = convert_density(1., unit_f06, unit_out)
         elif name in ['pressure', 'dynamic_pressure']:
             factor = convert_pressure(1., unit_f06, unit_out)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(name)
 
         if self.out_units is not None:
@@ -738,6 +738,7 @@ class FlutterResponse:
 
     def fix(self):
         """attempts to fix the mode switching"""
+        return
         #print(self.names)
 
         # results[imode, ipoint, iresult]
@@ -1204,8 +1205,13 @@ def _get_modes_imodes(all_modes, modes):
     imodes = np.searchsorted(all_modes, modes)
     return modes, imodes
 
-def _asarray(results):
+def _asarray(results, allow_fix_kfreq: bool=True):
     """casts the results array"""
+    allow_fix_kfreq = False
+    if not allow_fix_kfreq:
+        results = np.asarray(results, dtype='float64')
+        return results
+
     try:
         results = np.asarray(results, dtype='float64')
     except Exception:
