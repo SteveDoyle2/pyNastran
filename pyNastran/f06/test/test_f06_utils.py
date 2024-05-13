@@ -456,7 +456,10 @@ def _fix_modes(eigr: np.ndarray,
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
-        read_sol_200(f06_filename)
+        png_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.png')
+        plot_sol_200(f06_filename, png_filename=png_filename,
+                     show=True)
+        #read_sol_200(f06_filename)
 
     def test_opt_mdb200(self):
         f06_filename = os.path.join(MODEL_PATH, 'other', 'mdb200.f06')

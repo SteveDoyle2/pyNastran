@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from collections import defaultdict
 import numpy as np
 from cpylog import get_logger, SimpleLogger
@@ -41,6 +41,8 @@ def _read_line_block(i: int, lines: list[str],
                      rstrip: bool=False, strip: bool=False, debug: bool=False,
                      imax=None) -> tuple[int, list[str]]:
     i0 = i
+    if i > 480:
+        x=1
     lines2 = []
     line = lines[i].rstrip()
     #print('cat', rstrip, strip, line)
@@ -69,13 +71,13 @@ def _read_line_block(i: int, lines: list[str],
             if imax and i > imax:
                 raise RuntimeError('i=%i' % i)
             i += 1
-            if 'MSC.NASTRAN' in line:
+            if 'MSC.NASTRAN' in line or 'USER INFORMATION MESSAGE' in line:
                 break
-            if 'F I N A L   A N A L Y S I S' in line:
-                if debug:
-                    stopping
-                _read_line_block(i0, lines, stop_marker=stop,
-                                 rstrip=rstrip, strip=strip, debug=False)
+            #if 'F I N A L   A N A L Y S I S' in line:
+            #    if debug:
+            #        stopping
+            #    _read_line_block(i0, lines, stop_marker=stop,
+            #                     rstrip=rstrip, strip=strip, debug=False)
             #print(i, line)
             line = lines[i].strip()
             lines2.append(line)
@@ -88,6 +90,8 @@ def _read_line_block(i: int, lines: list[str],
             if imax and i > imax:
                 raise RuntimeError('i=%i' % i)
             i += 1
+            if 'MSC.NASTRAN' in line or 'USER INFORMATION MESSAGE' in line:
+                break
             line = lines[i].rstrip('\n')
             lines2.append(line)
     try:
@@ -184,7 +188,7 @@ def _read_gradient(i: int, line: str, lines: list[str], nlines, log: SimpleLogge
 
 def _read_gradient_block(i: int, line: str, lines: list[str],
                          nlines: int, log: SimpleLogger,
-                         debug: bool=True) -> tuple[int, np.ndarray]:
+                         debug: bool=True) -> tuple[int, list[str]]:
     i += 1
     if debug:
         log.debug(f'  {i} read_gradient: {line}')
@@ -193,13 +197,14 @@ def _read_gradient_block(i: int, line: str, lines: list[str],
     #print(i, line)
     i, lines2 = _read_line_block(i, lines, stop_marker='', rstrip=False, strip=True,
                                  debug=False, imax=None)
-    line = lines[i].strip()
+    unused_line = lines[i].strip()
     return i, lines2
 
-def _read_design_optimization(i, line, lines, nlines,
+
+def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
                               idesign: int,
                               all_results: list[OptimizationResult],
-                              log: SimpleLogger) -> tuple[int, np.ndarray]:
+                              log: SimpleLogger) -> tuple[int, bool, int]:
     optimization_result = all_results[-1]
     assert isinstance(optimization_result, OptimizationResult), optimization_result
     end_of_job = False
@@ -232,6 +237,7 @@ def _read_design_optimization(i, line, lines, nlines,
     stop_gradients = False
     #print('*'*80)
     iteration = 0
+    subcase_id = -1
     constraint_ids = None
     gvector = None
 
@@ -241,18 +247,28 @@ def _read_design_optimization(i, line, lines, nlines,
         #     log.debug(line)
         print_line = True
         line0 = line
-        while i < nlines and line.strip('* ') == '':
+        while i < nlines and line.strip('* -') in {'', '0'}:
             i += 1
             line = lines[i].strip()
 
         if line == '*                D E S I G N    O P T I M I Z A T I O N            *':
+            # found next design cycle
             i -= 1
-            #log.debug('breaking %s' % line)
+            log.debug('breaking %s' % line)
             break
         #elif 'F I N A L   A N A L Y S I S' in line:
             #i -= 1
             #log.debug('breaking %s' % line)
             #break
+
+        elif ('I N I T I A L   A N A L Y S I S    S U B C A S E =' in line or
+              'F I N A L   A N A L Y S I S    S U B C A S E =' in line):
+            sline = line.split('=')
+            subcase_id = int(sline[1])
+            i += 1
+        elif 'R E S P O N S E S    IN    D E S I G N    M O D E L' in line:
+            i += 1
+            # continue
 
         elif line == '-----   COMPARISON BETWEEN INPUT PROPERTY VALUES FROM ANALYSIS AND DESIGN MODELS -----':
             i, line, lines2 = _read_property_comparison_table(i, lines, log)
@@ -343,8 +359,8 @@ def _read_design_optimization(i, line, lines, nlines,
             # 'CONSTRAINT NUMBERS',
             # 'VARIABLE NUMBERS (MINUS INDICATES LOWER BOUND)',
             # 'RETAINED ACTIVE/VIOLATED CONSTRAINT NUMBERS',
-            i, ids = _read_int_gradient(i, line, lines, nlines, log)
-            gradients[line] = ids
+            i, ids_int = _read_int_gradient(i, line, lines, nlines, log)
+            gradients[line] = ids_int
         elif 'K-T PARAMETERS, BETA =' in line:
             # K-T PARAMETERS, BETA =  1.00000E+00  MAX. RESIDUAL =  3.36450E-04
             *trash, beta, maxstr, resstr, eq2, residual = line.split()
@@ -411,8 +427,6 @@ def _read_design_optimization(i, line, lines, nlines,
 
         elif line == '':
             print_line = False
-        elif '31)  ' in line:
-            asdf
         #elif 'INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS' in line:
             #print(i, line)
             #adsf
@@ -476,9 +490,15 @@ def _read_design_optimization(i, line, lines, nlines,
             #log.debug(line)
             i, line, lines2 = _read_weight_as_a_function_of_material_id(i, lines)
             assert isinstance(i, int), line
+        elif (
+                '-----   CONSTRAINTS ON DESIGNED BEAM LIBRARY DIMENSIONS    -----' in line or
+                '-----    DISPLACEMENT RESPONSES    -----' in line or
+                '-----    STABILITY DERIVATIVE RESPONSES    -----' in line):
+            i, line, lines2 = _read_composite_stress_responses(i, lines)
+
         elif '-----    STRESS RESPONSES    -----' in line:
             #log.debug(f'stress response {i} {line}')
-            i, line, lines2 = _read_stress_responses(i, lines)
+            i, line, lines2, stress_response = _read_stress_responses(i, lines, subcase_id)
             #log.debug(f'stress response2 {i} {line}')
         elif '-----    COMPOSITE LAMINATE STRESS RESPONSES    -----' in line:
             log.debug(line)
@@ -513,14 +533,14 @@ def _read_design_optimization(i, line, lines, nlines,
         elif 'D E S I G N   C Y C L E' in line and 'S U B C A S E =' in line:
             # 'D E S I G N   C Y C L E =       1    S U B C A S E =       3'
             design_cycle_n, subcase_str = line.split('S U B C A S E =')
-            subcase = int(subcase_str)
+            subcase_id = int(subcase_str)
             design_cycle_n = design_cycle_n.strip()
             design_cycle_str = design_cycle_n.split('D E S I G N   C Y C L E =')[1]
 
             design_cycle = int(design_cycle_str)
             log.warning(f'design cycle={design_cycle:d} idesign={idesign}')
             idesign = 0
-            i += 2
+            i += 1
             line = lines[i].strip()
             del design_cycle_n
 
@@ -545,6 +565,54 @@ def _read_design_optimization(i, line, lines, nlines,
         elif line.startswith('*** ') or line.startswith('^^^ ') or 'SIMCENTER NASTRAN' in line or line.startswith('****************'):
             print_line = False
             pass
+        elif 'CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)' in line:
+            # CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+            #             ----------------------------------------------------------------------------------------------
+            #
+            #                      RELATIVE CHANGE IN OBJECTIVE           :  3.7612E-01  MUST BE LESS THAN   1.0000E-03
+            #              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.8161E+00  MUST BE LESS THAN   1.0000E-20
+            #                                                      --- AND ---
+            #                      MAXIMUM CONSTRAINT VALUE               : -5.3309E-03  MUST BE LESS THAN   5.0000E-03
+            #                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+            #                                                      --- OR ---
+            #                      MAXIMUM OF RELATIVE PROP. CHANGES      :  5.0000E-01  MUST BE LESS THAN   1.0000E-03
+            #              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  5.0000E-01  MUST BE LESS THAN   1.0000E-03
+            #                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+            #             ----------------------------------------------------------------------------------------------
+            i += 12
+            line = lines[i].strip()
+        elif '***** NORMAL CONVERGENCE CRITERIA SATISFIED ***** (HARD CONVERGENCE DECISION LOGIC)' in line:
+            #                 ***** NORMAL CONVERGENCE CRITERIA SATISFIED ***** (HARD CONVERGENCE DECISION LOGIC)
+            #
+            #                 **************************************************************************************
+            #                                  CONVERGENCE ACHIEVED BASED ON THE FOLLOWING CRITERIA
+            #                                           (HARD CONVERGENCE DECISION LOGIC)
+            #
+            #                        RELATIVE CHANGE IN OBJECTIVE        3.0370E-04  MUST BE LESS THAN   1.0000E-03
+            #                  OR    ABSOLUTE CHANGE IN OBJECTIVE        8.1873E-04  MUST BE LESS THAN   1.0000E-20
+            #                                                   --- AND ---
+            #                        MAXIMUM CONSTRAINT VALUE            2.5629E-03  MUST BE LESS THAN   5.0000E-03
+            #                                          (CONVERGENCE TO A FEASIBLE DESIGN)
+            #                                                   --- OR ---
+            #                        MAXIMUM OF RELATIVE PROP. CHANGES   2.3390E-02  MUST BE LESS THAN   1.0000E-03
+            #                  AND   MAXIMUM OF RELATIVE D.V. CHANGES    2.3390E-02  MUST BE LESS THAN   1.0000E-03
+            #                                 (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+            #                 **************************************************************************************
+            i += 15
+            line = lines[i].strip()
+        elif 'INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS' in line:
+            # ****************************************************************************************
+            #                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+            #                                                  (SOFT CONVERGENCE DECISION LOGIC)
+            #                       ****************************************************************************************
+            #
+            #                          MAXIMUM OF RELATIVE PROP. CHANGES     5.0000E-01 MUST BE LESS THAN   1.0000E-03
+            #                                                        --- AND ---
+            #                          MAXIMUM OF RELATIVE D.V. CHANGES      5.0000E-01  MUST BE LESS THAN   1.0000E-03
+            #                       ****************************************************************************************
+            i += 7
+            line = lines[i].strip()
+
         elif 'CPU Statistics for Module' in line:
             # ******************************************
             # ***** CPU Statistics for Module DOM9 *****
@@ -565,7 +633,7 @@ def _read_design_optimization(i, line, lines, nlines,
             #print_line = True
             print_line = False
             log.debug(f'skipped-read_design_optimization {i} {line!r}')
-        if print_line:
+        if print_line and line0:
             log.info(f'*** {i} {line0!r}')
 
         assert isinstance(i, int), f'i={i} line={line}'
@@ -593,6 +661,7 @@ def _read_design_optimization(i, line, lines, nlines,
 def _read_design_optimization_tools(i: int, line: str, lines: list[str],
                                     nlines: int,
                                     design_vars, log: SimpleLogger) -> int:
+    """DESIGN OPTIMIZATION TOOLS"""
     #                     DESIGN OPTIMIZATION TOOLS
     #
     #
@@ -1074,8 +1143,18 @@ def _read_designed_properties(i: int, lines: list[str]) -> tuple[int, str, list[
     line = lines[i].strip()
     return i, line, lines2
 
-def _read_stress_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
+def _read_stress_responses(i: int, lines: list[str],
+                           subcase_id: int) -> tuple[int, str, list[str], dict[str, Any]]:
     """STRESS RESPONSES"""
+    #                                                 -----    STRESS RESPONSES    -----
+    #
+    #     -----------------------------------------------------------------------------------------------------------
+    #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER                       UPPER
+    #           ID        ID      LABEL        ID     ELM ID      NO.         BOUND         VALUE         BOUND
+    #     -----------------------------------------------------------------------------------------------------------
+    #               2        23  S1               1                   2       N/A        1.3530E+04    2.0000E+04
+    #               3        25  S3               3                   2   -1.5000E+04   -9.0973E+03       N/A
+
     #                                                 -----    STRESS RESPONSES    -----
     #
     #     ---------------------------------------------------------------------------------------------------------------------------
@@ -1083,12 +1162,163 @@ def _read_stress_responses(i: int, lines: list[str]) -> tuple[int, str, list[str
     #           ID        ID      LABEL        ID     ELM ID      NO.         BOUND         VALUE         VALUE         BOUND
     #     ---------------------------------------------------------------------------------------------------------------------------
     #               2     10036  U4446         5644                   9       N/A        2.6654E+04    2.5291E+04    5.0000E+04
-    i += 6
+    i += 3
+    header_line = lines[i].strip()
+
+    i += 3
     line = lines[i].strip()
+    # assert line == '', line
     #print(i, line)
-    i, lines2 = _read_line_block(i, lines, strip=True)
+    i, lines2 = _read_line_block(i-1, lines, strip=False)
     line = lines[i].strip()
-    return i, line, lines2
+
+    stress_response = {
+        'internal_id' : [],
+        'dresp_id': [],
+        'label': [],
+        'element_id': [],
+        # 'view_id': [],
+        'component': [],
+        'lower_bound': [],
+        'upper_bound': [],
+    }
+    is_error = False
+    if header_line == 'INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER                       UPPER':
+        stress_response['value'] = []
+        for linei in lines2:
+            sline = linei.split()
+            assert len(sline) == 8, sline
+            internal_id, dresp_id, label, element_id, component, lower_bound, value, upper_bound = sline
+            internal_id2 = linei[:16]
+            dresp_id2 = linei[16:26]
+            label2 = linei[26:36]
+            element_id2 = linei[36:46]
+            view2 = linei[46:56]
+            component2 = linei[56:66]
+            lower_bound2 = linei[66:80]
+            value2 = linei[80:94]
+            upper_bound2 = linei[94:108]
+
+            if internal_id != internal_id2.strip():  # pragma: no cover
+                print(f'internal_id: ={internal_id} {internal_id2}')
+                is_error = True
+            if dresp_id != dresp_id2.strip():  # pragma: no cover
+                print(f'dresp_id: ={dresp_id} {internal_id2}')
+                is_error = True
+            if label != label2.strip():  # pragma: no cover
+                print(f'label: ={label} {label2}')
+                is_error = True
+            if element_id != element_id2.strip():  # pragma: no cover
+                print(f'element_id: ={element_id} {element_id2}')
+                is_error = True
+            if component != component2.strip():  # pragma: no cover
+                print(f'component: ={component} {component2}')
+                is_error = True
+            if lower_bound != lower_bound2.strip():  # pragma: no cover
+                print(f'lower_bound: ={lower_bound} {lower_bound2}')
+                is_error = True
+            if value != value2.strip():  # pragma: no cover
+                print(f'value: ={value} {value2}')
+                is_error = True
+            if upper_bound != upper_bound2.strip():  # pragma: no cover
+                print(f'upper_bound: ={upper_bound} {upper_bound2}')
+                is_error = True
+            if view2.strip() != '':  # pragma: no cover
+                print(f'view: ={view2}')
+                is_error = True
+            x=1
+            if 'N/A' in lower_bound2:
+                lower_bound2 = 'nan'
+            if 'N/A' in upper_bound2:
+                upper_bound2 = 'nan'
+            stress_response['internal_id'].append(internal_id.strip())
+            stress_response['dresp_id'].append(dresp_id.strip())
+            stress_response['label'].append(label.strip())
+            stress_response['element_id'].append(element_id.strip())
+            #stress_response['view_id'].append(view2.strip())
+            stress_response['component'].append(component2.strip())
+            stress_response['lower_bound'].append(lower_bound2.strip())
+            stress_response['upper_bound'].append(upper_bound2.strip())
+            stress_response['value'].append(value2.strip())
+    else:  # pragma: no cover
+        stress_response['input'] = []
+        stress_response['output'] = []
+        for linei in lines2:
+            # view_id,
+            sline = linei.split()
+            assert len(sline) == 9, sline
+            internal_id, dresp_id, label, element_id, component, lower_bound, inputi, outputi, upper_bound = sline
+            internal_id2 = linei[:16]
+            dresp_id2 = linei[16:26]
+            label2 = linei[26:36]
+            element_id2 = linei[36:46]
+            view2 = linei[46:56]
+            component2 = linei[56:66]
+
+            lower_bound2 = linei[66:80]
+            inputi2 = linei[80:94]
+            outputi2 = linei[94:108]
+            upper_bound2 = linei[108:122]
+            if internal_id != internal_id2.strip():  # pragma: no cover
+                print(f'internal_id: ={internal_id} {internal_id2}')
+                is_error = True
+            if dresp_id != dresp_id2.strip():  # pragma: no cover
+                print(f'dresp_id: ={dresp_id} {internal_id2}')
+                is_error = True
+            if label != label2.strip():  # pragma: no cover
+                print(f'label: ={label} {label2}')
+                is_error = True
+            if element_id != element_id2.strip():  # pragma: no cover
+                print(f'element_id: ={element_id} {element_id2}')
+                is_error = True
+            if component != component2.strip():  # pragma: no cover
+                print(f'component: ={component} {component2}')
+                is_error = True
+            if lower_bound != lower_bound2.strip():  # pragma: no cover
+                print(f'lower_bound: ={lower_bound} {lower_bound2}')
+                is_error = True
+            if inputi != inputi2.strip():  # pragma: no cover
+                print(f'inputi: ={inputi} {inputi2}')
+                is_error = True
+            if outputi != outputi2.strip():  # pragma: no cover
+                print(f'outputi: ={outputi} {outputi2}')
+                is_error = True
+            if upper_bound != upper_bound2.strip():  # pragma: no cover
+                print(f'upper_bound: ={upper_bound} {upper_bound2}')
+                is_error = True
+            if view2.strip() != '':  # pragma: no cover
+                print(f'view: ={view2}')
+                is_error = True
+            if 'N/A' in lower_bound2:
+                lower_bound2 = 'nan'
+            if 'N/A' in upper_bound2:
+                upper_bound2 = 'nan'
+            stress_response['internal_id'].append(internal_id.strip())
+            stress_response['dresp_id'].append(dresp_id.strip())
+            stress_response['label'].append(label.strip())
+            stress_response['element_id'].append(element_id.strip())
+            #stress_response['view_id'].append(view2.strip())
+            stress_response['component'].append(component2.strip())
+            stress_response['lower_bound'].append(lower_bound2.strip())
+            stress_response['upper_bound'].append(upper_bound2.strip())
+            stress_response['input'].append(inputi2.strip())
+            stress_response['output'].append(outputi2.strip())
+
+    assert not is_error, is_error
+    stress_response2 = {}
+    for key, values in stress_response.items():
+        if key in {'internal_id', 'dresp_id', 'element_id', 'view_id', 'component'}:
+            values2 = np.array(values, dtype='int32')
+        elif key == 'label':
+            values2 = np.array(values, dtype='|U8')
+        elif key in {'value', 'input', 'output', 'upper_bound', 'lower_bound'}:
+            values2 = np.array(values, dtype='float64')
+        else:  # pragma: no cover
+            raise RuntimeError(key)
+        stress_response2[key] = values2.tolist()
+
+    print(f'stress_response[subcase={subcase_id}] = {stress_response2}')
+    return i, line, lines2, stress_response2
 
 def _read_composite_stress_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """COMPOSITE LAMINATE STRESS RESPONSES"""
@@ -1661,6 +1891,7 @@ def _parse_gradient(lines: list[str], debug: bool=True) -> np.ndarray:
     gradient = np.array(data, dtype='float32')
     return gradient
 
+
 def _get_decision_variables(lines: list[str]) -> tuple[list[str], np.ndarray, np.ndarray]:
     """
     DECISION VARIABLES, X
@@ -1760,6 +1991,8 @@ def read_sol_200(f06_filename: str,
             break
         line = lines[i].strip()
 
+    assert i > nlines * 0.95, f'{i}/{nlines} found'
+
     log.warning('finished reading f06 file...')
     return all_results
 
@@ -1792,8 +2025,8 @@ def plot_sol_200_from_results(all_results: list[OptimizationResult],
         desvars = np.vstack(desvars_x_list2)
         print(desvars.shape)
         print(desvars[:, :8])
-        dv_max = desvars.max(axis=0) # len=1309
-        dv_min = desvars.min(axis=0) # len=1309
+        dv_max = desvars.max(axis=0)  # len=1309
+        dv_min = desvars.min(axis=0)  # len=1309
         dmin_max = dv_max - dv_min
         print(desvars[:, 0])
         print(np.abs(dmin_max).max())
@@ -1823,7 +2056,7 @@ def plot_sol_200_from_results(all_results: list[OptimizationResult],
     ax.grid()
     if png_filename:
         fig.savefig(png_filename)
-    if show:
+    if show:  # pragma: no cover
         plt.show()
     print(all_results[-1])
     return all_results
