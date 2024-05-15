@@ -35,7 +35,7 @@ from pyNastran.f06.parse_flutter import (
     FlutterResponse,
 )
 from pyNastran.f06.parse_trim import read_f06_trim
-from pyNastran.f06.dev.read_sol_200 import read_sol_200, plot_sol_200
+from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = pyNastran.__path__[0]
@@ -305,8 +305,8 @@ def _fix_modes(eigr: np.ndarray,
 
     # all_data = [nmode, nvel, 2]
     all_data = np.dstack([eigr, eigi])
-    data0 = np.column_stack([eigr[:,0],eigi[:,0]])
-    assert np.array_equal(data0, all_data[:,0,:])
+    data0 = np.column_stack([eigr[:,0],eigi[:, 0]])
+    assert np.array_equal(data0, all_data[:, 0, :])
     assert all_data.shape == (nmodes, nvel, 2), all_data.shape
     imode_expected = np.arange(nmodes, dtype='int32')
 
@@ -319,7 +319,7 @@ def _fix_modes(eigr: np.ndarray,
     tree0 = KDTree(data0)
     for ivel in range(1, nvel):
         # datai = [imode, 2=real/imag]
-        datai = np.column_stack([eigr[:,ivel],eigi[:,ivel]])
+        datai = np.column_stack([eigr[:, ivel], eigi[:, ivel]])
         dxyz, ixyz = tree0.query(datai, k=kmodes)
         if debug:
             print(f'\ndata0[{ivel}]:\n{data0}')
@@ -394,7 +394,7 @@ def _fix_modes(eigr: np.ndarray,
                         #eigiii = func_eigi(xi)
                         if debug:
                             print(f'  eig_predicted[{imode+1}] = {eigrii} + {eigiii}j')
-                        x=1
+                        x = 1
                     else:
                         spline_eigr = splrep(x, eigr_mode, s=s)
                         spline_eigi = splrep(x, eigi_mode, s=s)
@@ -455,6 +455,7 @@ def _fix_modes(eigr: np.ndarray,
 
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
+        """tests optimization"""
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
         png_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.png')
         plot_sol_200(f06_filename, png_filename=png_filename,
@@ -462,6 +463,7 @@ class TestF06Utils(unittest.TestCase):
         #read_sol_200(f06_filename)
 
     def test_opt_mdb200(self):
+        """tests optimization"""
         f06_filename = os.path.join(MODEL_PATH, 'other', 'mdb200.f06')
         png_filename = os.path.join(MODEL_PATH, 'other', 'mdb200.png')
         plot_sol_200(f06_filename, png_filename=png_filename,

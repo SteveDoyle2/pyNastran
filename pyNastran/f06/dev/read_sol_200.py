@@ -154,12 +154,13 @@ def _goto_page(i: int, lines: list[str], debug: bool=False):
     return i
 
 def _read_int_gradient(i: int, line: str, lines: list[str],
-                       nlines: int, log: SimpleLogger, debug: bool=True) -> tuple[int, np.ndarray]:
+                       nlines: int, log: SimpleLogger,
+                       debug: bool=False) -> tuple[int, np.ndarray]:
     line = lines[i].strip()
-    #if debug:
-    log.debug(f'{i} read_int_gradient: {line}')
+    if debug:
+        log.debug(f'{i} read_int_gradient: {line}')
     i, lines2 = _read_line_block(i, lines, stop_marker='', rstrip=False, strip=True,
-                                 debug=True, imax=None)
+                                 debug=debug, imax=None)
     line = lines[i].strip()
     #for line in lines2:
         #print(line)
@@ -168,10 +169,9 @@ def _read_int_gradient(i: int, line: str, lines: list[str],
     return i, ids
 
 def _read_gradient(i: int, line: str, lines: list[str], nlines, log: SimpleLogger,
-                   debug: bool=True) -> tuple[int, np.ndarray]:
+                   debug: bool=False) -> tuple[int, np.ndarray]:
     i += 1
-    #if debug:
-    if 'GRADIENT OF CONSTRAINT NUMBER' not in line:
+    if debug and 'GRADIENT OF CONSTRAINT NUMBER' not in line:
         log.debug(f'{i} read_gradient: {line}')
     #print(i, line)
     line = lines[i].strip()
@@ -203,13 +203,14 @@ def _read_gradient_block(i: int, line: str, lines: list[str],
 
 def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
                               idesign: int,
-                              all_results: list[OptimizationResult],
+                              optimization_results: list[OptimizationResult],
                               log: SimpleLogger) -> tuple[int, bool, int]:
-    optimization_result = all_results[-1]
-    assert isinstance(optimization_result, OptimizationResult), optimization_result
+    optimization_result = OptimizationResult()
+    obj = np.nan
     end_of_job = False
     i += 1
     log.debug(f'{i} read_design_optimization')
+    #log.warning(f'nobj = {len(all_results)}')
     #log.debug(f'{i} {line}')
     line = lines[i].strip()
     gradient_words = [
@@ -273,9 +274,11 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
         elif line == '-----   COMPARISON BETWEEN INPUT PROPERTY VALUES FROM ANALYSIS AND DESIGN MODELS -----':
             i, line, lines2 = _read_property_comparison_table(i, lines, log)
             i += 7
+            print_line = False
         elif line == '-----   COMPARISON BETWEEN INPUT CONNECTIVITY PROPERTY VALUES FROM ANALYSIS AND DESIGN MODELS -----':
             i, line, lines2 = _read_property_table(i, lines)
             #print('*', i, line)
+            print_line = False
         elif line == '*******   ANALYSIS RESULTS BASED ON THE INITIAL DESIGN   *******':
             i += 1
             line = lines[i].strip()
@@ -313,7 +316,9 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i = _read_iteration_number(i, line, lines, show_design_vars, constraint_ids, gvector, nlines, log)
             line = lines[i].strip()
             #print('*', i, line)
+            print_line = False
         elif line in gradient_words:
+            print_line = False
             if line in gradients:
                 ngrad = len(gradients[line])
                 skip_ = [
@@ -336,24 +341,29 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i -= 1
             i, grad = _read_gradient(i, line, lines, nlines, log, debug=False)
             gradients[line].append(grad)
+            print_line = False
         elif line in  blank_gradients:
             # there is a blank line
             i += 1
             log.info(line)
             i, lines2 = _read_gradient(i, line, lines, nlines, log, debug=False)
+            print_line = False
         elif 'DECISION VARIABLES, X' in line:
             i += 1
             i, lines2 = _read_gradient_block(i, line, lines, nlines, log)
             header, ids, data = _get_decision_variables(lines2)
+            print_line = False
         elif 'THE GRADIENT OF CONSTRAINT NUMBERS' in line:
             # THE GRADIENT OF CONSTRAINT NUMBERS      4779 AND      4778 ARE DEPENDENT
             # CONSTRAINT NUMBER      4779 IS REMOVED FROM THE ACTIVE SET
             log.debug(line)
             i += 1
+            print_line = False
         elif 'GRADIENT OF CONSTRAINT NUMBER' in line:
             igradient = int(line.split()[-1])
             i, lines2 = _read_gradient(i, line, lines, nlines, log)
             constraint_gradients[igradient] = lines2
+            print_line = False
 
         elif line in int_tables:
             # 'CONSTRAINT NUMBERS',
@@ -367,12 +377,14 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             del trash, maxstr, resstr, eq2
             beta = float(beta)
             residual = float(residual)
+            print_line = False
         elif 'ALPHA =' in line:
             # CALCULATED ALPHA =  1.66390E-02
             # PROPOSED ALPHA =  2.06505E-04
             # ALPHA =  2.06505E-04
             alpha = line.split()[-1]
             alpha = float(alpha)
+            print_line = False
 
         #elif ')  ' not in line:
             #print('b', i, line)
@@ -389,13 +401,13 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
         elif 'OBJ =' in line:
             # OBJ =  2.63781E+01
             #assert obj is None, line
-            obj = line.split()[-1]
-            obj = float(obj)
+            obj_str = line.split()[-1]
+            obj = float(obj_str)
         elif 'OBJECTIVE =' in line:
             # OBJECTIVE =  2.63781E+01
             #assert obj is None, line
-            obj = line.split()[-1]
-            obj = float(obj)
+            obj_str = line.split()[-1]
+            obj = float(obj_str)
         elif '-- OPTIMIZATION RESULTS' in line:
             i += 3
             line = lines[i]
@@ -447,14 +459,16 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             #log.debug(line)
             if idesign != -1:
                 log.warning('reset...')
-                all_results.append(optimization_result)
-                optimization_result = OptimizationResult()
+                #optimization_result = OptimizationResult()
+                #optimization_results.append(optimization_result)
+            #optimization_results.append(optimization_result)
             i, line = _read_design_objective(i, lines, optimization_result, log)
             assert isinstance(i, int), line
         elif '-----   DESIGNED PROPERTIES   -----' in line:
             #log.debug(line)
             i, line, lines2 = _read_designed_properties(i, lines)
             assert isinstance(i, int), line
+            print_line = False
         elif '-----   DESIGN VARIABLES   -----' in line:
             print_line = False
             #log.debug(line)
@@ -462,12 +476,12 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i, line = _read_design_variables(
                 i, lines,
                 design_cycle, idesign, optimization_result, log)
-            if design_cycle == 3:
-                print([res.design_vars['internal_id'][0] for res in all_results])
-                print([res.design_vars['xu'][0] for res in all_results])
-                print([res.design_vars['xl'][0] for res in all_results])
-                print([res.design_vars['x'][0] for res in all_results])
-                asdf
+            #if design_cycle == 3:
+            #    print([res.design_vars['internal_id'][0] for res in all_results])
+            #    print([res.design_vars['xu'][0] for res in all_results])
+            #    print([res.design_vars['xl'][0] for res in all_results])
+            #    print([res.design_vars['x'][0] for res in all_results])
+            #    asdf
             idesign += 1
             line = lines[i].strip()
             #show_design_vars(design_vars, log)
@@ -495,23 +509,28 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
                 '-----    DISPLACEMENT RESPONSES    -----' in line or
                 '-----    STABILITY DERIVATIVE RESPONSES    -----' in line):
             i, line, lines2 = _read_composite_stress_responses(i, lines)
+            print_line = False
 
         elif '-----    STRESS RESPONSES    -----' in line:
             #log.debug(f'stress response {i} {line}')
             i, line, lines2, stress_response = _read_stress_responses(i, lines, subcase_id)
             #log.debug(f'stress response2 {i} {line}')
+            print_line = False
         elif '-----    COMPOSITE LAMINATE STRESS RESPONSES    -----' in line:
             log.debug(line)
             i, line, lines2 = _read_composite_stress_responses(i, lines)
+            print_line = False
         elif '-----    WEIGHT RESPONSE    -----' in line:
             #log.debug(line)
             i, line, lines2 = _read_weight_responses(i, lines)
         elif '-----    FLUTTER RESPONSES    -----' in line:
             #log.debug(line)
             i, line, lines2 = _read_flutter_responses(i, lines)
+            print_line = False
         elif '---- RETAINED DRESP2 RESPONSES ----' in line:
             #log.debug(line)
             i, line, lines2 = _read_retained_dresp2_responses(i, lines)
+            print_line = False
         elif 'S U M M A R Y   O F   D E S I G N    C Y C L E    H I S T O R Y' in line:
             i, end_of_job = _read_summary_of_design_cycle_history(i, line, lines, nlines, log)
             if end_of_job:
@@ -519,6 +538,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
         elif  line == 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
             i += 31
             line = lines[i].strip()  # page xx
+            print_line = False
         elif _is_page_skip(line):
             print_line = False
             i = _goto_page(i, lines)
@@ -546,9 +566,9 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
 
         elif 'D E S I G N   C Y C L E' in line:
             # '*      D E S I G N   C Y C L E      11    *'
-            if idesign != -1:
-                all_results.append(optimization_result)
-                optimization_result = OptimizationResult()
+            #if idesign != -1:
+            #    optimization_results.append(optimization_result)
+            #    optimization_result = OptimizationResult()
             print_line = False
             # '*      D E S I G N   C Y C L E      11    *'
             sline = line.split('*')
@@ -600,6 +620,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             #                 **************************************************************************************
             i += 15
             line = lines[i].strip()
+            print_line = False
         elif 'INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS' in line:
             # ****************************************************************************************
             #                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
@@ -612,6 +633,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             #                       ****************************************************************************************
             i += 7
             line = lines[i].strip()
+            print_line = False
 
         elif 'CPU Statistics for Module' in line:
             # ******************************************
@@ -629,6 +651,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             while 'Total               =' not in line and i < nlines:
                 i += 1
                 line = lines[i].strip()
+            print_line = False
         else:
             #print_line = True
             print_line = False
@@ -656,6 +679,12 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
     assert isinstance(i, int), line
     #print('idesign', idesign)
     #asdf
+
+    log.warning(f'idesign={idesign} obj={obj}')
+    if len(optimization_result.design_objective) > 0:
+        optimization_results.append(optimization_result)
+    #assert not np.isnan(obj), f'idesign={idesign} obj={obj}'
+    #optimization_result.design_objective = obj
     return i, end_of_job, idesign
 
 def _read_design_optimization_tools(i: int, line: str, lines: list[str],
@@ -750,8 +779,8 @@ def _read_design_optimization_tools(i: int, line: str, lines: list[str],
                 i, grad = _read_gradient(i, line, lines, nlines, log, debug=False)
                 i += 1
                 line = lines[i].strip()
-
-            log.debug(line)
+            if line.strip():
+                log.debug(line)
             #sss
         #elif line in gradient_words:
             ##i -= 1
@@ -769,7 +798,8 @@ def _read_design_optimization_tools(i: int, line: str, lines: list[str],
                 i, gvector = _read_gradient(i, line, lines, nlines, log, debug=False)
                 i += 1
                 line = lines[i].strip()
-            log.debug(line)
+            if line.strip():
+                log.debug(line)
         elif '***** WARNING - ONE OR MORE CONSTRAINT VALUES EXCEEDS 10.0 IN MAGNITUDE.' in line:
             log.warning(line)
             #print('keys=', list(gradients.keys()))
@@ -1449,6 +1479,10 @@ def _read_design_objective(i: int, lines: list[str],
     #                   ID       RESPONSE      LABEL     MAXIMIZE         ID            ID          VALUE           VALUE
     #     ---------------------------------------------------------------------------------------------------------------------------
     #                       4     DRESP2        N/A      MINIMIZE         N/A          N/A        1.8536E+01      2.3529E+01
+    subcase_id = -1
+    label = 'N/A'
+    input_value = np.nan
+    output_value = np.nan
     if debug:
         log.info(f'_read_design_objective')
     objective = optimization_result.design_objective
@@ -1481,6 +1515,7 @@ def _read_design_objective(i: int, lines: list[str],
     objective['label'].append(label)
     objective['in'].append(input_value)
     objective['out'].append(output_value)
+    log.warning(f'objective = {objective}; in={input_value} -> out={output_value}')
     return i, line
 
 def _read_design_variables(i: int, lines: list[str],
@@ -1926,14 +1961,17 @@ def read_sol_200(f06_filename: str,
     i = 0
     line = lines[i].strip()
 
-    all_results = [OptimizationResult()]
+    optimization_results: list[OptimizationResult] = []
     idesign = -1
 
     while i < nlines:
         #log.debug(f'{i} {line}')
         if line == '*                D E S I G N    O P T I M I Z A T I O N            *':
             i, end_of_job, idesign = _read_design_optimization(i, line, lines, nlines,
-                                                               idesign, all_results, log)
+                                                               idesign, optimization_results, log)
+            log.warning('objective')
+            for ires, res in enumerate(optimization_results):
+                log.warning(f'  objective[{ires}] = {res.design_objective}')
             if end_of_job:
                 log.debug('end of design optimization')
                 break
@@ -1994,7 +2032,7 @@ def read_sol_200(f06_filename: str,
     assert i > nlines * 0.95, f'{i}/{nlines} found'
 
     log.warning('finished reading f06 file...')
-    return all_results
+    return optimization_results
 
 def plot_sol_200(f06_filename: str, png_filename: str='', show: bool=True):
     all_results = read_sol_200(f06_filename)
@@ -2049,8 +2087,9 @@ def plot_sol_200_from_results(all_results: list[OptimizationResult],
     objs_out = [obj for obj in objs_out if obj]
     fig = plt.figure()
     ax = fig.gca()
-    ax.plot(design_cycle, objs_in, 'o-')
-    ax.plot(design_cycle, objs_out, 'o-')
+    ax.plot(design_cycle, objs_in, 'o-', label='Objective (in)')
+    ax.plot(design_cycle, objs_out, 'o-', label='Objective (out)')
+    ax.legend()
     ax.set_xlabel('Design Cycle')
     ax.set_ylabel('Objective Function')
     ax.grid()
