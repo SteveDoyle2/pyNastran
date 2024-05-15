@@ -267,6 +267,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             sline = line.split('=')
             subcase_id = int(sline[1])
             i += 1
+            print_line = False
         elif 'R E S P O N S E S    IN    D E S I G N    M O D E L' in line:
             i += 1
             # continue
@@ -491,19 +492,22 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             #log.debug(line)
             i, line, lines2 = _read_design_constraints_of_responses(i, lines)
             assert isinstance(i, int), line
+            print_line = False
         elif '-----   CONSTRAINTS ON DESIGNED PROPERTIES   -----' in line:
             #log.debug(line)
             i, line, lines2 = _read_constraints_on_designed_properties(i, lines)
             assert isinstance(i, int), line
+            print_line = False
         elif '-----   CONSTRAINTS ON DEPENDENT DESIGN VARIABLES   -----' in line:
             #log.debug(line)
             i, line, lines2 = _read_constraints_on_dependent_design_variables(i, lines)
             assert isinstance(i, int), line
-
+            print_line = False
         elif '-----   WEIGHT AS A FUNCTION OF MATERIAL ID ----' in line:
             #log.debug(line)
             i, line, lines2 = _read_weight_as_a_function_of_material_id(i, lines)
             assert isinstance(i, int), line
+            print_line = False
         elif (
                 '-----   CONSTRAINTS ON DESIGNED BEAM LIBRARY DIMENSIONS    -----' in line or
                 '-----    DISPLACEMENT RESPONSES    -----' in line or
@@ -634,7 +638,10 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i += 7
             line = lines[i].strip()
             print_line = False
-
+        elif 'DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND' in line:
+            print_line = False
+            # i += 1
+            # line = lines[i].strip()
         elif 'CPU Statistics for Module' in line:
             # ******************************************
             # ***** CPU Statistics for Module DOM9 *****
@@ -651,6 +658,24 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             while 'Total               =' not in line and i < nlines:
                 i += 1
                 line = lines[i].strip()
+            print_line = False
+        elif 'FOR DATA BLOCK   KLR' in line:
+            #                                  FOR DATA BLOCK   KLR
+            #    SUPPORT PT.NO.             EPSILON             STRAIN   ENERGY     EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+            #                1          2.6609233E-15          0.0000000E+00
+            #                2          2.6609233E-15          0.0000000E+00
+            i += 2
+            line = lines[i].strip()
+            sline = line.split()
+            while len(sline) == 3:
+                support_pt_str, epsilon_str, strain_energy_str = sline
+                support_pt = int(support_pt_str)
+                epsilon = float(epsilon_str)
+                strain_energy = float(strain_energy_str)
+                i += 1
+                line = lines[i].strip()
+                sline = line.split()
+            del support_pt_str, epsilon_str, strain_energy_str, support_pt, epsilon, strain_energy, sline
             print_line = False
         else:
             #print_line = True
@@ -828,16 +853,17 @@ def _read_design_optimization_tools(i: int, line: str, lines: list[str],
         line = lines[i].strip()
     return i
 
-def _read_summary_of_design_cycle_history(i, line, lines, nlines: int, log):
+def _read_summary_of_design_cycle_history(i: int, line: str, lines: list[str],
+                                          nlines: int,
+                                          log: SimpleLogger) -> tuple[int, bool]:
+    log.info('_read_summary_of_design_cycle_history')
     i += 1
     line = lines[i].strip()
     unused_convergence_type = None
     unused_nanalyses = None
     end_of_job = False
-    while i < nlines:
-        if line == '':
-            pass
-        elif line in ['***************************************************************']:
+    while i < nlines - 1:
+        if line.strip(' *'):
             pass
         elif line == '(HARD CONVERGENCE ACHIEVED)':
             unused_convergence_type = 'HARD'
@@ -846,7 +872,8 @@ def _read_summary_of_design_cycle_history(i, line, lines, nlines: int, log):
         elif line.startswith('NUMBER OF OPTIMIZATIONS W.R.T. APPROXIMATE MODELS'):
             unused_napproximate_optimizations = _get_last_int(line)
         elif 'OBJECTIVE AND MAXIMUM CONSTRAINT HISTORY' in line:
-            i, line, lines2 = _read_objective_and_maximum_constraint_history(i, lines, log)
+            i, line, obj_history = _read_objective_and_maximum_constraint_history(i, lines, log)
+            log.info(f'obj_history = {obj_history}')
         elif 'DESIGN VARIABLE HISTORY' in line:
             i, line, lines2 = _read_design_variable_history(i, lines)
             #for line in lines2:
@@ -865,6 +892,8 @@ def _read_summary_of_design_cycle_history(i, line, lines, nlines: int, log):
             #log.debug(f'summary {i} {line}')
             #aaa
         i += 1
+        #if i == nlines:
+        #    break
         line = lines[i].strip()
     return i, end_of_job
 
@@ -1407,10 +1436,26 @@ def _read_retained_dresp2_responses(i: int, lines: list[str]) -> tuple[int, str,
     #            ID           ID         LABEL          ID            BOUND            VALUE            BOUND
     #     ----------------------------------------------------------------------------------------------------------
     #                1        10200     GRAT400            42          N/A           1.9672E-01       2.0000E-01
-    i += 6
+    i += 5
     line = lines[i].strip()
     #print(i, line)
     i, lines2 = _read_line_block(i, lines, strip=True)
+    nj = len(lines2)
+    for j, line2 in enumerate(lines2):
+        sline = line2.split()
+        if len(sline) == 7:
+            internal_id_str, dresp2_id_str, label, equation_id_str, lower, value_str, upper = sline
+            internal_id = int(internal_id_str)
+            dresp2_id = int(dresp2_id_str)
+            equation_id = int(equation_id_str)
+            value = float(value_str)
+            #internal_ids.append(internal_id)
+            #dresp2_ids.append(dresp2_id)
+            #equation_ids.append(equation_id)
+            #values.append(value)
+        else:
+            break
+    i = i + j - nj
     line = lines[i].strip()
     return i, line, lines2
 
@@ -1456,7 +1501,27 @@ def _read_objective_and_maximum_constraint_history(i: int, lines: list[str],
     lines2 = []
     i = _goto_page(i, lines)
     line = lines[i].strip()
-    return i, line, lines2
+
+    obj = {
+    'cycle' : [],
+    'obj_approximate' : [],
+    'obj_exact' : [],
+    'error' : [],
+    'max_constraint' : [],
+    }
+    for line in lines2:
+        cycles, objas, objes, errors, max_constraints = line.split()
+        cycle = int(cycles)
+        obja = float(objas)
+        obje = float(objes)
+        error = float(errors)
+        max_constraint = float(max_constraints)
+        obj['cycle'].append(cycle)
+        obj['obj_approximate'].append(obja)
+        obj['obj_exact'].append(obje)
+        obj['error'].append(error)
+        obj['max_constraint'].append(max_constraint)
+    return i, line, obj
 
 def _read_design_objective(i: int, lines: list[str],
                            optimization_result: OptimizationResult,
