@@ -30,8 +30,10 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
         'CAERO2', 'PAERO2', 'SPLINE2',
         'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO5',
-        #'AELIST', 'AEFACT', 'AESURF', 'AESURFS'
-        'AESURF', 'AESTAT',
+        'AELIST',
+        'AEFACT',
+        'AESURF', 'AESURFS',
+        'AESTAT',
         'TRIM', 'DIVERG', 'FLUTTER',
         'DEFORM',
         'FLFACT',
@@ -43,11 +45,6 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     cards_to_skip = [
         #'GUST',  # part of DIT
     ]
-    #card_types = [
-        #'CAERO1', 'CAERO2',
-        #'SPLINE1', 'SPLINE2',
-        #'AEFACT', 'AELIST', 'AESTAT',
-    #]
     out = defaultdict(list)
     # geometry
     for unused_load_id, loads in model.loads.items():
@@ -63,6 +60,8 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
         out[paero.type].append(pid)
     for spline_id, spline in sorted(model.splines.items()):
         out[spline.type].append(spline_id)
+    for aelist_id, aelist in sorted(model.aelists.items()):
+        out[aelist.type].append(aelist_id)
     for aesurf_id, aesurf in sorted(model.aesurf.items()):
         out[aesurf.type].append(aesurf_id)
     for aesurfs_id, aesurfs in sorted(model.aesurfs.items()):
@@ -780,7 +779,7 @@ def write_aesurf(model: Union[BDF, OP2Geom], name: str,
             ldw_int = 0
         elif aesurf.ldw == 'NOLDW':
             ldw_int = 1
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(aesurf.ldw)
         cid2 = 0 if aesurf.cid2 is None else aesurf.cid2
         aelist_id2 = 0 if aesurf.aelist_id2 is None else aesurf.aelist_id2
@@ -857,7 +856,6 @@ def write_aestat(model: Union[BDF, OP2Geom], name: str,
 
     for aestat_id in aestat_ids:
         aestat = model.aestats[aestat_id] # type: AESTAT
-
         label_bytes = b'%-8s' % aestat.label.encode('ascii')
 
         #print(aestat.get_stats())
@@ -1367,7 +1365,6 @@ def write_monpnt1(model: Union[BDF, OP2Geom], name: str,
         nfields = 23
         structi = Struct(endian + b'8s 56s i 8s i 3f')  # nx
 
-
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
     #op2 = self.op2
     #ntotal = 4 * 24 # 4 * 24
@@ -1562,9 +1559,93 @@ def write_deform(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
+def write_aefact(model: Union[BDF, OP2Geom], name: str,
+                 aefact_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    """
+    MSC 2018.2
 
+    Word Name Type Description
+    1 SID I
+    2 D RS
+    Word 2 repeats until End of Record
+
+    (1, 0.0, 0.1, 0.2, 1.0, -1,
+     2, 0.0, 0.1, 0.2, 0.5, 1.0, -1,
+    )
+
+    """
+    key = (4002, 40, 273)
+
+    nvalues = 0
+    for aefact_id in aefact_ids:
+        aefacti = model.aefacts[aefact_id]
+        nvalues += 2 + len(aefacti.factors)
+
+    # 2* = sid and the -1 flag
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for aefact_id in aefact_ids:
+        aefacti = model.aefacts[aefact_id]
+        nfactors = len(aefacti.factors)
+
+        fmt = endian + b'i %df i' % (nfactors)
+        #print(fmt)
+        structi = Struct(fmt)
+
+        data = [aefacti.sid,] + aefacti.factors + [-1]
+
+        assert None not in data, data
+        op2_ascii.write(f'  AEFACT data={data}\n')
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
+    return nbytes
+
+def write_aelist(model: Union[BDF, OP2Geom], name: str,
+                 aelist_ids: list[int], ncards: int,
+                 op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 SID I
+    2 E I
+    Word 2 repeats until End of Record
+
+    """
+    key = (2302, 23, 341)
+
+    nvalues = 0
+    for aelist_id in aelist_ids:
+        aelist = model.aelists[aelist_id]
+        nvalues += 2 + len(aelist.elements)
+
+    # 2* = sid and the -1 flag
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for aelist_id in aelist_ids:
+        aelist = model.aelists[aelist_id]
+        nelements = len(aelist.elements)
+
+        fmt = endian + b'i %di i' % (nelements)
+        structi = Struct(fmt)
+
+        data = [aelist.sid,] + aelist.elements + [-1]
+        assert None not in data, data
+        op2_ascii.write(f'  AELIST data={data}\n')
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
+
+    return nbytes
 
 EDT_MAP = {
+    'AEFACT': write_aefact,
+    'AELIST': write_aelist,
+
     'MONPNT1': write_monpnt1,
     'MONPNT2': write_monpnt2,
     'MONPNT3': write_monpnt3,
@@ -1588,7 +1669,7 @@ EDT_MAP = {
     'SPLINE1': write_spline1,
     'SPLINE2': write_spline2,
     'AESURF': write_aesurf,
-    #'AESURFS': _write_aesurfs,
+    'AESURFS': write_aesurfs,
     'AESTAT': write_aestat,
     'AELINK': write_aelink,
     #'GUST': write_gust,  # part of DIT

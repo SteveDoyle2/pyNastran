@@ -1,7 +1,9 @@
-from typing import Optional, Any
+import os
 from collections import defaultdict
+from typing import Optional, Any
 import numpy as np
 from cpylog import get_logger, SimpleLogger
+from pyNastran.utils import print_bad_path
 
 class OptimizationResult():
     def __init__(self):
@@ -22,6 +24,10 @@ class OptimizationResult():
             'x' : [],
             'xu' : [],
         }
+
+    def len(self) -> int:
+        return len(self.design_objective['label'])
+
     def __repr__(self):
         design_objective = self.design_objective
         internal_id = np.array(self.design_vars['internal_id'], dtype='int32')
@@ -2019,6 +2025,7 @@ def read_sol_200(f06_filename: str,
                  log: Optional[SimpleLogger]=None) -> list[OptimizationResult]:
     log = get_logger(log=log, level='debug', encoding='utf-8')
 
+    assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     with open(f06_filename, 'r') as f:
         lines = f.readlines()
 

@@ -2341,7 +2341,7 @@ class EDT:
         ntotal0 = 16 * self.size
         ntotal1 = 6 * self.size
         ntotal2 = 2 * self.size
-        monpnts = []
+        #monpnts = []
         while n < len(data):
             edata = data[n:n+ntotal0]
             n += ntotal0
@@ -2391,7 +2391,7 @@ class EDT:
             op2._add_methods._add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
-            monpnts.append(monpnt)
+            #monpnts.append(monpnt)
         return n
 
     def read_monpnt2_msc(self, data: bytes, n: int) -> int:
@@ -2411,7 +2411,7 @@ class EDT:
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         structi = Struct(op2._endian + b'8s 56s 8s8s8s i')  # msc
-        monpnts = []
+        #monpnts = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -2426,7 +2426,7 @@ class EDT:
             str(monpnt)
             #print(monpnt)
             n += ntotal
-            monpnts.append(monpnt)
+            #monpnts.append(monpnt)
         #op2.to_nx(' because MONPNT3-NX was found')
         return n # , monpnt1s
 
@@ -2497,7 +2497,7 @@ class EDT:
             xyz = [x, y, z]
             try:
                 xflag_str = xflag_map[xflag]
-            except Exception:
+            except Exception:  # pragma: no cover
                 raise RuntimeError((name, label, xflag))
             monpnt = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                               cp=cp, cd=cd, xflag=xflag_str, comment='')
@@ -2558,6 +2558,7 @@ class EDT:
           ints    = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0,   b'SPBLNDX ', -858993459)
           floats  = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0.0, b'SPBLNDX ', -107374184.0)
           MDLPRM, nsgrds4, 20, pexts4, 50., spblndx, 3.1
+        TODO: no idea why this doesn't make sense...
         """
         op2: OP2Geom = self.op2
         ntotal = 12 * self.factor # 4 * 3
@@ -2571,9 +2572,10 @@ class EDT:
         MDLPRM_FLOAT_KEYS_1 = {
             'DBCTOLE', 'DELELAS', 'DELFAST', 'DELMASS', 'DELSEAM', 'DELWELD',
             'PEXTS4', 'PIVTHRSH', 'SPBLNDX'}
-        float_names = {('-%8s' % name).encode('ascii') for name in MDLPRM_FLOAT_KEYS_1}
+        float_names = {('%-8s' % name).encode('ascii') for name in MDLPRM_FLOAT_KEYS_1}
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
+            #op2.show_data(edata, types='ifs', endian='<')
             out = structi.unpack(edata)
             name_bytes, value = out
             if name_bytes in float_names:
@@ -2583,7 +2585,7 @@ class EDT:
             if name == 'SHEARP':
                 if value == 2:
                     value = 'HARDER'
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError((name, value))
             elif name == 'OFFDEF':
                 if value == 8:
@@ -2594,14 +2596,19 @@ class EDT:
                     value = 'NOMASS'
                 elif value in [128, 192]:
                     value = 'LROFF'
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError((name, value))
+            elif name == 'PEXTS4':
+                assert value == 0.0, (name, value)
 
             data_dict[name] = value
             n += ntotal
 
         if 'SPBLNDX' in data_dict:
-            raise RuntimeError(f'SPBLNDX exists and has the wrong value...{data_dict}')
+            if value == -107374184.0:
+                value = None
+            else:
+                raise RuntimeError(f'SPBLNDX exists and has the wrong value...{data_dict}')
 
         if op2.mdlprm is not None:
             return n
@@ -2731,19 +2738,6 @@ class EDT:
                             #omax=fmax,
                             #validate=True)
         return len(data)
-        #ntotal = 12 # 4 * 8
-        #ndatai = len(data) - n
-        #ncards = ndatai // ntotal
-        #assert ndatai % ntotal == 0
-        #structi = Struct(op2._endian + b'i 8s')
-        #for unused_i in range(ncards):
-            #edata = data[n:n + ntotal]
-            #out = structi.unpack(edata)
-            #aestat_id, label = out
-            #label = label.rstrip().decode('latin1')
-            #op2.add_aestat(aestat_id, label)
-            #n += ntotal
-        #return n
 
     def read_trim(self, data: bytes, n: int) -> int:
         """
