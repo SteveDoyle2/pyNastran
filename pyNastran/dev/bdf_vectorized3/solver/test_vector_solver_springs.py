@@ -451,13 +451,14 @@ class TestStaticRod(unittest.TestCase):
         assert np.allclose(solver.Fg[6], F), solver.xa_
         #assert np.allclose(solver.Fa_[0], 0.), solver.Fa_
 
-    def test_crod(self):
+    def test_crod_simple(self):
         """Tests a CROD/PROD"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'crod.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
+        L = 1.0
         nids = [1, 2]
         eid = 1
         pid = 2
@@ -468,7 +469,9 @@ class TestStaticRod(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
-        model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
+        A = 1.0
+        J = 2.0
+        model.add_prod(pid, mid, A=A, j=J, c=0., nsm=0.)
 
         load_id = 2
         spc_id = 3
@@ -483,6 +486,102 @@ class TestStaticRod(unittest.TestCase):
         setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
+
+        G = model.mat1.G[0]
+
+        ka_expected = A * E / L
+        kt_expected = G * J / L
+        Kgg_expected = np.zeros((12, 12))
+        # axial
+        Kgg_expected[0, 0] = Kgg_expected[6, 6] = ka_expected
+        Kgg_expected[0, 6] = Kgg_expected[6, 0] = -ka_expected
+
+        # torsion
+        Kgg_expected[3, 3] = Kgg_expected[9, 9] = kt_expected
+        Kgg_expected[3, 9] = Kgg_expected[9, 3] = -kt_expected
+
+        dof = [0, 3, 6, 9]
+        Kgg_expectedi = Kgg_expected[dof, :][:, dof]
+        Kgg = solver.Kgg[dof, :][:, dof]
+        assert np.allclose(Kgg, Kgg_expectedi)
+
+
+    def test_crod_rotate(self):
+        """Tests a CROD/PROD"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod.bdf'
+        thetad = 30.
+        theta = np.radians(thetad)
+        model.add_grid(1, [0., 0., 0.])
+        x = c = np.cos(theta)
+        y = s = np.sin(theta)
+        model.add_grid(2, [x, y, 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        #E = 1.
+        #G = 1.
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        A = 1.0
+        J = 2.0
+        L = 1.0
+
+        # ka=1
+        # kt=2
+        model.add_prod(pid, mid, A=A, j=J, c=0., nsm=0.)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [x, y, 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+        #---------------------------
+        # results
+        G = model.mat1.G[0]
+
+        ka_expected = A * E / L
+        kt_expected = G * J / L
+        Kgg_expected = np.zeros((12, 12))
+        # axial
+        Kgg_expected[0, 0] = Kgg_expected[6, 6] = ka_expected
+        Kgg_expected[0, 6] = Kgg_expected[6, 0] = -ka_expected
+
+        # torsion
+        Kgg_expected[3, 3] = Kgg_expected[9, 9] = kt_expected
+        Kgg_expected[3, 9] = Kgg_expected[9, 3] = -kt_expected
+        T3 = np.array([
+            [c, -s, 0.],
+            [s, c, 0.],
+            [0., 0., 1.]
+        ])
+        z = np.zeros((3, 3))
+        T = np.block([
+            [T3, z, z, z],
+            [z, T3, z, z],
+            [z, z, T3, z],
+            [z, z, z, T3],
+        ])
+        Kgg_expectedi = T.T @ Kgg_expected @ T
+        Kgg_expectedi = np.round(Kgg_expectedi)
+        #dof = [0, 3, 6, 9]
+        #Kgg_expectedi = Kgg_expected[dof, :][:, dof]
+        Kgg = np.round(solver.Kgg) # [dof, :][:, dof]
+        assert np.allclose(Kgg, Kgg_expectedi)
 
     def test_crod_aset(self):
         """

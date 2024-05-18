@@ -54,6 +54,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class Set(BaseCard):
@@ -2026,7 +2027,7 @@ class USET(Set):
             the BDF object
 
         """
-        msg = ', which is required by USET name=%s' % (self.name)
+        msg = f', which is required by USET name={self.name}'
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -2038,7 +2039,7 @@ class USET(Set):
     def node_ids(self):
         if self.ids_ref is None:
             return self.ids
-        msg = ', which is required by USET name=%s' % (self.name)
+        msg = f', which is required by USET name={self.name}'
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -2168,7 +2169,7 @@ class USET1(ABCQSet1):
             the BDF object
 
         """
-        msg = ', which is required by USET1 name=%s' % (self.name)
+        msg = f', which is required by USET1  name={self.name}'
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -2180,7 +2181,7 @@ class USET1(ABCQSet1):
     def node_ids(self):
         if self.ids_ref is None:
             return self.ids
-        msg = ', which is required by USET1 name=%s' % (self.name)
+        msg = f', which is required by USET1 name={self.name}'
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):

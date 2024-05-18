@@ -13,7 +13,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

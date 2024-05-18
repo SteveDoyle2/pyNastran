@@ -8,7 +8,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 
 """
 from collections import defaultdict
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import numpy as np
 

@@ -2317,7 +2317,7 @@ class EDOM(GeomCommon):
             try:
                 constraint_type = constraint_map[constraint_int]
             except KeyError:
-                raise NotImplementedError(f'disp_stress_force={disp_stress_force} out={out}')
+                raise NotImplementedError(f'disp_stress_force={constraint_int} out={out}')
             assert min_max in [0, 1], min_max
             out = list(out)
 

@@ -14,7 +14,7 @@ import getpass
 import inspect
 import warnings
 from pathlib import PurePath
-from abc import abstractmethod
+#from abc import abstractmethod
 from typing import Optional, Union, Any
 import pyNastran
 

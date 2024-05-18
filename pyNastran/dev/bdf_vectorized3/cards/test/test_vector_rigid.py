@@ -35,6 +35,70 @@ class TestRigid(unittest.TestCase):
             #print('dependent_nid_to_components = ', dependent_nid_to_components)
             assert dependent_nid_to_components == {3: '123456'}, dependent_nid_to_components
 
+    def test_Rdd_1(self):  # pragma: no cover
+        model = BDF(debug=None, log=None, mode='msc')
+        model.add_grid(2, [1., 1., 0.])
+        model.add_grid(4, [-1., 1., 0.])
+        model.add_grid(5, [0., 0., 0.])
+        model.add_grid(6, [0., 1., 1.])
+        eid = 200
+        refc = 123456
+        refgrid = 5
+        weights = [1.0]
+        comps = [123]
+        Gijs = [[2, 4, 6]]
+        model.add_rbe3(eid, refgrid, refc, weights, comps, Gijs,
+                       Gmi=None, Cmi=None,
+                       alpha=0.0, tref=0.0, validate=True, comment='')
+        model.setup()
+        model.rbe3.Rdd()
+
+    def test_Rdd_2(self):  # pragma: no cover
+        #SOL 101
+        #CEND
+        #    TITLE = scnastran
+        #    ECHO = NONE
+        #    DISPLACEMENT(PRINT) = ALL
+        #    SPCFORCE(PRINT) = ALL
+        #    OLOAD(PRINT) = ALL
+        #    FORCE(PRINT) = ALL
+        #    STRESS(PRINT) = ALL
+        #    SPC = 1
+        #    LOAD = 3
+        #BEGIN BULK
+        #$GRID     1               1.0     0.0     0.0
+        #GRID     2               1.0     1.0     0.0
+        #$GRID     3              -1.0     0.0     0.0
+        #GRID     4              -1.0     1.0     0.0
+        #GRID     5               0.0     0.0     0.0
+        #GRID     6               0.0     1.0     1.0
+
+        #GRID     10              10.     0.0     0.0
+        #GRID     20              10.     1.0     0.0
+        #$234567><234567><234567><234567><234567><234567><234567><234567>
+        #CBAR     100     20      10      20      0.0    0.0      1.0
+        #$CBAR     101     20      3       4       0.0    0.0      1.0
+        #$234567><234567><234567><234567><234567><234567><234567><234567>
+        #$	eid		refgrd	refc	wt1	c1	g1
+        #RBE3     200             5       123456  1.0     123     2      4
+            #6
+        model = BDF(debug=None, log=None, mode='msc')
+        model.add_grid(2, [1., 1., 0.])
+        model.add_grid(4, [-1., 1., 0.])
+        model.add_grid(5, [0., 0., 0.])
+        model.add_grid(6, [0., 1., 1.])
+        eid = 200
+        refc = 123456
+        refgrid = 5
+        weights = [1.0]
+        comps = [123]
+        Gijs = [[2, 4, 6]]
+        model.add_rbe3(eid, refgrid, refc, weights, comps, Gijs,
+                       Gmi=None, Cmi=None,
+                       alpha=0.0, tref=0.0, validate=True, comment='')
+        model.setup()
+        model.rbe3.Rdd()
+
     def test_rbe3_02(self):
         """RBE3 Gmi/Cmi default"""
         model = BDF(debug=None, log=None, mode='msc')
@@ -44,7 +108,9 @@ class TestRigid(unittest.TestCase):
         model.add_grid(6, [1., 1., 0])
         rbe3_id = model.add_rbe3(eid=1, refgrid=1, refc=1, weights=[.1, .5, 3.], comps=['123']*3,
                                  Gmi=None, Cmi=None, Gijs=[4, 5, 6])
+        model.setup()
         model.rbe3.write()
+        #model.rbe3.Rdd()
         save_load_deck(model)
 
     #-------------------------------------------------------------------------

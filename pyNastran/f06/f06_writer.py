@@ -24,6 +24,7 @@ from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
 
 
@@ -856,4 +857,3 @@ def _write_responses2(op2: OP2, f06: TextIO,
         msg = dscmcol.get_responses_by_group()
         f06.write(msg)
     return page_num
-

@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (
@@ -223,11 +223,11 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
     ----------
     bdf_filename : str/BDF
         a bdf filename or BDF model
-    csv_filename : str; default=None
-        str : the path to the output csv
-        None : don't write a CSV
     eids : list[int]
         the element ids to consider
+    #csv_filename : str; default=None
+        #str : the path to the output csv
+        #None : don't write a CSV
 
         **PSHELL**
 

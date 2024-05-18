@@ -21,13 +21,12 @@ from __future__ import annotations
 import math
 from itertools import count
 from collections import defaultdict, namedtuple
-from typing import Union, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.utils import object_attributes
-from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -39,7 +38,8 @@ from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.bdf.bdf import BDF, BDFCard
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
@@ -1614,10 +1614,10 @@ class CAERO1(BaseCard):
         msg = ''
         is_failed = False
         if not isinstance(self.p1, np.ndarray):
-            msg += 'p1=%s and must be a numpy array\n' % (self.p1)
+            msg += 'p1=%s and must be a numpy array\n' % self.p1
             is_failed = True
         if not isinstance(self.p4, np.ndarray):
-            msg += 'p1=%s and must be a numpy array\n' % (self.p1)
+            msg += 'p1=%s and must be a numpy array\n' % self.p1
             is_failed = True
 
         if self.x12 <= 0. and self.x43 <= 0.:
@@ -4416,7 +4416,7 @@ class PAERO1(BaseCard):
             if isinstance(caero_body_id, integer_types) and caero_body_id >= 0:
                 caero_body_ids2.append(caero_body_id)
             elif caero_body_id is not None:
-                msg = 'invalid caero_body_id value on PAERO1; caero_body_id=%r' % (caero_body_id)
+                msg = f'invalid caero_body_id value on PAERO1; caero_body_id={caero_body_id}'
                 raise RuntimeError(msg)
             #else:
                 #pass
@@ -5463,13 +5463,13 @@ class SPLINE1(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE1 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        msg = f', which is required by SPLINE1 eid={self.eid}'
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
         #self.setg_ref = model.safe_set(self, self.setg, self.eid, xref_errors, msg=msg)
     #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
@@ -5483,7 +5483,7 @@ class SPLINE1(Spline):
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE1 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 model.log.warning(msg)
@@ -5684,13 +5684,13 @@ class SPLINE2(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 2:
-                msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE2 requires at least 2 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by SPLINE2 eid=%s' % self.eid
+        msg = f', which is required by SPLINE2 eid={self.eid}'
         self.cid_ref = model.safe_coord(self.Cid(), self.eid, xref_errors, msg=msg)
 
         try:
@@ -5707,7 +5707,7 @@ class SPLINE2(Spline):
 
                 nnodes = len(self.setg_ref.ids)
                 if nnodes < 2:
-                    msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
+                    msg = f'SPLINE2 requires at least 2 nodes; nnodes={}\n'
                     msg += str(self)
                     msg += str(self.setg_ref)
                     raise RuntimeError(msg)
@@ -6185,7 +6185,7 @@ class SPLINE4(Spline):
         usage = data[6]
         nelements = data[7]
         melements = data[8]
-        assert len(data) == 9, 'data = %s' % (data)
+        assert len(data) == 9, f'data = {data}'
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        nelements, melements, comment=comment)
 
@@ -6218,7 +6218,7 @@ class SPLINE4(Spline):
             the BDF object
 
         """
-        msg = ', which is required by SPLINE4 eid=%s' % self.eid
+        msg = f', which is required by SPLINE4 eid={self.eid}'
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
@@ -6229,7 +6229,7 @@ class SPLINE4(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE4 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
@@ -6245,7 +6245,7 @@ class SPLINE4(Spline):
             the BDF object
 
         """
-        msg = ', which is required by SPLINE4 eid=%s' % self.eid
+        msg = f', which is required by SPLINE4 eid={self.eid}'
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
         self.aelist_ref = model.safe_aelist(self.aelist, self.eid, xref_errors, msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
@@ -6257,7 +6257,7 @@ class SPLINE4(Spline):
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE4 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise ValueError(msg)
@@ -6452,13 +6452,13 @@ class SPLINE5(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE5 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by SPLINE5 eid=%s' % self.eid
+        msg = f', which is required by SPLINE5 eid={self.eid}'
         self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
 
@@ -6466,7 +6466,7 @@ class SPLINE5(Spline):
             self.setg_ref = model.Set(self.setg, msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = f'SPLINE5 requires at least 3 nodes; nnodes={nnodes}\n'
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)

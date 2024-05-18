@@ -1622,16 +1622,11 @@ def _tstep_msg(fem: BDF,
                tstep_type: str='') -> str:
     """writes the TSTEP/TSTEPNL info"""
     msg = (
-        'tstep%s_id=%s\n'
-        'tsteps=%s\n'
-        'tstepnls=%s\n'
-        #'tstep1s=%s\n'
-        'subcase:\n%s' % (
-            tstep_type, tstep_id,
-            str(fem.tsteps),
-            str(fem.tstepnls),
-            #str(fem.tstep1s),
-            str(subcase))
+        f'tstep{tstep_type}_id={tstep_id}\n'
+        f'tsteps={str(fem.tsteps)}\n'
+        f'tstepnls={str(fem.tstepnls)}\n'
+        #f'tstep1s={str(fem.tstep1s)}\n'
+        f'subcase:\n{str(subcase)}'
     )
     return msg
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import getpass
+#import getpass
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -58,9 +58,6 @@ class ForceResults2(DispForceVectorResults):
             sets the default for reverting the legend ncolors
         set_max_min : bool; default=False
             set default_mins and default_maxs
-
-        Unused
-        ------
         uname : str
             some unique name for ...
         """

@@ -1328,7 +1328,7 @@ class AddMethods:
         if not allow_overwrites:
             assert key not in self.model.paeros, '\npaero=\n%r old_paero=\n%r' % (
                 paero, self.model.paeros[key])
-        assert key > 0, 'paero.pid = %r' % (key)
+        assert key > 0, f'paero.pid = {key}'
         self.model.paeros[key] = paero
         self.model._type_to_id_map[paero.type].append(key)
 

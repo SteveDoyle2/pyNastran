@@ -2,6 +2,7 @@
 References:
 https://www.oasys-software.com/help/gsa/9.0/GSA_Theory.pdf
 https://download.strusoft.com/FEM-Design/inst110x/theory.pdf
+https://people.duke.edu/~hpgavin/StructuralDynamics/StructuralElements.pdf
 
 Newton Rhapson
 --------------
@@ -52,7 +53,7 @@ from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weigh
 from pyNastran.dev.bdf_vectorized3.solver.recover.static_force import recover_force_101
 #from .recover.static_stress import recover_stress_101
 #from .recover.static_strain import recover_strain_101
-#from .recover.strain_energy import recover_strain_energy_101
+from .recover.strain_energy import recover_strain_energy_101
 from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS # , NO_VOLUME
@@ -349,7 +350,8 @@ class Solver:
                             f06_file: TextIO,
                             page_stamp: str, title: str='', subtitle: str='', label: str='',
                             page_num: int=1,
-                            idtype: str='int32', fdtype: str='float64') -> Any:
+                            idtype: str='int32',
+                            fdtype: str='float64') -> Any:
         """
         Runs a SOL 101
 
@@ -441,8 +443,8 @@ class Solver:
 
         gset_b = ps_to_sg_set(ndof, ps)
         Kgg = build_Kgg(model, dof_map,
-                        ndof, ngrid, ndof_per_grid,
-                        idtype='int32', fdtype=fdtype)
+                         ndof, ngrid, ndof_per_grid,
+                         idtype='int32', fdtype=fdtype)
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
         #print(self.op2.grid_point_weight)
         reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
@@ -457,18 +459,80 @@ class Solver:
         self.get_mpc_constraints(subcase, dof_map)
 
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
-        del Mbb, Mgg
+        del Mbb
 
         gset = np.arange(ndof, dtype=idtype)
-        #gset_b = np.ones(ndof, dtype='bool')
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
         #sset_b = np.union1d(sset_b, sset_g)
         #print(sset_g)
         #print(sset_b)
         #print(sset)
         Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
+        Fg = Fb
+        # ----------------------MPC reduction----------------------
+        if 0:
+            mset_b = np.zeros(ndof, dtype='bool')
+            nelement_mpc = len(model.mpc) + len(model.rbe1) + len(model.rbe2) + len(model.rbe3)
+            if nelement_mpc == 0:
+                Knn = Kgg
+                Fn = Fg
+                xn = xg
+            else:  # pragma: no cover
+                raise RuntimeError()
 
+            nset_b = gset_b & ~mset_b  # n = g-m
+            del Kgg, Mgg, Fg
+            # ----------------------SPC reduction NEW----------------------
+
+            fset_b = nset_b & sset_b
+            fset = gset[fset_b]
+            K = partition_matrix(Knn, [('f', fset), ('s', sset), ('0', set0)])
+            Ff, Fs = partition_vector2(Fn, [['f', fset], ['s', sset]])
+            xf, xs, x0 = partition_vector3(xn, [['f', fset], ['s', sset], ['0', set0]])
+
+            Kff = K['ff']
+            Kfs = K['fs']
+            Kss = K['ss']
+
+            # ----------------------OMIT reduction----------------------
+            #a = f - o
+            omit_b = np.zeros(ndof, dtype='bool')
+            if len(model.omit) == 0:
+                Kaa = Kff
+                Fa = Ff
+                xa = xf
+            else:  # pragma: no cover
+                raise RuntimeError()
+
+            aset_b = fset_b & omit_b
+            aset = gset[aset_b]
+
+            # q=0 for statics/modes, so a=t
+            Ktt = Kaa
+            xt = xa
+            Ft = Fa
+            tset_b = aset_b
+            tset = aset
+
+            # ----------------------OMIT reduction----------------------
+            # L = t - r
+            # rset
+            rset_b = np.zeros(ndof, dtype='bool')
+            if len(model.suport) == 0:
+                Kll = Ktt
+            else:  # pragma: no cover
+                raise RuntimeError()
+            lset_b = tset_b & rset_b
+            lset = gset[lset_b]
+
+            self.mset = gset[mset_b]
+            self.rset = gset[rset_b]
+            self.aset = aset
+            self.lset = lset
+
+        # ----------------------SPC reduction OLD----------------------
         # Constrained set
+
         # sset = sb_set | sg_set
 
         # free structural DOFs
@@ -484,6 +548,7 @@ class Solver:
             aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
         else:
             aset = np.setdiff1d(gset, sset) # a = g-s
+            #fset = np.setdiff1d(nset, sset) # f = n-s
         naset = aset.sum()
         nsset = sset.sum()
         if naset == 0 and nsset == 0:
@@ -502,10 +567,8 @@ class Solver:
         #    are SUPORTi, BSETi, or CSETi entries present, then the entire
         #    f-set is placed in the a-set and the o-set is not created.
 
-        page_num = write_oload(Fb, dof_map, isubcase, ngrid, ndof_per_grid,
+        page_num = write_oload(Fg, dof_map, isubcase, ngrid, ndof_per_grid,
                                f06_file, page_stamp, page_num, log)
-
-        Fg = Fb
 
         # aset - analysis set
         # sset - SPC set
@@ -563,7 +626,7 @@ class Solver:
         del x0
 
         #print(Kgg)
-        self.Kgg = Kgg.toarray()
+        self.Kgg: np.ndarray = Kgg.toarray()
         K = partition_matrix(Kgg, [('a', aset), ('s', sset), ('0', set0)])
         Kaa = K['aa']
         Kss = K['ss']
@@ -703,10 +766,10 @@ class Solver:
             #recover_stress_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                #title=title, subtitle=subtitle, label=label,
                                #page_stamp=page_stamp)
-        #if 'ESE' in subcase:
-            #recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
-                                      #title=title, subtitle=subtitle, label=label,
-                                      #page_stamp=page_stamp)
+        if 'ESE' in subcase:
+            recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                                      title=title, subtitle=subtitle, label=label,
+                                      page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
@@ -1477,7 +1540,6 @@ def solve(Kaa: lil_matrix,
         raise RuntimeError('no residual structure found')
 
     #Maa_ = Maa[ipositive, :][:, ipositive]
-
     #print(f'Fg = {Fg}')
     #print(f'Fa = {Fa}')
     #print(f'Fs = {Fs}')
@@ -1489,10 +1551,11 @@ def solve(Kaa: lil_matrix,
     #print(f'Kaa:\n{Kaa}')
     #print(f'Fa: {Fa}')
 
-    log.debug(f'  Kaas_:\n{Kaa_.toarray()}')
+    Kaa_dense = Kaa_.toarray()
+    log.debug(f'  Kaas_:\n{Kaa_dense}')
     log.debug(f'  Kaa_:\n{Kaa_}')
     log.debug(f'  Fa_: {Fa_}')
-    xa_ = np.linalg.solve(Kaa_.toarray(), Fa_)
+    xa_ = np.linalg.solve(Kaa_dense, Fa_)
     xas_ = sci_sparse.linalg.spsolve(Kaa_, Fa_)
     #xas_ = np.linalg.solve(Kaas_.toarray(), Fa_)
     sparse_error = np.linalg.norm(xa_ - xas_)
@@ -1856,8 +1919,8 @@ def _get_dof_map(model: BDF) -> tuple[DOF_MAP, list[int]]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
     i = 0
     dof_map = {}
-    spoints = []
-    ps = []
+    spoints: list[int] = []
+    ps: list[int] = []
     for nid, psi in zip(model.grid.node_id, model.grid.ps):
         for dof in range(1, 7):
             dof_map[(nid, dof)] = i

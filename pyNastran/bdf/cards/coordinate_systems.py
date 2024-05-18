@@ -17,7 +17,7 @@ All coordinate cards are defined in this file.  This includes:
 from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
-from abc import abstractproperty, abstractmethod
+#from abc import abstractproperty, abstractmethod
 from typing import Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -1039,10 +1039,10 @@ def define_spherical_cutting_plane(model: BDF,
 
     """
     if len(cids) != len(thetas):
-        msg = 'len(cids)=%s len(thetas)=%s; must be equal' % (len(cids, len(thetas)))
+        msg = f'len(cids)={len(cids)} len(thetas)={len(thetas)}; must be equal'
         raise RuntimeError(msg)
     if len(cids) != len(phis):
-        msg = 'len(cids)=%s len(phis)=%s; must be equal' % (len(cids, len(phis)))
+        msg = f'len(cids)={len(cids)} len(phis)={len(phis)}; must be equal'
         raise RuntimeError(msg)
 
     # check for duplicate coords

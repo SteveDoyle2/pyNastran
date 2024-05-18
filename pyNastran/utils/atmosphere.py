@@ -427,7 +427,7 @@ def atm_velocity(alt: float, mach: float,
     ----------
     alt : float
         altitude in alt_units
-    Mach : float
+    mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
@@ -457,7 +457,7 @@ def atm_equivalent_airspeed(alt: float,
     ----------
     alt : float
         altitude in alt_units
-    Mach : float
+    mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
@@ -799,9 +799,9 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
 
     Parameters
     ----------
-    alt : list[float]
+    alts : list[float]
         Altitude in alt_units
-    Mach : float
+    mach : float
         Mach Number \f$ M \f$
     eas_limit : float
         Equivalent airspeed limiter in eas_units
@@ -836,7 +836,7 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
-                                        eas_units: str='m/s') -> tuple[Any, Any, Any]:
+                                        eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """TODO: not validated"""
     assert tass[0] <= tass[-1], tass
 
@@ -856,23 +856,6 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                       velocity_units=velocity_units,
                                       eas_units=eas_units)
     return rho, machs, velocity
-
-#def make_flfacts_mach_sweep(alt: float, machs: list[float],
-                            #eas_limit: float=1000.,
-                            #alt_units: str='m',
-                            #velocity_units: str='m/s',
-                            #density_units: str='kg/m^3',
-                            #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    #deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4',
-               #levels=[0, 1, 2])
-    #out = make_flfacts_mach_sweep_constant_alt(
-        #alt, machs,
-        #eas_limit=eas_limit,
-        #alt_units=alt_units,
-        #velocity_units=velocity_units,
-        #density_units=density_units,
-        #eas_units=eas_units)
-    #return out
 
 def make_flfacts_mach_sweep_constant_alt(alt: float, machs: list[float],
                                          eas_limit: float=1000.,

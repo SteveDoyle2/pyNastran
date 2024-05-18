@@ -128,6 +128,8 @@ def cut_model(model, axis='-y'):
     axis : {'-x', '-y', '-z'}
         What direction should be removed?
 
+    Note
+    ----
     Considers:
       - nodes
       - elements
@@ -186,14 +188,12 @@ def _write_nodes(self, outfile, size, is_double):
     Writes the NODE-type cards
     """
     if self.spoints:
-        msg = []
-        msg.append('$SPOINTS\n')
+        msg = ['$SPOINTS\n']
         msg.append(self.spoints.write_card(size, is_double))
         outfile.write(''.join(msg))
 
     if self.nodes:
-        msg = []
-        msg.append('$NODES\n')
+        msg = ['$NODES\n']
         if self.grdset:
             msg.append(self.grdset.print_card(size))
         for (nid, node) in sorted(self.nodes.items()):
@@ -275,7 +275,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
 
     .. warning:: only supports CTRIA3 & CQUAD4
     """
-    if isinstance(theta_tols, (float, float32)):
+    if isinstance(theta_tols, (float, np.float32)):
         theta_tols = [theta_tols] * len(starting_eids)
 
     model = BDF(debug=False)
@@ -286,7 +286,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     out = model.get_card_ids_by_card_types(card_types,
                                            reset_type_to_slot_map=False,
                                            stop_on_missing_card=False)
-    shell_eids = hstack([out[card_type] for card_type in card_types])
+    shell_eids = np.hstack([out[card_type] for card_type in card_types])
     shell_eids.sort()
 
     # set_shell_eids = set(shell_eids)
@@ -363,7 +363,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
             #print('    theta[eid=%s] = %s; n=%s' % (eid, theta, nneighbors))
             assert len(theta) == nneighbors, len(theta)
 
-            itol = where(theta_deg <= theta_tol)[0]
+            itol = np.where(theta_deg <= theta_tol)[0]
             eids_within_tol = neigboring_eids_to_check[itol]
             group.update(eids_within_tol)
             check.update(eids_within_tol)
@@ -388,7 +388,7 @@ def split_model_by_material_id(bdf_filename: str, bdf_filename_base: str,
         the unicode encoding
     size : int; default=8
         the field width to write
-    is__double : bool; default=False
+    is_double : bool; default=False
         should double precision be used
 
     .. warning:: only considers elements with materials (so no CBUSH, but yes to CONROD)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 

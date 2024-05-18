@@ -475,54 +475,93 @@ def _build_kbbi_conrod_crod(Kbb: dok_matrix,
     assert isinstance(k_axial, float), k_axial
     assert isinstance(k_torsion, float), k_torsion
     k = np.array([[1., -1.],
-                  [-1., 1.]])  # 1D rod
+                  [-1., 1.]])  # 1D rod; element coordinate system
+    k3 = np.array([[1., -1., 0.],
+                   [-1., 1., 0.],
+                   [0., 0., 0.],
+                   ])  # 1D rod; element coordinate system
+    k6 = np.zeros((6, 6))
+    k6[0, 0] = k6[3, 3] = 1.0
+    k6[0, 3] = k6[3, 0] = -1.0
     Lambda = lambda1d(dxyz12, debug=False)
-    K = Lambda.T @ k @ Lambda
-    #i11 = dof_map[(n1, 1)]
-    #i12 = dof_map[(n1, 2)]
+    K = Lambda.T @ k @ Lambda # transform to basic?
 
-    #i21 = dof_map[(n2, 1)]
-    #i22 = dof_map[(n2, 2)]
+    theta = np.radians(30)
+    x = np.cos(theta)
+    y = np.sin(theta)
 
-    nki, nkj = K.shape
-    K2 = np.zeros((nki*2, nkj*2), dtype=fdtype)
+    # (a) Component of VY in direction of min VX is set to zero
+    # (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+    vx = dxyz12 / np.linalg.norm(dxyz12)
+    #iy = np.argsort(np.abs(vx))
+    vyi = np.array([vx[1], vx[0], vx[2]])  # arbitrary rotation
+    vyi /= np.linalg.norm(vyi)
+    vz = np.cross(vx, vyi)
+    vz /= np.linalg.norm(vz)  # not sure why I need to renormalize this?
+
+    vy = np.cross(vz, vx)
+    #Tr = np.row_stack([vx, vy, vz])
+    T3 = np.column_stack([vx, vy, vz])
+    #Tv = np.vstack([vx, vy, vz])
+    z = np.zeros((3, 3))
+    T6 = np.block([[T3, z],
+                   [z, T3]])
+    #K = Lambda.T @ k @ Lambda
+    K3 = T3.T @ k3 @ T3
+    K6 = T6 @ k6 @ T6.T
+    #print(K)
+
+    #K = np.array([[1., -1., 0.],
+                  #[-1., 1., 0.],
+                  #[0., 0., 0.]])
+
 
     # axial + torsion; assume 3D
     # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
-    K2[:nki, :nki] = K * k_axial
+    #k_axial = 1.
+    #k_torsion = 2.
+    Ka = K6 * k_axial
 
     # u1mx, u1my, u1mz, u2mx, u2my, u2mz
-    K2[nki:, nki:] = K * k_torsion
+    Kt = K6 * k_torsion
 
-    i1 = 0
-    i2 = 3 # dof_map[(n1, 2)]
-    dofs = np.array([
-        i1, i1+1, i1+2,
-        i2, i2+1, i2+2,
+    #print(K)
+    np.set_printoptions(linewidth=180)
+    #print(Ka)
 
-        i1+3, i1+4, i1+5,
-        i2+3, i2+4, i2+5,
+    # index in Ka
+    idofs = np.array([
+        0, 1, 2,
+        3, 4, 5,
     ], dtype='int32')
 
+    # mapping of dofs
     ni1 = dof_map[(nid1, 1)]
     nj2 = dof_map[(nid2, 1)]
-    n_ijv = [
-        # axial
-        ni1, ni1 + 1, ni1 + 2,  # node 1
-        nj2, nj2 + 1, nj2 + 2,  # node 2
-
-        # torsion
-        ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
-        nj2 + 3, nj2 + 4, nj2 + 5,  # node 2
-    ]
-    for dof1, i1 in zip(dofs, n_ijv):
-        for dof2, i2 in zip(dofs, n_ijv):
-            ki = K2[dof1, dof2]
+    n_ijv = np.array([
+        ni1, ni1+1, ni1+2,  # node 1
+        nj2, nj2+1, nj2+2,  # node 2
+    ], dtype='int32')
+    # axial
+    for dof1, i1 in zip(idofs, n_ijv):
+        for dof2, i2 in zip(idofs, n_ijv):
+            ki = Ka[dof1, dof2]
             if abs(ki) > 0.:
-                #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
+                print('a', ni1, nj2, f'({dof1}, {dof2});', (dof1, dof2), ki)
+                Kbb[i1, i2] += ki
+    #print(Kbb.todense())
+
+    # torsion
+    #idofs += 3
+    n_ijv += 3
+    for dof1, i1 in zip(idofs, n_ijv):
+        for dof2, i2 in zip(idofs, n_ijv):
+            ki = Kt[dof1, dof2]
+            if abs(ki) > 0.:
+                print('t', ni1, nj2, f'({i1}, {i2});', (dof1, dof2), ki)
                 Kbb[i1, i2] += ki
         #print(K2)
-    #print(Kbb)
+    print(Kbb.todense())
     return
 
 def _build_kbb_cbeam(model: BDF,

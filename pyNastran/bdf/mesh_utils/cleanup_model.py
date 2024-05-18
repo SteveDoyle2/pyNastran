@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Union
+from typing import Union, Any
 from pyNastran.bdf.bdf import BDF, LOAD, PLOAD2, PLOAD4
 
 

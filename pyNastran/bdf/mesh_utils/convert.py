@@ -5,7 +5,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
@@ -1686,7 +1686,7 @@ def _convert_optimization(model: BDF,
             assert len(desvars) == 1, len(desvars)
             _convert_desvars(desvars, scale)
         else:  # pragma: no cover
-            raise NotImplementedError(dvprel)
+            raise NotImplementedError(dvmrel)
 
     for unused_key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
@@ -1788,7 +1788,7 @@ def _convert_dvmrel1(dvmrel, xyz_scale: float,
         else:  # pragma: no cover
             raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvmrel))
     else:  # pragma: no cover
-        raise NotImplementedError('cannot convert %r\n%s' % (prop_type, dvprel))
+        raise NotImplementedError('cannot convert %r\n%s' % (mat_type, dvmrel))
     return scale
 
 def _convert_dvprel1(dvprel, xyz_scale: float,
@@ -1932,7 +1932,7 @@ def _convert_desvars(desvars, scale):
         if desvar.delx is not None and desvar.delx != 1e20:
             desvar.delx *= scale
         if desvar.ddval is not None:
-            msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+            msg = f'DESVAR id={desvar.ddval} DDVAL is not None\n{str(desvar)}'
             raise RuntimeError(msg)
         assert desvar.ddval is None, desvar
 

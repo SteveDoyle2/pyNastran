@@ -3074,9 +3074,9 @@ class GEOM2:
         #if op2.is_debug_file:
             #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if op2.is_debug_file:
-            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
-                                    'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
+        #if op2.is_debug_file:
+        #    op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+        #                            'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
 
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]

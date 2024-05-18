@@ -23,7 +23,7 @@ import sys
 import copy
 from typing import Any, Optional, TYPE_CHECKING
 
-from cpylog import get_logger
+from cpylog import get_logger, SimpleLogger
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name

@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
+from numpy import array, arange, zeros, unique, searchsorted, int64
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.rod.conrod import _Lambda

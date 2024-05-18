@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from collections import defaultdict
 #from itertools import count
 import numpy as np
@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thr
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim, parse_check)
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, string, blank,
+    integer, double, string, #blank,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
     string_choice_or_blank,
@@ -1261,14 +1261,14 @@ class BCRPARA(VectorizedBaseCard):
 
         Parameters
         ----------
-        crid : int
+        contact_region_id : int
             CRID Contact region ID.
         offset : float; default=None
             Offset distance for the contact region (Real > 0.0).
             None : OFFSET value in BCTPARA entry
         surf : str; default='TOP'
             SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
-        Type : str; default='FLEX'
+        surface_type : str; default='FLEX'
             Indicates whether a contact region is a rigid surface if it
             is used as a target region. {'RIGID', 'FLEX'}.
             This is not supported for SOL 101.

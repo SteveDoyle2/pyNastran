@@ -83,7 +83,7 @@ def get_inertia_rectangular(sections):
     Ixx = Axx / A
     Iyy = Ayy / A
     Ixy = Axy / A
-    return (A, Ixx, Iyy, Ixy)
+    return A, Ixx, Iyy, Ixy
 
 
 def _IAreaL(prop, dim):
@@ -145,7 +145,7 @@ def _IAreaL(prop, dim):
         msg = 'beam_type=%r is not supported for %s class...' % (
             beam_type, prop.type)
         raise NotImplementedError(msg)
-    return (A, Iyy, Izz, Iyz)
+    return A, Iyy, Izz, Iyz
 
 class LineProperty(Property):
     def __init__(self):
@@ -569,7 +569,7 @@ def hexa_section(class_name: str, beam_type: str, dim, prop):
     wall = dim2
     wtri = dim1
     wbox = wall - 2 * wtri
-    assert wbox > 0, 'wbox=%s' % (wbox)
+    assert wbox > 0, f'wbox={wbox}'
     A = hbox * wbox + hbox * wtri
     #print('hbox=%s wbox=%s hbox*wbox=%s 2*wtri*hbox=%s A=%s' % (
         #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))

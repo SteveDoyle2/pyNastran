@@ -52,9 +52,6 @@ class DisplacementResults2(DispForceVectorResults):
             sets the default for reverting the legend ncolors
         set_max_min : bool; default=False
             set default_mins and default_maxs
-
-        Unused
-        ------
         uname : str
             some unique name for ...
         """

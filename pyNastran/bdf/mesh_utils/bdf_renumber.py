@@ -255,7 +255,7 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
     # turn them into variables
     for key, value in sorted(starting_id_dict.items()):
         #assert isinstance(key, str), key
-        assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
+        assert key in starting_id_dict_default, f'key={key!r} is invalid'
         #assert isidentifier(key), 'key=%s is invalid' % key
         if value is None:
             pass

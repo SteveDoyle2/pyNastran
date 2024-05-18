@@ -52,7 +52,7 @@ glue:
 
 """
 from __future__ import annotations
-from typing import Union, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -63,6 +63,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class BFRIC(BaseCard):

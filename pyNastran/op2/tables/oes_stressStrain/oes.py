@@ -85,6 +85,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStre
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates_vm import RandomPlateVMStressArray, RandomPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_solids_vm import RandomSolidVMStressArray, RandomSolidVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import (
     RandomCompositePlateStressArray, RandomCompositePlateStrainArray,
@@ -2875,11 +2876,13 @@ class OES(OP2Common2):
             obj_vector_real = RealSolidStressArray
             obj_vector_complex = ComplexSolidStressArray
             obj_vector_random = RandomSolidStressArray
+            obj_vector_random_vm = RandomSolidVMStressArray
         else:
             stress_strain = 'strain'
             obj_vector_real = RealSolidStrainArray
             obj_vector_complex = ComplexSolidStrainArray
             obj_vector_random = RandomSolidStrainArray
+            obj_vector_random_vm = RandomSolidVMStrainArray
 
         if prefix == '' and postfix == '':
             prefix = stress_strain + '.'
@@ -2896,6 +2899,7 @@ class OES(OP2Common2):
         numwide_imag = 4 + (17 - 4) * nnodes_expected
         numwide_random = 4 + (11 - 4) * nnodes_expected
         numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        numwide_random3 = 4 + 8 * nnodes_expected
         preline1 = '%s-%s' % (op2.element_name, op2.element_type)
         preline2 = ' ' * len(preline1)
 
@@ -3227,21 +3231,96 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif op2.format_code in [1, 2, 3] and op2.num_wide in [76] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CHEXA
+        elif op2.format_code in [1, 2, 3] and op2.num_wide == numwide_random3 and op2.table_name in [b'OESXRMS1', b'OESXNO1']:
+            # CTETRA: 44
+            # CPYRAM: 52
+            # CHEXA:  76
+            # '      FREQUENCY =  0.000000E+00'
+            # '                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )'
+            # '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  1.00E+00 )'
+            # '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------'
+            # '      ELEMENT-ID   GRID-ID      NORMAL-X    NORMAL-Y    NORMAL-Z      SHEAR-XY    SHEAR-YZ    SHEAR-ZX   VON MISES'
+            # '0            6701        0GRID CS  8 GP'
+            # '0                   CENTER     6.413E+01   2.752E-01   6.413E+01     6.496E+00   6.496E+00   3.842E+01   9.359E+01'
+            # '0                    30000     5.367E+00   1.069E+01   5.367E+00     1.134E-15   1.134E-15   4.473E-15   5.321E+00'
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-            msg = 'skipping random CHEXA; numwide=76'
-            n = op2._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
-        elif op2.format_code in [1, 2, 3] and op2.num_wide in [52] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPYRAM
-            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-            msg = 'skipping random CPYRAM; numwide=52'
-            n = op2._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
-        elif op2.format_code in [1, 2, 3] and op2.num_wide in [44] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CTETRA
-            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-            msg = 'skipping random CTETRA; numwide=44'
+
+            # 2 CID       I Stress Coordinate System
+            # 3 CTYPE CHAR4 Coordinate System Type (BCD)
+            # 4 NODEF     I Number of Active Points
+            # 5 GRID      I External grid identification number (0=center)
+            msg = f'skipping random {element_name}; numwide={numwide_random3}'
+
+            ntotal = op2.num_wide * 4
+            nelements = ndata // ntotal
+            assert nelements > 0, nelements
+            assert ndata % ntotal == 0, ndata
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_random_vm)
+            if auto_return:
+                return nelements * ntotal, None, None
+            if op2.read_mode == 1:
+                return ndata, None, None
+
+            obj = op2.obj
+            if op2.use_vector and is_vectorized:  # pragma: no cover
+                is_finished = True
+                n = nelements * 4 * op2.num_wide
+                itotal = obj.ielement
+                itotali = obj.itotal + nelements
+                itotal2 = obj.itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    # (eid_device, cid, abcd, nnodes)
+                    ints = frombuffer(data, dtype=op2.idtype).copy()
+                    try:
+                        ints1 = ints.reshape(nelements, numwide_random3)
+                    except ValueError:
+                        msg = 'ints.shape=%s; size=%s ' % (str(ints.shape), ints.size)
+                        msg += 'nelements=%s numwide_random3=%s nelements*numwide=%s' % (
+                            nelements, numwide_random3, nelements * numwide_random3)
+                        raise ValueError(msg)
+                    eids = ints1[:, 0] // 10
+                    cids = ints1[:, 1]
+                    #nids = ints1[:, 4]
+                    assert eids.min() > 0, eids.min()
+                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 8)
+                    grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
+
+                    #print('%s-grid_device=%s' % (op2.element_name, grid_device))
+                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    print(f'grid_device = {grid_device.tolist()}')
+                    print(f'eids = {eids.tolist()}')
+                    print(f'cids = {cids.tolist()}')
+                    try:
+                        obj.element_node[itotal:itotal2, 1] = grid_device
+                    except ValueError:
+                        msg = '%s; nnodes=%s\n' % (op2.element_name, nnodes_expected)
+                        msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
+                        msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
+                        #msg += 'nids=%s' % nids
+                        raise ValueError(msg)
+                    obj.element_cid[itotal:itotali, 0] = eids
+                    obj.element_cid[itotal:itotali, 1] = cids
+
+                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_random3)[:, 4:]
+
+                #(grid_device, oxx, oyy, ozz, txy, tyz, txz, von_mises)
+                floats1 = floats.reshape(nelements * nnodes_expected, 8)[:, 1:] # drop grid_device
+                assert floats1.shape == (nelements * nnodes_expected, 7), floats1.shape
+
+                obj.data[obj.itime, itotal:itotal2, :] = floats1
+                obj.itotal = itotal2
+                obj.ielement = itotali
+            else:
+                if is_vectorized and op2.use_vector and obj.itime == 0:  # pragma: no cover
+                    log.debug(f'vectorize CSolid random SORT{op2.sort_method}')
+                n = oes_csolid_random3(op2, data, obj, nelements,
+                                       element_name, nnodes_expected,
+                                       ntotal)
+
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
@@ -7773,9 +7852,38 @@ def oes_cgapnl_real_11(op2: OP2, data: bytes,
         n += ntotal
     return n
 
+
+def oes_csolid_random3(op2: OP2, data: bytes, obj, nelements: int,
+                       element_name: str, nnodes_expected: int,
+                       ntotal: int) -> int:
+    # print(msg)
+    n = 0
+    fmt = b'ii4si' + b'i7f' * nnodes_expected
+    structi = Struct(fmt)
+
+    for ielement in range(nelements):
+        datai = data[n:n + ntotal]
+        # op2.show_data(datai, types='if')
+        out = structi.unpack(datai)
+        eid, cid, grid, nnodes, *other = out
+        eid = out[0] // 10
+        print(eid, cid, grid, nnodes)
+        # [oxx, oyy, ozz, txy, tyz, txz, von_mises]
+        # 6 SX   RS Normal in x
+        # 7 SY   RS Normal in y
+        # 8 SZ   RS Normal in z
+        # 9 TXY  RS Shear in xy
+        # 10 TYZ RS Shear in yz
+        # 11 TZX RS Shear in zx
+        # 12 RMSVM RS RMS von Mises
+        for inode in range(nnodes_expected):
+            print('   ', other[8 * inode], other[8 * inode + 1:8 * (inode + 1)])
+        n += ntotal
+    return n
+
 def oes_csolidnl_real(op2: OP2, data: bytes,
                       obj: RealNonlinearSolidArray,
-                      etype, nnodes,
+                      etype: str, nnodes: int,
                       nelements: int, ntotal: int) -> int:
     n = 0
     size = op2.size

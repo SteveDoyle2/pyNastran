@@ -17,10 +17,9 @@ from qtpy.compat import getexistingdirectory
 from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
-from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD)
+    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (

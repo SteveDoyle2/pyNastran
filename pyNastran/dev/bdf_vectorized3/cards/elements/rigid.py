@@ -1232,6 +1232,271 @@ class RBE3(RigidElement):
     def idependent(self) -> np.ndarray:
         return make_idim(self.n, self.ndependent)
 
+    def Rdd(self):
+        """
+        Salinas- Theory Manual
+        https://www.osti.gov/servlets/purl/1031884
+        """
+        nrbe3 = len(self)
+        nind = len(self.independent_nodes)
+        d = len(self.ref_grid) # nrbe3
+        assert nrbe3 == d, (nrbe3, d)
+        #dxi position of point i relative to the RBE3 reference point, d
+
+
+        #str_independent_dofs = self.independent_dofs.astype(str)
+        i_dep_comp = dofs_to_dof_matrix(self.ref_component) # dependent
+        i_ind_comp = dofs_to_dof_matrix(self.independent_dofs)
+        Rdi_list = []
+
+        grid = self.model.grid
+        igrid_dep = np.searchsorted(grid.node_id, self.ref_grid) # ref
+        igrid_ind = np.searchsorted(grid.node_id, self.independent_nodes)
+        xyz_cid0 = grid.xyz_cid0()
+        xyz_dep = xyz_cid0[igrid_dep, :]
+        xyz_ind = xyz_cid0[igrid_ind, :]
+        Rdd = np.zeros((d, d), dtype='float64')
+        Rdn = np.zeros((d, nind), dtype='float64')
+        #--------------------------------------
+        iweight0_for_grids = 0
+        igrid0 = 0
+        for ieid, eid, ref_grid, refc, irefc, \
+            nweight, iweight, \
+            idependent, in zip_longest(count(), self.element_id, self.ref_grid,
+                                       self.ref_component, i_dep_comp,
+                                       self.nweight, self.iweight,
+                                       self.idependent):
+
+            # independent
+            iweight0, iweight1 = iweight
+            weights = self.weight[iweight0:iweight1]
+            comps = self.independent_dofs[iweight0:iweight1]
+            Gijs = []
+
+            weight_ind6 = np.zeros(6, dtype='float64')
+            Rdi = np.zeros((6, 6), dtype='float64')
+            xyz_depi = xyz_dep[ieid, :]
+
+            #wtotal = weights.sum()
+            #weights = weights / wtotal  # eq 11-4
+
+            wtotal = 0.0
+            weights_list = []
+            for i, weight, comp in zip(count(), weights, comps):
+                comp_stri = str(comp)
+                comp_stri = '123456'
+
+                ngrid = self.ngrid_per_weight[iweight0_for_grids+i]
+                igrid1 = igrid0 + ngrid
+                Gij = self.independent_nodes[igrid0:igrid1].tolist()
+                #igij = np.searchsorted(grid.node_id, Gij)  # ind
+                #xyz_gij = xyz_cid0[igij, :]
+
+                dxyzs = xyz_depi - xyz_ind[igrid0:igrid1, :]
+                lxyzs = np.linalg.norm(dxyzs, axis=1)
+                Lc = lxyzs.sum() / len(lxyzs)
+
+                #If Lc is computed as a binary zero it is changed to a value of unity
+                if Lc == 0.0:
+                    Lc = 1.0
+
+                assert len(lxyzs) == ngrid
+                S_list = []
+                weights_list.extend([weight]*6*ngrid)
+                Siq = np.eye(6, dtype='float64')
+                wtotal += weight * ngrid
+                for gij, dxyz in zip(Gij, dxyzs):
+                    (dxi, dyi, dzi) = dxyz
+                    dx, dy, dz = weight * dxyz
+                    Siq[0, 4] = dzi
+                    Siq[0, 5] = -dyi
+
+                    Siq[1, 3] = -dzi
+                    Siq[1, 5] = dxi
+
+                    Siq[2, 3] = dyi
+                    Siq[2, 4] = -dxi
+                    S_list.append(Siq)
+                    eyz = weight * (dyi ** 2 + dzi ** 2)
+                    ezx = weight * (dzi ** 2 + dxi ** 2)
+                    exy = weight * (dxi ** 2 + dyi ** 2)
+
+                    if 1:
+                        Rdi += np.array([
+                            [1,    0,   0,   0,  dz, -dy],
+                            [0,    1,   0, -dz,   0,  dx],
+                            [0,    0,   1,  dy, -dx,   0],
+                            [0,  -dz,  dy, eyz,   0,   0],
+                            [dz,   0, -dx,   0, ezx,   0],
+                            [-dy, dx,   0,   0,   0, exy],
+                        ])
+                        for compi in comp_stri:
+                            assert compi in '123456', comp_stri
+                            icomp = int(compi) - 1
+                            weight_ind6[icomp] += weight
+                            if compi == '1':
+                                values = [1, 0, 0, 0, dz, -dy]
+                            elif compi == '2':
+                                values = [0, 1, 0, -dz, 0, dx]
+                            elif compi == '3':
+                                values = [0, 0, 1, dy, -dx, 0]
+                            elif compi == '4':
+                                values = [0, -dz, dy, eyz, 0, 0]
+                            elif compi == '5':
+                                values = [dz, 0, -dx, 0, ezx, 0]
+                            elif compi == '6':
+                                values = [-dy, dx, 0, 0, 0, exy]
+                            else:  # pragma: no cover
+                                raise NotImplementedError(comp_stri)
+                            Rdi[:, icomp] += values
+                    else:
+                        for compi in comp_stri:
+                            assert compi in '123456', comp_stri
+                            icomp = int(compi) - 1
+                            weight_ind6[icomp] += weight
+                            if compi == '1':
+                                values = [1, 0, 0, 0, dz, -dy]
+                            elif compi == '2':
+                                values = [0, 1, 0, -dz, 0, dx]
+                            elif compi == '3':
+                                values = [0, 0, 1, dy, -dx, 0]
+                            elif compi == '4':
+                                values = [0, -dz, dy, eyz, 0, 0]
+                            elif compi == '5':
+                                values = [dz, 0, -dx, 0, ezx, 0]
+                            elif compi == '6':
+                                values = [-dy, dx, 0, 0, 0, exy]
+                            else:  # pragma: no cover
+                                raise NotImplementedError(comp_stri)
+                            Rdi[:, icomp] += values
+                S = np.vstack(S_list)
+                #W = np.diag(weights.ravel())
+                W = np.diag(weights_list)
+                A = S.T @ W @ S
+                adet = np.linalg.det(A)
+                assert adet > 0, 'determinant of A=0.0'
+
+                #Gijs.append(Gij)
+                igrid0 = igrid1
+
+            Rdi /= wtotal
+            Rdi_trimmed = Rdi[irefc, :]
+
+            assert len(weights) == len(Gijs)
+            assert len(weights) == len(comps)
+
+            #Rdi_list = []
+            #Rdi = np.column_stack(Rdi_list)
+
+            iweight0_for_grids += nweight
+            #Gij = self.independent_nodes[iweight0:iweight1]
+            #igrid = make_idim(len(Gij), ngrid_per_weight)
+
+            # dependent
+            idependent0, idependent1 = idependent
+            Gmi = self.dependent_nodes[idependent0:idependent1]
+            Cmi = self.dependent_dofs[idependent0:idependent1]
+
+        # 2nd record : REID   : elem ID
+        #              AGRID_D: reference (or dependent) grid
+        #              COMPS_D: dependent displ comps
+        #              nweight = IRBE3  : number of independent sets of grid/components/weight in the element
+        #              WT     : total of all of the WTi weights on the RBE3 entry (calc'd when RBE3 bdf entry read in BD_RBE3
+        #
+        # 3rd record : GRID(1), COMP(1), WTi(1): 1st independent grid, the independent components and the weight for this grid
+        #
+        # 4th record : GRID(2), COMP(2), WTi(2): 2nd independent grid, the independent components and the weight for this grid
+
+        #$	eid		refgrd	refc	wt1	c1	g1
+        #RBE3     200             5       123456  1.0     123     2      4
+            #6
+        eid = 200
+        RGRID_D = 5
+        COMPS_D = 123456
+
+        # option 1
+        IRBE = 1
+        GRID = [[2, 4, 6]]
+        COMP = [123]
+        WT = [1.0]
+
+        # option 2
+        IRBE = 3
+        GRID = [2, 4, 6]
+        COMP = [123, 123, 123]
+        WT = [1.0, 1.0, 1.0]
+
+
+        WT6 = np.zeros(6, dtype='float64')
+
+        # Get coords of the reference grid (AGRID_D) in basic coord system
+        for i in range(3):
+            X0_D[I] = RGRID(GRID_ID_ROW_NUM_D, I)
+
+        # Calc DXI, DYI, DZI, DX_BAR, DY_BAR, DZ_BAR
+        DX_BAR = 0.0
+        DY_BAR = 0.0
+        DZ_BAR = 0.0
+        for j in range(nrbe3):
+            GET_ARRAY_ROW_NUM('GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I(J), GRID_ID_ROW_NUM_I)
+            for k in range(3):
+                X0_I[K] = RGRID(GRID_ID_ROW_NUM_I, K)  # basic frame?
+                DX0[K]  = X0_I[K] - X0_D[K]
+
+            # Transform rel coords from basic to the coord sys at the ref pt
+            DUM3 = TOD @ DX0
+            #MATMULT_FFF_T(T0D, DX0, 3, 3, 1, DUM3)
+
+            # Calc radius and in-plane angle from ref pt to indep points
+            DXI[J] = DUM3[0]
+            DYI[J] = DUM3[1]
+            DZI[J] = DUM3[2]
+
+            DX_BAR += WTi[J]*DXI[J]/WT6[0]  # NB *** new 10/03/21. Change WT to WT6(1)
+            DY_BAR += WTi[J]*DYI[J]/WT6[1]  # NB *** new 10/03/21. Change WT to WT6(2)
+            DZ_BAR += WTi[J]*DZI[J]/WT6[2]  # NB *** new 10/03/21. Change WT to WT6(3)
+
+        EBAR_YZ = 0.0
+        EBAR_ZX = 0.0
+        EBAR_XY = 0.0
+        SXY = 0.0
+        SZX = 0.0
+        SYZ = 0.0
+
+        # building eq 11-28 in mystran manual
+        # [ 1  0   0   0  DY   -DZ]
+        #
+        for j in range(nrbe3):
+            # Calc the EBAR's
+            EBAR_YZ += WTi[J]*( DYI[J]*DYI[J] + DZI[J]*DZI[J] )/WT
+            EBAR_ZX += WTi[J]*( DZI[J]*DZI[J] + DXI[J]*DXI[J] )/WT
+            EBAR_XY += WTi[J]*( DXI[J]*DXI[J] + DYI[J]*DYI[J] )/WT
+
+            # Calc the S-terms
+            SXY = WTi[J] * DXI[J] * DYI[J] / WT
+            SZX = WTi[J] * DZI[J] * DXI[J] / WT
+            SYZ = WTi[J] * DYI[J] * DZI[J] / WT
+
+        TDOF_COL_NUM('G ', G_SET_COL_NUM)
+        TDOF_COL_NUM('M ', M_SET_COL_NUM)
+        RDOF(COMPS_D, CDOF_D)
+        # Calc RMG_COL_NUM_D's no's for up to 6 DOF's for ref pt
+
+        #CALL CALC_TDOF_ROW_NUM ( AGRID_D, ROW_NUM_START_D, 'N' )
+        GET_ARRAY_ROW_NUM('GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, IGRID)
+        ROW_NUM_START_D = TDOF_ROW_START(IGRID)
+        for i in range(6):
+            RMG_COL_NUM_D[I] = 0
+            if CDOF_D[I] == '1':
+                IROW = I
+                RMG_COL_NUM_D[I] = TDOF(ROW_NUM_START_D+I, G_SET_COL_NUM)
+
+        # Write terms to L1J for the constraint equations.
+        # The outer loop is for each of the RBE3 equations and the inner
+        # loop cycles over the IRBE3 grids in the "independent" set
+        # (the i points). There are up to 6 constraint eqns per RBE3
+        # (1 each for T1, T2, T3, R1, R2 R3 comps in the indep set for the RBE3)
+
     @property
     def max_id(self) -> int:
         max_dependent_node = 0
@@ -1320,5 +1585,24 @@ class RBE3(RigidElement):
         geom_check(self,
                    missing,
                    node=(nid, all_nodes))
+
+def dofs_to_dof_matrix(dofs: np.ndarray) -> np.ndarray:
+    """
+    >>> dofs = [123, 123, 123]
+    >>> dofs_to_dof_matrix(dofs)
+    [
+        [1, 1, 1, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0],
+    ]
+    """
+    ndof = len(dofs)
+    idof = np.zeros((ndof, 6), dtype='bool')
+    for irbe, dof_int in enumerate(dofs):
+        dof_str = str(dof_int)
+        for dof_stri in dof_str:
+            idofi = int(dof_stri) - 1
+            idof[irbe, idofi] = True
+    return idof
 
 RSSCON = RBAR

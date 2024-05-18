@@ -22,7 +22,7 @@ Limitations:
 """
 #from types import MethodType, FunctionType
 
-from typing import List, Optional, Any
+from typing import Optional, Any
 
 import h5py
 from h5py._hl.dataset import Dataset

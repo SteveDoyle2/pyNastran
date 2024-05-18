@@ -732,7 +732,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
     if debug and len(diff_bad) or len(diff_missed):  # pragma: no cover
         #log.warning(f'nid_pairs          = {nid_pairs}')
         #log.warning(f'nid_pairs_expected = {nid_pairs_expected}')
-        if (len(diff_bad) + len(diff_missed) < 20):
+        if len(diff_bad) + len(diff_missed) < 20:
             log.warning(f'diff_bad = {diff_bad}')
             log.warning(f'diff_missed = {diff_missed}')
         else:

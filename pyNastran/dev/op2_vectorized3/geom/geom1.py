@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 from __future__ import annotations
 from struct import Struct
 from collections import defaultdict
-from typing import Tuple, Dict, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -990,7 +990,7 @@ class GEOM1:
         """CVISC(3901,39,50) - the marker for Record 105"""
         op2 = self.op2
         #struct_4i = Struct(op2._endian + b'4i')
-        #ntotal = 16 * op2.factor  # 4*4
+        ntotal = 4 * op2.size
         nentries = (len(data) - n) // ntotal
 
         n, ints = get_ints(data, n, nentries, 11,

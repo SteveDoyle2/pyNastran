@@ -4,6 +4,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 import vtk
+from vtk import vtkActor2D
 
 apply_colors = False
 

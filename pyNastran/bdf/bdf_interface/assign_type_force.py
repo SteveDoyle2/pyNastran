@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional, Union
+from typing import Optional
 from .assign_type import double, _get_dtype
 from .bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (

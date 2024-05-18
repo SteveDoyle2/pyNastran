@@ -11,8 +11,8 @@ from typing import Optional, cast, TextIO, TYPE_CHECKING
 import numpy as np
 
 #import pyNastran
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+#from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
+#from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 #from pyNastran.op2.tables.onmd import NormalizedMassDensity
 #from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 #from pyNastran.op2.op2_interface.result_set import ResultSet
@@ -203,10 +203,6 @@ class CSVWriter:
         is_sort1 : bool; default=True
             writes output in SORT1 format if the output is transient;
             ignored for static analyses
-        delete_objects : bool; default=True
-            should objects be deleted after they're written to reduce memory
-        end_flag : bool; default=False
-            should a dummy Nastran "END" table be made
         quiet : bool; default=False
             suppress print messages
         repr_check: bool; default=False

@@ -44,7 +44,7 @@ from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_lines_rigid, get_mpcs)
 
 if TYPE_CHECKING:  # pragma: no cover
-    from cpylog import SimpleLogger
+    #from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 
 class GetCard(GetMethods):

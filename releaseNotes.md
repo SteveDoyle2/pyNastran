@@ -11,15 +11,17 @@ Release Notes
 
 v1.4.2 (2024/5/xx)
 ------------------
- 
+
 BDF:
  - added:
    - added PBUSH2D-MSC, add_pbush2d_cross (only CROSS is saupported)
+   - added NX extrap flag (default=0) is not used on TABLED1-D3, TABLEM1-M3, and TABLEST
    - MATT11
  - changed:
    - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
    - DRESP1, DRESP2, DRESP3 region=None is now stored as 0
  - fixed:
+   - DVPREL2, DVMREL2, DVCREL2 can use only labels (and no DESVARs)
    - SPLINE5 add_card out of range bug
    - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
    - MATS1: NLEAS and NLEAST are the same thing 
@@ -42,8 +44,10 @@ OP2:
    - vg_vf_response (from OVG table)
  - changed:
    - Glue forces f06 writing now listed under "glue forces" and not "contact forces"
-   - RealSlideDistanceArray object used by contact_slide_distance
-     and glue_contact_slide_distance inherits from RealTableArray now;
+   - split cards to avoid op2/f06 errors
+     - contact_slide_distance:      RealSlideDistanceArray (vs. DisplacementArray)
+     - glue_contact_slide_distance: RealSlideDistanceArray (vs. DisplacementArray)
+     - bolt_results:                RealBoltResultsArray (vs. DisplacementArray)
  - fixed:
    - CSTM no longer print out when it's empty
    - rms cpyram_stress/strain no longer cause crashes
@@ -55,9 +59,13 @@ OP2Geom:
    - other: ACCEL, PAERO4, PBUSH2D-CROSS, CBUSH2D, BNDGRID, MATT11, BNDGRID
    - DRESP1-NX:
      - PSDVELO, ERP, FLUTTER now supported
-   - adding DOPTPRM-NX-196
+   - added DOPTPRM-NX-196
+   - added extrap flag for tables TABLED1-D3, TABLEM1-M3
+   - added TABLEST
  - changed:
  - fixed:
+   - fixing 64-bit MAT9 bug
+   - fixed TABLED1, TABLEM1 64-bit reading
    - fixed SPLINE5-MSC ftype reading bug
    - fixed MONPNT2-NX parsing
    - TODO: fix EIGC kstep bug (is set to the BDF incorrectly and then writes followed by reading poorly) 
@@ -70,15 +78,21 @@ F06:
     - DESVAR f06 writing
     - Convergence f06 writing
  - changed:
+    - removed frequency filter for flutter_response
  - fixed:
     - fixed bug in complex eigenvector f06 writing (left off mode id from table header)
 
 op2_writer:
- - adding:
-    - DRESP1, DVCREL1, DVGRID
-    - contact_slide_distance/glue_contact_slide_distance
+ - added:
+    - edom:  DRESP1, DVCREL1, DVGRID
+    - dit:   GUST, TABDMP1, TABRNDG, TABLED1-D4, TABLEM1-M4, TABLES1, TABLEST, TABLEH1
+    - geom2: CMASS1-CMASS4 writing
+    - contact_slide_distance, glue_contact_slide_distance, bolt_results
+    - added OUG1S (eigenvector_structure)
  - fixed:
    - fixed bug for RBAR where blank component values had issues
+   - fixed LSEQ bug when only thermal load is used
+   - fixed CAERO3 list_w, list_c1, list_c2 None bug
 
 nastran_to_vtk:
  - added:

@@ -19,9 +19,9 @@ if TYPE_CHECKING:  # pragma: no cover
         CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
         PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         #MONPNT1, MONPNT2, MONPNT3,
-        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5
+        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     )
-    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS # CSSCHD, TRIM, TRIM2, DIVERG
+    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM # CSSCHD, TRIM2, DIVERG
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST
     # MKAERO1, MKAERO2
     # ----------------------------------------------------
@@ -35,7 +35,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dynamic import (
         #DELAY, DPHASE,
         NLPARM)
-    from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+    from pyNastran.bdf.cards.elements.rigid import (
+        RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
     from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
     from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -250,8 +251,8 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed masses=%s'
                            % (eid, msg, _unique_keys(self.masses)))
 
-    def RigidElement(self, eid: int, msg: str='') -> Union[RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON]:
-        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
+    def RigidElement(self, eid: int, msg: str='') -> Union[RBAR, RBE1, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON]:
+        """gets a rigid element (RBAR, RBE1, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
         try:
             return self.rigid_elements[eid]
         except KeyError:

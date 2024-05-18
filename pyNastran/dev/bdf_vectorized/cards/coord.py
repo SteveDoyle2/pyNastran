@@ -1,7 +1,7 @@
 from numpy import (array, searchsorted, zeros, full,
-                   nan, where, vstack, dot, cross, degrees, radians, arctan2,
+                   nan, where, vstack, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, sqrt, unique,
-                   transpose, asarray, isnan, array_equal)
+                   asarray, array_equal)
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.coordinate_systems import (
