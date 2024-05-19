@@ -2068,7 +2068,7 @@ class OP2Reader:
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.show_data(data))
         self._read_subtables()
 
@@ -3530,7 +3530,11 @@ class OP2Reader:
 
         subtable_name = self.get_subtable_name4(op2, data, ndata)
         op2.subtable_name = subtable_name
-        self._read_subtables()
+        try:
+            self._read_subtables()
+        except Exception:
+            self.log.error('\n' + str(self.op2.code_information()))
+            raise
 
     def read_results_table8(self) -> None:
         """Reads a results table"""
@@ -3554,7 +3558,11 @@ class OP2Reader:
         subtable_name = reshape_bytes_block(
             subtable_name, is_interlaced_block=is_interlaced_block)
         op2.subtable_name = subtable_name
-        self._read_subtables()
+        try:
+            self._read_subtables()
+        except Exception:
+            self.log.error('\n' + str(self.op2.code_information()))
+            raise
 
     def get_subtable_name8(self, op2, data: bytes, ndata: int) -> bytes:
         is_interlaced_block = self.op2.is_nx

@@ -2897,6 +2897,7 @@ class OES(OP2Common2):
 
         numwide_real = 4 + 21 * nnodes_expected
         numwide_imag = 4 + (17 - 4) * nnodes_expected
+        numwide_imag2 = 4 + 14 * nnodes_expected
         numwide_random = 4 + (11 - 4) * nnodes_expected
         numwide_random2 = 18 + 14 * (nnodes_expected - 1)
         numwide_random3 = 4 + 8 * nnodes_expected
@@ -2906,6 +2907,7 @@ class OES(OP2Common2):
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         op2._data_factor = nnodes_expected
         log = op2.log
+        #print(op2.format_code, op2.table_name, op2.num_wide, op2.element_name)
         if op2.format_code == 1 and op2.num_wide == numwide_real:  # real
             ntotal = (16 + 84 * nnodes_expected) * self.factor
             nelements = ndata // ntotal
@@ -3176,7 +3178,11 @@ class OES(OP2Common2):
             #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #op2.num_wide, numwide_real, numwide_imag, numwide_random)
             #return op2._not_implemented_or_skip(data, ndata, msg)
-        elif 0 and op2.format_code in [1, 2] and op2.num_wide == 67:  # CHEXA
+        elif op2.format_code in [1, 2] and op2.num_wide == 67 and op2.element_name == 'CHEXA':  # CHEXA
+            # CTETRA:
+            # CPYRAM:
+            # CPENTA:
+            # CHEXA:  67
             #44 = 5 * 8 + 4  (TETRA)
             #52 = 6 * 8 + 4  (PYRAM)
             #60 = 7 * 8 + 4  (PENTA)
@@ -3228,6 +3234,23 @@ class OES(OP2Common2):
 
             #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             msg = 'skipping random CPENTA; numwide=60'
+            n = op2._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+        elif op2.format_code in [2, 3] and op2.table_name in [b'OESVM1', b'OSTRVM1', b'OESVM2', b'OSTRVM2'] and (
+                (op2.num_wide == 130 and op2.element_name == 'CHEXA') or
+                (op2.num_wide == 102 and op2.element_name == 'CPENTA')):
+            # CTETRA:
+            # CPYRAM:
+            # CPENTA: 102
+            # CHEXA:  130
+            #102 = a + b * 7
+            #130 = a + b * 9
+            #28 = 2b; b=14
+            #102 = a + 98; a=4
+            assert numwide_imag2 == op2.num_wide
+
+            msg = f'skipping complex {op2.table_name} element_name={op2.element_name}; op2.num_wide={op2.num_wide}'
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
