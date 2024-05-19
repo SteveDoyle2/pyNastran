@@ -5,6 +5,7 @@ import numpy as np
 from cpylog import get_logger, SimpleLogger
 from pyNastran.utils import print_bad_path
 
+
 class OptimizationResult():
     def __init__(self):
         self.design_objective = {
@@ -41,6 +42,7 @@ class OptimizationResult():
             f"  out   = {outputs}\n")
         #print(obj)
         return f'OptimizationResult(obj={obj}, ndesvars={len(internal_id)})'
+
 
 def _read_line_block(i: int, lines: list[str],
                      stop_marker: str='',
@@ -109,6 +111,7 @@ def _read_line_block(i: int, lines: list[str],
 
     return i, lines2
 
+
 def _read_startswith_line_block(i: int, lines: list[str], stop_marker='',
                                 rstrip=False, strip=False, debug=False, imax=None):
     assert strip or rstrip
@@ -140,6 +143,7 @@ def _read_startswith_line_block(i: int, lines: list[str], stop_marker='',
     print(f'!!! {line}')
     return i, lines2
 
+
 def _goto_page(i: int, lines: list[str], debug: bool=False):
     line = lines[i]
     i0 = i
@@ -158,6 +162,7 @@ def _goto_page(i: int, lines: list[str], debug: bool=False):
             pass
         raise
     return i
+
 
 def _read_int_gradient(i: int, line: str, lines: list[str],
                        nlines: int, log: SimpleLogger,
@@ -443,7 +448,6 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             #labels = optimization_result.design_vars['label']
             #dfasf
 
-
         elif line == '':
             print_line = False
         #elif 'INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS' in line:
@@ -545,7 +549,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i, end_of_job = _read_summary_of_design_cycle_history(i, line, lines, nlines, log)
             if end_of_job:
                 break
-        elif  line == 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
+        elif line == 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
             i += 31
             line = lines[i].strip()  # page xx
             print_line = False
@@ -859,6 +863,7 @@ def _read_design_optimization_tools(i: int, line: str, lines: list[str],
         line = lines[i].strip()
     return i
 
+
 def _read_summary_of_design_cycle_history(i: int, line: str, lines: list[str],
                                           nlines: int,
                                           log: SimpleLogger) -> tuple[int, bool]:
@@ -955,6 +960,7 @@ def _complete_optimization(i, lines, nlines, log):
         line = lines[i].strip()
     return i
 
+
 def _is_page_skip(line: str) -> bool:
     is_page_skip = (
         'News file' in line or
@@ -995,8 +1001,10 @@ def _is_page_skip(line: str) -> bool:
         assert is_page_skip is False
     return is_page_skip
 
+
 def _is_skip_one_line(line: str) -> bool:
     return 'DATA BLOCK ' in line and ' WRITTEN ON FORTRAN UNIT ' in line and ', TRL =' in line
+
 
 def _is_info_msg(line: str) -> bool:
     is_info_msg = (
@@ -1006,13 +1014,13 @@ def _is_info_msg(line: str) -> bool:
         '(NUMBER OF FORTRAN RECORDS WRITTEN =' in line or
         '(TOTAL DATA WRITTEN FOR DATA BLOCK =' in line or
         '(MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =' in line or
-        '(MAXIMUM POSSIBLE FORTRAN RECORD SIZE =' in  line or
+        '(MAXIMUM POSSIBLE FORTRAN RECORD SIZE =' in line or
         '^^^ NORMAL MODES ANALYSIS COMPLETED FOR ANALYSIS=' in line or
         '*** USER WARNING MESSAGE 324 (XSORSO)' in line or
         '*** USER WARNING MESSAGE 2251 (IFS1P)' in line or
         '*** USER INFORMATION MESSAGE 4109 (OUTPX2)' in line or
         '*** USER INFORMATION MESSAGE 4114 (OUTPX2)' in line or
-        '*** USER INFORMATION MESSAGE 4507 (GPFEV1)'  in line or
+        '*** USER INFORMATION MESSAGE 4507 (GPFEV1)' in line or
         '*** USER INFORMATION MESSAGE 5458 (REIG)' in line or
         '*** USER INFORMATION MESSAGE 6464 (DOM12E)' in line or
         '*** USER WARNING MESSAGE 6654 (DOM9PRD)' in line or
@@ -1021,7 +1029,7 @@ def _is_info_msg(line: str) -> bool:
         '^^^ USER INFORMATION MESSAGE 9051 (FEA)' in line or
         '^^^ USER INFORMATION MESSAGE 9052 (FEA)' in line or
         '^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=' in line or
-        '^^^ STATIC AEROELASTIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=' in  line or
+        '^^^ STATIC AEROELASTIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=' in line or
         '^^^ STATIC AEROELASTIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=' in line or
         '^^^ STATIC AEROELASTIC ANALYSIS - DATA RECOVERY INITIATED.  DESIGN CYCLE NUMBER=' in line or
         '^^^ FLUTTER DATA RECOVERY COMPLETED.    DESIGN CYCLE NUMBER=' in line or
@@ -1052,6 +1060,7 @@ def _is_info_msg(line: str) -> bool:
             raise RuntimeError(line)
     return is_info_msg
 
+
 def _find_next_table(i: int, line: str, lines: list[str]) -> tuple[int, bool]:
     ii = 0
     is_broken = False
@@ -1079,6 +1088,7 @@ def _find_next_table(i: int, line: str, lines: list[str]) -> tuple[int, bool]:
         i += 1
         ii += 1
     return i, is_broken
+
 
 def _read_property_comparison_table(i: int, lines: list[str], log: SimpleLogger) -> tuple[int, str, list[str]]:
     #                   -----   COMPARISON BETWEEN INPUT PROPERTY VALUES FROM ANALYSIS AND DESIGN MODELS -----
@@ -1192,6 +1202,7 @@ def _read_weight_as_a_function_of_material_id(i: int, lines: list[str]) -> tuple
         #print(linei)
     return i, line, lines2
 
+
 def _read_designed_properties(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """DESIGNED PROPERTIES"""
     #                                                -----   DESIGNED PROPERTIES   -----
@@ -1207,6 +1218,7 @@ def _read_designed_properties(i: int, lines: list[str]) -> tuple[int, str, list[
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_stress_responses(i: int, lines: list[str],
                            subcase_id: int) -> tuple[int, str, list[str], dict[str, Any]]:
@@ -1238,7 +1250,7 @@ def _read_stress_responses(i: int, lines: list[str],
     line = lines[i].strip()
 
     stress_response = {
-        'internal_id' : [],
+        'internal_id': [],
         'dresp_id': [],
         'label': [],
         'element_id': [],
@@ -1291,7 +1303,7 @@ def _read_stress_responses(i: int, lines: list[str],
             if view2.strip() != '':  # pragma: no cover
                 print(f'view: ={view2}')
                 is_error = True
-            x=1
+            x = 1
             if 'N/A' in lower_bound2:
                 lower_bound2 = 'nan'
             if 'N/A' in upper_bound2:
@@ -1479,6 +1491,7 @@ def _read_design_variable_history(i: int, lines: list[str]) -> tuple[int, str, l
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_objective_and_maximum_constraint_history(i: int, lines: list[str],
                                                    log: SimpleLogger,
@@ -1790,7 +1803,7 @@ def _read_iteration_number(i: int, line: str, lines: list[str],
             i += 2
             line = lines[i].strip()
             return i
-            if 0: ## pragma: no cover
+            if 0:  # pragma: no cover
                 # 'GRADIENT OF THE OBJECTIVE FUNCTION (DF-VECTOR)'
                 i, grad = _read_gradient(i, line, lines, nlines, log, debug=False)
                 i += 1
@@ -1886,6 +1899,7 @@ def _read_iteration_number(i: int, line: str, lines: list[str],
     if scaling_keys:
         log.info(f'scaling_info {scaling_keys}')
     return i
+
 
 def _read_1d_search(i: int, line: str, lines: list[str], nlines: int,
                     log: SimpleLogger) -> int:
@@ -2106,9 +2120,12 @@ def read_sol_200(f06_filename: str,
     log.warning('finished reading f06 file...')
     return optimization_results
 
+
 def plot_sol_200(f06_filename: str, png_filename: str='', show: bool=True):
     all_results = read_sol_200(f06_filename)
     plot_sol_200_from_results(all_results, png_filename=png_filename, show=show)
+
+
 def plot_sol_200_from_results(all_results: list[OptimizationResult],
                               png_filename: str='',
                               show: bool=True):
@@ -2126,8 +2143,8 @@ def plot_sol_200_from_results(all_results: list[OptimizationResult],
     if len(desvars_xi_list):
         desvars_xi_list2 = [xi for xi in desvars_xi_list if len(xi)]
         desvars_xi = np.vstack(desvars_xi_list2)
-        dvi_max = desvars_xi.max(axis=0) # len=1309
-        dvi_min = desvars_xi.min(axis=0) # len=1309
+        dvi_max = desvars_xi.max(axis=0)  # len=1309
+        dvi_min = desvars_xi.min(axis=0)  # len=1309
         dmin_maxi = dvi_max - dvi_min
 
     if len(desvars_x_list):
@@ -2171,6 +2188,7 @@ def plot_sol_200_from_results(all_results: list[OptimizationResult],
         plt.show()
     print(all_results[-1])
     return all_results
+
 
 if __name__ == '__main__':   # pragma: no cover
     bdf_filename = 'optimize_formsc_2.f06'

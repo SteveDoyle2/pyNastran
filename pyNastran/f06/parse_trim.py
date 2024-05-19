@@ -114,6 +114,7 @@ def read_f06_trim(f06_filename: str,
     str(trim_results)
     return trim_results
 
+
 def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
                                    nlines_max: int) -> tuple[str, int, int]:
     seek0 = f06_file.tell()
@@ -122,6 +123,7 @@ def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
 
     f06_file.seek(seek0)
     return line_end, iend, seek1
+
 
 def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
                         nlines_max: int) -> tuple[str, int]:
@@ -216,6 +218,7 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             log.debug(f'i={i}')
     return trim_results, tables, matrices
 
+
 def _get_title_subtitle_subcase(f06_file: TextIO,
                                 line: str, i: int,
                                 nlines_max: int) -> tuple[str, int,
@@ -308,7 +311,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     cds = []
     axis_to_index = {
         'CX': 0, 'CY': 1, 'CZ': 2,
-        'CMX': 3, 'CMY': 4, 'CMZ': 5,}
+        'CMX': 3, 'CMY': 4, 'CMZ': 5, }
 
     while i < iend and 'MONITOR POINT NAME' in line:
         #'        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
@@ -432,7 +435,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
             while i < iend - 1:
                 line = f06_file.readline().strip()
                 i += 1
-                if len(line) == 0: # or 'PAGE' in line or 'NASTRAN' in line:
+                if len(line) == 0:  # or 'PAGE' in line or 'NASTRAN' in line:
                     break
                 axis, rigid_air, elastic_rest, inertial, rigid_applied, rest_applied = line.split()
                 iaxis = axis_to_index[axis]
@@ -513,6 +516,7 @@ def _get_controller_state(header_lines: list[str]) -> ControllerState:
             controller_state[name] = float(value)
     return controller_state
 
+
 def _read_aeroelastic_trim_variables(f06_file: TextIO,
                                      line: str, i: int, nlines_max: int,
                                      trim_results: TrimResults, isubcase: int) -> tuple[str, int]:
@@ -571,7 +575,7 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
 
 def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     """101     ANGLEA             RIGID BODY           FIXED      1.000000E-01  RADIANS'"""
-    line2 = line.rstrip() # s.split()
+    line2 = line.rstrip()  # s.split()
 
     # old
     #id_str = line2[30:40].strip()
@@ -602,6 +606,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
 
     return int_id, name, Type, trim_status, ux, ux_unit
+
 
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,
@@ -705,6 +710,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
 
     return line, i, ipressure, iforce
 
+
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
                                                         line: str, i: int, nlines_max: int, log: SimpleLogger) -> tuple[
                                                             str, int, np.ndarray, np.ndarray]:
@@ -736,7 +742,6 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
         i += 1
         line_strip = line.strip()
         ndata = len(data_lines)
-
 
     ndata = len(data_lines)
     grid_id = np.zeros(ndata, dtype='int32')
@@ -807,6 +812,7 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
 def main() -> None:
     f06_filename = r'C:\NASA\ase2\ar9_caero.f06'
     read_f06_trim(f06_filename, log=None, nlines_max=1_000_000)
+
 
 if __name__ == '__main__':
     main()

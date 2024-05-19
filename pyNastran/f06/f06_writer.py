@@ -22,7 +22,7 @@ from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
-from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
+from pyNastran.op2.result_objects.matrix import Matrix  #, MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
@@ -153,7 +153,7 @@ def make_end(end_flag: bool=False,
 
         SOLLIN = 'F'
         if 'SEMR' in options:
-            SOLLIN = 'T' # p-elements
+            SOLLIN = 'T'  # p-elements
         PVALID = 0
         SOLNL = 'F'
         LOOPID = -1
@@ -250,7 +250,7 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('strain')
             elif result in ('spc_forces', 'mpc_forces', 'constraint_forces'):
                 self._results.add('constraint_forces')
-            elif 'force' in result.lower(): # could use more validation...
+            elif 'force' in result.lower():  # could use more validation...
                 self._results.add('element_forces')
             # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
@@ -297,7 +297,7 @@ class F06Writer(OP2_F06_Common):
         self.page_num += 1
         return msg
 
-    def _write_summary(self, f06_file, card_count=None) -> str:
+    def _write_summary(self, f06_file, card_count=None) -> None:
         """writes the F06 card summary table"""
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
@@ -319,7 +319,6 @@ class F06Writer(OP2_F06_Common):
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'CONV',
         }
-
 
         blocks = [
             ['POINTS', ['GRID', 'GRDSET', ]],
@@ -738,6 +737,7 @@ class F06Writer(OP2_F06_Common):
             f06.write(' EID DENSITY\n')
             for eid, density in zip(mass.eids, mass.data):
                 f06.write(f' {eid:-8d} {density:.8f}\n')
+
 
 def check_element_node(obj):
     if obj is None:

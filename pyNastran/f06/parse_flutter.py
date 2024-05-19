@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import Optional, Union, cast
+from typing import Optional, cast
 import numpy as np
 #import PySide
 try:
@@ -447,6 +447,7 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
     #if close:
         #plt.close()
 
+
 def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                xlim, ylim_damping, ylim_freq, ylim_kfreq,
                                plot_type: str,
@@ -536,7 +537,6 @@ def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
         #if gx.max() < -0.1:
             #results[imode, :, :] = np.nan
 
-
     radius = np.sqrt(real ** 2 + imag ** 2)
 
     # R sin(t) = i
@@ -621,6 +621,7 @@ def _find_modes_to_keep(flutter: FlutterResponse,
     #iimag = np.where(dimag != 0.)[0]
     #log
     return isave, ifilter
+
 
 if __name__ == '__main__':  # pragma: no cover
     plot_flutter_f06('bah_plane.f06')

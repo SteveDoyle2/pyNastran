@@ -6,6 +6,7 @@ Defines:
 from numpy import array
 from pyNastran.nptyping_interface import NDArray6float
 
+
 class Resultant:
     """interface for making the OLOAD Resultant Table"""
     def __init__(self, table_name, fxyz, isubcase):
@@ -26,7 +27,7 @@ class Resultant:
         self.fxyz[isubcase] = fxyz
 
     def write_f06(self, f06_file, page_stamp, page_num):
-        """writes an f06 file"""
+        """write an f06 file"""
         #msg = ''
         #msg += '        *** USER INFORMATION MESSAGE 7310 (VECPRN)\n'
         #msg += '            ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.\n'

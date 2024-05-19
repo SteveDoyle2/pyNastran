@@ -181,10 +181,10 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     export_veas_filename = None if export_zona is False else 'nastran.veas'
 
     # TODO: need a new parameter
-    vg_filename = None if export_zona is  None else 'vg_subcase_%d.png'
-    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%d.png'
-    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%d.png'
-    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%d.png'
+    vg_filename = None if export_zona is None else 'vg_subcase_%d.png'
+    vg_vf_filename = None if export_zona is None else 'vg_vf_subcase_%d.png'
+    kfreq_damping_filename = None if export_zona is None else 'kfreq_damping_subcase_%d.png'
+    root_locus_filename = None if export_zona is None else 'root_locus_subcase_%d.png'
     if not plot:
         return
 
@@ -213,6 +213,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
     return flutter_responses
 
+
 def get_cmd_line_float(data: dict[str, str], key: str) -> float:
     try:
         svalue = data[key]
@@ -221,6 +222,7 @@ def get_cmd_line_float(data: dict[str, str], key: str) -> float:
         raise
     value = float(svalue)
     return value
+
 
 def split_float_colons(string_values: str) -> list[float]:
     """
@@ -249,6 +251,7 @@ def split_float_colons(string_values: str) -> list[float]:
         assert string_values is None, None
         values = None # all values
     return values
+
 
 def split_int_colon(modes: str, nmax: int=1000,
                     start_value: int=0) -> list[int]:
@@ -320,6 +323,7 @@ def split_int_colon(modes: str, nmax: int=1000,
     except AttributeError:
         pass
     return modes
+
 
 def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
                                log: Optional[SimpleLogger]=None):
@@ -410,9 +414,10 @@ def cmd_line(argv=None, plot: bool=True, show: bool=True,
         cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
     elif argv[1] == 'plot_200':
         cmd_line_plot_optimization(argv=argv, plot=plot, show=show, log=log)
-    else:
+    else:  # pragma: no cover
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % argv[1])
+
 
 if __name__ == '__main__':  # pragma: no cover
     cmd_line()

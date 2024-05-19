@@ -193,7 +193,7 @@ class FlutterResponse:
         All allowable fields are shown below.
 
         f06_units : dict[str] = str (default=None -> no units conversion)
-            The units to to read from the F06.
+            The units to read from the F06.
             PK method:
                 f06_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
@@ -297,7 +297,7 @@ class FlutterResponse:
         # g - green
         # m - magenta
         # y - yellow
-        #colors = ['b', 'c', 'g', 'k', 'm', 'r'] #, 'y']
+        #colors = ['b', 'c', 'g', 'k', 'm', 'r'] #, 'y'
         # D - wide diamond
         # h - hexagon
         # * - star
@@ -455,10 +455,10 @@ class FlutterResponse:
         ----------
         modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
-        fig : plt.figure
-            figure object
-        axes : plt.axes
-            axes object
+        fig : plt.Figure
+            the figure object
+        axes : plt.Axes
+            the axes object
         xlim : list[float/None, float/None]
             the x plot limits
         ylim : list[float/None, float/None]
@@ -596,7 +596,7 @@ class FlutterResponse:
         symbols, colors = self._get_symbols_colors_from_modes(modes)
 
         linestyle = 'None' if noline else '-'
-        if nopoints: # and noline is False:
+        if nopoints:  # and noline is False:
             scatter = False
 
         markersize = None
@@ -749,7 +749,7 @@ class FlutterResponse:
         return
 
         #-----------------------------------------------------------------------
-        # 2. sort the results based on velocity so we're going low to high
+        # 2. sort the results based on velocity, so we're going low to high
         #nmodes, npoints = self.results.shape[:2]
 
         #for imode in range(nmodes):
@@ -799,6 +799,14 @@ class FlutterResponse:
 
         Parameters
         ----------
+        fig : plt.Figure; default=None
+            the fig object
+        damp_axes : plt.Axes; default=None
+            the ax object
+        freq_axes : plt.Axes; default=None
+            the ax object
+        fig : plt.Figure; default=None
+            the fig object
         modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
         legend : bool; default=True
@@ -821,7 +829,6 @@ class FlutterResponse:
         if nopoints:
             symbols = ['None'] * len(symbols)
         linestyle = 'None' if noline else '-'
-
 
         #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
@@ -923,13 +930,13 @@ class FlutterResponse:
         headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
         with open(veas_filename, 'w') as veas_file:
             veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG '
-                            'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
+                            f'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE= {nmodes:4i}\n')
             veas_file.write(''.join(headers) + '\n')
             nspeeds = self.results.shape[1]
             for i in range(nspeeds):
                 damping = self.results[:, i, self.idamping]
                 eas = self.results[0, i, self.ieas]
-                omega = self.results[:, i, self.ifreq] # in Hz (what WHZ means)
+                omega = self.results[:, i, self.ifreq]  # in Hz (what WHZ means)
 
                 values = [eas] + damping.tolist() + [eas] + omega.tolist()
                 str_values = (' %11.4E' % value for value in values)
@@ -1079,26 +1086,26 @@ class FlutterResponse:
         if plot_type == 'tas':
             ix = self.ivelocity
             velocity_units = self.out_units['velocity']
-            xlabel = 'Velocity [%s]' % velocity_units
+            xlabel = f'Velocity [{velocity_units}]'
         elif plot_type == 'eas':
             ix = self.ieas
             velocity_units = self.out_units['eas']
-            xlabel = 'Equivalent Airspeed [%s]' % velocity_units
+            xlabel = f'Equivalent Airspeed [{velocity_units}]'
         elif plot_type == 'alt':
             ix = self.ialt
             alt_units = self.out_units['altitude']
-            xlabel = 'Altitude [%s]' % alt_units
+            xlabel = f'Altitude [{alt_units}]'
         elif plot_type == 'kfreq':
             ix = self.ikfreq
             xlabel = 'Reduced Frequency [rad]'
         elif plot_type == 'rho':
             ix = self.idensity
             density_units = self.out_units['density']
-            xlabel = 'Density [%s]' % density_units
+            xlabel = f'Density [{density_units}]'
         elif plot_type == 'q':
             ix = self.iq
             pressure_unit = self.out_units['dynamic_pressure']
-            xlabel = 'Dynamic Pressure [%s]' % pressure_unit
+            xlabel = f'Dynamic Pressure [{pressure_unit}]'
         elif plot_type == 'mach':
             ix = self.imach
             xlabel = 'Mach'
@@ -1117,7 +1124,7 @@ class FlutterResponse:
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
             xlabel = 'Damping'
-        else:
+        else:  # pramga: no cover
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
         return ix, xlabel
@@ -1255,6 +1262,7 @@ def _asarray(results, allow_fix_kfreq: bool=True):
                 results[imode, inan, 0] = 1. / results[imode, inan, 1]
     return results
 
+
 def _add_damping_limit(plot_type: str,
                       damp_axes: Axes,
                       damping_limit: Optional[float],
@@ -1267,6 +1275,7 @@ def _add_damping_limit(plot_type: str,
                       label=f'Damping=0%')
     damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
                       label=f'Abs Damping={damping_limit*100:.1f}%')
+
 
 def _add_vd_limit(plot_type: str,
                   damp_axes: Axes, freq_axes: Axes,
@@ -1289,35 +1298,42 @@ def _add_vd_limit(plot_type: str,
     freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
                       linewidth=linewidth)
 
-def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
     """gets the units"""
     if units is None:
         units = 'english_in'
-        #units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
-                 #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+        #units = {
+            #'velocity' : 'in/s', 'density' : 'slug/ft^3',
+            #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
 
     if isinstance(units, str):
         units = units.lower()
         # https://www.dynasupport.com/howtos/general/consistent-units
         # mm, Mg, s / si_ton
         # mm, Mg, s
-        #units = {'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
-                 #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
+        #units = {
+            #'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
+            #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
         if units == 'si':
-            units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
-                     'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
+            units = {'velocity': 'm/s', 'density': 'kg/m^3',
+                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+        elif units == 'si_mmgs':
+            units = {'velocity': 'mm/s', 'density': 'g/mm^3',
+                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+        elif units == 'si_cmgs':
+            units = {'velocity': 'cm/s', 'density': 'g/cm^3',
+                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'cm/s'}
         elif units == 'english_in':
-            units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
+            units = {'velocity': 'in/s', 'density': 'slinch/in^3',
+                     'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
         elif units == 'english_ft':
-            units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+            units = {'velocity': 'ft/s', 'density': 'slug/ft^3',
+                     'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'ft/s'}
         elif units == 'english_kt':
-            units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
-        else:
-            raise NotImplementedError('units=%r must be in [si, english_in, '
-                                      'english_ft, english_kt]' % units)
-    else:
-        assert isinstance(units, dict), 'units=%r' % (units)
+            units = {'velocity': 'knots', 'density': 'slug/ft^3',
+                     'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'knots'}
+        else:  # pragma: no cover
+            raise NotImplementedError(f'units={units!r} must be in [si, english_in, '
+                                      'english_ft, english_kt]')
+    else:  # pragma: no cover
+        assert isinstance(units, dict), f'units={units!r}'
     return units
