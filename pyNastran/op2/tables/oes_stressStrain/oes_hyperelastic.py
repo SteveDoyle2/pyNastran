@@ -3,7 +3,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object  # StressObject,
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 

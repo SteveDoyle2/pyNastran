@@ -20,7 +20,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_weld import ComplexWeldSt
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 #RealCompositePlateStressStrengthRatioArray, RealCompositePlateStrainStrengthRatioArray = None, None
 #RealCompositePlateStrainStrengthRatioArray = None
-from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray # , RealCompositePlateStrainStrengthRatioArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray  # , RealCompositePlateStrainStrengthRatioArray
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray
@@ -72,6 +72,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearSt
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+
 def oes_celas_real_2(op2: OP2, data: bytes,
                      obj: Union[RealSpringStressArray, RealSpringStrainArray],
                      nelements: int, ntotal: int, dt: Any) -> int:
@@ -86,7 +87,7 @@ def oes_celas_real_2(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
         if eid <= 0: # pragma: no cover
-            msg = 'table_name=%s sort_method=%s eid_device=%s nonlinear_factor=%s'  % (
+            msg = 'table_name=%s sort_method=%s eid_device=%s nonlinear_factor=%s' % (
                 op2.table_name_str, op2.sort_method,
                 eid_device, op2.nonlinear_factor)
             raise RuntimeError(msg)
@@ -96,6 +97,7 @@ def oes_celas_real_2(op2: OP2, data: bytes,
         add_sort_x(dt, eid, ox)
         n += ntotal
     return n
+
 
 def oes_celas_complex_3(op2: OP2, data: bytes, obj: Union[ComplexSpringStressArray, ComplexSpringStrainArray],
                         nelements: int, ntotal: int,
@@ -121,6 +123,7 @@ def oes_celas_complex_3(op2: OP2, data: bytes, obj: Union[ComplexSpringStressArr
         add_sort_x(dt, eid, axial)
         n += ntotal
     return n
+
 
 def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
                                 obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
@@ -173,6 +176,7 @@ def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
         n += ntotal
     return n
 
+
 def oes_cbeam_real_111(op2: OP2, data: bytes,
                        obj: Union[RealBeamStressArray, RealBeamStrainArray],
                        nelements: int, dt: Any) -> int:
@@ -208,6 +212,7 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
             add_sort_x(dt, eid, *out)
     return n
 
+
 def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRodStrainArray],
                     nelements: int, ntotal: int, dt) -> int:
     n = 0
@@ -225,7 +230,9 @@ def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRo
                 eid, ', '.join(['%r' % di for di in out])))
         add_sort_x(dt, eid, axial, axial_margin, torsion, torsion_margin)
         n += ntotal
+
     return n
+
 
 def oes_crod_complex_5(op2: OP2, data: bytes, obj: Union[ComplexRodStressArray, ComplexRodStrainArray],
                        nelements: int, ntotal: int, dt, is_magnitude_phase: bool) -> int:
@@ -250,6 +257,7 @@ def oes_crod_complex_5(op2: OP2, data: bytes, obj: Union[ComplexRodStressArray, 
         add_sort_x(dt, eid, axial, torsion)
         n += ntotal
     return n
+
 
 def oes_crod_random_3(op2: OP2, data: bytes, ndata: int,
              obj: Union[RandomRodStressArray, RandomRodStrainArray],
@@ -276,6 +284,7 @@ def oes_crod_random_3(op2: OP2, data: bytes, ndata: int,
         n += ntotal
     return n
 
+
 def oes_cbar100_real_10(op2: OP2, data: bytes, obj, nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'9f', op2.size))
@@ -292,6 +301,7 @@ def oes_cbar100_real_10(op2: OP2, data: bytes, obj, nelements: int, ntotal: int,
         obj.add_new_eid_sort1(op2.element_name, dt, eid,
                               sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
     return n
+
 
 def oes_cbeam_complex_111(op2: OP2, data: bytes,
                           obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
@@ -362,6 +372,7 @@ def oes_cbeam_complex_111(op2: OP2, data: bytes,
                 op2.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
     return n
 
+
 def oes_cbeam_random_67(op2: OP2, data: bytes,
                         obj: Union[RandomBeamStressArray, RandomBeamStrainArray],
                         nelements: int, nnodes: int, dt: Any) -> int:
@@ -395,6 +406,7 @@ def oes_cbeam_random_67(op2: OP2, data: bytes,
             add_sort_x(dt, eid, *out)
     return n
 
+
 def oes_cquad4_33_complex_15(op2: OP2,
                              data: bytes,
                              obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
@@ -419,7 +431,7 @@ def oes_cquad4_33_complex_15(op2: OP2,
     """
     n = 0
     s1 = Struct(op2._endian + op2._analysis_code_fmt + b'14f')
-    cen = 0 # 'CEN/4'
+    cen = 0  # 'CEN/4'
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
@@ -454,6 +466,7 @@ def oes_cquad4_33_complex_15(op2: OP2,
                    fd1, sx1, sy1, txy1,
                    fd2, sx2, sy2, txy2)
     return n
+
 
 def oes_cquad4_random_vm_57(op2: OP2,
                             data: bytes,
@@ -524,6 +537,7 @@ def oes_cquad4_random_vm_57(op2: OP2,
     #nelements = None
     #ntotal = None
     return n
+
 
 def oes_cquad4_144_complex_77(op2: OP2,
                               data: bytes,
@@ -608,6 +622,7 @@ def oes_cquad4_144_complex_77(op2: OP2,
                        fd1, sx1, sy1, txy1,
                        fd2, sx2, sy2, txy2)
     return n
+
 
 def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
                              obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
@@ -791,6 +806,7 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
         #print('-----------')
     return n
 
+
 def oes_cquad4_33_random_9(op2: OP2, data: bytes,
                            obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                            nelements: int, ntotal: int) -> int:
@@ -819,11 +835,12 @@ def oes_cquad4_33_random_9(op2: OP2, data: bytes,
         n += ntotal
     return n
 
+
 def oes_ctria3_real_17(op2: OP2, data: bytes,
                        obj: Union[RealPlateStressArray, RealPlateStrainArray],
                        ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
-    cen = 0 # 'CEN/3'
+    cen = 0  # 'CEN/3'
     #assert op2.sort_method == 1, op2.code_information()
 
     add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
@@ -849,6 +866,7 @@ def oes_ctria3_real_17(op2: OP2, data: bytes,
                            fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
         n += ntotal
     return n
+
 
 def oes_quad4_33_real_17(op2: OP2, data: bytes,
                          obj: Union[RealPlateStressArray, RealPlateStrainArray],
@@ -940,6 +958,7 @@ def oes_ctria3_complex_vm_17(op2: OP2,
     #msg = '%s-%s' % (op2.table_name_str, op2.element_name)
     return n
 
+
 def oes_ctria3_random_9(op2: OP2, data: bytes,
                         obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                         nelements: int, ntotal: int) -> int:
@@ -969,6 +988,7 @@ def oes_ctria3_random_9(op2: OP2, data: bytes,
         n += ntotal
     return n
 
+
 def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
                                obj: Union[RandomPlateVMStressArray, RandomPlateVMStrainArray],
                                nelements: int, ntotal: int) -> int:
@@ -997,6 +1017,7 @@ def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
                    fd2, sx2, sy2, txy2, ovm2)
         n += ntotal
     return n
+
 
 def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
                             obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
@@ -1028,6 +1049,7 @@ def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
                   fd2, sx2, sy2, txy2, ovm2)
         n += ntotal
     return n
+
 
 def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
                         obj: RealPlateStrainArray,
@@ -1098,6 +1120,7 @@ def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
             n += n68
     return n
 
+
 def oes_cquad4_144_random(op2: OP2, data: bytes,
                           obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                           nelements: int, nnodes: int, ndata: int) -> int:
@@ -1167,6 +1190,7 @@ def oes_cquad4_144_random(op2: OP2, data: bytes,
             n += ntotal2
     return n
 
+
 def oes_cbar_real_16(op2: OP2, data: bytes,
                      obj: Union[RealBarStressArray, RealBarStrainArray],
                      nelements: int, ntotal: int, dt: Any) -> int:
@@ -1232,9 +1256,10 @@ def oes_weldp_msc_real_8(op2: OP2, data: bytes,
         assert len(np.unique(obj._times)) == len(obj._times), obj._times.tolist()
     return n
 
+
 def oes_weldp_msc_complex_15(op2: OP2,
                              data: bytes,
-                             obj : Union[ComplexWeldStressArray, ComplexWeldStrainArray],
+                             obj: Union[ComplexWeldStressArray, ComplexWeldStrainArray],
                              nelements: int, ntotal: int,
                              is_magnitude_phase: bool, dt: Any) -> int:
     n = 0
@@ -1275,6 +1300,7 @@ def oes_weldp_msc_complex_15(op2: OP2,
         n += ntotal
     return n
 
+
 def oes_fastp_msc_real_7(op2: OP2, data: bytes,
                          obj: Union[int, float],
                          nelements: int, ntotal: int, dt: Any) -> int:
@@ -1303,6 +1329,7 @@ def oes_fastp_msc_real_7(op2: OP2, data: bytes,
         #print(f'{self.table_name} sort_method={op2.sort_method}', obj._times)
         assert len(np.unique(obj._times)) == len(obj._times), obj._times.tolist()
     return n
+
 
 def oes_fastp_msc_complex_13(op2: OP2,
                              data: bytes,
@@ -1343,6 +1370,7 @@ def oes_fastp_msc_complex_13(op2: OP2,
         add_sort_x(dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z)
         n += ntotal
     return n
+
 
 def oes_cshear_real_4(op2: OP2, data: bytes,
                       obj: Union[RealShearStressArray, RealShearStrainArray],
@@ -1390,6 +1418,7 @@ def oes_cshear_complex_5(op2: OP2,
         add_sort_x(dt, eid, etmax, etavg)
         n += ntotal
     return n
+
 
 def oes_cbar_complex_19(op2: OP2,
                         data: bytes,
@@ -1439,6 +1468,7 @@ def oes_cbar_complex_19(op2: OP2,
                               s1b, s2b, s3b, s4b)
     return n
 
+
 def oes_cbar_random_10(op2: OP2, data: bytes,
                        obj: Union[RandomBarStressArray, RandomBarStrainArray],
                        nelements: int, ntotal: int) -> int:
@@ -1481,6 +1511,7 @@ def oes_cbar_random_10(op2: OP2, data: bytes,
                    s1b, s2b, s3b, s4b)
     return n
 
+
 def oes_cbush_real_7(op2: OP2, data: bytes,
                      obj: Union[RealBushStressArray, RealBushStrainArray],
                      nelements: int, ntotal: int, dt, debug: bool=False) -> int:
@@ -1506,6 +1537,7 @@ def oes_cbush_real_7(op2: OP2, data: bytes,
 
         add_sort_x(dt, eid, tx, ty, tz, rx, ry, rz)
     return n
+
 
 def oes_cbush_complex_13(op2: OP2,
                          data: bytes,
@@ -1573,6 +1605,7 @@ def oes_ctriax6_real_33(op2: OP2, data: bytes,
             n += ntotal2
     return n
 
+
 def oes_ctriax_complex_37(op2: OP2,
                           data: bytes,
                           obj: ComplexTriaxStressArray,
@@ -1629,6 +1662,7 @@ def oes_ctriax_complex_37(op2: OP2,
             add_sort_x(dt, eid, loc, rs, azs, As, ss)
             n += ntotal2  # 4*8
     return n
+
 
 def oes_csolid_real(op2: OP2, data: bytes,
                     obj: Union[RealSolidStressArray, RealSolidStrainArray],
@@ -1716,6 +1750,7 @@ def oes_csolid_real(op2: OP2, data: bytes,
             n += n84
     return n
 
+
 def oes_csolid_complex(op2: OP2, data: bytes,
                        obj: Union[ComplexSolidStressArray, ComplexSolidStrainArray],
                        nelements: int, # nnodes: int,
@@ -1773,6 +1808,7 @@ def oes_csolid_complex(op2: OP2, data: bytes,
             obj.add_node_sort1(dt, eid, grid, inode,
                                ex, ey, ez, etxy, etyz, etzx)
     return n
+
 
 def oes_csolid_random(op2: OP2, data: bytes,
                       obj: Union[RandomSolidStressArray, RandomSolidStrainArray],
@@ -1835,6 +1871,7 @@ def oes_csolid_random(op2: OP2, data: bytes,
             n += ntotal2
     return n
 
+
 def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
                            obj: Union[RealCompositePlateStressArray, RealCompositePlateStrainArray],
                            ntotal: int, nelements: int, etype: str, dt: Any) -> int:
@@ -1865,6 +1902,7 @@ def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
         eid_old = eid
         n += ntotal
     return n
+
 
 def oesrt_comp_shell_real_9(op2: OP2, data: bytes, ndata: int,
                             obj: RealCompositePlateStressStrengthRatioArray,
@@ -1967,6 +2005,7 @@ def oes_cshear_random_3(op2: OP2, data: bytes,
         n += ntotal
     return n
 
+
 def oes_cbend_real_21(op2: OP2, data: bytes,
                       obj: Union[RealBendStressArray, RealBendStrainArray],
                       nelements: int, ntotal: int, dt) -> int:
@@ -2027,6 +2066,7 @@ def oesrt_cquad4_95(op2: OP2, data: bytes, ndata: int) -> int:
         n += ntotal
     return n
 
+
 def oes_csolid_composite_real(op2: OP2, data: bytes,
                               obj,
                               nelements: int, nedges: int,
@@ -2069,7 +2109,7 @@ def oes_csolid_composite_real(op2: OP2, data: bytes,
 
         n += ntotal1
         for inode in range(nedges):  # nodes pts, no centroid
-            out = struct2.unpack(data[n:n + ntotal2]) # 4*8 = 32
+            out = struct2.unpack(data[n:n + ntotal2])  # 4*8 = 32
             if op2.is_debug_file:
                 op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
@@ -2100,6 +2140,7 @@ def oes_csolid_composite_real(op2: OP2, data: bytes,
             n += ntotal2
     return n
 
+
 def oes_shell_composite_complex_11(op2: OP2,
                                    data: bytes,
                                    obj: Union[ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray],
@@ -2124,6 +2165,7 @@ def oes_shell_composite_complex_11(op2: OP2,
         add_sort_x(dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear)
         n += ntotal
     return n
+
 
 def oes_shell_composite_complex_13(op2: OP2,
                                    data: bytes,
@@ -2154,6 +2196,7 @@ def oes_shell_composite_complex_13(op2: OP2,
                    o1b, o2b, t12b, o1zb, e2zb, ovm)
         n += ntotal
     return n
+
 
 def _oes_csolid2_real(op2: OP2, data: bytes,
                       n: int,
@@ -2228,6 +2271,7 @@ def _oes_csolid2_real(op2: OP2, data: bytes,
             n += ntotal2
     return n
 
+
 def oes_csolid_linear_hyperelastic_cosine_real(op2: OP2, data: bytes,
                                                nelements: int, nnodes_expected: int,
                                                preline1: str, preline2: str) -> int:
@@ -2282,7 +2326,7 @@ def oes_csolid_linear_hyperelastic_cosine_real(op2: OP2, data: bytes,
 
         n += 8
         for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
-            out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
+            out = struct2.unpack(data[n:n + 80])  # 4*20 = 80
             if op2.is_debug_file:
                 op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             # nid, oxx, oxy, pa, ax, ay, az, pressure,
@@ -2309,6 +2353,7 @@ def oes_csolid_linear_hyperelastic_cosine_real(op2: OP2, data: bytes,
                                        #sxx, syy, szz, txy, tyz, txz, ovm)
             n += 80
     return n
+
 
 def oes_csolid_linear_hyperelastic_real(op2: OP2, data: bytes, obj,
                                         nelements: int, nnodes_expected: int,

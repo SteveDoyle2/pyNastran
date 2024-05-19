@@ -5,6 +5,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
+
 def print_card(fields, size=8, is_double=False):
     """
     Prints a card in 8-character of 16-character Nastran format.
@@ -33,6 +34,7 @@ def print_card(fields, size=8, is_double=False):
     elif is_double:
         return print_card_double(fields)
     return print_card_16(fields)
+
 
 def print_card_(fields, size=8, is_double=False):
     if size == 8:

@@ -35,6 +35,7 @@ def coords_from_vector_1d(v_array):
     coords = axes_stack(i, j, k, nmag)
     return coords
 
+
 def coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3):
     """computes the elemental for a tri element"""
     xyz1 = np.atleast_2d(xyz1)
@@ -46,6 +47,7 @@ def coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3):
     normal = cross2d(v21, v31)
     coords = _coordinate_system_from_vector_2d(v21, normal)
     return coords
+
 
 def coordinate_system_from_vector_2d_quad(xyz1, xyz2, xyz3, xyz4):
     """computes the elemental for a quad element"""
@@ -60,6 +62,7 @@ def coordinate_system_from_vector_2d_quad(xyz1, xyz2, xyz3, xyz4):
     normal = cross2d(v31, v42)
     coords = _coordinate_system_from_vector_2d(v21, normal)
     return coords
+
 
 def shape4(xy):
     """
@@ -78,6 +81,7 @@ def shape4(xy):
     n4 = (1-x) * (1+y)
     n = np.hstack([n1, n2, n3, n4]) / 4
     return np.atleast_2d(n)
+
 
 def tet_coord(p1, p2, p3, p4):  # pragma: no cover
     """doesn't compute the elemental for a tet element"""
@@ -108,6 +112,7 @@ def tet_coord(p1, p2, p3, p4):  # pragma: no cover
     # ???
     return r, s, t, origin
 
+
 def shape8(xyz):  # pragma: no cover
     """
     xyz : (n, 3)
@@ -134,12 +139,13 @@ def shape8(xyz):  # pragma: no cover
     n = np.hstack([n1, n2, n3, n4, n5, n6, n7, n8]) / 8
     return n
 
+
 def shape4_to_xyz(p1234, n4):
     """
     p1234 : (n, 4, 3)
         the points of the quad
     shape : (n, 2)
-        the values for the she function
+        the values for the shape function
     """
     #print('n4 = ', n4)
     p1234 = np.asarray(p1234)
@@ -164,6 +170,7 @@ def shape4_to_xyz(p1234, n4):
     #print(xyz)
     #assert xyz.shape == (nquads, 3), 'shape=%s' % str(p1234.shape)
     return p
+
 
 def hexa_coord(xyz1, xyz2, xyz3, xyz4,
                xyz5, xyz6, xyz7, xyz8):  # pragma: no cover
@@ -200,6 +207,7 @@ def hexa_coord(xyz1, xyz2, xyz3, xyz4,
     #normal = cross2d(v31, v42)
     #coords = _coordinate_system_from_vector_2d(v21, normal)
     #return coords
+
 
 def _coordinate_system_from_vector_2d(v21, normal):
     r"""

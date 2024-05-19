@@ -7,7 +7,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
-class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
+class RealNonlinearRodArray(OES_Object):  # 89-CRODNL, 92-CONRODNL
     """
     ::
 

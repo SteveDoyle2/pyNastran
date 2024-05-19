@@ -259,7 +259,6 @@ class Subcase:
         elif table_name in ['RAREATC', 'RARCONS']:
             self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
 
-
         elif table_name in ['OPHIG', 'BOPHIG', 'BOPHIGF']:
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', [], 'KEY-type')
@@ -289,7 +288,6 @@ class Subcase:
                 self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-
 
         elif table_name in ['OQG1', 'OQG2', 'OQGV1']:
             if table_code == 3:
@@ -934,7 +932,7 @@ class Subcase:
 
     def print_param(self, key: str, param: tuple[Any, Any, str]) -> str:
         """
-        Prints a single entry of the a subcase from the global or local
+        Prints a single entry of the subcase from the global or local
         subcase list.
         """
         msg = ''
@@ -952,7 +950,7 @@ class Subcase:
         #print('key=%s param=%s param_type=%s' % (key, param, param_type))
         if param_type == 'SUBCASE-type':
             if self.id > 0:
-                msgi = 'SUBCASE %s\n' % (self.id)
+                msgi = f'SUBCASE {self.id:d}\n'
                 assert len(msgi) < 72, f'len(msg)={len(msgi)}; msg=\n{msgi}'
                 msg += msgi
             #else:  global subcase ID=0 and is not printed
@@ -989,18 +987,17 @@ class Subcase:
             msg += value.write(spaces)
         else:
             # SET-type is not supported yet...
-            msg = ('\nkey=%r param=%r\n'
+            msg = (f'\nkey={key!r} param={param!r}\n'
                    'allowed_params=[SET-type, STRESS-type, STRING-type, SUBCASE-type, KEY-type]\n'
                    'CSV-type     -> PARAM,FIXEDB,-1\n'
-                   'KEY-type     -> ???\n' # the catch all
+                   'KEY-type     -> ???\n'  # the catch all
                    'SET-type     -> SET 99 = 1234\n'
                    'SUBCASE-type -> ???\n'
                    'STRESS-type  -> DISP(PLOT, SORT1)=ALL\n'
                    '                STRESS(PLOT, SORT1)=ALL\n'
                    'STRING-type  -> LABEL = A label\n'
                    '                TITLE = A title\n'
-                   '                SUBTITLE = A subtitle\n'
-                   ''% (key, param))
+                   '                SUBTITLE = A subtitle\n')
             raise NotImplementedError(msg)
 
         #print("msg = %r" % (msg))
@@ -1188,11 +1185,13 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
+
 def _update_analysis_value(value: str) -> str:
     """ANALYSIS = FLUT"""
     if value == 'FLUT':
         value = 'FLUTTER'
     return value
+
 
 def _simplify_set(key: str, value: Any, options: list[Any],
                   param_type: str) -> tuple[int, str, list[str], str]:
@@ -1218,7 +1217,7 @@ def _simplify_set(key: str, value: Any, options: list[Any],
         msg = f'invalid type for options={options!r} value; expected an integer; got a list'
         raise TypeError(msg)
     options = int(options)
-    return (key, values2, options, param_type)
+    return key, values2, options, param_type
 
 
 def update_param_name(param_name: str) -> str:
@@ -1327,6 +1326,7 @@ def update_param_name(param_name: str) -> str:
     #print '*param_name = ',param_name
     return param_name
 
+
 def get_analysis_code(sol: int) -> int:
     """
     Maps the solution number to the OP2 analysis code.
@@ -1341,24 +1341,24 @@ def get_analysis_code(sol: int) -> int:
     .. todo:: verify
     """
     codes = {
-        101 : 1,  # staics
-        103 : 2,  # modes
-        105 : 7,  # pre-buckling
-        106 : 10, # nonlinear statics
-        107 : 9,  # complex eigenvalues
+        101: 1,  # staics
+        103: 2,  # modes
+        105: 7,  # pre-buckling
+        106: 10,  # nonlinear statics
+        107: 9,  # complex eigenvalues
         108 : 5,  # frequency
-        111 : 5,
-        112 : 6,
-        114 : 1,
-        115 : 2,
-        116 : 7,
-        118 : 5,
-        129 : 6,  # nonlinear
-        144 : 1,  # static aero
-        145 : 1,
-        146 : 1,  # flutter
-        153 : 10,
-        159 : 6,  # transient thermal
+        111: 5,
+        112: 6,
+        114: 1,
+        115: 2,
+        116: 7,
+        118: 5,
+        129: 6,  # nonlinear
+        144: 1,  # static aero
+        145: 1,
+        146: 1,  # flutter
+        153: 10,
+        159: 6,  # transient thermal
     }
     #print("sol=%s" % sol)
     approach_code = codes[sol]
@@ -1603,6 +1603,7 @@ def get_table_code(sol: int, table_name: str, unused_options) -> int:
     table_code = tables[key]
     return table_code
 
+
 def get_sort_code(options: list[str], unused_value) -> int:
     """
     Gets the sort code of a given set of options and value
@@ -1622,6 +1623,7 @@ def get_sort_code(options: list[str], unused_value) -> int:
     if 'RANDOM' in options:
         sort_code += 4
     return sort_code
+
 
 def get_format_code(options: list[str], unused_value: Any) -> int:
     """
@@ -1646,6 +1648,7 @@ def get_format_code(options: list[str], unused_value: Any) -> int:
         format_code += 4
     format_code = max(format_code, 1)
     return format_code
+
 
 def get_stress_code(key: str, options: dict[str, Any], unused_value: Any) -> int:
     """

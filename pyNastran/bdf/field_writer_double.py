@@ -7,6 +7,7 @@ from typing import Union
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
+
 def print_scientific_double(value: float) -> str:
     """
     Prints a value in 16-character scientific double precision.
@@ -73,7 +74,7 @@ def print_card_double(fields: list[Union[int, float, str, None]], wipe_fields: b
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
-              unnecessary field, print_card doesnt use it.
+              unnecessary field, print_card doesn't use it.
 
     .. code-block:: python
 

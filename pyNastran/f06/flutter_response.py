@@ -147,7 +147,7 @@ class FlutterResponse:
         resp = FlutterResponse(
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, f06_units=f06_units, out_units=out_units)
-        if 0: # pragma: no cover
+        if 0:  # pragma: no cover
             resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None, show=False,
                                  clear=False, close=False, legend=True, png_filename=None)
             resp.plot_vg_vf(fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
@@ -238,7 +238,6 @@ class FlutterResponse:
                 assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
             for key in f06_units:
                 assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
-
 
         self.subcase = subcase
         self.configuration = configuration
@@ -809,6 +808,8 @@ class FlutterResponse:
             the fig object
         modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
+        plot_type : str; default='tas'
+           tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         legend : bool; default=True
             should the legend be shown
 
@@ -830,7 +831,7 @@ class FlutterResponse:
             symbols = ['None'] * len(symbols)
         linestyle = 'None' if noline else '-'
 
-        #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']
+        #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach']
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
         for i, imode, mode in zip(count(), imodes, modes):
@@ -1118,7 +1119,7 @@ class FlutterResponse:
         elif plot_type == 'eigr':
             ix = self.ieigr
             xlabel = 'Eigenvalue (Real)'
-        elif plot_type == 'eigr':
+        elif plot_type == 'eigi':
             ix = self.ieigi
             xlabel = 'Eigenvalue (Imaginary)'
         elif plot_type in ['damp', 'damping']:
@@ -1212,6 +1213,7 @@ def _get_modes_imodes(all_modes, modes):
     imodes = np.searchsorted(all_modes, modes)
     return modes, imodes
 
+
 def _asarray(results, allow_fix_kfreq: bool=True):
     """casts the results array"""
     allow_fix_kfreq = False
@@ -1298,6 +1300,8 @@ def _add_vd_limit(plot_type: str,
     freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
                       linewidth=linewidth)
 
+
+def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
     """gets the units"""
     if units is None:
         units = 'english_in'

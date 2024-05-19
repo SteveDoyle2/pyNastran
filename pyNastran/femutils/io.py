@@ -14,11 +14,12 @@ from itertools import count
 
 import numpy as np
 from numpy.lib._iotools import _is_string_like
-from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode
+from numpy.compat import asstr, asunicode
 
 from pyNastran.utils import is_file_obj, _filename
 
 __all__ = ['loadtxt_nice', 'savetxt_nice']
+
 
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
@@ -117,8 +118,8 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.fl
 
     if usecols:
         for usecol in usecols:
-            assert isinstance(usecol, int), 'usecol=%s usecols=%s' % (usecol, usecols)
-        assert len(np.unique(usecols)), 'usecols=%s must be unique' % (usecols)
+            assert isinstance(usecol, int), f'usecol={usecol} usecols={usecols}'
+        assert len(np.unique(usecols)), f'usecols={usecols} must be unique'
         for line in lines:
             if line.startswith(comments):
                 continue

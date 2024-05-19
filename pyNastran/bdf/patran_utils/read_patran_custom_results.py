@@ -117,13 +117,14 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
     data_array = np.array(data, dtype=dtype)
 
     data_dict = {
-        'title' : title,
-        'subtitle' : subtitle,
-        'nids' : nids_array,
-        'data' : data_array,
-        'headers' : headers,
+        'title': title,
+        'subtitle': subtitle,
+        'nids': nids_array,
+        'data': data_array,
+        'headers': headers,
     }
     return data_dict
+
 
 def load_patran_nod(nod_filename: str,
                     node_ids: np.ndarray) -> tuple[dict[str, np.ndarray],

@@ -355,32 +355,32 @@ class OES(OP2Common2):
 
         op2._setup_op2_subcase('STRESS/STRAIN')
         elements_to_read = [
-            1, 3, 10, # CROD, CTUBE, CTUBE
-            11, 12, 13, # CELAS1, CELAS2, CELAS3,
-            2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
-            75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
-            69, # CBEND
-            67, 68, 95, 102, #  #CHEXA, CPENTA, QUAD4-comp, CBUSH
-            39, #CTETRA
-            86, # GAPNL
-            88, # TRIA3-nonlinear
-            89, # ROD-nonlinear
-            90, # QUAD4-nonlinear
-            91, # PENTANL
-            93, # HEXANL
-            97, # CTRIA3-C
-            96, # QUAD8-nonlinear
-            98, # TRIA6-nonlinear
-            100, # CBAR-100
-            228, # CQUADR
-            232, # CQUADR-composite
-            243, # CQUADX4
-            189, # VUQUAD
-            190, # VUTRIA
-            191, # VUBEAM
-            256, # CPYRAM
-            227, # CTRIAR
-            275, # CPLSTS3
+            1, 3, 10,  # CROD, CTUBE, CTUBE
+            11, 12, 13,  # CELAS1, CELAS2, CELAS3,
+            2, 4, 34, 33, 74,  # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
+            75, 64, 70, 82, 144,  # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
+            69,  # CBEND
+            67, 68, 95, 102,  # #CHEXA, CPENTA, QUAD4-comp, CBUSH
+            39,  #CTETRA
+            86,  # GAPNL
+            88,  # TRIA3-nonlinear
+            89,  # ROD-nonlinear
+            90,  # QUAD4-nonlinear
+            91,  # PENTANL
+            93,  # HEXANL
+            97,  # CTRIA3-C
+            96,  # QUAD8-nonlinear
+            98,  # TRIA6-nonlinear
+            100,  # CBAR-100
+            228,  # CQUADR
+            232,  # CQUADR-composite
+            243,  # CQUADX4
+            189,  # VUQUAD
+            190,  # VUTRIA
+            191,  # VUBEAM
+            256,  # CPYRAM
+            227,  # CTRIAR
+            275,  # CPLSTS3
         ]
         if op2.element_type in elements_to_read:
             n = self._read_oes_4_sort(data, ndata)
@@ -593,19 +593,19 @@ class OES(OP2Common2):
         op2.data_code['is_strain_flag'] = True
 
         op2._setup_op2_subcase('STRESS/STRAIN')
-        if op2.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
-                                 11, 12, 13, # CELAS1, CELAS2, CELAS3,
-                                 2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
-                                 75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
-                                 69, # CBEND
-                                 67, 68, 95, 102,#CHEXA, CPENTA, QUAD4-comp, CBUSH
-                                 96, # QUAD8-nonlinear
-                                 98, # TRIA6-nonlinear
-                                 39, #CTETRA
-                                 228, #CQUADR
-                                 232, #CQUADR-composite
-                                 233, #CTRIAR-composite
-                                 97]:  # CTRIA3-C
+        if op2.element_type in [1, 3, 10,  # CROD, CTUBE, CTUBE
+                                11, 12, 13,  # CELAS1, CELAS2, CELAS3,
+                                2, 4, 34, 33, 74,  # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
+                                75, 64, 70, 82, 144,  # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
+                                69,  # CBEND
+                                67, 68, 95, 102,  #CHEXA, CPENTA, QUAD4-comp, CBUSH
+                                96,  # QUAD8-nonlinear
+                                98,  # TRIA6-nonlinear
+                                39,  #CTETRA
+                                228,  #CQUADR
+                                232,  #CQUADR-composite
+                                233,  #CTRIAR-composite
+                                97]:  # CTRIA3-C
             n = self._read_ostr_4_sort(data, ndata)
         else:
             msg = op2.code_information()
@@ -743,152 +743,152 @@ class OES(OP2Common2):
             (4, 3, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),
 
-            (11, 1, 2, b'OES1X1') : ('celas1_stress', RealSpringStressArray), # real
-            (11, 2, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # real/imag
-            (11, 3, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
-            (11, 2, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
-            (11, 3, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 1, 2, b'OES1X1'): ('celas1_stress', RealSpringStressArray), # real
+            (11, 2, 3, b'OES1X'): ('celas1_stress', ComplexSpringStressArray), # real/imag
+            (11, 3, 3, b'OES1X'): ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 2, 3, b'OESVM1'): ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 3, 3, b'OESVM1'): ('celas1_stress', ComplexSpringStressArray), # mag/phase
 
-            (12, 1, 2, b'OES1X1') : ('celas2_stress', RealSpringStressArray),
-            (12, 1, 2, b'OES1X') : ('celas2_stress', RealSpringStressArray),
-            (12, 1, 2, b'OES1') : ('celas2_stress', RealSpringStressArray),
-            (12, 2, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
-            (12, 3, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
-            (12, 2, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
-            (12, 3, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
+            (12, 1, 2, b'OES1X1'): ('celas2_stress', RealSpringStressArray),
+            (12, 1, 2, b'OES1X'): ('celas2_stress', RealSpringStressArray),
+            (12, 1, 2, b'OES1'): ('celas2_stress', RealSpringStressArray),
+            (12, 2, 3, b'OES1X'): ('celas2_stress', ComplexSpringStressArray),
+            (12, 3, 3, b'OES1X'): ('celas2_stress', ComplexSpringStressArray),
+            (12, 2, 3, b'OESVM1'): ('celas2_stress', ComplexSpringStressArray),
+            (12, 3, 3, b'OESVM1'): ('celas2_stress', ComplexSpringStressArray),
 
-            (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
+            (13, 1, 2, b'OES1X1'): ('celas3_stress', RealSpringStressArray),
             #(13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
             #(13, 3, 3) : ('celas3_stress', ComplexSpringStressArray),
-            (13, 2, 3, b'OES1X') : ('celas3_stress', ComplexSpringStressArray),
-            (13, 2, 3, b'OESVM1') : ('celas3_stress', ComplexSpringStressArray),
-            (13, 3, 3, b'OESVM1') : ('celas3_stress', ComplexSpringStressArray),
+            (13, 2, 3, b'OES1X'): ('celas3_stress', ComplexSpringStressArray),
+            (13, 2, 3, b'OESVM1'): ('celas3_stress', ComplexSpringStressArray),
+            (13, 3, 3, b'OESVM1'): ('celas3_stress', ComplexSpringStressArray),
 
             (14, 1, 2) : ('celas4_stress', RealSpringStressArray),
             (14, 2, 3) : ('celas4_stress', ComplexSpringStressArray),
             (14, 3, 3) : ('celas4_stress', ComplexSpringStressArray),
 
-            (34, 1, 16, b'OES1X1') : ('cbar_stress', RealBarStressArray),
-            (34, 1, 16, b'OES1X') : ('cbar_stress', RealBarStressArray),
-            (34, 1, 16, b'OES1') : ('cbar_stress', RealBarStressArray),
-            (34, 2, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
-            (34, 1, 10, b'OESNO1') : ('cbar_stress', ComplexBarStressArray),
-            (34, 2, 10, b'OESXRMS1') : ('cbar_stress', ComplexBarStressArray),
+            (34, 1, 16, b'OES1X1'): ('cbar_stress', RealBarStressArray),
+            (34, 1, 16, b'OES1X'): ('cbar_stress', RealBarStressArray),
+            (34, 1, 16, b'OES1'): ('cbar_stress', RealBarStressArray),
+            (34, 2, 19, b'OES1X'): ('cbar_stress', ComplexBarStressArray),
+            (34, 1, 10, b'OESNO1'): ('cbar_stress', ComplexBarStressArray),
+            (34, 2, 10, b'OESXRMS1'): ('cbar_stress', ComplexBarStressArray),
 
-            (34, 1, 10, b'OESRMS2') : ('cbar_stress', RandomBarStressArray),
+            (34, 1, 10, b'OESRMS2'): ('cbar_stress', RandomBarStressArray),
 
-            (34, 2, 10, b'OESPSD2') : ('cbar_stress', RandomBarStressArray),
-            (34, 2, 10, b'OESRMS2') : ('cbar_stress', RandomBarStressArray),
-            (34, 2, 10, b'OESNO2') : ('cbar_stress', RandomBarStressArray),
-            (34, 2, 10, b'OESATO2') : ('cbar_stress', RandomBarStressArray),
-            (34, 2, 10, b'OESCRM2') : ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESPSD2'): ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESRMS2'): ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESNO2'): ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESATO2'): ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESCRM2'): ('cbar_stress', RandomBarStressArray),
 
             # Missing stress_mapper key for OES1 table #501
             # see cbarao_random_x_mini.op2 for an example with OES1 and OES1X...
             # it looks to be an error in MSC [2008-2012)
-            (34, 2, 19, b'OES1') : ('cbar_stress', ComplexBarStressArray),
-            (34, 3, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
-            (34, 3, 19, b'OESVM1') : ('cbar_stress', ComplexBarStressArray),
+            (34, 2, 19, b'OES1'): ('cbar_stress', ComplexBarStressArray),
+            (34, 3, 19, b'OES1X'): ('cbar_stress', ComplexBarStressArray),
+            (34, 3, 19, b'OESVM1'): ('cbar_stress', ComplexBarStressArray),
             #(34, 1, 19) : ('cbar_stress', RandomBarStressArray),
-            (100, 1, 10, b'OES1X1') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
-            (100, 1, 10, b'OES1X') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
+            (100, 1, 10, b'OES1X1'): ('cbar_stress_10nodes', RealBar10NodesStressArray),
+            (100, 1, 10, b'OES1X'): ('cbar_stress_10nodes', RealBar10NodesStressArray),
 
             # solids
-            (39, 1, 109, b'OES1X1') : ('ctetra_stress', RealSolidStressArray), # real
-            (39, 1, 109, b'OES1X') : ('ctetra_stress', RealSolidStressArray), # real
-            (39, 1, 109, b'OES1') : ('ctetra_stress', RealSolidStressArray), # real
-            (39, 3, 74, b'OESVM1') : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
+            (39, 1, 109, b'OES1X1'): ('ctetra_stress', RealSolidStressArray), # real
+            (39, 1, 109, b'OES1X'): ('ctetra_stress', RealSolidStressArray), # real
+            (39, 1, 109, b'OES1'): ('ctetra_stress', RealSolidStressArray), # real
+            (39, 3, 74, b'OESVM1'): ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
-            (67, 1, 193, b'OES1X1') : ('chexa_stress', RealSolidStressArray),
-            (67, 1, 193, b'OES1X') : ('chexa_stress', RealSolidStressArray),
-            (67, 1, 193, b'OES1') : ('chexa_stress', RealSolidStressArray),
-            (67, 1, 193, b'RASCONS') : ('chexa_stress', RealSolidStressArray),
+            (67, 1, 193, b'OES1X1'): ('chexa_stress', RealSolidStressArray),
+            (67, 1, 193, b'OES1X'): ('chexa_stress', RealSolidStressArray),
+            (67, 1, 193, b'OES1'): ('chexa_stress', RealSolidStressArray),
+            (67, 1, 193, b'RASCONS'): ('chexa_stress', RealSolidStressArray),
 
-            (68, 1, 151, b'OES1X1') : ('cpenta_stress', RealSolidStressArray),
-            (68, 1, 151, b'OES1X') : ('cpenta_stress', RealSolidStressArray),
-            (68, 1, 151, b'OES1') : ('cpenta_stress', RealSolidStressArray),
-            (68, 3, 102, b'OESVM1') : ('cpenta_stress', ComplexSolidStressArray),
+            (68, 1, 151, b'OES1X1'): ('cpenta_stress', RealSolidStressArray),
+            (68, 1, 151, b'OES1X'): ('cpenta_stress', RealSolidStressArray),
+            (68, 1, 151, b'OES1'): ('cpenta_stress', RealSolidStressArray),
+            (68, 3, 102, b'OESVM1'): ('cpenta_stress', ComplexSolidStressArray),
 
-            (39, 2, 69, b'OES1X') : ('ctetra_stress', ComplexSolidStressArray), # real/imag
-            (39, 2, 69, b'OES1') : ('ctetra_stress', ComplexSolidStressArray),
-            (39, 2, 74, b'OESVM1') : ('ctetra_stress', 'NA'), # real/imag
+            (39, 2, 69, b'OES1X'): ('ctetra_stress', ComplexSolidStressArray), # real/imag
+            (39, 2, 69, b'OES1'): ('ctetra_stress', ComplexSolidStressArray),
+            (39, 2, 74, b'OESVM1'): ('ctetra_stress', 'NA'), # real/imag
             #(39, 3, 69) : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
-            (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
-            (67, 3, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
-            (67, 3, 130, b'OESVM1') : ('chexa_stress', ComplexSolidStressArray),
-            (67, 2, 121, b'OES1') : ('chexa_stress', ComplexSolidStressArray),
-            (67, 3, 121, b'OES1') : ('chexa_stress', ComplexSolidStressArray),
+            (67, 2, 121, b'OES1X'): ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 121, b'OES1X'): ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 130, b'OESVM1'): ('chexa_stress', ComplexSolidStressArray),
+            (67, 2, 121, b'OES1'): ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 121, b'OES1'): ('chexa_stress', ComplexSolidStressArray),
 
-            (68, 2, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
-            (68, 3, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
-            (68, 2, 95, b'OES1') : ('cpenta_stress', ComplexSolidStressArray),
+            (68, 2, 95, b'OES1X'): ('cpenta_stress', ComplexSolidStressArray),
+            (68, 3, 95, b'OES1X'): ('cpenta_stress', ComplexSolidStressArray),
+            (68, 2, 95, b'OES1'): ('cpenta_stress', ComplexSolidStressArray),
 
-            (33, 1, 17, b'OES1X1') :  ('cquad4_stress', RealPlateStressArray),
-            (33, 1, 17, b'OES1X') :  ('cquad4_stress', RealPlateStressArray),
-            (33, 1, 17, b'OES1') :  ('cquad4_stress', RealPlateStressArray),
-            (33, 2, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
-            (33, 3, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
+            (33, 1, 17, b'OES1X1'):  ('cquad4_stress', RealPlateStressArray),
+            (33, 1, 17, b'OES1X'):  ('cquad4_stress', RealPlateStressArray),
+            (33, 1, 17, b'OES1'):  ('cquad4_stress', RealPlateStressArray),
+            (33, 2, 15, b'OES1X'):  ('cquad4_stress', ComplexPlateStressArray),
+            (33, 3, 15, b'OES1X'):  ('cquad4_stress', ComplexPlateStressArray),
             #(33, 3, 0) :  ('cquad4_stress', RandomPlateStressArray),
-            (33, 1, 9, b'OESNO1') : ('cquad4_stress', ComplexPlateStressArray),
-            (33, 2, 11, b'OESXRMS1') : ('cquad4_stress', ComplexPlateStressArray),
+            (33, 1, 9, b'OESNO1'): ('cquad4_stress', ComplexPlateStressArray),
+            (33, 2, 11, b'OESXRMS1'): ('cquad4_stress', ComplexPlateStressArray),
 
-            (33, 2, 9, b'OESATO2') : ('cquad4_stress', 'NA'),
-            (33, 2, 9, b'OESCRM2') : ('cquad4_stress', 'NA'),
-            (33, 2, 9, b'OESPSD2') : ('cquad4_stress', 'NA'),
-            (33, 2, 9, b'OESNO2') : ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESATO2'): ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESCRM2'): ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESPSD2'): ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESNO2'): ('cquad4_stress', 'NA'),
 
-            (33, 1, 9, b'OESRMS2') : ('cquad4_stress', 'NA'),
-            (33, 2, 9, b'OESRMS2') : ('cquad4_stress', 'NA'),
+            (33, 1, 9, b'OESRMS2'): ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESRMS2'): ('cquad4_stress', 'NA'),
 
 
-            (74, 1, 17, b'OES1X1') : ('ctria3_stress', RealPlateStrainArray),
-            (74, 1, 17, b'OES1X') : ('ctria3_stress', RealPlateStrainArray),
-            (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
-            (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 2, 11, b'OESXRMS1') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 1, 9, b'OESNO1') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 2, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
-            (74, 3, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
+            (74, 1, 17, b'OES1X1'): ('ctria3_stress', RealPlateStrainArray),
+            (74, 1, 17, b'OES1X'): ('ctria3_stress', RealPlateStrainArray),
+            (74, 1, 17, b'OES1'): ('ctria3_stress', RealPlateStrainArray),
+            (74, 2, 15, b'OES1X'): ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 3, 15, b'OES1X'): ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 2, 11, b'OESXRMS1'): ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 1, 9, b'OESNO1'): ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 2, 17, b'OESVM1'): ('ctria3_stress', 'NA'),
+            (74, 3, 17, b'OESVM1'): ('ctria3_stress', 'NA'),
 
-            (74, 1, 9, b'OESRMS2') : ('ctria3_stress', 'NA'),
+            (74, 1, 9, b'OESRMS2'): ('ctria3_stress', 'NA'),
 
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
-            (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
-            (82, 1, 87, b'OES1X') : ('cquadr_stress', RealPlateStressArray),
-            (82, 2, 77, b'OES1X') : ('cquadr_stress', ComplexPlateStressArray),
+            (82, 1, 87, b'OES1X1'): ('cquadr_stress', RealPlateStressArray),
+            (82, 1, 87, b'OES1X'): ('cquadr_stress', RealPlateStressArray),
+            (82, 2, 77, b'OES1X'): ('cquadr_stress', ComplexPlateStressArray),
             (82, 3, 77, b'OES1X') : ('cquadr_stress', ComplexPlateStressArray),
 
             (64, 1, 87, b'OES1X1') : ('cquad8_stress', RealPlateStressArray), # real
-            (64, 1, 87, b'OES1X') : ('cquad8_stress', RealPlateStressArray),
-            (64, 1, 87, b'OES1') : ('cquad8_stress', RealPlateStressArray),
-            (64, 2, 77, b'OES1') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
-            (64, 3, 77, b'OES1') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
-            (64, 2, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
-            (64, 3, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
-            (64, 2, 87, b'OESVM1') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
-            (64, 3, 87, b'OESVM1') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
+            (64, 1, 87, b'OES1X'): ('cquad8_stress', RealPlateStressArray),
+            (64, 1, 87, b'OES1'): ('cquad8_stress', RealPlateStressArray),
+            (64, 2, 77, b'OES1'): ('cquad8_stress', ComplexPlateStressArray), # real/imag
+            (64, 3, 77, b'OES1'): ('cquad8_stress', ComplexPlateStressArray), # mag/phase
+            (64, 2, 77, b'OES1X'): ('cquad8_stress', ComplexPlateStressArray), # real/imag
+            (64, 3, 77, b'OES1X'): ('cquad8_stress', ComplexPlateStressArray), # mag/phase
+            (64, 2, 87, b'OESVM1'): ('cquad8_stress', ComplexPlateStressArray), # real/imag
+            (64, 3, 87, b'OESVM1'): ('cquad8_stress', ComplexPlateStressArray), # mag/phase
 
-            (70, 1, 70, b'OES1X1') : ('ctriar_stress', RealPlateStressArray),
-            (70, 1, 70, b'OES1X') : ('ctriar_stress', RealPlateStressArray),
-            (70, 2, 62, b'OES1X') : ('ctriar_stress', ComplexPlateStressArray),
-            (70, 3, 62, b'OES1X') : ('ctriar_stress', ComplexPlateStressArray),
+            (70, 1, 70, b'OES1X1'): ('ctriar_stress', RealPlateStressArray),
+            (70, 1, 70, b'OES1X'): ('ctriar_stress', RealPlateStressArray),
+            (70, 2, 62, b'OES1X'): ('ctriar_stress', ComplexPlateStressArray),
+            (70, 3, 62, b'OES1X'): ('ctriar_stress', ComplexPlateStressArray),
 
-            (75, 1, 70, b'OES1X1') : ('ctria6_stress', RealPlateStressArray),
-            (75, 2, 62, b'OES1X') : ('ctria6_stress', ComplexPlateStressArray),
-            (75, 3, 62, b'OES1X') : ('ctria6_stress', ComplexPlateStressArray),
-            (75, 2, 70, b'OESVM1') : ('ctria6_stress', ComplexPlateStressArray),
-            (75, 3, 70, b'OESVM1') : ('ctria6_stress', ComplexPlateStressArray),
+            (75, 1, 70, b'OES1X1'): ('ctria6_stress', RealPlateStressArray),
+            (75, 2, 62, b'OES1X'): ('ctria6_stress', ComplexPlateStressArray),
+            (75, 3, 62, b'OES1X'): ('ctria6_stress', ComplexPlateStressArray),
+            (75, 2, 70, b'OESVM1'): ('ctria6_stress', ComplexPlateStressArray),
+            (75, 3, 70, b'OESVM1'): ('ctria6_stress', ComplexPlateStressArray),
 
-            (144, 1, 87, b'OES1X1') : ('cquad4_stress', RealPlateStressArray),
-            (144, 1, 87, b'OES1') : ('cquad4_stress', RealPlateStressArray),
-            (144, 1, 87, b'RASCONS') : ('cquad4_stress', RealPlateStressArray),
+            (144, 1, 87, b'OES1X1'): ('cquad4_stress', RealPlateStressArray),
+            (144, 1, 87, b'OES1'): ('cquad4_stress', RealPlateStressArray),
+            (144, 1, 87, b'RASCONS'): ('cquad4_stress', RealPlateStressArray),
 
-            (144, 2, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
-            (144, 3, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
-            (144, 3, 87, b'OESVM1') : ('cquad4_stress', ComplexPlateStressArray),
+            (144, 2, 77, b'OES1X'): ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 77, b'OES1X'): ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 87, b'OESVM1'): ('cquad4_stress', ComplexPlateStressArray),
             #(144, 3, 77) : ('cquad4_stress', ComplexPlateStressArray),
             #(64, 1, 47) : ('cquad8_stress', RandomPlateStressArray), # random
             #(70, 1, 39) : ('ctriar_stress', RandomPlateStressArray),
@@ -896,134 +896,134 @@ class OES(OP2Common2):
             #(82, 1, 47) : ('cquadr_stress', RandomPlateStressArray),
             #(144, 1, 47) : ('cquad4_stress', RandomPlateStressArray),
 
-            (88, 1, 13, b'OESNLXR') : ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real
-            (88, 1, 25, b'OESNL1X') : ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real?
-            (88, 1, 25, b'OESNLXR') : ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real?
+            (88, 1, 13, b'OESNLXR'): ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real
+            (88, 1, 25, b'OESNL1X'): ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real?
+            (88, 1, 25, b'OESNLXR'): ('nonlinear_ctria3_stress', RealNonlinearPlateArray), # real?
 
-            (90, 1, 13, b'OESNLXR') : ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
-            (90, 1, 25, b'OESNL1X') : ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
-            (90, 1, 25, b'OESNLXR') : ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
-            (90, 1, 25, b'OESNLXD') : ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
+            (90, 1, 13, b'OESNLXR'): ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
+            (90, 1, 25, b'OESNL1X'): ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
+            (90, 1, 25, b'OESNLXR'): ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
+            (90, 1, 25, b'OESNLXD'): ('nonlinear_cquad4_stress', RealNonlinearPlateArray),
 
-            (95, 1, 11, b'OES1C') : ('cquad4_composite_stress', RealCompositePlateStressArray), # real
-            (95, 1, 11, b'OESCP') : ('cquad4_composite_stress', RealCompositePlateStressArray), # real
-            (95, 1, 9, b'OESRT') : ('cquad4_composite_stress', 'RandomCompositePlateStressArray'), # real
-            (95, 2, 11, b'OESCP') : ('cquad4_composite_stress', RealCompositePlateStressArray), # real?
-            (95, 2, 11, b'OESRT') : ('cquad4_composite_stress', RealCompositePlateStressArray), # real?
+            (95, 1, 11, b'OES1C'): ('cquad4_composite_stress', RealCompositePlateStressArray), # real
+            (95, 1, 11, b'OESCP'): ('cquad4_composite_stress', RealCompositePlateStressArray), # real
+            (95, 1, 9, b'OESRT'): ('cquad4_composite_stress', 'RandomCompositePlateStressArray'), # real
+            (95, 2, 11, b'OESCP'): ('cquad4_composite_stress', RealCompositePlateStressArray), # real?
+            (95, 2, 11, b'OESRT'): ('cquad4_composite_stress', RealCompositePlateStressArray), # real?
             #(95, 2, 9) : ('cquad4_composite_stress', ComplexCompositePlateStressArray), # real/imag
             #(95, 3, 9) : ('cquad4_composite_stress', ComplexCompositePlateStressArray), # mag/phase
 
             #(96, 1, 9) : ('cquad8_composite_stress', 'RandomCompositePlateStressArray'),
-            (96, 1, 11, b'OES1C') : ('cquad8_composite_stress', RealCompositePlateStressArray),
+            (96, 1, 11, b'OES1C'): ('cquad8_composite_stress', RealCompositePlateStressArray),
             #(96, 1, 11) : ('cquad8_composite_stress', RealCompositePlateStressArray),
             #(96, 2, 9) : ('cquad8_composite_stress', ComplexCompositePlateStressArray),
             #(96, 3, 9) : ('cquad8_composite_stress', ComplexCompositePlateStressArray),
 
-            (97, 1, 9, b'OESRT') : ('ctria3_composite_stress', 'RandomCompositePlateStressArray'),
-            (97, 1, 11, b'OES1C') : ('ctria3_composite_stress', RealCompositePlateStressArray),
-            (97, 1, 11, b'OESCP') : ('ctria3_composite_stress', RealCompositePlateStressArray),
-            (97, 2, 11, b'OESCP') : ('ctria3_composite_stress', RealCompositePlateStressArray),
+            (97, 1, 9, b'OESRT'): ('ctria3_composite_stress', 'RandomCompositePlateStressArray'),
+            (97, 1, 11, b'OES1C'): ('ctria3_composite_stress', RealCompositePlateStressArray),
+            (97, 1, 11, b'OESCP'): ('ctria3_composite_stress', RealCompositePlateStressArray),
+            (97, 2, 11, b'OESCP'): ('ctria3_composite_stress', RealCompositePlateStressArray),
             #(97, 2, 9) : ('ctria3_composite_stress', ComplexCompositePlateStressArray),
             #(97, 3, 9) : ('ctria3_composite_stress', ComplexCompositePlateStressArray),
 
-            (98, 1, 9, b'OESRT') : ('ctria6_composite_stress', 'RandomCompositePlateStressArray'),
-            (98, 1, 11, b'OES1C') : ('ctria6_composite_stress', RealCompositePlateStressArray),
+            (98, 1, 9, b'OESRT'): ('ctria6_composite_stress', 'RandomCompositePlateStressArray'),
+            (98, 1, 11, b'OES1C'): ('ctria6_composite_stress', RealCompositePlateStressArray),
             #(98, 1, 11) : ('ctria6_composite_stress', RealCompositePlateStressArray),
             #(98, 2, 9) : ('ctria6_composite_stress', ComplexCompositePlateStressArray),
             #(98, 3, 9) : ('ctria6_composite_stress', ComplexCompositePlateStressArray),
 
-            (53, 1, 33, b'OES1X1') : ('ctriax_stress', RealTriaxStressArray),
-            (53, 1, 33, b'OES1X') : ('ctriax_stress', RealTriaxStressArray),
-            (53, 2, 37, b'OES1X') : ('ctriax_stress', ComplexTriaxStressArray),
+            (53, 1, 33, b'OES1X1'): ('ctriax_stress', RealTriaxStressArray),
+            (53, 1, 33, b'OES1X'): ('ctriax_stress', RealTriaxStressArray),
+            (53, 2, 37, b'OES1X'): ('ctriax_stress', ComplexTriaxStressArray),
             #(53, 3, 37) : ('ctriax_stress', ComplexTriaxStressArray),
 
-            (102, 1, 7, b'OES1X1') : ('cbush_stress', RealBushStressArray),
-            (102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
-            (102, 1, 7, b'OES1') : ('cbush_stress', RealBushStressArray),
-            (102, 2, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
-            (102, 3, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
-            (102, 2, 13, b'OESVM1') : ('cbush_stress', 'NA'),
+            (102, 1, 7, b'OES1X1'): ('cbush_stress', RealBushStressArray),
+            (102, 1, 7, b'OES1X'): ('cbush_stress', RealBushStressArray),
+            (102, 1, 7, b'OES1'): ('cbush_stress', RealBushStressArray),
+            (102, 2, 13, b'OES1X'): ('cbush_stress', ComplexCBushStressArray),
+            (102, 3, 13, b'OES1X'): ('cbush_stress', ComplexCBushStressArray),
+            (102, 2, 13, b'OESVM1'): ('cbush_stress', 'NA'),
             (102, 2, 13, b'OES1'): ('cbush_stress', ComplexCBushStressArray),
 
-            (40, 1, 8, b'OES1X1') : ('cbush1d_stress_strain', RealBushStressArray),
-            (40, 1, 8, b'OESNLXD') : ('cbush1d_stress_strain', RealBushStressArray),
+            (40, 1, 8, b'OES1X1'): ('cbush1d_stress_strain', RealBushStressArray),
+            (40, 1, 8, b'OESNLXD'): ('cbush1d_stress_strain', RealBushStressArray),
             #(40, 2, 9) : ('cbush1d_stress_strain', ComplexCBushStressArray),
             #(40, 3, 9) : ('cbush1d_stress_strain', ComplexCBushStressArray),
 
-            (87, 1, 7, b'OESNL1X') : ('nonlinear_ctube_stress', RealNonlinearRodArray),
-            (87, 1, 7, b'OESNLXR') : ('nonlinear_ctube_stress', RealNonlinearRodArray),
-            (89, 1, 7, b'OESNL1X') : ('nonlinear_crod_stress', RealNonlinearRodArray),
-            (89, 1, 7, b'OESNLXD') : ('nonlinear_crod_stress', RealNonlinearRodArray),
-            (89, 1, 7, b'OESNLXR') : ('nonlinear_crod_stress', RealNonlinearRodArray),
-            (92, 1, 7, b'OESNL1X') : ('nonlinear_conrod_stress', RealNonlinearRodArray),
-            (92, 1, 7, b'OESNLXD') : ('nonlinear_conrod_stress', RealNonlinearRodArray),
-            (92, 1, 7, b'OESNLXR') : ('nonlinear_conrod_stress', RealNonlinearRodArray),
+            (87, 1, 7, b'OESNL1X'): ('nonlinear_ctube_stress', RealNonlinearRodArray),
+            (87, 1, 7, b'OESNLXR'): ('nonlinear_ctube_stress', RealNonlinearRodArray),
+            (89, 1, 7, b'OESNL1X'): ('nonlinear_crod_stress', RealNonlinearRodArray),
+            (89, 1, 7, b'OESNLXD'): ('nonlinear_crod_stress', RealNonlinearRodArray),
+            (89, 1, 7, b'OESNLXR'): ('nonlinear_crod_stress', RealNonlinearRodArray),
+            (92, 1, 7, b'OESNL1X'): ('nonlinear_conrod_stress', RealNonlinearRodArray),
+            (92, 1, 7, b'OESNLXD'): ('nonlinear_conrod_stress', RealNonlinearRodArray),
+            (92, 1, 7, b'OESNLXR'): ('nonlinear_conrod_stress', RealNonlinearRodArray),
 
-            (224, 1, 3, b'OESNLXD') : ('nonlinear_celas1_stress', RealNonlinearSpringStressArray),
-            (224, 1, 3, b'OESNLXR') : ('nonlinear_celas1_stress', RealNonlinearSpringStressArray),
-            (225, 1, 3, b'OESNLXR') : ('nonlinear_celas3_stress', RealNonlinearSpringStressArray),
+            (224, 1, 3, b'OESNLXD'): ('nonlinear_celas1_stress', RealNonlinearSpringStressArray),
+            (224, 1, 3, b'OESNLXR'): ('nonlinear_celas1_stress', RealNonlinearSpringStressArray),
+            (225, 1, 3, b'OESNLXR'): ('nonlinear_celas3_stress', RealNonlinearSpringStressArray),
 
-            (35, 1, 18, b'OES1X1') : ('NA', 'NA'), # CCONEAX
-            (35, 1, 18, b'OES1') : ('NA', 'NA'), # CCONEAX
+            (35, 1, 18, b'OES1X1'): ('NA', 'NA'), # CCONEAX
+            (35, 1, 18, b'OES1'): ('NA', 'NA'), # CCONEAX
 
-            (60, 1, 10, b'OES1X') : ('NA', 'NA'), # DUM8/CCRAC2D
-            (61, 1, 10, b'OES1X') : ('NA', 'NA'), # DUM8/CCRAC3D
+            (60, 1, 10, b'OES1X'): ('NA', 'NA'), # DUM8/CCRAC2D
+            (61, 1, 10, b'OES1X'): ('NA', 'NA'), # DUM8/CCRAC3D
 
-            (69, 1, 21, b'OES1X1') : ('NA', 'NA'), # CBEND
-            (69, 2, 21, b'OES1X') : ('NA', 'NA'), # CBEND
-            (69, 3, 21, b'OES1X') : ('NA', 'NA'), # CBEND
+            (69, 1, 21, b'OES1X1'): ('NA', 'NA'), # CBEND
+            (69, 2, 21, b'OES1X'): ('NA', 'NA'), # CBEND
+            (69, 3, 21, b'OES1X'): ('NA', 'NA'), # CBEND
 
-            (86, 1, 11, b'OESNL1X') : ('nonlinear_cgap_stress', NonlinearGapStressArray),
-            (86, 1, 11, b'OESNLXR') : ('nonlinear_cgap_stress', NonlinearGapStressArray),
-            (86, 1, 11, b'OESNLXD') : ('nonlinear_cgap_stress', NonlinearGapStressArray),
-            (94, 1, 51, b'OESNL1X') : ('nonlinear_cbeam_stress', RealNonlinearBeamStressArray),
-            (94, 1, 51, b'OESNLXR') : ('nonlinear_cbeam_stress', RealNonlinearBeamStressArray),
+            (86, 1, 11, b'OESNL1X'): ('nonlinear_cgap_stress', NonlinearGapStressArray),
+            (86, 1, 11, b'OESNLXR'): ('nonlinear_cgap_stress', NonlinearGapStressArray),
+            (86, 1, 11, b'OESNLXD'): ('nonlinear_cgap_stress', NonlinearGapStressArray),
+            (94, 1, 51, b'OESNL1X'): ('nonlinear_cbeam_stress', RealNonlinearBeamStressArray),
+            (94, 1, 51, b'OESNLXR'): ('nonlinear_cbeam_stress', RealNonlinearBeamStressArray),
 
-            (85, 1, 82, b'OESNLXR') : ('NA', 'NA'),  # TETRANL
-            (91, 1, 114, b'OESNLXD') : ('NA', 'NA'),  # PENTANL
-            (91, 1, 114, b'OESNLXR') : ('NA', 'NA'),  # PENTANL
-            (93, 1, 146, b'OESNL1X') : ('NA', 'NA'),  # HEXANL
-            (93, 1, 146, b'OESNLXD') : ('NA', 'NA'),  # HEXANL
-            (93, 1, 146, b'OESNLXR') : ('NA', 'NA'),  # HEXANL
+            (85, 1, 82, b'OESNLXR'): ('NA', 'NA'),  # TETRANL
+            (91, 1, 114, b'OESNLXD'): ('NA', 'NA'),  # PENTANL
+            (91, 1, 114, b'OESNLXR'): ('NA', 'NA'),  # PENTANL
+            (93, 1, 146, b'OESNL1X'): ('NA', 'NA'),  # HEXANL
+            (93, 1, 146, b'OESNLXD'): ('NA', 'NA'),  # HEXANL
+            (93, 1, 146, b'OESNLXR'): ('NA', 'NA'),  # HEXANL
 
             # 101-AABSF
-            (101, 2, 4, b'OES1X') : ('NA', 'NA'),
+            (101, 2, 4, b'OES1X'): ('NA', 'NA'),
 
             # 140-HEXA8FD
-            (140, 1, 162, b'OES1X1') : ('NA', 'NA'),
+            (140, 1, 162, b'OES1X1'): ('NA', 'NA'),
             #201-QUAD4FD
-            (201, 1, 46, b'OESNLXD') : ('NA', 'NA'),
-            (201, 1, 46, b'OESNLXR') : ('NA', 'NA'),
+            (201, 1, 46, b'OESNLXD'): ('NA', 'NA'),
+            (201, 1, 46, b'OESNLXR'): ('NA', 'NA'),
 
             # 145-VUHEXA  (8 nodes)
-            (145, 1, 98, b'OES1X1') : ('NA', 'NA'),
-            (145, 2, 106, b'OES1X') : ('NA', 'NA'),
-            (145, 3, 106, b'OES1X') : ('NA', 'NA'),
+            (145, 1, 98, b'OES1X1'): ('NA', 'NA'),
+            (145, 2, 106, b'OES1X'): ('NA', 'NA'),
+            (145, 3, 106, b'OES1X'): ('NA', 'NA'),
             # 146-VUPENTA (6 nodes)
             (146, 1, 74, b'OES1X1') : ('NA', 'NA'),
-            (146, 2, 80, b'OES1X') : ('NA', 'NA'),
-            (146, 3, 80, b'OES1X') : ('NA', 'NA'),
+            (146, 2, 80, b'OES1X'): ('NA', 'NA'),
+            (146, 3, 80, b'OES1X'): ('NA', 'NA'),
             # 147-VUTETRA (4 nodes)
-            (147, 1, 50, b'OES1X1') : ('NA', 'NA'),
-            (147, 2, 54, b'OES1X') : ('NA', 'NA'),
-            (147, 3, 54, b'OES1X') : ('NA', 'NA'),
+            (147, 1, 50, b'OES1X1'): ('NA', 'NA'),
+            (147, 2, 54, b'OES1X'): ('NA', 'NA'),
+            (147, 3, 54, b'OES1X'): ('NA', 'NA'),
 
             # 139-QUAD4FD
             # self.hyperelastic_cquad4_strain, HyperelasticQuad
-            (139, 1, 30, b'OES1X1') : ('NA', 'NA'),
+            (139, 1, 30, b'OES1X1'): ('NA', 'NA'),
 
             # 189-VUQUAD
-            (189, 1, 74, b'OES1X1') : ('NA', 'NA'),
-            (189, 2, 114, b'OES1X') : ('NA', 'NA'),
+            (189, 1, 74, b'OES1X1'): ('NA', 'NA'),
+            (189, 2, 114, b'OES1X'): ('NA', 'NA'),
 
             # 47-AXIF2
-            (47, 2, 9, b'OES1X') : ('axif2', 'NA'),
+            (47, 2, 9, b'OES1X'): ('axif2', 'NA'),
             # 48-AXIF3
-            (48, 2, 19, b'OES1X') : ('axif3', 'NA'),
+            (48, 2, 19, b'OES1X'): ('axif3', 'NA'),
             # 190-VUTRIA
-            (190, 1, 57, b'OES1X1') : ('NA', 'NA'),
-            (190, 2, 87, b'OES1X') : ('NA', 'NA'),
-            (190, 3, 87, b'OES1X') : ('NA', 'NA'),
+            (190, 1, 57, b'OES1X1'): ('NA', 'NA'),
+            (190, 2, 87, b'OES1X'): ('NA', 'NA'),
+            (190, 3, 87, b'OES1X'): ('NA', 'NA'),
 
             # 191-VUBEAM
             #(191, 1, 60, b'OES1X1') : ('vubeam', 'NA'),
@@ -1031,145 +1031,145 @@ class OES(OP2Common2):
             #(191, 3, 80, b'OES1X') : ('vubeam', 'NA'),
 
             # 203-SLIF1D?
-            (203, 1, 14, b'OESNLBR') : ('slif1d', 'NA'),
+            (203, 1, 14, b'OESNLBR'): ('slif1d', 'NA'),
             # 50-SLOT3
-            (50, 2, 11, b'OES1X') : ('slot3', 'NA'),
+            (50, 2, 11, b'OES1X'): ('slot3', 'NA'),
             # 51-SLOT4
-            (51, 2, 13, b'OES1X') : ('slot4', 'NA'),
+            (51, 2, 13, b'OES1X'): ('slot4', 'NA'),
 
             # 160-PENTA6FD
-            (160, 1, 122, b'OES1X1') : ('cpenta', 'NA'),
+            (160, 1, 122, b'OES1X1'): ('cpenta', 'NA'),
             # 161-TETRA4FD
-            (161, 1, 22, b'OES1X1') : ('ctetra', 'NA'),
+            (161, 1, 22, b'OES1X1'): ('ctetra', 'NA'),
             # 162-TRIA3FD
-            (162, 1, 9, b'OES1X1') : ('ctria', 'NA'),
+            (162, 1, 9, b'OES1X1'): ('ctria', 'NA'),
             # 163-HEXAFD
-            (163, 1, 542, b'OES1X1') : ('chexa', 'NA'),
+            (163, 1, 542, b'OES1X1'): ('chexa', 'NA'),
             # 164-QUADFD
-            (164, 1, 65, b'OES1X1') : ('cquad', 'NA'),
+            (164, 1, 65, b'OES1X1'): ('cquad', 'NA'),
             # 165-PENTAFD
-            (165, 1, 422, b'OES1X1') : ('cpenta', 'NA'),
+            (165, 1, 422, b'OES1X1'): ('cpenta', 'NA'),
             # 166-TETRAFD
-            (166, 1, 102, b'OES1X1') : ('ctetra', 'NA'),
+            (166, 1, 102, b'OES1X1'): ('ctetra', 'NA'),
             # 167-TRIAFD
-            (167, 1, 23, b'OES1X1') : ('NA', 'NA'),
+            (167, 1, 23, b'OES1X1'): ('NA', 'NA'),
             # 168-TRIAX3FD
-            (168, 1, 9, b'OES1X1') : ('ctriax3', 'NA'),
+            (168, 1, 9, b'OES1X1'): ('ctriax3', 'NA'),
             # 169-TRIAXFD
-            (169, 1, 23, b'OES1X1') : ('ctriax', 'NA'),
+            (169, 1, 23, b'OES1X1'): ('ctriax', 'NA'),
             # 170-QUADX4FD
-            (170, 1, 30, b'OES1X1') : ('cquadx4fd', 'NA'),
+            (170, 1, 30, b'OES1X1'): ('cquadx4fd', 'NA'),
             # 171-QUADXFD
-            (171, 1, 65, b'OES1X1') : ('cquadx', 'NA'),
+            (171, 1, 65, b'OES1X1'): ('cquadx', 'NA'),
             # 172-QUADRNL
-            (172, 1, 25, b'OESNLXR') : ('cquadrnl', 'NA'),
+            (172, 1, 25, b'OESNLXR'): ('cquadrnl', 'NA'),
             # 202-HEXA8FD
-            (202, 1, 122, b'OESNLXD') : ('chexa', 'NA'),
-            (202, 1, 122, b'OESNLXR') : ('chexa', 'NA'),
+            (202, 1, 122, b'OESNLXD'): ('chexa', 'NA'),
+            (202, 1, 122, b'OESNLXR'): ('chexa', 'NA'),
             # 204-PENTA6FD
-            (204, 1, 92, b'OESNLXR') : ('cpenta', 'NA'),
+            (204, 1, 92, b'OESNLXR'): ('cpenta', 'NA'),
             # 211-TRIAFD
-            (211, 1, 35, b'OESNLXR') : ('ctria3', 'NA'),
+            (211, 1, 35, b'OESNLXR'): ('ctria3', 'NA'),
             # 213-TRIAXFD
-            (213, 1, 35, b'OESNLXR') : ('ctriax', 'NA'),
+            (213, 1, 35, b'OESNLXR'): ('ctriax', 'NA'),
             # 214-QUADX4FD
-            (214, 1, 46, b'OESNLXR') : ('cquadx4', 'NA'),
+            (214, 1, 46, b'OESNLXR'): ('cquadx4', 'NA'),
             # 216-TETRA4FD
-            (216, 1, 62, b'OESNLXD') : ('NA', 'NA'),
-            (216, 1, 62, b'OESNLXR') : ('NA', 'NA'),
+            (216, 1, 62, b'OESNLXD'): ('NA', 'NA'),
+            (216, 1, 62, b'OESNLXR'): ('NA', 'NA'),
             # 217-TRIA3FD
             (217, 1, 35, b'OESNLXR') : ('ctria3', 'NA'),
             # 218-HEXAFD
-            (218, 1, 122, b'OESNLXR') : ('chexa', 'NA'),
+            (218, 1, 122, b'OESNLXR'): ('chexa', 'NA'),
             # 219-QUADFD
-            (219, 1, 46, b'OESNLXR') : ('cquad', 'NA'),
+            (219, 1, 46, b'OESNLXR'): ('cquad', 'NA'),
             # 220-PENTAFD
-            (220, 1, 92, b'OESNLXR') : ('cpenta', 'NA'),
+            (220, 1, 92, b'OESNLXR'): ('cpenta', 'NA'),
             # 221-TETRAFD
-            (221, 1, 62, b'OESNLXR') : ('tetrafd', 'NA'),
+            (221, 1, 62, b'OESNLXR'): ('tetrafd', 'NA'),
             # 222-TRIAX3FD
-            (222, 1, 35, b'OESNLXR') : ('ctriax3fd', 'NA'),
+            (222, 1, 35, b'OESNLXR'): ('ctriax3fd', 'NA'),
             # 223-CQUADXFD
-            (223, 1, 46, b'OESNLXR') : ('cquadx', 'NA'),
+            (223, 1, 46, b'OESNLXR'): ('cquadx', 'NA'),
             # 226-BUSH
-            (226, 1, 19, b'OESNLXD') : ('cbush', 'NA'),
-            (226, 1, 19, b'OESNLXR') : ('cbush', 'NA'),
+            (226, 1, 19, b'OESNLXD'): ('cbush', 'NA'),
+            (226, 1, 19, b'OESNLXR'): ('cbush', 'NA'),
             # 227-CTRIAR
-            (227, 1, 17, b'OES1X1') : ('ctriar', 'NA'),
-            (227, 1, 17, b'OES1X') : ('ctriar', 'NA'),
+            (227, 1, 17, b'OES1X1'): ('ctriar', 'NA'),
+            (227, 1, 17, b'OES1X'): ('ctriar', 'NA'),
             # 228-CQUADR
-            (228, 1, 17, b'OES1X1') : ('cquadr', 'NA'),
-            (228, 1, 17, b'OES1X') : ('cquadr', 'NA'),
+            (228, 1, 17, b'OES1X1'): ('cquadr', 'NA'),
+            (228, 1, 17, b'OES1X'): ('cquadr', 'NA'),
             # 232-QUADRLC
-            (232, 1, 11, b'OES1C') : ('cquadr', 'NA'),
-            (232, 1, 11, b'OESCP') : ('cquadr', 'NA'),
-            (232, 2, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
-            (232, 3, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
+            (232, 1, 11, b'OES1C'): ('cquadr', 'NA'),
+            (232, 1, 11, b'OESCP'): ('cquadr', 'NA'),
+            (232, 2, 13, b'OESVM1C'): ('cquadr', 'NA'),  # freq nx
+            (232, 3, 13, b'OESVM1C'): ('cquadr', 'NA'),  # freq nx
             #(234, 1, 11) : ('cquadr', 'NA'), # bad?
             # 233-TRIARLC
-            (233, 1, 11, b'OES1C') : ('ctriar', 'NA'),
-            (233, 2, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
-            (233, 3, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
+            (233, 1, 11, b'OES1C'): ('ctriar', 'NA'),
+            (233, 2, 13, b'OESVM1C'): ('ctriar', 'NA'),  # freq nx
+            (233, 3, 13, b'OESVM1C'): ('ctriar', 'NA'),  # freq nx
             # 235-CQUADR
-            (235, 1, 17, b'OES1X1') : ('NA', 'NA'),
-            (235, 2, 15, b'OES1X') : ('NA', 'NA'),
+            (235, 1, 17, b'OES1X1'): ('NA', 'NA'),
+            (235, 2, 15, b'OES1X'): ('NA', 'NA'),
 
             # 242-CTRAX
             # 244-CTRAX6
-            (242, 1, 34, b'OES1X1') : ('ctrax', 'NA'),
-            (244, 1, 34, b'OES1X1') : ('ctrax6', 'NA'),
+            (242, 1, 34, b'OES1X1'): ('ctrax', 'NA'),
+            (244, 1, 34, b'OES1X1'): ('ctrax6', 'NA'),
 
             # 243-CQUADX4
             # 245-CQUADX8
-            (243, 1, 42, b'OES1X1') : ('cquadx4', 'NA'),
-            (245, 1, 42, b'OES1X1') : ('cquadx8', 'NA'),
+            (243, 1, 42, b'OES1X1'): ('cquadx4', 'NA'),
+            (245, 1, 42, b'OES1X1'): ('cquadx8', 'NA'),
 
             #256-CPYRAM
-            (255, 1, 130, b'OES1X1') : ('cpyram', 'NA'),
-            (255, 2, 82, b'OES1X') : ('cpyram', 'NA'),
-            (256, 1, 98, b'OESNLXD') : ('cpyram', 'NA'),
+            (255, 1, 130, b'OES1X1'): ('cpyram', 'NA'),
+            (255, 2, 82, b'OES1X'): ('cpyram', 'NA'),
+            (256, 1, 98, b'OESNLXD'): ('cpyram', 'NA'),
 
             # 271-CPLSTN3
             # 272-CPLSTN4
-            (271, 1, 6, b'OES1X1') : ('cplstn3', 'NA'),
-            (271, 1, 6, b'OES1X') : ('cplstn3', 'NA'),
+            (271, 1, 6, b'OES1X1'): ('cplstn3', 'NA'),
+            (271, 1, 6, b'OES1X'): ('cplstn3', 'NA'),
             (272, 1, 32, b'OES1X1') : ('cplstn4', 'NA'),
-            (272, 1, 32, b'OES1X') : ('cplstn4', 'NA'),
-            (273, 1, 26, b'OES1X1') : ('cplstn6', 'NA'),
-            (273, 1, 26, b'OES1X') : ('cplstn6', 'NA'),
-            (274, 1, 32, b'OES1X1') : ('cplstn3', 'NA'),
-            (274, 1, 32, b'OES1X') : ('cplstn3', 'NA'),
+            (272, 1, 32, b'OES1X'): ('cplstn4', 'NA'),
+            (273, 1, 26, b'OES1X1'): ('cplstn6', 'NA'),
+            (273, 1, 26, b'OES1X'): ('cplstn6', 'NA'),
+            (274, 1, 32, b'OES1X1'): ('cplstn3', 'NA'),
+            (274, 1, 32, b'OES1X'): ('cplstn3', 'NA'),
 
             # 275-CPLSTS3
             # 277-CPLSTS6
-            (275, 1, 6, b'OES1X1') : ('cplsts3', 'NA'),
-            (276, 1, 32, b'OES1X1') : ('cplsts4', 'NA'),
-            (277, 1, 26, b'OES1X1') : ('cplsts6', 'NA'),
-            (278, 1, 32, b'OES1X1') : ('cplsts8', 'NA'),
+            (275, 1, 6, b'OES1X1'): ('cplsts3', 'NA'),
+            (276, 1, 32, b'OES1X1'): ('cplsts4', 'NA'),
+            (277, 1, 26, b'OES1X1'): ('cplsts6', 'NA'),
+            (278, 1, 32, b'OES1X1'): ('cplsts8', 'NA'),
 
-            (1, 2, 5, 'OESVM1') : ('crod', 'NA'),
-            (10, 2, 5, 'OESVM1') : ('conrod', 'NA'),
-            (10, 2, 5, 'OES1X') : ('conrod', 'NA'),
+            (1, 2, 5, 'OESVM1'): ('crod', 'NA'),
+            (10, 2, 5, 'OESVM1'): ('conrod', 'NA'),
+            (10, 2, 5, 'OES1X'): ('conrod', 'NA'),
 
-            (11, 2, 3, 'OESVM1') : ('celas1', 'NA'),
-            (12, 2, 3, 'OESVM1') : ('celas2', 'NA'),
+            (11, 2, 3, 'OESVM1'): ('celas1', 'NA'),
+            (12, 2, 3, 'OESVM1'): ('celas2', 'NA'),
 
-            (2, 2, 111, b'OESVM1') : ('cbeam', 'NA'),
-            (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
+            (2, 2, 111, b'OESVM1'): ('cbeam', 'NA'),
+            (34, 2, 19, b'OESVM1'): ('cbar', 'NA'),
 
-            (4, 2, 5, 'OESVM1') : ('cshear', 'NA'),
-            (4, 2, 5, 'OES1X') : ('cshear', 'NA'),
-            (74, 2, 17, 'OESVM1') : ('ctria3', 'NA'),
-            (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
+            (4, 2, 5, 'OESVM1'): ('cshear', 'NA'),
+            (4, 2, 5, 'OES1X'): ('cshear', 'NA'),
+            (74, 2, 17, 'OESVM1'): ('ctria3', 'NA'),
+            (144, 2, 87, b'OESVM1'): ('cquad4', 'NA'),
 
-            (95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
-            (95, 3, 13, b'OESVM1C') : ('cquad4', 'NA'),
-            (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
-            (97, 3, 13, b'OESVM1C') : ('ctria3', 'NA'),
+            (95, 2, 13, b'OESVM1C'): ('cquad4', 'NA'),
+            (95, 3, 13, b'OESVM1C'): ('cquad4', 'NA'),
+            (97, 2, 13, b'OESVM1C'): ('ctria3', 'NA'),
+            (97, 3, 13, b'OESVM1C'): ('ctria3', 'NA'),
 
-            (39, 2, 74, 'OESVM1') : ('ctetra', 'NA'),
-            (67, 2, 130, b'OESVM1') : ('chexa', 'NA'),
-            (68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
+            (39, 2, 74, 'OESVM1'): ('ctetra', 'NA'),
+            (67, 2, 130, b'OESVM1'): ('chexa', 'NA'),
+            (68, 2, 102, b'OESVM1'): ('cpenta', 'NA'),
         }
         op2 = self.op2
         key = (op2.element_type, op2.format_code, op2.num_wide, op2.table_name)
@@ -1263,9 +1263,9 @@ class OES(OP2Common2):
             op2.to_nx(f' because table_name={table_name_bytes} was found')
 
         #----------------------------------------------------------------
-        elif table_name_bytes in [b'OSTRMS1C']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'OSTRMS1C']:  #, b'OSTRMS1C']:
             op2.format_code = 1
-            op2.sort_bits[0] = 0 # real
+            op2.sort_bits[0] = 0  # real
             prefix = 'rms.'
 
         elif table_name_bytes in [b'OESXRMS1']:
@@ -1273,7 +1273,7 @@ class OES(OP2Common2):
             self._set_as_random()
             self._set_as_sort1()
             prefix = 'rms.'
-        elif table_name_bytes in [b'OESXRMS2']: # wrong?
+        elif table_name_bytes in [b'OESXRMS2']:  # wrong?
             self._set_as_random()
             self._set_as_sort2()
             prefix = 'rms.'
@@ -1333,9 +1333,9 @@ class OES(OP2Common2):
 
         elif table_name_bytes in [b'OESPSD1', b'OSTRPSD1']:
             #op2.format_code = 1
-            op2.sort_bits[0] = 0 # real
-            op2.sort_bits[1] = 0 # sort1
-            op2.sort_bits[2] = 1 # random
+            op2.sort_bits[0] = 0  # real
+            op2.sort_bits[1] = 0  # sort1
+            op2.sort_bits[2] = 1  # random
             prefix = 'psd.'
         elif table_name_bytes in [b'OESPSD2', b'OSTRPSD2',
                                   b'OESPSD2C', b'OSTPSD2C']:
@@ -2851,8 +2851,8 @@ class OES(OP2Common2):
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_csolid(self, data, ndata, dt, is_magnitude_phase,
-                    result_type, prefix, postfix):
+    def _oes_csolid(self, data, ndata: int, dt, is_magnitude_phase: bool,
+                    result_type: str, prefix: str, postfix: str):
         """
         reads stress/strain for element type:
          - 39 : CTETRA
@@ -3127,7 +3127,7 @@ class OES(OP2Common2):
                                       element_name, nnodes_expected,
                                       preline1, preline2)
 
-        elif op2.format_code in [2, 3] and op2.num_wide == numwide_random2:
+        elif 0 and op2.format_code in [2, 3] and op2.num_wide == numwide_random2:
             #raise RuntimeError(op2.code_information())
             ## a = 18
             ## b = 14
@@ -3176,7 +3176,7 @@ class OES(OP2Common2):
             #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #op2.num_wide, numwide_real, numwide_imag, numwide_random)
             #return op2._not_implemented_or_skip(data, ndata, msg)
-        elif op2.format_code in [1, 2] and op2.num_wide == 67:  # CHEXA
+        elif 0 and op2.format_code in [1, 2] and op2.num_wide == 67:  # CHEXA
             #44 = 5 * 8 + 4  (TETRA)
             #52 = 6 * 8 + 4  (PYRAM)
             #60 = 7 * 8 + 4  (PENTA)
@@ -3187,7 +3187,7 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif op2.format_code in [1, 2, 3] and op2.num_wide in [60] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
+        elif 0 and op2.format_code in [1, 2, 3] and op2.num_wide in [60] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
             # bad
             #if op2.read_mode == 2:
                 #ints    = (68011, 0, 805.28, 6,
@@ -3333,8 +3333,8 @@ class OES(OP2Common2):
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information() +
-                               '\nnumwide real=%s imag=%s random=%s' % (
-                                   numwide_real, numwide_imag, numwide_random2))
+                               f'\nnumwide real={numwide_real} imag={numwide_imag} '
+                               f'random2={numwide_random2} random3={numwide_random3}')
         return n, nelements, ntotal
 
     def _oes_csolid2(self, data, ndata, dt, is_magnitude_phase,

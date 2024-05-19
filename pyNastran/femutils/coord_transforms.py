@@ -15,6 +15,7 @@ Defines general coordinate system related functions including:
 # pylint: disable=C0103
 import numpy as np
 
+
 # xyz to xxx transforms
 def xyz_to_rtz_array(xyz: np.ndarray) -> np.ndarray:
     r"""
@@ -43,6 +44,7 @@ def xyz_to_rtz_array(xyz: np.ndarray) -> np.ndarray:
     R = np.sqrt(x * x + y * y)
     return np.array([R, theta, xyz[:, 2]], dtype=xyz.dtype).T
 
+
 def xyz_to_rtp_array(xyz: np.ndarray) -> np.ndarray:
     """rho-theta-phi to xyz transform"""
     xyz = np.atleast_2d(xyz)
@@ -59,6 +61,7 @@ def xyz_to_rtp_array(xyz: np.ndarray) -> np.ndarray:
     ir = np.where(rho != 0.0)
     theta[ir] = np.degrees(np.arccos(z[ir] / rho[ir]))
     return np.array([rho, theta, phi], dtype=xyz.dtype).T
+
 
 #---------------------------------------------------------------
 # xxx to xyz transforms
@@ -90,6 +93,7 @@ def rtz_to_xyz_array(rtz: np.ndarray) -> np.ndarray:
     xyz = np.array([x, y, rtz[:, 2]], dtype=rtz.dtype).T
     return xyz
 
+
 def rtp_to_xyz_array(rtp: np.ndarray) -> np.ndarray:
     """
     rho-theta-phi to xyz transform
@@ -110,6 +114,7 @@ def rtp_to_xyz_array(rtp: np.ndarray) -> np.ndarray:
     z = R * np.cos(theta)
     return np.array([x, y, z], dtype=rtp.dtype).T
 
+
 #---------------------------------------------------------------
 # rtz/rtp and rtp/rtz transforms
 def rtz_to_rtp_array(rtz: np.ndarray) -> np.ndarray:
@@ -129,12 +134,13 @@ def rtz_to_rtp_array(rtz: np.ndarray) -> np.ndarray:
     # If we let x and y go to 0, we're left with z/z=1 and
     # phi = acos(1) = 0.  The other alternative is to let
     # z -> 0 and x/y be non-zero, but that leaves us with
-    # a 90 degree angle, which feels wrong.
+    # a 90-degree angle, which feels wrong.
     #
     phi = np.full(thetad.shape, 0., dtype=thetad.dtype)
 
     phi[irho0] = np.degrees(np.arccos(z[irho0] / rho[irho0]))
     return np.array([rho, thetad, phi], dtype=dtype).T
+
 
 def rtp_to_rtz_array(rtp: np.ndarray) -> np.ndarray:
     """rho-theta-phi to R-theta-z transform"""
@@ -146,6 +152,7 @@ def rtp_to_rtz_array(rtp: np.ndarray) -> np.ndarray:
     r = rho * np.sin(phi)
     z = rho * np.cos(phi)
     return np.array([r, thetad, z], dtype=rtp.dtype).T
+
 
 def cylindrical_rotation_matrix(thetar: np.ndarray, dtype: str='float64') -> np.ndarray:
     """

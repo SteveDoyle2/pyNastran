@@ -23,7 +23,7 @@ def rpt_read():
     i = 2
     j = 0
     res = 0
-    results = {0:[], 1:[]}
+    results = {0: [], 1: []}
     while i < len(lines):
         data = []
 
@@ -134,6 +134,7 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
                 #f.write("-------------------\n")
                 x_orig = X[i]
                 response = a_response[i]
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

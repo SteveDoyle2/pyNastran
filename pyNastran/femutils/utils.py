@@ -15,6 +15,7 @@ from pyNastran.utils.mathematics import get_abs_max
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
 
+
 def hstack_unique(list_of_arrays: list[np.ndarray],
                   unique: bool=True,
                   ) -> np.ndarray:
@@ -46,6 +47,7 @@ def hstack_unique(list_of_arrays: list[np.ndarray],
         #raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
     #return myarray
 
+
 def hstack_lists(list_of_arrays: list[np.ndarray],
                  unique_sort: bool=False) -> np.ndarray:
     """
@@ -63,6 +65,7 @@ def hstack_lists(list_of_arrays: list[np.ndarray],
     if unique_sort:
         array = np.unique(array)
     return array
+
 
 def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
     """
@@ -88,6 +91,7 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
     else:
         array = np.vstack(list_of_arrays)
     return array
+
 
 def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -151,11 +155,11 @@ def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]
     else:  # pragma: no cover
         raise RuntimeError(nshape)
 
-    pivot_table = np.full((nrows, ncols), -1, dtype='int32')
-    pivot_table[row_pos_new, col_pos_new] = icount
-    #print(pivot_table)
+    pivot_tablei = np.full((nrows, ncols), -1, dtype='int32')
+    pivot_tablei[row_pos_new, col_pos_new] = icount
+    #print(pivot_tablei)
 
-    ipivot_row, ipivot_col = np.where(pivot_table != -1)
+    ipivot_row, ipivot_col = np.where(pivot_tablei != -1)
     default_val = np.nan if data.dtype.name not in {'int32', 'int64'} else -1
     data2 = np.full(shape2, default_val, dtype=data.dtype)
 
@@ -204,14 +208,17 @@ def unique2d(a: np.ndarray, return_index=False):
     #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
     #return uniq.view(data.dtype).reshape(-1, data.shape[1])
 
+
 def duplicates(ids):
     """finds the duplicate ids"""
     counts = np.bincount(ids)
     return np.where(counts > 1)[0]
 
+
 def is_monotonic(int_array: np.ndarray) -> bool:
     """is the array monotonic?"""
     return np.all(int_array[1:] >= int_array[:-1])
+
 
 def unique_rows(A: np.ndarray, return_index=False, return_inverse=False):
     """
@@ -250,6 +257,7 @@ def unique_rows(A: np.ndarray, return_index=False, return_inverse=False):
     else:
         return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
 
+
 def cross2d(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Interface to np.cross for 2d matrices
@@ -261,6 +269,7 @@ def cross2d(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     # axisa=-1, axisb=-1, axisc=-1,
     return np.cross(a, b, axis=1)
+
 
 def augmented_identity(nx: int, ny: int) -> np.ndarray:
     """
@@ -276,6 +285,7 @@ def augmented_identity(nx: int, ny: int) -> np.ndarray:
     """
     eye = np.eye(max(nx, ny), dtype='float64')
     return eye[:nx, :ny]
+
 
 def perpendicular_vector(v: np.ndarray) -> np.ndarray:
     """
@@ -315,6 +325,7 @@ def perpendicular_vector(v: np.ndarray) -> np.ndarray:
     # then the equation simplifies to
     #     c = -(x + y)/z
     return np.array([1., 1., -1.0 * (v[0] + v[1]) / v[2]])
+
 
 def perpendicular_vector2d(v_array: np.ndarray) -> np.ndarray:
     """
@@ -382,10 +393,13 @@ def perpendicular_vector2d(v_array: np.ndarray) -> np.ndarray:
     vout[is_3d, 2] = -1. * (v[is_3d, 0] + v[is_3d, 1]) / v[is_3d, 2]
     return vout
 
+
 _dtype_map = {
     'float32': 'float64',
     'complex64': 'complex128',
 }
+
+
 def safe_norm(t123: np.ndarray,
               ord=None,
               axis: Optional[int]=None) -> np.ndarray:
@@ -423,11 +437,13 @@ def safe_norm(t123: np.ndarray,
             #raise
     #return normi
 
+
 def abs_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     max_values = np.amax(x, axis=axis)
     min_values = np.amin(x, axis=axis)
     y = get_abs_max(min_values, max_values, dtype=x.dtype)
     return y
+
 
 def abs_nan_min_max(x: np.ndarray, axis: int) -> np.ndarray:
     if x.ndim == 2 and axis == 1 and x.shape[1] == 1:
@@ -440,6 +456,7 @@ def abs_nan_min_max(x: np.ndarray, axis: int) -> np.ndarray:
         min_values = np.nanmin(x, axis=axis)
         y = get_abs_max(min_values, max_values, dtype=x.dtype)
     return y
+
 
 def safe_nanstd(x: np.ndarray, axis: int) -> np.ndarray:
     try:

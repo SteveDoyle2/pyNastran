@@ -62,11 +62,13 @@ def parse_femap_syntax(lines: list[str]) -> np.ndarray:
     return values2
 
 
-
 def get_femap_property_comments_dict(data_dict):
     return _get_femap_comments_dict(data_dict, word='Femap Property')
+
+
 def get_femap_material_comments_dict(data_dict):
     return _get_femap_comments_dict(data_dict, word='Femap Material')
+
 
 def _get_femap_comments_dict(data_dict, word: str):
     word = word.lower()
@@ -80,6 +82,7 @@ def _get_femap_comments_dict(data_dict, word: str):
                 break
         comment_dict[pid] = commenti.strip()
     return comment_dict
+
 
 def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     """
@@ -105,8 +108,8 @@ def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     return xyz2
 
 
-
-def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> tuple[np.ndarray, np.ndarray]:
+def transform_load(F: np.ndarray, M: np.ndarray,
+                   cid: int, cid_new: int, model: BDF) -> tuple[np.ndarray, np.ndarray]:
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.

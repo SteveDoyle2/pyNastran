@@ -3,10 +3,10 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header # write_floats_13e,
+from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header  # write_floats_13e,
 
 
-class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
+class RealNonlinearBushArray(OES_Object):  # 226-CBUSHNL
     """
     ::
 
@@ -244,7 +244,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
                   smx, smy, smz, sorx, sory, sorz, serx, sery, serz]) = write_floats_12e(
                       [fxi, fyi, fzi, otxi, otyi, otzi, etxi, etyi, etzi,
                        mxi, myi, mzi, orxi, oryi, orzi, erxi, eryi, erzi])
-                f06_file.write(#fx    fy    fz     otx   oty   otz  etx   ety   etz
+                f06_file.write(  #fx    fy    fz     otx   oty   otz  etx   ety   etz
                     ' %8i     %-12s %-12s %-12s  %-12s %-12s %-12s  %-12s %-12s %s\n'
                     ' %8s     %-12s %-12s %-12s  %-12s %-12s %-12s  %-12s %-12s %s\n' % (
                         eid, sfx, sfy, sfz, sotx, soty, sotz, setx, sety, setz,
