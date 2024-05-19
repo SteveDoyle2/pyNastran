@@ -683,7 +683,7 @@ class PBUSH1D(BushingProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     @staticmethod
-    def _read_shock(card: BDFCard, istart: int) -> tuple[str, float, float, float, float]:
+    def _read_shock(card: BDFCard, istart: int) -> tuple[int, tuple[str, float, float, float, float]]:
         """
         F(u, v) = Cv * S(u) * sign(v) * |v|^ev
         """

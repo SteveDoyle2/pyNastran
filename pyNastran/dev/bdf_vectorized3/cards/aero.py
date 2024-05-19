@@ -1234,8 +1234,8 @@ class CAERO2(VectorizedBaseCard):
                 xratio = xstation / dxi
                 #print('xstation/dxi=%s' % xratio)
                 dxyz = np.zeros((nsb+1, 3))
-                for i, xr in enumerate(xratio):
-                    dxyz[i, :] = xr * L
+                for ii, xr in enumerate(xratio):
+                    dxyz[ii, :] = xr * L
                 ystation = dxyz[:, 1]
                 zstation = dxyz[:, 2]
 

@@ -20,7 +20,7 @@ MODCON           OSTRMC        Modal contributions
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -3320,10 +3320,6 @@ class OES(OP2Common2):
                 n = oes_csolid_random3(op2, data, obj, nelements,
                                        element_name, nnodes_expected,
                                        ntotal)
-
-            n = op2._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
         #elif op2.format_code in [2, 3] and op2.num_wide == 76:  # imag
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             # analysis_code = 5   Frequency
@@ -7853,11 +7849,12 @@ def oes_cgapnl_real_11(op2: OP2, data: bytes,
     return n
 
 
-def oes_csolid_random3(op2: OP2, data: bytes, obj, nelements: int,
+def oes_csolid_random3(op2: OP2, data: bytes, obj: RandomSolidVMStressArray, nelements: int,
                        element_name: str, nnodes_expected: int,
                        ntotal: int) -> int:
     # print(msg)
     n = 0
+    assert op2.size == 4, op2.size
     fmt = b'ii4si' + b'i7f' * nnodes_expected
     structi = Struct(fmt)
 
@@ -7865,9 +7862,10 @@ def oes_csolid_random3(op2: OP2, data: bytes, obj, nelements: int,
         datai = data[n:n + ntotal]
         # op2.show_data(datai, types='if')
         out = structi.unpack(datai)
-        eid, cid, grid, nnodes, *other = out
-        eid = out[0] // 10
-        print(eid, cid, grid, nnodes)
+        eid_device, cid, grid, nnodes, *other = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        #print(eid, cid, grid, nnodes)
         # [oxx, oyy, ozz, txy, tyz, txz, von_mises]
         # 6 SX   RS Normal in x
         # 7 SY   RS Normal in y
@@ -7877,7 +7875,10 @@ def oes_csolid_random3(op2: OP2, data: bytes, obj, nelements: int,
         # 11 TZX RS Shear in zx
         # 12 RMSVM RS RMS von Mises
         for inode in range(nnodes_expected):
-            print('   ', other[8 * inode], other[8 * inode + 1:8 * (inode + 1)])
+            #print('   ', other[8 * inode], other[8 * inode + 1:8 * (inode + 1)])
+            node_id = other[8 * inode]
+            oxx, oyy, ozz, txy, tyz, txz, vm = other[8 * inode + 1:8 * (inode + 1)]
+            obj.add_node_sort1(dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, vm)
         n += ntotal
     return n
 

@@ -50,9 +50,9 @@ class Nodes:
 
     def repr_indent(self, indent=''):
         msg = '%s<Nodes>:\n' % indent
-        msg += '%s  GRID: %s\n' % len(indent, self.grid)
-        msg += '%s  SPOINT: %s\n' % len(indent, self.spoints)
-        msg += '%s  EPOINT: %s\n' % len(indent, self.epoints)
+        msg += f'{indent}  GRID: {self.grid}\n'
+        msg += f'{indent}  SPOINT: {self.spoints}\n'
+        msg += f'{indent}  EPOINT: {self.epoints}\n'
 
     def get_by_nid(self, nid):
         #self.grid.make_current()

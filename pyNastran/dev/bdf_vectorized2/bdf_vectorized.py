@@ -2286,7 +2286,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT10' : (MAT10, add_methods._add_structural_material_object),
             'MAT11' : (MAT11, add_methods._add_structural_material_object),
             'MAT3D' : (MAT3D, add_methods._add_structural_material_object),
-            'MATEV' : (MATEV, add_methods._add_structural_material_object),
             'EQUIV' : (EQUIV, add_methods._add_structural_material_object),
             'MATG' : (MATG, add_methods._add_structural_material_object),
 
@@ -2572,9 +2571,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'CYJOIN' : (CYJOIN, self._add_cyjoin_object),
         }
         self._card_parser_prepare = {
-            'PLOTEL': self._prepare_plotel,
-            'CBAR' : self._prepare_cbar,
-            'CBEAM' : self._prepare_cbeam,
             'CTETRA' : self._prepare_ctetra,
             'CPENTA' : self._prepare_cpenta,
             'CHEXA' : self._prepare_chexa,
@@ -2587,7 +2583,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'PMASS' : self._prepare_pmass,
             'CMASS4' : self._prepare_cmass4,
-            'CDAMP4' : self._prepare_cdamp4,
             'DEFORM' : self._prepare_deform,  # enforced displacement
 
             'DTI' : self._prepare_dti,
@@ -2608,7 +2603,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PDAMP' : self._prepare_pdamp,
 
             'TEMPAX' : self._prepare_tempax,
-            'TEMPD' : self._prepare_tempd,
             'TEMPBC' : self._prepare_tempbc,
             'CONVM' : self._prepare_convm,
             'CONV' : self._prepare_conv,

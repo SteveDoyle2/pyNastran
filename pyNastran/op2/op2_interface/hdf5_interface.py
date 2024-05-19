@@ -500,7 +500,6 @@ TABLE_OBJ_MAP = {
     'stress.cweld_stress' : (RealWeldStressArray, ),
 
     # lines
-    'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),
     'RAFEATC.cbar_force' : (RealCBarForceArray, ),
 

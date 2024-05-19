@@ -1153,7 +1153,6 @@ DOPTPRM_DEFAULTS = {
     'DSMXESL' : 20,
     'DXMAX' : 1.0,
     'DXMIN' : 0.05,  # 1e-5 for topology optimization
-    'DPMIN' : 0.01,
 
     'ETA1' : 0.01,
     'ETA2' : 0.25,

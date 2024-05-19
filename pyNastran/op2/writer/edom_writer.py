@@ -1198,7 +1198,6 @@ EDOM_MAP = {
     #'DCONADD': _write_dconadd,
 
     #'DLINK': _write_dlink,
-    'DESVAR': write_desvar,
     'DVGRID': write_dvgrid,
     'DSCREEN': write_dscreen,
     'DRESP1': write_dresp1,

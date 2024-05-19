@@ -178,10 +178,6 @@ CARD_MAP = {
     'BLSEG' : BLSEG,
     'BFRIC' : BFRIC,
 
-    # nx glue
-    'BGADD' : BGADD,
-    'BGSET' : BGSET,
-
     # nx bolt
     'BOLT' : BOLT,
     'BOLTFOR' : BOLTFOR,

@@ -2673,7 +2673,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCSURF': (RuntimeCrash, None),
             'BCRGSRF': (RuntimeCrash, None),
 
-            'BCRGSRF': (RuntimeCrash, None),
             'BCTABL1': (RuntimeCrash, None),
             'BWIDTH': (RuntimeCrash, None),
 

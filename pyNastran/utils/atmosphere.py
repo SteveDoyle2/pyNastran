@@ -1068,7 +1068,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                          velocity_units: str='ft/s',
                                          density_units: str='slug/ft^3',
                                          pressure_units: str='psf',
-                                         eas_units: str='knots') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         eas_units: str='knots') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Veas = Vtrue * sqrt(rho/rho0)
     V = a * mach

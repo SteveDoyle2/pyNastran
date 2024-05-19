@@ -1032,11 +1032,11 @@ def _write_boundary_as_nastran(model: Abaqus,
 
             nids = _get_nodes(model, nid)
             #assert isinstance(nid, int), nid
-            for nid in nids:
+            for nidi in nids:
                 if value == 0.0:
-                    fixed_spcs[dof].append(nid)
+                    fixed_spcs[dof].append(nidi)
                 else:
-                    raise RuntimeError((nid, dof, value))
+                    raise RuntimeError((nidi, dof, value))
 
         # add the spcs
         for dof, nids in fixed_spcs.items():

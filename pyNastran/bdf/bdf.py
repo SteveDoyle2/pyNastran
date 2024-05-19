@@ -2382,7 +2382,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT10' : (MAT10, add_methods._add_structural_material_object),
             'MAT11' : (MAT11, add_methods._add_structural_material_object),
             'MAT3D' : (MAT3D, add_methods._add_structural_material_object),
-            'MATEV' : (MATEV, add_methods._add_structural_material_object),
             'EQUIV' : (EQUIV, add_methods._add_structural_material_object),
             'MATG' : (MATG, add_methods._add_structural_material_object),
 

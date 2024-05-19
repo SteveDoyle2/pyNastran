@@ -5186,7 +5186,7 @@ class SPLINE2(Spline):
 
         nnodes = len(setg_ref.ids)
         if nnodes < 2:
-            msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
+            msg = f'SPLINE2 requires at least 2 nodes; nnodes={nnodes}\n'
             msg += str(self)
             msg += str(setg_ref)
             raise RuntimeError(msg)

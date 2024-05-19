@@ -232,16 +232,16 @@ class F06Writer(OP2_F06_Common):
                 raise RuntimeError(f'all_results={all_results_str}\n{result!r} is not a valid result to remove')
             if result == 'stress':
                 stress_results = []
-                for result in all_results:
+                for resulti in all_results:
                     if 'stress' in result.lower():
-                        stress_results.append(result)
+                        stress_results.append(resulti)
                 #stress_results = [result if 'stress' in result.lower() for result in all_results]
                 self._results.update(stress_results)
             elif result == 'strain':
                 strain_results = []
-                for result in all_results:
-                    if 'strain' in result.lower():
-                        strain_results.append(result)
+                for resulti in all_results:
+                    if 'strain' in resulti.lower():
+                        strain_results.append(resulti)
                 #strain_results = [result if 'strain' in result.lower() for result in all_results]
                 self._results.update(strain_results)
             elif 'stress' in result.lower():

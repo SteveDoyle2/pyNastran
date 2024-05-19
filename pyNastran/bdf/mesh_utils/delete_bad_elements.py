@@ -11,14 +11,15 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF
 
-SIDE_MAP = {}
-SIDE_MAP['CHEXA'] = {
-    1 : [4, 3, 2, 1],
-    2 : [1, 2, 6, 5],
-    3 : [2, 3, 7, 6],
-    4 : [3, 4, 8, 7],
-    5 : [4, 1, 5, 8],
-    6 : [5, 6, 7, 8],
+SIDE_MAP = {
+    'CHEXA' : {
+        1 : [4, 3, 2, 1],
+        2 : [1, 2, 6, 5],
+        3 : [2, 3, 7, 6],
+        4 : [3, 4, 8, 7],
+        5 : [4, 1, 5, 8],
+        6 : [5, 6, 7, 8],
+    },
 }
 PIOVER2 = np.pi / 2.
 PIOVER3 = np.pi / 3.

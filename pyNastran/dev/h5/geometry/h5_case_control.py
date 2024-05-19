@@ -80,7 +80,6 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
         'AXSYMSET': ('AXISYMMETRIC', 0),
         'DAMPTBL': ('SDAMP(STRUCT)', 0),
         'NONPARAM': ('NLPARM', 0),
-        'LOADSET': ('LOADSET', 0),
         'MODLIST': ('OMODES', 0),
         'REESETF': ('METHOD(FLUID)', 0),
         'NMODES': ('NMODES', 0),
