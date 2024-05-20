@@ -3129,7 +3129,7 @@ class OES(OP2Common2):
                                       element_name, nnodes_expected,
                                       preline1, preline2)
 
-        elif 0 and op2.format_code in [2, 3] and op2.num_wide == numwide_random2:
+        elif op2.format_code in [2, 3] and op2.num_wide == numwide_random2:
             #raise RuntimeError(op2.code_information())
             ## a = 18
             ## b = 14
@@ -3193,7 +3193,7 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif 0 and op2.format_code in [1, 2, 3] and op2.num_wide in [60] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
+        elif op2.format_code in [1, 2, 3] and op2.num_wide in [60] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
             # bad
             #if op2.read_mode == 2:
                 #ints    = (68011, 0, 805.28, 6,

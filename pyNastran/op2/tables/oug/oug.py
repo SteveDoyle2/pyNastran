@@ -703,7 +703,7 @@ class OUG:
                 n = self._read_oug_acceleration(data, ndata)
             elif table_name_bytes == b'OCRUG':
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(op2.code_information())
         elif op2.table_code == 7:
             assert table_name_bytes in {b'OUG1', b'OUGV1', b'OUGV2', b'OUG1S', b'OUGF1', b'OPHIG',
@@ -736,7 +736,7 @@ class OUG:
             assert table_name_bytes in [b'OUGMC1', b'OUGMC2'], op2.table_name
             op2.to_nx(f' because table_name={op2.table_name} was found')
             n = self._read_oug_displacement(data, ndata, is_cid=False)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(op2.code_information())
         return n
 
@@ -829,6 +829,7 @@ class OUG:
             return ndata
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
+
         if op2.thermal == 0:
             #result_name = 'displacements'
             #storage_obj = self.displacements

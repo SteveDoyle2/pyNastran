@@ -189,7 +189,7 @@ def transpose3d(T: np.ndarray) -> np.ndarray:
     """
     return np.transpose(T, axes=(0, 2, 1))
 
-def triple_n33_n33(A, T, transpose=False, debug=True):
+def triple_n33_n33(A, T, transpose: bool=False, debug: bool=True) -> np.ndarray:
     """
     Calculates the matrix triple product  for a series of::
 
@@ -210,14 +210,14 @@ def triple_n33_n33(A, T, transpose=False, debug=True):
 
     """
     assert A.shape == T.shape, 'A.shape=%s T.shape=%s' % (str(A.shape), str(T.shape))
-    if tranpose:
+    if transpose:
         C = np.matmul(transpose3d(T), np.matmul(A, T))
     else:
         C = np.matmul(T, np.matmul(A, transpose3d(T)))
 
     if debug:
         D = np.full(A.shape, np.nan)
-        if tranpose:
+        if transpose:
             for i, Ai, Ti in zip(count(), A, T):
                 Dia = Ti.T @ Ai @ Ti
                 D[i, :, :] = Dia
@@ -228,7 +228,7 @@ def triple_n33_n33(A, T, transpose=False, debug=True):
         assert np.all(np.allclose(C, D)), f'transpose={transpose}'
     return C
 
-def triple_n33_33(A, T, transpose: bool=False, debug: bool=True):
+def triple_n33_33(A, T, transpose: bool=False, debug: bool=True) -> np.ndarray:
     """
     Calculates the matrix triple product  for a series of::
 
@@ -264,5 +264,5 @@ def triple_n33_33(A, T, transpose: bool=False, debug: bool=True):
             for i, Ai, Ti in zip(count(), A, T):
                 Dib = T @ Ai @ T.T
                 D[i, :, :] = Dib
-        assert np.all(np.allclose(C, D)), 'tranpose=%s' % tranpose
+        assert np.all(np.allclose(C, D)), 'transpose=%s' % transpose
     return C

@@ -103,7 +103,7 @@ class TestMatrix3d(unittest.TestCase):
              [0., 0., 1.],
              [1., 0., 9.],],
         ])
-        TtAT_actual = triple_n33_n33(A, T, tranpose=False)
+        TtAT_actual = triple_n33_n33(A, T, transpose=False)
         TtAT_expected = [
             [[5., 6., 58.],
              [8., 9., 88.],
@@ -114,7 +114,7 @@ class TestMatrix3d(unittest.TestCase):
              [74., 84., 820.],],
         ]
         assert is_array_close(TtAT_expected, TtAT_actual)
-        TATt_actual = triple_n33_n33(A, T, tranpose=True)
+        TATt_actual = triple_n33_n33(A, T, transpose=True)
         TATt_expected = [
             [[9., 7., 89.],
              [3., 1., 29.],
@@ -142,7 +142,7 @@ class TestMatrix3d(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 9.],
         ])
-        TtAT_actual = triple_n33_33(A, T, tranpose=False)
+        TtAT_actual = triple_n33_33(A, T, transpose=False)
         TtAT_expected = [
             [[5., 6., 58.],
              [8., 9., 88.],
@@ -153,7 +153,7 @@ class TestMatrix3d(unittest.TestCase):
              [74., 84., 820.],],
         ]
         assert is_array_close(TtAT_expected, TtAT_actual)
-        TATt_actual = triple_n33_33(A, T, tranpose=True)
+        TATt_actual = triple_n33_33(A, T, transpose=True)
         TATt_expected = [
             [[9., 7., 89.],
              [3., 1., 29.],

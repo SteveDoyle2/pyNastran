@@ -321,14 +321,14 @@ def add_list_var(model, variables, obj, grid, grid_objs, i):
     i += 1
     return i
 
-def add_transposed_vars(model, variables_tranposed, obj, grid, grid_objs, i):
+def add_transposed_vars(model, variables_transposed, obj, grid, grid_objs, i):
     """
     combines different variables with the same dimensions into a single table,
     such as for the PCOMP
 
     material_id, thickness, theta, SOUT
     """
-    variables = variables_tranposed.variables
+    variables = variables_transposed.variables
     nvars = len(variables)
     nrows = 0
     #nrows = 5

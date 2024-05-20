@@ -931,7 +931,7 @@ class FlutterResponse:
         headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
         with open(veas_filename, 'w') as veas_file:
             veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG '
-                            f'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE= {nmodes:4i}\n')
+                            f'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE= {nmodes:4d}\n')
             veas_file.write(''.join(headers) + '\n')
             nspeeds = self.results.shape[1]
             for i in range(nspeeds):
