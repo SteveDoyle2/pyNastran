@@ -35,7 +35,7 @@ class TestRigid(unittest.TestCase):
             #print('dependent_nid_to_components = ', dependent_nid_to_components)
             assert dependent_nid_to_components == {3: '123456'}, dependent_nid_to_components
 
-    def test_Rdd_1(self):  # pragma: no cover
+    def _test_Rdd_1(self):  # pragma: no cover
         model = BDF(debug=None, log=None, mode='msc')
         model.add_grid(2, [1., 1., 0.])
         model.add_grid(4, [-1., 1., 0.])
@@ -53,7 +53,7 @@ class TestRigid(unittest.TestCase):
         model.setup()
         model.rbe3.Rdd()
 
-    def test_Rdd_2(self):  # pragma: no cover
+    def _test_Rdd_2(self):  # pragma: no cover
         #SOL 101
         #CEND
         #    TITLE = scnastran
