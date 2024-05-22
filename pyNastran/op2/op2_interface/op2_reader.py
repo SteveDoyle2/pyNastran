@@ -3530,11 +3530,12 @@ class OP2Reader:
 
         subtable_name = self.get_subtable_name4(op2, data, ndata)
         op2.subtable_name = subtable_name
-        try:
-            self._read_subtables()
-        except Exception:
-            self.log.error('\n' + str(self.op2.code_information()))
-            raise
+        #try:
+        op2._results.log = op2.log
+        self._read_subtables()
+        #except Exception:
+            #self.log.error('\n' + str(self.op2.code_information()))
+            #raise
 
     def read_results_table8(self) -> None:
         """Reads a results table"""

@@ -21,7 +21,7 @@ from pyNastran.utils import object_attributes
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
-from pyNastran.op2.op2_interface.result_set import ResultSet
+from pyNastran.op2.op2_interface.result_set import ResultSet, add_results_of_exact_type
 from pyNastran.op2.result_objects.matrix import Matrix  #, MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -222,6 +222,7 @@ class F06Writer(OP2_F06_Common):
 
     def _add_results(self, results: Union[str, list[str]]) -> None:
         """supports catch all classes...don't call this..."""
+        #self.log.warning(f'_add_results = {results}')
         if isinstance(results, str):
             results = [results]
         all_results = self.get_all_results()
@@ -231,19 +232,17 @@ class F06Writer(OP2_F06_Common):
                 all_results_str = get_all_results_string(all_results)
                 raise RuntimeError(f'all_results={all_results_str}\n{result!r} is not a valid result to remove')
             if result == 'stress':
-                stress_results = []
-                for resulti in all_results:
-                    if 'stress' in result.lower():
-                        stress_results.append(resulti)
-                #stress_results = [result if 'stress' in result.lower() for result in all_results]
+                stress_results = add_results_of_exact_type(all_results, 'stress')
+                #assert 'displacements' not in stress_results
                 self._results.update(stress_results)
+            elif result == 'stressa':
+                stressa_results = add_results_of_exact_type(all_results, 'stressa')
+                self._results.update(stressa_results)
             elif result == 'strain':
-                strain_results = []
-                for resulti in all_results:
-                    if 'strain' in resulti.lower():
-                        strain_results.append(resulti)
-                #strain_results = [result if 'strain' in result.lower() for result in all_results]
+                strain_results = add_results_of_exact_type(all_results, 'strain')
                 self._results.update(strain_results)
+            elif 'stressa' in result.lower():
+                self._results.add('stressa')
             elif 'stress' in result.lower():
                 self._results.add('stress')
             elif 'strain' in result.lower():
@@ -254,8 +253,11 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('element_forces')
             # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
+            #assert 'displacements' not in self._results.saved, result
 
     def set_results(self, results: Union[str, list[str]]) -> None:
+        #self.log.warning(f'set_results = {results}')
+        #assert 'displacements' not in results, results
         self.clear_results()
         results = self._results.add(results)
         self._add_results(results)

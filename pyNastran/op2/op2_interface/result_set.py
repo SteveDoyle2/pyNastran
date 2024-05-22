@@ -21,7 +21,8 @@ Defines:
 """
 import re
 from copy import deepcopy
-from typing import Union
+from typing import Union, Any
+from cpylog import SimpleLogger
 
 
 class ResultSet:
@@ -31,8 +32,21 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results: list[int],
-                 results_map, log):
+    def __init__(self, allowed_results: list[str],
+                 results_map: dict[str, Any],
+                 log: SimpleLogger):
+        """we'll set the allowed results
+
+        Parameters
+        ----------
+        allowed_results : list[str]
+            all results that are allowed
+        results_map : dict[str, Any]
+            combined objects (e.g., ato, psd, stress, force, ...)
+        log : SimpleLogger
+            the logging object
+
+        """
         #self.log = log
         #allowed_results.sort()
         #for a in allowed_results:
@@ -48,10 +62,14 @@ class ResultSet:
         # the set of results to be saved
         self.saved = deepcopy(self.allowed)
         self.results_map = results_map
+        #self.log = log
 
     def is_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
         #assert result in self.results_map, f'result={result}'
+        #print(self.saved)
+        #self.saved = list(self.saved)
+        #self.saved.sort()
         if result not in self.allowed:
             #allowed2 = list(self.allowed)
             #allowed2.sort()
@@ -69,9 +87,11 @@ class ResultSet:
                     #print(results_obj.get_table_types())
                 raise RuntimeError(msg.rstrip())
         if result in self.saved:
-            #self.log.debug('    %s is being read' % result)
+            #log.debug('    %s is being read' % result)
+            #self.log.warning('    %s is being read' % result)
             return True
-        #self.log.debug('    %s was skipped' % result)
+        #log.debug('    %s was skipped' % result)
+        #self.log.warning('    %s was skipped' % result)
         return False
 
     def is_not_saved(self, result: str) -> bool:
@@ -80,7 +100,9 @@ class ResultSet:
 
     def clear(self) -> None:
         """clears all the results"""
+        #self.log.warning('clearing')
         self.saved.clear()
+        #self.log.warning(f'saved={self.saved}')
 
     def add(self, results: Union[str, list[str]])  -> list[str]:
         """adds a list/str of results"""
@@ -89,17 +111,20 @@ class ResultSet:
             return added
         #print(f'saved = {self.saved}')
         #print(f'results = {results}')
+        #assert 'displacements' not in results
         all_matched_results = self._get_matched_results(results)
         for result in all_matched_results:
-            #print(f'  result = {result}')
+            #self.log.warning(f'  add result = {result}')
             if result not in self.saved:
                 self.saved.add(result)
                 added.append(result)
         #print(f'saved = {self.saved}')
+        #assert 'displacements' not in self.saved, self.saved
         return added
 
     def remove(self, results: Union[str, list[str]]) -> list[str]:
         """removes a list/str of results"""
+        #self.log.warning(f'removing...results={results}')
         removed = []
         if len(results) == 0:
             return removed
@@ -117,10 +142,12 @@ class ResultSet:
         if isinstance(results, str):
             results = [results]
         all_matched_results = []
+        #assert 'displacements' not in all_matched_results
+        #assert 'displacements' not in results
         for result in results:
             #print(result)
             if result in self.allowed:
-                #print('allowed')
+                #self.log.warning(f'allowed - {result}')
                 all_matched_results.append(result)
                 continue
 
@@ -136,6 +163,8 @@ class ResultSet:
                 raise RuntimeError(f'{result!r} is not a valid result to remove\n{self}\n'
                                    f'{result!r} is not a valid result to remove')
             all_matched_results.extend(matched_results)
+            #assert 'displacements' not in matched_results
+        #assert 'displacements' not in all_matched_results
         return all_matched_results
 
     def _found_result(self, result: str) -> None:
@@ -145,6 +174,7 @@ class ResultSet:
         self.found.add(result)
 
     def update(self, results: list[str]) -> None:
+        #assert 'displacements' not in results
         for result in results:
             self.add(result)
 
@@ -221,3 +251,35 @@ def _get_regex(result: str) -> str:
         resulti = f'{result[:-1]}.*'
     #print(f'E: resulti = {resulti!r}')
     return resulti
+
+def add_results_of_exact_type(all_results: list[str], result_word: str) -> list[str]:
+    """
+    Parameters
+    ----------
+    all_results : list[str]
+        all the results to check against
+    result_word : str
+        'stress', 'strain', ...
+        'stress' lets in stress.cquad4_stress, but not psd.cquad4_stress or grid_point_stress_discontinuities
+        changed in v1.3.5; previously allowed things like displacement in (oops!) as well as the two mentioned cases
+
+    Returns
+    -------
+    results_to_add : list[str]
+        the results to add
+
+    """
+    results_to_add = []
+    #_result_word = '_' + result_word
+    result_word_dot = result_word + '.'
+    for resulti in all_results:
+        lower_resulti = resulti.lower()
+        if result_word in lower_resulti and result_word_dot in lower_resulti:
+            #print(result_word, resulti)
+            # if _result_word not in lower_resulti:
+            #     print('_word =', _result_word, lower_resulti)
+            #flag = result_word in resulti.lower()
+            #print(f'result_word={result_word!r} resulti={resulti}; flag={flag}')
+            results_to_add.append(resulti)
+    # stress_results = [result if 'stress' in result.lower() for result in all_results]
+    return results_to_add
