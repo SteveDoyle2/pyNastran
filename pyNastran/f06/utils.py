@@ -22,7 +22,7 @@ PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
 USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_zona] [--f06] '
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
     '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT]\n'
 )
 USAGE_200 = (
@@ -83,6 +83,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
         '  --export_zona    export a zona file\n'
+        '  --export_csv     export a CSV file\n'
         '  --f06            export an F06 file (temporary)\n'
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
         '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
@@ -101,8 +102,8 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     assert docopt_version >= '0.9.0', docopt_version
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
+    base = os.path.splitext(f06_filename)[0]
     if f06_filename.lower().endswith(('.bdf', '.op2')):
-        base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
     modes = split_int_colon(data['--modes'], start_value=1)
@@ -175,12 +176,15 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     noline = data['--noline']
 
     export_f06 = data['--f06']
+    export_csv = data['--export_csv']
     export_zona = data['--export_zona']
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
     export_zona_filename = None if export_zona is False else 'nastran.zona'
     export_veas_filename = None if export_zona is False else 'nastran.veas'
 
     # TODO: need a new parameter
+    export_csv_filename = None if export_csv is None else base + '.plot_145_subcase_%d.csv'
+
     vg_filename = None if export_zona is None else 'vg_subcase_%d.png'
     vg_vf_filename = None if export_zona is None else 'vg_vf_subcase_%d.png'
     kfreq_damping_filename = None if export_zona is None else 'kfreq_damping_subcase_%d.png'
@@ -204,6 +208,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         damping_limit=damping_limit,
         nopoints=nopoints,
         noline=noline,
+        export_csv_filename=export_csv_filename,
         export_veas_filename=export_veas_filename,
         export_zona_filename=export_zona_filename,
         export_f06_filename=export_f06_filename,

@@ -78,7 +78,11 @@ class TestFlutter(unittest.TestCase):
         #                 log=log)
 
     def test_plot_flutter_0012(self):
-        """tests plot_flutter_f06"""
+        """
+        tests plot_flutter_f06
+
+        has issues with writing the subcase...
+        """
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(
@@ -97,6 +101,7 @@ class TestFlutter(unittest.TestCase):
             f06_units=None, out_units=None,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
+            export_csv_filename='nastran.csv',
             export_f06_filename='nastran.f06',
             export_veas_filename='nastran.veas',
             export_zona_filename='zona.f06',
@@ -116,6 +121,7 @@ class TestFlutter(unittest.TestCase):
             os.remove('kfreq_damping_subcase_1.png')
             os.remove('root_locus_subcase_1.png')
 
+            os.remove('nastran.csv')
             os.remove('nastran.f06')
             os.remove('nastran.veas')
             os.remove('zona.f06')
@@ -200,14 +206,16 @@ class TestFlutter(unittest.TestCase):
                                # kfreq_damping_filename=kfreq_damping_filename,
                                show=False, clear=True, close=True)
 
-            export_zona_filename = os.path.join(DIRNAME, 'zona_%i.f06')
-            export_veas_filename = os.path.join(DIRNAME, 'flutter_%i.veas')
-            export_f06_filename = os.path.join(DIRNAME, 'flutter_%i.f06')
+            export_csv_filename = os.path.join(DIRNAME, 'csv_%d.csv')
+            export_zona_filename = os.path.join(DIRNAME, 'zona_%d.f06')
+            export_veas_filename = os.path.join(DIRNAME, 'flutter_%d.veas')
+            export_f06_filename = os.path.join(DIRNAME, 'flutter_%d.f06')
             make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
                                plot_type,
                                plot_vg=True, plot_vg_vf=True,
                                plot_root_locus=True, plot_kfreq_damping=True,
                                nopoints=True, noline=False,
+                               export_csv_filename=export_csv_filename,
                                export_zona_filename=export_zona_filename,
                                export_veas_filename=export_veas_filename,
                                export_f06_filename=export_f06_filename,
@@ -222,7 +230,7 @@ class TestFlutter(unittest.TestCase):
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         argv = ['f06', 'plot_145', f06_filename, '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
-                '--modes', '1:', '--ylimdamp', '-.3:']
+                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

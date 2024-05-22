@@ -900,6 +900,54 @@ class FlutterResponse:
         if close:
             plt.close()
 
+    def export_to_csv(self, csv_filename: str, modes: Optional[list[int]]=None) -> None:
+        """
+        Exports a ZONA .veas file
+
+        Parameters
+        ----------
+        veas_filename : str
+            the filename to write
+        modes : list[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
+
+        *.VEAS
+
+        ' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=     714 FOR FLUTTER/ASE ID=     714 NMODE=   12'
+        '  IPOINT,  VEL_1,       VEL_2,       RHO_1,       RHO_2, ...'
+        '  1,       0.0000E+00,  0.0000E+00,  0.0000E+00,  0.0000E+00'
+        '  2,       4.9374E-01, -1.6398E-03, -5.4768E-04, -2.3136E-04'
+        """
+        imodes = self._imodes(modes)
+        assert len(imodes) > 0, imodes
+        headers = ['ipoint']
+        for name in self.names:
+            headersi = [f'{name}_imode={imode}' for imode in imodes]
+            headers += headersi
+        #print(headers)
+
+        nspeed = self.results.shape[1]
+        ipoint = np.arange(1, nspeed+1, 1, dtype='int32')
+
+        csv_filename2 = _apply_subcase_to_filename(csv_filename, self.subcase)
+        with open(csv_filename2, 'w') as csv_file:
+            csv_file.write(f'# subcase = {self.subcase}\n')
+            for key, unit in self.out_units.items():
+                csv_file.write(f'# {key} = {unit}\n')
+            csv_file.write('# ' + ','.join(headers) + '\n')
+
+            results = [ipoint]
+            for iresult, name in enumerate(self.names):
+                for imode in imodes:
+                    result = self.results[imode, :, iresult]
+                    results.append(result)
+            results_array = np.column_stack(results)
+            np.savetxt(csv_file, results_array, delimiter=',')
+
+            #for i in range(nspeeds):
+            #    damping = self.results[:, i, self.idamping]
+            #    asdf
+
     def export_to_veas(self, veas_filename: str, modes: Optional[list[int]]=None) -> None:
         """
         Exports a ZONA .veas file
@@ -929,7 +977,8 @@ class FlutterResponse:
             omega_modes.append(wmode)
 
         headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
-        with open(veas_filename, 'w') as veas_file:
+        veas_filename2 = _apply_subcase_to_filename(veas_filename, self.subcase)
+        with open(veas_filename2, 'w') as veas_file:
             veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG '
                             f'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE= {nmodes:4d}\n')
             veas_file.write(''.join(headers) + '\n')
@@ -943,11 +992,15 @@ class FlutterResponse:
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
 
-    def _imodes(self, modes):
+    def _imodes(self, modes) -> np.ndarray:
         """gets the imodes from the modes"""
         if modes is None:
             nmodes = self.results.shape[0]
             imodes = range(nmodes)
+        elif isinstance(modes, slice):
+            nmodes = self.results.shape[0]
+            all_modes = np.arange(0, nmodes, dtype='int32')
+            imodes = all_modes[modes]
         else:
             imodes = modes - 1
         return imodes
@@ -1077,7 +1130,8 @@ class FlutterResponse:
                 msg += 'mode, V, damp, freq: (damping ratio=%s)\n%s\n' % (damping_ratio, msgi)
 
         ## TODO: doesn't always have data...
-        with open(zona_filename, 'w') as zona_file:
+        zona_filename2 = _apply_subcase_to_filename(zona_filename, self.subcase)
+        with open(zona_filename2, 'w') as zona_file:
             zona_file.write(msg)
         return msg
 
@@ -1341,3 +1395,10 @@ def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[U
     else:  # pragma: no cover
         assert isinstance(units, dict), f'units={units!r}'
     return units
+
+def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
+    """helper for filename management"""
+    filename_out = filename
+    if '%' in filename:
+        filename_out = filename % subcase
+    return filename_out

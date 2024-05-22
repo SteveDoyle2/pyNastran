@@ -274,6 +274,7 @@ def plot_flutter_f06(f06_filename: str,
                      damping_limit: Optional[float]=None,
                      nopoints: bool=False,
                      noline: bool=False,
+                     export_csv_filename: Optional[str]=None,
                      export_zona_filename: Optional[str]=None,
                      export_veas_filename: Optional[str]=None,
                      export_f06_filename: Optional[str]=None,
@@ -326,6 +327,8 @@ def plot_flutter_f06(f06_filename: str,
         suppress the lines
     subcases: list[int]; default=None
         the list of subcases that should be considered
+    export_csv_filename : Optional[str]; default=None -> no csv
+        the csv filename to dump
 
     Returns
     -------
@@ -365,6 +368,7 @@ def plot_flutter_f06(f06_filename: str,
                            plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                            nopoints, noline,
                            vd_limit=vd_limit, damping_limit=damping_limit,
+                           export_csv_filename=export_csv_filename,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
                            export_f06_filename=export_f06_filename,
@@ -391,6 +395,7 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
                        legend: bool=True,
                        vd_limit: Optional[float]=None,
                        damping_limit: Optional[float]=None,
+                       export_csv_filename: Optional[str]=None,
                        export_zona_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
                        export_f06_filename: Optional[str]=None,
@@ -434,6 +439,8 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
             kfreq_damping_filename=kfreq_damping_filename,
             show=show, clear=clear, close=close, log=log)
 
+        if export_csv_filename:
+            flutter.export_to_csv(export_csv_filename, modes=modes)
         if export_zona_filename:
             flutter.export_to_zona(export_zona_filename, modes=modes,
                                    xlim=xlim, plot_type=plot_type)
