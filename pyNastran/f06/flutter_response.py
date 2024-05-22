@@ -1018,7 +1018,8 @@ class FlutterResponse:
                       modes: Optional[list[int]]=None,
                       page_stamp: Optional[str]=None,
                       page_num: int=1) -> int:
-        with open(f06_filename, 'w') as f06_file:
+        f06_filename2 = _apply_subcase_to_filename(f06_filename, self.subcase)
+        with open(f06_filename2, 'w') as f06_file:
             page_num = self.export_to_f06_file(
                 f06_file, modes=modes,
                 page_stamp=page_stamp, page_num=page_num)
