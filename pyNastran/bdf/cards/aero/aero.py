@@ -1950,6 +1950,312 @@ class CAERO1(BaseCard):
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
 
+    def span_split(self, span_percentage: float) -> tuple[CAERO1, CAERO1]:
+        """
+        ::
+
+          1
+          | \
+          |  14
+          |  |  \
+          |  |   4
+          |  |   |
+          |  |   |
+          2--23--3
+
+        Parameters
+        ----------
+        span_percentage : float
+            the value to split at
+
+        p1 = [0., 0., 0.]
+        x12 = 1.0
+        p4 = [0., 10., 0.]
+        x43 = 1.0
+        nspan = 10
+        span_percentage = 0.10
+        nspan1 = nspan * span_percentage = 1
+        nspan2 = nspan * (1 - span_percentage) = 9
+        """
+        assert 0. < span_percentage < 1.0, span_percentage
+        assert self.nspan > 0, self.nspan
+        p1 = self.p1
+        p4 = self.p4
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
+        p14: np.ndarray = p1 * (1 - span_percentage) + p4 * span_percentage
+        p23: np.ndarray = p2 * (1 - span_percentage) + p3 * span_percentage
+        x14_23: float = p23[0] - p23[0]
+
+        nspan_a = max(1, int(self.nspan * span_percentage))
+        nspan_b = max(1, int(self.nspan * (1 - span_percentage)))
+
+        eid_a = self.eid
+        eid_b = self.eid + 1
+        pid = self.pid
+        igroup = self.igroup
+        cp = self.cp
+        nchord = self.nchord
+        lchord = self.lchord
+        lspan = self.lspan
+
+        comment_a = (self.comment + ' A').strip()
+        comment_b = (self.comment + ' B').strip()
+        caero_a = CAERO1(eid_a, pid, igroup, p1, self.x12, p14, x14_23,
+                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord, lchord=lchord,
+                        comment=comment_a)
+        caero_b = CAERO1(eid_b, pid, igroup, p14, x14_23, p4, self.x43,
+                         cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment=comment_b)
+        return caero_a, caero_b
+
+    def span_chord_split(self,
+                         span_percentage: float,
+                         chord_percentage: float, iy: int=1) -> list[CAERO1]:
+        """
+        ::
+
+          1
+          | \
+          |  14
+          |  |  \
+          |  |   4
+          |  |   |
+          12-c--43
+          |  |   |
+          |  |   |
+          2--23--3
+
+        Parameters
+        ----------
+        span_percentage : float
+            the value to split at
+        chord_percentage : float
+            the value to split at
+        iy : int; default=1
+            the dimension to consider as y (if y and z vary, 1/2 will workj)
+
+        p1 = [0., 0., 0.]
+        x12 = 1.0
+        p4 = [0., 10., 0.]
+        x43 = 1.0
+        nspan = 10
+        span_percentage = 0.10
+        nspan1 = nspan * span_percentage = 1
+        nspan2 = nspan * (1 - span_percentage) = 9
+
+        """
+        assert 0. <= span_percentage < 1.0, span_percentage
+        assert 0. <= chord_percentage < 1.0, chord_percentage
+        assert iy in {1, 2}, iy
+        assert self.nspan > 0, self.nspan
+        assert self.nchord > 0, self.nchord
+        p1 = self.p1
+        p4 = self.p4
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
+        p14: np.ndarray = p1 * (1 - span_percentage) + p4 * span_percentage
+        p23: np.ndarray = p2 * (1 - span_percentage) + p3 * span_percentage
+
+        p12: np.ndarray = p1 * (1 - chord_percentage) + p2 * chord_percentage
+        p43: np.ndarray = p4 * (1 - chord_percentage) + p3 * chord_percentage
+        pc: np.ndarray = p14 * (1 - chord_percentage) + p23 * chord_percentage
+
+        x1_12: float = p12[0] - p1[0]
+        x12_2: float = p2[0] - p12[0]
+
+        x14_c: float = pc[0] - p14[0]
+        xc_23: float = p23[0] - pc[0]
+
+        x4_43: float = p43[0] - p4[0]
+        x43_3: float = p3[0] - p43[0]
+
+        nspan_a = max(1, int(self.nspan * span_percentage))
+        nspan_b = max(1, int(self.nspan * (1 - span_percentage)))
+
+        nchord_a = max(1, int(self.nchord * chord_percentage))
+        nchord_b = max(1, int(self.nchord * (1 - chord_percentage)))
+
+        eid_a = self.eid
+        eid_b = self.eid
+        pid = self.pid
+        igroup = self.igroup
+        cp = self.cp
+        lchord = self.lchord
+        lspan = self.lspan
+
+        eid_a = self.eid
+        eid_b = self.eid + 1
+        eid_c = self.eid + 2
+        eid_d = self.eid + 3
+
+        comment_a = (self.comment + ' A').strip()
+        comment_b = (self.comment + ' B').strip()
+        comment_c = (self.comment + ' C').strip()
+        comment_d = (self.comment + ' D').strip()
+
+        # LE
+        caero_a = CAERO1(eid_a, pid, igroup, p1, x1_12, p14, x14_c,
+                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_a, lchord=lchord,
+                        comment=comment_a)
+        caero_b = CAERO1(eid_b, pid, igroup, p14, x14_c, p4, x4_43,
+                         cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord_a, lchord=lchord,
+                         comment=comment_b)
+
+        y1 = p1[iy]
+        y4 = p4[iy]
+        y14 = p14[iy]
+        y1_14 = abs(y14 - y1)
+        y14_4 = abs(y4 - y14)
+
+        caeros = []
+        #print(f'y1 = {y1}')
+        #print(f'y4 = {y4}')
+        #print(f'y1_14 = {y1_14}')
+        #print(f'y14_4 = {y14_4}')
+        inboard_le_chord = (x1_12 > 0. or x14_c > 0.0)
+        outboard_le_chord = (x14_c > 0.0 or x4_43 > 0.)
+        #print(f'inboard_le_chord = {inboard_le_chord}')
+        #print(f'outboard_le_chord = {outboard_le_chord}')
+
+        if (x1_12 > 0. or x14_c > 0.0) and y1_14 > 0.0:
+            caeros.append(caero_a)
+        if (x14_c > 0.0 or x4_43 > 0.) and y14_4 > 0.0:
+            caeros.append(caero_b)
+
+        # TE
+        caero_c = CAERO1(eid_c, pid, igroup, p12, x12_2, pc, xc_23,
+                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_b, lchord=lchord,
+                        comment=comment_c)
+        caero_d = CAERO1(eid_d, pid, igroup, pc, xc_23, p43, x43_3,
+                         cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord_b, lchord=lchord,
+                         comment=comment_d)
+
+        inboard_te_chord = (x12_2 > 0. or xc_23 > 0.0)
+        outboard_te_chord = (xc_23 > 0.0 or x43_3 > 0.)
+        #print(f'inboard_te_chord = {inboard_te_chord}')
+        #print(f'outboard_te_chord = {outboard_te_chord}')
+        if (x12_2 > 0. or xc_23 > 0.0) and y1_14 > 0.0:
+            caeros.append(caero_c)
+        if (xc_23 > 0.0 or x43_3 > 0.) and y14_4 > 0.0:
+            caeros.append(caero_d)
+        return caeros
+
+    def generic_split(self, caero_project: CAERO1) -> list[CAERO1]:  # pragma: no cover
+        """
+        the intention of this method is to vary the chord/span across the panel
+
+        ::
+
+          1
+          | \
+          |   \
+          |     \
+          A--B   4
+          |  |   |
+          |  |   |
+          |  |   |
+          |  |   |
+          2--C---3
+
+        Parameters
+        ----------
+        caero_project : CAERO1
+            the caero to project
+
+        TODO: not done...
+
+        """
+        #p1x = np.array([self.p1[0], 0., 0.])
+        p1 = self.p1.copy() #- p1x
+        p4 = self.p4.copy() #- p1x
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
+
+        q1 = caero_project.p1.copy() #- p1x
+        q4 = caero_project.p4.copy() #- p1x
+        q2 = q1 + np.array([caero_project.x12, 0., 0.])
+        q3 = q4 + np.array([caero_project.x43, 0., 0.])
+
+        # https://stackoverflow.com/questions/41797953/how-to-find-the-intersection-of-two-lines-given-a-point-on-each-line-and-a-paral
+        #x = x1 + t1 * dx1
+        #y = y1 + t1 * dy1
+        #x = x2 + t2 * dx2
+        #y = y2 + t2 * dy2
+        #
+        #x = x0a + dxa×t
+        #y = y0a + dya×t
+        #x = x0b + dxb×u
+        #y = y0b + dyb×u
+
+        def points_in_polygon(polygon: np.ndarray, pts: np.ndarray) -> np.ndarray:
+            contour2 = np.vstack((polygon[1:], polygon[:1]))
+            test_diff = contour2 - polygon
+            mask1 = (pts[:, None] == polygon).all(-1).any(-1)
+            m1 = (polygon[:, 1] > pts[:, None, 1]) != (contour2[:, 1] > pts[:, None, 1])
+            slope = ((pts[:, None, 0] - polygon[:, 0]) * test_diff[:, 1]) - (
+                        test_diff[:, 0] * (pts[:, None, 1] - polygon[:, 1]))
+            m2 = slope == 0
+            mask2 = (m1 & m2).any(-1)
+            m3 = (slope < 0) != (contour2[:, 1] < polygon[:, 1])
+            m4 = m1 & m3
+            count = np.count_nonzero(m4, axis=-1)
+            mask3 = ~(count % 2 == 0)
+            mask = mask1 | mask2 | mask3
+            return mask
+
+        iy = 1
+        polygon = np.vstack([p1, p2, p3, p4])[:, [0, iy]]
+        points = np.vstack([q1, q2, q3, q4])[:, [0, iy]]
+        iq1, iq2, iq3, iq4 = points_in_polygon(polygon, points)
+
+        caeros = []
+        nq = (iq1 + iq2 + iq3 + iq4)
+        if nq == 4:
+            #
+            # p1--------p4
+            # |          |
+            # |   q1-q4  |
+            # |   |   |  |
+            # |   q2-q3  |
+            # |          |
+            # p2--------p3
+            raise RuntimeError('all points q in p')
+        elif nq == 3:
+            # p1--------p4
+            # |          |
+            # |   q1-----|---q4
+            # |   |      | /
+            # |   |      /
+            # |   q2-q3  |
+            # |          |
+            # p2--------p3
+            raise RuntimeError('one point q not in p')
+        elif nq == 2:
+            # p1--------p4
+            # |          |
+            # |   q1-----|---q4
+            # |   |      |    |
+            # |   |      |    |
+            # |   q2-----|---q3
+            # |          |
+            # p2--------p3
+            raise RuntimeError('two point q not in p')
+        elif nq == 1:
+            # p1--------p4
+            # |          |
+            # |   q1-----*---q4
+            # |   |      |    |
+            # p2--*-----p3    |
+            #     |           |
+            #     q2---------q3
+            raise RuntimeError('primary case')
+        elif nq == 0:
+            return caeros
+        else:  # pragma: no cover
+            raise RuntimeError(f'nq = {nq}')
+        return caeros
+
     def get_box_index(self, box_id: int) -> tuple[int, int]:
         """
         Get the index of ``self.box_ids`` that corresponds to the given box id.

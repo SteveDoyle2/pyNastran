@@ -542,6 +542,48 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(TypeError):
             aeros.validate()
 
+    def test_caero1_split(self):
+        """checks the CAERO1/PAERO1/AEFACT card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 10., 0.]
+        x12 = 1.
+        x43 = 1.
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 1001
+        comment =  '%-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s' % ('CAERO1', 'EID', 'PID', 'CP', 'NSPAN', 'NCHORD', 'LSPAN', 'LCHORD', 'IGID\n')
+        comment += '%-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s' % ('', 'X1', 'Y1', 'Z1', 'X12', 'X4', 'Y4', 'Z4', 'X43')
+
+        caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                 cp=0, nspan=10, lspan=0, nchord=10, lchord=0, comment=comment)
+        caero_a, caero_b = caero.span_split(0.10)
+        print(caero)
+        print(caero_a)
+        print(caero_b)
+        print('-----')
+
+        caero_a, caero_b, caero_c, caero_d = caero.span_chord_split(0.10, 0.1)
+        print(caero_a)
+        print(caero_b)
+        print(caero_c)
+        print(caero_d)
+
+        print('new')
+        caeros = caero.span_chord_split(0.0, 0.0)
+        assert len(caeros) == 1, caeros
+        for caero in caeros:
+            print(caero)
+        print('-----')
+
     def test_caero1_paneling_nspan_nchord_1(self):
         """checks the CAERO1/PAERO1/AEFACT card"""
         log = SimpleLogger(level='warning')
