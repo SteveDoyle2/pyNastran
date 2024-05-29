@@ -687,8 +687,7 @@ class OP2Common(Op2Codes, F06Writer):
         try:
             name, func = mapper[keys]
         except KeyError:
-            self.show_data(data[n:])
-            raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
+            #raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
             return n
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (
@@ -697,12 +696,7 @@ class OP2Common(Op2Codes, F06Writer):
             self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
                 keys[0], keys[1], keys[2], name, self.table_name))
         self.card_name = name
-        try:
-            n = func(data, n)  # gets all the grid/mat cards
-        except:  # pragma: no cover
-            self.log.error("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
-                keys[0], keys[1], keys[2], name, self.table_name))
-            raise
+        n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
         if n != ndata:  # pragma: no cover
             assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}'

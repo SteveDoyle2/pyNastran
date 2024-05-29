@@ -1,6 +1,5 @@
 """runs various OP4 tests"""
 import os
-from pathlib import Path
 import unittest
 
 import numpy as np
@@ -10,10 +9,10 @@ import scipy
 import scipy.sparse
 from scipy.sparse import coo_matrix  # type: ignore
 
-from pyNastran.op4.op4 import OP4, read_op4, Matrix, write_op4
+from pyNastran.op4.op4 import OP4, read_op4, Matrix
 import pyNastran.op4.test
 
-OP4_PATH = Path(pyNastran.op4.test.__path__[0])
+OP4_PATH = pyNastran.op4.test.__path__[0]
 PKG_PATH = pyNastran.__path__[0]
 
 #coo_matrix = scipy.sparse._coo.coo_matrix
@@ -23,11 +22,9 @@ class TestOP4(unittest.TestCase):
     def test_op4_binary(self):
         fnames = [
             'mat_b_dn.op4',
-            #'mat_b_s1.op4',
-            #'mat_b_s2.op4',
+            'mat_b_s1.op4',
+            'mat_b_s2.op4',
         ]
-        name_order = ['EYE10', 'LOW', 'RND1RS', 'RND1RD',
-                      'RND1CS', 'RND1CD', 'STRINGS', 'EYE5CD']
         for fname in fnames:
             op4_filename = os.path.join(OP4_PATH, fname)
             matrices = read_op4(op4_filename)
@@ -46,8 +43,6 @@ class TestOP4(unittest.TestCase):
                     assert isinstance(data, coo_matrix), type(data)
                     #print(data)
                 matrix.write_dmi()
-                op4_filename_out = OP4_PATH / 'test.op4'
-                write_op4(op4_filename_out, matrices, name_order=name_order)
 
     def test_op4_ascii(self):
         fnames = [
@@ -73,12 +68,12 @@ class TestOP4(unittest.TestCase):
     def test_eye10(self):
         """tests the EYE10 matrices"""
         fnames = [
-            #'mat_t_dn.op4',
-            #'mat_t_s1.op4',
-            #'mat_t_s2.op4',
+            'mat_t_dn.op4',
+            'mat_t_s1.op4',
+            'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4_filename = OP4_PATH / fname
+            op4_filename = os.path.join(OP4_PATH, fname)
             matrices = read_op4(op4_filename, debug=False)
             A = matrices['EYE10']
             mat = A.data
@@ -92,9 +87,6 @@ class TestOP4(unittest.TestCase):
                 eye_matrix = eye(10)
                 self.assertTrue(array_equal(mat, eye_matrix))
             A.write_dmi()
-            op4_filename_out = OP4_PATH / 'test.op4'
-            write_op4(op4_filename_out, matrices, name_order=['EYE10'])
-            #read_op4(op4_filename_out, debug=True)
 
     def test_eye5cd(self):
         """tests the EYE5CD matrices"""

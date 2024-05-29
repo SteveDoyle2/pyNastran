@@ -17,7 +17,9 @@ from vtkmodules.vtkCommonDataModel import (
 from vtkmodules.vtkFiltersPoints import vtkExtractPoints
 from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+from vtkmodules.vtkRenderingCore import vtkActor
 
+from pyNastran.gui.vtk_rendering_core import vtkActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from pyNastran.gui.vtk_util import vtk_to_numpy
@@ -26,24 +28,22 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 )
 from pyNastran.gui.menus.highlight.vtk_utils import (
     create_highlighted_ugrids,
-    get_ids_filter)
+    create_highlighted_actors, get_ids_filter)
 
 if TYPE_CHECKING:
     from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints, vtkIdTypeArray
-    from vtkmodules.vtkFiltersCore import vtkIdFilter
     from vtkmodules.vtkRenderingCore import vtkAreaPicker
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.gui.typing import Actor
 
 def get_actors_by_area_picker(gui: MainWindow, area_picker: vtkAreaPicker,
                               model_name: str,
                               is_nids: bool=True, is_eids: bool=True,
                               representation: str='points',
-                              add_actors: bool=False) -> tuple[list[Actor], list[int], list[int]]:
+                              add_actors: bool=False) -> tuple[list[vtkActor], list[int], list[int]]:
     """doesn't handle multiple actors yet..."""
     frustum: vtkPlanes = area_picker.GetFrustum()
 
-    is_nid_ugrid, ugrid_point, nids, is_eid_ugrid, ugrid_element, eids = get_depth_ids(
+    ugrid, eids, nids = get_depth_ids(
         gui, frustum, model_name=model_name,
         is_nids=is_nids, is_eids=is_eids,
         representation=representation)
@@ -53,21 +53,19 @@ def get_actors_by_area_picker(gui: MainWindow, area_picker: vtkAreaPicker,
     is_wire = 'wire' in representation
     is_surface = 'surface' in representation
 
-    if is_nid_ugrid and is_points:
+    if is_nids and is_points:
         actor = gui.create_highlighted_actor(
-            ugrid_point, representation='points', add_actor=add_actors)
+            ugrid, representation='points', add_actor=add_actors)
         actors.append(actor)
 
-    if is_eid_ugrid and is_wire:
+    if is_eids and is_wire:
         actor = gui.create_highlighted_actor(  # or surface
-            ugrid_element, representation='wire', add_actor=add_actors)
+            ugrid, representation='wire', add_actor=add_actors)
         actors.append(actor)
-    elif is_eid_ugrid and is_surface:
+    elif is_eids and is_surface:
         actor = gui.create_highlighted_actor(  # or surface
-            ugrid_element, representation='surface', add_actor=add_actors)
+            ugrid, representation='surface', add_actor=add_actors)
         actors.append(actor)
-    elif is_eid_ugrid:  # pragma: no cover
-        raise RuntimeError(representation)
 
     return actors, eids, nids
 
@@ -77,27 +75,10 @@ def get_depth_ids(gui: MainWindow,
                   model_name: str='main',
                   is_nids: bool=True,
                   is_eids: bool=True,
-                  representation: str='points') -> tuple[bool, vtkUnstructuredGrid, np.ndarray,
-                                                         bool, vtkUnstructuredGrid, np.ndarray]:
+                  representation: str='points') -> tuple[list[vtkActor], list[int], list[int]]:
     """
-    Picks the nodes and/or elements.  One grid is returned for the
-    nodes and one for the elements.
-
-    Returns
-    -------
-    is_nid_ugrid : bool
-        flag
-    ugrid_nodes : vtkUnstructuredGrid
-        the node ugrid
-    nids : np.ndarray
-        the node ids
-    is_eid_ugrid : bool
-        flag
-    ugrid_elements : vtkUnstructuredGrid
-        the element ugrid
-    eids : np.ndarray
-        the element ids
-
+    Picks the nodes and/or elements.  Only one grid (e.g., the elements)
+    is currently returned.
     """
     #len(gui.node_ids)
     #2675
@@ -114,19 +95,18 @@ def get_depth_ids(gui: MainWindow,
 
     #extract_ids = vtkExtractSelectedIds()
     #extract_ids.AddInputData(grid)
-    if is_nids:
-        ids_node = get_ids_filter(
-            grid, idsname='Ids',
-            is_nids=True, is_eids=False)
-    if is_eids:
-        ids_element = get_ids_filter(
-            grid, idsname='Ids',
-            is_nids=False, is_eids=True)
 
-    eids = np.array([], dtype='int32')
+    ids = get_ids_filter(
+        grid, idsname='Ids',
+        is_nids=is_nids, is_eids=is_eids)
+
+    # TODO: this ugrid includes all elements in the box, including the ones
+    #       not visible...it's an issue.  The eids/nids  are right tho
+    ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
+        grid, ids, frustum)
+
+    eids = None
     if is_eids:
-        ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
-            grid, ids_element, frustum)
         #Number Of Points: 46
         #Number Of Cells: 31
         cells: vtkCellData = ugrid.GetCellData()
@@ -137,43 +117,24 @@ def get_depth_ids(gui: MainWindow,
                 assert len(cell_ids) == len(np.unique(cell_ids))
                 eids = gui.get_element_ids(model_name, cell_ids)
 
+    nids = None
     if is_nids:
-        ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
-            grid, ids_node, frustum)
         # TODO: the highlighted node ugrid is a problem for groups
-        #ugrid_node = ugrid
-
-        #points: vtkPointData = ugrid.GetPointData()
-        #ids: vtkIdTypeArray = points.GetArray('Ids')
-        #point_ids = vtk_to_numpy(ids)
-
-        #points_flipped: vtkPointData = ugrid_flipped.GetPointData()
-        #ids_flipped: vtkIdTypeArray = points_flipped.GetArray('Ids')
-        #point_ids_flipped = vtk_to_numpy(ids_flipped)
-
-        ugrid_node, nids = get_inside_point_ids(
+        ugrid_points, nids = get_inside_point_ids(
             gui, ugrid, ugrid_flipped, model_name,
             representation=representation)
-        is_nid_ugrid = True
-    else:
-        nids = np.array([], dtype='int32')
-        ugrid_node = vtkUnstructuredGrid()
-        is_nid_ugrid = False
+        ugrid = ugrid_points
 
-    if is_eids and len(eids):
+    if is_eids and eids is not None and len(eids):
         # the highlighted element ugrid works for groups
-        ugrid_node2, ugrid_element = create_highlighted_ugrids(
+        ugrid_node, ugrid_element = create_highlighted_ugrids(
             gui, grid,
             #all_nodes=None, nodes=None, set_node_scalars=True,
             all_elements=gui.element_ids, elements=eids, set_element_scalars=True)
-        #del ugrid_node
-        is_eid_ugrid = True
-    else:
-        ugrid_element = vtkUnstructuredGrid()
-        is_eid_ugrid = False
+        del ugrid_node
+        ugrid = ugrid_element
 
-    is_nid_ugrid = is_nids and is_nid_ugrid
-    return is_nid_ugrid, ugrid_node, nids, is_eid_ugrid, ugrid_element, eids
+    return ugrid, eids, nids
 
 
 def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
@@ -242,7 +203,7 @@ def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
 
 
 def grid_ids_frustum_to_ugrid_ugrid_flipped(grid: vtkUnstructuredGrid,
-                                            ids: vtkIdFilter,
+                                            ids,
                                             frustum: vtkPlanes):
     if 1:
         selected_frustum = vtkExtractSelectedFrustum()
