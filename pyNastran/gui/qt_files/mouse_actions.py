@@ -674,8 +674,7 @@ class MouseActions:
                     world_position, cell_id)
                 #if out is None:
                     #return
-                _result_name, result_value, unused_node_id, node_xyz = out
-                focal_point = node_xyz
+                _result_name, result_value, unused_node_id, focal_point = out
                 gui.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
 

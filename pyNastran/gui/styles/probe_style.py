@@ -34,8 +34,7 @@ class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
             camera = gui.rend.GetActiveCamera()
             #focal_point = world_position
             out = gui.get_result_by_xyz_cell_id(world_position, cell_id)
-            result_name, result_value, node_id, node_xyz = out
-            focal_point = node_xyz
+            result_name, result_value, node_id, focal_point = out
             gui.log_info('focal_point = %s' % str(focal_point))
             gui.mouse_actions.setup_mouse_buttons(mode='default')
 
@@ -66,12 +65,16 @@ class ProbeResultStyle(vtkInteractorStyleTrackballCamera):
             out = gui._cell_centroid_pick(cell_id, world_position)
         elif location == 'node':
             out = gui._cell_node_pick(cell_id, world_position)
-        else:
-            raise RuntimeError('invalid pick location=%r' % location)
+        else:  # pragma: no cover
+            raise RuntimeError(f'invalid pick location={location!r}')
 
         return_flag, duplicate_key, result_value, result_name, xyz = out
         if return_flag is True:
             return
+        if xyz is None:
+            gui.log.warning(f'ProbeResult has xyz=None from gui._cell_{location}_pick({cell_id}, {world_position})')
+            return
+
 
         # prevent duplicate labels with the same value on the same cell
         if duplicate_key is not None and duplicate_key in gui.label_ids[result_name]:
