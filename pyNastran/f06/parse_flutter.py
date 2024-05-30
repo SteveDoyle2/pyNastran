@@ -89,6 +89,8 @@ def make_flutter_response(f06_filename: str,
                     break
             if nblank == 100:
                 break
+            #if 'FLUTTER  SUMMARY' in line:
+                #found_flutter_summary = True
 
             #log.debug('line%ib = %r' % (iline, line))
             if 'SUBCASE' in line[109:]:
@@ -136,6 +138,8 @@ def make_flutter_response(f06_filename: str,
             if nblank == 100:
                 log.warning('breaking on nblank=100 b')
                 break
+            if 'FLUTTER  SUMMARY' in line:
+                found_flutter_summary = True
 
             # pulls the subcase id for the first subcase
             if last_line is not None:
@@ -152,9 +156,6 @@ def make_flutter_response(f06_filename: str,
                     subcase = 1
                     #raise
                 log.debug('subcase = %s' % subcase)
-
-            if not found_flutter_summary:
-                raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
 
             configuration_sline = f06_file.readline().split()
             #log.error(f'configuration_sline={configuration_sline}')
@@ -252,6 +253,9 @@ def make_flutter_response(f06_filename: str,
             #print('')
 
         log.debug('modes = %s' % modes)
+        #if not found_flutter_summary:
+            #print(line)
+            #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
