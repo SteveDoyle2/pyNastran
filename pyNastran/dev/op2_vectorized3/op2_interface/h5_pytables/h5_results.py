@@ -11,7 +11,7 @@ try:
 except ImportError:
     print('pytables was not found; no h5 support.  Run ">>> pip install tables"\n'
           'Do you have h5py installed?  That can cause conflicts.')
-    raise
+    #raise
 
 #from .nodes import load_h5_node
 #from .coords import load_h5_coord

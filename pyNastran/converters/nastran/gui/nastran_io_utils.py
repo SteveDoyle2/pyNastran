@@ -2599,7 +2599,10 @@ def get_pcomp_nplies(properties: dict[int, Union[PCOMP, PCOMPG, PCOMPS, PCOMPLS]
     npliesi = 0
     pcomp_nplies = 0
     for pid in property_ids_pcomp:
-        prop = properties[pid]
+        try:
+            prop = properties[pid]
+        except KeyError:
+            continue
         pcomp_nplies = max(pcomp_nplies, prop.nplies + 1)
     npliesi = max(npliesi, pcomp_nplies)
     return npliesi

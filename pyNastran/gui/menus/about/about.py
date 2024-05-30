@@ -7,7 +7,10 @@ import importlib
 import warnings
 with warnings.catch_warnings():  # avoid an imp module deprecation warning
     warnings.simplefilter("ignore")
-    import setuptools
+    try:
+        import setuptools
+    except ModuleNotFoundError:
+        pass
 
 import numpy
 import scipy
@@ -204,27 +207,27 @@ def get_packages() -> dict[str, str]:
         #'Python Build': str(platform.python_build()),
         'Compiler': platform.python_compiler(),
         'Implementation': platform.python_implementation(),
-        'setuptools': setuptools.__version__,
-        'numpy' : numpy.__version__,
-        'scipy' : scipy.__version__,
-        'cpylog' : cpylog.__version__,
-        'matplotlib' : 'N/A',
-        'pandas' : 'N/A',
-        'h5py' : 'N/A',
-        'tables' : 'N/A',
-        'imageio' : 'N/A',
-        'PIL' : 'N/A',
-        'vtk' : VTK_VERSION,
-        'qtpy' : qtpy.__version__,
-        qt_name : PYQT_VERSION,
+        'setuptools': 'N/A',
+        'numpy': numpy.__version__,
+        'scipy': scipy.__version__,
+        'cpylog': cpylog.__version__,
+        'matplotlib': 'N/A',
+        'pandas': 'N/A',
+        'h5py': 'N/A',
+        'tables': 'N/A',
+        'imageio': 'N/A',
+        'PIL': 'N/A',
+        'vtk': VTK_VERSION,
+        'qtpy': qtpy.__version__,
+        qt_name: PYQT_VERSION,
         'QScintilla2': QSCINTILLA_VERSION,
-        'pygments' : 'N/A',
-        'docopt-ng' : docopt.__version__,
+        'pygments': 'N/A',
+        'docopt-ng': docopt.__version__,
     }
     if 'pyside' in qt_name.lower():
         del packages['QScintilla2']
 
-    for name in ['matplotlib', 'pandas', 'h5py', 'tables', 'imageio', 'PIL', 'pygments']:
+    for name in ['setuptools', 'matplotlib', 'pandas', 'h5py', 'tables', 'imageio', 'PIL', 'pygments']:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:
@@ -260,11 +263,11 @@ def get_version() -> dict[str, str]:
         'Release Type': 'Final Release' if 'dev' not in pyNastran.__version__ else 'Developement',
         'Release Date': pyNastran.__releaseDate2__.title(),
         #'Cache Directory': ,
-        'OS' : f'win32 (sys.platform={sys_platform})',
-        'Platform' : platform.platform(),
-        'Architecture' : str(platform.architecture()),
-        'Machine' : platform.machine(),
-        'Processor' : platform.processor(),
+        'OS': f'win32 (sys.platform={sys_platform})',
+        'Platform': platform.platform(),
+        'Architecture': str(platform.architecture()),
+        'Machine': platform.machine(),
+        'Processor': platform.processor(),
 
         #'Bit': bit,
         #'Memory': memory,

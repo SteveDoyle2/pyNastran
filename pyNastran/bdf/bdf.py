@@ -4406,6 +4406,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             $ pyNastran: nelements=100
             $ pyNastran: skip_cards=PBEAM,CBEAM
             $ pyNastran: units=in,lb,s
+            $ pyNastran: skip properties=1,2,3
+            $ pyNastran: skip elements=4,5,6
+            $ pyNastran: skip materials=7,8,9
+            $ pyNastran: skip thermal_materials=10,11
 
         ..warning :: pyNastran lines must be at the top of the file
 
@@ -4442,7 +4446,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._check_pynastran_header(lines, check_header=True)
         map_update(self, self.nastran_format)
 
-    def _update_for_nastran(self):
+    def _update_for_nastran(self) -> None:
         """updates for msc/nx/optistruct"""
         # TODO: undo the changes for zona
         card_parser = self._card_parser
@@ -4450,28 +4454,29 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_parser['PARAM'] = (PARAM, self._add_methods._add_param_object)
         self.add_param = self._add_param_nastran
 
-    def _update_for_optistruct(self):
+    def _update_for_optistruct(self) -> None:
         """updates for mystran"""
         self._update_for_nastran() # copies this...
         card_parser = self._card_parser
         CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
         card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_methods._add_property_object)
 
-    def _update_for_mystran(self):
+    def _update_for_mystran(self) -> None:
         """updates for mystran"""
         card_parser = self._card_parser
         CARD_MAP['PARAM'] = PARAM_MYSTRAN
         card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_methods._add_param_object)
         self.add_param = self._add_param_mystran
 
-    def _update_for_nasa95(self):
+    def _update_for_nasa95(self) -> None:
         """updates for nasa95"""
         CARD_MAP['PARAM'] = PARAM_NASA95
         card_parser = self._card_parser
         card_parser['PARAM'] = (PARAM_NASA95, self._add_methods._add_param_object)
         self.add_param = self._add_param_nasa95
 
-    def _check_pynastran_header(self, lines: list[str], check_header: bool=True) -> None:
+    def _check_pynastran_header(self, lines: list[str],
+                                check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
         if not check_header:
             return
@@ -4485,7 +4490,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in ['msc', 'nx', 'optistruct', 'zona', 'nasa95', 'mystran'], f'version={value!r} is not supported'
+                assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'nasa95', 'mystran'}, f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value
@@ -4517,7 +4522,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #elif key == 'skip_properties'
             elif key == 'units':
                 self.units = [value.strip() for value in value.upper().split(',')]
-            elif key in ['code-block', 'code_block']:
+            elif key in {'code-block', 'code_block'}:
                 value = line.split('=', 1)[1]
                 if not hasattr(self, 'code_block'):
                     self.code_block = ''
@@ -4534,7 +4539,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     # HDF5
     def _read_bdf_cards(self, bdf_filename: Optional[str]=None,
                         punch: bool=False,
-                        read_includes: bool=True, encoding: Optional[str]=None) -> dict[str, list[Any]]:
+                        read_includes: bool=True,
+                        encoding: Optional[str]=None) -> dict[str, list[Any]]:
         """
         Read method for the bdf files
 
@@ -4619,7 +4625,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             subcases[subcase_id] = subcase
         return subcases
 
-    def _parse_cards_hdf5(self, cards: dict[str, Any], unused_card_count) -> dict[str, list[Any]]:
+    def _parse_cards_hdf5(self, cards: dict[str, Any],
+                          unused_card_count) -> dict[str, list[Any]]:
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
@@ -4639,7 +4646,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return cards_out
 
     def _add_card_hdf5(self, card_lines: list[str], card_name: str,
-                       comment='', is_list: bool=True, has_none: bool=True) -> Any:
+                       comment: str='',
+                       is_list: bool=True,
+                       has_none: bool=True) -> Any:
         """
         Creates a BaseCard object that will be used to simplify HDF5 adding.
 
@@ -4784,7 +4793,8 @@ class BDF(BDF_):
         #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
     ]
 
-    def __init__(self, debug: Optional[bool]=True, log: Any=None, mode: str='msc') -> None:
+    def __init__(self, debug: Optional[bool]=True, log: Any=None,
+                 mode: str='msc') -> None:
         """
         Initializes the BDF object
 
@@ -4845,7 +4855,7 @@ class BDF(BDF_):
         #        word='')
         return result
 
-    def _add_disabled_cards(self):
+    def _add_disabled_cards(self) -> None:
         self._remove_disabled_cards = False
         self.cards_to_read.update(REMOVED_CARDS)  # add
 
@@ -4860,7 +4870,8 @@ def _echo_card(card, card_obj):
         else:
             print(print_card_16(card_obj).rstrip())
 
-def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=True, punch: bool=False,
+def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True,
+             xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,
              skip_cards: Optional[list[str]]=None,
              read_cards: Optional[list[str]]=None,
@@ -4998,7 +5009,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
         #model.get_bdf_stats()
     return model
 
-def _prep_comment(comment):
+def _prep_comment(comment: str) -> str:
     return comment.rstrip()
     #print('comment = %r' % comment)
     #comment = '  this\n  is\n  a comment\n'
@@ -5028,7 +5039,7 @@ def _check_replicated_cards(replicated_cards):
 def _set_nodes(model: BDF,
                spoints, epoints,
                nnodes: int, nspoints: int, nepoints: int, ngridb: int,
-               idtype, fdtype):
+               idtype: str, fdtype: str):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
     nids_cd_transform = defaultdict(list)  # type: dict[int, np.ndarray]
@@ -5068,7 +5079,7 @@ def _set_nodes(model: BDF,
             i += 1
     return nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform
 
-def _bool(value):
+def _bool(value) -> bool:
     """casts a lower string to a booean"""
     return True if value == 'true' else False
 
@@ -5130,7 +5141,7 @@ def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
         #raise RuntimeError(msg)
     return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
 
-def map_version(fem: BDF, version: str):
+def map_version(fem: BDF, version: str) -> None:
     version_map = {
         'msc': fem.set_as_msc,
         'nx': fem.set_as_nx,
@@ -5147,7 +5158,7 @@ def map_version(fem: BDF, version: str):
         raise RuntimeError(msg)
     func()
 
-def map_update(fem: BDF, version: str):
+def map_update(fem: BDF, version: str) -> None:
     #if self.nastran_format == 'zona':
         #self.zona.update_for_zona()
     #elif self.nastran_format == 'mystran':
@@ -5189,7 +5200,7 @@ def map_update(fem: BDF, version: str):
     #raise NotImplementedError(msg)
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """shows off how unicode works because it's overly complicated"""
     import pyNastran
     pkg_path = pyNastran.__path__[0]

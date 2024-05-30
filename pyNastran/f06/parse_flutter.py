@@ -70,6 +70,7 @@ def make_flutter_response(f06_filename: str,
     mach = None
     density_ratio = None
     method = None
+    found_flutter_summary = False
 
     log.info('f06_filename = %r' % f06_filename)
     with open(f06_filename, 'r') as f06_file:
@@ -151,6 +152,9 @@ def make_flutter_response(f06_filename: str,
                     subcase = 1
                     #raise
                 log.debug('subcase = %s' % subcase)
+
+            if not found_flutter_summary:
+                raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
 
             configuration_sline = f06_file.readline().split()
             #log.error(f'configuration_sline={configuration_sline}')

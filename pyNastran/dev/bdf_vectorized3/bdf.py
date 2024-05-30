@@ -4324,7 +4324,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         card_parser['PARAM'] = (PARAM_NASA95, self._add_methods._add_param_object)
         self.add_param = self._add_param_nasa95
 
-    def _check_pynastran_header(self, lines: list[str], check_header: bool=True) -> None:
+    def _check_pynastran_header(self, lines: list[str],
+                                check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
         if not check_header:
             return
