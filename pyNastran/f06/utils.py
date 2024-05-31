@@ -65,11 +65,13 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
         '                   si (kg, m, s) -> m/s (default)\n'
+        '                   si_mm (Mg, mm, s) -> mm/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s\n'
 
         '  --out_units OUT  Selects the output unit system (default=in_units)\n'
         '                   si (kg, m, s) -> m/s\n'
+        '                   si_mm (Mg, mm, s) -> mm/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s\n'
         '                   english_kt (slinch/in^3, nm, s) -> knots\n'
@@ -131,7 +133,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         else:
             in_units = data['--in_units']
     in_units = in_units.lower()
-    assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
+    assert in_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, 'in_units=%r' % in_units
 
     # The default used to be SI, but it's really weird when I'm working in
     # English units and my output is in SI
@@ -143,7 +145,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
             out_units = data['--out_units']
     out_units = out_units.lower()
 
-    assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
+    assert out_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, 'out_units=%r' % out_units
 
     plot_type = 'tas'
     if data['--eas']:

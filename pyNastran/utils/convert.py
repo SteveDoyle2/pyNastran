@@ -14,7 +14,7 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
         pass
     elif alt_units_in == 'kft':
         factor *= 1000.
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(f'alt_units_in={alt_units_in!r} is not valid; use [m, ft, kft]')
 
     # ft to m
@@ -24,11 +24,12 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
         pass
     elif alt_units_out == 'kft':
         factor /= 1000.
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(f'alt_units_out={alt_units_out!r} is not valid; use [1/m, 1/in, 1/ft]')
     return factor
 
-def convert_density(density: float, density_units_in: str, density_units_out: str) -> float:
+def convert_density(density: float, density_units_in: str,
+                    density_units_out: str) -> float:
     """
     nominal unit is slug/ft^3
     TODO: change this to SI
@@ -46,10 +47,13 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
         factor *= 12**4
     elif density_units_in == 'kg/m^3':
         factor /= 515.378818
+    elif density_units_in == 'Mg/mm^3':
+        factor /= 5.15378818e-10
     elif density_units_in == 'g/cm^3':
         factor *= (1000. / 515.378818)
     else:
-        msg = f'density_units_in={density_units_in!r} is not valid; use [kg/m^3, g/cm^3, slinch/in^3, slug/ft^3]'
+        msg = f'density_units_in={density_units_in!r} is not valid; use ['\
+              'kg/m^3, g/cm^3, Mg/mm^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
 
     # data is now in slug/ft^3
@@ -59,20 +63,25 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
         factor /= 12**4
     elif density_units_out == 'kg/m^3':
         factor *= 515.378818
+    elif density_units_out == 'Mg/mm^3':
+        factor *= 5.15378818e-10
     elif density_units_out == 'g/cm^3':
         factor /= (1000. / 515.378818)
     else:
-        msg = f'density_units_out={density_units_out!r} is not valid; use [kg/m^3, g/cm^3, slinch/in^3, slug/ft^3]'
+        msg = f'density_units_out={density_units_out!r} is not valid; use ['\
+              'kg/m^3, Mg/mm^3, g/cm^3, Mg/mm^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
     return factor
 
-def convert_temperature(temperature: float, temperature_units_in: str, temperature_units_out: str) -> float:
+def convert_temperature(temperature: float, temperature_units_in: str,
+                        temperature_units_out: str) -> float:
     """nominal unit is C"""
     if temperature_units_in == temperature_units_out:
         return temperature
     return _temperature_factor(temperature, temperature_units_in, temperature_units_out)
 
-def _temperature_factor(temperature: float, temperature_units_in: str, temperature_units_out: str) -> float:
+def _temperature_factor(temperature: float, temperature_units_in: str,
+                        temperature_units_out: str) -> float:
     """helper method for convert_temperature"""
     temperature2 = temperature
     # 9/5 = 1.8
@@ -103,7 +112,8 @@ def _temperature_factor(temperature: float, temperature_units_in: str, temperatu
 
     return temperature2
 
-def convert_pressure(pressure: float, pressure_units_in: str, pressure_units_out: str) -> float:
+def convert_pressure(pressure: float, pressure_units_in: str,
+                     pressure_units_out: str) -> float:
     """nominal unit is psf"""
     if pressure_units_in == pressure_units_out:
         return pressure
@@ -140,7 +150,8 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
         raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, psf, psi]')
     return factor
 
-def convert_velocity(velocity: float, velocity_units_in: str, velocity_units_out: str) -> float:
+def convert_velocity(velocity: float, velocity_units_in: str,
+                     velocity_units_out: str) -> float:
     """nominal unit is ft/s"""
     if velocity_units_in == velocity_units_out:
         return velocity
@@ -153,28 +164,32 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
         factor /= 0.3048
     elif velocity_units_in == 'cm/s':
         factor /= 30.48
+    elif velocity_units_in == 'mm/s':
+        factor /= 304.8
     elif velocity_units_in == 'ft/s':
         pass
     elif velocity_units_in == 'in/s':
         factor /= 12.
     elif velocity_units_in == 'knots':
         factor *= 1.68781
-    else:
-        msg = f'velocity_units_in={velocity_units_in!r} is not valid; use [m/s, cm/s, in/s, ft/s, knots]'
+    else:  # pragma: no cover
+        msg = f'velocity_units_in={velocity_units_in!r} is not valid; use [m/s, cm/s, mm/s, in/s, ft/s, knots]'
         raise RuntimeError(msg)
 
     if velocity_units_out == 'm/s':
         factor *= 0.3048
     elif velocity_units_out == 'cm/s':
         factor *= 30.48
+    elif velocity_units_out == 'mm/s':
+        factor *= 304.8
     elif velocity_units_out == 'ft/s':
         pass
     elif velocity_units_out == 'in/s':
         factor *= 12.
     elif velocity_units_out == 'knots':
         factor /= 1.68781
-    else:
-        msg = f'velocity_units_out={velocity_units_out!r} is not valid; use [m/s, cm/s, in/s, ft/s, knots]'
+    else:  # pragma: no cover
+        msg = f'velocity_units_out={velocity_units_out!r} is not valid; use [m/s, cm/s, mm/s, in/s, ft/s, knots]'
         raise RuntimeError(msg)
     return factor
 
@@ -196,7 +211,8 @@ def _area_factor(area_units_in: str, area_units_out: str) -> float:
     area_factor = length_factor ** 2
     return area_factor
 
-def convert_length(length: float, length_units_in: str, length_units_out: str) -> float:
+def convert_length(length: float, length_units_in: str,
+                   length_units_out: str) -> float:
     """nominal unit is ft"""
     if length_units_in == length_units_out:
         return length
@@ -301,4 +317,3 @@ def _force_factor(force_units_in: str, force_units_out: str) -> float:
         msg = f'force_units_out={force_units_out!r} is not valid; use [MN, N, cN, mN, lbf]'
         raise RuntimeError(msg)
     return factor
-

@@ -1372,15 +1372,18 @@ def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[U
         #units = {
             #'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
             #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
+
+        # units should be consistent
+        # what's going on with altitude having inconsistent units?
         if units == 'si':
             units = {'velocity': 'm/s', 'density': 'kg/m^3',
                      'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
-        elif units == 'si_mmgs':
-            units = {'velocity': 'mm/s', 'density': 'g/mm^3',
-                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
-        elif units == 'si_cmgs':
-            units = {'velocity': 'cm/s', 'density': 'g/cm^3',
-                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'cm/s'}
+        elif units == 'si_mm':
+            units = {'velocity': 'mm/s', 'density': 'Mg/mm^3',
+                     'altitude': 'm', 'dynamic_pressure': 'MPa', 'eas': 'mm/s'}
+        #elif units == 'si_cmgs':
+            #units = {'velocity': 'cm/s', 'density': 'g/cm^3',
+                     #'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'cm/s'}
         elif units == 'english_in':
             units = {'velocity': 'in/s', 'density': 'slinch/in^3',
                      'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
@@ -1391,8 +1394,8 @@ def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[U
             units = {'velocity': 'knots', 'density': 'slug/ft^3',
                      'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'knots'}
         else:  # pragma: no cover
-            raise NotImplementedError(f'units={units!r} must be in [si, english_in, '
-                                      'english_ft, english_kt]')
+            raise NotImplementedError(f'units={units!r} must be in [si, si_mm, '
+                                      'english_in, english_ft, english_kt]')
     else:  # pragma: no cover
         assert isinstance(units, dict), f'units={units!r}'
     return units

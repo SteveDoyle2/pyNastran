@@ -81,10 +81,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
 
     units = data['UNITS']
     units_map = {
+        # units must be consistent
+        #
         # (alt, velocity, density, eas, pressure)
         'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots', 'psi'),
         'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots', 'psf'),
-        'si': ('m', 'm/s', 'kg/m^3', 'knots', 'Pa'),
+        'si': ('m', 'm/s', 'kg/m^3', 'm/s', 'Pa'),
+        'si_mm': ('m', 'mm/s', 'Mg/mm^3', 'mm/s', 'MPa'),
     }
     try:
         unitsi = units_map[units.lower()]
@@ -217,10 +220,11 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
             eas_units=eas_units)
     elif sweep_method == 'eas' and const_type == 'mach':
         gamma = 1.4
-        flutter.make_flfacts_eas_sweep_constant_mach(
+        flutter.make_flfacts_eas_sweep_constant_mach(  # TODO: need to test this; seems wrong
             model, mach, eass,
             gamma=gamma,
             alt_units=alt_units,
+            velocity_units=velocity_units,
             density_units=density_units,
             pressure_units=pressure_units,
             eas_units=eas_units)
@@ -251,7 +255,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError((sweep_method, const_type))
 
     model.punch = True
