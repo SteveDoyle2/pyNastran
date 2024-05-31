@@ -66,6 +66,9 @@ class TestConvert(unittest.TestCase):
         assert np.allclose(convert_mass(1., 'slug', 'kg'), 14.5939)
         assert np.allclose(convert_mass(1., 'kg', 'slug'), 1 / 14.5939)
 
+        #assert np.allclose(convert_mass(1., 'Mg', 'kg'), 1000)
+        #assert np.allclose(convert_mass(1., 'kg', 'Mg'), 1 / 1000)
+
     def test_force(self):
         """force checks"""
         assert np.allclose(convert_force(1., 'lbf', 'lbf'), 1.)
@@ -152,6 +155,11 @@ class TestConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_density(1., 'bad', 'slug/ft^3')
 
+        assert np.allclose(convert_density(1., 'slinch/in^3', 'slinch/in^3'), 1)
+        assert np.allclose(convert_density(1., 'slug/ft^3', 'slug/ft^3'), 1)
+        assert np.allclose(convert_density(1., 'kg/m^3', 'kg/m^3'), 1)
+        assert np.allclose(convert_density(1., 'Mg/mm^3', 'Mg/mm^3'), 1)
+
         assert np.allclose(convert_density(1., 'slinch/in^3', 'slug/ft^3'), 12**4)
         assert np.allclose(convert_density(1., 'slug/ft^3', 'slinch/in^3'), 1 / 12**4)
 
@@ -195,8 +203,8 @@ class TestAtm(unittest.TestCase):
                          2116.2247459927403)
 
         units = {
-            'alt_units' : 'ft',
-            'pressure_units' : 'psf',
+            'alt_units': 'ft',
+            'pressure_units': 'psf',
         }
         self.assertEqual(atm_pressure(alt=10*1000., **units), 1456.3074319943232)
         self.assertEqual(atm_pressure(alt=60*1000., **units), 151.20878913237249)
@@ -207,8 +215,8 @@ class TestAtm(unittest.TestCase):
         self.assertEqual(atm_pressure(alt=350*1000., **units), 0.00028114006933161638)
 
         units = {
-            'alt_units' : 'kft',
-            'pressure_units' : 'psf',
+            'alt_units': 'kft',
+            'pressure_units': 'psf',
         }
         self.assertEqual(atm_pressure(alt=10, **units), 1456.3074319943232)
         self.assertEqual(atm_pressure(alt=60, **units), 151.20878913237249)
@@ -234,8 +242,8 @@ class TestAtm(unittest.TestCase):
     def test_viscosity(self):
         """tests dynamic viscosity at various altitudes"""
         units = {
-            'alt_units' : 'ft',
-            'visc_units' : '(lbf*s)/ft^2',
+            'alt_units': 'ft',
+            'visc_units': '(lbf*s)/ft^2',
         }
         self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
         self.assertEqual(atm_dynamic_viscosity_mu(alt=10 *1000., **units), 3.5317481186391660e-07)
@@ -247,15 +255,15 @@ class TestAtm(unittest.TestCase):
         self.assertEqual(atm_dynamic_viscosity_mu(alt=350*1000., **units), 2.7383347922674784e-07)
 
         units = {
-            'alt_units' : 'kft',
-            'visc_units' : '(lbf*s)/ft^2',
+            'alt_units': 'kft',
+            'visc_units': '(lbf*s)/ft^2',
         }
         self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
         self.assertEqual(atm_dynamic_viscosity_mu(alt=10., **units), 3.5317481186391660e-07)
 
         units = {
-            'alt_units' : 'm',
-            'visc_units' : '(lbf*s)/ft^2',
+            'alt_units': 'm',
+            'visc_units': '(lbf*s)/ft^2',
         }
         self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
 
