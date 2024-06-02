@@ -946,19 +946,6 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: list[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-#def make_flfacts_eas_sweep(alt: float, eass: list[float],
-                           #alt_units: str='m',
-                           #velocity_units: str='m/s',
-                           #density_units: str='kg/m^3',
-                           #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    #deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4',
-               #levels=[0, 1, 2])
-    #out = make_flfacts_eas_sweep_constant_alt(
-        #alt, eass,
-        #alt_units=alt_units, velocity_units=velocity_units,
-        #density_units=density_units, eas_units=eas_units)
-    #return out
-
 def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
@@ -1067,7 +1054,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                          alt_units: str='ft',
                                          velocity_units: str='ft/s',
                                          density_units: str='slug/ft^3',
-                                         pressure_units: str='psf',
+                                         #pressure_units: str='psf',
                                          eas_units: str='knots') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Veas = Vtrue * sqrt(rho/rho0)
@@ -1083,40 +1070,45 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
     """
     assert len(machs) == len(eass)
     assert len(machs) > 0, machs
-    machs = np.asarray(machs)
-    eass = np.asarray(eass)
+    mach = np.asarray(machs)
+    eas = np.asarray(eass)
+    nmach = len(mach)
 
     # get eas in ft/s and density in slug/ft^3,
     # so pressure is in psf
     #
     # then pressure in a sane unit (e.g., psi/psf/Pa)
     # without a wacky conversion
-    eas = convert_velocity(eass, eas_units, 'ft/s')
+    eas_fts = convert_velocity(eas, eas_units, 'ft/s')
+    rho0_english = atm_density(0., R=1716., alt_units=alt_units,
+                               density_units='slug/ft^3')
+    pressure_psf = (eas_fts / machs) ** 2 * rho0_english / gamma  # psf
+
+    rho = np.zeros(nmach, machs.dtype)
+    alt_ft = np.zeros(nmach, machs.dtype)
+    for i, pressure_psfi in enumerate(pressure_psf):
+        alt_fti = get_alt_for_pressure(pressure_psfi, pressure_units='psf',
+                                       alt_units='ft', nmax=20, tol=5.)
+        rhoi = atm_density(alt_fti, R=1716., alt_units='ft', density_units=density_units)
+        rho[i] = rhoi
+        alt_ft[i] = alt_fti
+    alt = convert_altitude(alt_ft, 'ft', alt_units)
+
+    # eas = Vtas * sqrt(rho/rho0)
+    # Vtas = eas * sqrt(rho0/rho)
     rho0 = atm_density(0., R=1716., alt_units=alt_units,
-                       density_units='slug/ft^3')
-    nmach = len(machs)
-    pressure = (eas / machs) ** 2 * rho0 / gamma  # psf
-    pressure_units = 'psf'
-
-    alts = np.zeros(nmach, machs.dtype)
-    rhos = np.zeros(nmach, machs.dtype)
-    for i, pressurei in enumerate(pressure):
-        alti = get_alt_for_pressure(pressurei, pressure_units=pressure_units,
-                                    alt_units=alt_units, nmax=20, tol=5.)
-        rhos[i] = atm_density(alti, R=1716., alt_units=alt_units, density_units=density_units)
-        alts[i] = alti
-        #pressure[i] = pressurei
-
-    velocity = eas * np.sqrt(rho0 / rhos)
+                       density_units=density_units)
+    velocity_fts = eas_fts * np.sqrt(rho0 / rho)
+    velocity = convert_velocity(velocity_fts, 'ft/s', velocity_units)
 
     #rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
                                       #alt_units=alt_units,
                                       #density_units=density_units,
                                       #velocity_units=velocity_units,
                                       #eas_units=eas_units,)
-    assert len(rhos) == len(machs)
-    assert len(rhos) == len(velocity)
-    return rhos, machs, velocity, alts
+    assert len(rho) == len(machs)
+    assert len(rho) == len(velocity)
+    return rho, mach, velocity, alt
 
 
 def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,

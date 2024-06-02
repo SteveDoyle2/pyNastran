@@ -13,6 +13,7 @@ from pyNastran.utils.atmosphere import (
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_alt,
+    make_flfacts_eas_sweep_constant_mach,
 )
 
 from pyNastran.utils.convert import (
@@ -515,6 +516,48 @@ class TestAtm(unittest.TestCase):
 
             rel_b = atm_unit_reynolds_number2(alt, mach, alt_units='kft', reynolds_units='1/ft')
             assert np.allclose(rel_b, re_expected, atol=1e-3), 'rel_b=%s re_expected=%s' % (rel_b, re_expected)
+
+    def test_sweep_eas_mach(self):
+        eass = np.linspace(0., 1000., num=101, dtype='float64')
+        neas = len(eass)
+
+        mach = 0.5
+        machs = np.ones(neas, dtype='float64') * mach
+        rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
+            machs, eass, gamma=1.4,
+            velocity_units='ft/s', density_units='slug/ft^3',
+            alt_units='ft',
+            #pressure_units='psf',
+            eas_units='knots')
+
+        rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
+            mach, alts,
+            eas_limit=1000000,
+            velocity_units='ft/s', density_units='slug/ft^3',
+            alt_units='ft',
+            pressure_units='psf',
+            eas_units='knots')
+        assert np.allclose(rhos1, rhos2)
+        assert np.allclose(machs1, machs2)
+        assert np.allclose(velocity1, velocity2)
+        #-----------------------------------------------
+        rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
+            machs, eass, gamma=1.4,
+            velocity_units='m/s', density_units='kg/m^3',
+            alt_units='m',
+            #pressure_units='psf',
+            eas_units='m/s')
+
+        rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
+            mach, alts,
+            eas_limit=1000000,
+            velocity_units='m/s', density_units='kg/m^3',
+            alt_units='ft',
+            pressure_units='psf',
+            eas_units='m/s')
+        assert np.allclose(rhos1, rhos2)
+        assert np.allclose(machs1, machs2)
+        assert np.allclose(velocity1, velocity2)
 
     def test_sweep(self):
         """tests FLFACT sweeps"""
