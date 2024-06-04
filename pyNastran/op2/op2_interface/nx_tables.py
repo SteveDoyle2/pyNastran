@@ -535,6 +535,12 @@ NX_RESULT_TABLES: list[bytes] = [
     b'XCASECC',
     b'RST',
     b'OVG',  # flutter velocity
+    b'OAEROTV', # trim variables
+    b'OAEROP',  # aero pressure
+    b'OAEROF',  # aero forces
+    b'OAERCSHM', # control surface position & hinge moment
+    b'OAEROHMD', # hinge moment derivatives
+    b'OAEROSCD', # stability and control derivatives
 
     # displacements, velocity, acceleration
     # BOUGV1 - G-set results (displacement, velocity, acceleration, eigenvector)

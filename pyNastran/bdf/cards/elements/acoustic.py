@@ -375,7 +375,7 @@ class PAABSF(Property):
     @classmethod
     def _init_from_empty(cls):
         pid = 1
-        return PAABSF(pid, tzreid=None, tzimid=None,
+        return PAABSF(pid, tzreid=0, tzimid=0,
                       s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0,
                       comment='')
 
@@ -584,10 +584,16 @@ class ACPLNW(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        infor = 1
-        fset = 1.0
-        sset = 1.
-        return ACMODL(infor, fset, sset)
+        sid = 1
+        form = 'cat'
+        scale = 1.0
+        real = 1.0
+        imag = 1.
+        cid1 = 1
+        cid2 = 0
+        xyz = [0., 0., 0.]
+        nxyz = [0., 0., 0.]
+        return ACPLNW(sid, form, scale, real, imag, cid1, xyz, cid2, nxyz)
 
     def __init__(self, sid: int, form: str, scale: float,
                  real: Union[int, float],
@@ -886,9 +892,9 @@ class ACMODL(Element):
 
     @classmethod
     def _init_from_empty(cls):
-        infor = 1
-        fset = 1.0
-        sset = 1.
+        infor = 'ELEMENT'
+        fset = 1
+        sset = 1
         return ACMODL(infor, fset, sset)
 
     def __init__(self, infor: str, fset: int, sset: int,
@@ -1305,4 +1311,3 @@ class MATPOR(BaseCard):
     def write_card(self, size=8, is_double=False) -> str:
         fields = self.raw_fields()
         return print_card_8(fields)
-

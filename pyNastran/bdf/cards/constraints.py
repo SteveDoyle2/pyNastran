@@ -1214,7 +1214,7 @@ class SPCOFF(Constraint):
         Cs = ['1', '2']
         return SPCOFF(nodes, Cs, comment='')
 
-    def __init__(self, nodes, components, comment=''):
+    def __init__(self, nodes, components, comment: str=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment

@@ -15,6 +15,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh, _output_helper
 from pyNastran.bdf.bdf_interface.write_mesh_utils import find_aero_location
 from pyNastran.bdf.write_path import write_include
+from pyNastran.utils import PathLike
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
 
@@ -33,8 +34,9 @@ class WriteMeshs(WriteMesh):
         """creates methods for writing cards"""
         WriteMesh.__init__(self)
 
-    def write_bdfs(self, out_filenames: Optional[Union[str, StringIO]],
-                   relative_dirname: Optional[str]=None, encoding: Optional[str]=None,
+    def write_bdfs(self, out_files_map: dict[str, str],
+                   relative_dirname: str='',
+                   encoding: Optional[str]=None,
                    size: int=8, is_double: bool=False,
                    enddata: Optional[bool]=None, close: bool=True,
                    is_windows: Optional[bool]=None) -> None:
@@ -43,15 +45,14 @@ class WriteMeshs(WriteMesh):
 
         Parameters
         ----------
-        out_filename : varies; default=None
-            str        - the name to call the output bdf
-            file       - a file object
-            StringIO() - a StringIO object
-            None       - pops a dialog
-        relative_dirname : str; default=None -> os.curdir
+        out_files_map : dict[source_bdf, out_bdf]
+            source_bdf : str
+                the name of the original bdf
+            out_bdf : str
+                the name of the output bdf
+        relative_dirname : str; default=''
             A relative path to reference INCLUDEs.
-            ''   : relative to the main bdf
-            None : use the current directory
+            ''   : relative to the first bdf in out_files_map
             path : absolute path
         encoding : str; default=None -> system specified encoding
             the unicode encoding
@@ -71,17 +72,25 @@ class WriteMeshs(WriteMesh):
                 files, so the format for a BDF that will run on Linux and
                 Windows is different.
             None : Check the platform
+
+        include_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
+        for i in range(len(fem.include_filenames[0])):
+            ifilename = fem.include_filenames[0][i]
+            include_map[ifilename] = ifilename[:-4] + "_NEW_VERSION" + ifilename[-4:]
+
         """
-        assert isinstance(out_filenames, dict), out_filenames
+        assert isinstance(out_files_map, dict), out_files_map
+        for key, value in out_files_map.items():
+            assert isinstance(key, str), type(key)
+            assert isinstance(value, str), type(value)
+            # assert isinstance(key, PathLike), key
+            # assert isinstance(value, PathLike), value
         #is_long_ids = False
 
-        if self.is_bdf_vectorized:  # pragma: no cover
-            raise NotImplementedError()
-        else:
-            is_long_ids, size = self._get_long_ids(size)
+        is_long_ids, size = self._get_long_ids(size)
 
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
-            out_filenames, self.active_filenames)
+            out_files_map, self.active_filenames)
         ifile0 = list(sorted(ifile_out_filenames))[0]
         #print('ifile_out_filenames =', ifile_out_filenames)
 
@@ -97,7 +106,6 @@ class WriteMeshs(WriteMesh):
         #class DevNull:
             #def write(self, *_):
                 #pass
-
         #devnull = DevNull()
 
         bdf_files, bdf_file0 = _open_bdf_files(ifile_out_filenames, self.active_filenames, encoding)
@@ -105,7 +113,7 @@ class WriteMeshs(WriteMesh):
         if bdf_file0 is not None:
             self._write_header(bdf_file0, encoding)
 
-        self._write_bdf_includes(out_filenames, bdf_files, relative_dirname=relative_dirname,
+        self._write_bdf_includes(out_files_map, bdf_files, relative_dirname=relative_dirname,
                                  is_windows=is_windows)
 
         self._write_params_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
@@ -129,13 +137,16 @@ class WriteMeshs(WriteMesh):
                     bdf_file.close()
         del bdf_files
 
-    def _write_bdf_includes(self, out_filenames, bdf_files, relative_dirname=None, is_windows=True):
+    def _write_bdf_includes(self, out_files_map: dict[str, str],
+                            bdf_files,
+                            relative_dirname: str='',
+                            is_windows: bool=True):
         """
         Writes the INCLUDE files
 
         Parameters
         ----------
-        out_filenames : dict[fname] : fname2
+        out_files_map : dict[fname] : fname2
             fname_in - the nominal bdf that was read
             fname_out - the bdf that will be written
         relative_dirname : str; default=None -> os.curdir
@@ -152,7 +163,7 @@ class WriteMeshs(WriteMesh):
         if relative_dirname is None:
             relative_dirname = os.curdir
         elif relative_dirname == '':
-            out_filename0 = list(out_filenames.keys())[0]
+            out_filename0 = list(out_files_map.keys())[0]
             relative_dirname = os.path.dirname(os.path.abspath(out_filename0))
             self.log.debug(f'relative_dirname = {relative_dirname}')
 
@@ -169,8 +180,8 @@ class WriteMeshs(WriteMesh):
                 #print('***', include_filename, '***')
 
                 mapped_include_filename = include_filename
-                if include_filename in out_filenames:
-                    mapped_include_filename = out_filenames[include_filename]
+                if include_filename in out_files_map:
+                    mapped_include_filename = out_files_map[include_filename]
 
                 if relative_dirname == '':
                     # absolute path

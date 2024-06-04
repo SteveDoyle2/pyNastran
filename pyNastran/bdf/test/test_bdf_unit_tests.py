@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 from io import StringIO
 import numpy as np
 from numpy import allclose, array
@@ -14,10 +15,14 @@ from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 from pyNastran.bdf.mesh_utils.forces_moments import get_forces_moments_array
 from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files, main as test_bdf
 
-PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
-GUI_MODEL_DIRNAME = os.path.join(PKG_PATH, 'converters', 'nastran', 'models')
+
+
+from pyNastran.bdf.bdf import BDF
+
+PKG_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = PKG_PATH / 'bdf' / 'test'
+MODEL_PATH = PKG_PATH / '..' / 'models'
+GUI_MODEL_DIRNAME = PKG_PATH / 'converters' / 'nastran' / 'models'
 
 class Tester(unittest.TestCase):
 
@@ -752,7 +757,7 @@ class TestBDFUnit(Tester):
 
     def test_bdf_05(self):
         """checks testA.dat"""
-        bdf_filename = os.path.join(PKG_PATH, 'bdf', 'test', 'unit', 'testA.bdf')
+        bdf_filename = os.path.join(TEST_PATH, 'unit', 'testA.bdf')
         (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=False,
             run_extract_bodies=False,
@@ -1006,6 +1011,28 @@ class TestBDFUnit(Tester):
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
+
+    def test_write_bdfs(self):
+        fem = BDF()
+        base_dir = TEST_PATH / 'unit' / 'include_bug' / 'pyNastran_test'
+        bdf_filename = base_dir / 'main_input.bdf'
+        assert bdf_filename.exists(), bdf_filename
+        bdf_filename = str(bdf_filename)
+        fem.read_bdf(bdf_filename, save_file_structure=True)
+
+        include_map = {}
+        main_bdf_filename2 = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
+        include_map[fem.active_filenames[0]] = main_bdf_filename2
+        for i in range(len(fem.include_filenames[0])):
+            ifilename = fem.include_filenames[0][i]
+            include_map[ifilename] = ifilename[:-4] + "_NEW_VERSION" + ifilename[-4:]
+
+        fem.write_bdfs(include_map, is_windows=True, relative_dirname=base_dir)
+        read_bdf(main_bdf_filename2)
+
+        fem.write_bdfs(include_map, is_windows=True, relative_dirname='')
+        read_bdf(main_bdf_filename2)
+
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
     unused_mass1, unused_cg1, unused_I1 = mass_properties(

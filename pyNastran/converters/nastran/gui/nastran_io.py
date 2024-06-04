@@ -2460,6 +2460,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             0: {'title': 'F_', 'corner': 'F_'},
                         }
                         force_case = Case2D(self.node_ids, fxyz)
+                        force_case.node_gridtype[:, 0] = self.node_ids
                         force_xyz_res2 = ForceResults2(
                             subcase_id,
                             self.node_ids, self.xyz_cid0,
@@ -2503,6 +2504,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         }
                         methods_txyz_rxyz = ['Mx', 'My', 'Mz']
                         moment_case = Case2D(self.node_ids, mxyz)
+                        moment_case.node_gridtype[:, 0] = self.node_ids
                         moment_xyz_res2 = ForceResults2(
                             subcase_id,
                             self.node_ids, self.xyz_cid0,

@@ -1048,6 +1048,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
     #"""
     #return rho, vel, mach
 
+
 def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                          eass: np.ndarray,
                                          gamma: float=1.4,
@@ -1096,8 +1097,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
 
     # eas = Vtas * sqrt(rho/rho0)
     # Vtas = eas * sqrt(rho0/rho)
-    rho0 = atm_density(0., R=1716., alt_units=alt_units,
-                       density_units=density_units)
+    rho0 = convert_density(rho0_english, 'slug/ft^3', density_units)
     velocity_fts = eas_fts * np.sqrt(rho0 / rho)
     velocity = convert_velocity(velocity_fts, 'ft/s', velocity_units)
 

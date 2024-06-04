@@ -765,6 +765,50 @@ class TestNastranGUI(unittest.TestCase):
         else:
             assert len(test.result_cases) == 39, len(test.result_cases)
 
+    def test_solid_bending_missing_nodes(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        op2_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        op2_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_extra_nodes.op2')
+
+        model = read_op2(op2_filename=op2_filename1, debug=False, combine=False)
+        print(list(model.displacements.keys()))
+        disp = model.displacements[(1, 1, 1, 0, 0, '', '')]
+        # print(disp.object_attributes())
+
+        # ['acoustic_flag', 'analysis_code', 'analysis_fmt', 'approach_code', 'class_name', 'data', 'data_code',
+        #  'data_frame', 'data_names', 'dataframe', 'device_code', 'dt', 'format_code', 'gridtype_str', 'h5_file',
+        #  'headers', 'is_built', 'is_cid', 'is_complex', 'is_msc', 'is_nasa95', 'is_real', 'is_sort1', 'is_sort2',
+        #  'isubcase', 'itime', 'itotal', 'label', 'load_as_h5', 'lsdvmn', 'lsdvmns', 'name', 'node_gridtype',
+        #  'nonlinear_factor', 'ntimes', 'ntotal', 'num_wide', 'ogs', 'pval_step', 'random_code', 'result_name', 'size',
+        #  'sort_bits', 'sort_code', 'sort_method', 'subtitle', 'subtitle_original', 'superelement_adaptivity_index',
+        #  'tCode', 'table_code', 'table_name', 'table_name_str', 'thermal', 'thermal_bits', 'title', 'words']
+
+        nids = disp.node_gridtype[:, 0]
+        gridtype = disp.node_gridtype[:, 1]
+        nnids = len(nids)
+        nid = nids[-1] + 1
+        nids2 = np.arange(nid, nid+nnids, dtype=nids.dtype)
+        node_gridtype2 =  disp.node_gridtype.copy()
+        node_gridtype2[:, 0] = nids2
+
+        datai = disp.data[0, :, :]
+        data = np.vstack([datai, datai])
+        disp.node_gridtype = np.vstack([disp.node_gridtype, node_gridtype2])
+        print(disp.node_gridtype)
+        disp.data = data.reshape(1, 2*nnids, 6)
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 11, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 10, len(test.result_cases)
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 10, len(test.result_cases)
+
+        test.load_nastran_results(model)
+
     def test_beam_modes_01(self):
         """CBAR/CBEAM - PARAM,POST,-1"""
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')

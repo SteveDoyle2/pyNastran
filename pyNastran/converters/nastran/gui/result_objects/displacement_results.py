@@ -1,6 +1,6 @@
 from __future__ import annotations
-import numpy as np
 from typing import Union, TYPE_CHECKING
+import numpy as np
 
 from .vector_results import DispForceVectorResults
 
@@ -78,8 +78,13 @@ class DisplacementResults2(DispForceVectorResults):
             uname=uname)
 
         # setup the node mapping
+        #node_id # the nodes in the bdf
         disp_nodes = dxyz.node_gridtype[:, 0]  #  local node id
-        self.inode = np.searchsorted(node_id, disp_nodes)
+        self.common_nodes = np.intersect1d(node_id, disp_nodes)
+        self.inode_common = np.searchsorted(node_id, self.common_nodes)
+        self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)
+        assert disp_nodes.max() > 0, disp_nodes
+        assert len(self.inode_result) > 0, self.inode_result
 
         # dense -> no missing nodes in the results set
         self.is_dense = (len(node_id) == len(disp_nodes))
@@ -147,7 +152,7 @@ class DisplacementResults2(DispForceVectorResults):
 
         Parameters
         ----------
-        i : int
+        itime : int
             mode/time/loadstep number
         name : str
             unused; useful for debugging
@@ -162,6 +167,7 @@ class DisplacementResults2(DispForceVectorResults):
             the nominal state
         deflected_xyz : (nnodes, 3) float ndarray
             the deflected state
+
         """
         assert self.dim == 3, self.dim
         assert len(self.xyz.shape) == 2, self.xyz.shape
