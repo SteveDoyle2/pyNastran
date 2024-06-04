@@ -73,10 +73,12 @@ class WriteMeshs(WriteMesh):
                 Windows is different.
             None : Check the platform
 
-        include_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
-        for i in range(len(fem.include_filenames[0])):
-            ifilename = fem.include_filenames[0][i]
-            include_map[ifilename] = ifilename[:-4] + "_NEW_VERSION" + ifilename[-4:]
+        out_files_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
+        for ifile, include_filenames in model.include_filenames.items():
+            for include_filename in include_filenames:
+                base, ext = os.path.splitext(include_filename)
+                new_filename = base + "_NEW" + ext
+                out_files_map[include_filename] = new_filename
 
         """
         assert isinstance(out_files_map, dict), out_files_map

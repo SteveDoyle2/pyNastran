@@ -1013,25 +1013,48 @@ class TestBDFUnit(Tester):
         #assert len(diff_cards2) == 0, diff_cards2
 
     def test_write_bdfs(self):
-        fem = BDF()
+        model = BDF()
         base_dir = TEST_PATH / 'unit' / 'include_bug'
         bdf_filename = base_dir / 'main_input.bdf'
         assert bdf_filename.exists(), bdf_filename
         bdf_filename = str(bdf_filename)
-        fem.read_bdf(bdf_filename, save_file_structure=True)
+        model.read_bdf(bdf_filename, save_file_structure=True)
+        nnodes = 20
+        assert len(model.nodes) == nnodes, model.nodes
 
-        include_map = {}
-        main_bdf_filename2 = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
-        include_map[fem.active_filenames[0]] = main_bdf_filename2
-        for i in range(len(fem.include_filenames[0])):
-            ifilename = fem.include_filenames[0][i]
-            include_map[ifilename] = ifilename[:-4] + "_NEW_VERSION" + ifilename[-4:]
+        out_files_map = {}
+        main_bdf_filename2 = bdf_filename[:-4] + "_NEW" + bdf_filename[-4:]
+        out_files_map[model.active_filenames[0]] = main_bdf_filename2
 
-        fem.write_bdfs(include_map, is_windows=True, relative_dirname=base_dir)
-        read_bdf(main_bdf_filename2)
+        # active_files = [
+        #     'include_bug\\main_input.bdf',
+        #     'include_bug\\Dir A\\nodeset1.bdf',
+        #     'include_bug\\dir A\\dir_A2\\nodeset1a.inc',
+        #     'include_bug\\Dir B\\nodeset2.bdf',
+        #     'include_bug\\dir B\\dir_B2\\nodeset2b.inc']
+        # include_filenames = {
+        #     0: ['include_bug\\Dir A\\nodeset1.bdf',
+        #         'include_bug\\Dir B\\nodeset2.bdf'],
+        #     1: ['include_bug\\dir A\\dir_A2\\nodeset1a.inc'],
+        #     3: ['include_bug\\dir B\\dir_B2\\nodeset2b.inc']}
 
-        fem.write_bdfs(include_map, is_windows=True, relative_dirname='')
-        read_bdf(main_bdf_filename2)
+        #print('active_files = ', fem.active_filenames)
+        #print('include_filenames = ', fem.include_filenames)
+        for ifile, include_filenames in model.include_filenames.items():
+            for include_filename in include_filenames:
+                base, ext = os.path.splitext(include_filename)
+                new_filename = base + "_NEW" + ext
+                out_files_map[include_filename] = new_filename
+                #print(f' - {include_filename}')
+                #print(f' > {new_filename}')
+
+        model.write_bdfs(out_files_map, is_windows=True, relative_dirname=base_dir)
+        mdoel2 = read_bdf(main_bdf_filename2)
+
+        model.write_bdfs(out_files_map, is_windows=True, relative_dirname='')
+        mdoel3 = read_bdf(main_bdf_filename2)
+        assert len(mdoel2.nodes) == nnodes
+        assert len(mdoel3.nodes) == nnodes
 
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):

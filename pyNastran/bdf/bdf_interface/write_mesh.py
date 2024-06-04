@@ -247,8 +247,8 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(f'$pyNastran: version={self.nastran_format}\n')
             bdf_file.write(f'$pyNastran: punch={self.punch}\n')
             bdf_file.write(f'$pyNastran: encoding={encoding}\n')
-            bdf_file.write(f'$pyNastran: nnodes={len(self.nodes):d}\n')
-            bdf_file.write(f'$pyNastran: nelements={len(self.elements):d}\n')
+            #bdf_file.write(f'$pyNastran: nnodes={len(self.nodes):d}\n')
+            #bdf_file.write(f'$pyNastran: nelements={len(self.elements):d}\n')
 
         if not self.punch:
             self._write_executive_control_deck(bdf_file)
@@ -1432,4 +1432,3 @@ def write_optimization_include(model: BDF, pch_include_filename: str, size: int=
         for desvar in desvars:
             pch_file.write(desvar.write_card(size=size))
     return
-
