@@ -3,4 +3,4 @@ GRID     100001          218.3  24.6365482.89401
 GRID     100002          218.3  24.9087680.04774
 GRID     100003          218.3  25.1355677.19721
 GRID     100004          218.3   25.327 74.34402
-include dir A/dir_A2/nodeset1a.inc
+include Dir A/dir_A2/nodeset1a.inc
