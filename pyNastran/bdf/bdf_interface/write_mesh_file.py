@@ -73,7 +73,7 @@ class WriteMeshs(WriteMesh):
                 Windows is different.
             None : Check the platform
 
-        out_files_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW_VERSION" + bdf_filename[-4:]
+        out_files_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW" + bdf_filename[-4:]
         for ifile, include_filenames in model.include_filenames.items():
             for include_filename in include_filenames:
                 base, ext = os.path.splitext(include_filename)

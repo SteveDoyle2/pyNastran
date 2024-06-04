@@ -101,8 +101,6 @@ class CaseControlTest(unittest.TestCase):
             '$pyNastran: version=msc',
             '$pyNastran: punch=False',
             '$pyNastran: encoding=utf-8',
-            '$pyNastran: nnodes=1',
-            '$pyNastran: nelements=0',
             '$EXECUTIVE CONTROL DECK',
             'SOL 101',
             'CEND',

@@ -439,8 +439,6 @@ class TestReadWrite(unittest.TestCase):
             '$pyNastran: version=msc',
             '$pyNastran: punch=True',
             '$pyNastran: encoding=utf-8\n',
-            '$pyNastran: nnodes=1',
-            '$pyNastran: nelements=0',
             '$NODES',
             'GRID      100000        43.91715    -29..8712984',
         ]
