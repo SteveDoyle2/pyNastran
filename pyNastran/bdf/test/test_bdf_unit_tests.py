@@ -1014,7 +1014,7 @@ class TestBDFUnit(Tester):
 
     def test_write_bdfs(self):
         fem = BDF()
-        base_dir = TEST_PATH / 'unit' / 'include_bug' / 'pyNastran_test'
+        base_dir = TEST_PATH / 'unit' / 'include_bug'
         bdf_filename = base_dir / 'main_input.bdf'
         assert bdf_filename.exists(), bdf_filename
         bdf_filename = str(bdf_filename)

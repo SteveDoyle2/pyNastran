@@ -2540,6 +2540,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     assert len(tnorm) == len(self.nid_map)
 
                     force_case = Case2D(self.node_ids, spcd)
+                    force_case.node_gridtype[:, 0] = self.node_ids
                     title = 'SPCD'
                     index_to_base_title_annotation = {
                         0: {'title': 'T_', 'corner': 'T_'},

@@ -1089,7 +1089,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
     alt_ft = np.zeros(nmach, machs.dtype)
     for i, pressure_psfi in enumerate(pressure_psf):
         alt_fti = get_alt_for_pressure(pressure_psfi, pressure_units='psf',
-                                       alt_units='ft', nmax=20, tol=5.)
+                                       alt_units='ft', nmax=30, tol=1.)
         rhoi = atm_density(alt_fti, R=1716., alt_units='ft', density_units=density_units)
         rho[i] = rhoi
         alt_ft[i] = alt_fti
@@ -1111,7 +1111,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
     return rho, mach, velocity, alt
 
 
-def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
+def _limit_eas(rho: NDArrayNfloat, machs: NDArrayNfloat, velocity: NDArrayNfloat,
                eas_limit: float=1000.,
                alt_units: str='m',
                velocity_units: str='m/s',

@@ -1,0 +1,12 @@
+SOL 103
+CEND
+ECHO = NONE
+TITLE = Test Case
+SUBCASE       1
+  VECTOR(PLOT,SORT1,REAL) = ALL
+  ESE(PLOT) = ALL
+BEGIN BULK
+
+INCLUDE './Dir A/nodeset1.bdf'
+INCLUDE './Dir B/nodeset2.bdf'
+ENDDATA

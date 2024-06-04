@@ -35,7 +35,7 @@ class WriteMeshs(WriteMesh):
         WriteMesh.__init__(self)
 
     def write_bdfs(self, out_files_map: dict[str, str],
-                   relative_dirname: str='',
+                   relative_dirname: PathLike='',
                    encoding: Optional[str]=None,
                    size: int=8, is_double: bool=False,
                    enddata: Optional[bool]=None, close: bool=True,
