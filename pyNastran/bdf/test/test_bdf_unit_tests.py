@@ -1048,10 +1048,10 @@ class TestBDFUnit(Tester):
                 #print(f' - {include_filename}')
                 #print(f' > {new_filename}')
 
-        model.write_bdfs(out_files_map, is_windows=True, relative_dirname=base_dir)
+        model.write_bdfs(out_files_map, relative_dirname=base_dir)
         mdoel2 = read_bdf(main_bdf_filename2)
 
-        model.write_bdfs(out_files_map, is_windows=True, relative_dirname='')
+        model.write_bdfs(out_files_map, relative_dirname='')
         mdoel3 = read_bdf(main_bdf_filename2)
         assert len(mdoel2.nodes) == nnodes
         assert len(mdoel3.nodes) == nnodes
