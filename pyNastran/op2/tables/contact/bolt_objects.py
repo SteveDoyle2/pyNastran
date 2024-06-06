@@ -129,7 +129,7 @@ class RealBoltArray(RealTableArray):
                       4*ntotal]
             op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write(f'r4 [4, {itable::d}, 4]\n')
+            fascii.write(f'r4 [4, {itable:d}, 4]\n')
             fascii.write(f'r4 [4, {4*ntotal:d}, 4]\n')
 
             datai = view_dtype(self.data[itime, :, :], fdtype)
