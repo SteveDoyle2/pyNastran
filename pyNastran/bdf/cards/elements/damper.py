@@ -552,7 +552,7 @@ class CDAMP3(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by CDAMP3 eid=%s' % self.eid
+        msg = f', which is required by CDAMP3 eid={self.eid:d}'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
@@ -566,7 +566,7 @@ class CDAMP3(LineDamper):
 
     @property
     def node_ids(self):
-        msg = f', which is required by CDAMP3 eid={self.eid:d}
+        msg = f', which is required by CDAMP3 eid={self.eid:d}'
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -692,7 +692,7 @@ class CDAMP4(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = f', which is required by CDAMP4 eid={self.eid:d}
+        msg = f', which is required by CDAMP4 eid={self.eid:d}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -842,7 +842,7 @@ class CDAMP5(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = f', which is required by CDAMP5 eid={self.eid:d}
+        msg = f', which is required by CDAMP5 eid={self.eid:d}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
@@ -855,7 +855,7 @@ class CDAMP5(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = f', which is required by CDAMP5 eid={self.eid:d}
+        msg = f', which is required by CDAMP5 eid={self.eid:d}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -993,7 +993,7 @@ class CVISC(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by CVISC eid=%s' % self.eid
+        msg = f', which is required by CVISC eid={self.eid:d}'
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
@@ -1006,7 +1006,7 @@ class CVISC(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = f', which is required by CVISC eid={self.eid:d}
+        msg = f', which is required by CVISC eid={self.eid:d}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
