@@ -1101,7 +1101,7 @@ class PMIC(Property):
         self.comment = comment
 
     @classmethod
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         pid = integer(card, 1, 'property_id')
         return PMIC(pid, comment=comment)
 
@@ -1187,7 +1187,7 @@ class MATPOR(BaseCard):
         self.L2 = L2
 
     @classmethod
-    def add_craggs(self, mid: int,
+    def add_craggs(cls, mid: int,
                    rho: float, c: float, resistivity: float,
                    porosity: float, tortuosity: float,
                    comment: str=''):
@@ -1204,7 +1204,7 @@ class MATPOR(BaseCard):
                       density=0.0, comment=comment)
 
     @classmethod
-    def add_delmiki(self, mid: int,
+    def add_delmiki(cls, mid: int,
                     rho: float, c: float, resistivity: float,
                     porosity: float, frame: str,
                     density: float=0.0, comment: str=''):

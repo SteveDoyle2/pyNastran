@@ -399,9 +399,10 @@ class ComplexEigenvalues(BaseScalarObject):
 
     def get_stats(self, short: bool=False) -> list[str]:
         neigenvalues = len(self.extraction_order)
-        msg = ['  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues)]
-        msg.append('  isubcase, extraction_order, eigenvalues, '
-                   'cycles, damping\n')
+        msg = [
+            '  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues),
+            '  isubcase, extraction_order, eigenvalues, cycles, damping\n'
+        ]
         return msg
 
     @property
@@ -676,9 +677,10 @@ class BucklingEigenvalues(BaseScalarObject):
 
     def get_stats(self, short: bool=False) -> list[str]:
         neigenvalues = len(self.extraction_order)
-        msg = ['  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues)]
-        msg.append('  imode, extraction_order, eigenvalues, '
-                   'radians, cycles, generalized_mass, generalized_stiffness\n')
+        msg = [
+            '  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues),
+            '  imode, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness\n'
+        ]
         return msg
 
     @property

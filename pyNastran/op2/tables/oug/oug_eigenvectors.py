@@ -53,7 +53,7 @@ class RealEigenvectorArray(RealTableArray):
         return phi_transpose.T
 
     @classmethod
-    def phi_to_data(self, phi):
+    def phi_to_data(cls, phi):
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         ndof, nmodes = phi.shape
         nnodes = ndof // 6
