@@ -105,7 +105,7 @@ class CPENTA15(SolidElement):
     def _area_centroid(self, element_id, xyz_cid0):
         (A1, c1) = tri_area_centroid(n1, n2, n3)
         (A2, c2) = tri_area_centroid(n4, n5, n6)
-        return (A1, A2, c1, c2)
+        return A1, A2, c1, c2
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """

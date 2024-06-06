@@ -814,7 +814,7 @@ class SPC(Constraint):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        msg = ', which is required by SPC=%s' % (self.conid)
+        msg = f', which is required by SPC={self.conid:d}'
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model: BDF) -> None:
@@ -827,7 +827,7 @@ class SPC(Constraint):
             the BDF object
 
         """
-        msg = ', which is required by SPC=%s' % (self.conid)
+        msg = f', which is required by SPC={self.conid:d}'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model: BDF, debug=True):

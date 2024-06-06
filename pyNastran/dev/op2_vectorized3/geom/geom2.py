@@ -764,7 +764,7 @@ class GEOM2:
                 #print(f'eid={eid} fe,f={fe},{f} g0={g0}')
                 x = None
             else:
-                raise RuntimeError('invalid f value...f=%s' % (f))
+                raise RuntimeError(f'invalid f value...f={f}')
 
             wa = [w1a, w2a, w3a]
             wb = [w1b, w2b, w3b]
@@ -1240,7 +1240,7 @@ class GEOM2:
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, g0]]
             else:
-                raise RuntimeError('invalid f value...f=%s' % (f))
+                raise RuntimeError(f'invalid f value...f={f}')
             elem = CBEND.add_op2_data(data_in)
             elem.validate()
             assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)

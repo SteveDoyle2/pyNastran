@@ -627,7 +627,7 @@ def fortran_to_python(deqatn_id: int,
             f, eq = line.split('=')
         except ValueError:
             if '=' not in line:
-                raise SyntaxError('= not found in %r' % (line))
+                raise SyntaxError(f'= not found in {line!r}')
             msg = 'only 1 = sign may be found a line\n'
             msg += 'line = %r\n' % line
             if len(lines) > 1:
@@ -786,7 +786,7 @@ def _write_function_line(func_name: str, variables: list[str],
             vals.append('%s=%s' % (var, default_values[var]))
             is_default = True
         else:
-            vals.append('%s' % (var))
+            vals.append('%s' % var)
             if is_default:
                 msg = 'default variables must be set at the end of the function\n'
                 msg += 'variables = %s\n' % variables

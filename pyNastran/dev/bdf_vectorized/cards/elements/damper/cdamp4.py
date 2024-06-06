@@ -119,7 +119,7 @@ class CDAMP4(DamperElement):
             (n2, 1),
         ]
         dofs = n_ijv
-        return (k, dofs, n_ijv)
+        return k, dofs, n_ijv
 
     def displacement_stress(self, model, positions, q, dofs,
                             ni, o1, e1, f1):

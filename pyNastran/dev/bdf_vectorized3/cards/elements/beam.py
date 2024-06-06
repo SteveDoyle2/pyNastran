@@ -375,7 +375,7 @@ class CBEAM(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == 0)
+        return self.g0 == 0
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -519,7 +519,7 @@ class CBEAM(Element):
         if np.any(is_rotate_v_g):
             # end A
             # global - cid != 0
-            icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
+            icd1_v_vector = is_rotate_v_g & (cd1 != 0)
             cd1_v_vector = cd1[icd1_v_vector]
             if np.any(cd1_v_vector):
                 #v[icd1_vector, :] = np.nan
@@ -573,7 +573,7 @@ class CBEAM(Element):
         wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
 
         if np.any(is_rotate_wa_g):
-            icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
+            icd1_vector = is_rotate_wa_g & (cd1 != 0)
             cd1_vector = cd1[icd1_vector]
             if np.any(icd1_vector):
                 cd1_ref = coords.slice_card_by_id(cd1_vector)
@@ -606,7 +606,7 @@ class CBEAM(Element):
         # wb defines the offset at end B
         wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
         if np.any(is_rotate_wb_g):
-            icd2_vector = (is_rotate_wb_g) & (cd2 != 0)
+            icd2_vector = is_rotate_wb_g & (cd2 != 0)
             cd2_vector = cd2[icd2_vector]
             #cd2_vector = cd2[is_rotate_wb]
             #icd2_vector = (cd2_vector != 0)
@@ -3084,7 +3084,7 @@ class CBEAM3(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == 0)
+        return self.g0 == 0
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -3765,7 +3765,7 @@ class CBEND(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == 0)
+        return self.g0 == 0
 
     @property
     def is_g0(self) -> np.ndarray:

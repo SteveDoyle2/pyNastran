@@ -1092,7 +1092,8 @@ def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
         return str(svalue.upper())
     return default
 
-def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str, choices: tuple[str], default=None):
+def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                           choices: tuple[str, ...], default=None):
     """
     Parameters
     ----------

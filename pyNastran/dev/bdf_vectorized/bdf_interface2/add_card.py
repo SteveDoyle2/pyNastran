@@ -234,7 +234,7 @@ class AddCard(BDFAttributes):
         key = paero.pid
         assert key not in self.paeros, '\npaero=\n|%s| old_paero=\n|%s|' % (
             paero, self.paeros[key])
-        assert key > 0, 'paero.pid = %r' % (key)
+        assert key > 0, 'paero.pid = %r' % key
         self.paeros[key] = paero
         self._type_to_id_map[paero.type].append(key)
 

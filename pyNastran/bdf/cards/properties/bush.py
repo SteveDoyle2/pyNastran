@@ -833,7 +833,7 @@ class PBUSH1D(BushingProperty):
             nspaces = 8 - (len(list_fields) - 1) % 8
 
             if nspaces < 8:
-                list_fields += [None] * (nspaces)
+                list_fields += [None] * nspaces
         return list_fields
 
     def repr_fields(self):

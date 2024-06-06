@@ -324,7 +324,7 @@ class CTUBE(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, n_ijv)
+        return M, dofs, n_ijv
 
     #=========================================================================
     def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
@@ -455,8 +455,7 @@ class CTUBE(RodElement):
 
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.info('K =\n%s' % list_print(K / knorm))
-
-        return(K2, dofs, n_ijv)
+        return K2, dofs, n_ijv
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

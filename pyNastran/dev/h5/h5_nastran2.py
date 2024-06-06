@@ -371,7 +371,7 @@ def set_spc_mpc_suport_grid(model: BDF,
                         mpc_to_subcase[mpc_id].append(subcase_id)
 
         for spc_id in chain(model.spcs, model.spcadds):
-            spc_name = 'SPC=%i' % (spc_id)
+            spc_name = f'SPC={spc_id:d}'
             if spc_id in mpc_to_subcase:
                 subcases = spc_to_subcase[spc_id]
                 spc_name += ': Subcases='

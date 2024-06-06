@@ -503,7 +503,7 @@ class NastranMatrix(BaseCard):
             #   equal to the index of the highest numbered non-null column (in
             #   internal sort). Trailing null columns of the g- or p-size matrix
             #   will be truncated.
-            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
+            ncols = integer_or_blank(card, 8, f'matrix_form={matrix_form}; ncol')
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
@@ -1953,7 +1953,7 @@ class DMI(NastranMatrix):
 
     @property
     def shape(self) -> tuple[int, int]:
-        return (self.nrows, self.ncols)
+        return self.nrows, self.ncols
 
     @property
     def ifo(self) -> int:
@@ -2801,7 +2801,7 @@ def get_matrix(self: DMIG,
             #assert isinstance(self, (DMIG, DMIK, DMIJ, DMIJI)), type(self)
             M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
             assert isinstance(M, np.ndarray), type(M)
-    return (M, rows_reversed, cols_reversed)
+    return M, rows_reversed, cols_reversed
 
 
 def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:

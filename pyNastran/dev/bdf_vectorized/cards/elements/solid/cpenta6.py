@@ -20,7 +20,7 @@ def tri_area_centroid(n1, n2, n3):
     area = 0.5 * norm(cross(a, b), axis=1)
     centroid = (n1 + n2 + n3) / 3.
 
-    return(area, centroid)
+    return area, centroid
 
 
 class CPENTA6(SolidElement):
@@ -267,4 +267,3 @@ class CPENTA6(SolidElement):
                     bdf_file.write(self._comments[eid])
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 bdf_file.write(print_card_8(card))
-

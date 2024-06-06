@@ -3239,7 +3239,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             msg += 'all_nodes=%s' % (all_nodes)
             raise RuntimeError(msg)
         if npoints == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            msg = f'nnodes={nnodes} nspoints={nspoints} nepoints={nepoints}'
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
@@ -4969,7 +4969,7 @@ def _bool(value):
         ##raise RuntimeError(msg)
     #return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
 
-class Zona():
+class Zona:
     def __init__(self):
         pass
     def update_for_zona(self):

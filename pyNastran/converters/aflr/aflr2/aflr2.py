@@ -494,7 +494,7 @@ def export_to_bedge(bedge_filename,
         log.debug('nsubcurves = %s?' % nsubcurves)
         if nsubcurves > 30:
             msg = 'Are you sure you are merging model.grid_bc and not model.grid_bcs?\n'
-            msg += 'nsubcurves=%s' % (nsubcurves)
+            msg += f'nsubcurves={nsubcurves:d}'
             raise RuntimeError(msg)
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 

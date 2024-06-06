@@ -532,7 +532,7 @@ class CaseControlDeck:
         lines = _clean_lines([param])
         (j, fail_flag, key, value, options, param_type) = parse_entry(
             lines, self.log, debug=self.debug)
-        return (j, key, value, options, param_type)
+        return j, key, value, options, param_type
 
     def _read(self, lines: list[str]) -> None:
         """
@@ -724,7 +724,7 @@ class CaseControlDeck:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-def _split_param(line: str, line_upper: str) -> tuple[str, str, str]:
+def _split_param(line: str, line_upper: str) -> tuple[str, str, list[Any], str]:
     """parses a PARAM card"""
     tabbed_line_upper = line_upper.expandtabs().rstrip()
     if ',' in tabbed_line_upper:
@@ -1327,5 +1327,4 @@ def parse_entry(lines: list[str],
     assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
 
     fail_flag = False
-    return (i, fail_flag, key, value, options, param_type)
-
+    return i, fail_flag, key, value, options, param_type

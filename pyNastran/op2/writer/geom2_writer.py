@@ -337,7 +337,7 @@ def write_solid(model, name, eids, nelements, itable, op2_file, op2_ascii, endia
     else:  # pragma: no cover
         raise NotImplementedError(name)
     nfields = nnodes + 2
-    spack = Struct(endian + b'%ii' % (nfields))
+    spack = Struct(endian + b'%ii' % nfields)
 
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
     for eid in sorted(eids):

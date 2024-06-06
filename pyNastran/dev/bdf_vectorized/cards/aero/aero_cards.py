@@ -73,7 +73,7 @@ class AECOMP(BaseCard):
     type = 'AECOMP'
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
-    def __init__(self, name: str, list_type: list[str],
+    def __init__(self, name: str, list_type: str,
                  lists: Union[int, list[int]], comment: str='') -> None:
         """
         Creates an AECOMP card
@@ -3597,13 +3597,13 @@ class FLUTTER(BaseCard):
     def update(self, maps):
         raise NotImplementedError()
 
-    def _get_raw_nvalue_omax(self):
+    def _get_raw_nvalue_omax(self) -> tuple[Any, Any]:
         if self.method in ['K', 'KE']:
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
-            return(self.imethod, self.nvalue)
+            return self.imethod, self.nvalue
         elif self.method in ['PKS', 'PKNLS']:
-            return(self.imethod, self.omax)
-        return(self.imethod, self.nvalue)
+            return self.imethod, self.omax
+        return self.imethod, self.nvalue
 
     def _repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -5017,7 +5017,7 @@ class SPLINE1(Spline):
 
         nnodes = len(setg_ref.ids)
         if nnodes < 3:
-            msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg = f'SPLINE1 requires at least 3 nodes; nnodes={nnodes:d}\n'
             msg += str(self)
             msg += str(setg_ref)
             raise RuntimeError(msg)
@@ -5417,7 +5417,7 @@ class SPLINE3(Spline):
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
-            msg = 'SPLINE3 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg = f'SPLINE3 requires at least 3 nodes; nnodes={nnodes:d}\n'
             msg += str(self)
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
@@ -5611,7 +5611,7 @@ class SPLINE4(Spline):
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
-            msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg = f'SPLINE4 requires at least 3 nodes; nnodes={nnodes:d}\n'
             msg += str(self)
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
@@ -5782,7 +5782,7 @@ class SPLINE5(Spline):
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
-            msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg = f'SPLINE5 requires at least 3 nodes; nnodes={nnodes:d}\n'
             msg += str(self)
             msg += str(self.setg_ref)
             raise RuntimeError(msg)

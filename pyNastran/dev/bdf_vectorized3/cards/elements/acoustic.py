@@ -356,7 +356,7 @@ class PACBAR(Property):
 
     def _save(self, property_id, mass_backing, mass_septum, freq_resonant, k_resonant):
         if len(self.property_id) != 0:
-            asdf
+            raise NotImplementedError()
             #property_id = np.hstack([self.property_id, property_id])
             #mass_backing = np.hstack([self.mass_backing, mass_backing])
             #mass_septum = np.hstack([self.mass_septum, mass_septum])
@@ -426,4 +426,3 @@ class PACBAR(Property):
     #def rho(self) -> np.ndarray:
         #rho = get_density_from_material(self.material_id, self.allowed_materials)
         #return rho
-

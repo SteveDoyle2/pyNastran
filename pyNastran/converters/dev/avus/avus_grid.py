@@ -126,7 +126,7 @@ class AvusGrid:
         self.npoints = npoints
         self.zones = zones
         self.nfaces = nfaces
-        return (zones, npoints, nfaces, ncells, mxppfs, mxfpcs)
+        return zones, npoints, nfaces, ncells, mxppfs, mxfpcs
 
     def read_avus_grid(self, avus_filename):
         self.infilename = avus_filename

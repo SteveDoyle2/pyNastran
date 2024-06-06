@@ -1326,7 +1326,7 @@ class CGAP(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == -1)
+        return self.g0 == -1
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -1696,4 +1696,3 @@ class PGAP(Property):
                            tmax, mar, trmin]
             bdf_file.write(print_card(list_fields))
         return
-

@@ -908,7 +908,7 @@ class SUPORT(VectorizedBaseCard):
         self.cards = []
 
     def _setup(self, ncards: int, cards: list[Any],
-               idtype: str) -> tuple[np.ndarray, np.ndarray]:
+               idtype: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         suport_id = []
         node_id = []
         component_list = []
@@ -2612,8 +2612,3 @@ class SESET(VectorizedBaseCard):
                 #assert len(list_fields) < 10, print_card(list_fields)
                 bdf_file.write(print_card(list_fields))
         return
-
-
-
-
-

@@ -230,7 +230,7 @@ class Cart3D(Cart3dReaderWriter):
         self.elements = elements2
         self.regions = regions2
         self.loads = loads2
-        return (nodes2, elements2, regions2, loads2)
+        return nodes2, elements2, regions2, loads2
 
     def keep_elements(self,
                       ielements: np.ndarray,

@@ -84,7 +84,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
     ]
     level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    log = SimpleLogger(level=level, encoding='utf-8')
     model = read_bdf(bdf_filename, log=log, skip_cards=skip_cards)
     export_caero_mesh(model, caero_bdf_filename,
                       is_subpanel_model=is_subpanel_model, pid_method=pid_method)

@@ -330,14 +330,14 @@ class HDF5Importer:
                 obj = self._load_custom_type(h5_file, Type, key, value, custom_types_dict,
                                              self_obj, nlevels)
             except Exception:
-                msg = ('Cannot load custom type: %s.  Try setting:\n'
+                msg = (f'Cannot load custom type: {Type}.  Try setting:\n'
                        ' - load_hdf5_file\n'
-                       ' - function\n' % (Type))
+                       ' - function\n')
                 self.log.error(msg)
                 raise
             model[key] = obj
         else:
-            print('%s%s %s %s' % ((nlevels)*'  ', key, value, keys))
+            print('%s%s %s %s' % (nlevels*'  ', key, value, keys))
             custom_type_keys = list(custom_types_dict.keys())
             custom_type_keys.sort()
             raise TypeError('Type=%r is not in custom_types_dict=%s' % (Type, custom_type_keys))

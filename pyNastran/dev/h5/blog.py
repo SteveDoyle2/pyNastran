@@ -185,15 +185,15 @@ class RequestSubset(VTKPythonAlgorithmBase):
 
     def RequestInformation(self, request, inInfo, outInfo):
         info = outInfo.GetInformationObject(0)
-        info.Set(vtk.vtkStreamingDemandDrivenPipeline.WHOLE_EXTENT(), \
-            self.__UpdateExtent, 6)
+        info.Set(vtk.vtkStreamingDemandDrivenPipeline.WHOLE_EXTENT(),
+                 self.__UpdateExtent, 6)
         return 1
 
     def RequestUpdateExtent(self, request, inInfo, outInfo):
         if self.__UpdateExtent is not None:
             info = inInfo[0].GetInformationObject(0)
-            info.Set(vtk.vtkStreamingDemandDrivenPipeline.UPDATE_EXTENT(), \
-                self.__UpdateExtent, 6)
+            info.Set(vtk.vtkStreamingDemandDrivenPipeline.UPDATE_EXTENT(),
+                     self.__UpdateExtent, 6)
         return 1
 
     def RequestData(self, request, inInfo, outInfo):

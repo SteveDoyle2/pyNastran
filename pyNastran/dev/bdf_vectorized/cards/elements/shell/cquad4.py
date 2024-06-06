@@ -462,7 +462,7 @@ class CQUAD4(ShellElement):
 
         knorm = 1.0
         self.model.log.info("K_norm / %s = \n" % knorm + list_print(K / knorm, float_fmt='%-4.4f'))
-        return(K, dofs, n_ijv)
+        return K, dofs, n_ijv
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

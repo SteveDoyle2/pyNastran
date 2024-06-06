@@ -188,7 +188,7 @@ class WeightResponse:
 
     def get_stats(self, short: bool=False):
         if short:
-            return 'responses.weight_response (%s)\n' % (self.n)
+            return f'responses.weight_response ({self.n:d})\n'
         return self.__repr__() + '\n'
 
 

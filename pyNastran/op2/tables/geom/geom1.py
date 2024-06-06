@@ -30,7 +30,7 @@ class GEOM1:
     def read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
-    def read_stop(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def read_stop(self, data: bytes, n: int):  # pragma: no cover
         """
         ints    = (1000, 0, 0, 0, 0, 0, 0, 0,               20.0, 100, 30.0, 120, 60.0, 130, -1, -1,
                    2000, 0, 0, 0, 0, 0, 0, 0, 1101004800, 200, 1106247680, 220, 1114636288, 230, -1, -1)

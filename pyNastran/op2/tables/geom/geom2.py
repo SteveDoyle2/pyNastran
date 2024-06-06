@@ -792,7 +792,7 @@ class GEOM2:
                             w2a, w3a, w1b, w2b, w3b], [f, g0]]
                 #print(f'eid={eid} fe,f={fe},{f} g0={g0}')
             else:
-                raise RuntimeError('invalid f value...f=%s' % (f))
+                raise RuntimeError(f'invalid f value...f={f}')
             elem = CBAR.add_op2_data(data_in)
             try:
                 offt = BAR_FE_MAP[fe]
@@ -1221,7 +1221,7 @@ class GEOM2:
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, g0]]
             else:
-                raise RuntimeError('invalid f value...f=%s' % (f))
+                raise RuntimeError(f'invalid f value...f={f}')
             elem = CBEND.add_op2_data(data_in)
             elem.validate()
             assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)

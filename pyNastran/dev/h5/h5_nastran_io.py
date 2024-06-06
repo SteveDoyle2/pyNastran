@@ -5,7 +5,7 @@ from pyNastran.gui.qt_files.colors import (
     #YELLOW_FLOAT,
     ORANGE_FLOAT)
 
-class H5NastranIO():
+class H5NastranIO:
     def __init__(self, gui):
         self.gui = gui
 

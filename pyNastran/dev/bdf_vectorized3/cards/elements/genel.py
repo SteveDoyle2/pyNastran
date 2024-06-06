@@ -417,7 +417,7 @@ class GENEL(Element):
 
         for eid, (ik0, ik1), (is0, is1), (iz0, iz1), \
             (iul0, iul1), (iud0, iud1), \
-            nk, ns, nz in zip(element_ids, \
+            nk, ns, nz in zip(element_ids,
                               self.idim_k, self.idim_s, self.idim_z,
                               self.idim_ul, self.idim_ud,
                               self.nk, self.ns, self.nz):

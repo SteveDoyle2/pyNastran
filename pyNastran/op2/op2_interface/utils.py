@@ -197,21 +197,21 @@ def update_subtitle_with_adaptivity_index(subtitle: str, superelement_adaptivity
             return ''.join(str(ord(c)) for c in src)
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrsee101q3.op2
         adpativity_index2 = (
-            adpativity_index \
-            .replace('\x02\x00\x00\x00', hexi('\x02\x00\x00\x00')) \
-            .replace('\x03\x00\x00\x00', hexi('\x03\x00\x00\x00')) \
-            .replace('\x04\x00\x00\x00', hexi('\x04\x00\x00\x00')) \
-            .replace('\x05\x00\x00\x00', hexi('\x05\x00\x00\x00')) \
+            adpativity_index
+            .replace('\x02\x00\x00\x00', hexi('\x02\x00\x00\x00'))
+            .replace('\x03\x00\x00\x00', hexi('\x03\x00\x00\x00'))
+            .replace('\x04\x00\x00\x00', hexi('\x04\x00\x00\x00'))
+            .replace('\x05\x00\x00\x00', hexi('\x05\x00\x00\x00'))
 
             # form feed; \f
-            .replace('\x0c\x00\x00\x00', hexi('\x0c\x00\x00\x00')) \
+            .replace('\x0c\x00\x00\x00', hexi('\x0c\x00\x00\x00'))
 
             #  carriage return
-            .replace('\r\x00\x00\x00', hexi('\r\x00\x00\x00')) \
+            .replace('\r\x00\x00\x00', hexi('\r\x00\x00\x00'))
 
-            .replace('\x0f\x00\x00\x00', hexi('\x0f\x00\x00\x00')) \
+            .replace('\x0f\x00\x00\x00', hexi('\x0f\x00\x00\x00'))
             # null
-            .replace('\x00\x00\x00\x00', hexi('\x00\x00\x00\x00')) \
+            .replace('\x00\x00\x00\x00', hexi('\x00\x00\x00\x00'))
             .strip()
         )
         #print('adpativity_index = %r' % adpativity_index.strip())

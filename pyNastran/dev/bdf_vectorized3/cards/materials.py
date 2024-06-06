@@ -845,8 +845,8 @@ class MAT3(Material):
         material_ids = array_str(self.material_id, size=size)
         for mid, ex, eth, ez, nuxth, nuthz, nuzx, \
             rho, gzx, ax, ath, az, tref, ge in zip_longest(material_ids,
-                                                           self.ex, self.eth, self.ez, \
-                                                           self.nuxth, self.nuthz, self.nuzx, \
+                                                           self.ex, self.eth, self.ez,
+                                                           self.nuxth, self.nuthz, self.nuzx,
                                                            self.rho, self.gzx, self.ax, self.ath, self.az,
                                                            self.tref, self.ge):
             ax = set_blank_if_default(ax, 0.0)

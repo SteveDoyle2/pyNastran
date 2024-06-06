@@ -1034,7 +1034,7 @@ class FREQ5(FREQ):
         i = 1
         fractions = []
         for ifield in range(4, len(card)):
-            fraction = double(card, ifield, 'FR%i' % (i))
+            fraction = double(card, ifield, f'FR%{i:d}')
             fractions.append(fraction)
             i += 1
         return FREQ5(sid, fractions, f1=f2, f2=f2, comment=comment)

@@ -238,8 +238,7 @@ class SHABP(ShabpOut):
                 t1 = int(t1)
                 if t1 == 1:
                     patch.append(row)
-                    row = []
-                    row.append([x1, y1, z1])
+                    row = [[x1, y1, z1]]
                 elif t1 in [0, 2]:
                     row.append([x1, y1, z1])
                 elif t1 == 3:
@@ -260,8 +259,7 @@ class SHABP(ShabpOut):
                 t2 = int(t2)
                 if t2 == 1:
                     patch.append(row)
-                    row = []
-                    row.append([x2, y2, z2])
+                    row = [[x2, y2, z2]]
                 elif t2 in [0, 2]:
                     row.append([x2, y2, z2])
                 elif t2 == 3:

@@ -251,7 +251,7 @@ class CBUSH(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == -1)
+        return self.g0 == -1
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -757,7 +757,7 @@ def read_pbush_rcv(model: BDF, card, istart: int) -> tuple[float, float, float, 
     st = fdouble_or_blank(card, istart + 2, 'st', default=1.)
     ea = fdouble_or_blank(card, istart + 3, 'ea', default=1.)
     et = fdouble_or_blank(card, istart + 4, 'et', default=1.)
-    return (sa, st, ea, et)
+    return sa, st, ea, et
 
 
 class PBUSHT(Property):
@@ -1387,7 +1387,7 @@ class PBUSH1D(Property):
                 nspaces = 8 - (len(list_fields) - 1) % 8
 
                 if nspaces < 8:
-                    list_fields += [None] * (nspaces)
+                    list_fields += [None] * nspaces
 
             bdf_file.write(print_card(list_fields))
         return

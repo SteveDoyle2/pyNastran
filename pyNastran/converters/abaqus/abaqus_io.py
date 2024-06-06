@@ -94,9 +94,9 @@ class AbaqusIO:
         self.gui.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
         cases = {}
-        ID = 1
+        idi = 1
         form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(
-            cases, ID, nids, nodes, nelements, model)
+            cases, idi, nids, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
 
         self.gui.node_ids = node_ids
@@ -111,7 +111,7 @@ class AbaqusIO:
         """does nothing"""
         raise NotImplementedError()
 
-    def _fill_abaqus_case(self, cases, ID: int, node_ids, nodes, nelements: int,
+    def _fill_abaqus_case(self, cases, idi: int, node_ids, nodes, nelements: int,
                           unused_model: Abaqus) -> tuple[Any, Any, int, np.ndarray, np.ndarray]:
         """creates the result objects for abaqus"""
         #return [], {}, 0
@@ -134,9 +134,9 @@ class AbaqusIO:
                                     #nids, eids, regions, cnormals,
                                     #uname='Cart3dGeometry')
         colormap = 'jet'
-        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+        nid_res = GuiResult(idi, header='NodeID', title='NodeID',
                             location='node', scalar=node_ids)
-        eid_res = GuiResult(ID, header='ElementID', title='ElementID',
+        eid_res = GuiResult(idi, header='ElementID', title='ElementID',
                             location='centroid', scalar=element_ids)
         nxyz_res = NormalResult(0, 'Normals', 'Normals',
                                 nlabels=2, labelsize=5, ncolors=2,

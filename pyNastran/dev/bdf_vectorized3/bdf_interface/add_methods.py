@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
     #from pyNastran.dev.bdf_vectorized3.cards.import DEQATN
 
-class AddMethods():
+class AddMethods:
     def __init__(self, model: BDF):
         self.model = model
 

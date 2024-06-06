@@ -82,14 +82,14 @@ class GetMethods(BDFAttributes):
         if self.aero is not None:
             return self.aero
         else:
-            raise RuntimeError('no AERO card found%s.' % (msg))
+            raise RuntimeError(f'no AERO card found{msg}.')
 
     def Aeros(self, msg=''):
         """gets the AEROS"""
         if self.aeros is not None:
             return self.aeros
         else:
-            raise RuntimeError('no AEROS card found%s.' % (msg))
+            raise RuntimeError(f'no AEROS card found{msg}.')
 
     def Spline(self, eid, msg=''):
         """gets a SPLINEx"""
@@ -298,4 +298,3 @@ class GetMethods(BDFAttributes):
         except KeyError:
             raise KeyError('equation_id=%s not found%s.  Allowed DMIGs=%s'
                            % (equation_id, msg, np.unique(list(self.dequations.keys()))))
-

@@ -203,7 +203,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     # turn them into variables
     for key, value in sorted(starting_id_dict.items()):
         #assert isinstance(key, str), key
-        assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
+        assert key in starting_id_dict_default, f'key={key!r} is invalid'
         if value is None:
             pass
         else:

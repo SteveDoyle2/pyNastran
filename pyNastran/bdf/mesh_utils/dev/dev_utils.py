@@ -188,8 +188,10 @@ def _write_nodes(self, outfile, size, is_double):
     Writes the NODE-type cards
     """
     if self.spoints:
-        msg = ['$SPOINTS\n']
-        msg.append(self.spoints.write_card(size, is_double))
+        msg = [
+            '$SPOINTS\n',
+            self.spoints.write_card(size, is_double),
+       ]
         outfile.write(''.join(msg))
 
     if self.nodes:

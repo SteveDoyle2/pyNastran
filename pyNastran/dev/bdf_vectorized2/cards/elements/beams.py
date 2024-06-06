@@ -324,7 +324,7 @@ class CBEAMv(BeamElement):
 
         """
         if g0 is not None:
-            return (g0, None, None)
+            return g0, None, None
         else:
             #print('x =', self.x)
             #print('g0 =', self.g0)

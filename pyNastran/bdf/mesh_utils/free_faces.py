@@ -209,11 +209,12 @@ def write_skin_solid_faces(model, skin_filename,
                             write_solids=write_solids, write_shells=write_shells,
                             size=size, is_double=is_double, encoding=encoding)
 
-def _write_skin_solid_faces(model, skin_filename, face_map,
-                            nids_to_write, eids_to_write, mids_to_write, eid_set,
-                            eid_shell, pid_shell, mid_shell,
-                            write_solids=False, write_shells=True,
-                            size=8, is_double=False, encoding=None):
+def _write_skin_solid_faces(model: BDF, skin_filename: str, face_map,
+                            nids_to_write: list[int], eids_to_write: list[int], mids_to_write: list[int],
+                            eid_set,
+                            eid_shell: int, pid_shell: int, mid_shell: int,
+                            write_solids: bool=False, write_shells: bool=True,
+                            size: int=8, is_double: bool=False, encoding=None):
     """
     helper method for ``write_skin_solid_faces``
 
@@ -278,14 +279,17 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             del eid, pid, mid
 
         if write_shells:
-            eid_shell = _write_shells(bdf_file, model, eid_set, face_map, eid_shell, pid_shell, mid_shell, mids_to_write)
+            eid_shell = _write_shells(bdf_file, model, eid_set, face_map,
+                                      eid_shell, pid_shell, mid_shell, mids_to_write)
         bdf_file.write('ENDDATA\n')
     #if 0:
         #model = model.__class__.__init__()
         #model.read_bdf(skin_filename)
 
 
-def _write_shells(bdf_file, model, eid_set, face_map, eid_shell, pid_shell, mid_shell, mids_to_write):
+def _write_shells(bdf_file, model: BDF,
+                  eid_set: dict, face_map: dict,
+                  eid_shell: int, pid_shell: int, mid_shell: int, mids_to_write):
     """helper method for ``_write_skin_solid_faces``"""
     mids_to_write.sort()
     for imid, mid in enumerate(mids_to_write):

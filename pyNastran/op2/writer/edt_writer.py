@@ -1590,7 +1590,7 @@ def write_aefact(model: Union[BDF, OP2Geom], name: str,
         aefacti = model.aefacts[aefact_id]
         nfactors = len(aefacti.factors)
 
-        fmt = endian + b'i %df i' % (nfactors)
+        fmt = endian + b'i %df i' % nfactors
         #print(fmt)
         structi = Struct(fmt)
 
@@ -1630,7 +1630,7 @@ def write_aelist(model: Union[BDF, OP2Geom], name: str,
         aelist = model.aelists[aelist_id]
         nelements = len(aelist.elements)
 
-        fmt = endian + b'i %di i' % (nelements)
+        fmt = endian + b'i %di i' % nelements
         structi = Struct(fmt)
 
         data = [aelist.sid,] + aelist.elements + [-1]

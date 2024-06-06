@@ -631,7 +631,7 @@ class CAERO1(VectorizedBaseCard):
                 msg = 'x12=%s x43=%s; dx=%s chord=%s nchord=%s; nchord must be greater than 0' % (
                     x12, x43, dx, chord, nchord)
                 raise ValueError(msg)
-        else:
+        else:  # pragma: no cover
             raise TypeError(chord)
         n = self.add(eid, pid, igroup, p1, x12, p4, x43, cp=cp,
                  nspan=nspan, lspan=lspan,
@@ -917,7 +917,7 @@ class CAERO1(VectorizedBaseCard):
         assert self.p4.shape[1] == 3, self.p4.shape
         p1_ = self.p1.tolist()
         p4_ = self.p4.tolist()
-        for eid, pid, igroup, p1, x12, p4, x43, cp, nspan, lspan, nchord, lchord in zip(\
+        for eid, pid, igroup, p1, x12, p4, x43, cp, nspan, lspan, nchord, lchord in zip(
                 element_id, property_id, igroup_, p1_, self.x12, p4_, self.x43, cp_,
                 nspan_, lspan_, nchord_, lchord_):
             list_fields = ['CAERO1', eid, pid, cp, nspan, nchord,
@@ -1278,7 +1278,7 @@ class CAERO2(VectorizedBaseCard):
         lint_ = array_default_int(self.lint, default=0, size=size)
         assert self.p1.shape[1] == 3, self.p1.shape
         p1_ = self.p1.tolist()
-        for eid, pid, igroup, p1, x12, cp, nsb, lsb, nint, lint in zip(\
+        for eid, pid, igroup, p1, x12, cp, nsb, lsb, nint, lint in zip(
             element_id, property_id, igroup_, p1_, self.x12, cp_,
             nsb_, lsb_, nint_, lint_):
             list_fields = (['CAERO2', eid, pid, cp, nsb, nint,
@@ -2355,7 +2355,7 @@ class CAERO5(VectorizedBaseCard):
         assert self.p4.shape[1] == 3, self.p4.shape
         p1_ = self.p1.tolist()
         p4_ = self.p4.tolist()
-        for eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ntheory, nthick in zip(\
+        for eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ntheory, nthick in zip(
                 element_id, property_id, p1_, self.x12, p4_, self.x43, cp_,
                 nspan_, lspan_, ntheory_, nthick_):
             list_fields = ['CAERO5', eid, pid, cp, nspan, lspan,
@@ -2758,7 +2758,7 @@ class CAERO7(VectorizedBaseCard):
         assert self.p4.shape[1] == 3, self.p4.shape
         p1_ = self.p1.tolist()
         p4_ = self.p4.tolist()
-        for eid, label, p1, x12, p4, x43, cp, nspan, lspan, nchord, ztaic, p_airfoil, in zip(\
+        for eid, label, p1, x12, p4, x43, cp, nspan, lspan, nchord, ztaic, p_airfoil, in zip(
                 element_id, self.label, p1_, self.x12, p4_, self.x43, cp_,
                 nspan_, lspan_, nchord_, ztaic_, p_airfoil_):
             list_fields = [
@@ -4618,7 +4618,7 @@ class SPLINE1(VectorizedBaseCard):
         melements = array_default_int(self.melement, default=0, size=size)
         dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, \
-            method, usage, nelement, melement in zip(\
+            method, usage, nelement, melement in zip(
                 spline_ids, caero_ids, boxs, set_ids, dzs,
                 self.method, self.usage, nelements, melements):
             #dz = set_blank_if_default(self.dz, 0.)
@@ -4906,7 +4906,7 @@ class SPLINE2(VectorizedBaseCard):
         dthxs = array_default_float(self.dthx, default=0.0, size=size, is_double=False)
         dthys = array_default_float(self.dthy, default=0.0, size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, dtor, \
-            cid, usage, dthx, dthy in zip(\
+            cid, usage, dthx, dthy in zip(
                 spline_ids, caero_ids, boxs, set_ids, dzs, dtors,
                 coord_ids, self.usage, dthxs, dthys):
 

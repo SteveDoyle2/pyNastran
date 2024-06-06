@@ -642,7 +642,7 @@ class CBAR(Element):
         if np.any(is_rotate_v_g):
             # end A
             # global - cid != 0
-            icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
+            icd1_v_vector = is_rotate_v_g & (cd1 != 0)
             cd1_v_vector = cd1[icd1_v_vector]
             eid_v_vector = self.element_id[icd1_v_vector]
             if np.any(cd1_v_vector):
@@ -703,7 +703,7 @@ class CBAR(Element):
         assert not np.isnan(np.max(wa)), wa
 
         if np.any(is_rotate_wa_g):
-            icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
+            icd1_vector = is_rotate_wa_g & (cd1 != 0)
             cd1_vector = cd1[icd1_vector]
             if np.any(icd1_vector):
                 cd1_ref = coords.slice_card_by_id(cd1_vector, sort_ids=False)
@@ -736,7 +736,7 @@ class CBAR(Element):
         # wb defines the offset at end B
         wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
         if np.any(is_rotate_wb_g):
-            icd2_vector = (is_rotate_wb_g) & (cd2 != 0)
+            icd2_vector = is_rotate_wb_g & (cd2 != 0)
             cd2_vector = cd2[icd2_vector]
             #cd2_vector = cd2[is_rotate_wb]
             #icd2_vector = (cd2_vector != 0)
@@ -2095,4 +2095,3 @@ def k_from_property_id(property_id: np.ndarray,
             k1_k2i = prop.k()
         k1_k2[i_lookup] = k1_k2i[i_all]
     return k1_k2
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 #import os
 #from itertools import count
 from pathlib import PurePath
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, Union, Any, TYPE_CHECKING
 
 import numpy as np
 #import vtkmodules
@@ -42,7 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,
     )
-    SolidElement = Union[CTETRA, CPENTA, CHEXA, CPYRAM],
+    SolidElement = Union[CTETRA, CPENTA, CHEXA, CPYRAM]
 
 
 class Nastran3:

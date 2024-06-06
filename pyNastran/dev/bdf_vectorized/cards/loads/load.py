@@ -73,9 +73,8 @@ class LOAD:
             return self.comment
         return []
 
-    def get_stats(self):
-        msg = []
-        msg.append('  %-8s: %i' % ('LOAD[%s]' % self.load_id))
+    def get_stats(self) -> list[str]:
+        msg = ['  %-8s: %i' % ('LOAD[%s]' % self.load_id)]
         return msg
 
     def write_card(self, bdf_file, size=8, is_double=False, load_id=None):

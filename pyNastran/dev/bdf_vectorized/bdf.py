@@ -2548,9 +2548,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         unsupported_types = ignored_types.union(ignored_types2)
         all_params = object_attributes(self, keys_to_skip=unsupported_types)
 
-        msg = ['---BDF Statistics---']
-        # sol
-        msg.append('SOL %s\n' % self.sol)
+        msg = [
+            '---BDF Statistics---',
+            'SOL %s\n' % self.sol,
+        ]
 
         # loads
         for (lid, loads) in sorted(self.loads.items()):

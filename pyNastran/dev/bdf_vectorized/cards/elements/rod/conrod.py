@@ -350,7 +350,7 @@ class CONROD(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, n_ijv)
+        return M, dofs, n_ijv
 
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         #print("----------------")
@@ -463,7 +463,7 @@ class CONROD(RodElement):
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.debug('K =\n\n%s' % (K / knorm))
 
-        return(K2, dofs, n_ijv)
+        return K2, dofs, n_ijv
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

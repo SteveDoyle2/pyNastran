@@ -502,7 +502,7 @@ class CaseControlDeck:
         lines = _clean_lines([param])
         (j, fail_flag, key, value, options, param_type) = parse_entry(
             lines, self.log, debug=self.debug)
-        return (j, key, value, options, param_type)
+        return j, key, value, options, param_type
 
     def _read(self, lines: list[str]) -> None:
         """
@@ -1228,13 +1228,13 @@ def _parse_entry(self, lines: list[str],
         param_type = 'KEY-type'
         assert key.upper() == key, key
     else:
-        msg = 'generic catch all...line=%r' % line
+        msg = f'generic catch all...line={line!r}'
         key = ''
         value = line
         options = None
         param_type = 'KEY-type'
         assert key.upper() == key, key
     i += 1
-    assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
+    assert key.upper() == key, f'key={key} param_type={param_type}'
 
-    return (i, key, value, options, param_type)
+    return i, key, value, options, param_type

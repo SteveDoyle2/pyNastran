@@ -156,8 +156,8 @@ class Coord(BaseCard):
             #print("e12 = %s" % e12)
         except TypeError:
             msg = ''
-            msg += "\ntype = %s\n" % (self.type)
-            msg += "\ncid  = %s\n" % (self.Cid())
+            msg += f"\ntype = {self.type}\n"
+            msg += f"\ncid  = {self.Cid()}\n"
             msg += "e1 = %s\n" % str(e1)
             msg += "e2 = %s\n" % str(e2)
             msg += "e3 = %s\n" % str(e3)
@@ -168,7 +168,7 @@ class Coord(BaseCard):
             self.k = normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
+            print(f"Cp  = {self.Cid()}")
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))

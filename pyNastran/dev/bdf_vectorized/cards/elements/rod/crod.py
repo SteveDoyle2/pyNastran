@@ -332,7 +332,7 @@ class CROD(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, n_ijv)
+        return M, dofs, n_ijv
 
 
     #=========================================================================
@@ -447,8 +447,7 @@ class CROD(RodElement):
 
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.info('K =\n%s' % list_print(K / knorm))
-
-        return(K2, dofs, n_ijv)
+        return K2, dofs, n_ijv
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

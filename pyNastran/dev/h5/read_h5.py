@@ -1092,7 +1092,7 @@ class vtkNastranReader(vtk.vtkPolyDataAlgorithm):
             return VTK_BINARY
         else:
             raise RuntimeError("Case not handled, file type is %s" % ft)
-        return VTK_BINARY; # should not happen
+        return VTK_BINARY  # should not happen
 
     def PrintSelf(file_obj, indent: vtk.vtkIndent):
         self.Superclass.PrintSelf(file_obj, indent)
@@ -1315,4 +1315,3 @@ if __name__ == '__main__':
     #model = pyNastranH5()
     #model.read_h5_nastran(h5_filename)
     #run2(h5_filename)
-

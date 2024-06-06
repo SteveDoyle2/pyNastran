@@ -103,7 +103,7 @@ def Frequencies(bands, src):
     """
     freq = dict()
     for i in range(len(bands)):
-        freq[i] = 0;
+        freq[i] = 0
     tuples = src.GetPointData().GetScalars().GetNumberOfTuples()
     for i in range(tuples):
         x = src.GetPointData().GetScalars().GetTuple1(i)

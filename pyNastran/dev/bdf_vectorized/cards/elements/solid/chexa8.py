@@ -56,7 +56,7 @@ def quad_area_centroid(n1, n2, n3, n4):
     n = len(n1)
     assert area.shape == (n, ), area.shape
     assert centroid.shape == (n, 3), centroid.shape
-    return(area, centroid)
+    return area, centroid
 
 
 class CHEXA8(SolidElement):
