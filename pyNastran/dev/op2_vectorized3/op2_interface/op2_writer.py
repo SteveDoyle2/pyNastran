@@ -1,5 +1,5 @@
-asdf
 from __future__ import annotations
+asdf
 from collections import defaultdict
 from struct import pack, Struct
 from typing import TYPE_CHECKING
@@ -278,4 +278,3 @@ def write_geom1(op2_file, op2_ascii, model: BDF, endian=b'<'):
     #_write_markers(op2_file, op2_ascii, [2, 4])
     #-------------------------------------
     close_geom_table(op2_file, op2_ascii, itable)
-

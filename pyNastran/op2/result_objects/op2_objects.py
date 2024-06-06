@@ -132,10 +132,6 @@ SORT2_TABLE_NAME_MAP = {
 
     # ONR / OEE
     'ONRGY2' : 'ONRGY1',
-
-    'OUGV2' : 'OUGV1',
-    'OPG2' : 'OPG1',
-
 }
 
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())

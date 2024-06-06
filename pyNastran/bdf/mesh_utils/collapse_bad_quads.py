@@ -141,7 +141,7 @@ def delete_bad_tris(model: BDF,
     model : BDF()
         a BDF model that has not had it's properties/load xref'd, but is valid
         such that it could
-    eids : list; (default=None -> all CTRIA3s)
+    eids_to_check : list; (default=None -> all CTRIA3s)
         the subset of element ids to check
     xyz_cid0 : (n, 3) ndarray
         nodes in cid=0

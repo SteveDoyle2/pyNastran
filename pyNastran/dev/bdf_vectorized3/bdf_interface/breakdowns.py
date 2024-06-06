@@ -123,6 +123,8 @@ def get_area_breakdown(model: BDF,
 
     Parameters
     ----------
+    model: BDF
+        a BDF object
     property_ids : list[int] / int
         list of property ID
     stop_if_no_area : bool; default=True

@@ -134,8 +134,6 @@ class BDFMethods(BDFAttributes):
         stop_if_no_mass : bool; default=True
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
-        detailed : bool, optional, default : False
-            Separates structural and nonstructural mass outputs.
 
         Returns
         -------

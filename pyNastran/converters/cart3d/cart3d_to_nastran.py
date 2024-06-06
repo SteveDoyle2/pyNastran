@@ -22,7 +22,7 @@ def cart3d_to_nastran_model(cart3d_filename: str,
     ----------
     cart3d_filename : str
         path to the input Cart3D file
-    loads_dict: dict[load_id, case]
+    loads_map: dict[load_id, case]
         case : dict[eid, pressure]
         write the loads
     log : log / None

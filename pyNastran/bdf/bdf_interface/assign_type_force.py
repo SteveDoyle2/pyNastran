@@ -141,8 +141,8 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         return svalue
     elif isinstance(svalue, integer_types):
         fvalue = float(svalue)
-        warnings.warn('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
-                      'card=%s' % (fieldname, svalue, ifield, card))
+        warnings.warn(f'{fieldname} = {svalue!r} (field #{ifield}) on card must be a float or blank (not an integer).\n'
+                      f'card={card}')
         return fvalue
     elif isinstance(svalue, str):
         try:
@@ -174,13 +174,13 @@ def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
         return svalue
     elif isinstance(svalue, integer_types):
         fvalue = float(svalue)
-        warnings.warn('%s = %r (field #%s) on card must be a float or string (not an integer) -> %s.\n'
+        warnings.warn('%s = %r (field #%s) on card must be a float or string (not an integer).\n'
                       'card=%s' % (fieldname, svalue, ifield, card))
         return fvalue
 
     elif isinstance(svalue, str):
         if len(svalue) == 0:
-            warnings.warn('%s = %r (field #%s) on card must be a float or string (not an blank) -> %s.\n'
+            warnings.warn('%s = %r (field #%s) on card must be a float or string (not an blank).\n'
                           'card=%s' % (fieldname, svalue, ifield, card))
             raise RuntimeError('no blanks allowed')
 

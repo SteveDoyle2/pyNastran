@@ -496,7 +496,7 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                 txt_format = delimiter.join(fmt)
             elif iscomplex_X and n_fmt_chars != (2 * ncol):
                 raise error
-            elif ((not iscomplex_X) and n_fmt_chars != ncol):
+            elif (not iscomplex_X) and n_fmt_chars != ncol:
                 raise error
             else:
                 txt_format = fmt

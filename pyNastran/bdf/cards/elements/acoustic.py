@@ -1007,6 +1007,8 @@ class ACMODL(Element):
         ----------
         card : BDFCard()
             a BDFCard object
+        nastran_version : str
+            msc/nx
         comment : str; default=''
             a comment for the card
         """

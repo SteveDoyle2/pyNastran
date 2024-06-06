@@ -74,7 +74,7 @@ def parse_set_type(i, line, lines, key, value):
 
     options = int(ID)  # needed a place to put it...
     param_type = 'SET-type'
-    return (i, key, value, options, param_type)
+    return i, key, value, options, param_type
 
 
 def _parse_entry(lines):
@@ -162,13 +162,13 @@ def _parse_entry(lines):
         try:
             (key, value) = line_upper.split(' ')
         except ValueError:
-            msg = 'excepted "BEGIN BULK" found=%r' % (line)
+            msg = f'excepted "BEGIN BULK" found={line!r}'
             raise RuntimeError(msg)
         param_type = 'BEGIN_BULK-type'
     elif 'PARAM' in line_upper:  # param
         sline = line.split(',')
         if len(sline) != 3:
-            raise SyntaxError("Param Parse: trying to parse %r..." % line)
+            raise SyntaxError(f"Param Parse: trying to parse {line!r}...")
         (key, value, options) = sline
         param_type = 'CSV-type'
     elif ' ' not in line:
@@ -177,7 +177,7 @@ def _parse_entry(lines):
         options = None
         param_type = 'KEY-type'
     else:
-        msg = 'generic catch all...line=%r' % line
+        msg = f'generic catch all...line={line!r}'
         #print('C ??? line = ', line)
         #raise RuntimeError(msg)
         key = ''
@@ -186,7 +186,7 @@ def _parse_entry(lines):
         param_type = 'KEY-type'
     i += 1
     #print("done with %s" % key)
-    return (i, key, value, options, param_type)
+    return i, key, value, options, param_type
 
 if __name__ == '__main__':  # pragma: no cover
     pass

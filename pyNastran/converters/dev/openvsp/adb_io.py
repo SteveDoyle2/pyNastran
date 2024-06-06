@@ -159,7 +159,7 @@ class ADB_IO:  # pragma: no cover
         #raise NotImplementedError()
 
 
-    def _fill_adb_case(self, cases, ID, model, plot_wakes=False):  # pragma: no cover
+    def _fill_adb_case(self, cases, idi, model, plot_wakes=False):  # pragma: no cover
         nxyz_nodes = model.nodes.shape[0]
         nxyz_elements = model.tris.shape[0]
         nwake_nodes = model.wake_xyz.shape[0]
@@ -203,10 +203,10 @@ class ADB_IO:  # pragma: no cover
         assert len(surf_id) == nelements, len(surf_id)
         assert len(area) == nelements, len(area)
 
-        region_res = GuiResult(ID, 'Region', 'Region', 'centroid', surf_id)
-        nid_res = GuiResult(ID, 'NodeID', 'NodeID', 'centroid', nids)
-        eid_res = GuiResult(ID, 'ElementID', 'ElementID', 'centroid', eids)
-        area_res = GuiResult(ID, 'Area', 'Area', 'centroid', area,
+        region_res = GuiResult(idi, 'Region', 'Region', 'centroid', surf_id)
+        nid_res = GuiResult(idi, 'NodeID', 'NodeID', 'centroid', nids)
+        eid_res = GuiResult(idi, 'ElementID', 'ElementID', 'centroid', eids)
+        area_res = GuiResult(idi, 'Area', 'Area', 'centroid', area,
                              data_format='%.3f')
 
         i = 0
@@ -236,7 +236,7 @@ class ADB_IO:  # pragma: no cover
             cases[i + 2] = (nz_res, (0, 'Normal Z'))
             i += 3
 
-        cp_res = GuiResult(ID, 'Cp', 'Cp', 'centroid', Cp, data_format='%.3f')
+        cp_res = GuiResult(idi, 'Cp', 'Cp', 'centroid', Cp, data_format='%.3f')
         cases[i] = (cp_res, (0, 'Cp'))
         results_form.append(('Cp', i, []))
         i += 1

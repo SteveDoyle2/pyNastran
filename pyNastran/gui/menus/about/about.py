@@ -31,23 +31,23 @@ from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 
-def get_qt_license(qt_name: str) -> str:
-    if qt_name == 'PyQt5':
+def get_qt_license(qt_namei: str) -> str:
+    if qt_namei == 'PyQt5':
         qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
-    elif qt_name == 'PyQt6':
+    elif qt_namei == 'PyQt6':
         qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PyQt6 Python bindings for Qt6, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
-    elif qt_name == 'PySide2':
+    elif qt_namei == 'PySide2':
         qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PySide2 Python bindings for Qt5, by Qt for Python.'
-    elif qt_name == 'PySide6':
+    elif qt_namei == 'PySide6':
         qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PySide6 Python bindings for Qt6, by Qt for Python.'
     else:  # pragma: no cover
-        raise NotImplementedError(qt_name)
+        raise NotImplementedError(qt_namei)
     return qt
 
 QT = get_qt_license(qt_name)

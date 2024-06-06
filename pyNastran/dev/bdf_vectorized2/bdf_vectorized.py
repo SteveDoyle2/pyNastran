@@ -531,7 +531,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: Union[str, bool, None], bool=True,
+    def __init__(self, debug: Union[str, bool, None],
                  log: Optional[SimpleLogger]=None,
                  mode: str='msc') -> None:
         """

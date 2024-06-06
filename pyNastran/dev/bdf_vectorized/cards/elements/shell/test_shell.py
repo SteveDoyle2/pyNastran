@@ -1,5 +1,7 @@
 from collections import defaultdict
+from io import StringIO
 import unittest
+
 import numpy as np
 from numpy import array, allclose
 
@@ -366,7 +368,6 @@ class TestShells(unittest.TestCase):
             #p.plies[iply][0] = m # MAT1
             ##p.mids = [m, m, m]
 
-        from StringIO import StringIO
         f = StringIO()
 
         #print(m.write_card(f, size=8, material_id=None))

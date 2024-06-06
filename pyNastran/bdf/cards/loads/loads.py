@@ -353,7 +353,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
 
         """
-        msg = ', which is required by LSEQ=%s' % (self.sid)
+        msg = f', which is required by LSEQ={self.sid:d}'
         if self.lid is not None:
             self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
@@ -747,12 +747,12 @@ class DAREA(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by DAREA=%s' % (self.sid)
+        msg = f', which is required by DAREA={self.sid:d}'
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         nids2 = []
-        msg = ', which is required by DAREA=%s' % (self.sid)
+        msg = f', which is required by DAREA={self.sid:d}'
         for nid in self.node_ids:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -773,7 +773,7 @@ class DAREA(BaseCard):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        msg = ', which is required by DAREA=%s' % (self.sid)
+        msg = f', which is required by DAREA={self.sid:d}'
         return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=False, msg=msg)
 
     def raw_fields(self):
@@ -921,7 +921,7 @@ class SPCD(Load):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        msg = ', which is required by SPCD=%s' % (self.sid)
+        msg = f', which is required by SPCD={self.sid:d}'
         return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model: BDF) -> None:
@@ -934,11 +934,11 @@ class SPCD(Load):
             the BDF object
 
         """
-        msg = ', which is required by SPCD=%s' % (self.sid)
+        msg = f', which is required by SPCD={self.sid:d}'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
-        msg = ', which is required by SPCD=%s' % (self.sid)
+        msg = f', which is required by SPCD={self.sid:d}'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -1054,11 +1054,11 @@ class DEFORM(Load):
             the BDF object
 
         """
-        msg = ', which is required by DEFORM=%s' % (self.sid)
+        msg = f', which is required by DEFORM={self.sid:d}'
         self.eid_ref = model.Element(self.eid, msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
-        msg = ', which is required by DEFORM=%s' % (self.sid)
+        msg = f', which is required by DEFORM={self.sid:d}'
         self.eid_ref = model.safe_element(self.eid, self.sid, xref_errors, msg)
 
     def uncross_reference(self) -> None:
@@ -1198,7 +1198,7 @@ class SLOAD(Load):
             the BDF object
 
         """
-        msg = ', which is required by SLOAD=%s' % (self.sid)
+        msg = f', which is required by SLOAD={self.sid:d}'
         self.nodes_ref = []
         for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))

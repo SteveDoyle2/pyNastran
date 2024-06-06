@@ -594,7 +594,7 @@ class CBAR(LineElement):
         ----------
         card : BDFCard()
             a BDFCard object
-        beamor : BAROR() or None
+        baror : BAROR() or None
             defines the defaults
         comment : str; default=''
             a comment for the card

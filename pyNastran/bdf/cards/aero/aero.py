@@ -2188,16 +2188,16 @@ class CAERO1(BaseCard):
         #x = x0b + dxb×u
         #y = y0b + dyb×u
 
-        def points_in_polygon(polygon: np.ndarray, pts: np.ndarray) -> np.ndarray:
-            contour2 = np.vstack((polygon[1:], polygon[:1]))
-            test_diff = contour2 - polygon
-            mask1 = (pts[:, None] == polygon).all(-1).any(-1)
-            m1 = (polygon[:, 1] > pts[:, None, 1]) != (contour2[:, 1] > pts[:, None, 1])
-            slope = ((pts[:, None, 0] - polygon[:, 0]) * test_diff[:, 1]) - (
-                        test_diff[:, 0] * (pts[:, None, 1] - polygon[:, 1]))
+        def points_in_polygon(polygoni: np.ndarray, pts: np.ndarray) -> np.ndarray:
+            contour2 = np.vstack((polygoni[1:], polygoni[:1]))
+            test_diff = contour2 - polygoni
+            mask1 = (pts[:, None] == polygoni).all(-1).any(-1)
+            m1 = (polygoni[:, 1] > pts[:, None, 1]) != (contour2[:, 1] > pts[:, None, 1])
+            slope = ((pts[:, None, 0] - polygoni[:, 0]) * test_diff[:, 1]) - (
+                        test_diff[:, 0] * (pts[:, None, 1] - polygoni[:, 1]))
             m2 = slope == 0
             mask2 = (m1 & m2).any(-1)
-            m3 = (slope < 0) != (contour2[:, 1] < polygon[:, 1])
+            m3 = (slope < 0) != (contour2[:, 1] < polygoni[:, 1])
             m4 = m1 & m3
             count = np.count_nonzero(m4, axis=-1)
             mask3 = ~(count % 2 == 0)

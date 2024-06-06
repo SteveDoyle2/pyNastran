@@ -443,7 +443,7 @@ class LoadActions(BaseGui):
             return is_failed, '', -1
 
         if out_filename in (None, False):
-            title = 'Select a Custom Results File for %s' % (self.gui.format)
+            title = f'Select a Custom Results File for {self.gui.format}'
 
             #print('wildcard_level =', wildcard_level)
             #self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'

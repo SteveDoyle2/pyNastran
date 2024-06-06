@@ -3840,9 +3840,9 @@ class AddMaterial:
 
 
 class AddContact:
-    def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment='') -> BSURFS:
+    def add_bsurfs(self, bsurfs_id, eids, g1s, g2s, g3s, comment='') -> BSURFS:
         """Creates a BSURFS card"""
-        bsurfs = BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
+        bsurfs = BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment=comment)
         self._add_methods._add_bsurfs_object(bsurfs)
         return bsurfs
 

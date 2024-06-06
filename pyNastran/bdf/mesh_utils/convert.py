@@ -1139,7 +1139,8 @@ def _convert_materials(model: BDF,
     }
     _write_scales(model.log, scale_map, scales)
 
-def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str], keys_to_skip=set([])):
+def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str],
+                  keys_to_skip=set([])):
     for scale, msg in scale_map.items():
         if scale in scales:
             log.debug(msg)

@@ -1252,7 +1252,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         mpc_to_subcase[mpc_id].append(subcase_id)
 
         for spc_id in chain(model.spcs, model.spcadds):
-            spc_name = 'SPC=%i' % (spc_id)
+            spc_name = f'SPC={spc_id:d}'
             if spc_id in mpc_to_subcase:
                 subcases = spc_to_subcase[spc_id]
                 spc_name += ': Subcases='
@@ -2982,9 +2982,10 @@ class NastranIO(NastranIO_):
         #gui.menu_help.
 
         #gui.actions['about'].Disable()
-        menu_items = {}
-        menu_items['nastran_toolbar'] = (gui.nastran_toolbar,
-                                         ('caero', 'caero_subpanels', 'conm2'))
+        menu_items = {
+            'nastran_toolbar': (gui.nastran_toolbar,
+                                ('caero', 'caero_subpanels', 'conm2'))
+        }
         #menu_items = [
             #(self.menu_help2, ('about_nastran',)),
             #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))

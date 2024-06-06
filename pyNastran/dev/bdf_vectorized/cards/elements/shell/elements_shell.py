@@ -169,7 +169,7 @@ class ElementsShell:
         #print('property_ids =', property_id)
         massi = zeros(n, dtype='float64')
 
-        etypes = [etype.type for type in types]
+        etypes = [etype.type for typei in types]
         #print("etypes =", etypes)
         massi = zeros(n, dtype='float64')
 

@@ -1171,7 +1171,7 @@ class CAERO2(VectorizedBaseCard):
 
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return (p1, p2)
+        return p1, p2
 
     def get_points_elements_3d(self):
         """

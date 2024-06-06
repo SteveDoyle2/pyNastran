@@ -2677,9 +2677,9 @@ class PBCOMP(Property):
             z = self.z[istation0:istation1]
             c = self.c[istation0:istation1]
             mids = self.material_ids[istation0:istation1]
-            for (yi, zi, ci, mid) in zip_longest(y, z, c, mids):
+            for (yi, zi, ci, midi) in zip_longest(y, z, c, mids):
                 ci = set_blank_if_default(ci, default=0.0)
-                list_fields += [yi, zi, ci, mid, None, None, None, None]
+                list_fields += [yi, zi, ci, midi, None, None, None, None]
             #assert len(y) > 0, list_fields
             bdf_file.write(print_card(list_fields))
         return

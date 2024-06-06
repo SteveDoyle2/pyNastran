@@ -2325,7 +2325,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nodes[ngrids+nspoints:] = self.epoint.points
         return nodes
 
-    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True, dtype='float64'):
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2358,7 +2358,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             raise NotImplementedError('EPOINT')
 
         assert ngrids + nspoints + nepoints > 0, 'ngrids=%s nspoints=%s nepoints=%s' % (ngrids, nspoints, nepoints)
-        xyz_cid0 = np.zeros((ngrids + nspoints + nepoints, 3), dtype=dtype)
+        xyz_cid0 = np.zeros((ngrids + nspoints + nepoints, 3), dtype=fdtype)
         if cid == 0:
             xyz_cid0 = self.grid.get_position_by_node_index()
             assert nspoints == 0, nspoints
@@ -2644,9 +2644,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        fdtype : str
+        fdtype : str; default='float64'
             the type of xyz_cp
-        int32 : str
+        idtype : str; default='int32'
             the type of nid_cp_cd
 
         Returns
@@ -2707,7 +2707,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 #raise NotImplementedError('EPOINTs')
 
         if nnodes + nspoints + nepoints == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            msg = f'nnodes={nnodes:d} nspoints={nspoints:d} nepoints={nepoints:d}'
             raise ValueError(msg)
 
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)

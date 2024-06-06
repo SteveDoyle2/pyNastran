@@ -127,7 +127,7 @@ def create_res_obj(islot: int,
         else:  # pramga: no cover
             raise RuntimeError('is_deflection=%s is_force=%s' % (is_deflection, is_force))
     else:  # pramga: no cover
-        raise RuntimeError('vector_size=%s' % (vector_size))
+        raise RuntimeError(f'vector_size={vector_size}')
     return res_obj, title
 
 def load_deflection_csv(out_filename: str,

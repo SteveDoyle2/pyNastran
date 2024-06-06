@@ -107,7 +107,8 @@ class TetgenIO:
                             mask_value=None, nlabels=None, labelsize=None, ncolors=None,
                             colormap='jet', data_format=None, uname='GuiResult')
 
-        cases = {}
-        cases[icase] = (nid_res, (0, 'NodeID'))
-        cases[icase + 1] = (eid_res, (0, 'ElementID'))
+        cases = {
+            icase: (nid_res, (0, 'NodeID')),
+            icase+1: (eid_res, (0, 'ElementID')),
+        }
         return form, cases, nids, eids

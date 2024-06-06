@@ -196,7 +196,7 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
     if np.any(is_x):
         coords = elem.model.coord
-        is_cd1 = (cd1 > 0) & (is_x)
+        is_cd1 = (cd1 > 0) & is_x
 
         v[is_x, :] = elem.x[is_x, :]
         if np.any(is_cd1):
@@ -554,7 +554,7 @@ class CBAR(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == 0)
+        return self.g0 == 0
 
     @property
     def is_g0(self) -> np.ndarray:

@@ -4309,7 +4309,7 @@ class PAERO1(BaseCard):
             if isinstance(bi, integer_types) and bi >= 0:
                 Bi2.append(bi)
             elif bi is not None:
-                raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))
+                raise RuntimeError(f'invalid Bi value on PAERO1 bi={bi!r}')
             #else:
                 #pass
         return PAERO1(pid, Bi, comment=comment)

@@ -289,7 +289,7 @@ class NSM1(NSM1x):
 
     def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
         """See ``NSM1x``"""
-        assert isinstance(value, float), 'NSM1; value=%r and must be a float' % (value)
+        assert isinstance(value, float), f'NSM1; value={value!r} and must be a float'
         NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment='')
 
 
@@ -433,7 +433,7 @@ class NSML1(NSM1x):
         comment : str; default=''
             a comment for the card
         """
-        assert isinstance(value, float), 'NSML1; value=%r and must be a float' % (value)
+        assert isinstance(value, float), f'NSML1; value={value!r} and must be a float'
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
 

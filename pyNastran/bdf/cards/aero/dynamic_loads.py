@@ -543,9 +543,9 @@ class FLUTTER(BaseCard):
                 value = self.nvalue
             return value
         else:
-            raise KeyError('Field %r is an invalid FLUTTER entry.' % (n))
+            raise KeyError(f'Field {n!r} is an invalid FLUTTER entry.')
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value):
         """
         Updates complicated parameters on the FLUTTER card
 

@@ -98,7 +98,7 @@ def list_print(lst: list[Any], float_fmt: str='%-4.2f') -> str:
         if len(lst) == 0:
             return '[]'
 
-        if isinstance(lst, (np.ndarray)) and lst.ndim == 2:
+        if isinstance(lst, np.ndarray) and lst.ndim == 2:
             row, col = lst.shape
             return (
                 "["+",\n ".join(["["+",".join(

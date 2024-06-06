@@ -395,7 +395,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         cids.sort()
         #print('cids =', cids)
         cid_map.update(
-            {(cid + cids[i] - 1) : (i) for i in range(ncoords)})
+            {(cid + cids[i] - 1) : i for i in range(ncoords)})
         #print('cid_map =', cid_map)
 
     eid_map = {}

@@ -82,13 +82,13 @@ class BOLTLD(Combination):
 
         Parameters
         ----------
-        sid : int
+        bolt_id : int
             Load set identification number. See Remarks 1. and 4. (Integer > 0)
         scale : float
             Scale factor. See Remarks 2. and 8. (Real)
-        Si : list[float]
+        scale_factors : list[float]
             Scale factors. See Remarks 2., 7. and 8. (Real)
-        load_ids : list[int]
+        bolt_ids : list[int]
             Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
             TLOAD2, and ACSRCE entries. See Remarks 3. and 7. (Integer > 0)
         comment : str; default=''

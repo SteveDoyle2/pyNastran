@@ -157,7 +157,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
                 #print('writing %s' % card_type)
 
                 # %10i
-                fmt = endian + '%ii' % (nshells)
+                fmt = endian + '%ii' % nshells
                 structi = Struct(fmt)
                 pids = pids_shrink
                 f_ugrid.write(structi.pack(*pids))

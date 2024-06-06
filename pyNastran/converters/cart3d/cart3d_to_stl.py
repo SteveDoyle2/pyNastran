@@ -6,7 +6,8 @@ defines:
 from pyNastran.converters.cart3d.cart3d import read_cart3d, Cart3D
 from pyNastran.converters.stl.stl import STL
 
-def cart3d_to_stl(cart3d, stl_filename=None, is_binary=False, log=None, debug=False):
+def cart3d_to_stl(cart3d, stl_filename=None, is_binary: bool=False, log=None,
+                  debug: bool=False):
     """
     Converts a Cart3D object to STL format.
 
@@ -16,6 +17,8 @@ def cart3d_to_stl(cart3d, stl_filename=None, is_binary=False, log=None, debug=Fa
         a Cart3D object
     stl_filename : str; default=None
         path to the output STL file (or None to skip)
+    is_binary : bool; default=False
+        flag to make the STL binary
     log : log
         a logger object (or None)
     debug : bool; default=False
