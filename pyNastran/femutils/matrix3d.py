@@ -95,7 +95,7 @@ def dot_n33_33(A, B, debug=True):
     assert B.shape == (3, 3), B.shape
     #C = np.matmul(B, A.T) # 3x3x4
     #C = B.dot(A)  # 3x4x3
-    C = np.tensordot(A, B, axes=(1))
+    C = np.tensordot(A, B, axes=1)
 
     #print('C (nx3x3 @ 33).shape = ', C.shape)
     if debug:

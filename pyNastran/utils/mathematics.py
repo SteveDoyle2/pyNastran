@@ -324,8 +324,8 @@ def list_print(list_a,
                 return j % (0. if abs(a) < tol else a)
 
         if isinstance(a, (complex, complex64, complex128)):
-            return '%4s%4s' % ('0' if abs(a.real) < 1e-8 else '%.4g' % (a.real),
-                               '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
+            return '%4s%4s' % ('0' if abs(a.real) < 1e-8 else '%.4g' % a.real,
+                               '' if abs(a.imag) < 1e-8 else '%+.4gj' % a.imag)
         try:
             print("list_print: type(a) is not supported... %s" % (type(a)))
             return ' %g' % a

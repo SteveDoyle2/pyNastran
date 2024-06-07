@@ -1029,7 +1029,7 @@ class OP2Reader:
             #doubles = np.frombuffer(blocks[1], dtype='float64')
             nints = len(ints)
 
-            assert nints % 14 == 0, 'nints=%s' % (nints)
+            assert nints % 14 == 0, f'nints={nints:d}'
             ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
             ints = ints.reshape(ncstm, 14)[:, :2]
             floats = floats.reshape(ncstm, 14)[:, 2:]
@@ -1347,7 +1347,7 @@ class OP2Reader:
                 raise RuntimeError(msg)
             op2._frequencies = freqs
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
+                self.binary_debug.write(f'  recordi = [{subtable_name_raw!r}, freqs]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()

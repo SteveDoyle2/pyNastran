@@ -77,7 +77,7 @@ def create_res_obj(islot: int,
     elif dimension == 2:
         vector_size = datai.shape[1]
     else:  # pramga: no cover
-        raise RuntimeError('dimension=%s' % (dimension))
+        raise RuntimeError(f'dimension={dimension}')
 
     if vector_size == 1:
         res_obj = GuiResult(

@@ -597,6 +597,17 @@ class TestNastranGUI(unittest.TestCase):
         test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
                               plot=True, stop_on_failure=True)
 
+    def test_aero_02(self):
+        """checks 0012_flutter.op2"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.op2')
+        #log = SimpleLogger(level='error', encoding='utf-8')
+        test = NastranGUI()
+        test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
+                              plot=True, stop_on_failure=True)
+        test.on_load_results(op2_filename)
+        test.validate_result_object_methods()
+
     def test_stack_composites(self):
         e1 = np.array([
             [18,  1],

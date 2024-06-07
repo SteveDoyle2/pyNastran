@@ -120,8 +120,11 @@ class FlutterResponse:
         eigr = omegas * damps / 2
         eigc = omegas
 
+        one_over_kfreq = np.full(kfreqs.shape, np.nan, dtype=kfreqs.dtype)
+        ikfreq = np.where(kfreqs != 0)
+        one_over_kfreq[ikfreq] = 1 / kfreqs[ikfreq]
         results[:, :, 0] = kfreqs
-        results[:, :, 1] = 1 / kfreqs
+        results[:, :, 1] = one_over_kfreq
         results[:, :, 7] = eigr  # real part of eigenvalue
         results[:, :, 8] = eigc  # complex part of eigenvalue
         results[:, :, [2, 3, 4, 5, 6]] = fdata[:, :, [0, 1, 2, 3, 4]]

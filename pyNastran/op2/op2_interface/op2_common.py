@@ -353,7 +353,7 @@ class OP2Common(Op2Codes, F06Writer):
                              fix_device_code: bool=False,
                              add_to_dict: bool=True):
         assert len(data) == 1168, len(data)
-        datai = data[8 * (field_num - 1) : 8 * (field_num)]
+        datai = data[8 * (field_num - 1) : 8 * field_num]
         assert len(datai) == 8, len(datai)
         if var_type == b'i':
             var_type = b'q'
@@ -374,7 +374,7 @@ class OP2Common(Op2Codes, F06Writer):
                              fix_device_code: bool=False,
                              add_to_dict: bool=True):
         assert len(data) == 584, len(data)
-        datai = data[4 * (field_num - 1) : 4 * (field_num)]
+        datai = data[4 * (field_num - 1) : 4 * field_num]
         assert len(datai) == 4, len(datai)
         #assert type(self._endian) == type(Type), 'endian=%r Type=%r' % (self._endian, Type)
         value = self._unpack_data_parameter(
@@ -1784,7 +1784,7 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  %-14s = %r\n' % ('approach_code', self.approach_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  device_code', self.device_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  analysis_code', self.analysis_code))
-            self.binary_debug.write('  %-14s = sort_code * 1000 + table_code\n' % ('tCode'))
+            self.binary_debug.write('  %-14s = sort_code * 1000 + table_code\n' % 'tCode')
             self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
             self.binary_debug.write('  %-14s = %r\n' % ('  table_code', self.table_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
@@ -1920,7 +1920,7 @@ class OP2Common(Op2Codes, F06Writer):
         # Sort codes can range from 0 to 7, but most of the examples
         # are covered by these.  The ones that break are incredibly large.
         if self.sort_code not in [0, 1, 2, 3, 4, 5, 6, 7]:
-            msg = 'Invalid sort_code=%s' % (self.sort_code)
+            msg = f'Invalid sort_code={self.sort_code}'
             raise SortCodeError(msg)
 
         #: the bytes describe the SORT information

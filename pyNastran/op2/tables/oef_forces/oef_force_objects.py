@@ -807,7 +807,7 @@ class RealSpringDamperForceArray(RealForceObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
+        raise NotImplementedError(f'this should be overwritten by {self.__class__.__name__}')
 
     def write_csv(self, csv_file: TextIO,
                   is_exponent_format: bool=False,

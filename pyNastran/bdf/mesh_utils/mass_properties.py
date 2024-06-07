@@ -2137,7 +2137,7 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
             model.log.info('WTMASS scale = %r' % scale)
     mass *= scale
     inertia *= scale
-    return (mass, cg, inertia)
+    return mass, cg, inertia
 
 #-------------------------------------------------------------------------------
 def mass_properties_breakdown(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,

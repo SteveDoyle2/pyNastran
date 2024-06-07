@@ -2391,7 +2391,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         times = self._times
         #ntimes = self.data.shape[0]
         for ieid, eid in enumerate(eids):
-            eid_line = ' ELEMENT-ID = %s' % (eid)
+            eid_line = f' ELEMENT-ID = {eid:d}'
             header[1] = eid_line
             msg = header + msg_temp
             f06_file.write(''.join(msg))
@@ -3833,7 +3833,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         eids = self.element
         times = self._times
         for ieid, eid in enumerate(eids):
-            eid_line = ' ELEMENT-ID = %s' % (eid)
+            eid_line = f' ELEMENT-ID = {eid:d}'
             header[1] = eid_line
             msg = header + msg_temp
             f06_file.write(''.join(msg))

@@ -137,12 +137,17 @@ class DisplacementResults2(DispForceVectorResults):
 
     def get_vector_result(self, itime: int, res_name: str,
                           return_dense: bool=True) -> tuple[np.ndarray, np.ndarray]:
-        dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
-        assert dxyz.ndim == 2, dxyz
-
         scale = self.get_scale(itime, res_name)
-        deflected_xyz = self.xyz + scale * dxyz
-        return self.xyz, deflected_xyz
+        if self.is_real:
+            dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
+            assert dxyz.ndim == 2, dxyz
+            xyz = self.xyz
+            deflected_xyz = self.xyz + scale * dxyz
+        else:
+            phase = self.get_phase(itime, res_name)
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                itime, res_name, scale, phase)
+        return xyz, deflected_xyz
 
     def get_vector_result_by_scale_phase(self, itime: int, res_name: str,
                                          scale: float,

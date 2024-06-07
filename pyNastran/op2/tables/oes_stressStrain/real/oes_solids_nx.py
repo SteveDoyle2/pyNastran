@@ -175,7 +175,7 @@ class RealSolidArrayNx(OES_Object):
             self.data[:, :, :6] += factor
         else:
             # TODO: should support arrays
-            raise TypeError('factor=%s and must be a float' % (factor))
+            raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
     def __isub__(self, factor):
@@ -184,18 +184,18 @@ class RealSolidArrayNx(OES_Object):
             self.data[:, :, :6] -= factor
         else:
             # TODO: should support arrays
-            raise TypeError('factor=%s and must be a float' % (factor))
+            raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
     def __imul__(self, factor):
         """[A] *= b"""
-        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= factor
         self.update_data_components()
 
     def __idiv__(self, factor):
         """[A] *= b"""
-        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= 1. / factor
         self.update_data_components()
 

@@ -51,7 +51,7 @@ def save_nastran_results(gui: NastranGUI,
         if case.is_complex:
             log.warning(f'skipping case {str(case)} because it is complex')
             continue
-        if isinstance(case, (GridPointForceResult)):
+        if isinstance(case, GridPointForceResult):
             log.warning(f'skipping case {str(case)}')
             continue
 

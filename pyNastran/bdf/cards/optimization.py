@@ -684,7 +684,7 @@ class DCONSTR(OptConstraint):
             the BDF object
 
         """
-        msg = ', which is required by DCONSTR oid=%s' % (self.oid)
+        msg = f', which is required by DCONSTR oid={self.oid:d}'
         self.dresp_id_ref = model.DResp(self.dresp_id, msg)
         if isinstance(self.lid, integer_types):
             self.lid_ref = model.TableD(self.lid, msg)

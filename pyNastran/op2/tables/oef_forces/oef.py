@@ -201,7 +201,7 @@ class OEF:
             imag = imag_mapper[op2.element_type]
         except KeyError:
             imag = None
-        return (real, imag)
+        return real, imag
 
     def _read_oef1_3(self, data: bytes, ndata: int):
         """Table 3 parser for OEF1 table"""

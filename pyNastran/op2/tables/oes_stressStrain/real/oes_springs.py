@@ -137,10 +137,10 @@ class RealSpringArray(OES_Object):
 
     #def __mul__(self, factor):
         #"""in-place multiplication"""
-        #assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        #assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         #self.data *= factor
     #def __rmul__(self, factor):
-        #assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        #assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         #self.data *= factor
 
     #def __sub__(self, factor):
@@ -148,14 +148,14 @@ class RealSpringArray(OES_Object):
             #self.data -= factor
         #else:
             ## TODO: should support arrays
-            #raise TypeError('factor=%s and must be a float' % (factor))
+            #raise TypeError(f'factor={factor} and must be a float')
     #def __add__(self, factor):
         #"""[C] = [A] + b"""
         #if isinstance(factor, float_types):
             #self.data += factor
         #else:
             ## TODO: should support arrays
-            #raise TypeError('factor=%s and must be a float' % (factor))
+            #raise TypeError(f'factor={factor} and must be a float')
 
     #def __radd__(self, factor):
         #"""[C] = b + [A]"""
@@ -170,7 +170,7 @@ class RealSpringArray(OES_Object):
             self.data += factor
         else:
             # TODO: should support arrays
-            raise TypeError('factor=%s and must be a float' % (factor))
+            raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
     def __isub__(self, factor):
@@ -179,18 +179,18 @@ class RealSpringArray(OES_Object):
             self.data -= factor
         else:
             # TODO: should support arrays
-            raise TypeError('factor=%s and must be a float' % (factor))
+            raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
     def __imul__(self, factor):
         """[A] *= b"""
-        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data *= factor
         self.update_data_components()
 
     def __idiv__(self, factor):
         """[A] *= b"""
-        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data *= 1. / factor
         self.update_data_components()
 

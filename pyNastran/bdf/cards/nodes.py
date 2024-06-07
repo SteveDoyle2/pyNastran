@@ -1208,11 +1208,11 @@ class GRID(BaseCard):
         return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     def validate(self) -> None:
-        assert isinstance(self.cp, integer_types), 'cp=%s' % (self.cp)
-        assert self.nid > 0, 'nid=%s' % (self.nid)
-        assert self.cp >= 0, 'cp=%s' % (self.cp)
-        assert self.cd >= -1, 'cd=%s' % (self.cd)
-        assert self.seid >= 0, 'seid=%s' % (self.seid)
+        assert isinstance(self.cp, integer_types), f'cp={self.cp:d}'
+        assert self.nid > 0, f'nid={self.nid:d}'
+        assert self.cp >= 0, f'cp={self.cp:d}'
+        assert self.cd >= -1, f'cd={self.cd:d}'
+        assert self.seid >= 0, f'seid={self.seid:d}'
         assert len(self.xyz) == 3
 
     def Nid(self) -> int:

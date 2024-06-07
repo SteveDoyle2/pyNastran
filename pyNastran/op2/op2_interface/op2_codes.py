@@ -492,7 +492,7 @@ class Op2Codes:
         msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
 
         random_code = self.random_code if hasattr(self, 'random_code') else 0
-        msg += "  random_code   = %-3s\n" % (random_code)
+        msg += "  random_code   = %-3s\n" % random_code
 
         if element_type is not None:
             if isinstance(element_type, str):

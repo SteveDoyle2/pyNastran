@@ -3481,7 +3481,7 @@ class MATHE(HyperelasticMaterial):
 
             gent = [nkt, n, im, d1, d2, d3, d4, d5]
         else:  # pragma: no cover
-            raise NotImplementedError('model=%r' % (model))
+            raise NotImplementedError(f'model={model!r}')
 
         return MATHE(mid, model, bulk, mus, alphas, betas,
                      mooney, sussbat, aboyce, gent,

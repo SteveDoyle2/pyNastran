@@ -701,7 +701,7 @@ def _bar_eq_pload1(model: BDF, load, elem, xyz, Ldir,
 
 def _pload4_total(loadcase_id, load, scale, xyz, F, M, p):
     """helper method for ``sum_forces_moments``"""
-    assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
+    assert load.line_load_dir == 'NORM', f'line_load_dir = {load.line_load_dir!r}'
     for elem in load.eids_ref:
         fi, mi = _pload4_helper(loadcase_id, load, scale, elem, xyz, p)
         F += fi
@@ -710,7 +710,7 @@ def _pload4_total(loadcase_id, load, scale, xyz, F, M, p):
 
 def _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p):
     """helper method for ``sum_forces_moments_elements``"""
-    assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
+    assert load.line_load_dir == 'NORM', f'line_load_dir = {load.line_load_dir!r}'
     for elem in load.eids_ref:
         eid = elem.eid
         if eid not in eids:

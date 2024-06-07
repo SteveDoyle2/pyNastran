@@ -1905,7 +1905,7 @@ class DRESP3(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
+        msg = f', which is required by DRESP3 ID={self.dresp_id:d}'
         default_values = {}
         for name, vals in sorted(self.params.items()):
             if name in ['DRESP1', 'DRESP2']:

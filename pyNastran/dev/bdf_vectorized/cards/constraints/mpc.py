@@ -75,7 +75,8 @@ class MPC:
         if self.constraint_id is None:
             self.constraint_id = constraint_id
         elif self.constraint_id != constraint_id:
-            raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
+            raise RuntimeError('self.constraint_id == constraint_id; '
+                               f'constraint_id={self.constraint_id} expected; found={constraint_id}')
 
     def build(self):
         #float_fmt = self.model.float_fmt
