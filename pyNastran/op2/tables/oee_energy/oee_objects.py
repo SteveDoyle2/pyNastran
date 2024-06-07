@@ -393,7 +393,7 @@ class RealStrainEnergyArray(BaseElement):
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append(f'  element: [{ntimes_word:d}, nelements]; eid=100000000 -> total\n')
+        msg.append(f'  element: [{ntimes_word:s}, nelements]; eid=100000000 -> total\n')
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         #msg.append('  element type: %s\n' % self.element_type)
@@ -1063,7 +1063,7 @@ class ComplexStrainEnergyArray(BaseElement):
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append(f'  element: [{ntimes_word:d}, nelements]; eid=100000000 -> total\n')
+        msg.append(f'  element: [{ntimes_word:s}, nelements]; eid=100000000 -> total\n')
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         #msg.append('  element type: %s\n' % self.element_type)
