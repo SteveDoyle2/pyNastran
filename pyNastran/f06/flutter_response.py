@@ -83,9 +83,20 @@ class FlutterResponse:
                 subcase_id: int=1, cref: float=1.0,
                 is_xysym: bool=False, is_xzsym: bool=False):
         """
-        cref : chord
-           Reference length for reduced frequency
-           used to compute b (reference semi-chord)
+        Parameters
+        ----------
+        method : str
+            expected PKNL
+        subcase_id : int
+            self explanatory
+        cref : chord; default=1.0
+            Reference length for reduced frequency
+            used to compute b (reference semi-chord); found per the AERO card
+        is_xysym : bool; default=False
+            is the model symmetric about the xy plane?
+        is_xzsym : bool; default=False
+            is the model symmetric about the xz plane?
+
         """
         b = cref / 2.0
         configuration = 'AEROSG2D' #  TODO: what is this?
@@ -447,7 +458,8 @@ class FlutterResponse:
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
                         xlim=None, ylim=None,
-                        show=True, clear=False, close=False, legend=True,
+                        show: bool=True, clear: bool=False,
+                        close: bool=False, legend: bool=True,
                         png_filename=None,
                         **kwargs):
         """
@@ -486,8 +498,8 @@ class FlutterResponse:
             0.0 - fully transparent
 
         """
-        xlabel = 'Eigenvalue (Real)'
-        ylabel = 'Eigenvalue (Imaginary)'
+        xlabel = 'Eigenvalue (Real); $\omega \zeta$'
+        ylabel = 'Eigenvalue (Imaginary); $\omega$'
         ix = self.ieigr
         iy = self.ieigi
         scatter = True
@@ -497,10 +509,14 @@ class FlutterResponse:
                        png_filename=png_filename,
                        **kwargs)
 
-    def _plot_x_y(self, ix, iy, xlabel, ylabel, scatter, modes=None,
+    def _plot_x_y(self, ix: int, iy: int,
+                  xlabel: str, ylabel: str,
+                  scatter: bool,
+                  modes=None,
                   fig=None, axes=None,
                   xlim=None, ylim=None,
-                  show=True, clear=False, close=False, legend=True,
+                  show: bool=True, clear: bool=False,
+                  close: bool=False, legend: bool=True,
                   png_filename=None,
                   **kwargs):
         """builds the plot"""
@@ -526,8 +542,9 @@ class FlutterResponse:
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
-            axes.plot(xs[iplot], ys[iplot], color=color, marker=symbol, label='Mode %i' % mode,
-                      linestyle=linestyle, markersize=0)
+            line = axes.plot(xs[iplot], ys[iplot],
+                             color=color, marker=symbol, label=f'Mode {mode:d}',
+                             linestyle=linestyle, markersize=0)
 
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
@@ -563,8 +580,9 @@ class FlutterResponse:
     def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
-                   nopoints=False, noline=False,
-                   show=True, clear=False, close=False, legend=True,
+                   nopoints: bool=False, noline: bool=False,
+                   show: bool=True, clear: bool=False,
+                   close: bool=False, legend: bool=True,
                    png_filename=None,
                    **kwargs):
         """
@@ -654,7 +672,7 @@ class FlutterResponse:
         axes2.set_xlabel(xlabel)
         axes2.set_ylabel(ylabel2)
 
-        title = 'Subcase %i' % self.subcase
+        title = f'Subcase {self.subcase:d}'
         if png_filename:
             title += '\n%s' % png_filename
         fig.suptitle(title)
@@ -695,8 +713,8 @@ class FlutterResponse:
         assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
-        ylabel1 = 'Damping'
-        ylabel2 = 'KFreq [rad]'
+        ylabel1 = r'Damping; $\zeta = 2 \xi $'
+        ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
 
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
         iy1 = self.idamping
@@ -715,7 +733,8 @@ class FlutterResponse:
     def plot_kfreq_damping2(self, modes=None,
                             fig=None,
                             xlim=None, ylim=None,
-                            show=True, clear=False, close=False, legend=True,
+                            show: bool=True, clear: bool=False,
+                            close: bool=False, legend: bool=True,
                             png_filename=None,
                             **kwargs):
         """
@@ -724,8 +743,8 @@ class FlutterResponse:
         See ``plot_root_locus`` for arguments
 
         """
-        xlabel = 'KFreq [rad]'
-        ylabel1 = 'Damping'
+        xlabel = r'KFreq [rad]; $ \omega c / (2 V)$'
+        ylabel1 = r'Damping; $\zeta = 2 \xi $'
         ylabel2 = 'Frequency'
         ix = self.ikfreq
         iy1 = self.idamping
@@ -792,10 +811,11 @@ class FlutterResponse:
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type: str='tas',
-                   clear=False, close=False, legend=True,
+                   clear: bool=False, close: bool=False, legend: bool=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    vd_limit=None, damping_limit=None,
-                   nopoints=False, noline=False, png_filename=None, show=None):
+                   nopoints: bool=False, noline: bool=False,
+                   png_filename=None, show: bool=False):
         """
         Make a V-g and V-f plot
 
@@ -815,6 +835,8 @@ class FlutterResponse:
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         legend : bool; default=True
             should the legend be shown
+        show : bool; default=None???
+            show/don't show the plot
 
         """
         assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
@@ -858,7 +880,7 @@ class FlutterResponse:
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
-        damp_axes.set_ylabel('Damping')
+        damp_axes.set_ylabel(r'Damping; $\zeta = 2 \xi $')
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
@@ -1156,7 +1178,7 @@ class FlutterResponse:
             xlabel = f'Altitude [{alt_units}]'
         elif plot_type == 'kfreq':
             ix = self.ikfreq
-            xlabel = 'Reduced Frequency [rad]'
+            xlabel = 'Reduced Frequency [rad]; $\omega c / (2V) $'
         elif plot_type == 'rho':
             ix = self.idensity
             density_units = self.out_units['density']
@@ -1173,16 +1195,16 @@ class FlutterResponse:
             xlabel = 'Frequency [Hz]'
         elif plot_type in ['1/kfreq', 'ikfreq']:
             ix = self.ikfreq_inv
-            xlabel = '1/KFreq [1/rad]'
+            xlabel = '1/KFreq [1/rad]; $2V / (\omega c) $'
         elif plot_type == 'eigr':
             ix = self.ieigr
-            xlabel = 'Eigenvalue (Real)'
+            xlabel = 'Eigenvalue (Real); $\omega \zeta$'
         elif plot_type == 'eigi':
             ix = self.ieigi
-            xlabel = 'Eigenvalue (Imaginary)'
+            xlabel = 'Eigenvalue (Imaginary); $\omega$'
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
-            xlabel = 'Damping'
+            xlabel = r'Damping; $\zeta = 2 \xi $'
         else:  # pramga: no cover
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")

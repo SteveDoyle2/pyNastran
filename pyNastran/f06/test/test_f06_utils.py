@@ -329,7 +329,7 @@ def _fix_modes(eigr: np.ndarray,
         # datai = [imode, 2=real/imag]
         datai = np.column_stack([eigr[:, ivel], eigi[:, ivel]])
         dxyz, ixyz = tree0.query(datai, k=kmodes)
-        if debug:
+        if debug:  # pragma: no cover
             print(f'\ndata0[{ivel}]:\n{data0}')
             print(f'datai[{ivel}]:\n{datai}')
             print(f'dxyz[{ivel}]:\n{dxyz}')
