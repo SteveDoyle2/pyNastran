@@ -104,7 +104,7 @@ class Zone:
         return nxyz
 
     @classmethod
-    def set_zone_from_360(self,
+    def set_zone_from_360(cls,
                           log: SimpleLogger,
                           header_dict: dict[str, Any],
                           variables: list[str],
@@ -133,7 +133,6 @@ class Zone:
         zone.headers_dict = copy.copy(header_dict)
         zone.name = name
         zone.strand_id = strand_id
-
 
         if tris is not None:
             zone.tri_elements = tris

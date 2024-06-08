@@ -201,7 +201,7 @@ class Usm3d:
 
         # determine .flo file name
         if nmax > 0:
-            flo_filename = basename + '_%s.flo' % (nmax)
+            flo_filename = basename + f'_{nmax}.flo'
         else:
             flo_filename = basename + '.flo'
 

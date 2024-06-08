@@ -249,13 +249,13 @@ class PCOMP(Property):
             raise IndexError(msg)
         return mid[0] if int_flag else mid
 
-    def _adjust_ply_id(self, i, jply):
+    def _adjust_ply_id(self, i: int, jply: int):
         nplies = self.nplies[i]
         if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
+            msg = 'invalid jply=%s' % jply
             raise IndexError(msg)
         elif jply >= nplies:
-            msg = 'invalid jply=%s' % (jply)
+            msg = 'invalid jply=%s' % jply
             raise IndexError(msg)
         else:
             if self.lam[i] == 'SYM':
@@ -287,7 +287,7 @@ class PCOMP(Property):
         int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
         if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
+            msg = 'invalid jply=%s' % jply
             raise IndexError(msg)
 
         jply2, nplies = self._adjust_ply_id(i, jply)
@@ -545,4 +545,3 @@ class PCOMP(Property):
         f.write('<PCOMP object> n=%s\n' % self.n)
         self.write_card(f)
         return f.getvalue()
-

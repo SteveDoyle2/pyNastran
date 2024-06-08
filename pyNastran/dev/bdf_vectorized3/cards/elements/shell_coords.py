@@ -102,7 +102,7 @@ def material_coordinate_system(element,
     neid = ntheta + nmcid # element.n
     #nmcid = len(itheta) - ntheta
 
-    if (ntheta + nmcid == 0):  # pragma: no cover
+    if ntheta + nmcid == 0:  # pragma: no cover
         raise NotImplementedError((ntheta, nmcid))
 
     imat = np.full((neid, 3), np.nan, dtype=normal.dtype)

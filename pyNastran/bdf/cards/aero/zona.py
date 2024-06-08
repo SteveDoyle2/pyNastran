@@ -1319,7 +1319,7 @@ class PANLST3(Spline):
         group_id = 1
         panel_groups = []
         for ifield in range(2, len(card)):
-            name = string(card, ifield, 'group_%i'%  (group_id))
+            name = string(card, ifield, f'group_{group_id:d}')
             panel_groups.append(name)
         assert len(card) > 2, 'len(PANLST3 card) = %i; no panel_groups were defined\ncard=%s' % (len(card), card)
         return PANLST3(eid, panel_groups, comment=comment)

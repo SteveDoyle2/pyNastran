@@ -874,7 +874,7 @@ class PSOLID(Property):
 
     def cross_reference(self, model: BDF) -> None:
         """cross reference method for a PSOLID"""
-        msg = ', which is required by PSOLID pid=%s' % (self.pid)
+        msg = f', which is required by PSOLID pid={self.pid:d}'
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self) -> None:

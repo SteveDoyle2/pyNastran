@@ -298,7 +298,7 @@ class SU2Reader:
                     su2_file.write(f'MARKER_TAG = {name}\n')
                     for etype, elementsi in region.items():
                         nnodesi = self.etype_nnodes_map[etype]
-                        fmt = str(etype) + ' %s' * (nnodesi) + '\n'
+                        fmt = str(etype) + ' %s' * nnodesi + '\n'
                         for element in elementsi:
                             su2_file.write(fmt % tuple(element))
 

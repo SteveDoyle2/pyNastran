@@ -889,14 +889,14 @@ def get_solid_stress_strain(model: OP2, key, is_stress: bool, vm_word: str, itim
     vm_word0 = vm_word
     if is_stress:
         stress = model.op2_results.stress
-        solids = [(stress.ctetra_stress),
-                  (stress.cpenta_stress),
-                  (stress.chexa_stress),]
+        solids = [stress.ctetra_stress,
+                  stress.cpenta_stress,
+                  stress.chexa_stress,]
     else:
         strain = model.op2_results.strain
-        solids = [(strain.ctetra_strain),
-                  (strain.cpenta_strain),
-                  (strain.chexa_strain),]
+        solids = [strain.ctetra_strain,
+                  strain.cpenta_strain,
+                  strain.chexa_strain,]
 
     for result in solids:
         if key not in result:

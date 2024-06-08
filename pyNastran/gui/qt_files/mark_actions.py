@@ -16,6 +16,7 @@ from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
+    from vtkmodules.vtkRenderingAnnotation import vtkBillboardTextActor3D
 
 
 class MarkActions:
@@ -28,7 +29,8 @@ class MarkActions:
     def log(self):
         return self.gui.log
 
-    def create_annotation(self, text: str, x: float, y: float, z: float) -> :
+    def create_annotation(self, text: str,
+                          x: float, y: float, z: float) -> vtkBillboardTextActor3D:
         """
         Creates the actual annotation and appends it to slot
 

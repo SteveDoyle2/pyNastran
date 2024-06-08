@@ -461,7 +461,7 @@ class ScalarObject(BaseScalarObject):
         for name in self.data_code['data_names']:
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')
-                name = name + 's'
+                name += 's'
                 vals_array = np.array(vals)
             elif hasattr(self, name):
                 vals = getattr(self, name)

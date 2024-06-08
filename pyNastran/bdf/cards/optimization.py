@@ -2197,7 +2197,7 @@ class DRESP1(OptConstraint):
             the BDF object
 
         """
-        msg = ', which is required by DRESP1 dresp_id=%s' % (self.dresp_id)
+        msg = f', which is required by DRESP1 dresp_id={self.dresp_id:d}'
         msg += '\n' + str(self)
 
         op2_results = [
@@ -3200,7 +3200,7 @@ class DRESP3(OptConstraint):
             the BDF object
 
         """
-        msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
+        msg = f', which is required by DRESP3 ID={self.dresp_id:d}'
         default_values = {}
         params = {}
         for key, vals in sorted(self.params.items()):
@@ -4238,7 +4238,7 @@ class DVMREL1(DVXREL1):
             the BDF object
 
         """
-        msg = ', which is required by DVMREL1 oid=%r' % (self.oid)
+        msg = f', which is required by DVMREL1 oid={self.oid:d}'
         self.mid_ref = model.Material(self.mid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 

@@ -187,7 +187,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         nplies = len(self.plies)
         if iply >= nplies:
             if iply < self.nplies:
-                iply = iply - nplies
+                iply -= nplies
             else:
                 raise IndexError('invalid value for iply=%r' % iply)
         elif iply < 0:

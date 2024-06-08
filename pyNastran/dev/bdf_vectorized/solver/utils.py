@@ -9,7 +9,7 @@ def partition_sparse(Is, Js, Vs):
             I2.append(i)
             J2.append(j)
             V2.append(v)
-    return(I2, J2, V2)
+    return I2, J2, V2
 
 
 def get_dof_set(nall, dofs):
@@ -33,7 +33,7 @@ def partition_dense_symmetric(A, dofs_in):
             v = A[dofI, dofJ]
             if abs(v) >= 1e-8:
                 A2[i, j] = v
-    return (A2, dofs)
+    return A2, dofs
 
 
 def partition_dense_vector(F, dofs_in):
@@ -48,7 +48,7 @@ def partition_dense_vector(F, dofs_in):
         v = F[dofI]
         if abs(v) >= 1e-8:
             F2[i] = v
-    return (F2, dofs)
+    return F2, dofs
 
 
 def partition_sparse_vector(F, dofs):
@@ -61,7 +61,7 @@ def partition_sparse_vector(F, dofs):
         if abs(v) >= 1e-8:
             F2i.append(i)
             F2v.append(v)
-    return(F2i, F2v)
+    return F2i, F2v
 
 
 def departition_dense_vector(n, IsVs):
@@ -88,4 +88,3 @@ def triple(A, B):
     assert isinstance(A, ndarray), type(A)
     assert isinstance(A, ndarray), type(B)
     return A.T @ B @ A
-

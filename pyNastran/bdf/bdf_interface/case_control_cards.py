@@ -157,7 +157,6 @@ CLASS_MAP = {
     'DSYM' : DSYM,
     'SEQDEP' : SEQDEP,
     'K2PP' : K2PP,
-    'THERMAL' : THERMAL,
     'RIGID' : RIGID,
 
     #  other??
@@ -166,16 +165,12 @@ CLASS_MAP = {
     'SEDR' : SEDR,
 
     'HARMONICS' : HARMONICS,
-    'ADACT' : ADACT,
     'AEROF' : AEROF,
     'APRES' : APRES,
 
     'CSCALE' : CSCALE,
     'GPKE' : GPKE,
     'GPRSORT' : GPRSORT,
-    'GPSDCON' : GPSDCON,
-    'GPSTRESS' : GPSTRESS,
-    'OFREQUENCY' : OFREQUENCY,
     'SURFACE' : SURFACE,
     'VOLUME' : VOLUME,
 

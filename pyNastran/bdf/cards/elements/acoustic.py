@@ -688,10 +688,11 @@ class AMLREG(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        infor = 1
-        fset = 1.0
-        sset = 1.
-        return AMLREG(infor, fset, sset)
+        rid = 1
+        sid = 1
+        name = 'amlreg'
+        infid = [1]
+        return AMLREG(rid, sid, name, infid)
 
     def __init__(self, rid: int, sid: int, name: str,
                  infid: list[int],

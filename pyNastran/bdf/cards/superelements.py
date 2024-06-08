@@ -229,7 +229,7 @@ class SEELT(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by SEELT seid=%s' % (self.seid)
+        msg = f', which is required by SEELT seid={self.seid:d}'
         eids_ref = self._xref_elements_plotels(model, self.eids, msg=msg)
         self.eids_ref = eids_ref
 
@@ -654,7 +654,7 @@ class SELOC(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by SELOC seid=%s' % (self.seid)
+        msg = f', which is required by SELOC seid={self.seid:d}'
 
         #PA1-PA3 Three GRID entries in the PART that are to be used to move the PART. After moving,
         #these points will be coincident with PB1-PB3.
@@ -678,7 +678,7 @@ class SELOC(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by SELOC seid=%s' % (self.seid)
+        msg = f', which is required by SELOC seid={self.seid:d}'
         self.nodes_seid_ref = model.superelement_nodes(self.seid, self.nodes_seid, msg=msg)
         self.nodes_0_ref = model.get_point_grids(self.nodes_0, msg=msg)
 

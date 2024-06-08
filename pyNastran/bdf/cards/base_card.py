@@ -72,7 +72,7 @@ class BaseCard:
         return []
 
     @abstractclassmethod
-    def add_card(self, card, comment=''):  # pragma: no cover
+    def add_card(self, card, comment: str=''):  # pragma: no cover
         return BaseCard()
 
     def __deepcopy__(self, memo_dict):

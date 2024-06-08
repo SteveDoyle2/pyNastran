@@ -67,7 +67,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
 
     n_list, flo_filenames = get_flo_files(dirname, model_name, nstart, nlimit)
     nlimit = len(flo_filenames)
-    assert nlimit > 0, 'nfiles=%s' % (nlimit)
+    assert nlimit > 0, f'nfiles={nlimit:d}'
     #print("nmax =", nlimit)
 
     Cp = {}

@@ -411,7 +411,7 @@ def run_and_compare_fems(
 
     if not quiet:
         print("-" * 80)
-    return (fem1, fem2, diff_cards)
+    return fem1, fem2, diff_cards
 
 
 def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
@@ -615,7 +615,7 @@ def remake_model(bdf_model, fem1, pickle_obj):
     if remake:
         #log = fem1.log
         model_name = os.path.splitext(bdf_model)[0]
-        obj_model = '%s.test_bdfv.obj' % (model_name)
+        obj_model = f'{model_name}.test_bdfv.obj'
         #out_model_8 = '%s.test_bdfv.bdf' % (model_name)
         #out_model_16 = '%s.test_bdfv.bdf' % (model_name)
 

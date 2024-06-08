@@ -157,7 +157,7 @@ class RandomObjects:
         ]
         return [self.prefix + table + self.postfix for table in tables]
 
-class PSDObjects():
+class PSDObjects:
     """storage class for the ATO objects"""
     prefix = 'psds.'
     postfix = ''

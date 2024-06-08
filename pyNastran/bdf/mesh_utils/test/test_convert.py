@@ -182,7 +182,7 @@ class TestConvert(unittest.TestCase):
         assert weight_scale == 1., weight_scale
         assert gravity_scale == 1./12., gravity_scale
         wtmass = 1. / (32.174 * 12.)
-        wtmass_expected = 1. / (32.174)
+        wtmass_expected = 1. / 32.174
         assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
@@ -199,8 +199,8 @@ class TestConvert(unittest.TestCase):
         assert mass_scale == 0.45359237, mass_scale
         assert time_scale == 1.
         assert allclose(weight_scale, 4.4482216526), weight_scale
-        assert allclose(gravity_scale, 1/32.174), 'gravity_scale=%s 1/expected=%s' % (gravity_scale, 1/(32.2))
-        wtmass = 1. / (32.174)
+        assert allclose(gravity_scale, 1/32.174), 'gravity_scale=%s 1/expected=%s' % (gravity_scale, 1/32.2)
+        wtmass = 1. / 32.174
         wtmass_expected = 1.
         assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass/gravity_scale, wtmass_expected)
 

@@ -560,7 +560,7 @@ def run_and_compare_fems(
 
     if not quiet:
         print("-" * 80)
-    return (fem1, fem2, diff_cards)
+    return fem1, fem2, diff_cards
 
 
 def run_nastran(bdf_model: str, nastran: str, post: int=-1,
@@ -861,7 +861,7 @@ def remake_model(bdf_model: str, fem1: BDF, pickle_obj: bool) -> BDF:
     if remake:
         #log = fem1.log
         model_name = os.path.splitext(bdf_model)[0]
-        obj_model = '%s.test_bdf.obj' % (model_name)
+        obj_model = f'{model_name}.test_bdf.obj'
         #out_model_8 = '%s.test_bdf.bdf' % (model_name)
         #out_model_16 = '%s.test_bdf.bdf' % (model_name)
 
@@ -1389,11 +1389,11 @@ def _check_static_aero_case(fem2: BDF, log: SimpleLogger, sol: int,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.caeros) == 0:
-        msg = 'An CAEROx card is required for STATIC AERO - SOL %i' % (sol)
+        msg = f'An CAEROx card is required for STATIC AERO - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.splines) == 0:
-        msg = 'An SPLINEx card is required for STATIC AERO - SOL %i' % (sol)
+        msg = f'An SPLINEx card is required for STATIC AERO - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     return ierror
@@ -1407,15 +1407,15 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
 
     if len(fem2.caeros) == 0:
-        msg = 'An CAEROx card is required for FLUTTER - SOL %i' % (sol)
+        msg = 'An CAEROx card is required for FLUTTER - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.splines) == 0:
-        msg = 'An SPLINEx card is required for FLUTTER - SOL %i' % (sol)
+        msg = f'An SPLINEx card is required for FLUTTER - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.mkaeros) == 0:
-        msg = 'An MKAERO1/2 card is required for FLUTTER - SOL %i' % (sol)
+        msg = f'An MKAERO1/2 card is required for FLUTTER - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     unused_mklist = fem2.get_mklist()
@@ -1461,20 +1461,20 @@ def _check_gust_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if fem2.aero is None:
-        msg = 'An AERO card is required for GUST - SOL %i' % sol
+        msg = f'An AERO card is required for GUST - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
 
     if len(fem2.caeros) == 0:
-        msg = 'An CAEROx card is required for GUST - SOL %i' % (sol)
+        msg = f'An CAEROx card is required for GUST - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.splines) == 0:
-        msg = 'An SPLINEx card is required for GUST - SOL %i' % (sol)
+        msg = f'An SPLINEx card is required for GUST - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.mkaeros) == 0:
-        msg = 'An MKAERO1/2 card is required for GUST - SOL %i' % (sol)
+        msg = f'An MKAERO1/2 card is required for GUST - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     unused_mklist = fem2.get_mklist()

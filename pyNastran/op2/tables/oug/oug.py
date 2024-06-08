@@ -186,7 +186,7 @@ class OUG:
         if op2._nastran_format == 'nasa95' and op2.analysis_code == 2:  # real eigenvalues
             #print(op2.mode, op2.eign, op2.mode_cycle)
             # sqrt(lambda) = omega = 2*pi*f
-            freq = (op2.eign) ** 0.5 / (2 * np.pi)
+            freq = op2.eign ** 0.5 / (2 * np.pi)
             op2.mode_cycle = freq
             op2.data_code['mode_cycle'] = freq
 

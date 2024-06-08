@@ -160,18 +160,18 @@ class Panel:
                 Z.append(z)
 
         msg = ''
-        for x in X:
-            msg += '%s ' % (x)
+        for xi in X:
+            msg += '%s ' % xi
         p3d_file.write(msg + '\n')
 
         msg = ''
-        for y in Y:
-            msg += '%s ' % (y)
+        for yi in Y:
+            msg += '%s ' % yi
         p3d_file.write(msg + '\n')
 
         msg = ''
-        for z in Z:
-            msg += '%s ' % (z)
+        for zi in Z:
+            msg += '%s ' % zi
         p3d_file.write(msg + '\n')
 
 def read_lawgs(wgs_filename, log=None, debug=False):

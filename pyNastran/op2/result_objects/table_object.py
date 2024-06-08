@@ -650,7 +650,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray((nnodes), unicode=True)
+        self.gridtype_str = np.chararray(nnodes, unicode=True)
         ugridtypes = np.unique(gridtypes)
         for ugridtype in ugridtypes:
             i = np.where(gridtypes == ugridtype)
@@ -1145,8 +1145,8 @@ class RealTableArray(TableArray):
                       4*ntotal]
             op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (itable))
-            fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+            fascii.write(f'r4 [4, {itable}, 4]\n')
+            fascii.write(f'r4 [4, {4*ntotal:d}, 4]\n')
 
             datai = view_dtype(self.data[itime, :, :], fdtype)
             node_gridtype_data = np.hstack([node_gridtype_floats, datai])
@@ -2038,8 +2038,8 @@ class ComplexTableArray(TableArray):
                       4*ntotal]
             op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (itable))
-            fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+            fascii.write(f'r4 [4, {itable}, 4]\n')
+            fascii.write(f'r4 [4, {4*ntotal:d}, 4]\n')
 
             #datai = self.data[itime, :, :]
             #node_gridtype_data = np.hstack([

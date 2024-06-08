@@ -1606,8 +1606,8 @@ class TEMPBC(ThermalBC):
         nodes = []
         for i in range(nfields_left // 2):
             ifield = 3 + i*2
-            temp = double(card, ifield, 'temp_%i'%  ((i+1)))
-            nid = integer(card, ifield+1, 'temp_%i'%  ((i+1)))
+            temp = double(card, ifield, 'temp_%i' % (i+1))
+            nid = integer(card, ifield+1, 'temp_%i' % (i+1))
             temps.append(temp)
             nodes.append(nid)
         return TEMPBC(sid, Type, nodes, temps, comment=comment)

@@ -165,20 +165,20 @@ class TestSuperelements(unittest.TestCase):
 
 def create_superelement(debug=False):
     """creates a simple bar model"""
-    super = BDF(debug=debug)
-    super.add_grid(10, [0., 0., 0.])
-    super.add_grid(20, [0., 0., 1.])
-    super.add_grid(30, [1., 0., 0.])
+    super_model = BDF(debug=debug)
+    super_model.add_grid(10, [0., 0., 0.])
+    super_model.add_grid(20, [0., 0., 1.])
+    super_model.add_grid(30, [1., 0., 0.])
 
-    super.add_grid(11, [1., 1., 0.])
-    super.add_grid(12, [2., 2., 0.])
+    super_model.add_grid(11, [1., 1., 0.])
+    super_model.add_grid(12, [2., 2., 0.])
 
     x = [0., 0., 1.]
     g0 = None
-    super.add_cbar(100, 1000, [11, 12], x, g0)
-    super.add_pbarl(1000, 2000, 'ROD', [1.,])
-    super.add_mat1(2000, 3.0e7, None, 0.3)
-    return super
+    super_model.add_cbar(100, 1000, [11, 12], x, g0)
+    super_model.add_pbarl(1000, 2000, 'ROD', [1.,])
+    super_model.add_mat1(2000, 3.0e7, None, 0.3)
+    return super_model
 
 if __name__ == '__main__':   # pragma: no cover
     unittest.main()

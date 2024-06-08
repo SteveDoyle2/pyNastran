@@ -95,8 +95,8 @@ class PanairPatch:
             nlopt2 = 6
             nropt2 = 2
             ipot = 2
-        else:
-            raise NotImplementedError('new kt...kt=%s' % (self.kt))
+        else:  # pragma: no cover
+            raise NotImplementedError(f'new kt...kt={self.kt}')
         pts = self.npoints
         pans = self.npanels
         #cumPts=33
@@ -149,7 +149,7 @@ class PanairPatch:
             p = [icol for icol in range(self.ncols)]  # good
         elif edge_number == 2:
             xyz = self.xyz[:, self.ncols - 1, :]  # pretty sure edge 2 is the 0th row
-            p = [icol * (self.nrows) + (self.nrows - 1) for icol in range(self.ncols)]
+            p = [icol * self.nrows + (self.nrows - 1) for icol in range(self.ncols)]
             #p = [iRow*(self.ncols)+(self.ncols-1) for iRow in range(self.nrows)]  #
         elif edge_number == 3:
             xyz = self.xyz[self.nrows - 1, :, :]  # pretty sure edge3 is the last row
@@ -170,7 +170,7 @@ class PanairPatch:
             unused_p2 = self.get_ipoint(point_id)
             #print("point[%s]=%s" % (point_id, unused_p2))
 
-        return (p, xyz)
+        return p, xyz
 
     def get_edges(self):
         self.log.debug('get_edges')
@@ -185,7 +185,7 @@ class PanairPatch:
             p[i:i + nx1] = p1[:nx1]
             xyz[i:i + nx1] = xyz1[:nx1, :]
             #self.log.debug("-----")
-        return (p, xyz)
+        return p, xyz
 
     def get_elements(self, unused_ipoint):
         #print('nrows=%s ncols=%s' % (self.nrows, self.ncols))
@@ -209,15 +209,15 @@ class PanairPatch:
         z = self.xyz[:, :, 2].ravel()  # unravel
 
         for xi in x:
-            out += "%s " % (xi)
+            out += "%s " % xi
         out += "\n"
 
         for yi in y:
-            out += "%s " % (yi)
+            out += "%s " % yi
         out += "\n"
 
         for zi in z:
-            out += "%s " % (zi)
+            out += "%s " % zi
         out += "\n"
         #self.log.debug(out)
         #print x
@@ -295,7 +295,7 @@ class PanairPatch:
     def fix_point(self, point_in):
         point_out = []
         for value in point_in:
-            str_value = '%s' % (value)
+            str_value = '%s' % value
             if len(str_value) > 10:
                 str_value = str_value[0:9]
             point_out.append(str_value.rstrip('0'))

@@ -421,7 +421,7 @@ class BOLTFOR(BaseCard):
         assert len(bolt_ids) > 0, bolt_ids
 
     @classmethod
-    def add_card(self, card, comment: str=''):
+    def add_card(cls, card, comment: str=''):
         sid = integer(card, 1, 'sid')
         load_value = double(card, 2, 'load')
         fields = card[3:9]

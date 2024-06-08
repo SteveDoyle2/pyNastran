@@ -108,7 +108,8 @@ def _triangle_area_centroid_normal(nodes, card):
                f'length = {length}\n'
                f'{str(card)}')
         raise RuntimeError(msg)
-    return (0.5 * length, (n1 + n2 + n3) / 3., normal)
+    area = 0.5 * length, (n1 + n2 + n3) / 3.
+    return area, normal
 
 
 def _normal(a, b):
@@ -1672,7 +1673,7 @@ class CTRIAR(TriShell):
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
-        return (theta_mcid, zoffset, tflag, T1, T2, T3)
+        return theta_mcid, zoffset, tflag, T1, T2, T3
 
 
     def _verify(self, xref):
@@ -1797,12 +1798,12 @@ class QuadShell(ShellElement):
             raise RuntimeError(msg)
         return n
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self) -> tuple[float, float, float]:
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
-        return (area, centroid, normal)
+        return area, centroid, normal
 
-    def AreaCentroid(self):
+    def AreaCentroid(self) -> tuple[float, float]:
         r"""
         ::
           1-----2
@@ -1825,15 +1826,15 @@ class QuadShell(ShellElement):
         n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
-        return(area, centroid)
+        return area, centroid
 
-    def Centroid(self):
+    def Centroid(self) -> float:
         nodes_ref = self.nodes_ref[:4]
         n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
-    def Centroid_no_xref(self, model):
+    def Centroid_no_xref(self, model) -> float:
         nodes = self.nodes[:4]
         n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=nodes)
         centroid = (n1 + n2 + n3 + n4) / 4.
@@ -1885,7 +1886,7 @@ class QuadShell(ShellElement):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         T4 = set_blank_if_default(self.T4, 1.0)
-        return (theta_mcid, zoffset, tflag, T1, T2, T3, T4)
+        return theta_mcid, zoffset, tflag, T1, T2, T3, T4
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -2135,7 +2136,7 @@ class CSHEAR(QuadShell):
     def AreaCentroidNormal(self) -> tuple[NDArray3float, NDArray3float, NDArray3float]:
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
-        return (area, centroid, normal)
+        return area, centroid, normal
 
     def AreaCentroid(self) -> tuple[NDArray3float, NDArray3float]:
         r"""
@@ -2167,7 +2168,7 @@ class CSHEAR(QuadShell):
 
         area = area1 + area2
         centroid = (n1 + n2 + n3 + n4) / 4.
-        return(area, centroid)
+        return area, centroid
 
     def Centroid(self) -> NDArray3float:
         (n1, n2, n3, n4) = self.get_node_positions()
@@ -3265,7 +3266,7 @@ class CPLSTS4(CPLSTx4):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         T4 = set_blank_if_default(self.T4, 1.0)
-        return (theta, tflag, T1, T2, T3, T4)
+        return theta, tflag, T1, T2, T3, T4
 
     @property
     def node_ids(self):
@@ -3705,11 +3706,11 @@ class CPLSTx8(QuadShell):
             #mass = self.Mass()
             #assert isinstance(mass, float), 'mass=%r' % mass
 
-    def Thickness(self):
+    def Thickness(self) -> float:
         """Returns the thickness"""
         return self.pid_ref.Thickness()
 
-    def flip_normal(self):
+    def flip_normal(self) -> None:
         r"""
         ::
 
@@ -3723,11 +3724,11 @@ class CPLSTx8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
-    def Normal(self):
+    def Normal(self) -> np.ndarray:
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroid(self):
+    def AreaCentroid(self) -> tuple[float, float]:
         """
         ::
 
@@ -3758,9 +3759,9 @@ class CPLSTx8(QuadShell):
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        return(area, centroid)
+        return area, centroid
 
-    def Area(self):
+    def Area(self) -> float:
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""

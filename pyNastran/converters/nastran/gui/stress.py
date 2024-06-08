@@ -988,7 +988,7 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
                 log.warning(f'skipping strength ratio {case.table_name_str}')
                 continue
             key_cases[key].append(case)
-            if (case_key != key or key in keys_map):
+            if case_key != key or key in keys_map:
                 continue
             keys_map[key] = KeyMap(case.subtitle, case.label,
                                    case.superelement_adaptivity_index,

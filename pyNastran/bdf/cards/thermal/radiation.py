@@ -59,10 +59,10 @@ class RADM(ThermalBC):
         msg = ''
         if self.absorb is not None:
             if not 0. <= self.absorb <= 1.0:
-                msg += 'absorb=%s not in range 0.0 <= absorb <= 1.0\n' % (self.absorb)
+                msg += f'absorb={self.absorb} not in range 0.0 <= absorb <= 1.0\n'
         for i, emissivityi in enumerate(self.emissivity):
             if not 0. <= emissivityi <= 1.0:
-                msg += 'emissivity[%i]=%s\n' % (i, emissivityi)
+                msg += f'emissivity[{i}]={emissivityi}\n'
         if msg:
             warnings.warn(msg + str(self))
             #raise RuntimeError(msg + str(self))

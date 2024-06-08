@@ -281,12 +281,12 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     # radset
     if model.radset:
         msg.append('bdf:radset')
-        msg.append('  %-8s 1' % ('RADSET:'))
+        msg.append('  %-8s 1' % 'RADSET:')
 
     #seqgp
     if model.seqgp:
         msg.append('bdf:seqgp')
-        msg.append('  %-8s 1' % ('SEQGP:'))
+        msg.append('  %-8s 1' % 'SEQGP:')
 
     for card_group_name in card_dict_groups:
         try:
@@ -416,7 +416,7 @@ def _cyclic_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     if model.cyax:
         msg.append('bdf.cyax')
-        msg.append('  %-8s 1' % ('CYAX:'))
+        msg.append('  %-8s 1' % 'CYAX:')
     if model.cyjoin:
         msg.append('bdf:cyjoin')
         msg.append('  %-8s %s' % ('CYJOIN:', len(model.cyjoin)))
@@ -425,12 +425,12 @@ def _aero_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     if model.aero:
         msg.append('bdf.aero')
-        msg.append('  %-8s 1' % ('AERO:'))
+        msg.append('  %-8s 1' % 'AERO:')
 
     # aeros
     if model.aeros:
         msg.append('bdf:aeros')
-        msg.append('  %-8s 1' % ('AEROS:'))
+        msg.append('  %-8s 1' % 'AEROS:')
 
     #mkaeros
     if model.mkaeros:

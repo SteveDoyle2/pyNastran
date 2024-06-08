@@ -467,8 +467,8 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                       4*ntotal]
             op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (itable))
-            fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+            fascii.write(f'r4 [4, {itable}, 4]\n')
+            fascii.write(f'r4 [4, {4*ntotal:d}, 4]\n')
 
             t1 = self.data[itime, :, 0]
             for node_id, t1i in zip(nnodes_device, t1):

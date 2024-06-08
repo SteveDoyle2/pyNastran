@@ -131,7 +131,7 @@ class RANDPS(RandomLoad):
 
         """
         if self.tid and isinstance(self.tid, integer_types):
-            msg = ', which is required by RANDPS sid=%s' % (self.sid)
+            msg = f', which is required by RANDPS sid={self.sid:d}'
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)
 

@@ -413,7 +413,7 @@ class MainWindow2(QMainWindow):
             file_actions_list.append('')
         file_actions_list.append('exit')
 
-        help = HelpActions(self)
+        help_actions = HelpActions(self)
         toolbar_tools = [
             #'camera_reset', 'view',
             'screenshot',
@@ -463,12 +463,12 @@ class MainWindow2(QMainWindow):
         menus_list = [
             ('file', '&File', file_actions_list),
             ('window', '&Window', menu_window),
-            ('help', '&Help', help.actions_list),
+            ('help', '&Help', help_actions.actions_list),
             ('toolbar', self.toolbar, toolbar_tools),
         ]
 
         self.actions: dict[str, QAction] = self._setup_actions(
-            help, self.view_actions,
+            help_actions, self.view_actions,
             base_actions=self.actions)
         #self.actions['pulldown'] =
 
@@ -479,7 +479,7 @@ class MainWindow2(QMainWindow):
         self.menus = fill_menus(self, menus_list, self.actions, allow_missing_actions=False)
 
     def _setup_actions(self,
-                       help: HelpActions,
+                       help_actions: HelpActions,
                        view_actions: ViewActions,
                        base_actions: Optional[dict[str, QAction]]) -> dict[str, QAction]:
         assert isinstance(base_actions, dict), base_actions
@@ -537,7 +537,7 @@ class MainWindow2(QMainWindow):
         checkables_set = set([])
 
         # setup the actions
-        actions_list = file_tools + view_tools + help.tools_list
+        actions_list = file_tools + view_tools + help_actions.tools_list
         actions = build_actions(self, base_actions, icon_path, actions_list, checkables_set, self.log)
         assert len(actions) > 0, actions
         return actions

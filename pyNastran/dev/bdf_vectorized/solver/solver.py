@@ -688,7 +688,7 @@ class Solver(OP2):
                     j = i + psi - 1
                     iUsg.append(j)
                     Usg.append(0.0)
-                    ps = ps // 10
+                    ps //= 10
                 self.log.info("  Usg=%s" % Usg)
                 self.iUsg += iUsg
                 self.Usg += Usg
@@ -700,7 +700,7 @@ class Solver(OP2):
             nid_component_to_id_map[(nid, 5)] = i + 4
             nid_component_to_id_map[(nid, 6)] = i + 5
             i += 6
-        self.log.info('iUsg = %s' % (self.iUsg))
+        self.log.info(f'iUsg = {self.iUsg}')
 
         spoint = model.spoint
         if spoint.n:
@@ -712,7 +712,7 @@ class Solver(OP2):
         #: starting index for MPC cards
         self.mp_index = model.grid.n + spoint.n
 
-        return(nid_component_to_id_map, i)
+        return nid_component_to_id_map, i
 
     def get_Mgg(self, model, ndofs, force_calcs=False):
         Mgg = None

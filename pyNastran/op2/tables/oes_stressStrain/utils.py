@@ -767,7 +767,7 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        for i in range(nnodes):
+        for inode in range(nnodes):
             edata2 = data[n:n+ntotal2]
 
             #DISTANCE             NORMAL-X                     NORMAL-Y                    SHEAR-XY             VON MISES
@@ -776,7 +776,7 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
              fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
              fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2) = out
             fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
-            if i == 0:
+            if inode == 0:
                 nid = 0
 
             if is_magnitude_phase:
@@ -2021,9 +2021,9 @@ def oes_cbend_real_21(op2: OP2, data: bytes,
         eid_device, = struct1.unpack(edata)
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-
         n += 4
-        for unused_i in range(2):
+
+        for unused_j in range(2):
             edata = data[n:n + ntotali]
             out = struct2.unpack(edata)
             if op2.is_debug_file:

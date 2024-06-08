@@ -1023,13 +1023,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OBC1' : [reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'],
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
-            b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
-            b'OCPSDFC' : [self._nx_table_passer, self._table_passer, 'NX cross-PSD functions for composites'],
-            b'OCCORFC' : [self._nx_table_passer, self._table_passer, 'NX cross-correlation functions for composites'],
-
             # Glue normal and tangential tractions at grid point in basic coordinate system
             b'OBG1' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
             b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
+
+            b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
+            b'OCPSDFC' : [self._nx_table_passer, self._table_passer, 'NX cross-PSD functions for composites'],
+            b'OCCORFC' : [self._nx_table_passer, self._table_passer, 'NX cross-correlation functions for composites'],
 
             # Glue forces at grid point in basic coordinate system
             b'OQGGF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Glue forces at grid point in cid=0 frame'],
@@ -1179,7 +1179,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             b'OMEOSC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT1'],
             b'OMECON1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant total modal energies; SORT1'],
-            b'OMEOSC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT1'],
             b'OMKEC1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal kinetic energies; SORT1'],
             b'OMKEO1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal kinetic energies; SORT1'],
             b'OMSEC1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal strain energies; SORT1'],
@@ -1187,7 +1186,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT2'],
             b'OMECON2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant total modal energies; SORT2'],
-            b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT2'],
             b'OMKEC2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal kinetic energies; SORT2'],
             b'OMKEO2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal kinetic energies; SORT2'],
             b'OMSEC2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal strain energies; SORT2'],

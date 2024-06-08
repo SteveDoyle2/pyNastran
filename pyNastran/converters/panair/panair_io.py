@@ -316,7 +316,7 @@ def add_networks(out_networks, out_headers, is_beta0,
     unused_nsolutions = len(out_networks)
     for isolution, networks in sorted(out_networks.items()):
         if networks == {}:
-            log.info('skipping isolution=%s' % (isolution))
+            log.info(f'skipping isolution={isolution}')
             continue
         print('isolution = ', isolution, geom_model.alphas)
         alpha = geom_model.alphas[isolution-1]

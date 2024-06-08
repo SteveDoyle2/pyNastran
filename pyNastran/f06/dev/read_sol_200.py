@@ -6,7 +6,7 @@ from cpylog import get_logger, SimpleLogger
 from pyNastran.utils import print_bad_path
 
 
-class OptimizationResult():
+class OptimizationResult:
     def __init__(self):
         self.design_objective = {
             'label': [],

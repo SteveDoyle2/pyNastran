@@ -805,7 +805,7 @@ class Subcase:
                        param_type: str) -> tuple[str, Any, Any]:
         if param_type == 'SET-type':
             (key, values2, options, param_type) = _simplify_set(key, value, options, param_type)
-            return (key, values2, options)
+            return key, values2, options
 
         elif param_type == 'CSV-type':
             #print(f'adding isubcase={self.id} key={key!r} value={value!r} options={options!r} '
@@ -836,7 +836,7 @@ class Subcase:
 
     def get_op2_data(self, sol, solmap_to_value) -> None:
         self.sol = sol
-        label = 'SUBCASE %s' % (self.id)
+        label = f'SUBCASE {self.id}'
         op2_params = {
             'isubcase': None, 'tables': [], 'analysis_codes': [],
             'device_codes': [], 'sort_codes': [], 'table_codes': [],

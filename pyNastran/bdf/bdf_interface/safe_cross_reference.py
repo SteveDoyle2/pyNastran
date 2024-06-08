@@ -439,7 +439,7 @@ class SafeXrefMesh(XrefMesh):
                 element = self.Element(eid)
             except KeyError:
                 element = eid
-                msgi += msg % (eid)
+                msgi += msg % eid
             elements.append(element)
         return elements, msgi
 

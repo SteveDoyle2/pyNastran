@@ -828,9 +828,9 @@ class TEMPBC(VectorizedBaseCard):
         temps = []
         nodes = []
         for i in range(nfields_left // 2):
-            ifield = 3 + i*2
-            temp = double(card, ifield, 'temp_%d' % ((i+1)))
-            nid = integer(card, ifield+1, 'node_%d' % ((i+1)))
+            ifield = 3 + i * 2
+            temp = double(card, ifield, 'temp_%d' % (i+1))
+            nid = integer(card, ifield+1, 'node_%d' % (i+1))
             temps.append(temp)
             nodes.append(nid)
         self.cards.append((sid, bc_type, temps, nodes, comment))

@@ -675,7 +675,7 @@ class UGRID:
 
             # PSHELL
             if nshells:
-                fmt = endian + '%ii' % (nshells)
+                fmt = endian + '%ii' % nshells
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*pids.ravel()))
 

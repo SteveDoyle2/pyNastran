@@ -446,7 +446,8 @@ def write_cbush(eids, spack, obj, op2_file, op2_ascii, endian):
             f = -1
             data = [eid, pid, ga, gb, 0, 0, 0,
                     f, cid, s, ocid, s1, s2, s3]
-            assert None not in data, 'CBUSH-1 %s' % (data)
+            assert None not in data, ('CBUSH-1 %s' %
+                                      (data))
             op2_file.write(spacki.pack(*data))
         elif elem.x[0] is not None:
             f = 0

@@ -272,7 +272,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         raise
 
     print("-" * 80)
-    return (fem1, fem2, diff_cards)
+    return fem1, fem2, diff_cards
 
 
 def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid):

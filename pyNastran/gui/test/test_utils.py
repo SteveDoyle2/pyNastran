@@ -744,11 +744,11 @@ class GuiUtils(unittest.TestCase):
 
 
 
-def assert_array(actual_array, expected_array, name):
+def assert_array(actual_array, expected_array, name: str):
     """checks the arrays for equivalence and the correct length"""
     expected_array = np.asarray(expected_array)
-    actual_name = 'actual_%s  ' % (name)
-    expected_name = 'expected_%s' % (name)
+    actual_name = 'actual_%s  ' % name
+    expected_name = 'expected_%s' % name
     if not len(actual_array) == len(expected_array):
         raise AssertionError('Invalid Length\n'
                              '%s=%s; len=%s\n'
@@ -764,4 +764,3 @@ def assert_array(actual_array, expected_array, name):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

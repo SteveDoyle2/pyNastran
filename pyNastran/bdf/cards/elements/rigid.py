@@ -172,8 +172,9 @@ class RROD(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by RROD eid=%s' % (self.eid)
+        msg = f', which is required by RROD eid={self.eid:d}'
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -331,11 +332,11 @@ class RBAR(RigidElement):
                 independent_b.add(comp)
             if comp in self.cma:
                 if comp in independent_a:
-                    msg += 'dof=%s on node %s is both independent and dependent\n' % (self.ga)
+                    msg += f'dof={comp} on node {self.ga:d} is both independent and dependent\n'
                 dependent_a.add(comp)
             if comp in self.cmb:
                 if comp in independent_b:
-                    msg += 'dof=%s on node %s is both independent and dependent\n' % (self.gb)
+                    msg += f'dof={comp} on node {self.gb:d} is both independent and dependent\n'
                 dependent_b.add(comp)
         if msg:
             raise RuntimeError(msg + str(self))
@@ -349,7 +350,7 @@ class RBAR(RigidElement):
                 #raise RuntimeError(msg)
             for comp in '123456':
                 if comp not in independent:
-                    msgi += '  comp=%s is not independent\n' % (comp)
+                    msgi += f'  comp={comp} is not independent\n'
             if msgi:
                 msg1 += 'cna=%r cnb=%r\n%s' % (self.cna, self.cnb, msgi)
 
@@ -361,7 +362,7 @@ class RBAR(RigidElement):
                 raise RuntimeError(msg)
             for comp in '123456':
                 if comp not in dependent:
-                    msgi2 += '  comp=%s is not dependent\n' % (comp)
+                    msgi2 += f'  comp={comp} is not dependent\n'
             if msgi2:
                 msg2 = 'cma=%r cmb=%r\n%s' % (self.cma, self.cmb, msgi2)
 
@@ -465,8 +466,9 @@ class RBAR(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by RBAR eid=%s' % (self.eid)
+        msg = f', which is required by RBAR eid={self.eid:d}'
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
 
@@ -478,6 +480,7 @@ class RBAR(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -621,8 +624,9 @@ class RBAR1(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by RBAR1 eid=%s' % (self.eid)
+        msg = f', which is required by RBAR1 eid={self.eid:d}'
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
 
@@ -634,6 +638,7 @@ class RBAR1(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -805,8 +810,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by RBE1 eid=%s' % (self.eid)
+        msg = f', which is required by RBE1 eid={self.eid:d}'
         self.Gni_ref = model.EmptyNodes(self.Gni, msg=msg)
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
@@ -818,6 +824,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -1538,8 +1545,9 @@ class RBE3(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by RBE3 eid=%s' % (self.eid)
+        msg = f', which is required by RBE3 eid={self.eid:d}'
         assert self.Gmi is not None
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
@@ -1551,7 +1559,7 @@ class RBE3(RigidElement):
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     def safe_cross_reference(self, model: BDF, debug: bool=True) -> int:
-        msg = ', which is required by RBE3 eid=%s' % (self.eid)
+        msg = f', which is required by RBE3 eid={self.eid:d}'
         assert self.Gmi is not None
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
 
@@ -1947,7 +1955,7 @@ class RSSCON(RigidElement):
         model : BDF()
             the BDF object
         """
-        unused_msg = ', which is required by RSSCON eid=%s' % (self.eid)
+        unused_msg = f', which is required by RSSCON eid={self.eid:d}'
         #if self.rigid_type == 'ELEM':
             #self.shell_eid_ref = model.Element(self.shell_eid, msg=msg)
             #self.solid_eid_ref = model.Element(self.shell_eid, msg=msg)

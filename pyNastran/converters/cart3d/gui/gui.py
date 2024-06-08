@@ -85,13 +85,13 @@ class MainWindow(GuiCommon2):
 
     def about_dialog(self):
         """ Display about dialog """
-        copyright = pyNastran.__pyqt_copyright__
+        copyright_str = pyNastran.__pyqt_copyright__
 
         about = [
             'pyCart3d Qt GUI',
             '',
             'pyCart3d v%s' % pyNastran.__version__,
-            copyright,
+            copyright_str,
             pyNastran.__author__,
             '',
             '%s' % pyNastran.__website__,

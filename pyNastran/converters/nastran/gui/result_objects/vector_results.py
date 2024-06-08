@@ -859,7 +859,7 @@ def _to_dense_vector(dxyz: np.ndarray,
                      is_dense: bool) -> np.ndarray:
     """map vectored data to dense"""
     return_sparse = not return_dense
-    if (return_sparse or is_dense):
+    if return_sparse or is_dense:
         dxyz2 = dxyz
     else:
         dxyz2 = np.full((nnodes, 3), np.nan, dtype=dxyz.dtype)

@@ -1453,7 +1453,7 @@ def get_residual_structure(model: BDF, dof_map: DOF_MAP,
         #    there are SUPORTi, BSETi, or CSETi entries present, then
         #    the entire f-set is placed in the a-set and the o-set is
         #    not created.
-    elif (not np.any(aqo_set) and np.any(bcr_set)):
+    elif not np.any(aqo_set) and np.any(bcr_set):
         aset = fset
         # 4. There must be at least one explicit ASETi, QSETi, or OMITi
         #    entry for the o-set to exist, even if the ASETi, QSETi, or
@@ -1894,7 +1894,7 @@ def build_Mbb(model: BDF,
     # TODO: non-zero mass case doesn't handle SPOINTs
     #
     has_special_points = 'SPOINT' in model.card_count or 'EPOINT' in model.card_count
-    is_all_grids = not(has_special_points)
+    is_all_grids = not has_special_points
     unused_can_dof_slice = is_all_grids and not has_mass
     if Mbb.sum() != 0.0:
     #if Mbb.sum() != 0.0 or can_dof_slice:

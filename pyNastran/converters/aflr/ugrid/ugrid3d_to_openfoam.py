@@ -72,10 +72,10 @@ def _write_points(ugrid, points_filename):
 
 
         points_file.write('\n\n')
-        points_file.write('%i\n' % (nnodes))
+        points_file.write('%i\n' % nnodes)
         points_file.write('(\n')
         for node in enumerate(ugrid.nodes):
-            points_file.write(('    (%-12s %-12s %-12s)\n') % (node[0], node[1], node[2]))
+            points_file.write('    (%-12s %-12s %-12s)\n' % (node[0], node[1], node[2]))
         points_file.write(')\n')
 
 def _write_boundary(ugrid, boundary_filename, tag_filename):

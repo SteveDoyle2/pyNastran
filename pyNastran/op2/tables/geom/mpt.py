@@ -1569,7 +1569,7 @@ class MPT:
             number, = struct_i.unpack(edata)
             n += 4
 
-            iformat = b'i %if' % (number)
+            iformat = b'i %if' % number
             struct_i_nf = Struct(op2._endian + iformat)
             #mid, absorb, emiss1, emiss2, ...
             ndata_per_pack = 1 + number

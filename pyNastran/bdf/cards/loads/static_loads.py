@@ -167,7 +167,7 @@ class LOAD(LoadCombination):
                     msg = ('%s is not supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
-        return (scale_factors, loads)
+        return scale_factors, loads
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -180,7 +180,7 @@ class LOAD(LoadCombination):
 
         """
         load_ids2 = []
-        msg = ', which is required by LOAD=%s' % (self.sid)
+        msg = f', which is required by LOAD={self.sid:d}'
         for load_id in self.load_ids:
             if load_id == self.sid:
                 msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (
@@ -193,7 +193,7 @@ class LOAD(LoadCombination):
 
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         load_ids2 = []
-        msg = ', which is required by LOAD=%s' % (self.sid)
+        msg = f', which is required by LOAD={self.sid:d}'
         for load_id in self.load_ids:
             try:
                 load_id2 = model.Load(load_id, consider_load_combinations=True, msg=msg)
@@ -262,7 +262,7 @@ class CLOAD(LoadCombination):
 
         """
         load_ids2 = []
-        msg = ', which is required by CLOAD=%s' % (self.sid)
+        msg = f', which is required by CLOAD={self.sid:d}'
         for load_id in self.load_ids:
             if load_id == self.sid:
                 msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (

@@ -626,7 +626,7 @@ def run_and_compare_fems(
 
     if not quiet:
         print("-" * 80)
-    return (fem1, fem2, diff_cards)
+    return fem1, fem2, diff_cards
 
 def check_setup_flag(model: BDFv) -> None:
     if not isinstance(model, BDFv):
@@ -1426,7 +1426,7 @@ def remake_model(bdf_model: BDFs, fem1: BDFs, pickle_obj: bool) -> None:
     if remake:
         #log = fem1.log
         model_name = os.path.splitext(bdf_model)[0]
-        obj_model = '%s.test_bdf.obj' % (model_name)
+        obj_model = f'{model_name}.test_bdf.obj'
         #out_model_8 = '%s.test_bdf.bdf' % (model_name)
         #out_model_16 = '%s.test_bdf.bdf' % (model_name)
 
@@ -1838,7 +1838,7 @@ def check_case(sol: int,
 
     elif sol in {144, 'AESTAT'}:
         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
-    elif sol in {145, 'SEFLUTTER'}:
+    elif sol in {145, 'SEFLUTTR', 'SEFLUTTER'}:
         ierror = _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors)
     elif sol in {146, 'SEAERO'}:
         ierror = _check_gust_case(fem2, log, sol, subcase, ierror, nerrors)
@@ -1924,11 +1924,11 @@ def _check_static_aero_case(fem: BDFv, log: SimpleLogger, sol: int,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem.caero_ids) == 0:
-        msg = 'An CAEROx card is required for STATIC AERO - SOL %i' % (sol)
+        msg = f'An CAEROx card is required for STATIC AERO - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem.spline_ids) == 0:
-        msg = 'An SPLINEx card is required for STATIC AERO - SOL %i' % (sol)
+        msg = f'An SPLINEx card is required for STATIC AERO - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     return ierror
@@ -2012,7 +2012,7 @@ def _check_gust_case(fem2: BDFs, log: SimpleLogger, sol: int, subcase: Subcase,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.mkaeros) == 0:
-        msg = 'An MKAERO1/2 card is required for GUST - SOL %i' % (sol)
+        msg = f'An MKAERO1/2 card is required for GUST - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     unused_mklist = fem2.get_mklist()

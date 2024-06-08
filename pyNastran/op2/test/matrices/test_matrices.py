@@ -49,7 +49,7 @@ class TestOP2Matrix(unittest.TestCase):
         kelm = model.matrices['KELM']
         kdict = model.matdicts['KDICT']
         assert kelm.data.shape == (300, 21), kelm.data.shape
-        assert (kdict.element_types) == [34, 2, 67, 68, 33, 1, 39, 74], kdict.element_types
+        assert kdict.element_types == [34, 2, 67, 68, 33, 1, 39, 74], kdict.element_types
         ngrids = [len(np.where(sil[0, :] > 0)[0]) for sil in kdict.sils]
 
         #print(kelm.data)

@@ -392,7 +392,7 @@ class OP2Common(Op2Codes, F06Writer):
         value, = unpack(self._endian + Type, datai)
         if fix_device_code:
             # was value = (value - self.device_code) // 10
-            value = value // 10
+            value //= 10
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
