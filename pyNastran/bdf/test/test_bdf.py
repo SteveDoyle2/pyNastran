@@ -1230,12 +1230,12 @@ def check_case(sol: int,
         ierror = check_for_optional_param(('TSTEP', 'TSTEPNL'),
                                           subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol in {1, 101, 'SESTATIC', 'SESTATICS'}:
+    elif sol in {1, 101, 'STATIC', 'STATICS', 'SESTATIC', 'SESTATICS'}:
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(
             ('LOAD', 'TEMPERATURE(LOAD)', 'P2G'),
             subcase, msg, RuntimeError, log, ierror, nerrors)
-    elif sol in {3, 103, 'SEMODES'}:
+    elif sol in {3, 103, 'MODES', 'SEMODES'}:
         ierror = check_for_optional_param(
             ('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'),
             subcase, msg, RuntimeError, log, ierror, nerrors)
@@ -1262,7 +1262,7 @@ def check_case(sol: int,
         ierror = check_for_optional_param(
             ('LOAD', 'TEMPERATURE(LOAD)', 'CLOAD'),
             subcase, msg, RuntimeError, log, ierror, nerrors)
-    elif sol in {7, 107, 'SEDCEIG'}:
+    elif sol in {7, 107, 'DCEIG', 'SEDCEIG'}:
         # direct complex eigenvalue
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(
@@ -1272,10 +1272,10 @@ def check_case(sol: int,
                                           #RuntimeError, log, ierror, nerrors)
     elif sol in {8, 108}: # freq
         assert 'FREQUENCY' in subcase, subcase
-    elif sol in {109, 'SEDTRAN'}:  # time
+    elif sol in {109, 'DTRAN', 'SEDTRAN'}:  # time
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
 
-    elif sol in {110, 'SEMCEIG'}:  # modal complex eigenvalues
+    elif sol in {110, 'MCEIG', 'SEMCEIG'}:  # modal complex eigenvalues
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(
             ('LOAD', 'STATSUB'),
@@ -1283,7 +1283,7 @@ def check_case(sol: int,
     elif sol in {11, 111, 'SEMFREQ'}:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), msg
         assert any(subcase.has_parameter('METHOD', 'RMETHOD')), msg
-    elif sol in {112, 'SEMTRAN'}:  # modal transient
+    elif sol in {112, 'MTRAN', 'SEMTRAN'}:  # modal transient
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
@@ -1309,11 +1309,11 @@ def check_case(sol: int,
     elif sol in {159, 'NLTCSH'}:  # thermal transient
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), msg
 
-    elif sol == 144:  # aero - trim, diverg
+    elif sol in {144, 'AESTAT'}:  # aero - trim, diverg
         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
-    elif sol == 145:  # aero - flutter
+    elif sol in {145, 'SEFLUTTR', 'SEFLUTTER'}:  # aero - flutter
         ierror = _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors)
-    elif sol == 146:  # aero - gust
+    elif sol in {146, 'SEAERO'}:  # aero - gust
         ierror = _check_gust_case(fem2, log, sol, subcase, ierror, nerrors)
 
     elif sol in {153, 'NLSCSH'}:
