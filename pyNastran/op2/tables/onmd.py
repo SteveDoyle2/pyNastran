@@ -117,7 +117,7 @@ class ONMD:
         op2.is_table_1 = True
         op2.is_table_2 = False
         assert data is not None
-        unused_three = op2.parse_approach_code(data)
+        op2.parse_approach_code(data)  # field 3
         op2.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', 'dcycle', 'robj',

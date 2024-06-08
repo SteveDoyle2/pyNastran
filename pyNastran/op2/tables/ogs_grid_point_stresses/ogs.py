@@ -34,7 +34,7 @@ class OGS:
     def _read_ogs1_3(self, data: bytes, ndata: int):
         """OGS1 - grid point stresses"""
         op2 = self.op2
-        unused_three = op2.parse_approach_code(data)
+        op2.parse_approach_code(data)  # field 3
         op2.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',

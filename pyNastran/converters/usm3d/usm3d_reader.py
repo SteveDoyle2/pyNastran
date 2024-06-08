@@ -255,7 +255,7 @@ class Usm3d:
         return header, tris, bcs
 
     def read_cogsg(self, cogsg_filename: str,
-                   stop_after_header: bool=False) -> None:
+                   stop_after_header: bool=False) -> tuple[np.ndarray, np.ndarray]:
         """
         Reads the *.cogsg file
 

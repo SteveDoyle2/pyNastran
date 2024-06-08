@@ -73,7 +73,7 @@ class OBOLT:
         op2.nonlinear_factor = np.nan
         op2.is_table_1 = True
         op2.is_table_2 = False
-        unused_three = op2.parse_approach_code(data)
+        op2.parse_approach_code(data)  # from field 3
         op2.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
@@ -420,4 +420,3 @@ class OBOLT:
             raise RuntimeError(op2.code_information())
         #raise NotImplementedError(op2.code_information())
         return ndata
-

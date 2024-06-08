@@ -135,7 +135,7 @@ def transform_load(F: np.ndarray, M: np.ndarray,
         the force in an arbitrary coordinate system
 
     """
-    if cid == cid_new: # same coordinate system
+    if cid == cid_new:  # same coordinate system
         return F, M
 
     # find the vector r for doing:
@@ -194,7 +194,7 @@ def PositionWRT(xyz: NDArray3float, cid: int, cid_new: int, model: BDF) -> NDArr
         the position of the GRID in an arbitrary coordinate system
 
     """
-    if cid == cid_new: # same coordinate system
+    if cid == cid_new:  # same coordinate system
         return xyz
 
     cp_ref = _coord(model, cid)
@@ -251,6 +251,7 @@ def get_xyz_cid0_dict(model: BDF,
         xyz = xyz_cid0
     return xyz
 
+
 def split_eids_along_nids(model: BDF, eids: list[int], nids: list[int]) -> None:
     """
     Disassociate a list of elements along a list of nodes.
@@ -300,6 +301,7 @@ def split_eids_along_nids(model: BDF, eids: list[int], nids: list[int]) -> None:
                 nodes.append(nidi)
             assert len(np.unique(nodes)) == len(nodes), 'nodes=%s' % nodes
         elem.nodes = nodes
+
 
 def _coord(model: BDF, cid: int) -> Coord:
     """helper method"""

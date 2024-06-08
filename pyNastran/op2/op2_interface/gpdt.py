@@ -146,7 +146,7 @@ def read_gpdt(op2_reader: OP2Reader) -> None:
 
         op2.op2_results.gpdt = GPDT(nid_cp_cd_ps, xyz)
     else:
-        unused_data = skip_record() # nid,cp,x,y,z,cd,ps
+        skip_record() # nid,cp,x,y,z,cd,ps
 
 
     # 1. Scalar points are identified by CP=-1 and words X1 through

@@ -501,13 +501,13 @@ class Element(BaseCard):
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
-    def prepare_node_ids(self, nids: list[int], allow_empty_nodes: bool=False) -> None:
+    def prepare_node_ids(self, nids: list[int], allow_empty_nodes: bool=False) -> list[int]:
         """Verifies all node IDs exist and that they're integers"""
         #self.nodes = nids
         nids = self.validate_node_ids(nids, allow_empty_nodes)
         return nids
 
-    def validate_node_ids(self, nodes: list[int], allow_empty_nodes: bool=False) -> None:
+    def validate_node_ids(self, nodes: list[int], allow_empty_nodes: bool=False) -> list[int]:
         if allow_empty_nodes:
             # verify we have nodes
             if len(nodes) == 0:

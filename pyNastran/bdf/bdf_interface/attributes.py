@@ -1224,7 +1224,6 @@ class BDFAttributes:
         if len(self.executive_control_lines) == 0:
             self.executive_control_lines = ['SOL %s' % sol, 'CEND']
             self.sol_iline = 0
-        return self._sol
 
     @property
     def subcases(self) -> dict[int, Subcase]:

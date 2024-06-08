@@ -1490,7 +1490,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.nonlinear_factor = np.nan
         self.is_table_1 = True
         self.is_table_2 = False
-        unused_three = self.parse_approach_code(data)
+        self.parse_approach_code(data)  # field 3
         self.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
@@ -2376,7 +2376,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """reads the PSDF table"""
         #(50, 2011, 4001, 0, 302130, 3
         # strip off the title
-        unused_three = self.parse_approach_code(data)
+        self.parse_approach_code(data)  # field 3
         self.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',

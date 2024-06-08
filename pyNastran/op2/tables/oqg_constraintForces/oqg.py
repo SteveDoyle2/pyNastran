@@ -118,7 +118,7 @@ class OQG:
         op2.nonlinear_factor = np.nan #None
         op2.is_table_1 = True
         op2.is_table_2 = False
-        unused_three = op2.parse_approach_code(data)
+        self.parse_approach_code(data)  # field 3
         op2.words = [
             'analysis_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
@@ -849,4 +849,3 @@ class OQG:
                                    random_code=op2.random_code)
         assert n is not None, n
         return n
-

@@ -61,6 +61,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # PLOTOPT
 
 # PLOADG
+
 class CGEN(BaseCard):
     """
     +------+--------+-----------+-----+----------+-----+-------------+------+------+
@@ -168,8 +169,10 @@ class CGEN(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         pass
+
     def safe_cross_reference(self, model):
         pass
+
     def uncross_reference(self, model):
         pass
 
@@ -475,5 +478,3 @@ class GMLOAD(Load):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
-
-

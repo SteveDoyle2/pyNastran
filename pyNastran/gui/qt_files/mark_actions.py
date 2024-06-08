@@ -28,7 +28,7 @@ class MarkActions:
     def log(self):
         return self.gui.log
 
-    def create_annotation(self, text: str, x, y, z):
+    def create_annotation(self, text: str, x: float, y: float, z: float) -> :
         """
         Creates the actual annotation and appends it to slot
 

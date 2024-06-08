@@ -33,7 +33,7 @@ from scipy.spatial import KDTree
     #b[0] = 1.0 - b[1] - b[2]
     #return b
 
-def project_points_onto_stl(stl, points):
+def project_points_onto_stl(stl: np.ndarray, points: np.ndarray) -> : np.ndarray:
     """
     Parameters
     ----------

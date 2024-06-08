@@ -491,7 +491,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         gui.format = 'nastran'
 
-    def _points_to_vtkpoints_coords(self, model: BDF, xyz_cid0: np.ndarray) -> None:
+    def _points_to_vtkpoints_coords(self, model: BDF, xyz_cid0: np.ndarray) -> float:
         """
         helper method for:
          - load_nastran_geometry_unvectorized

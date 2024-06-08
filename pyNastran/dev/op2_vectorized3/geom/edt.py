@@ -208,7 +208,15 @@ class EDT:
         return n
 
     def _read_mkaero2(self, data: bytes, n: int) -> int:
-        mkaero2x
+        op2 = self.op2
+        mks = np.frombuffer(data[n:], dtype=op2.fdtype8)
+        npairs = len(mks) // 2
+        mks = mks.reshape(npairs, 2)
+        machs = mks[:, 0].tolist()
+        ks = mks[:, 0].tolist()
+        op2.add_mkaero1(machs, ks)
+        return len(data)
+
     def _read_csschd(self, data: bytes, n: int) -> int:
         csschd
     def _read_diverg(self, data: bytes, n: int) -> int:

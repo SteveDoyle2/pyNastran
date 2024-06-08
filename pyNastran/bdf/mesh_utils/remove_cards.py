@@ -1,6 +1,11 @@
-def remap_cards(model, cross_reference=True,
-                remap_nodes=True, remap_elements=True, remap_properties=True,
-                remap_materials=True):
+from pyNastran.bdf.bdf import BDF
+
+def remap_cards(model: BDF,
+                cross_reference: bool=True,
+                remap_nodes: bool=True,
+                remap_elements: bool=True,
+                remap_properties: bool=True,
+                remap_materials: bool=True):
     """
     Remap cards after a cross-reference; works on an uncross-referenced model
 
@@ -10,8 +15,9 @@ def remap_cards(model, cross_reference=True,
         the BDF object
     cross_reference : bool; default=True
         cross_reference once the remapping is done
-    remap_x : bool; default=True
+    remap_nodes : bool; default=True
         'x' may be nodes, elements, properties, materials
+
     """
     model.uncross_reference()
 
@@ -45,7 +51,7 @@ def remap_cards(model, cross_reference=True,
     if cross_reference:
         model.cross_reference()
 
-def delete_properties(bdf_model, property_types_to_save=None):
+def delete_properties(bdf_model: BDF, property_types_to_save=None):
     """early version of way to delete specific property cards"""
     pids_to_delete = set()
     if property_types_to_save:
@@ -57,7 +63,7 @@ def delete_properties(bdf_model, property_types_to_save=None):
     for pid in pids_to_delete:
         del bdf_model.properties[pid]
 
-def delete_elements(bdf_model, element_types_to_save=None):
+def delete_elements(bdf_model: BDF, element_types_to_save=None):
     """early version of way to delete specific element cards"""
     eids_to_delete = set()
     if element_types_to_save:

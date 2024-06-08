@@ -114,7 +114,7 @@ class Testfield_writer_8(unittest.TestCase):
         #msg = '|%s| len(msg)=%s' %(msg, len(msg))
         #self.assertEqual(print_field_16('12345678'), '12345678        ',msg)
         self.assertEqual(print_field_16('1               '), '1               ',
-                          '|%s|' % (print_field_8('1       ')))
+                         '|%s|' % (print_field_8('1       ')))
 
     def test_floats_positive_8(self):
         # ideal
@@ -193,11 +193,11 @@ class Testfield_writer_8(unittest.TestCase):
                          print_field_8(-12345.238))
         self.assertEqual(print_field_8(-123456.28), '-123456.',
                          print_field_8(-123456.28))
-        self.assertEqual(print_field_8(-1234567.25), '-1.235+6', # is this right?
+        self.assertEqual(print_field_8(-1234567.25), '-1.235+6',  # is this right?
                          print_field_8(-1234567.25))
-        self.assertEqual(print_field_8(-12345678.), '-1.235+7', # is this right?
+        self.assertEqual(print_field_8(-12345678.), '-1.235+7',  # is this right?
                          '|%s|' % print_field_8(-12345678.))
-        self.assertEqual(print_field_8(-123456789.), '-1.235+8', # is this right?
+        self.assertEqual(print_field_8(-123456789.), '-1.235+8',  # is this right?
                          '|%s|' % print_field_8(-123456789.))
 
         self.assertEqual(print_field_8(-0.1), '     -.1',
@@ -490,6 +490,7 @@ def compare(value_in):
         p = (val - value_in) / val
         if p > 0.01:  # pragma: no cover
             raise ValueError('val=%s value_in=%s' % (val, value_in))
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

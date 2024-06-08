@@ -31,7 +31,7 @@ def str_to_html(log_type: str, filename: str,
         the filename the message came from
     lineno : int
         the line number the message came from
-    message : str
+    msg : str
         the message
 
     Returns
@@ -56,7 +56,7 @@ def str_to_html(log_type: str, filename: str,
     html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
     return html_msg
 
-def get_html_msg(color: str, tim: str, log_type: str,
+def get_html_msg(color: str, time: str, log_type: str,
                  filename: str, lineno: int, msg: str) -> str:
     """
     converts the message to html
@@ -73,15 +73,17 @@ def get_html_msg(color: str, tim: str, log_type: str,
         the filename the message came from
     lineno : int
         the line number the message came from
-    message : str
+    msg : str
         the message
 
     Returns
     -------
     html_msg : str
         the HTML message
+
     """
     # log_type, filename, lineno, msg
     html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
-        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
+        color, time, log_type, filename, lineno,
+        msg.replace('\n', '<br>'))
     return html_msg

@@ -3073,7 +3073,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         return card_obj
 
     def add_card(self, card_lines: list[str], card_name: str,
-                 comment: str='', ifile=None,
+                 comment: str='', ifile: Optional[int]=None,
                  is_list: bool=True, has_none: bool=True) -> Any:
         """
         Adds a card object to the BDF object.

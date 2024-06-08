@@ -47,7 +47,7 @@ COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
 RUN_PANELING = False
 
-def build_caero_paneling(model: BDF) -> None:
+def build_caero_paneling(model: BDF) -> tuple[None, None, None]:
     all_control_surface_name = None
     caero_control_surfaces = None
     out = None

@@ -2883,6 +2883,10 @@ class PBEND(LineProperty):
 
         Parameters
         ----------
+        pid : int
+            property id
+        mid : int
+            material id
         A : float
             cross-sectional area
         i1, i2 : float
@@ -2899,12 +2903,15 @@ class PBEND(LineProperty):
             Shear stiffness factor K in K*A*G for plane 1 and plane 2
         nsm : float; default=0.
             nonstructural mass per unit length???
+        rc : float; default=None
+            Radial offset of the geometric centroid from points GA and GB.
         zc : float; default=None
             Offset of the geometric centroid in a direction perpendicular to
             the plane of points GA and GB and vector v.
         delta_n : float; default=None
             Radial offset of the neutral axis from the geometric centroid,
             positive is toward the center of curvature
+
         """
         beam_type = 1
         fsi = None
@@ -2930,6 +2937,10 @@ class PBEND(LineProperty):
 
         Parameters
         ----------
+        pid : int
+            property id
+        mid : int
+            material id
         fsi : int
             Flag selecting the flexibility and stress intensification
             factors. See Remark 3. (Integer = 1, 2, or 3)

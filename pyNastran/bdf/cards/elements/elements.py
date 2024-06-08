@@ -892,6 +892,8 @@ class PLOTEL(BaseCard):
         ----------
         card : BDFCard()
             a BDFCard object
+        icard: int
+            allows for two PLOTELs on a single line
         comment : str; default=''
             a comment for the card
 

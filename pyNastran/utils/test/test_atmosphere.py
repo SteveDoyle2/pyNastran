@@ -50,6 +50,9 @@ class TestConvert(unittest.TestCase):
         assert np.allclose(convert_length(1., 'cm', 'mm'), 10.)
         assert np.allclose(convert_length(1., 'cm', 'm'), 1 / 100.)
 
+        assert np.allclose(convert_length(1., 'cm', 'in'), 1/2.54), convert_length(1., 'cm', 'in')
+        assert np.allclose(convert_length(1., 'in', 'cm'), 2.54), convert_length(1., 'in', 'cm')
+
         assert np.allclose(convert_length(1., 'mm', 'm'), 1 / 1000.)
         assert np.allclose(convert_length(1., 'mm', 'cm'), 1 / 10.)
 
@@ -159,6 +162,7 @@ class TestConvert(unittest.TestCase):
         assert np.allclose(convert_density(1., 'slinch/in^3', 'slinch/in^3'), 1)
         assert np.allclose(convert_density(1., 'slug/ft^3', 'slug/ft^3'), 1)
         assert np.allclose(convert_density(1., 'kg/m^3', 'kg/m^3'), 1)
+        assert np.allclose(convert_density(1., 'g/cm^3', 'g/cm^3'), 1)
         assert np.allclose(convert_density(1., 'Mg/mm^3', 'Mg/mm^3'), 1)
 
         assert np.allclose(convert_density(1., 'slinch/in^3', 'slug/ft^3'), 12**4)

@@ -1,4 +1,5 @@
 import numpy as np
+from cpylog import SimpleLogger
 from pyNastran.converters.panair.assign_type import integer
 
 
@@ -10,7 +11,9 @@ def print_float(value):  # sInt #string_float_value
 
 class PanairPatch:
     """Used for physical surfaces"""
-    def __init__(self, inetwork, network_name, kt, cp_norm, xyz, log):
+    def __init__(self, inetwork: int, network_name: str,
+                 kt: int, cp_norm: int, xyz: np.ndarray,
+                 log: SimpleLogger):
         self.log = log
 
         self.inetwork = inetwork  # lets it print out in order, does it need a deepcopy???
@@ -26,13 +29,13 @@ class PanairPatch:
         self.nrows = xyz.shape[0]
         self.ncols = xyz.shape[1]
 
-    def is_wake(self):
+    def is_wake(self) -> bool:
         #self.log.debug('is_wake %s %s' % (self.network_name, self.kt))
         if self.kt in [18, 20]:
             return True
         return False
 
-    def write_plot3d(self, f, dim):
+    def write_plot3d(self, f, dim: int):
         """
         ..todo: is the normal defined correctly?
         ..todo: will this load into tecplot

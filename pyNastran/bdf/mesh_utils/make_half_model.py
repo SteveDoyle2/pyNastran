@@ -17,8 +17,10 @@ def make_symmetric_model(bdf_filename, plane: str='xz',
     deprecated('make_symmetric_model', 'make_half_model', '1.3', levels=[0, 1, 2])
     return make_half_model(bdf_filename, plane=plane, zero_tol=zero_tol, log=log, debug=debug)
 
-def make_half_model(bdf_filename, plane: str='xz',
-                         zero_tol: float=1e-12, log=None, debug: bool=True):
+def make_half_model(bdf_filename: str,
+                    plane: str='xz',
+                    zero_tol: float=1e-12,
+                    log=None, debug: bool=True):
     """
     Makes a half/symmetric model from a full model
 
@@ -32,7 +34,7 @@ def make_half_model(bdf_filename, plane: str='xz',
         xz : +y/-y
         yz : +x/-x
         xy : +z/-z
-    zaero_tol : float; default=1e-12
+    zero_tol : float; default=1e-12
         the symmetry plane tolerance
 
     Returns

@@ -14,7 +14,7 @@ Contains the following atmospheric functions:
        mach, alts, eas_limit=1000.,
        alt_units='m', velocity_units='m/s', density_units='kg/m^3',
        eas_units='m/s')
- - rho, machs, velocity = make_flfacts_mach_sweep(
+ - rho, machs, velocity = make_flfacts_mach_sweep_constant_alt(
        alt, machs, eas_limit=1000.,
        alt_units='m', velocity_units='m/s', density_units='kg/m^3',
        eas_units='m/s')
@@ -46,7 +46,7 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
     density : float
         the air density in slug/ft^3
     density_units : str; default='slug/ft^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     alt_units : str; default='ft'
         sets the units for the output altitude; ft, m, kft
     nmax : int; default=20
@@ -462,7 +462,7 @@ def atm_equivalent_airspeed(alt: float,
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     eas_units : str; default='ft/s'
-        the equivalent airspeed units; ft/s, m/s, in/s, knots
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     Returns
     -------
@@ -509,7 +509,7 @@ def atm_mach(alt: float,
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     velocity_units : str; default='ft/s'
-        the velocity units; ft/s, m/s, in/s, knots
+        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     Returns
     -------
@@ -539,7 +539,7 @@ def atm_density(alt: float,
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     density_units : str; default='slug/ft^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
 
     Returns
     -------
@@ -808,11 +808,11 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
     alt_units : str; default='m'
         the altitude units; ft, kft, m
     velocity_units : str; default='m/s'
-        the velocity units; ft/s, m/s, in/s, knots
+        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
     density_units : str; default='kg/m^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     eas_units : str; default='m/s'
-        the equivalent airspeed units; ft/s, m/s, in/s, knots
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     """
     rho = np.array([atm_density(alt, R=1716., alt_units=alt_units,
@@ -877,11 +877,11 @@ def make_flfacts_mach_sweep_constant_alt(alt: float, machs: list[float],
     alt_units : str; default='m'
         the altitude units; ft, kft, m
     velocity_units : str; default='m/s'
-        the velocity units; ft/s, m/s, in/s, knots
+        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
     density_units : str; default='kg/m^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     eas_units : str; default='m/s'
-        the equivalent airspeed units; ft/s, m/s, in/s, knots
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     """
     assert machs[0] <= machs[-1], machs
@@ -919,11 +919,11 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: list[float],
     alt_units : str; default='m'
         the altitude units; ft, kft, m
     velocity_units : str; default='m/s'
-        the velocity units; ft/s, m/s, in/s, knots
+        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
     density_units : str; default='kg/m^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     eas_units : str; default='m/s'
-        the equivalent airspeed units; ft/s, m/s, in/s, knots
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     """
     assert alts[0] >= alts[-1], alts
@@ -963,11 +963,11 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
     alt_units : str; default='m'
         the altitude units; ft, kft, m
     velocity_units : str; default='m/s'
-        the velocity units; ft/s, m/s, in/s, knots
+        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
     density_units : str; default='kg/m^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     eas_units : str; default='m/s'
-        the equivalent airspeed units; ft/s, m/s, in/s, knots
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     """
     assert eass[0] <= eass[-1], eass
@@ -1007,7 +1007,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
     #velocity_units : str; default='m/s'
         #the velocity units; ft/s, m/s, in/s, knots
     #density_units : str; default='kg/m^3'
-        #the density units; slug/ft^3, slinch/in^3, kg/m^3
+        #the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
     #eas_units : str; default='m/s'
         #the equivalent airspeed units; ft/s, m/s, in/s, knots
 

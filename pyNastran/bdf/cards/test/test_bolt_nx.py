@@ -4,7 +4,6 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestBolt(unittest.TestCase):
-
     def test_bolt_nx_1(self):
         model = BDF(debug=False)
         model.case_control_deck

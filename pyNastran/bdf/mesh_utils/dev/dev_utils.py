@@ -456,8 +456,13 @@ def split_model_by_material_id(bdf_filename: str, bdf_filename_base: str,
             bdf_file.write('ENDDATA\n')
 
 
-def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_cid0=None,
-                    vector1=None, vector2=None, idir=None, eid_start=1):
+def create_spar_cap(model, eids, nids, width,
+                    nelements: int=1, symmetric: bool=True,
+                    xyz_cid0=None,
+                    vector1=None,
+                    vector2=None,
+                    idir=None,
+                    eid_start: int=1):
     """
     Builds elements along a line of nodes that are normal to the element face.
 

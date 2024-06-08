@@ -82,7 +82,7 @@ class OPR:
         op2.nonlinear_factor = np.nan
         op2.is_table_1 = True
         op2.is_table_2 = False
-        unused_three = op2.parse_approach_code(data)
+        self.parse_approach_code(data)  # field 3
         op2.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
@@ -191,7 +191,7 @@ class OPR:
 
         op2.is_table_1 = False
         op2.is_table_2 = True
-        unused_three = op2.parse_approach_code(data)
+        self.parse_approach_code(data)  # field 3
         op2.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',

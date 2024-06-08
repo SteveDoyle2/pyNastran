@@ -69,8 +69,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.menus.groups_modify.groups_modify import Group
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-    #from vtkmodules.vtkFiltersGeneral import vtkAxes
+    from vtkmodules.vtkRenderingCore import vtkBillboardTextActor3D    #from vtkmodules.vtkFiltersGeneral import vtkAxes
     from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
+
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
 
@@ -1370,7 +1371,7 @@ class GuiAttributes:
         self.mark_actions.mark_nodes(nids, icase, text)
 
     def create_annotation(self, text: str,
-                          x: float, y: float, z: float) -> None:
+                          x: float, y: float, z: float) -> vtkBillboardTextActor3D:
         """
         Creates the actual annotation
 

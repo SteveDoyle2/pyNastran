@@ -286,13 +286,13 @@ class PanairGrid:
 
         return points
 
-    def add_wake_patch(self, network_name, options, xyz):
+    def add_wake_patch(self, network_name: str, options, xyz: np.ndarray) -> None:
         patch = PanairWakePatch(self.nnetworks, network_name, options, xyz, self.log)
         self.msg += patch.process()
         self.patches[patch.inetwork] = patch  # deepcopy?
         self.nnetworks += 1
 
-    def add_patch(self, network_name, kt, cp_norm, xyz):
+    def add_patch(self, network_name: str, kt: int, cp_norm: int, xyz: np.ndarray) -> None:
         patch = PanairPatch(self.nnetworks, network_name, kt, cp_norm, xyz, self.log)
         self.msg += patch.process()
         self.patches[patch.inetwork] = patch  # deepcopy?

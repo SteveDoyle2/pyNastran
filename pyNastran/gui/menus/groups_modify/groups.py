@@ -66,7 +66,7 @@ class Group:
     def node_ids(self) -> np.ndarray:
         return parse_patran_syntax(self.node_str, pound=self.nodes_pound)
 
-    @element_ids.setter
+    @node_ids.setter
     def node_ids(self, nids: np.ndarray) -> None:
         assert isinstance(nids, np.ndarray), nids
         self.node_str = _get_collapsed_text(nids).strip()

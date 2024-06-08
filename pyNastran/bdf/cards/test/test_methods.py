@@ -167,5 +167,6 @@ class TestMethods(unittest.TestCase):
         eigc = model.cMethods[40]
         str(eigc)
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
