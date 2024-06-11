@@ -48,6 +48,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ra
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain_nx import RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
@@ -1775,7 +1776,7 @@ class OES(OP2Common2):
             # 226-BUSHNL
             n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
                                                              result_type, prefix, postfix)
-        elif op2.element_type in [271, 275]:
+        elif op2.element_type in [275]: # 271,
             #271 CPLSTN3 Triangle plane strain linear format (Center Only)
             #272 CPLSTN4 Quadrilateral plane strain linear format (Center and Corners)
             #273 CPLSTN6 Triangle plane strain linear format (Center and Corners)
@@ -1785,7 +1786,6 @@ class OES(OP2Common2):
             #276 CPLSTS4 Quadrilateral plane stress linear format (Center and Corners)
             #277 CPLSTS6 Triangle plane stress linear format (Center and Corners)
             #278 CPLSTS8 Quadrilateral plane stress linear format (Center and Corners)
-
 
             # 271-CPLSTN3
             # 275-CPLSTS3
@@ -1871,8 +1871,9 @@ class OES(OP2Common2):
             #floats  = (1001, -0.0007072892040014267, 0.6948937773704529, -0.6963083744049072, 0.6948915123939514, -0.6963061094284058, 6.161498617984762e-07, 0.0)
             #if data:
                 #self.show_data(data)
-            n, nelements, ntotal = self._oes_weld_118(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
+            n, nelements, ntotal = self._oes_weld_118(
+                data, ndata, dt, is_magnitude_phase,
+                result_type, prefix, postfix)
         elif op2.element_type == 126:  # FASTP
             #C:\MSC.Software\msc_nastran_runs\cf103e.op2
             # S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
@@ -1886,11 +1887,22 @@ class OES(OP2Common2):
         elif op2.is_nx and op2.element_type in [269, 270]:
             # 269-CHEXAL
             # 270-PENTAL
-            n, nelements, ntotal = self._oes_composite_solid_nx(data, ndata, dt, is_magnitude_phase,
-                                                                result_type, prefix, postfix)
+            n, nelements, ntotal = self._oes_composite_solid_nx(
+                data, ndata, dt, is_magnitude_phase,
+                result_type, prefix, postfix)
+
+
+        elif op2.element_type in [271, 272, 273, 274]:
+            # 271 CPLSTN3
+            # 272 CPLSTN4
+            # 273 CPLSTN6
+            # 274 CPLSTN3 -> 8???
+            n, nelements, ntotal = self._oes_cplstn_nx(
+                data, ndata, dt, is_magnitude_phase,
+                result_type, prefix, postfix)
         elif op2.element_type in [159, 184,
-                                   200, 201, 236, 237, 242, 243, 244, 245,
-                                   272, 273, 274]:
+                                  200, 201, 236, 237, 242, 243, 244, 245,
+                                  272, 273, 274]:
             # 159-SEAMP
             # 184-CBEAM3
             #
@@ -1902,10 +1914,6 @@ class OES(OP2Common2):
             # 243 CQUADX4
             # 244 CTRAX6
             # 245 CQUADX8
-            #
-            # 272 CPLSTN4
-            # 273 CPLSTN6
-            # 274 CPLSTN3
             log.warning(f'skipping {op2.element_name}-{op2.element_type}')
             return ndata
         elif op2.element_type in [312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323,
@@ -2899,7 +2907,7 @@ class OES(OP2Common2):
         numwide_imag = 4 + (17 - 4) * nnodes_expected
         numwide_imag2 = 4 + 14 * nnodes_expected
         numwide_random = 4 + (11 - 4) * nnodes_expected
-        numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        numwide_random2 = 4 + 14 * nnodes_expected
         numwide_random3 = 4 + 8 * nnodes_expected
         preline1 = '%s-%s' % (op2.element_name, op2.element_type)
         preline2 = ' ' * len(preline1)
@@ -2907,8 +2915,10 @@ class OES(OP2Common2):
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         op2._data_factor = nnodes_expected
         log = op2.log
-        #print(op2.format_code, op2.table_name, op2.num_wide, op2.element_name)
+        # print(op2.format_code, op2.table_name, op2.num_wide, op2.element_name)
+        # print(op2.code_information())
         if op2.format_code == 1 and op2.num_wide == numwide_real:  # real
+            op2.log.debug(f'numwide_real={numwide_real}')
             ntotal = (16 + 84 * nnodes_expected) * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -2992,6 +3002,7 @@ class OES(OP2Common2):
                                     preline1, preline2)
 
         elif op2.format_code in [2, 3] and op2.num_wide == numwide_imag:  # complex
+            op2.log.debug(f'numwide_imag={numwide_imag}')
             ntotal = numwide_imag * 4 * self.factor
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes_expected
@@ -3047,6 +3058,7 @@ class OES(OP2Common2):
                                        is_magnitude_phase)
 
         elif op2.format_code == 1 and op2.num_wide == numwide_random: # random
+            op2.log.debug(f'numwide_random={numwide_random}')
             if not op2.is_sort1:
                 log.debug(f'support CSolid random SORT{op2.sort_method}')
                 return ndata, None, None
@@ -3129,7 +3141,9 @@ class OES(OP2Common2):
                                       element_name, nnodes_expected,
                                       preline1, preline2)
 
-        elif op2.format_code in [2, 3] and op2.num_wide == numwide_random2:
+        elif op2.format_code in [2, 3] and op2.num_wide == numwide_random2 and \
+                op2.table_name in {b'OESVM1', b'OSTRVM1', b'OESVM2', b'OSTRVM2'}:
+            #op2.log.debug(f'numwide_random2={numwide_random2}')
             #raise RuntimeError(op2.code_information())
             ## a = 18
             ## b = 14
@@ -3150,35 +3164,81 @@ class OES(OP2Common2):
             #if op2.num_wide ==
             if op2.read_mode == 1:
                 return ndata, None, None
-            return ndata, None, None
             #print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (
                 #op2.num_wide, numwide_random, num_wide_random, op2.isubcase))
             ##msg = op2.code_information()
             #ntotal = 130
-            #nelements = ndata // ntotal
+            ntotal = op2.num_wide * op2.size
+            nelements = ndata // ntotal
 
             ## cid, coord_type, nactive_pnts,
             ##      nid, oxx, oyy, ozz, txy, tyz, txz
-            #struct1 = Struct(op2._endian + b'2i 4s')
-            #struct2 = Struct(op2._endian + b'i6f')
-            #for i in range(nelements):
-                #edata = data[n:n+12]
-                #out = struct1.unpack(edata)
-                #(eid_device, cid, abcd) = out
-                #eid, dt = get_eid_dt_from_eid_device(
-                    #eid_device, op2.nonlinear_factor, op2.sort_method)
-                #if op2.is_debug_file:
-                    #op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-                #n += 12
-                #for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                    #out = struct2.unpack(data[n:n + 28]) # 4*7 = 28
+            struct1 = Struct(op2._endian + b'2i 4s i')
+            struct2 = Struct(op2._endian + b'i13f')
+            ntotal1 = 4 * self.size # 3*4
+            ntotal2 = 14 * self.size
+            ntotali = ntotal1 + nnodes_expected * ntotal2
+            assert ntotali == ntotal, (ntotali, ntotal)
+
+            # 2 CID I Stress Coordinate System
+            # 3 CTYPE CHAR4 Coordinate System Type (BCD)
+            # 4 NODEF I Number of Active Points
+            #
+            # 5 GRID I External grid identification number (0=center)
+            # 6 SXR RS Normal in x
+            # 7 SYR RS Normal in y
+            # 8 SZR RS Normal in z
+            # 9 TXYR RS Shear in xy
+            # 10 TYZR RS Shear in yz
+            # 11 TZXR RS Shear in zx
+            # 12 SXI RS Normal in x
+            # 13 SYI RS Normal in y
+            # 14 SZI RS Normal in z
+            # 15 TXYI RS Shear in xy
+            # 16 TYZI RS Shear in yz
+            # 17 TZXI RS Shear in zx
+            # 18 VM RS von Mises
+            # Words 5 through 18 repeat 005 times
+            for i in range(nelements):
+                edata = data[n:n+ntotal1]
+                out = struct1.unpack(edata)
+                (eid_device, cid, cen, nnodesi) = out
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, op2.nonlinear_factor, op2.sort_method)
+                #print(eid, cid, cen, nnodesi)
+                if op2.is_debug_file:
+                    op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                n += ntotal1
+                for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                    grid, *out = struct2.unpack(data[n:n + ntotal2])
                     #if op2.is_debug_file:
                         #op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
                     #(grid_device, sxx, syy, sz, txy, tyz, txz) = out
-            #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #op2.num_wide, numwide_real, numwide_imag, numwide_random)
-            #return op2._not_implemented_or_skip(data, ndata, msg)
+                    grid, sxr, syr, szr, txyr, tyzr, txzr, \
+                        sxi, syi, szi, txyi, tyzi, txzi = out
+                    if is_magnitude_phase:
+                        sx = polar_to_real_imag(sxr, sxi)
+                        sy = polar_to_real_imag(syr, syi)
+                        sz = polar_to_real_imag(szr, szi)
+                        txy = polar_to_real_imag(txyr, txyi)
+                        tyz = polar_to_real_imag(tyzr, tyzi)
+                        txz = polar_to_real_imag(txzr, txzi)
+                    else:
+                        sx = complex(sxr, sxi)
+                        sy = complex(syr, syi)
+                        sz = complex(szr, szi)
+                        txy = complex(txyr, txyi)
+                        tyz = complex(tyzr, tyzi)
+                        txz = complex(txzr, txzi)
+                    del grid, sx, sy, sz, txy, tyz, txz
+                    #print(grid, sx, sy, sz, txy, tyz, txz)
+                    n += ntotal2
+            etype_num = f'{op2.element_name}-{op2.element_type:d};'
+            msg = f'OES-{etype_num:<11s} complex2; table_name={op2.table_name}; numwide={op2.num_wide}'
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
+            #return ndata, None, None
         elif op2.format_code in [1, 2] and op2.num_wide == 67 and op2.element_name == 'CHEXA':  # CHEXA
+            op2.log.debug(f'numwide complex HEXA?')
             # CTETRA:
             # CPYRAM:
             # CPENTA:
@@ -3194,6 +3254,7 @@ class OES(OP2Common2):
             nelements = None
             ntotal = None
         elif op2.format_code in [1, 2, 3] and op2.num_wide in [60] and op2.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
+            op2.log.debug(f'numwide complex PENTA?')
             # bad
             #if op2.read_mode == 2:
                 #ints    = (68011, 0, 805.28, 6,
@@ -3237,9 +3298,10 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif op2.format_code in [2, 3] and op2.table_name in [b'OESVM1', b'OSTRVM1', b'OESVM2', b'OSTRVM2'] and (
+        elif op2.format_code in [2, 3] and op2.table_name in {b'OESVM1', b'OSTRVM1', b'OESVM2', b'OSTRVM2'} and (
                 (op2.num_wide == 130 and op2.element_name == 'CHEXA') or
                 (op2.num_wide == 102 and op2.element_name == 'CPENTA')):
+            op2.log.debug(f'numwide complex HEXA/PENTA')
             # CTETRA:
             # CPYRAM:
             # CPENTA: 102
@@ -3255,6 +3317,7 @@ class OES(OP2Common2):
             nelements = None
             ntotal = None
         elif op2.format_code in [1, 2, 3] and op2.num_wide == numwide_random3 and op2.table_name in [b'OESXRMS1', b'OESXNO1']:
+            op2.log.debug(f'numwide_random3={numwide_random3}')
             # CTETRA: 44
             # CPYRAM: 52
             # CHEXA:  76
@@ -7012,6 +7075,168 @@ class OES(OP2Common2):
                     obj.add_sort1(dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
                                   mx, my, mz, orx, ory, orz, erx, ery, erz)
                     n += ntotal
+        else:  # pragma: no cover
+            raise RuntimeError(op2.code_information())
+        return n, nelements, ntotal
+
+    def _oes_cplstn_nx(self, data, ndata: int, dt, is_magnitude_phase: bool,
+                       result_type: str, prefix: str, postfix: str):
+        """
+        reads stress/strain for element type:
+        - 271 CPLSTN3
+        - 272 CPLSTN4
+        - 273 CPLSTN6
+        - 274 CPLSTN8
+        """
+        op2 = self.op2
+        n = 0
+        if op2.is_stress:
+            stress_strain = 'stress'
+            obj_vector_real = RealCPLSTRNPlateStressNXArray
+        else:
+            stress_strain = 'strain'
+            obj_vector_real = RealCPLSTRNPlateStrainNXArray
+
+        if op2.element_type == 271:    # CPLSTN3
+            nnodes = 3
+            #nodes_loop = 3
+        elif op2.element_type == 272:    # CPLSTN4
+            nnodes = 4
+            #nodes_loop = 4
+        elif op2.element_type == 273:  # CPLSTN6
+            nnodes = 6
+            #nodes_loop = 4
+        elif op2.element_type == 274:  # CPLSTN8
+            nnodes = 8
+            #nodes_loop = 4
+        else:  # pragma: no cover
+            #raise RuntimeError(op2.element_type)
+            raise RuntimeError(op2.code_information())
+        result_name = f'{stress_strain}.cplstn{nnodes}_{stress_strain}'
+        nnodes_total = nnodes + 1
+
+        if op2._results.is_not_saved(result_name):
+            return ndata, None, None
+        op2._results._found_result(result_name)
+        slot = op2.get_result(result_name)
+
+        #print(op2.code_information())
+        num_wide = op2.num_wide
+        ntotal = num_wide * self.size
+        num_wide_real = 32  # CPLSTN4, CPLSTN3
+        num_wide_real = 26  # CPLSTN6
+        nelements = ndata // ntotal
+        assert ndata % ntotal == 0
+        # auto_return = (op2.read_mode == 1)
+        #print(f'result_name = {result_name}')
+
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_real)
+        if result_type == 0 and num_wide == 6 and nnodes == 3:  # real; CPLSTN3
+            if auto_return:
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
+
+            struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'5f')
+            for unused_i in range(nelements):
+                edata = data[n:n + ntotal]
+                out = struct_cen.unpack(edata)
+                n += ntotal
+                (eid_device, oxx, oyy, ozz, txy, von_mises) = out
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, op2.nonlinear_factor, op2.sort_method)
+                #print(eid, oxx, oyy, ozz, txy, von_mises)
+                if op2.is_debug_file:
+                    op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+
+        elif result_type == 0 and num_wide == 26 and nnodes == 6:  # real; CPLSTN4
+            if auto_return:
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
+
+            struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
+            struct_node = Struct(op2._endian + b'i5f')
+            ntotal0 = (2 + 6) * self.size
+            ntotal1 = 6 * self.size
+            for unused_i in range(nelements):
+                edata = data[n:n + ntotal0]
+                out = struct_cen.unpack(edata)
+                n += ntotal0
+
+                (eid_device, cen, node, a, b, c, d, e) = out
+                assert cen == b'CEN ', cen
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, op2.nonlinear_factor, op2.sort_method)
+                print(eid, cen, node, a, b, c, d, e)
+                if op2.is_debug_file:
+                    op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+                # obj.add_sort1(dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
+                #              mx, my, mz, orx, ory, orz, erx, ery, erz)
+                for i in range(3):
+                    edata = data[n:n + ntotal1]
+                    out = struct_node.unpack(edata)
+                    print('  ', out)
+                    n += ntotal1
+            # n = len(data)
+
+        elif result_type == 0 and num_wide == 32 and nnodes in {4, 8}:  # real; CPLSTN4
+            #ntotal = 32 * self.factor  #  32*4 = 76
+            # auto_return, is_vectorized = op2._create_oes_object4(
+            #     nelements, result_name, slot, RealNonlinearBushArray)
+            if auto_return:
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
+
+            obj = op2.obj
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                #op2.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            if 0 and op2.use_vector and is_vectorized and op2.sort_method == 1:
+                n = nelements * op2.num_wide * 4
+                istart = obj.itotal
+                iend = istart + nelements
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 19).copy()
+                    eids = ints[:, 0] // 10
+                    obj.element[istart:iend] = eids
+                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 19)
+                #[fx, fy, fz, otx, oty, otz, etx, ety, etz,
+                # mx, my, mz, orx, ory, orz, erx, ery, erz]
+                obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
+            else:
+                # op2.show_data(data[n:], types='ifs')
+                struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
+                struct_node = Struct(op2._endian +  b'i5f')
+                ntotal0 = (2 + 6) * self.size
+                ntotal1 = 6 * self.size
+
+                for unused_i in range(nelements):
+                    edata = data[n:n+ntotal0]
+                    out = struct_cen.unpack(edata)
+                    n += ntotal0
+
+                    (eid_device, cen, node, oxx, oyy, ozz, txy, von_mises) = out
+                    assert cen == b'CEN ', cen
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, op2.nonlinear_factor, op2.sort_method)
+                    #print(eid, cen, node, oxx, oyy, ozz, txy, von_mises)
+                    if op2.is_debug_file:
+                        op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+                    #obj.add_sort1(dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
+                    #              mx, my, mz, orx, ory, orz, erx, ery, erz)
+                    obj.add_new_eid_sort1(eid, dt, oxx, oyy, ozz, txy, ovm)
+                    for i in range(4):
+                        edata = data[n:n + ntotal1]
+                        out = struct_node.unpack(edata)
+                        #print('  ', out)
+                        obj.add_sort1(eid, dt, oxx, oyy, ozz, txy, ovm)
+                        n += ntotal1
+                # n = len(data)
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal

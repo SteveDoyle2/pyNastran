@@ -85,7 +85,7 @@ class RealPlateArray(OES_Object):
             nnodes_per_element = 4
         elif self.element_type == 75:  # CTRIA6
             nnodes_per_element = 4
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f'name={self.element_name!r} type={self.element_type}')
         return nnodes_per_element
 
@@ -93,7 +93,7 @@ class RealPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self):  # pragma: no cover
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def is_bilinear(self):
@@ -101,7 +101,7 @@ class RealPlateArray(OES_Object):
             return False
         elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             return True
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
@@ -466,7 +466,7 @@ class RealPlateArray(OES_Object):
             assert inid in (0, 1, 2, 3, 4), (self.element_name, self.element_type, inid)
         elif self.element_type == 75:  # CQUAD8
             assert inid in (0, 1, 2, 3), (self.element_name, self.element_type, inid)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError((self.element_name, self.element_type, inid))
 
 

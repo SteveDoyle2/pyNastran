@@ -498,8 +498,8 @@ class FlutterResponse:
             0.0 - fully transparent
 
         """
-        xlabel = 'Eigenvalue (Real); $\omega \zeta$'
-        ylabel = 'Eigenvalue (Imaginary); $\omega$'
+        xlabel = r'Eigenvalue (Real); $\omega \zeta$'
+        ylabel = r'Eigenvalue (Imaginary); $\omega$'
         ix = self.ieigr
         iy = self.ieigi
         scatter = True
@@ -1178,7 +1178,7 @@ class FlutterResponse:
             xlabel = f'Altitude [{alt_units}]'
         elif plot_type == 'kfreq':
             ix = self.ikfreq
-            xlabel = 'Reduced Frequency [rad]; $\omega c / (2V) $'
+            xlabel = r'Reduced Frequency [rad]; $\omega c / (2V) $'
         elif plot_type == 'rho':
             ix = self.idensity
             density_units = self.out_units['density']
@@ -1195,13 +1195,13 @@ class FlutterResponse:
             xlabel = 'Frequency [Hz]'
         elif plot_type in ['1/kfreq', 'ikfreq']:
             ix = self.ikfreq_inv
-            xlabel = '1/KFreq [1/rad]; $2V / (\omega c) $'
+            xlabel = r'1/KFreq [1/rad]; $2V / (\omega c) $'
         elif plot_type == 'eigr':
             ix = self.ieigr
-            xlabel = 'Eigenvalue (Real); $\omega \zeta$'
+            xlabel = r'Eigenvalue (Real); $\omega \zeta$'
         elif plot_type == 'eigi':
             ix = self.ieigi
-            xlabel = 'Eigenvalue (Imaginary); $\omega$'
+            xlabel = r'Eigenvalue (Imaginary); $\omega$'
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
             xlabel = r'Damping; $\zeta = 2 \xi $'

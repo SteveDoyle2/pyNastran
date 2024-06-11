@@ -22,7 +22,7 @@ class CPYRAM13(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card, comment: str=''):
         self.model.log.debug('add...')
         i = self.i
 
@@ -98,7 +98,8 @@ class CPYRAM13(SolidElement):
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None,
+                                          total: bool=False):
         """
         Gets the centroid and volume for one or more CPYRAM13 elements.
 
@@ -129,7 +130,8 @@ class CPYRAM13(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None,
+                                   total: bool=False):
         """
         Gets the centroid for one or more CPYRAM13 elements.
 
@@ -141,6 +143,7 @@ class CPYRAM13(SolidElement):
             the positions of the GRIDs in CID=0
         total : bool; default=False
             should the centroid be summed
+
         """
         if element_id is None:
             element_id = self.element_id

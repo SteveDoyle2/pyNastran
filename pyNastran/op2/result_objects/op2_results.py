@@ -255,10 +255,12 @@ class ModalContribution:
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
+        self.cpyram_stress = {}
 
         self.ctetra_strain = {}
         self.cpenta_strain = {}
         self.chexa_strain = {}
+        self.cpyram_strain = {}
 
         self.cbar_stress = {}
         self.cbar_strain = {}
@@ -315,14 +317,14 @@ class ModalContribution:
             'cbar_stress', 'cbeam_stress',
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
             'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
-            'ctetra_stress', 'cpenta_stress', 'chexa_stress',
+            'ctetra_stress', 'cpenta_stress', 'chexa_stress', 'cpyram_stress',
 
             'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
             'crod_strain', 'conrod_strain', 'ctube_strain',
             'cbar_strain', 'cbeam_strain',
             'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
-            'ctetra_strain', 'cpenta_strain', 'chexa_strain',
+            'ctetra_strain', 'cpenta_strain', 'chexa_strain', 'cpyram_strain',
 
             'cbend_stress', # 'cbend_strain', 'cbend_force',
             'cbush_stress', 'cbush_strain',
