@@ -14,6 +14,8 @@ import sys
 from io import StringIO
 from typing import Any
 from cpylog import SimpleLogger
+from docopt import docopt
+
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
@@ -78,7 +80,6 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf delete_bad_shells IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--skew SKEW] [--max_theta MAX_THETA] [--min_theta MIN_THETA] [--max_ar MAX_AR] [--max_taper MAX_TAPER] [--max_warp MAX_WARP]\n'
@@ -320,11 +321,11 @@ def cmd_line_renumber(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
+    options = '[--nid NID] [--eid EID] [--pid PID] [--mid MID]'
     msg = (
         "Usage:\n"
-        '  bdf renumber IN_BDF_FILENAME OUT_BDF_FILENAME [--superelement] [--size SIZE]\n'
-        '  bdf renumber IN_BDF_FILENAME                  [--superelement] [--size SIZE]\n'
+        f'  bdf renumber IN_BDF_FILENAME OUT_BDF_FILENAME [--superelement] [--size SIZE] {options}\n'
+        f'  bdf renumber IN_BDF_FILENAME                  [--superelement] [--size SIZE] {options}\n'
         '  bdf renumber -h | --help\n'
         '  bdf renumber -v | --version\n'
         '\n'
@@ -335,6 +336,10 @@ def cmd_line_renumber(argv=None, quiet=False):
         '\n'
 
         'Options:\n'
+        '--nid NID       starting node id\n'
+        '--eid EID       starting element id\n'
+        '--pid PID       starting property id\n'
+        '--mid MID       starting material id\n'
         '--superelement  calls superelement_renumber\n'
         '--size SIZE     set the field size (default=16)\n\n'
 
@@ -373,13 +378,23 @@ def cmd_line_renumber(argv=None, quiet=False):
 
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    starting_id_dict = {}
+    for arg in {'nid', 'eid', 'pid', 'mid'}:
+        dash_arg = f'--{arg}'
+        if dash_arg in data and data[dash_arg] is not None:
+            starting_id_dict[arg] = int(data[dash_arg])
+    if len(starting_id_dict) == 0:
+        starting_id_dict = None
+    else:
+        log.debug(f'starting_id_dict = {starting_id_dict}')
+
     if data['--superelement']:
         superelement_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
-                              starting_id_dict=None, #round_ids=False,
+                              starting_id_dict=starting_id_dict, #round_ids=False,
                               cards_to_skip=cards_to_skip, log=log)
     else:
         bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
-                     starting_id_dict=None, round_ids=False,
+                     starting_id_dict=starting_id_dict, round_ids=False,
                      cards_to_skip=cards_to_skip, log=log)
 
 
@@ -387,13 +402,10 @@ def cmd_line_mirror(argv=None, quiet: bool=False):
     """command line interface to write_bdf_symmetric"""
     if argv is None:
         argv = sys.argv
-
-    from docopt import docopt
-    import pyNastran
     msg = (
-        "Usage:\n"
-        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--tol TOL]\n"
-        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--noeq]\n"
+        'Usage:\n'
+        '  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--tol TOL]\n'
+        '  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--noeq]\n'
         '  bdf mirror -h | --help\n'
         '  bdf mirror -v | --version\n'
         '\n'
@@ -439,6 +451,10 @@ def cmd_line_mirror(argv=None, quiet: bool=False):
 
     if not quiet:  # pragma: no cover
         print(data)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    log.debug(f'plane = {plane!r}')
     size = 16
     punch = data['--punch']
     bdf_filename = data['IN_BDF_FILENAME']
@@ -450,8 +466,6 @@ def cmd_line_mirror(argv=None, quiet: bool=False):
     from pyNastran.bdf.bdf import read_bdf, BDF
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
-    level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = BDF(log=log)
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                             nxref_errors=100, stop_on_xref_error=False)
@@ -489,9 +503,9 @@ def cmd_line_mirror(argv=None, quiet: bool=False):
                               debug=True, log=log)
     else:
         if eid_offset == 0:
-            model.log.info('writing mirrored model %s without equivalencing because there are no elements' % bdf_filename_out)
+            model.log.info(f'writing mirrored model {bdf_filename_out} without equivalencing because there are no elements')
         else:
-            model.log.info('writing mirrored model %s without equivalencing' % bdf_filename_out)
+            model.log.info(f'writing mirrored model {bdf_filename_out} without equivalencing')
         with open(bdf_filename_out, 'w') as bdf_file:
             bdf_file.write(bdf_filename_stringio.getvalue())
 
@@ -500,9 +514,6 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False):
     """command line interface to flip_shell_normals"""
     if argv is None:
         argv = sys.argv
-
-    from docopt import docopt
-    import pyNastran
     msg = (
         "Usage:\n"
         "  bdf flip_shell_normals IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n"
@@ -778,7 +789,6 @@ def cmd_line_export_mcids(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x | --no_y]\n'
@@ -851,7 +861,6 @@ def cmd_line_remove_unused(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
@@ -1020,7 +1029,6 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
@@ -1068,7 +1076,6 @@ def cmd_line_transform(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf transform IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
@@ -1134,7 +1141,6 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     if argv is None:
         argv = sys.argv
 
-    from docopt import docopt
     msg = (
         'Usage:\n'
         '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'

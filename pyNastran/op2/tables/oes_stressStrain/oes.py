@@ -76,6 +76,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriax
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids_vm import ComplexSolidStressVMArray, ComplexSolidStrainVMArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
 
@@ -2883,12 +2884,14 @@ class OES(OP2Common2):
             stress_strain = 'stress'
             obj_vector_real = RealSolidStressArray
             obj_vector_complex = ComplexSolidStressArray
+            obj_vector_complex_vm = ComplexSolidStressVMArray
             obj_vector_random = RandomSolidStressArray
             obj_vector_random_vm = RandomSolidVMStressArray
         else:
             stress_strain = 'strain'
             obj_vector_real = RealSolidStrainArray
             obj_vector_complex = ComplexSolidStrainArray
+            obj_vector_complex_vm = ComplexSolidStrainVMArray
             obj_vector_random = RandomSolidStrainArray
             obj_vector_random_vm = RandomSolidVMStrainArray
 
@@ -3161,9 +3164,6 @@ class OES(OP2Common2):
             #print('random2=%s' % num_wide_random)
             #print(op2.code_information())
 
-            #if op2.num_wide ==
-            if op2.read_mode == 1:
-                return ndata, None, None
             #print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (
                 #op2.num_wide, numwide_random, num_wide_random, op2.isubcase))
             ##msg = op2.code_information()
@@ -3171,10 +3171,12 @@ class OES(OP2Common2):
             ntotal = op2.num_wide * op2.size
             nelements = ndata // ntotal
 
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_complex_vm)
+            if auto_return:
+                return nelements * ntotal, None, None
             ## cid, coord_type, nactive_pnts,
             ##      nid, oxx, oyy, ozz, txy, tyz, txz
-            struct1 = Struct(op2._endian + b'2i 4s i')
-            struct2 = Struct(op2._endian + b'i13f')
             ntotal1 = 4 * self.size # 3*4
             ntotal2 = 14 * self.size
             ntotali = ntotal1 + nnodes_expected * ntotal2
@@ -3199,13 +3201,22 @@ class OES(OP2Common2):
             # 17 TZXI RS Shear in zx
             # 18 VM RS von Mises
             # Words 5 through 18 repeat 005 times
+            struct1 = Struct(op2._endian + b'2i 4s i')
+            struct2 = Struct(op2._endian + b'i 13f')
+            element_num = op2.element_type
+            element_type = op2.element_name
+            obj = op2.obj
             for i in range(nelements):
                 edata = data[n:n+ntotal1]
                 out = struct1.unpack(edata)
-                (eid_device, cid, cen, nnodesi) = out
+                (eid_device, cid, ctype, nodef) = out
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, op2.nonlinear_factor, op2.sort_method)
-                #print(eid, cid, cen, nnodesi)
+                #obj.add_sort1(eid, dt, cid)
+                obj.add_eid_sort1(element_num, element_type, dt, eid, cid, ctype, nodef)
+
+                #if eid == 1048:
+                    #print(eid, cid, cen, nnodesi)
                 if op2.is_debug_file:
                     op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
                 n += ntotal1
@@ -3214,8 +3225,12 @@ class OES(OP2Common2):
                     #if op2.is_debug_file:
                         #op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
                     #(grid_device, sxx, syy, sz, txy, tyz, txz) = out
-                    grid, sxr, syr, szr, txyr, tyzr, txzr, \
-                        sxi, syi, szi, txyi, tyzi, txzi = out
+                    #     ELEMENT-ID    GRID-ID    NORMAL-X       NORMAL-Y       NORMAL-Z       SHEAR-XY       SHEAR-YZ       SHEAR-ZX      VON MISES
+                    # 0                     1048   2.823925E+03  -8.389856E+03  -1.373890E+03  -3.886024E+03  -9.440013E+02  -8.069132E+02
+                    #                             -1.142355E+02   3.635427E+02   6.020642E+01   1.693545E+02   4.121148E+01   3.410083E+01   1.210361E+04
+
+                    sxr, syr, szr, txyr, tyzr, txzr, \
+                    sxi, syi, szi, txyi, tyzi, txzi, ovm = out
                     if is_magnitude_phase:
                         sx = polar_to_real_imag(sxr, sxi)
                         sy = polar_to_real_imag(syr, syi)
@@ -3230,13 +3245,16 @@ class OES(OP2Common2):
                         txy = complex(txyr, txyi)
                         tyz = complex(tyzr, tyzi)
                         txz = complex(txzr, txzi)
-                    del grid, sx, sy, sz, txy, tyz, txz
-                    #print(grid, sx, sy, sz, txy, tyz, txz)
+                    #del grid, sx, sy, sz, txy, tyz, txz
+                    #if eid == 1048:
+                        #print(f'grid={grid}', sx, sy, sz, txy, tyz, txz)
+                        #out2 = [round(val, 2) for val in out]
+                        #print(grid, out2)
+                    obj.add_node_sort1(dt, eid, grid, inode, sx, sy, sz, txy, tyz, txz, ovm)
                     n += ntotal2
-            etype_num = f'{op2.element_name}-{op2.element_type:d};'
-            msg = f'OES-{etype_num:<11s} complex2; table_name={op2.table_name}; numwide={op2.num_wide}'
-            return op2._not_implemented_or_skip(data, ndata, msg), None, None
-            #return ndata, None, None
+            #etype_num = f'{op2.element_name}-{op2.element_type:d};'
+            #msg = f'OES-{etype_num:<11s} complex2; table_name={op2.table_name}; numwide={op2.num_wide}'
+            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         elif op2.format_code in [1, 2] and op2.num_wide == 67 and op2.element_name == 'CHEXA':  # CHEXA
             op2.log.debug(f'numwide complex HEXA?')
             # CTETRA:

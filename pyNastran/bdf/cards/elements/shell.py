@@ -108,8 +108,9 @@ def _triangle_area_centroid_normal(nodes, card):
                f'length = {length}\n'
                f'{str(card)}')
         raise RuntimeError(msg)
-    area = 0.5 * length, (n1 + n2 + n3) / 3.
-    return area, normal
+    area = 0.5 * length
+    centroid = (n1 + n2 + n3) / 3.
+    return area, centroid, normal
 
 
 def _normal(a, b):
@@ -292,7 +293,7 @@ class TriShell(ShellElement):
         return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
         #return self.pid_ref.Thickness()
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self) -> tuple[float, float, float]:
         """
         Returns area,centroid, normal as it's more efficient to do them
         together
@@ -308,7 +309,8 @@ class TriShell(ShellElement):
 
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
-        return _triangle_area_centroid_normal([n1, n2, n3], self)
+        area, centroid, normal = _triangle_area_centroid_normal([n1, n2, n3], self)
+        return area, centroid, normal
 
     def get_area(self) -> float:
         """see ``TriShell.Area()``"""
