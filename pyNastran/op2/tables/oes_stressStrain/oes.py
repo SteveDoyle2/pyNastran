@@ -3181,7 +3181,7 @@ class OES(OP2Common2):
             ntotal2 = 14 * self.size
             ntotali = ntotal1 + nnodes_expected * ntotal2
             assert ntotali == ntotal, (ntotali, ntotal)
-
+            op2.log.warning(f'vectorize complex solid vm SORT1; numwide={op2.num_wide}')
             # 2 CID I Stress Coordinate System
             # 3 CTYPE CHAR4 Coordinate System Type (BCD)
             # 4 NODEF I Number of Active Points
@@ -3215,8 +3215,6 @@ class OES(OP2Common2):
                 #obj.add_sort1(eid, dt, cid)
                 obj.add_eid_sort1(element_num, element_type, dt, eid, cid, ctype, nodef)
 
-                #if eid == 1048:
-                    #print(eid, cid, cen, nnodesi)
                 if op2.is_debug_file:
                     op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
                 n += ntotal1

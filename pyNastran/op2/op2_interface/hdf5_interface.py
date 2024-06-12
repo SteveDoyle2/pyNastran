@@ -86,6 +86,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriax
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids_vm import ComplexSolidStressVMArray, ComplexSolidStrainVMArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_fast import ComplexFastStressArray, ComplexFastStrainArray
@@ -735,6 +736,7 @@ TABLE_OBJ_MAP = {
     'no.ctetra_stress' : (RandomSolidStressArray, ),
     'RASCONS.ctetra_stress' : (RealSolidStressArray, ),
     'RASEATC.ctetra_stress' : (RealSolidStressArray, ),
+    'modal_contribution.ctetra_stress': (ComplexSolidStressVMArray,),
 
     'stress.cpenta_stress' : (RealSolidStressArray, RealSolidStressArrayNx, ComplexSolidStressArray),
     'stress.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
@@ -745,6 +747,7 @@ TABLE_OBJ_MAP = {
     'no.cpenta_stress' : (RandomSolidStressArray, ),
     'RASCONS.cpenta_stress' : (RealSolidStressArray, ),
     'RASEATC.cpenta_stress' : (RealSolidStressArray, ),
+    'modal_contribution.cpenta_stress': (ComplexSolidStressVMArray,),
 
     'stress.chexa_stress' : (RealSolidStressArray, RealSolidStressArrayNx, ComplexSolidStressArray),
     'stress.chexa_composite_stress': (RealSolidCompositeStressArray, ),
@@ -755,9 +758,11 @@ TABLE_OBJ_MAP = {
     'no.chexa_stress' : (RandomSolidStressArray, ),
     'RASCONS.chexa_stress' : (RealSolidStressArray, ),
     'RASEATC.chexa_stress' : (RealSolidStressArray, ),
+    'modal_contribution.chexa_stress' : (ComplexSolidStressVMArray,),
 
     'strain.cpyram_strain' : (RealSolidStrainArrayNx, ComplexSolidStrainArray, ),
     'stress.cpyram_stress' : (RealSolidStressArrayNx, ComplexSolidStressArray, ),
+    'modal_contribution.cpyram_stress': (ComplexSolidStressVMArray,),
 
     'strain.ctetra_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'ato.ctetra_strain' : (RandomSolidStrainArray, ),
@@ -767,6 +772,7 @@ TABLE_OBJ_MAP = {
     'no.ctetra_strain' : (RandomSolidStrainArray, ),
     'RAECONS.ctetra_strain' : (RealSolidStrainArray, ),
     'RAEEATC.ctetra_strain' : (RealSolidStrainArray, ),
+    'modal_contribution.ctetra_strain': (ComplexSolidStrainVMArray,),
 
     'strain.cpenta_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'strain.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
@@ -777,6 +783,7 @@ TABLE_OBJ_MAP = {
     'no.cpenta_strain' : (RandomSolidStrainArray, ),
     'RAECONS.cpenta_strain' : (RealSolidStrainArray, ),
     'RAEEATC.cpenta_strain' : (RealSolidStrainArray, ),
+    'modal_contribution.cpenta_strain': (ComplexSolidStrainVMArray,),
 
     'strain.chexa_strain' : (RealSolidStrainArray, RealSolidStrainArrayNx, ComplexSolidStrainArray),
     'ato.chexa_strain' : (RandomSolidStrainArray, ),
@@ -787,6 +794,7 @@ TABLE_OBJ_MAP = {
     'RAECONS.chexa_strain' : (RealSolidStrainArray, ),
     'RAEEATC.chexa_strain' : (RealSolidStrainArray, ),
     'strain.chexa_composite_strain': (RealSolidCompositeStrainArray, ),
+    'modal_contribution.chexa_strain': (ComplexSolidStrainVMArray,),
     # -------------------------------------
 
     'grid_point_forces' : (RealGridPointForcesArray, ComplexGridPointForcesArray),
