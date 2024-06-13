@@ -7103,6 +7103,7 @@ class OES(OP2Common2):
         - 272 CPLSTN4
         - 273 CPLSTN6
         - 274 CPLSTN8
+
         """
         op2 = self.op2
         n = 0
@@ -7115,117 +7116,159 @@ class OES(OP2Common2):
 
         if op2.element_type == 271:    # CPLSTN3
             nnodes = 3
-            #nodes_loop = 3
+            nnodes_cen = 1
         elif op2.element_type == 272:    # CPLSTN4
             nnodes = 4
-            #nodes_loop = 4
+            nnodes_cen = 5
         elif op2.element_type == 273:  # CPLSTN6
             nnodes = 6
-            #nodes_loop = 4
+            nnodes_cen = 4
         elif op2.element_type == 274:  # CPLSTN8
             nnodes = 8
-            #nodes_loop = 4
+            nnodes_cen = 5
         else:  # pragma: no cover
             #raise RuntimeError(op2.element_type)
             raise RuntimeError(op2.code_information())
         result_name = f'{stress_strain}.cplstn{nnodes}_{stress_strain}'
-        nnodes_total = nnodes + 1
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
 
-        #print(op2.code_information())
         num_wide = op2.num_wide
         ntotal = num_wide * self.size
         num_wide_real = 32  # CPLSTN4, CPLSTN3
         num_wide_real = 26  # CPLSTN6
         nelements = ndata // ntotal
         assert ndata % ntotal == 0
-        # auto_return = (op2.read_mode == 1)
         #print(f'result_name = {result_name}')
 
-        auto_return, is_vectorized = op2._create_oes_object4(
-            nelements, result_name, slot, obj_vector_real)
         if result_type == 0 and num_wide == 6 and nnodes == 3:  # real; CPLSTN3
+            nlayers = nelements
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_real)
             if auto_return:
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'5f')
-            for unused_i in range(nelements):
-                edata = data[n:n + ntotal]
-                out = struct_cen.unpack(edata)
-                n += ntotal
-                (eid_device, oxx, oyy, ozz, txy, von_mises) = out
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, op2.nonlinear_factor, op2.sort_method)
-                #print(eid, oxx, oyy, ozz, txy, von_mises)
-                if op2.is_debug_file:
-                    op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+            obj: RealCPLSTRNPlateStressNXArray = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                n = nelements * op2.num_wide * 4
+                istart = obj.itotal
+                iend = istart + nlayers
+                obj._times[obj.itime] = dt
 
-        elif result_type == 0 and num_wide == 26 and nnodes == 6:  # real; CPLSTN4
+                if obj.itime == 0:
+                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 6).copy()
+                    eids = ints1[:, 0] // 10
+                    obj.element[istart:iend] = eids
+                    obj.element_node[istart:iend, 0] = eids
+                    obj.element_node[istart:iend, 1] = 0
+                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 6)[:, 1:]
+                #[oxx, oyy, ozz, txy, von_mises]
+                obj.data[obj.itime, istart:iend, :] = floats.copy()
+            else:
+                nid = 0
+                struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'5f')
+                for unused_i in range(nelements):
+                    edata = data[n:n + ntotal]
+                    out = struct_cen.unpack(edata)
+                    n += ntotal
+                    (eid_device, oxx, oyy, ozz, txy, von_mises) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, op2.nonlinear_factor, op2.sort_method)
+                    obj.add_new_eid_sort1(dt, eid, nid, oxx, oyy, ozz, txy, von_mises)
+                    #if op2.is_debug_file:
+                        #op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+        elif result_type == 0 and num_wide == 26 and nnodes == 6:  # real; CPLSTN6
+            nlayers = nelements * nnodes_cen
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_real)
             if auto_return:
+                op2._data_factor = nnodes_cen
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
-            struct_node = Struct(op2._endian + b'i5f')
-            ntotal0 = (2 + 6) * self.size
-            ntotal1 = 6 * self.size
-            for unused_i in range(nelements):
-                edata = data[n:n + ntotal0]
-                out = struct_cen.unpack(edata)
-                n += ntotal0
+            obj: RealCPLSTRNPlateStressNXArray = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                n = nelements * op2.num_wide * 4
+                istart = obj.itotal
+                iend = istart + nlayers
+                obj._times[obj.itime] = dt
 
-                (eid_device, cen, node, a, b, c, d, e) = out
-                assert cen == b'CEN ', cen
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, op2.nonlinear_factor, op2.sort_method)
-                print(eid, cen, node, a, b, c, d, e)
-                if op2.is_debug_file:
-                    op2.binary_debug.write('%s - %s\n' % (name, str(out)))
-                # obj.add_sort1(dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
-                #              mx, my, mz, orx, ory, orz, erx, ery, erz)
-                for i in range(3):
-                    edata = data[n:n + ntotal1]
-                    out = struct_node.unpack(edata)
-                    print('  ', out)
-                    n += ntotal1
-            # n = len(data)
+                if obj.itime == 0:
+                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 26)[:, 2:].copy()
+                    ints2 = ints1.reshape(nlayers, 6)
+                    eids = ints1[:, 0] // 10
+                    nids = ints2[:, 0]
+                    obj.element[istart:iend] = eids
+                    eids2 = np.vstack([eids] * nnodes_cen).T.ravel()
+                    obj.element_node[istart:iend, 0] = eids2
+                    obj.element_node[istart:iend, 1] = nids
+                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 26)[:, 2:]
+                floats2 = floats.reshape(nlayers, 6)
+                #[oxx, oyy, ozz, txy, von_mises]
+                obj.data[obj.itime, istart:iend, :] = floats2[:, 1:].copy()
+            else:
+                struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
+                struct_node = Struct(op2._endian + b'i5f')
+                ntotal0 = (2 + 6) * self.size
+                ntotal1 = 6 * self.size
+                for unused_i in range(nelements):
+                    edata = data[n:n + ntotal0]
+                    out = struct_cen.unpack(edata)
+                    n += ntotal0
+
+                    (eid_device, cen, nid, oxx, oyy, ozz, txy, von_mises) = out
+                    assert cen == b'CEN ', cen
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, op2.nonlinear_factor, op2.sort_method)
+                    #if op2.is_debug_file:
+                        #op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+                    obj.add_new_eid_sort1(dt, eid, nid, oxx, oyy, ozz, txy, von_mises)
+                    for i in range(nnodes):
+                        edata = data[n:n + ntotal1]
+                        nid, oxx, oyy, ozz, txy, von_mises = struct_node.unpack(edata)
+                        obj.add_sort1(dt, eid, nid, oxx, oyy, ozz, txy, von_mises)
+                        n += ntotal1
 
         elif result_type == 0 and num_wide == 32 and nnodes in {4, 8}:  # real; CPLSTN4
-            #ntotal = 32 * self.factor  #  32*4 = 76
-            # auto_return, is_vectorized = op2._create_oes_object4(
-            #     nelements, result_name, slot, RealNonlinearBushArray)
+            nlayers = nelements * nnodes_cen
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_real)
             if auto_return:
+                op2._data_factor = nnodes_cen
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj = op2.obj
+            obj: RealCPLSTRNPlateStressNXArray = op2.obj
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                 #op2.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if 0 and op2.use_vector and is_vectorized and op2.sort_method == 1:
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
                 n = nelements * op2.num_wide * 4
                 istart = obj.itotal
-                iend = istart + nelements
+                iend = istart + nlayers
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 19).copy()
-                    eids = ints[:, 0] // 10
+                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 32).copy()
+                    ints2 = ints1[:, 2:].reshape(nlayers, 6)
+                    eids = ints1[:, 0] // 10
+                    nids = ints2[:, 0]
                     obj.element[istart:iend] = eids
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 19)
-                #[fx, fy, fz, otx, oty, otz, etx, ety, etz,
-                # mx, my, mz, orx, ory, orz, erx, ery, erz]
-                obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
+                    eids2 = np.vstack([eids] * nnodes_cen).T.ravel()
+                    obj.element_node[istart:iend, 0] = eids2
+                    obj.element_node[istart:iend, 1] = nids
+                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 32)[:, 2:]
+                floats2 = floats.reshape(nlayers, 6)
+                #[oxx, oyy, ozz, txy, von_mises]
+                obj.data[obj.itime, istart:iend, :] = floats2[:, 1:].copy()
             else:
-                # op2.show_data(data[n:], types='ifs')
                 struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
                 struct_node = Struct(op2._endian +  b'i5f')
                 ntotal0 = (2 + 6) * self.size
@@ -7236,23 +7279,18 @@ class OES(OP2Common2):
                     out = struct_cen.unpack(edata)
                     n += ntotal0
 
-                    (eid_device, cen, node, oxx, oyy, ozz, txy, von_mises) = out
+                    (eid_device, cen, nid, oxx, oyy, ozz, txy, von_mises) = out
                     assert cen == b'CEN ', cen
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
-                    #print(eid, cen, node, oxx, oyy, ozz, txy, von_mises)
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('%s - %s\n' % (name, str(out)))
-                    #obj.add_sort1(dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
-                    #              mx, my, mz, orx, ory, orz, erx, ery, erz)
-                    obj.add_new_eid_sort1(eid, dt, oxx, oyy, ozz, txy, ovm)
-                    for i in range(4):
+                    #if op2.is_debug_file:
+                        #op2.binary_debug.write('%s - %s\n' % (name, str(out)))
+                    obj.add_new_eid_sort1(dt, eid, nid, oxx, oyy, ozz, txy, von_mises)
+                    for i in range(nnodes):
                         edata = data[n:n + ntotal1]
-                        out = struct_node.unpack(edata)
-                        #print('  ', out)
-                        obj.add_sort1(eid, dt, oxx, oyy, ozz, txy, ovm)
+                        nid, oxx, oyy, ozz, txy, von_mises = struct_node.unpack(edata)
+                        obj.add_sort1(dt, eid, nid, oxx, oyy, ozz, txy, von_mises)
                         n += ntotal1
-                # n = len(data)
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal

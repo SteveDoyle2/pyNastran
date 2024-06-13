@@ -322,9 +322,6 @@ class ComplexSolidVMArray(OES_Object):
         #print(self.element_cid)
         #print(self.element_node)
 
-        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
-        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
-
         ntotali = self.num_wide
         ntotal = ntotali * nelements
 
@@ -338,8 +335,8 @@ class ComplexSolidVMArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'2i 4s 2i 12f')
-        struct2 = Struct(endian + b'i 12f')
+        #struct1 = Struct(endian + b'2i 4s 2i 13f')
+        #struct2 = Struct(endian + b'i 13f')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
@@ -360,12 +357,21 @@ class ComplexSolidVMArray(OES_Object):
             nnodes_no_centroid_array, # ints
         ], fdtype, debug=False)
 
+        #old
         # speed up transient cases, but slightly slows down static cases
         # [eid_device, cid, b'GRID', nnodes]
         # [node, (oxx, oyy, ozz, txy, tyz, txz)] * nnodes_centroid  # 13
         #    node is an scalar (int)
         #    stresses (6) are complex (real+imag), so 6*2 -> 12
-        data_out = np.full((nelements, 4+13*nnodes_centroid), np.nan, dtype=fdtype)
+        #data_out = np.full((nelements, 4+13*nnodes_centroid), np.nan, dtype=fdtype)
+
+        # new
+        # speed up transient cases, but slightly slows down static cases
+        # [eid_device, cid, b'GRID', nnodes]
+        # [node, (oxx, oyy, ozz, txy, tyz, txz, ovm)] * nnodes_centroid  # 14
+        #    node is an scalar (int)
+        #    stresses (6) are complex (real+imag) + 1 ovm, so 6*2+1 -> 13
+        data_out = np.full((nelements, 4+14*nnodes_centroid), np.nan, dtype=fdtype)
 
         # setting:
         #  - CTETRA: [element_device, cid, 'GRID', 4]
@@ -403,17 +409,27 @@ class ComplexSolidVMArray(OES_Object):
              #exr, eyr, ezr, etxyr, etyzr, etzxr,
             #exi, eyi, ezi, etxyi, etyzi, etzxi) = out
 
-            # [node, oxx, oyy, ozz, txy, tyz, txz]  # 7
-            datai = self.data[itime, : :]
 
-            datai2 = np.hstack([nodes_view, datai.real, datai.imag])  # 1+2*6 = 13
+            # old
+            # [node, oxx, oyy, ozz, txy, tyz, tx]  # 7
+            #datai = self.data[itime, : :]
+            #datai2 = np.hstack([nodes_view, datai.real, datai.imag])  # 1+2*6 = 13
+            #assert datai2.shape[1] == 13, datai2.shape
+
+			# new
+            # [node, oxx, oyy, ozz, txy, tyz, txz, ovm]  # 8
+            datai = self.data[itime, :, :-1]
+            ovm = self.data[itime, :, -1].real.reshape(nelements_nodes, 1)
+            datai2 = np.hstack([nodes_view, datai.real, datai.imag, ovm])  # 1+2*6 = 13
+            assert datai2.shape[1] == 14, datai2.shape
 
             # [eid_device, cid, b'GRID', nnodes,  #4
             #  node,
             #  doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real, #11
-            #  doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag]
+            #  doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag, ovm] # new
             # switch datai to element format and put it in the output buffer
-            data_out[:, 4:] = datai2.reshape(nelements, 13*nnodes_centroid)
+            #data_out[:, 4:] = datai2.reshape(nelements, 13*nnodes_centroid)   # old
+            data_out[:, 4:] = datai2.reshape(nelements, 14*nnodes_centroid)  # new
             assert data_out.size == ntotal, (data_out.shape, data_out.size, ntotal)
             op2_file.write(data_out)
 

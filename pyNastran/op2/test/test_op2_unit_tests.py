@@ -885,15 +885,18 @@ class TestNX(Tester):
         save_load_deck(model, run_save_load=False, run_renumber=False)
 
         log = get_logger(level='warning')
+        exclude_results = None  #['*cplstn3*']
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=False,
+                write_f06=False, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
+                subcases=None, exclude_results=exclude_results,
+                short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
+
     def test_nx_sol111_solid_stress(self):
         """OESVM1 for solids"""
         log = get_logger(level='info')

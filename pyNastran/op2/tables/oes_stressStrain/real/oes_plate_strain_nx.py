@@ -71,7 +71,8 @@ class RealCPLSTRNPlateArray(OES_Object):
         #self.nelements = 0
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+            #self.element_name, self.element_type, nnodes_per_element,
+            #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.ntotal, dtype=idtype)
@@ -88,7 +89,7 @@ class RealCPLSTRNPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
+                for ie, (eid, nid) in enumerate(self.element_node):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (oxx1, oyy1, ozz1, txy1, ovm1) = t1
@@ -157,24 +158,25 @@ class RealCPLSTRNPlateArray(OES_Object):
         #return ind
 
     def add_new_eid_sort1(self, dt, eid, node_id,
-                          fiber_dist1, oxx1, oyy1, ozz1, txy1, ovm1):
+                          oxx, oyy, ozz, txy, ovm):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
         # assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [oxx1, oyy1, ozz1, txy1, ovm1]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, ovm]
         self.itotal += 1
         self.ielement += 1
 
     def add_sort1(self, dt, eid, node_id,
-                  oxx1, oyy1, ozz1, txy1, ovm1):
+                  oxx, oyy, ozz, txy, ovm):
         assert self.sort_method == 1, self
         assert eid is not None, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
+        #print(self.element_node.shape, self.itotal, eid, node_id)
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [oxx1, oyy1, ozz1, txy1, ovm1]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, ovm]
         self.itotal += 1
         #self.ielement += 1
 
