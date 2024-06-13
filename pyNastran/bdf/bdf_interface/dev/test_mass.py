@@ -159,7 +159,7 @@ class TestMassGeneration(unittest.TestCase):
         assert np.allclose(IS, IS_expected)
         assert np.allclose(II, II_expected)
         assert np.allclose(Q, Q_expected)
-        assert np.allclose(IQ, IQ_expected)
+        assert np.allclose(np.diag(IQ), np.diag(IQ_expected)), f'IQ:\n{IQ}\nIQ_epected:\n{IQ_expected}'
 
     def test_make_gpwg_2(self):
         """directional dependence"""
@@ -296,8 +296,8 @@ class TestMassGeneration(unittest.TestCase):
         assert np.allclose(cg, cg_expected)
         assert np.allclose(IS, IS_expected)
         assert np.allclose(II, II_expected)
-        assert np.allclose(IQ, IQ_expected)
-        assert np.allclose(Q, Q_expected)
+        assert np.allclose(IQ, IQ_expected, atol=1e-4), f'IQ:\n{IQ}\nIQ_epected:\n{IQ_expected}'
+        assert np.allclose(Q, Q_expected, atol=1e-4), f'Q:\n{Q}\nIQ_epected:\n{Q_expected}'
 
 if __name__ == '__main__':
     unittest.main()

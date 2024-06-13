@@ -682,11 +682,11 @@ def _write_points_binary(outfile, points: np.ndarray, endian: bytes) -> None:
 
 def _write_points_ascii(outfile, points: np.ndarray, float_fmt='%6.6f') -> None:
     """writes the points"""
-    if isinstance(float_fmt, bytes):
-        fmt_ascii = float_fmt
-    else:
-        fmt_ascii = float_fmt.encode('latin1')
-    np.savetxt(outfile, points, fmt_ascii)
+    # if isinstance(float_fmt, bytes):
+    #     fmt_ascii = float_fmt
+    # else:
+    #     fmt_ascii = float_fmt.encode('latin1')
+    np.savetxt(outfile, points, fmt=float_fmt)
 
 def _write_elements_binary(outfile, elements: np.ndarray, endian: bytes) -> None:
     """writes the triangles"""
@@ -702,8 +702,8 @@ def _write_elements_binary(outfile, elements: np.ndarray, endian: bytes) -> None
 
 def _write_elements_ascii(outfile, elements: np.ndarray, int_fmt: str) -> None:
     """writes the triangles"""
-    fmt_ascii = int_fmt.encode('latin1')
-    np.savetxt(outfile, elements+1, fmt_ascii)
+    #fmt_ascii = int_fmt.encode('latin1')
+    np.savetxt(outfile, elements+1, fmt=int_fmt)
 
 def _write_regions_binary(outfile, regions, endian):
     """writes the regions"""
@@ -720,8 +720,8 @@ def _write_regions_binary(outfile, regions, endian):
 
 def _write_regions_ascii(outfile, regions):
     """writes the regions"""
-    fmt = b'%i'
-    np.savetxt(outfile, regions, fmt)
+    fmt = '%i'
+    np.savetxt(outfile, regions, fmt=fmt)
 
 def _write_loads_ascii(outfile, loads, npoints: int, float_fmt='%6.6f'):
     """writes the *.triq loads
