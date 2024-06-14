@@ -186,7 +186,7 @@ class MouseActions:
 
         #elif mode == 'pan':
             #pass
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
 
         if left_button_down_cleanup:
@@ -713,6 +713,9 @@ class MouseActions:
             return_flag, duplicate_key, result_value, unused_result_name, xyz = out
             if return_flag is True:
                 return
+            if xyz is None:
+                log.warning(f'xyz is None using _cell_{location}_pick(cell_id={cell_id}, world_position={world_position}; returning...')
+                return
 
             # prevent duplicate labels with the same value on the same cell
             if duplicate_key is not None and duplicate_key in gui.label_ids[icase]:
@@ -771,7 +774,7 @@ class MouseActions:
                         out = self._cell_centroid_pick(cell_id, world_position, icase=icase)
                     elif location == 'node':
                         out = self._cell_node_pick(cell_id, world_position, icase=icase)
-                    else:
+                    else:  # pragma: no cover
                         raise RuntimeError(f'probe_picker_all: invalid pick location={location!r}')
                 except IndexError:
                     # IndexError: out of range?

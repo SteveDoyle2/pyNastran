@@ -430,6 +430,7 @@ class FlutterResponse:
     def plot_vg(self, fig=None, modes=None,
                 plot_type='tas',
                 xlim=None, ylim_damping=None,
+                ncol: int=0,
                 clear=False, legend=True,
                 png_filename=None, show=True, **kwargs):
         """
@@ -438,11 +439,12 @@ class FlutterResponse:
         See ``plot_root_locus`` for arguments
         """
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
-        ylabel = 'Damping'
+        ylabel = 'Viscous Damping'
         iy = self.idamping
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
                        modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
+                       ncol=ncol,
                        show=show, clear=clear, legend=legend,
                        png_filename=png_filename,
                        **kwargs)
@@ -458,6 +460,7 @@ class FlutterResponse:
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
                         xlim=None, ylim=None,
+                        ncol: int = 0,
                         show: bool=True, clear: bool=False,
                         close: bool=False, legend: bool=True,
                         png_filename=None,
@@ -505,6 +508,7 @@ class FlutterResponse:
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
                        modes=modes, fig=fig, axes=axes, xlim=xlim, ylim=ylim,
+                       ncol=ncol,
                        show=show, clear=clear, close=close, legend=legend,
                        png_filename=png_filename,
                        **kwargs)
@@ -515,6 +519,7 @@ class FlutterResponse:
                   modes=None,
                   fig=None, axes=None,
                   xlim=None, ylim=None,
+                  ncol: int=0,
                   show: bool=True, clear: bool=False,
                   close: bool=False, legend: bool=True,
                   png_filename=None,
@@ -525,6 +530,8 @@ class FlutterResponse:
             kwargs = {}
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
+        nmodes = len(modes)
+        ncol = _update_ncol(nmodes, ncol)
 
         if fig is None:
             fig = plt.figure()
@@ -553,6 +560,7 @@ class FlutterResponse:
                 axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol)
 
         axes.grid(True)
+        #axes.set_xlabel(xlabel  + '; _plot_x_y')
         axes.set_xlabel(xlabel)
         axes.set_ylabel(ylabel)
         if xlim:
@@ -581,6 +589,7 @@ class FlutterResponse:
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
                    nopoints: bool=False, noline: bool=False,
+                   ncol: int=0,
                    show: bool=True, clear: bool=False,
                    close: bool=False, legend: bool=True,
                    png_filename=None,
@@ -599,6 +608,8 @@ class FlutterResponse:
             kwargs = {}
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
+        nmodes = len(modes)
+        ncol = _update_ncol(nmodes, ncol)
 
         if fig is None:
             fig = plt.figure()
@@ -666,6 +677,7 @@ class FlutterResponse:
 
         axes1.grid(True)
         axes1.set_xlabel(xlabel)
+        #axes1.set_xlabel(xlabel + '; _plot_x_y2')
         axes1.set_ylabel(ylabel1)
 
         axes2.grid(True)
@@ -683,7 +695,9 @@ class FlutterResponse:
                     continue
                 legend_kwargs[key] = value
 
-            axes1.legend(handles=legend_elements, **legend_kwargs)
+            axes1.legend(handles=legend_elements, **legend_kwargs)              # TODO: switch to figure...
+            #axes1.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)  # TODO: switch to figure...
+            #fig.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)
 
         if show:
             plt.show()
@@ -713,7 +727,7 @@ class FlutterResponse:
         assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
-        ylabel1 = r'Damping; $\zeta = 2 \xi $'
+        ylabel1 = r'Viscous Damping; $g = 2 \gamma $'
         ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
 
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
@@ -744,8 +758,8 @@ class FlutterResponse:
 
         """
         xlabel = r'KFreq [rad]; $ \omega c / (2 V)$'
-        ylabel1 = r'Damping; $\zeta = 2 \xi $'
-        ylabel2 = 'Frequency'
+        ylabel1 = r'Viscous Damping; $g = 2 \gamma $'
+        ylabel2 = 'Frequency [Hz]'
         ix = self.ikfreq
         iy1 = self.idamping
         iy2 = self.ifreq
@@ -815,6 +829,7 @@ class FlutterResponse:
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    vd_limit=None, damping_limit=None,
                    nopoints: bool=False, noline: bool=False,
+                   ncol: int=0,
                    png_filename=None, show: bool=False):
         """
         Make a V-g and V-f plot
@@ -880,7 +895,7 @@ class FlutterResponse:
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
-        damp_axes.set_ylabel(r'Damping; $\zeta = 2 \xi $')
+        damp_axes.set_ylabel(r'Viscous Damping; $g = 2 \gamma $')
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
@@ -907,8 +922,11 @@ class FlutterResponse:
         _add_damping_limit(plot_type, damp_axes, damping_limit)
         _add_vd_limit(plot_type, damp_axes, freq_axes, vd_limit)
 
+        nmodes = len(modes)
+        ncol = _update_ncol(nmodes, ncol)
         if legend:
             damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
+            #damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
             #plt.legend()
@@ -1198,13 +1216,13 @@ class FlutterResponse:
             xlabel = r'1/KFreq [1/rad]; $2V / (\omega c) $'
         elif plot_type == 'eigr':
             ix = self.ieigr
-            xlabel = r'Eigenvalue (Real); $\omega \zeta$'
+            xlabel = r'Eigenvalue (Real); $\omega \gamma$'
         elif plot_type == 'eigi':
             ix = self.ieigi
             xlabel = r'Eigenvalue (Imaginary); $\omega$'
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
-            xlabel = r'Damping; $\zeta = 2 \xi $'
+            xlabel = r'Viscous Damping; $g = 2 \gamma $'
         else:  # pramga: no cover
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
@@ -1354,9 +1372,9 @@ def _add_damping_limit(plot_type: str,
     #damp_label = f'Damping={damping_limit*100:.1f}'
     #plt.axhline(y=1.0, color="black", linestyle="--")
     damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
-                      label=f'Damping=0%')
+                      label=f'Viscous Damping=0%')
     damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-                      label=f'Abs Damping={damping_limit*100:.1f}%')
+                      label=f'Abs Viscous Damping={damping_limit*100:.1f}%')
 
 
 def _add_vd_limit(plot_type: str,
@@ -1431,3 +1449,14 @@ def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
     if '%' in filename:
         filename_out = filename % subcase
     return filename_out
+
+def _update_ncol(nmodes: int, ncol: int=0) -> int:
+    """Updates ncol to be a valid number"""
+    ncol = 1
+    if ncol > 0:
+        return ncol
+    if ncol == 0:
+        ncol = nmodes // 25
+    if ncol == 0:
+        ncol = 1
+    return ncol

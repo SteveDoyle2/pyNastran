@@ -16,9 +16,9 @@ Defines:
              is_binary=False, float_fmt='%6.7f')
 
 """
-from typing import Optional
 import sys
 from struct import pack, unpack
+from typing import TextIO, BinaryIO, Optional
 
 import numpy as np
 from cpylog import get_logger2, SimpleLogger
@@ -67,7 +67,7 @@ class Cart3dReaderWriter:
         """get the number of elements"""
         return self.elements.shape[0]
 
-    def _read_elements_ascii(self, infile, npoints: int, nelements: int) -> np.ndarray:
+    def _read_elements_ascii(self, infile: TextIO, npoints: int, nelements: int) -> np.ndarray:
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
 
@@ -123,7 +123,7 @@ class Cart3dReaderWriter:
                 log.error(msg)
                 raise
 
-    def _read_cart3d_binary(self, cart3d_filename: str, endian: bytes):
+    def _read_cart3d_binary(self, cart3d_filename: str, endian: bytes) -> None:
         self.n = 0
         with open(cart3d_filename, 'rb') as infile:
             try:
@@ -138,7 +138,7 @@ class Cart3dReaderWriter:
                 raise
             assert self.n == infile.tell(), 'n=%s tell=%s' % (self.n, infile.tell())
 
-    def _read_header_binary(self, infile) -> tuple[int, int, int, bytes]:
+    def _read_header_binary(self, infile: BinaryIO) -> tuple[int, int, int, bytes]:
         """
         Reads the header::
 
@@ -184,7 +184,7 @@ class Cart3dReaderWriter:
         self.n += 8
         return npoints, nelements, nresults, endian
 
-    def _read_points_binary(self, infile, npoints: int, endian: bytes) -> np.ndarray:
+    def _read_points_binary(self, infile: BinaryIO, npoints: int, endian: bytes) -> np.ndarray:
         """reads the xyz points"""
         size = npoints * 12  # 12=3*4 all the points
         data = infile.read(size)
@@ -197,7 +197,7 @@ class Cart3dReaderWriter:
         self.n += 8
         return points
 
-    def _read_elements_binary(self, infile, nelements: int, endian: bytes) -> np.ndarray:
+    def _read_elements_binary(self, infile: BinaryIO, nelements: int, endian: bytes) -> np.ndarray:
         """reads the triangles"""
         size = nelements * 12  # 12=3*4 all the elements
         data = infile.read(size)
@@ -211,7 +211,7 @@ class Cart3dReaderWriter:
         assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_regions_binary(self, infile, nelements: int, endian: bytes) -> np.ndarray:
+    def _read_regions_binary(self, infile: BinaryIO, nelements: int, endian: bytes) -> np.ndarray:
         """reads the regions"""
         size = nelements * 4  # 12=3*4 all the elements
         data = infile.read(size)
@@ -234,7 +234,7 @@ class Cart3dReaderWriter:
         self.n = 0
         infile.seek(self.n)
 
-    def show(self, infile, n: int, types='ifs', endian=None):  # pragma: no cover
+    def show(self, infile: BinaryIO, n: int, types='ifs', endian=None):  # pragma: no cover
         assert self.n == infile.tell(), 'n=%s tell=%s' % (self.n, infile.tell())
         #nints = n // 4
         data = infile.read(4 * n)
@@ -247,10 +247,10 @@ class Cart3dReaderWriter:
             endian = self._endian
         return show_data(sys.stdout, data, endian, types=types)
 
-    def show_ndata(self, infile, n: int, types: str='ifs'):  # pragma: no cover
+    def show_ndata(self, infile: BinaryIO, n: int, types: str='ifs'):  # pragma: no cover
         return self._write_ndata(infile, sys.stdout, n, types=types)
 
-    def _write_ndata(self, infile, outfile, n: int, types: str='ifs'):  # pragma: no cover
+    def _write_ndata(self, infile: BinaryIO, outfile, n: int, types: str='ifs'):  # pragma: no cover
         """Useful function for seeing what's going on locally when debugging."""
         nold = self.n
         data = infile.read(n)
@@ -258,7 +258,9 @@ class Cart3dReaderWriter:
         infile.seek(self.n)
         return _write_data(outfile, data, types=types, endian=self._endian)
 
-def _write_cart3d_ascii(outfilename, points, elements, regions, loads, float_fmt):
+def _write_cart3d_ascii(outfilename: str,
+                        points: np.ndarray, elements: np.ndarray, regions: np.ndarray,
+                        loads, float_fmt: str) -> None:
     npoints = points.shape[0]
     nelements = elements.shape[0]
     is_loads = len(loads) > 0
@@ -271,7 +273,9 @@ def _write_cart3d_ascii(outfilename, points, elements, regions, loads, float_fmt
         if is_loads:
             _write_loads_ascii(outfile, loads, npoints, float_fmt='%6.6f')
 
-def _write_cart3d_binary(outfilename, points, elements, regions, loads, endian):
+def _write_cart3d_binary(outfilename: str,
+                         points: np.ndarray, elements: np.ndarray, regions: np.ndarray,
+                         loads, endian):
     npoints = points.shape[0]
     nelements = elements.shape[0]
 
@@ -307,10 +311,10 @@ def b(mystr: str) -> bytes:
     """reimplementation of six.b(...) to work in Python 2"""
     return mystr.encode('ascii')
 
-def show_data(outfile, data: bytes, endian: bytes, types='ifs'):  # pragma: no cover
+def show_data(outfile, data: bytes, endian: bytes, types: str='ifs'):  # pragma: no cover
     return _write_data(outfile, data, endian, types=types)
 
-def _write_data(outfile, data: bytes, endian: bytes, types='ifs'):  # pragma: no cover
+def _write_data(outfile: TextIO, data: bytes, endian: bytes, types: str='ifs'):  # pragma: no cover
     """Useful function for seeing what's going on locally when debugging."""
     n = len(data)
     nints = n // 4
@@ -349,7 +353,7 @@ def _write_data(outfile, data: bytes, endian: bytes, types='ifs'):  # pragma: no
         outfile.write("long long = %s\n" % str(longs))
     return strings, ints, floats
 
-def _read_header_ascii(infile) -> tuple[int, int, int]:
+def _read_header_ascii(infile: TextIO) -> tuple[int, int, int]:
     """
     Reads the header::
 
@@ -370,7 +374,7 @@ def _read_header_ascii(infile) -> tuple[int, int, int]:
         raise ValueError('invalid result type')
     return npoints, nelements, nresults
 
-def _read_points_ascii(infile, npoints: int) -> np.ndarray:
+def _read_points_ascii(infile: TextIO, npoints: int) -> np.ndarray:
     """A point is defined by x,y,z and the ID is the location in points."""
     p = 0
     data = []
@@ -402,7 +406,7 @@ def _bad_parse_float(in_value: str) -> str:
         out = '???'
     return out
 
-def _read_regions_ascii(infile, nelements: int) -> np.ndarray:
+def _read_regions_ascii(infile: TextIO, nelements: int) -> np.ndarray:
     """reads the region section"""
     regions = np.zeros(nelements, dtype='int32')
     iregion = 0
@@ -415,7 +419,7 @@ def _read_regions_ascii(infile, nelements: int) -> np.ndarray:
     return regions
 
 
-def _read_results_ascii(i: int, infile,
+def _read_results_ascii(i: int, infile: TextIO,
                         npoints: int, nresults: int, log: SimpleLogger,
                         result_names: Optional[list[str]]=None) -> tuple[Optional[np.ndarray],
                                                                          list[str]]:
@@ -638,7 +642,8 @@ def _calculate_results(result_names: list[str], results: np.ndarray,
     log.debug('---finished read_results---')
     return loads
 
-def _write_header_binary(outfile, npoints: int, nelements: int, is_loads: bool, endian: bytes) -> None:
+def _write_header_binary(outfile: BinaryIO, npoints: int, nelements: int,
+                         is_loads: bool, endian: bytes) -> None:
     """writes the cart3d header"""
     if is_loads:
         fmt = endian + b'iiiii'
@@ -648,7 +653,7 @@ def _write_header_binary(outfile, npoints: int, nelements: int, is_loads: bool, 
         msg = pack(fmt, 2*4, npoints, nelements, 4)
     outfile.write(msg)
 
-def _write_header_ascii(outfile, npoints: int, nelements: int,
+def _write_header_ascii(outfile: TextIO, npoints: int, nelements: int,
                         is_loads: bool) -> str:
     """
     Writes the header::
@@ -668,7 +673,7 @@ def _write_header_ascii(outfile, npoints: int, nelements: int,
     int_fmt = '%%%si' % len(str(nelements))
     return int_fmt
 
-def _write_points_binary(outfile, points: np.ndarray, endian: bytes) -> None:
+def _write_points_binary(outfile: BinaryIO, points: np.ndarray, endian: bytes) -> None:
     """writes the points"""
     four = pack(endian + b'i', 4)
     outfile.write(four)
@@ -680,7 +685,7 @@ def _write_points_binary(outfile, points: np.ndarray, endian: bytes) -> None:
     outfile.write(floats)
     outfile.write(four)
 
-def _write_points_ascii(outfile, points: np.ndarray, float_fmt='%6.6f') -> None:
+def _write_points_ascii(outfile: TextIO, points: np.ndarray, float_fmt='%6.6f') -> None:
     """writes the points"""
     # if isinstance(float_fmt, bytes):
     #     fmt_ascii = float_fmt
@@ -688,7 +693,7 @@ def _write_points_ascii(outfile, points: np.ndarray, float_fmt='%6.6f') -> None:
     #     fmt_ascii = float_fmt.encode('latin1')
     np.savetxt(outfile, points, fmt=float_fmt)
 
-def _write_elements_binary(outfile, elements: np.ndarray, endian: bytes) -> None:
+def _write_elements_binary(outfile: BinaryIO, elements: np.ndarray, endian: bytes) -> None:
     """writes the triangles"""
     fmt = endian + b'i'
     four = pack(fmt, 4)
@@ -700,12 +705,12 @@ def _write_elements_binary(outfile, elements: np.ndarray, endian: bytes) -> None
     outfile.write(ints)
     outfile.write(four)
 
-def _write_elements_ascii(outfile, elements: np.ndarray, int_fmt: str) -> None:
+def _write_elements_ascii(outfile: BinaryIO, elements: np.ndarray, int_fmt: str) -> None:
     """writes the triangles"""
     #fmt_ascii = int_fmt.encode('latin1')
     np.savetxt(outfile, elements+1, fmt=int_fmt)
 
-def _write_regions_binary(outfile, regions, endian):
+def _write_regions_binary(outfile: BinaryIO, regions: np.ndarray, endian: bytes) -> None:
     """writes the regions"""
     fmt = endian + b'i'
     four = pack(fmt, 4)
@@ -718,7 +723,7 @@ def _write_regions_binary(outfile, regions, endian):
 
     outfile.write(four)
 
-def _write_regions_ascii(outfile, regions):
+def _write_regions_ascii(outfile: TextIO, regions: np.ndarray) -> None:
     """writes the regions"""
     fmt = '%i'
     np.savetxt(outfile, regions, fmt=fmt)
