@@ -492,7 +492,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
             flutter.plot_vg(modes=modes,
                             plot_type=plot_type,
                             xlim=xlim, ylim_damping=ylim_damping,
-                            ncol=col,
+                            ncol=ncol,
                             #vd_limit=vd_limit,
                             png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
