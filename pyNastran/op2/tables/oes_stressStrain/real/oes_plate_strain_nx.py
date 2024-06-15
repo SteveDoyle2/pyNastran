@@ -56,14 +56,14 @@ class RealCPLSTRNPlateArray(OES_Object):
         elif self.element_type == 272:  # CPLSTN4
             nnodes_per_element = 5
         elif self.element_type == 273:  # CPLSTN6
-            nnodes_per_element = 7
+            nnodes_per_element = 4 # 7
         elif self.element_type == 274:  # CPLSTN8
-            nnodes_per_element = 9
-        else:
+            nnodes_per_element = 5 # 9
+        else:  # pragma: no cover
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
         self.nnodes = nnodes_per_element
-        #self.nelements //= nnodes_per_element
+        self.nelements //= nnodes_per_element
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -75,7 +75,7 @@ class RealCPLSTRNPlateArray(OES_Object):
             #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = np.zeros(self.ntotal, dtype=idtype)
+        self.element = np.zeros(self.nelements, dtype=idtype)
         self.element_node = np.zeros((self.ntotal, 2), dtype=idtype)
 
         #[oxx, oyy, ozz, txy, ovm]
@@ -161,8 +161,10 @@ class RealCPLSTRNPlateArray(OES_Object):
                           oxx, oyy, ozz, txy, ovm):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
+        assert eid > 0, f'eid={eid}, nid={node_id}'
         self._times[self.itime] = dt
         # assert self.itotal == 0, oxx
+        self.element[self.ielement] = eid
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, ovm]
         self.itotal += 1
@@ -174,6 +176,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         assert eid is not None, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
+        assert eid > 0, f'eid={eid}, nid={node_id}'
         #print(self.element_node.shape, self.itotal, eid, node_id)
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, ovm]

@@ -48,6 +48,7 @@ from pyNastran.f06.csv_writer import write_csv
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
+OP2_TEST = PKG_PATH / 'op2' / 'test'
 
 
 class TestOP2Unit(Tester):
@@ -277,8 +278,7 @@ class TestAutodeskOP2(Tester):
     """various OP2 tests"""
     def _test_op2_autodesk_1(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
-                                    'autodesk', 'aa8lzviq9.op2')
+        op2_filename = OP2_TEST_PATH / 'autodesk' / 'aa8lzviq9.op2'
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,
@@ -777,8 +777,8 @@ class TestNX(Tester):
         initial/final contact separation distance
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'contact_model.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'contact_model.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'contact_model.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'contact_model.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -809,8 +809,8 @@ class TestNX(Tester):
         centroidal CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -841,8 +841,8 @@ class TestNX(Tester):
         corner CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -870,8 +870,8 @@ class TestNX(Tester):
     def test_nx_cplstn(self):
         """CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'conedg01e.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'conedg01e.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'conedg01e.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'conedg01e.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -900,8 +900,8 @@ class TestNX(Tester):
     def test_nx_sol111_solid_stress(self):
         """OESVM1 for solids"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'sol111_solid_stress', 'nx_sine.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'sol111_solid_stress', 'nx_sine.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
@@ -928,7 +928,7 @@ class TestMSC(Tester):
     def test_msc_2014(self):
         """test MSC 2014 version"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'sdof_crod_2014.op2')
+        op2_filename1 = MODEL_PATH / 'bugs' / 'msc_2014' / 'sdof_crod_2014.op2'
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
@@ -943,8 +943,8 @@ class TestMSC(Tester):
     def test_msc_cfast(self):
         """test MSC 126-CFAST"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.op2')
+        bdf_filename = MODEL_PATH / 'msc' / 'test_model_cfast.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'test_model_cfast.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
         bdf_filename_out = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast_out.bdf')
         model.write_bdf(bdf_filename_out)
@@ -961,8 +961,8 @@ class TestMSC(Tester):
     def test_msc_dscmcol(self):
         """test MSC 126 DSCMCOL-matrix sensitivites"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'goland_final_test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'goland_final_test.op2')
+        bdf_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'goland_final_test.bdf'
+        op2_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol'  'goland_final_test.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
         bdf_filename_out = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'test_goland_final_test.bdf')
         model.write_bdf(bdf_filename_out)
@@ -984,8 +984,8 @@ class TestMSC(Tester):
 
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'failure_indices_strength_ratio', 'TestStressTemp.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'failure_indices_strength_ratio', 'TestStressTemp.op2')
+        bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)

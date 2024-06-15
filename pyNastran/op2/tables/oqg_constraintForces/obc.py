@@ -156,6 +156,8 @@ class OBC:
         #if op2._results.is_not_saved(result_name):
             #print('return A')
             #return ndata
+        if op2._results.is_not_saved(result_name):
+            return ndata
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
 
