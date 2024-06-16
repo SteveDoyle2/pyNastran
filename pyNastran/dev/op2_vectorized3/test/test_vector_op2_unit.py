@@ -289,12 +289,10 @@ class TestOP2(unittest.TestCase):
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
         log = get_logger(level='warning')
-        unused_bdf_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        f06_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
-        op2_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        dirname = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'ibulk')
+        unused_bdf_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.op2'))
+        f06_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.test_op2.f06'))
+        op2_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.op2'))
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         op2.write_f06(f06_filename)
@@ -1534,8 +1532,8 @@ class TestOP2(unittest.TestCase):
         centroidal CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test.bdf'
-        op2_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test.op2'
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1566,8 +1564,8 @@ class TestOP2(unittest.TestCase):
         corner CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test_nx_corner.bdf'
-        op2_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test_nx_corner.op2'
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -3469,7 +3467,7 @@ class TestOP2(unittest.TestCase):
         assert len(model.spcadd) == 2, model.spcadd
         assert len(model.mpcadd) == 2, model.mpcadd
 
-def _verify_ids(bdf, op2, isubcase=1):
+def _verify_ids(bdf: BDF, op2: OP2, isubcase: int=1) -> None:
     """helper function for tests"""
     #types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
     #out = bdf.get_card_ids_by_card_types(types)
