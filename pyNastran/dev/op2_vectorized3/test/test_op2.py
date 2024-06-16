@@ -238,6 +238,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     else:
         sort_methods = is_sort2
 
+    op2_filename: str = str(op2_filename)
     base, ext = os.path.splitext(op2_filename.lower())
     assert ext in {'.op2', '.h5'}, f'op2_filename={op2_filename} is not an OP2'
     is_passed = False
