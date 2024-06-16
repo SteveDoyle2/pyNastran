@@ -16,7 +16,7 @@ from typing import Union, Optional, cast, TextIO, TYPE_CHECKING
 import numpy as np
 
 import pyNastran
-from pyNastran.utils import object_attributes
+from pyNastran.utils import object_attributes, PathLike, PurePath
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
@@ -806,10 +806,10 @@ def get_all_results_string(all_results: list[str]) -> str:
 
 
 def _get_file_obj(self: F06Writer,
-                  f06_filename: str,
+                  f06_filename: PathLike,
                   matrix_filename: Optional[str],
                   quiet: bool=True) -> tuple[TextIO, str, str]:
-    if isinstance(f06_filename, str):
+    if isinstance(f06_filename, (str, PurePath)):
         if matrix_filename is None:
             matrix_filename = os.path.splitext(f06_filename)[0] + '.mat'
         #print("matrix_filename =", matrix_filename)
@@ -828,6 +828,8 @@ def _get_file_obj(self: F06Writer,
             matrix_filename = os.path.splitext(f06_filename)[0] + '.mat'
         if not quiet:
             print('f06_filename =', f06_filename)
+    else:  # pragma: no cover
+        raise TypeError(type(f06_filename))
     return f06, f06_filename, matrix_filename
 
 def _write_responses1(op2: OP2, f06: TextIO,

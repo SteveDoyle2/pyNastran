@@ -195,7 +195,7 @@ class TestOP2(unittest.TestCase):
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         model = OP2Geom(log=log)
         model.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False,
@@ -304,14 +304,13 @@ class TestOP2(unittest.TestCase):
     def test_beam_modes(self):
         """tests the eigenvalue table reading"""
         log = get_logger(level='warning')
-        dirname = os.path.abspath(os.path.join(
-            MODEL_PATH, 'beam_modes'))
-        f06_filename = os.path.join(dirname, 'model1_sim1-solution_1.test_op2.f06')
-        op2_filename_m1 = os.path.join(dirname, 'beam_modes_m1.op2')
-        op2_filename_m2 = os.path.join(dirname, 'beam_modes_m2.op2')
+        dirname = MODEL_PATH / 'beam_modes'
+        f06_filename = dirname / 'model1_sim1-solution_1.test_op2.f06'
+        op2_filename_m1 = dirname / 'beam_modes_m1.op2'
+        op2_filename_m2 = dirname / 'beam_modes_m2.op2'
 
-        op2_filename_m1_out = os.path.join(dirname, 'beam_modes_m1_out.op2')
-        op2_filename_m2_out = os.path.join(dirname, 'beam_modes_m2_out.op2')
+        op2_filename_m1_out = dirname / 'beam_modes_m1_out.op2'
+        op2_filename_m2_out = dirname / 'beam_modes_m2_out.op2'
         op2_1 = read_op2(op2_filename_m1, debug=False, log=log)
         op2_2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2_2.read_op2(op2_filename_m2)
@@ -328,9 +327,9 @@ class TestOP2(unittest.TestCase):
         """tests a large number of elements and results in SOL 101"""
         log = get_logger(level='warning')
         #log = get_logger(level='debug')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'static_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -366,9 +365,9 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'modes_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'modes_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -390,9 +389,9 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_elements_03(self):
         """tests a large number of elements and results in SOL 108-freq"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'freq_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'freq_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -413,9 +412,9 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_elements_04(self):
         """tests a large number of elements and results in SOL 108-freq"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'freq_elements2.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'freq_elements2.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'freq_elements2.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -436,9 +435,9 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_elements_05(self):
         """tests a large number of elements and results in SOL 106-loadstep"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'loadstep_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'loadstep_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'loadstep_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -459,9 +458,9 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_elements_06(self):
         """tests a large number of elements and results in SOL 107-complex modes"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -482,9 +481,9 @@ class TestOP2(unittest.TestCase):
     def _test_op2_shock_01(self):  # pragma: no cover
         """tests a large number of elements and results in SOL 103-shock analysis"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.op2')
+        #bdf_filename = MODEL_PATH / 'shock' / 'shock_analysis.bdf'
+        #f06_filename = MODEL_PATH / 'shock' / 'shock_analysis.test_op2.f06'
+        op2_filename = MODEL_PATH / 'shock' / 'shock_analysis.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -505,9 +504,9 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_post_minus4(self):
         """tests a large number of elements and results in SOL 107-complex modes"""
         log = get_logger(level='warning')
-        unused_bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
+        unused_bdf_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.op2'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.op2'
         #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -534,9 +533,9 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_thermal_01(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -557,12 +556,12 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_thermal_02(self):
         """checks hd15306.bdf"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        #op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        #bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        #op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
 
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'hd15306.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'hd15306.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'hd15306.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'hd15306.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -584,8 +583,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_thermal_03(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        bdf_filename = MODEL_PATH, 'elements' / 'time_thermal_elements.bdf'
+        op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -604,8 +603,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_thermal_04(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.op2')
+        bdf_filename = MODEL_PATH / 'thermal' / 'thermal_elements2.bdf'
+        op2_filename = MODEL_PATH / 'thermal' / 'thermal_elements2.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -627,8 +626,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_thermal_05(self):
         """checks htflw47.bdf"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.op2')
+        #bdf_filename = MODEL_PATH / 'thermal' / 'htflw47.bdf'
+        op2_filename = MODEL_PATH / 'thermal' / 'htflw47.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -652,8 +651,8 @@ class TestOP2(unittest.TestCase):
     def _test_cbar100(self):
         """tests a CBAR-100 model"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.op2')
+        bdf_filename = MODEL_PATH / 'unit' / 'bars' / 'pbarl_bar_100.bdf'
+        op2_filename = MODEL_PATH / 'unit' / 'bars' / 'pbarl_bar_100.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -675,12 +674,12 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf which tests nonlinear elements"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        #op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        #bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        #op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
 
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'ofprand1.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ofprand1.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ofprand1.op2'
         #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -705,8 +704,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_02(self):
         """checks ac10707a.bdf, which is an acoustic problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'ac10707a.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ac10707a.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -729,8 +728,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_03(self):
         """checks ac10901a.bdf, which is an acoustic problem"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'ac10901a.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ac10901a.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -753,8 +752,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_04(self):
         """checks v10111.bdf, which is an conical problem"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10111.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'v10111.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'v10111.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'v10111.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -778,8 +777,8 @@ class TestOP2(unittest.TestCase):
         """checks ar29sadl.bdf, which is an CBUSH1D problem"""
         log = get_logger(level='warning')
         #log = get_logger(level='debug')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ar29sadl.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -802,8 +801,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_06(self):
         """checks randvar2.bdf, which is an CTRIAX problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'randvar2.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -829,8 +828,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_07(self):
         """checks randvar2.bdf, which is an CTRIAX problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v12902.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'v12902.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'v12902.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'v12902.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -853,8 +852,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_08(self):
         """checks randvar2.bdf, which is an CTRIAX problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'mne7a.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'mne7a.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'mne7a.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'mne7a.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -877,8 +876,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_09(self):
         """checks sdbush10.bdf, which is a ??? problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'sdbush10.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'sdbush10.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -901,8 +900,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_10(self):
         """checks v10112.bdf, which is an ??? problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10112.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'v10112.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'v10112.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'v10112.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -925,8 +924,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_11(self):
         """checks cbus129.bdf, which is an transient real/oes/cbush problem"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'cbus129.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'cbus129.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -949,8 +948,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_12(self):
         """checks api3.bdf, which is a ??? problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'api3.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'api3.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'api3.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -973,8 +972,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_13(self):
         """checks v10601s.bdf, which is an superelement complex cgap_force example"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10601s.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'v10601s.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'v10601s.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'v10601s.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -997,8 +996,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_14(self):
         """checks sbuckl2a.bdf, which is an buckling elgenvalues example"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'sbuckl2a.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'sbuckl2a.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1021,8 +1020,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_15(self):
         """checks dbxdra2.bdf, which is an ComplexTriaxStressArray example"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra2.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra2.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'dbxdra2.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1045,8 +1044,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_16(self):
         """checks phsflux4.bdf, which tests feedge"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'phsflux4.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'phsflux4.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1080,8 +1079,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_17(self):
         """checks cc508a.bdf, which tests feface, gmcurv, gmsurf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'cc508a.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'cc508a.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1109,8 +1108,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_18(self):
         """checks see101nd.bdf, which tests superelement cards"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'see101nd.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'see101nd.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1133,8 +1132,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_19(self):
         """checks see101ta.bdf, which tests superelement cards"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'see101ta.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'see101ta.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1157,8 +1156,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_20(self):
         """checks gpst17.bdf, which tests GridPointStressesVolumeDirectArray"""
         log = get_logger(level='error')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'gpst17.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'gpst17.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -1189,8 +1188,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_21(self):
         """checks cqra00366.bdf, which tests RealBush1DStressArray"""
         #log = get_logger(level='error')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'cqra00366.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'cqra00366.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
@@ -1217,8 +1216,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_22(self):
         """checks dbxdra7.bdf, which tests RealBush1DStressArray"""
         #log = get_logger(level='error')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'dbxdra7.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'dbxdra7.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
@@ -1245,8 +1244,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_23(self):
         """checks ehbus69.bdf, which tests RealBush1DStressArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ehbus69.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ehbus69.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'ehbus69.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ehbus69.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1276,8 +1275,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_24(self):
         """checks tst1d3.bdf, which tests RealBar10NodesStrainArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tst1d3.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'tst1d3.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'tst1d3.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'tst1d3.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1310,8 +1309,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_25(self):
         """checks trncomp12.bdf, which tests FailureIndicesArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'trncomp12.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'trncomp12.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'trncomp12.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1340,8 +1339,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_26(self):
         """checks tr1091x.bdf, which tests RealBendForceArray, CGEN"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1375,8 +1374,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_27(self):
         """checks ac10804.bdf, which tests ComplexPlateStressArray, CGEN"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1413,8 +1412,8 @@ class TestOP2(unittest.TestCase):
         which has a big int
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1442,8 +1441,8 @@ class TestOP2(unittest.TestCase):
     def test_bdf_op2_other_30(self):
         """checks rot063akd2s_107.bdf, which tests CampbellDiagram"""
         log = get_logger(level='info')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'rot063akd2s_107.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'rot063akd2s_107.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1471,8 +1470,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'htrussx.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1503,8 +1502,8 @@ class TestOP2(unittest.TestCase):
         initial/final contact separation distance
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'contact_model.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'contact_model.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'contact_model.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'contact_model.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1535,8 +1534,8 @@ class TestOP2(unittest.TestCase):
         centroidal CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1567,8 +1566,8 @@ class TestOP2(unittest.TestCase):
         corner CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test_nx_corner.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'composite_solids', 'test_nx_corner.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -3124,8 +3123,8 @@ class TestOP2(unittest.TestCase):
     def _test_cgap_01(self):
         """checks cc188b.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'cc188b.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'cc188b.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
@@ -3147,8 +3146,8 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_cbush_nonlinear(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.bdf')
-        op2_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.op2')
+        bdf_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.bdf'
+        op2_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
@@ -3181,8 +3180,7 @@ class TestOP2(unittest.TestCase):
         # subcase : times
         times = {1 : [2, 3]}
         model.set_transient_times(times)
-        op2_filename = os.path.abspath(os.path.join(MODEL_PATH, 'sol_101_elements',
-                                                    'mode_solid_shell_bar.op2'))
+        op2_filename = MODEL_PATH / 'sol_101_elements', 'mode_solid_shell_bar.op2'
         model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False,
                        encoding=None)
@@ -3195,9 +3193,9 @@ class TestOP2(unittest.TestCase):
     def test_random_ctria3(self):
         """runs a random test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'random')
-        op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
-        f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'random_test_bar_plus_tri.op2'
+        f06_filename = folder / 'random_test_bar_plus_tri.test_op2.f06'
         op2 = read_op2_geom(op2_filename, debug=False, log=log)
 
         op2res = op2.op2_results
@@ -3260,8 +3258,8 @@ class TestOP2(unittest.TestCase):
     def test_random_ctria3_oesrmx1(self):
         """runs a random test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'random')
-        op2_filename = os.path.join(folder, 'rms_tri_oesrmx1.op2')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'rms_tri_oesrmx1.op2'
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         unused_op2, unused_is_passed = run_op2(
@@ -3275,9 +3273,9 @@ class TestOP2(unittest.TestCase):
     def test_aero_cpmopt(self):
         """test optimization with multiple GEOM1 tables and multiple CSTM tables"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'aero')
-        op2_filename = os.path.join(folder, 'cpmopt.op2')
-        bdf_filename = os.path.join(folder, 'cpmopt.bdf')
+        folder = MODEL_PATH / 'aero'
+        op2_filename = folder / 'cpmopt.op2'
+        bdf_filename = folder / 'cpmopt.bdf'
         #unused_op2 = read_op2_geom(op2_filename, debug=False)
         read_bdf(bdf_filename, debug=False)
 
@@ -3322,8 +3320,8 @@ class TestOP2(unittest.TestCase):
     def _test_cbeam3_cbend(self):
         """test CBEAM3/CBEND"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'b3bend.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'b3bend.op2'
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model)
 
@@ -3416,10 +3414,10 @@ class TestOP2(unittest.TestCase):
     def _test_xsop2dir(self):
         """test NX 2019 XSOP2DIR"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'extse04c_cnv2_0.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'extse04c_cnv2_0.op2'
         #model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        #bdf_filename_out = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
+        #bdf_filename_out = MODEL_PATH / 'other' / 'extse04c_cnv2_0.bdf'
         #model.write_bdf(bdf_filename_out)
         #os.remove(bdf_filename_out)
 

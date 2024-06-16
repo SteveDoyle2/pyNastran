@@ -2533,7 +2533,7 @@ def create_binary_debug(op2_filename: str, debug_file: str, log) -> tuple[bool, 
         #: an ASCII version of the op2 (creates lots of output)
         log.debug('debug_file = %s' % debug_file)
         binary_debug = open(debug_file, 'w')
-        binary_debug.write(op2_filename + '\n')
+        binary_debug.write(str(op2_filename) + '\n')
         is_debug_file = True
     else:
         is_debug_file = False

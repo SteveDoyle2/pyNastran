@@ -16,6 +16,7 @@ import numpy as np
 #from pyNastran.op2.tables.onmd import NormalizedMassDensity
 #from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 #from pyNastran.op2.op2_interface.result_set import ResultSet
+from pyNastran.utils import PathLike, PurePath
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -490,16 +491,17 @@ class CSVWriter:
                 csv.write(f' {eid:-8d} {density:.8f}\n')
 
 
-def _get_file_obj(csv_filename: str,
+def _get_file_obj(csv_filename: PathLike,
                   matrix_filename: Optional[str],
                   quiet: bool=True) -> tuple[TextIO, str, str]:
-    if isinstance(csv_filename, str):
+    if isinstance(csv_filename, (str, PurePath)):
         if matrix_filename is None:
             matrix_filename = os.path.splitext(csv_filename)[0] + '.mat'
         #print("matrix_filename =", matrix_filename)
         #mat = open(matrix_filename, 'wb')
 
         csv = open(csv_filename, 'w')
+
     elif hasattr(csv_filename, 'read') and hasattr(csv_filename, 'write'):
         #f06 = f06_outname
     #else:

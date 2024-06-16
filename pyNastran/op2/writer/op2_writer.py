@@ -21,6 +21,7 @@ from .edt_writer import write_edt
 from .edom_writer import write_edom
 from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
+from pyNastran.utils import PathLike, PurePath
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -40,7 +41,7 @@ class OP2Writer(OP2_F06_Common):
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 
-    def write_op2(self, op2_out_filename: str,
+    def write_op2(self, op2_out_filename: PathLike,
                   post: int=-1,
                   endian: bytes=b'<',
                   includes: Optional[list[str]]=None,
@@ -76,7 +77,7 @@ class OP2Writer(OP2_F06_Common):
 
         #print('writing %s' % op2_outname)
 
-        if isinstance(op2_out_filename, str):
+        if isinstance(op2_out_filename, (str, PurePath)):
             op2_file = open(op2_out_filename, 'wb')
             #fop2_ascii = open(op2_outname + '.txt', 'w')
             fop2_ascii = TrashWriter()

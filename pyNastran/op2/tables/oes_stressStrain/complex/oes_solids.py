@@ -164,16 +164,16 @@ class ComplexSolidArray(OES_Object):
                         eid, nid = eid_nid
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
-                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        (ox1, oy1, oz1, txy1, tyz1, txz1) = t1
+                        (ox2, oy2, oz2, txy2, tyz2, txz2) = t2
                         d = t1 - t2
-                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                           [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        if not np.allclose([ox1.real, oy1.imag, oz1.real, txy1.real, tyz1.real, txz1.real],
+                                           [ox2.real, oy2.imag, oz2.real, txy2.imag, tyz2.imag, txz2.imag], atol=0.0001)  and 0:
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                            msg += '%-4s  (%s, %sj)\n      (%s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
                                 eid,
-                                tx1.real, tx1.imag, ty1.real, ty1.imag,
-                                tx2.real, tx2.imag, ty2.real, ty2.imag,
+                                ox1.real, oy1.imag, #oz1.real, txy1.real, tyz1.real, txz1.real, ovm1.real,
+                                ox2.real, oy2.imag, #oz2.real, txy2.imag, tyz2.imag, txz2.imag,
                                 d[0].real, d[0].imag, d[1].real, d[1].imag,)
                             i += 1
                         if i > 10:

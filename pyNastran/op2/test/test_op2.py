@@ -16,7 +16,7 @@ from pyNastran.op2.op2 import (
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, PathLike
 
 np.set_printoptions(precision=3, threshold=20)
 
@@ -126,7 +126,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
     return failed_cases
 
 
-def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
+def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             write_bdf: bool=False, read_bdf: Optional[bool]=None,
             write_f06: bool=True, write_op2: bool=False,
             write_hdf5: bool=True,
@@ -252,7 +252,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     else:
         sort_methods = is_sort2
 
-    assert '.op2' in op2_filename.lower(), f'op2_filename={op2_filename} is not an OP2'
+    assert '.op2' in str(op2_filename).lower(), f'op2_filename={op2_filename} is not an OP2'
     is_passed = False
 
     fname_base = os.path.splitext(op2_filename)[0]
