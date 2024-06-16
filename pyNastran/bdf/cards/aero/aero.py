@@ -31,7 +31,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, pri
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, integer_or_string,
+    string_or_blank, integer_or_string, integer_string_or_blank,
     interpret_value, parse_components, components_or_blank, blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
@@ -724,8 +724,9 @@ class AELIST(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-        elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
-        return AELIST(sid, elements, comment=comment)
+        elements = fields(integer_string_or_blank, card, 'eid', i=2, j=len(card))
+        elements2 = [elem for elem in elements if elem is not None]
+        return AELIST(sid, elements2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass

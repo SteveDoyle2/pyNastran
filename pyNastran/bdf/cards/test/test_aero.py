@@ -398,6 +398,17 @@ class TestAero(unittest.TestCase):
         aeparm.write_card()
         save_load_deck(model)
 
+    def test_aesurf_multi_thru(self):
+        model = BDF()
+        card = [
+            'AELIST', 1, '1', 'THRU', '10', '', '20', 'THRU', '30', '30', 'THRU', '40',
+        ]
+        aelist = model.add_card(card, 'AELIST')
+        str(aelist)
+        model.pop_parse_errors()
+
+        #save_load_deck(model)
+
    # def test_aestat_1(self):
    # def test_aesurf_1(self):
     def test_aesurfs_1(self):
