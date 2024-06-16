@@ -3265,7 +3265,6 @@ class OES(OP2Common2):
                 obj.itotal = itotal2
                 obj.ielement = itotali
             else:
-                #op2.log.warning(f'vectorize complex solid vm SORT1; numwide={op2.num_wide}')
                 struct1 = Struct(op2._endian + b'2i 4s i')
                 struct2 = Struct(op2._endian + b'i 13f')
                 element_num = op2.element_type
@@ -3312,8 +3311,7 @@ class OES(OP2Common2):
                         #del grid, sx, sy, sz, txy, tyz, txz
                         #if eid == 1048:
                             #print(f'grid={grid}', sx, sy, sz, txy, tyz, txz)
-                            #out2 = [round(val, 2) for val in out]
-                            #print(grid, out2)
+                            #print(grid, out)
                         obj.add_node_sort1(dt, eid, grid, inode, sx, sy, sz, txy, tyz, txz, ovm)
                         n += ntotal2
             #etype_num = f'{op2.element_name}-{op2.element_type:d};'
@@ -6196,9 +6194,9 @@ class OES(OP2Common2):
             obj = op2.obj
             if op2.is_debug_file:
                 op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write(f'  cap = {ndata:d}  # assume 1 cap when there could have been multiple\n')
                 op2.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+                op2.binary_debug.write(f'  nelements={nelements:d}; nnodes=1 # centroid\n')
 
             if op2.use_vector and is_vectorized and sort_method == 1:
                 n = nelements * op2.num_wide * 4
@@ -6270,7 +6268,6 @@ class OES(OP2Common2):
             complex_obj = ComplexLayeredCompositeStressArray if op2.is_stress else ComplexLayeredCompositeStrainArray
             return nelements * ntotal, None, None
 
-
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, complex_obj)
             if auto_return:
@@ -6280,7 +6277,7 @@ class OES(OP2Common2):
             n = oes_shell_composite_complex_11(op2, data, obj,
                                                ntotal, nelements, sort_method,
                                                dt, is_magnitude_phase)
-            return nelements * ntotal, None, None
+            return n, nelements, ntotal
 
         elif table_name_bytes in {b'OESRT', b'OESRTN'}:
             n, nelements, ntotal = self._oes_shells_composite_oesrt(
@@ -6299,13 +6296,38 @@ class OES(OP2Common2):
             if auto_return:
                 return nelements * ntotal, None, None
 
-            if is_vectorized and op2.use_vector:  # pragma: no cover
-                op2.log.warning(f'vectorize COMP_SHELL complex SORT{sort_method} (numwide=13)')
-
             obj = op2.obj
-            n = oes_shell_composite_complex_13(op2, data, obj,
-                                               ntotal, nelements, sort_method,
-                                               dt, is_magnitude_phase)
+            if is_vectorized and op2.use_vector:
+                #op2.log.warning(f'vectorize COMP_SHELL complex SORT{sort_method} (numwide=13)')
+                n = len(data)
+
+                istart = obj.itotal
+                iend = istart + nelements
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 13).copy()
+                    eids = ints[:, 0] // 10
+                    nids = ints[:, 1]
+                    obj.element_layer[istart:iend, 0] = eids
+                    obj.element_layer[istart:iend, 1] = nids
+
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)
+                #[o1a, o2a, t12a, o1za, o2za, o1b, o2b, t12b, o1zb, e2zb, ovm]
+                obj.data[obj.itime, istart:iend, :] = floats[:, 2:].copy()
+                # struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f ff')
+                # add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+                # for unused_i in range(nelements):
+                #     edata = data[n:n + ntotal]
+                #     out = struct1.unpack(edata)
+                #
+                #     (eid_device, ply_id,
+                #      o1a, o2a, t12a, o1za, o2za,
+                #      o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
+            else:
+                n = oes_shell_composite_complex_13(op2, data, obj,
+                                                   ntotal, nelements, sort_method,
+                                                   dt, is_magnitude_phase)
             #return nelements * ntotal, None, None
 
         elif num_wide == 7 and (result_type == 2 or table_name_bytes == b'OSTRMS1C'): # random (no VM)
