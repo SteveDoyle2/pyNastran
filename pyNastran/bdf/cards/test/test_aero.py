@@ -399,6 +399,7 @@ class TestAero(unittest.TestCase):
         save_load_deck(model)
 
     def test_aesurf_multi_thru(self):
+        """handles blanks in the card"""
         model = BDF()
         card = [
             'AELIST', 1, '1', 'THRU', '10', '', '20', 'THRU', '30', '30', 'THRU', '40',
