@@ -19,6 +19,7 @@ from pyNastran.utils.atmosphere import (
 from pyNastran.utils.convert import (
     convert_length, convert_density, convert_mass,
     convert_velocity, convert_force, convert_pressure,
+    _length_factor, _density_factor, _velocity_factor, _force_factor,
 )
 class TestConvert(unittest.TestCase):
     """various unit conversion tests"""
@@ -31,30 +32,30 @@ class TestConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_length(1., 'bad', 'ft')
 
-        assert np.allclose(convert_length(1., 'ft', 'ft'), 1.)
-        assert np.allclose(convert_length(1., 'in', 'in'), 1.)
-        assert np.allclose(convert_length(1., 'm', 'm'), 1.)
-        assert np.allclose(convert_length(1., 'cm', 'cm'), 1.)
-        assert np.allclose(convert_length(1., 'mm', 'mm'), 1.)
+        assert np.allclose(_length_factor('ft', 'ft'), 1.)
+        assert np.allclose(_length_factor('in', 'in'), 1.)
+        assert np.allclose(_length_factor('m', 'm'), 1.)
+        assert np.allclose(_length_factor('cm', 'cm'), 1.)
+        assert np.allclose(_length_factor('mm', 'mm'), 1.)
 
-        assert np.allclose(convert_length(1., 'ft', 'in'), 12.)
-        assert np.allclose(convert_length(1., 'in', 'ft'), 1 / 12.)
+        assert np.allclose(_length_factor('ft', 'in'), 12.)
+        assert np.allclose(_length_factor('in', 'ft'), 1 / 12.)
 
-        assert np.allclose(convert_length(1., 'ft', 'ft'), 1,)
-        assert np.allclose(convert_length(1., 'ft', 'm'), 1 / 3.28084)
+        assert np.allclose(_length_factor('ft', 'ft'), 1,)
+        assert np.allclose(_length_factor('ft', 'm'), 1 / 3.28084)
 
-        assert np.allclose(convert_length(1., 'm', 'ft'), 3.28084)
-        assert np.allclose(convert_length(1., 'm', 'cm'), 100.)
-        assert np.allclose(convert_length(1., 'm', 'mm'), 1000.)
+        assert np.allclose(_length_factor('m', 'ft'), 3.28084)
+        assert np.allclose(_length_factor('m', 'cm'), 100.)
+        assert np.allclose(_length_factor('m', 'mm'), 1000.)
 
-        assert np.allclose(convert_length(1., 'cm', 'mm'), 10.)
-        assert np.allclose(convert_length(1., 'cm', 'm'), 1 / 100.)
+        assert np.allclose(_length_factor('cm', 'mm'), 10.)
+        assert np.allclose(_length_factor('cm', 'm'), 1 / 100.)
 
-        assert np.allclose(convert_length(1., 'cm', 'in'), 1/2.54), convert_length(1., 'cm', 'in')
-        assert np.allclose(convert_length(1., 'in', 'cm'), 2.54), convert_length(1., 'in', 'cm')
+        assert np.allclose(_length_factor('cm', 'in'), 1/2.54), _length_factor('cm', 'in')
+        assert np.allclose(_length_factor('in', 'cm'), 2.54), _length_factor('in', 'cm')
 
-        assert np.allclose(convert_length(1., 'mm', 'm'), 1 / 1000.)
-        assert np.allclose(convert_length(1., 'mm', 'cm'), 1 / 10.)
+        assert np.allclose(_length_factor('mm', 'm'), 1 / 1000.)
+        assert np.allclose(_length_factor('mm', 'cm'), 1 / 10.)
 
     def test_mass(self):
         """mass checks"""
@@ -81,17 +82,17 @@ class TestConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_force(1., 'bad', 'lbf')
 
-        assert np.allclose(convert_force(1., 'lbf', 'N'), 4.44822)
-        assert np.allclose(convert_force(1., 'N', 'lbf'), 1 / 4.44822)
+        assert np.allclose(_force_factor('lbf', 'N'), 4.44822)
+        assert np.allclose(_force_factor('N', 'lbf'), 1 / 4.44822)
 
-        assert np.allclose(convert_force(1., 'MN', 'N'), 1000000.)
-        assert np.allclose(convert_force(1., 'N', 'MN'), 1 / 1000000.)
+        assert np.allclose(_force_factor('MN', 'N'), 1000000.)
+        assert np.allclose(_force_factor('N', 'MN'), 1 / 1000000.)
 
-        assert np.allclose(convert_force(1., 'mN', 'N'), 0.001)
-        assert np.allclose(convert_force(1., 'N', 'mN'), 1 / 0.001)
+        assert np.allclose(_force_factor('mN', 'N'), 0.001)
+        assert np.allclose(_force_factor('N', 'mN'), 1 / 0.001)
 
-        assert np.allclose(convert_force(1., 'cN', 'N'), 0.01)
-        assert np.allclose(convert_force(1., 'N', 'cN'), 1 / 0.01)
+        assert np.allclose(_force_factor('cN', 'N'), 0.01)
+        assert np.allclose(_force_factor('N', 'cN'), 1 / 0.01)
 
     def test_pressure(self):
         """pressure checks"""
@@ -121,35 +122,35 @@ class TestConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_velocity(1., 'bad', 'ft/s')
 
-        assert np.allclose(convert_velocity(1., 'ft/s', 'ft/s'), 1.)
-        assert np.allclose(convert_velocity(1., 'in/s', 'in/s'), 1.)
-        assert np.allclose(convert_velocity(1., 'm/s', 'm/s'), 1.)
-        assert np.allclose(convert_velocity(1., 'cm/s', 'cm/s'), 1.)
-        assert np.allclose(convert_velocity(1., 'mm/s', 'mm/s'), 1.)
+        assert np.allclose(_velocity_factor('ft/s', 'ft/s'), 1.)
+        assert np.allclose(_velocity_factor('in/s', 'in/s'), 1.)
+        assert np.allclose(_velocity_factor('m/s', 'm/s'), 1.)
+        assert np.allclose(_velocity_factor('cm/s', 'cm/s'), 1.)
+        assert np.allclose(_velocity_factor('mm/s', 'mm/s'), 1.)
 
-        assert np.allclose(convert_velocity(1., 'ft/s', 'in/s'), 12.)
-        assert np.allclose(convert_velocity(1., 'in/s', 'ft/s'), 1 / 12.)
+        assert np.allclose(_velocity_factor('ft/s', 'in/s'), 12.)
+        assert np.allclose(_velocity_factor('in/s', 'ft/s'), 1 / 12.)
 
-        assert np.allclose(convert_velocity(1., 'm/s', 'ft/s'), 3.28084)
-        assert np.allclose(convert_velocity(1., 'ft/s', 'm/s'), 1 / 3.28084)
+        assert np.allclose(_velocity_factor('m/s', 'ft/s'), 3.28084)
+        assert np.allclose(_velocity_factor('ft/s', 'm/s'), 1 / 3.28084)
 
-        assert np.allclose(convert_velocity(1., 'ft/s', 'm/s'), 1 / 3.28084)
-        assert np.allclose(convert_velocity(1., 'm/s', 'ft/s'), 3.28084)
+        assert np.allclose(_velocity_factor('ft/s', 'm/s'), 1 / 3.28084)
+        assert np.allclose(_velocity_factor('m/s', 'ft/s'), 3.28084)
 
-        assert np.allclose(convert_velocity(1., 'ft/s', 'cm/s'), 1 / 3.28084 * 100)
-        assert np.allclose(convert_velocity(1., 'ft/s', 'mm/s'), 1 / 3.28084 * 1000)
+        assert np.allclose(_velocity_factor('ft/s', 'cm/s'), 1 / 3.28084 * 100)
+        assert np.allclose(_velocity_factor('ft/s', 'mm/s'), 1 / 3.28084 * 1000)
 
-        assert np.allclose(convert_velocity(1., 'cm/s', 'm/s'), 1 / 100.)
-        assert np.allclose(convert_velocity(1., 'm/s', 'cm/s'), 100.)
+        assert np.allclose(_velocity_factor('cm/s', 'm/s'), 1 / 100.)
+        assert np.allclose(_velocity_factor('m/s', 'cm/s'), 100.)
 
-        assert np.allclose(convert_velocity(1., 'm/s', 'mm/s'), 1000.)
-        assert np.allclose(convert_velocity(1., 'mm/s', 'm/s'), 1 / 1000.)
+        assert np.allclose(_velocity_factor('m/s', 'mm/s'), 1000.)
+        assert np.allclose(_velocity_factor('mm/s', 'm/s'), 1 / 1000.)
 
-        assert np.allclose(convert_velocity(1., 'mm/s', 'cm/s'), 1 / 10.)
-        assert np.allclose(convert_velocity(1., 'cm/s', 'mm/s'), 10.)
+        assert np.allclose(_velocity_factor('mm/s', 'cm/s'), 1 / 10.)
+        assert np.allclose(_velocity_factor('cm/s', 'mm/s'), 10.)
 
-        assert np.allclose(convert_velocity(1., 'knots', 'ft/s'), 1.68781)
-        assert np.allclose(convert_velocity(1., 'ft/s', 'knots'), 1 / 1.68781)
+        assert np.allclose(_velocity_factor('knots', 'ft/s'), 1.68781)
+        assert np.allclose(_velocity_factor('ft/s', 'knots'), 1 / 1.68781)
 
     def test_density(self):
         """density checks"""
@@ -159,26 +160,26 @@ class TestConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_density(1., 'bad', 'slug/ft^3')
 
-        assert np.allclose(convert_density(1., 'slinch/in^3', 'slinch/in^3'), 1)
-        assert np.allclose(convert_density(1., 'slug/ft^3', 'slug/ft^3'), 1)
-        assert np.allclose(convert_density(1., 'kg/m^3', 'kg/m^3'), 1)
-        assert np.allclose(convert_density(1., 'g/cm^3', 'g/cm^3'), 1)
-        assert np.allclose(convert_density(1., 'Mg/mm^3', 'Mg/mm^3'), 1)
+        assert np.allclose(_density_factor('slinch/in^3', 'slinch/in^3'), 1)
+        assert np.allclose(_density_factor('slug/ft^3', 'slug/ft^3'), 1)
+        assert np.allclose(_density_factor('kg/m^3', 'kg/m^3'), 1)
+        assert np.allclose(_density_factor('g/cm^3', 'g/cm^3'), 1)
+        assert np.allclose(_density_factor('Mg/mm^3', 'Mg/mm^3'), 1)
 
-        assert np.allclose(convert_density(1., 'slinch/in^3', 'slug/ft^3'), 12**4)
-        assert np.allclose(convert_density(1., 'slug/ft^3', 'slinch/in^3'), 1 / 12**4)
+        assert np.allclose(_density_factor('slinch/in^3', 'slug/ft^3'), 12**4)
+        assert np.allclose(_density_factor('slug/ft^3', 'slinch/in^3'), 1 / 12**4)
 
-        assert np.allclose(convert_density(1., 'slug/ft^3', 'kg/m^3'), 515.379)
-        assert np.allclose(convert_density(1., 'kg/m^3', 'slug/ft^3'), 1 / 515.379)
+        assert np.allclose(_density_factor('slug/ft^3', 'kg/m^3'), 515.379)
+        assert np.allclose(_density_factor('kg/m^3', 'slug/ft^3'), 1 / 515.379)
 
-        assert np.allclose(convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.), 'actual=%g expected=%g' % (convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.)
-        assert np.allclose(convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.)
+        assert np.allclose(_density_factor('g/cm^3', 'kg/m^3'), 1000.), 'actual=%g expected=%g' % (convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.)
+        assert np.allclose(_density_factor('kg/m^3', 'g/cm^3'), 1 / 1000.), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.)
 
-        assert np.allclose(convert_density(1., 'Mg/mm^3', 'kg/m^3'), 1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'Mg/mm^3', 'kg/m^3'), 1000.**4)
-        assert np.allclose(convert_density(1., 'kg/m^3', 'Mg/mm^3'), 1/1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'Mg/mm^3'), 1/1000.**4)
+        assert np.allclose(_density_factor('Mg/mm^3', 'kg/m^3'), 1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'Mg/mm^3', 'kg/m^3'), 1000.**4)
+        assert np.allclose(_density_factor('kg/m^3', 'Mg/mm^3'), 1/1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'Mg/mm^3'), 1/1000.**4)
 
-        assert np.allclose(convert_density(1., 'g/cm^3', 'slug/ft^3'), 1.94032)
-        assert np.allclose(convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032), 'actual=%g expected=%g' % (convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032)
+        assert np.allclose(_density_factor('g/cm^3', 'slug/ft^3'), 1.94032)
+        assert np.allclose(_density_factor('slug/ft^3', 'g/cm^3'), 1 / 1.94032), 'actual=%g expected=%g' % (convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032)
 
 class TestAtm(unittest.TestCase):
     """various atmosphere tests"""
