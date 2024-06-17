@@ -17,9 +17,13 @@ from pyNastran.utils.atmosphere import (
 )
 
 from pyNastran.utils.convert import (
-    convert_length, convert_density, convert_mass,
+    convert_length, convert_area,
+    convert_density, convert_mass,
     convert_velocity, convert_force, convert_pressure,
-    _length_factor, _density_factor, _velocity_factor, _force_factor,
+    convert_temperature,
+    _length_factor, _area_factor,
+    _density_factor, _velocity_factor, _force_factor,
+    _temperature_factor,
 )
 class TestConvert(unittest.TestCase):
     """various unit conversion tests"""
@@ -56,6 +60,39 @@ class TestConvert(unittest.TestCase):
 
         assert np.allclose(_length_factor('mm', 'm'), 1 / 1000.)
         assert np.allclose(_length_factor('mm', 'cm'), 1 / 10.)
+
+    def test_area(self):
+        """area checks"""
+        assert np.allclose(convert_area(1., 'ft^2', 'ft^2'), 1.)
+        with self.assertRaises(RuntimeError):
+            convert_area(1., 'ft^2', 'bad^2')
+        with self.assertRaises(RuntimeError):
+            convert_area(1., 'bad^2', 'ft^2')
+
+        assert np.allclose(_area_factor('ft^2', 'ft^2'), 1.)
+        assert np.allclose(_area_factor('in^2', 'in^2'), 1.)
+        assert np.allclose(_area_factor('m^2', 'm^2'), 1.)
+        assert np.allclose(_area_factor('cm^2', 'cm^2'), 1.)
+        assert np.allclose(_area_factor('mm^2', 'mm^2'), 1.)
+
+        assert np.allclose(_area_factor('ft^2', 'in^2'), 12.**2)
+        assert np.allclose(_area_factor('in^2', 'ft^2'), 1 / 12.**2)
+
+        assert np.allclose(_area_factor('ft^2', 'ft^2'), 1.)
+        assert np.allclose(_area_factor('ft^2', 'm^2'), 1 / 3.28084**2)
+
+        assert np.allclose(_area_factor('m^2', 'ft^2'), 3.28084**2)
+        assert np.allclose(_area_factor('m^2', 'cm^2'), 100.**2)
+        assert np.allclose(_area_factor('m^2', 'mm^2'), 1000.**2)
+
+        assert np.allclose(_area_factor('cm^2', 'mm^2'), 10.**2)
+        assert np.allclose(_area_factor('cm^2', 'm^2'), 1 / 100.**2)
+
+        assert np.allclose(_area_factor('cm^2', 'in^2'), 1/2.54**2), _area_factor('cm^2', 'in^2')
+        assert np.allclose(_area_factor('in^2', 'cm^2'), 2.54**2), _area_factor('in^2', 'cm^2')
+
+        assert np.allclose(_area_factor('mm^2', 'm^2'), 1 / 1000.**2)
+        assert np.allclose(_area_factor('mm^2', 'cm^2'), 1 / 10.**2)
 
     def test_mass(self):
         """mass checks"""
@@ -180,6 +217,31 @@ class TestConvert(unittest.TestCase):
 
         assert np.allclose(_density_factor('g/cm^3', 'slug/ft^3'), 1.94032)
         assert np.allclose(_density_factor('slug/ft^3', 'g/cm^3'), 1 / 1.94032), 'actual=%g expected=%g' % (convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032)
+
+    def test_temperature(self):
+        """density checks"""
+        assert np.allclose(convert_temperature(1., 'R', 'R'), 1.)
+        with self.assertRaises(RuntimeError):
+            convert_temperature(1., 'F', 'bad')
+        with self.assertRaises(RuntimeError):
+            convert_temperature(1., 'bad', 'C')
+
+        assert np.allclose(_temperature_factor(1., 'R', 'R'), 1)
+        assert np.allclose(_temperature_factor(1., 'F', 'F'), 1)
+        assert np.allclose(_temperature_factor(1., 'C', 'C'), 1)
+        assert np.allclose(_temperature_factor(1., 'K', 'K'), 1)
+
+        assert np.allclose(_temperature_factor(32., 'F', 'C'), 0.)
+        assert np.allclose(_temperature_factor(0., 'C', 'F'), 32.)
+
+        assert np.allclose(_temperature_factor(104., 'F', 'C'), 40.)
+        assert np.allclose(_temperature_factor(40., 'C', 'F'), 104.)
+
+        assert np.allclose(_temperature_factor(40., 'F', 'R'), 499.67)
+        assert np.allclose(_temperature_factor(499.67, 'R', 'F'), 40.)
+
+        assert np.allclose(_temperature_factor(20., 'C', 'K'), 293.15)
+        assert np.allclose(_temperature_factor(293.15, 'K', 'C'), 20.)
 
 class TestAtm(unittest.TestCase):
     """various atmosphere tests"""
