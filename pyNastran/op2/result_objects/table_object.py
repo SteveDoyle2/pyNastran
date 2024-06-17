@@ -650,11 +650,16 @@ class TableArray(ScalarObject):  # displacement style table
         self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray(nnodes, unicode=True)
+        #self.gridtype_str2 = np.chararray(nnodes, unicode=True)
+        self.gridtype_str = np.zeros(nnodes, dtype='U1')
         ugridtypes = np.unique(gridtypes)
         for ugridtype in ugridtypes:
             i = np.where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
+            #self.gridtype_str2[i] = self.recast_gridtype_as_string(ugridtype)
+        #print(self.gridtype_str, self.gridtype_str.dtype)
+        #print(self.gridtype_str2, self.gridtype_str2.dtype)
+        #asdf
         #del self.itotal, self.itime
 
     def set_as_sort1(self):

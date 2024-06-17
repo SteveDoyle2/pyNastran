@@ -1944,7 +1944,29 @@ class EDT:
 
     def read_spline3(self, data: bytes, n: int) -> int:
         """reads the SPLINE3 card"""
+        """
+        SPLINE3 (4901, 49, 173)
+
+        Word Name Type Description
+        1 EID          I Element identification number
+        2 CAERO        I Identification number of the macro-element on which
+                         the element to be interpolated lies
+        3 BOXID        I Identification number of the aerodynamic element
+        4 COMP         I The component of motion to be interpolated
+        5 USAGE(2) CHAR4 Spline usage flag to determine whether this spline applies
+                         to the force transformation, displacement transformation, or both:
+                         FORCE, DISP, or BOTH
+        7 G            I Identification number of the independent grid point
+        8 C            I Component number in the displacement coordinate system
+        9 A           RS Coefficient of the constraint relationship
+        Words 7 thru 9 repeat until -1 occurs
+        """
+
         spline3
+        #structi = Struct(op2._endian + b'4i 8s 2if')
+
+        #for unused_i in range(ncards):
+        #    edata = data[n:n + ntotal]
         #n = self._read_spline2_nx(data, n)
         return n
 

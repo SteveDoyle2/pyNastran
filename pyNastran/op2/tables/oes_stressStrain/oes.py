@@ -1780,6 +1780,15 @@ class OES(OP2Common2):
             # 226-BUSHNL
             n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
                                                              result_type, prefix, postfix)
+        elif op2.element_type in [271, 272, 273, 274]:
+            # 271 CPLSTN3
+            # 272 CPLSTN4
+            # 273 CPLSTN6
+            # 274 CPLSTN8
+            n, nelements, ntotal = self._oes_cplstn_nx(
+                data, ndata, dt, is_magnitude_phase,
+                result_type, prefix, postfix)
+
         elif op2.element_type in [275]: # 271,
             #271 CPLSTN3 Triangle plane strain linear format (Center Only)
             #272 CPLSTN4 Quadrilateral plane strain linear format (Center and Corners)
@@ -1802,7 +1811,6 @@ class OES(OP2Common2):
             # 278-CPLSTS8
             n, nelements, ntotal = self._oes_plate_stress_68(data, ndata, dt, is_magnitude_phase,
                                                              stress_name, prefix, postfix)
-
 
         elif op2.element_type == 35: # CON
             return ndata
@@ -1895,15 +1903,6 @@ class OES(OP2Common2):
                 data, ndata, dt, is_magnitude_phase,
                 result_type, prefix, postfix)
 
-
-        elif op2.element_type in [271, 272, 273, 274]:
-            # 271 CPLSTN3
-            # 272 CPLSTN4
-            # 273 CPLSTN6
-            # 274 CPLSTN3 -> 8???
-            n, nelements, ntotal = self._oes_cplstn_nx(
-                data, ndata, dt, is_magnitude_phase,
-                result_type, prefix, postfix)
         elif op2.element_type in [159, 184,
                                   200, 201, 236, 237, 242, 243, 244, 245]:
             # 159-SEAMP
@@ -1920,8 +1919,8 @@ class OES(OP2Common2):
             log.warning(f'skipping {op2.element_name}-{op2.element_type}')
             return ndata
         elif op2.element_type in [312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323,
-                                   343, 344, 345, 346, 347, 348, 349,
-                                   350, 351, 352, 355, 356, 357, 358, 363]:
+                                  343, 344, 345, 346, 347, 348, 349,
+                                  350, 351, 352, 355, 356, 357, 358, 363]:
             #
             # 312 TRAX3
             # 313 QUADX4
@@ -2095,36 +2094,30 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         n = 0
+
+        if op2.element_type == 11:
+            etype = 'celas1'
+        elif op2.element_type == 12:
+            etype = 'celas2'
+        elif op2.element_type == 13:
+            etype = 'celas3'
+        elif op2.element_type == 14:
+            etype = 'celas4'
+        else:  # pragma: no cover
+            raise RuntimeError(op2.element_type)
+
         if op2.is_stress:
             if prefix == '' and postfix == '':
                 prefix = 'stress.'
             obj_real = RealSpringStressArray
             obj_complex = ComplexSpringStressArray
-            if op2.element_type == 11:
-                result_name = prefix + 'celas1_stress' + postfix
-            elif op2.element_type == 12:
-                result_name = prefix + 'celas2_stress' + postfix
-            elif op2.element_type == 13:
-                result_name = prefix + 'celas3_stress' + postfix
-            elif op2.element_type == 14:
-                result_name = prefix + 'celas4_stress' + postfix
-            else:
-                raise RuntimeError(op2.element_type)
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
             if prefix == '' and postfix == '':
                 prefix = 'strain.'
             obj_real = RealSpringStrainArray
             obj_complex = ComplexSpringStrainArray
-            if op2.element_type == 11:
-                result_name = prefix + 'celas1_strain' + postfix
-            elif op2.element_type == 12:
-                result_name = prefix + 'celas2_strain' + postfix
-            elif op2.element_type == 13:
-                result_name = prefix + 'celas3_strain' + postfix
-            elif op2.element_type == 14:
-                result_name = prefix + 'celas4_strain' + postfix
-            else:
-                raise RuntimeError(op2.element_type)
+            result_name = f'{prefix}{etype}_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2222,32 +2215,25 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         n = 0
+        if op2.element_type == 1:  # CROD
+            etype = 'crod'
+        elif op2.element_type == 3:  # CTUBE
+            etype = 'ctube'
+        elif op2.element_type == 10:  # CONROD
+            etype = 'conrod'
+        else:  # pragma: no cover
+            raise ValueError(op2.code_information())
+
         if op2.is_stress:
             obj_vector_real = RealRodStressArray
             obj_vector_complex = ComplexRodStressArray
             obj_vector_random = RandomRodStressArray
-            if op2.element_type == 1: # CROD
-                result_name = prefix + 'crod_stress' + postfix
-            elif op2.element_type == 3:  # CTUBE
-                result_name = prefix + 'ctube_stress' + postfix
-            elif op2.element_type == 10:  # CONROD
-                result_name = prefix + 'conrod_stress' + postfix
-            else:  # pragma: no cover
-                msg = op2.code_information()
-                return op2._not_implemented_or_skip(data, ndata, msg)
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
             obj_vector_real = RealRodStrainArray
             obj_vector_complex = ComplexRodStrainArray
             obj_vector_random = RandomRodStrainArray
-            if op2.element_type == 1: # CROD
-                result_name = prefix + 'crod_strain' + postfix
-            elif op2.element_type == 3:  # CTUBE
-                result_name = prefix + 'ctube_strain' + postfix
-            elif op2.element_type == 10:  # CONROD
-                result_name = prefix + 'conrod_strain' + postfix
-            else:  # pragma: no cover
-                msg = op2.code_information()
-                return op2._not_implemented_or_skip(data, ndata, msg)
+            result_name = f'{prefix}{etype}_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -4033,25 +4019,25 @@ class OES(OP2Common2):
             word = 'stress'
             if op2.element_type == 163:  # CHEXA
                 nnodes_expected = 27
-                result_name = prefix + 'chexa_stress' + postfix
+                etype = 'chexa'
                 #element_name = 'CHEXA8'
                 # real=122
             elif op2.element_type == 160:  # CPENTA
                 nnodes_expected = 6
-                result_name = prefix + 'cpenta_stress' + postfix
+                etype = 'cpenta'
                 #element_name = 'CPENTA6'
             elif op2.element_type == 165:  # CPENTA
                 nnodes_expected = 21
-                result_name = prefix + 'cpenta_stress' + postfix
+                etype = 'cpenta'
                 #element_name = 'CPENTA6'
 
             elif op2.element_type == 161:  # CTETRA
                 nnodes_expected = 1
-                result_name = prefix + 'ctetra_stress' + postfix
+                etype = 'ctetra'
                 #element_name = 'CTETRA4'
             elif op2.element_type == 166:  # CTETRA
                 nnodes_expected = 5
-                result_name = prefix + 'ctetra_stress' + postfix
+                etype = 'ctetra'
                 #element_name = 'CTETRA4'
             #elif op2.element_type == 303:  # CPYRAM
                 #nnodes_expected = 5
@@ -4059,6 +4045,7 @@ class OES(OP2Common2):
                 #element_name = 'CPYRAM5'
             else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
             #obj_vector_real = RealSolidStrainArray
             #obj_vector_complex = ComplexSolidStrainArray
@@ -4240,23 +4227,21 @@ class OES(OP2Common2):
             word = 'stress'
             if op2.element_type in [202, 218]:  # CHEXA
                 nnodes_expected = 8
-                result_name = prefix + 'chexa_stress_strain' + postfix
                 element_name = 'CHEXA8'
                 # real=122
             elif op2.element_type in [204, 220]:  # CPENTA
                 nnodes_expected = 6
-                result_name = prefix + 'cpenta_stress_strain' + postfix
                 element_name = 'CPENTA6'
             elif op2.element_type in [216, 221]:  # CTETRA
                 nnodes_expected = 4
-                result_name = prefix + 'ctetra_stress_strain' + postfix
                 element_name = 'CTETRA4'
             #elif op2.element_type == 303:  # CPYRAM
                 #nnodes_expected = 5
-                #result_name = prefix + 'cpyram_stress' + postfix
                 #element_name = 'CPYRAM5'
             else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
+            etype = element_name[:-1].lower()
+            result_name = f'{prefix}{etype}_stress_strain{postfix}'
         else:
             #obj_vector_real = RealSolidStrainArray
             #obj_vector_complex = ComplexSolidStrainArray
@@ -4437,22 +4422,19 @@ class OES(OP2Common2):
         if op2.element_type == 85:
             etype = 'CTETRANL'
             nnodes = 5
-            result_name = prefix + 'ctetra_stress_strain' + postfix
         elif op2.element_type == 91:
             etype = 'CPENTANL'
             nnodes = 7
-            result_name = prefix + 'cpenta_stress_strain' + postfix
         elif op2.element_type == 93:
             etype = 'CHEXANL'
             nnodes = 9
-            result_name = prefix + 'chexa_stress_strain' + postfix
         elif op2.element_type == 256:
             etype = 'CPYRAMNL'
             nnodes = 6
-            result_name = prefix + 'chexa_stress_strain' + postfix
-
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
+        etype = etype[:-2].lower()
+        result_name = f'{prefix}{etype}_stress_strain{postfix}'
 
         numwide_real = 4 + (25 - 4) * nnodes  # real???
         numwide_random = 2 + (18 - 2) * nnodes  # imag???
@@ -4466,7 +4448,6 @@ class OES(OP2Common2):
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
         op2._results._found_result(result_name)
-
         slot = op2.get_result(result_name)
 
         if op2.format_code == 1 and op2.num_wide == numwide_real:
@@ -4775,41 +4756,30 @@ class OES(OP2Common2):
         factor = self.factor
         size = self.size
         #print('_oes_cquad4_33')
+        if op2.element_type == 33:
+            etype = 'cquad4'
+        elif op2.element_type == 228:
+            etype = 'cquadr'
+            assert op2.num_wide in [17, 15], op2.code_information()
+
+        elif op2._nastran_format == 'nasa95':
+            if op2.element_type == 19:
+                etype = 'cquad1'
+            elif op2.element_type == 64:
+                etype = 'cquad4'
+            else:  # pragma: no cover
+                raise NotImplementedError(op2.code_information())
+        else:  # pragma: no cover
+            raise NotImplementedError(op2.code_information())
+
         if op2.is_stress:
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
-            if op2.element_type == 33:
-                result_name = prefix + 'cquad4_stress' + postfix
-            elif op2.element_type == 228:
-                result_name = prefix + 'cquadr_stress' + postfix
-                assert op2.num_wide in [17, 15], op2.code_information()
-
-            elif op2._nastran_format == 'nasa95':
-                if op2.element_type == 19:
-                    result_name = prefix + 'cquad1_stress' + postfix
-                elif op2.element_type == 64:
-                    result_name = prefix + 'cquad4_stress' + postfix
-                else:  # pragma: no cover
-                    raise NotImplementedError(op2.code_information())
-            else:  # pragma: no cover
-                raise NotImplementedError(op2.code_information())
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
-            if op2.element_type == 33:
-                result_name = prefix + 'cquad4_strain' + postfix
-            elif op2.element_type == 228:
-                result_name = prefix + 'cquadr_strain' + postfix
-                assert op2.num_wide in [17, 15], op2.code_information()
-            elif op2._nastran_format == 'nasa95':
-                if op2.element_type == 19:
-                    result_name = prefix + 'cquad1_strain' + postfix
-                elif op2.element_type == 64:
-                    result_name = prefix + 'cquad4_strain' + postfix
-                else:  # pragma: no cover
-                    raise NotImplementedError(op2.code_information())
-            else:  # pragma: no cover
-                raise NotImplementedError(op2.code_information())
+            result_name = f'{prefix}{etype}_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -5999,20 +5969,19 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         n = 0
+        if op2.element_type == 88:
+            etype = 'ctria3'
+            nnodes = 3
+        elif op2.element_type == 90:
+            etype = 'cquad4'
+            nnodes = 4
+        else:  # pragma: no cove
+            raise RuntimeError(op2.element_type)
+
         if op2.is_stress:
-            if op2.element_type == 88:
-                result_name = prefix + 'ctria3_stress' # + postfix  nonlinear_
-            elif op2.element_type == 90:
-                result_name = prefix + 'cquad4_stress'  + postfix # nonlinear_
-            else:
-                raise RuntimeError(op2.element_type)
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
-            if op2.element_type == 88:
-                result_name = prefix + 'ctria3_strain' + postfix # nonlinear_
-            elif op2.element_type == 90:
-                result_name = prefix + 'cquad4_strain' + postfix # nonlinear_
-            else:
-                raise RuntimeError(op2.element_type)
+            result_name = f'{prefix}{etype}_strain{postfix}'
 
         slot = op2.get_result(result_name)
         op2._results._found_result(result_name)
@@ -6050,7 +6019,7 @@ class OES(OP2Common2):
             else:
                 if is_vectorized and op2.use_vector:  # pragma: no cover
                     log.debug('vectorize CTRIA3/CQUAD4_NL real SORT%s' % op2.sort_method)
-                n = oes_cshellnl_real_13(op2, data, obj, etype, nnodes, nelements, ntotal)
+                n = oes_cshellnl_real_13(op2, data, obj, etype, nelements, ntotal)
 
         elif op2.format_code == 1 and op2.num_wide == 25 and op2.element_type in [88, 90]:
             # TODO: vectorize
@@ -6929,30 +6898,22 @@ class OES(OP2Common2):
         op2 = self.op2
         n = 0
         #prefix = 'nonlinear_'
+        if op2.element_type == 87:
+            etype = 'ctube'
+            name = 'CTUBENL-87'
+        elif op2.element_type == 89:
+            etype = 'crod'
+            name = 'RODNL-89'
+        elif op2.element_type == 92:
+            etype = 'conrod'
+            name = 'CONRODNL-92'
+        else:  # pragma: no cover
+            raise RuntimeError(op2.code_information())
+
         if op2.is_stress:
-            if op2.element_type == 87:
-                result_name = prefix + 'ctube_stress' + postfix
-                name = 'CTUBENL-87'
-            elif op2.element_type == 89:
-                result_name = prefix + 'crod_stress' + postfix
-                name = 'RODNL-89'
-            elif op2.element_type == 92:
-                result_name = prefix + 'conrod_stress' + postfix
-                name = 'CONRODNL-92'
-            else:  # pragma: no cover
-                raise RuntimeError(op2.code_information())
+            result_name = f'{prefix}{etype}_stress{postfix}'
         else:
-            if op2.element_type == 87:
-                result_name = prefix + 'ctube_strain' + postfix
-                name = 'CTUBENL-87'
-            elif op2.element_type == 89:
-                result_name = prefix + 'crod_strain' + postfix
-                name = 'RODNL-89'
-            elif op2.element_type == 92:
-                result_name = prefix + 'conrod_strain' + postfix
-                name = 'CONRODNL-92'
-            else:  # pragma: no cover
-                raise RuntimeError(op2.code_information())
+            result_name = f'{prefix}{etype}_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -7020,12 +6981,16 @@ class OES(OP2Common2):
         # NonlinearSpringStress
         n = 0
         numwide_real = 3
+        if op2.element_type == 224:
+            etype = 'celas1_stress'
+        elif op2.element_type == 225:
+            etype = 'celas3_stress'
+        else:  # pragma: no cover
+            raise NotImplementedError(op2.code_information())
+
         if op2.is_stress:
-            if op2.element_type == 224:
-                result_name = prefix + 'celas1_stress' + postfix # nonlinear_
-            elif op2.element_type == 225:
-                result_name = prefix + 'celas3_stress' + postfix # nonlinear_
-        else:
+            result_name = prefix + f'{prefix}{etype}_stress{postfix}' # nonlinear_
+        else:  # pragma: no cover
             raise NotImplementedError('NonlinearSpringStrain')
 
         if op2._results.is_not_saved(result_name):
@@ -7041,7 +7006,7 @@ class OES(OP2Common2):
             if op2.is_stress:
                 auto_return, is_vectorized = op2._create_oes_object4(
                     nelements, result_name, slot, RealNonlinearSpringStressArray)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('NonlinearSpringStrainArray') # undefined
 
             if auto_return:
@@ -8264,7 +8229,7 @@ def oes_csolidnl_real(op2: OP2, data: bytes,
 
 def oes_cshellnl_real_13(op2: OP2, data: bytes,
                          obj: RealNonlinearPlateArray,
-                         etype,
+                         etype: str,
                          nelements: int, ntotal: int) -> int:
     n = 0
     #size = op2.size

@@ -7,9 +7,6 @@ from struct import Struct, pack
 from typing import TextIO, Optional, cast, TYPE_CHECKING
 
 import numpy as np
-in1d = np.in1d
-#in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
-#from numpy import zeros, unique, array_equal, empty
 
 from cpylog import SimpleLogger
 
@@ -559,7 +556,7 @@ class RealGridPointForcesArray(GridPointForces):
 
         assert isinstance(eids[0], integer_types), type(eids[0])
 
-        is_in = in1d(gpforce_eids, eids, assume_unique=False)
+        is_in = np.isin(gpforce_eids, eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in]
         nids = gpforce_nids[irange]
 
@@ -569,7 +566,7 @@ class RealGridPointForcesArray(GridPointForces):
             log.debug('eids = %s' % gpforce_eids[irange])
 
         try:
-            is_in3 = in1d(nid_cd[:, 0], nids, assume_unique=False)
+            is_in3 = np.isin(nid_cd[:, 0], nids, assume_unique=False)
         except IndexError:
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
@@ -743,7 +740,7 @@ class RealGridPointForcesArray(GridPointForces):
 
         # get analysis coordinate systems
         try:
-            is_in_cd = in1d(nid_cd[:, 0], nids, assume_unique=False)
+            is_in_cd = np.isin(nid_cd[:, 0], nids, assume_unique=False)
         except IndexError:
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
@@ -812,7 +809,7 @@ class RealGridPointForcesArray(GridPointForces):
         assert isinstance(eids[0], integer_types), type(eids[0])
         assert isinstance(nids[0], integer_types), type(nids[0])
         # filter out rows not in the node set
-        is_in = in1d(gpforce_nids, nids, assume_unique=False)
+        is_in = np.isin(gpforce_nids, nids, assume_unique=False)
         if not np.any(is_in):
             msg = 'no nodes found\n'
             if log:
@@ -823,7 +820,7 @@ class RealGridPointForcesArray(GridPointForces):
             return gpforce_nids, gpforce_eids, irange, force_out, moment_out
 
         # filter out rows not in the element set
-        is_in2 = in1d(gpforce_eids[is_in], eids, assume_unique=False)
+        is_in2 = np.isin(gpforce_eids[is_in], eids, assume_unique=False)
         if not np.any(is_in2):
             msg = 'no elements found\n'
             log.warning(msg)

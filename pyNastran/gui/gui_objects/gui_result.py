@@ -8,7 +8,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Union, Any, Optional, TYPE_CHECKING
 import numpy as np
-in1d = np.in1d
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 if TYPE_CHECKING:
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForceArray
@@ -515,7 +514,7 @@ class GuiResult(GuiResultCommon):
                 inan_short = np.where(self.scalar == mask_value)[0]
                 if len(inan_short):
                     # overly complicated way to allow us to use ~inan to invert the array
-                    inan = in1d(np.arange(len(self.scalar)), inan_short)
+                    inan = np.isin(np.arange(len(self.scalar)), inan_short)
                     inan_remaining = self.scalar[~inan]
 
                     self.scalar = np.asarray(self.scalar, 'f')

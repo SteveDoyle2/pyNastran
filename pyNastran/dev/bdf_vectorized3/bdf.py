@@ -28,7 +28,6 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-in1d = np.in1d
 from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path, PathLike
@@ -3610,13 +3609,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
-            icd_transform[cd] = np.where(in1d(nids_all, nids))[0]
+            icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
 
         for cp, nids in sorted(nids_cp_transform.items()):
             if cp in [-1]:
                 continue
             nids = np.array(nids)
-            icp_transform[cp] = np.where(in1d(nids_all, nids))[0]
+            icp_transform[cp] = np.where(np.isin(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def get_xyz_in_coord_array(self, cid: int=0,
@@ -3899,7 +3898,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(nids_transform.keys()):
             nids = np.array(nids_transform[cid])
-            icd_transform[cid] = np.where(in1d(nids_all, nids))[0]
+            icd_transform[cid] = np.where(np.isin(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
 
     def increase_card_count(self, card_name: str, count_num: int=1) -> None:

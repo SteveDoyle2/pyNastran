@@ -26,10 +26,9 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     card_types = [
         'MKAERO1', # 'MKAERO2',
         'AERO', 'AEROS',
-        'CAERO1', 'PAERO1', 'SPLINE1',
-        'CAERO2', 'PAERO2', 'SPLINE2',
-        'CAERO3', 'CAERO4', 'CAERO5',
-        'PAERO5',
+        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'PAERO1', 'PAERO2', 'PAERO5',
+        'SPLINE1', 'SPLINE2', #'SPLINE3',
         'AELIST',
         'AEFACT',
         'AESURF', 'AESURFS',
@@ -735,6 +734,70 @@ def write_spline2(model: Union[BDF, OP2Geom], name: str,
         assert None not in data, data
         op2_ascii.write(f'  SPLINE2 data={data}\n')
         op2_file.write(structi.pack(*data))
+    return nbytes
+
+def write_spline3(model: Union[BDF, OP2Geom], name: str,
+                  spline_ids: list[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:  # pragma: no cover
+    """
+    Writes the SPLINE3 card
+
+    Word Name Type Description
+    1 EID          I Element identification number
+    2 CAERO        I Identification number of the macro-element on which
+                     the element to be interpolated lies
+    3 BOXID        I Identification number of the aerodynamic element
+    4 COMP         I The component of motion to be interpolated
+    5 USAGE(2) CHAR4 Spline usage flag to determine whether this spline applies
+                     to the force transformation, displacement transformation, or both:
+                     FORCE, DISP, or BOTH
+    7 G            I Identification number of the independent grid point
+    8 C            I Component number in the displacement coordinate system
+    9 A           RS Coefficient of the constraint relationship
+    Words 7 thru 9 repeat until -1 occurs
+
+    How do you interpret the -1. Is it -1 or (-1, -1, -1)?
+    """
+    key = (4901, 49, 173)
+    nvalues = 0
+    msg = b''
+    for spline_id in spline_ids:
+        spline = model.splines[spline_id]
+        ngrid = len(spline.nodes)
+        nvalues += 6 + ngrid * 3
+
+    for spline_id in spline_ids:
+        spline = model.splines[spline_id]
+        usage = spline.usage.encode('ascii')
+        datai = [spline.eid, spline.caero, spline.box_id, spline.components, usage]
+        fmt = '4i 8s'
+        for nid, comp, coeff in zip(spline.nodes, spline.displacement_components, spline.coeffs):
+            fmt += '2if'
+            datai.extend([nid, comp, coeff])
+        #values.extend(datai)
+        assert None not in datai, datai
+        msgi = Struct(fmt).pack(*datai)
+        msg += msgi
+        op2_ascii.write(f'  SPLINE3 data={datai}\n')
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    op2_file.write(msg)
+
+    # structi = Struct(endian + b'5i 2f i 2f 8s')
+    # nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+    #
+    # for spline_id in spline_ids:
+    #     spline = model.splines[spline_id]
+    #
+    #     usage_bytes = b'%-8s' % spline.usage.encode('ascii')
+    #     dthx = 0.0 if spline.dthx is None else spline.dthx
+    #     dthy = 0.0 if spline.dthx is None else spline.dthx
+    #     #print(spline.get_stats())
+    #     data = [spline.eid, spline.caero, spline.box1, spline.box2,
+    #             spline.setg, spline.dz, spline.dtor, spline.cid,
+    #             dthx, dthy, usage_bytes]
+    #     assert None not in data, data
+    #     op2_ascii.write(f'  SPLINE3 data={data}\n')
+    #     op2_file.write(structi.pack(*data))
     return nbytes
 
 def write_aesurf(model: Union[BDF, OP2Geom], name: str,
@@ -1668,6 +1731,7 @@ EDT_MAP = {
     'FLFACT': write_flfact,
     'SPLINE1': write_spline1,
     'SPLINE2': write_spline2,
+    #'SPLINE3': write_spline3,
     'AESURF': write_aesurf,
     'AESURFS': write_aesurfs,
     'AESTAT': write_aestat,

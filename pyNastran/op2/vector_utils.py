@@ -30,7 +30,7 @@ from struct import calcsize
 from itertools import count
 from typing import Optional, TYPE_CHECKING
 import numpy as np
-from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
+from numpy import arccos, sqrt, pi, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import CORDx
@@ -85,7 +85,7 @@ def where_searchsorted(a, v, side='left', x=None, y=None):
     assert x is None, x
     assert y is None, y
     assert side == 'left', side
-    i = np.where(in1d(a, v), x=x, y=y)
+    i = np.where(np.isin(a, v), x=x, y=y)
     return i
 
 def sortedsum1d(ids, values, axis=None):

@@ -17,11 +17,7 @@ from functools import reduce
 from typing import Optional
 
 import numpy as np
-in1d = np.in1d
 #from numpy import array, where, hstack, searchsorted, float32, arccos, degrees
-#in1d = np.in1d if hasattr(np, 'in1d') else getattr(np, 'in')
-#if not hasattr(np, 'in'):  # pragma: no cover
-    #setattr(np, 'in', np.in1d)
 
 from numpy.linalg import norm  # type: ignore
 
@@ -537,7 +533,7 @@ def create_spar_cap(model, eids, nids, width,
         elem = model.elements[eid]
         pid = elem.Pid()
         enids = elem.node_ids
-        common_nids = np.where(in1d(enids, nids)) # A in B
+        common_nids = np.where(np.isin(enids, nids)) # A in B
         all_common_nids.update(common_nids)
         i = np.searchsorted(all_nids, enids)
         xyz = xyz_cid0[i, :]
