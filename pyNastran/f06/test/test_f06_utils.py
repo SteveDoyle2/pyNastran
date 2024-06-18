@@ -230,7 +230,7 @@ class TestFlutter(unittest.TestCase):
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         argv = ['f06', 'plot_145', f06_filename, '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
-                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv']
+                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv', '--ncol', '2']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

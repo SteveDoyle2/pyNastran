@@ -162,18 +162,23 @@ class FlutterResponse:
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, f06_units=f06_units, out_units=out_units)
         if 0:  # pragma: no cover
-            resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None, show=False,
+            resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None,
+                                 ncol=ncol, show=False,
                                  clear=False, close=False, legend=True, png_filename=None)
             resp.plot_vg_vf(fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
-                            clear=False, close=False, legend=True, xlim=None,
+                             legend=True, xlim=None,
                             ylim_damping=None, ylim_freq=None, vd_limit=None,
-                            damping_limit=None, nopoints=False, noline=False, png_filename=None, show=False)
+                            damping_limit=None, nopoints=False, noline=False,
+                            clear=False, close=False,
+                            ncol=ncol, png_filename=None, show=False)
             resp.plot_kfreq_damping(modes=None, plot_type='tas', fig=None, damp_axes=None, freq_axes=None,
-                                    xlim=None, show=False, clear=False, close=False, legend=True, png_filename=None,
+                                    xlim=None, ncol=ncol, legend=True,
+                                    show=False, clear=False, close=False, png_filename=None,
                                     ylim_damping=None, ylim_kfreq=None, vd_limit=None, damping_limit=None,
                                     nopoints=False, noline=False)
-            resp.plot_kfreq_damping2(modes=None, fig=None, xlim=None, ylim=None, show=True,
-                                     clear=False, close=False, legend=True, png_filename=None)
+            resp.plot_kfreq_damping2(modes=None, fig=None, xlim=None, ylim=None,
+                                     show=True, clear=False, close=False,
+                                     ncol=ncol, legend=True, png_filename=None)
         return resp
 
     def __init__(self, subcase: int, configuration: str,
@@ -326,8 +331,8 @@ class FlutterResponse:
             #for color in colors:
                 #symbol_list.append('%s-%s' % (shape, color))
         self.noline = False
-        self._symbols = []  # type: list[str]
-        self._colors = []  # type: list[str]
+        self._symbols: list[str] = []
+        self._colors: list[str] = []
         self.generate_symbols()
 
     def set_pknl_results(self, results: np.ndarray):
@@ -380,11 +385,17 @@ class FlutterResponse:
         results2[:, :, self.ivelocity] = vel
         self.results = results2
 
-    def generate_symbols(self, colors=None, symbols=None):
+    def generate_symbols(self, colors=None, symbols=None, imethod: int=0):
         """
         This symbol list is taken from a series of "good" colors (e.g. not yellow)
         and easily distinguishable shapes.  Far more combinations that is necessary
         is defined.
+
+        Parameters
+        ----------
+        imethod: int; default=0
+            imethod=0: loop over symbols and then colors
+            imethod=1: loop over colors and then symbols
 
         """
         # rgbkm - max of 35 combinations
@@ -392,12 +403,26 @@ class FlutterResponse:
         if colors is None:
             #colors = ['r', 'g', 'b', 'k', 'm'] # 5
             colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'] # 10
+
         if symbols is None:
             symbols = ['o', '*', 'x', 'v', '>', '<', '^'] # 7
-        for symbol in symbols:
+        if imethod == 0:
+            for symbol in symbols:
+                for color in colors:
+                    self._symbols.append(symbol)
+                    self._colors.append(color)
+        else:
+            xmin = 0.0
+            xmax = 0.8
+            nmodes = len(self.modes)
+            colormap_name = 'viridis'
+            x = np.linspace(xmin, xmax, num=nmodes)[::-1]
+            colormap = plt.get_cmap(colormap_name)
+            colors = colormap(x)
             for color in colors:
-                self._symbols.append(symbol)
-                self._colors.append(color)
+                for symbol in symbols:
+                    self._symbols.append(symbol)
+                    self._colors.append(color)
 
     def set_plot_options(self, noline: bool=False) -> None:
         self.noline = noline
@@ -460,7 +485,7 @@ class FlutterResponse:
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
                         xlim=None, ylim=None,
-                        ncol: int = 0,
+                        ncol: int=0,
                         show: bool=True, clear: bool=False,
                         close: bool=False, legend: bool=True,
                         png_filename=None,
@@ -573,6 +598,7 @@ class FlutterResponse:
             title += '\n%s' % png_filename
         fig.suptitle(title)
         if legend:
+            # bbox_to_anchor=(1.125, 1.), ncol=ncol,
             axes.legend(**kwargs)
 
         if show:
@@ -801,7 +827,7 @@ class FlutterResponse:
         # 4. find the critical mode
         # 5. ???
 
-    def _get_symbols_colors_from_modes(self, modes) -> tuple[list[str], list[str]]:
+    def _get_symbols_colors_from_modes(self, modes: np.ndarray) -> tuple[list[str], list[str]]:
         """
         We need to make sure we have a symbol and color for each mode,
         even if we repeat them.
@@ -810,17 +836,7 @@ class FlutterResponse:
         and just duplicate colors N times.
         """
         nmodes = len(modes)
-        colors = self._colors
-        ncolors = len(colors)
-        if ncolors < nmodes:
-            kcolor = int(np.ceil(nmodes / ncolors))
-            colors = self._colors * kcolor
-
-        symbols = self._symbols
-        nsymbols = len(symbols)
-        if nsymbols < nmodes:
-            ksymbol = int(np.ceil(nmodes / nsymbols))
-            symbols = self._symbols * ksymbol
+        symbols, colors = _symbols_colors_from_nlines(self._colors, self._symbols, nmodes)
         return symbols, colors
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
@@ -925,7 +941,7 @@ class FlutterResponse:
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
         if legend:
-            damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
+            damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
             #damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
@@ -1035,7 +1051,8 @@ class FlutterResponse:
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
 
-    def _imodes(self, modes) -> np.ndarray:
+    def _imodes(self, modes: Optional[Union[np.ndarray, slice[int],
+                                            tuple[int], list[int]]]) -> np.ndarray:
         """gets the imodes from the modes"""
         if modes is None:
             nmodes = self.results.shape[0]
@@ -1044,6 +1061,9 @@ class FlutterResponse:
             nmodes = self.results.shape[0]
             all_modes = np.arange(0, nmodes, dtype='int32')
             imodes = all_modes[modes]
+        elif isinstance(modes, (list, tuple)):
+            modes = np.array(modes, dtype='int32')
+            imodes = modes - 1
         else:
             imodes = modes - 1
         return imodes
@@ -1228,8 +1248,8 @@ class FlutterResponse:
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
         return ix, xlabel
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
+    def object_attributes(self, mode: str='public', keys_to_skip=None,
+                          filter_properties: bool=False):
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -1256,7 +1276,7 @@ class FlutterResponse:
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
+    def object_methods(self, mode: str='public', keys_to_skip=None):
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -1296,7 +1316,7 @@ def _get_modes_imodes(all_modes, modes):
         if step is None:
             step = 1
         modes = np.unique(range(start, stop, step))
-    elif len(modes) == 0:
+    elif len(modes) == 0:  # pragma: no cover
         raise RuntimeError('modes = %s' % modes)
     else:
         assert 0 not in modes, modes
@@ -1306,7 +1326,7 @@ def _get_modes_imodes(all_modes, modes):
     if modes.max() > all_modes.max():
         imodes = np.where(modes <= all_modes.max())
         modes = modes[imodes]
-    if len(modes) == 0:
+    if len(modes) == 0:  # pragma: no cover
         raise RuntimeError('No modes to plot...')
     imodes = np.searchsorted(all_modes, modes)
     return modes, imodes
@@ -1340,7 +1360,7 @@ def _asarray(results, allow_fix_kfreq: bool=True):
                     else:
                         try:
                             row_entry2 = float(row_entry)
-                        except Exception:
+                        except Exception:  # pragma: no cover
                             raise ValueError(f'i={i} row_entry={row_entry!r}')
                     row2.append(row_entry2)
                 mode_result2.append(row2)
@@ -1452,11 +1472,38 @@ def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
 
 def _update_ncol(nmodes: int, ncol: int=0) -> int:
     """Updates ncol to be a valid number"""
-    ncol = 1
     if ncol > 0:
         return ncol
-    if ncol == 0:
-        ncol = nmodes // 25
-    if ncol == 0:
-        ncol = 1
+    nmodes_per_column = 40
+    ncol = nmodes // nmodes_per_column
+    if nmodes % nmodes_per_column > 0:
+        ncol += 1
+    ncol = min(ncol, nmodes)
     return ncol
+
+
+def _symbols_colors_from_nlines(colors: list[str], symbols: list[str],
+                                nlines: int) -> tuple[list[str], list[str]]:
+    """
+    Repeats colors/symbols if there are too many lines
+
+    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6',
+              'C7', 'C8', 'C9', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C0', 'C1', 'C2', 'C3',
+              'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C0',
+              'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7',
+              'C8', 'C9']
+    symbols = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*',
+               'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'v', 'v', 'v', 'v', 'v', 'v', 'v', 'v', 'v', 'v',
+               '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<',
+               '^', '^', '^', '^', '^', '^', '^', '^', '^', '^']
+    """
+    ncolors = len(colors)
+    nsymbols = len(symbols)
+    if ncolors < nlines:
+        kcolor = int(np.ceil(nlines / ncolors))
+        colors = colors * kcolor
+
+    if nsymbols < nlines:
+        ksymbol = int(np.ceil(nlines / nsymbols))
+        symbols = symbols * ksymbol
+    return symbols, colors

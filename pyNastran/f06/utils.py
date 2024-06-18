@@ -23,7 +23,7 @@ USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
     f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
-    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT]\n'
+    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -82,6 +82,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --xlim XLIM      the velocity limits (default=no limit)\n'
         '  --ylimfreq FREQ  the damping limits (default=no limit)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
+        '  --ncol NCOL      the number of columns for the legend\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
         '  --export_zona    export a zona file\n'
@@ -121,6 +122,10 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     ylim_freq = [None, None]
     if data['--ylimfreq']:
         ylim_freq = split_float_colons(data['--ylimfreq'])
+
+    ncol = 0
+    if data['--ncol']:
+        ncol = int(data['--ncol'])
 
     # the default units is in SI because there isn't a great default unit
     # system for English.  Better to just make it easy for one system.
@@ -210,6 +215,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         damping_limit=damping_limit,
         nopoints=nopoints,
         noline=noline,
+        ncol=ncol,
         export_csv_filename=export_csv_filename,
         export_veas_filename=export_veas_filename,
         export_zona_filename=export_zona_filename,
