@@ -345,6 +345,7 @@ class BDFAttributes:
             'NLTRAN': 129,
             'AESTAT': 144,
             'FLUTTR': 145,
+            'SEFLUTTR': 145,
             'SEAERO': 146,
             'NLSCSH': 153,
             'NLTCSH': 159,

@@ -1,5 +1,5 @@
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
-from pyNastran.gui.gui_objects.settings import Settings, NASTRAN_BOOL_KEYS
+from pyNastran.gui.gui_objects.settings import Settings, NASTRAN_BOOL_KEYS, NastranSettings
 from pyNastran.gui.qt_files.base_gui import BaseGui
 
 
@@ -30,10 +30,14 @@ class PreferencesObject(BaseGui):
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
         settings: Settings = self.gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
         data = {
             'font_size' : settings.font_size,
             'annotation_size' : settings.annotation_size, # int
             'annotation_color' : settings.annotation_color,
+
+            'caero_color' : nastran_settings.caero_color,
+            'rbe_line_color': nastran_settings.rbe_line_color,
 
             'use_startup_directory': settings.use_startup_directory,
 

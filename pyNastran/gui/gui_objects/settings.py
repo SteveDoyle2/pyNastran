@@ -20,7 +20,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
 
@@ -32,6 +32,7 @@ from pyNastran.utils import object_attributes #, object_stats
 
 from pyNastran.gui.qt_files.colors import (
     BLACK_FLOAT, WHITE_FLOAT, GREY_FLOAT, ORANGE_FLOAT, HOT_PINK_FLOAT,
+    YELLOW_FLOAT, LIGHT_GREEN_FLOAT,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
@@ -101,14 +102,17 @@ MAGNIFY = 5
 MAGNIFY_MIN = 1
 MAGNIFY_MAX = 10
 
+CAERO_COLOR = YELLOW_FLOAT
+RBE_LINE_COLOR = LIGHT_GREEN_FLOAT
 
+NASTRAN_COLOR_KEYS = ['nastran_caero_color', 'nastran_rbe_line_color']
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
     'nastran_is_properties',
     'nastran_is_element_quality',
     'nastran_is_bar_axes',
     'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
-    'nastran_is_shell_mcids', 'nastran_is_update_conm2',
+    'nastran_is_shell_mcids',
 
     'nastran_displacement', 'nastran_velocity', 'nastran_acceleration', 'nastran_eigenvector',
     'nastran_spc_force', 'nastran_mpc_force', 'nastran_applied_load',
@@ -134,10 +138,11 @@ NASTRAN_BOOL_KEYS = [
 ]
 
 class NastranSettings:
-    def __init__(self):
+    def __init__(self, parent):
         """
         Creates the Settings object
         """
+        self.parent = parent
         self.reset_settings()
 
     def reset_settings(self):
@@ -148,7 +153,6 @@ class NastranSettings:
         self.create_coords = True
         self.is_bar_axes = True
         self.is_shell_mcids = True
-        self.is_update_conm2 = True
 
         self.stress = True
         self.spring_stress = True
@@ -191,6 +195,11 @@ class NastranSettings:
         self.strain_energy = True
         self.grid_point_force = True
 
+        #---------------------------------------0000000000000000
+        # colors
+        self.caero_color = CAERO_COLOR
+        self.rbe_line_color = RBE_LINE_COLOR
+
         # ------------------------------------------------------
 
         #: flips the nastran CAERO subpaneling
@@ -201,6 +210,37 @@ class NastranSettings:
         self.show_caero_actor = True  # show the caero mesh
         #self.show_control_surfaces = True
         #self.show_conm = True
+
+    def set_caero_color(self, color: ColorFloat, render: bool=True) -> None:
+        """
+        Set the CAEROx color
+
+        Parameters
+        ----------
+        color : ColorFloat
+            RGB values as floats
+        """
+        self.caero_color = color
+        parent = self.parent
+        if render:
+            parent.vtk_interactor.Render()
+        parent.log_command('self.settings.nastran_settings.set_caero_color(%s, %s, %s)' % color)
+
+    def set_rbe_line_color(self, color: ColorFloat, render: bool=True) -> None:
+        """
+        Set the RBE2/RBE3 line color
+
+        Parameters
+        ----------
+        color : ColorFloat
+            RGB values as floats
+        """
+        self.rbe_line_color = color
+        parent = self.parent
+        if render:
+            parent.vtk_interactor.Render()
+        parent.log_command('self.settings.nastran_settings.set_rbe_line_color(%s, %s, %s)' % color)
+
 
     def __repr__(self) -> str:
         msg = '<NastranSettings>\n'
@@ -233,7 +273,7 @@ class Settings:
         #self.annotation_scale = 1.0
 
         self.reset_settings(resize=True, reset_dim_max=True)
-        self.nastran_settings = NastranSettings()
+        self.nastran_settings = NastranSettings(parent)
 
     def reset_settings(self, resize: bool=True,
                        reset_dim_max: bool=True) -> None:
@@ -310,7 +350,7 @@ class Settings:
             self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
-        self.nastran_settings = NastranSettings()
+        self.nastran_settings = NastranSettings(self.parent)
 
     def finish_startup(self):
         self.set_background_color(self.background_color, render=False, quiet=True)
@@ -320,6 +360,9 @@ class Settings:
     def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
         for key in NASTRAN_BOOL_KEYS:
+            base, key2 = key.split('_', 1)
+            data[key] = getattr(nastran_settings, key2)
+        for key in NASTRAN_COLOR_KEYS:
             base, key2 = key.split('_', 1)
             data[key] = getattr(nastran_settings, key2)
 
@@ -598,6 +641,19 @@ class Settings:
             #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
             setattr(nastran_settings, key2, value)
 
+        for key in NASTRAN_COLOR_KEYS:
+            # nastran_is_properties -> nastran, is_properties
+            base, key2 = key.split('_', 1)
+
+            # we get default from the nastran_settings
+            default = getattr(nastran_settings, key2)
+
+            # pull it from the QSettings
+            value = self._set_setting(settings, setting_keys, [key],
+                                      default, save=True, auto_type=float)
+            #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
+            setattr(nastran_settings, key2, value)
+
     def _set_setting(self, settings, setting_keys: list[str],
                      setting_names: list[str], default: Any,
                      save: bool=True, auto_type=None) -> Any:
@@ -688,6 +744,11 @@ class Settings:
             value = getattr(nastran_settings, key2)
             settings.setValue(key, value)
             #print(f'*key={key!r} key2={key2!r} value={value!r}')
+
+        for key in NASTRAN_COLOR_KEYS:
+            base, key2 = key.split('_', 1)
+            value = getattr(nastran_settings, key2)
+            settings.setValue(key, value)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
 

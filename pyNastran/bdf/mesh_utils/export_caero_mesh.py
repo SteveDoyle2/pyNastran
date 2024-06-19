@@ -58,7 +58,7 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
         for isubpanel_eid in range(len(elements)):
             aero_eid_map[isubpanel_ieid] = caero_eid + isubpanel_eid
             isubpanel_ieid += 1
-    model.log.info(f'nsubpanels = {len(aero_eid_map)}')
+    model.log.debug(f'nsubpanels = {len(aero_eid_map)}')
     subcases, loads = _write_subcases_loads(model, aero_eid_map, is_subpanel_model)
 
     with open(caero_bdf_filename, 'w') as bdf_file:

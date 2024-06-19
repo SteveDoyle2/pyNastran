@@ -127,6 +127,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
         export_caero_mesh(model, caero_bdf_filename,
                           is_subpanel_model=True,
                           pid_method='caero', write_panel_xyz=True)
+        os.remove(caero_bdf_filename)
 
     read_write_op2_geom(
         model,

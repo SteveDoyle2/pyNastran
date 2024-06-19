@@ -127,6 +127,11 @@ class PreferencesWindow(PyDialog):
         self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
 
+        self.caero_color_float, self.caero_color_int = check_color(
+            data['caero_color'])
+        self.rbe_line_color_float, self.rbe_line_color_int = check_color(
+            data['rbe_line_color'])
+
         #self._shear_moment_torque_opacity = data['shear_moment_torque_opacity']
         #self._shear_moment_torque_point_size = data['shear_moment_torque_point_size']
         #self._shear_moment_torque_color_int = data['shear_moment_torque_color']
@@ -152,7 +157,6 @@ class PreferencesWindow(PyDialog):
         self._nastran_rod_strain = data['nastran_rod_strain']
         self._nastran_bar_strain = data['nastran_bar_strain']
         self._nastran_beam_strain = data['nastran_beam_strain']
-
 
         self._nastran_displacement = data['nastran_displacement']
         self._nastran_velocity = data['nastran_velocity']
@@ -363,7 +367,7 @@ class PreferencesWindow(PyDialog):
         #self.nastran_is_3d_bars_checkbox.setDisabled(True)
 
         self.nastran_is_3d_bars_update_checkbox = QCheckBox('Update 3D Bars')
-        self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D Bar/Beam cross-sections when deformations are applied')
+        self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D geometry (Bar/Beam cross-sections and CONMw) when deformations are applied')
         self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
 
         self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
@@ -429,6 +433,16 @@ class PreferencesWindow(PyDialog):
             #self.nastran_rod_strain_checkbox.setChecked(self._nastran_rod_strain)
             #self.nastran_bar_strain_checkbox.setChecked(self._nastran_bar_strain)
             #self.nastran_beam_strain_checkbox.setChecked(self._nastran_beam_strain)
+
+        #-----------------------------------------------------------------------
+        # colors
+        self.caero_color_label = QLabel("Default CAERO panel color:")
+        self.caero_color_edit = QPushButtonColor(self.caero_color_int)
+        self.caero_color_edit.setToolTip('Sets the color for the caero/caero sub-panels actors')
+
+        self.rbe_line_color_label = QLabel("Default RBE2/RBE3 line color:")
+        self.rbe_line_color_edit = QPushButtonColor(self.rbe_line_color_int)
+        self.rbe_line_color_edit.setToolTip('Sets the color for the RBE2/RBE3 line colo')
 
         #-----------------------------------------------------------------------
         # closing
@@ -601,6 +615,18 @@ class PreferencesWindow(PyDialog):
         vbox_nastran_results.addWidget(self.nastran_results_label)
         vbox_nastran_results.addLayout(grid_nastran_results)
 
+        grid_nastran_actors = QGridLayout()
+        irow = 1
+        grid_nastran_actors.addWidget(self.caero_color_label, irow, 0)
+        grid_nastran_actors.addWidget(self.caero_color_edit, irow, 1)
+        irow += 1
+        grid_nastran_actors.addWidget(self.rbe_line_color_label, irow, 0)
+        grid_nastran_actors.addWidget(self.rbe_line_color_edit, irow, 1)
+
+        vbox_nastran_actors = QVBoxLayout()
+        self.nastran_actors_label = QLabel('Nastran Actors:')
+        vbox_nastran_actors.addWidget(self.nastran_actors_label)
+        vbox_nastran_actors.addLayout(grid_nastran_actors)
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
@@ -618,6 +644,7 @@ class PreferencesWindow(PyDialog):
             vbox_nastran_tab = QVBoxLayout()
             vbox_nastran_tab.addLayout(vbox_nastran)
             vbox_nastran_tab.addLayout(vbox_nastran_results)
+            vbox_nastran_tab.addLayout(vbox_nastran_actors)
             vbox_nastran_tab.addStretch()
 
             nastran_tab_widget = QWidget(self)
@@ -632,6 +659,7 @@ class PreferencesWindow(PyDialog):
             vbox.addLayout(grid)
             vbox.addLayout(vbox_nastran)
             vbox.addLayout(vbox_nastran_results)
+            vbox.addLayout(vbox_nastran_actors)
         #vbox.addStretch()
         #vbox.addLayout(grid2)
         vbox.addStretch()
@@ -757,6 +785,11 @@ class PreferencesWindow(PyDialog):
         self.nastran_stress_checkbox.clicked.connect(partial(on_nastran, self, 'stress'))
         self.nastran_strain_energy_checkbox.clicked.connect(partial(on_nastran, self, 'strain_energy'))
 
+        # --------------------------
+        # colors
+        self.caero_color_edit.clicked.connect(self.on_caero_color)
+        self.rbe_line_color_edit.clicked.connect(self.on_rbe_line_color)
+
     def set_connections(self):
         """creates the actions for the menu"""
         self.font_size_edit.valueChanged.connect(self.on_font)
@@ -854,12 +887,12 @@ class PreferencesWindow(PyDialog):
         self.annotation_color_int = tuple([round(val * 255) for val in ANNOTATION_COLOR])
         self.shear_moment_torque_color_int = tuple([round(val * 255) for val in SHEAR_MOMENT_TORQUE_COLOR])
 
-        set_label_color(self.corner_text_color_edit, self.corner_text_color_int)
-        set_label_color(self.highlight_color_edit, self.highlight_color_int)
-        set_label_color(self.background_color_edit, self.background_color1_int)
-        set_label_color(self.background_color2_edit, self.background_color2_int)
-        set_label_color(self.annotation_color_edit, self.annotation_color_int)
-        #set_label_color(self.shear_moment_torque_color_edit, self.shear_moment_torque_color_int)
+        set_pushbutton_color(self.corner_text_color_edit, self.corner_text_color_int)
+        set_pushbutton_color(self.highlight_color_edit, self.highlight_color_int)
+        set_pushbutton_color(self.background_color_edit, self.background_color1_int)
+        set_pushbutton_color(self.background_color2_edit, self.background_color2_int)
+        set_pushbutton_color(self.annotation_color_edit, self.annotation_color_int)
+        #set_pushbutton_color(self.shear_moment_torque_color_edit, self.shear_moment_torque_color_int)
 
         for key in NASTRAN_BOOL_KEYS:
             checkbox_name = f'{key}_checkbox'
@@ -908,6 +941,7 @@ class PreferencesWindow(PyDialog):
         bold_font = make_font(value, is_bold=True)
         self.nastran_label.setFont(bold_font)
         self.nastran_results_label.setFont(bold_font)
+        self.nastran_actors_label.setFont(bold_font)
         if IS_SMT:
             self.shear_moment_torque_label.setFont(bold_font)
 
@@ -956,7 +990,7 @@ class PreferencesWindow(PyDialog):
         rgb_color_ints = self.background_color_int
         color_edit = self.background_color_edit
         func_name = 'set_background_color'
-        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+        passed, rgb_color_ints, rgb_color_floats = self._load_color(
             title, color_edit, rgb_color_ints, func_name)
         if passed:
             self.background_color_int = rgb_color_ints
@@ -968,11 +1002,35 @@ class PreferencesWindow(PyDialog):
         rgb_color_ints = self.background_color2_int
         color_edit = self.background_color2_edit
         func_name = 'set_background_color2'
-        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+        passed, rgb_color_ints, rgb_color_floats = self._load_color(
             title, color_edit, rgb_color_ints, func_name)
         if passed:
             self.background_color2_int = rgb_color_ints
             self.background_color2_float = rgb_color_floats
+
+    def on_caero_color(self) -> None:
+        """ Choose a CAERO color"""
+        title = "Choose a default CAERO color"
+        rgb_color_ints = self.caero_color_int
+        color_edit = self.caero_color_edit
+        func_name = 'set_caero_color'
+        passed, rgb_color_ints, rgb_color_floats = self._load_nastran_color(
+            title, color_edit, rgb_color_ints, func_name)
+        if passed:
+            self.caero_color_int = rgb_color_ints
+            self.caero_color_float = rgb_color_floats
+
+    def on_rbe_line_color(self) -> None:
+        """ Choose an RBE color"""
+        title = "Choose a default RBE2/RBE3 line color"
+        rgb_color_ints = self.rbe_line_color_int
+        color_edit = self.rbe_line_color_edit
+        func_name = 'set_rbe_line_color'
+        passed, rgb_color_ints, rgb_color_floats = self._load_nastran_color(
+            title, color_edit, rgb_color_ints, func_name)
+        if passed:
+            self.rbe_line_color_int = rgb_color_ints
+            self.rbe_line_color_float = rgb_color_floats
 
     def on_highlight_color(self) -> None:
         """ Choose a highlight color"""
@@ -980,7 +1038,7 @@ class PreferencesWindow(PyDialog):
         rgb_color_ints = self.highlight_color_int
         color_edit = self.highlight_color_edit
         func_name = 'set_highlight_color'
-        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+        passed, rgb_color_ints, rgb_color_floats = self._load_color(
             title, color_edit, rgb_color_ints, func_name)
         if passed:
             self.highlight_color_int = rgb_color_ints
@@ -999,19 +1057,6 @@ class PreferencesWindow(PyDialog):
         self._highlight_point_size = value
         if self.win_parent is not None:
             self.settings.set_highlight_point_size(value)
-
-    def _background_color(self, title: str, color_edit: QPushButtonColor,
-                          rgb_color_ints: tuple[int, int, int],
-                          func_name: str):
-        """helper method for ``on_background_color`` and ``on_background_color2``"""
-        passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            color_edit, rgb_color_ints, title)
-        if passed:
-            if self.win_parent is not None:
-                settings = self.settings
-                func_background_color = getattr(settings, func_name)
-                func_background_color(rgb_color_floats)
-        return passed, rgb_color_ints, rgb_color_floats
 
     def on_corner_text_color(self) -> None:
         """Choose a corner text color"""
@@ -1036,6 +1081,32 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.settings.set_corner_text_size(value)
 
+    def _load_nastran_color(self, title: str, color_edit: QPushButtonColor,
+                            rgb_color_ints: tuple[int, int, int],
+                            func_name: str):
+        """helper method for nastran colors"""
+        passed, rgb_color_ints, rgb_color_floats = self.on_color(
+            color_edit, rgb_color_ints, title)
+        if passed:
+            if self.win_parent is not None:
+                settings = self.settings.nastran_settings
+                func_color = getattr(settings, func_name)
+                func_color(rgb_color_floats)
+        return passed, rgb_color_ints, rgb_color_floats
+
+    def _load_color(self, title: str, color_edit: QPushButtonColor,
+                    rgb_color_ints: tuple[int, int, int],
+                    func_name: str):
+        """helper method for ``on_background_color`` and ``on_background_color2``"""
+        passed, rgb_color_ints, rgb_color_floats = self.on_color(
+            color_edit, rgb_color_ints, title)
+        if passed:
+            if self.win_parent is not None:
+                settings = self.settings
+                func_color = getattr(settings, func_name)
+                func_color(rgb_color_floats)
+        return passed, rgb_color_ints, rgb_color_floats
+
     def on_color(self, color_edit: QPushButtonColor,
                  rgb_color_ints: tuple[int, int, int],
                  title: str) -> tuple[bool, tuple[int, int, int], Any]:
@@ -1051,7 +1122,7 @@ class PreferencesWindow(PyDialog):
         assert isinstance(color_float[0], float), color_float
         assert isinstance(color_int[0], int), color_int
 
-        set_label_color(color_edit, color_int)
+        set_pushbutton_color(color_edit, color_int)
         return True, color_int, color_float
 
     def on_picker_size(self) -> None:
@@ -1197,8 +1268,8 @@ def create_opacity_edit(parent, value: float) -> QDoubleSpinBox:
     return opacity_edit
 
 
-def set_label_color(color_edit: QPushButtonColor,
-                    color_tuple: tuple[int, int, int]) -> None:
+def set_pushbutton_color(color_edit: QPushButtonColor,
+                         color_tuple: tuple[int, int, int]) -> None:
     color_edit.setStyleSheet(
         "QPushButton {"
         "background-color: rgb(%s, %s, %s);" % tuple(color_tuple) +
@@ -1272,6 +1343,9 @@ def main():  # pragma: no cover
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,
         'picker_size' : 10.,
+
+        'caero_color': (0.2, 0.7, 0.4),
+        'rbe_line_color': (0.5, 0.6, 0.7),
 
         'min_clip' : 0.,
         'max_clip' : 10,

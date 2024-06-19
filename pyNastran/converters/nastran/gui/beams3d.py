@@ -236,7 +236,7 @@ def update_3d_beams(ugrid: vtkUnstructuredGrid,
         elif ptype == 'PBEAML':
             dim1 = pid_ref.dim[0, :]
             dim2 = pid_ref.dim[-1, :]
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(pid_ref)
             #dim1 = dim2 = None
             #return node0

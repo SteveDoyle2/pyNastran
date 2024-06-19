@@ -1896,6 +1896,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
                                 ierror: int=0, nerrors: int=100,
                                 stop_on_failure: bool=True) -> int:
     """helper method for ``_check_case_parameters``"""
+    #assert isinstance(sol, int), sol
     log = fem.log
     if 'TRIM' in subcase:
         trim_id = subcase.get_int_parameter('TRIM')[0]

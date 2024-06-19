@@ -16,6 +16,7 @@ class QSettingsLike2:
         'highlight_color', 'shear_moment_torque_color',
         'corner_text_color', 'annotation_color',
         'screen_shape', 'screen_position',
+        'nastran_caero_color', 'nastran_rbe_line_color',
     }
     def __init__(self):
         """

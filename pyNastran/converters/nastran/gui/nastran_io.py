@@ -1339,6 +1339,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
+        settings: NastranSettings = gui.settings.nastran_settings
         if len(rigid_lines):
             # handle RBEs without MPCs
             mpc_id = 0
@@ -1570,14 +1571,15 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if not lines:
             return []
         gui: MainWindow = self.gui
+        settings: NastranSettings = gui.settings.nastran_settings
         gui.create_alternate_vtk_grid(
-            depname, color=GREEN_FLOAT, line_width=5, opacity=1.,
+            depname, color=RED_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         gui.create_alternate_vtk_grid(
-            indname, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
+            indname, color=BLUE_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         gui.create_alternate_vtk_grid(
-            linename, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
+            linename, color=settings.rbe_line_color, line_width=5, opacity=1.,
             point_size=5, representation='wire', is_visible=False)
 
         lines2 = []
@@ -3565,7 +3567,7 @@ def _create_masses(gui: MainWindow,
                                nodes: np.ndarray) -> None:
         #if not create_secondary_actors:
             #return
-        if not gui.settings.nastran_settings.is_update_conm2:
+        if not gui.settings.nastran_settings.nastran_is_3d_bars_update:
             return
         mass_grid = gui.alt_grids['conm2']
         update_mass_grid(model, mass_grid, points, node_ids, nodes)
@@ -3713,11 +3715,12 @@ def _create_caero_actors(gui: MainWindow, ncaeros: int,
     """
     if not has_caero:
         return
+    settings: NastranSettings = gui.settings.nastran_settings
     gui.create_alternate_vtk_grid(
-        'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+        'caero', color=settings.caero_color, line_width=3, opacity=1.0,
         representation='toggle', is_visible=True, is_pickable=False)
     gui.create_alternate_vtk_grid(
-        'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
+        'caero_subpanels', color=settings.caero_color, line_width=3, opacity=1.0,
         representation='toggle', is_visible=False, is_pickable=False)
 
     gui.alt_grids['caero'].Allocate(ncaeros, 1000)
