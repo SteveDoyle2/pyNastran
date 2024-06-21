@@ -1807,7 +1807,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             pass
         elif animate_in_gui:
             msg = (
-                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'self.make_gif({gif_filename!r}, scale={scale}, istep={istep},\n'
                 f'    min_value={min_value}, max_value={max_value},\n'
                 f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
                 f'    animate_time={animate_time},\n{icase_msg}'

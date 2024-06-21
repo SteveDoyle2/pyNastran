@@ -161,7 +161,7 @@ class ForceResults2(DispForceVectorResults):
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             dxyz, itime, case_flag = self.get_vector_data_dense(itime, res_name)
-            deflected_xyz = self.xyz + scale * dxyz[i, :]
+            deflected_xyz = self.xyz + scale * dxyz
         else:
             assert isinstance(itime, int), (itime, phase)
             assert isinstance(phase, float), (itime, phase)

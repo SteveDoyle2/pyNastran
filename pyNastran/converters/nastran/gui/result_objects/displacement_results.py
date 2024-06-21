@@ -137,6 +137,7 @@ class DisplacementResults2(DispForceVectorResults):
 
     def get_vector_result(self, itime: int, res_name: str,
                           return_dense: bool=True) -> tuple[np.ndarray, np.ndarray]:
+        """returns dense data"""
         scale = self.get_scale(itime, res_name)
         if self.is_real:
             dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
@@ -178,7 +179,7 @@ class DisplacementResults2(DispForceVectorResults):
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
-            deflected_xyz = self.xyz + scale * dxyz[itime, :]
+            deflected_xyz = self.xyz + scale * dxyz
         else:
             assert isinstance(itime, int), (itime, phase)
             assert isinstance(phase, float), (itime, phase)
@@ -191,6 +192,8 @@ class DisplacementResults2(DispForceVectorResults):
                                             phase: float=0.) -> np.ndarray:
         """
         Get displacements for a complex eigenvector result.
+
+        e^(i*theta) = cos(theta) + 1j*sin(theta)
         """
         dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
         assert dxyz.ndim == 2, dxyz

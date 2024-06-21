@@ -104,6 +104,7 @@ MAGNIFY_MAX = 10
 
 CAERO_COLOR = YELLOW_FLOAT
 RBE_LINE_COLOR = LIGHT_GREEN_FLOAT
+DISPLACEMENT_MODEL_SCALE = 0.1
 
 NASTRAN_COLOR_KEYS = ['nastran_caero_color', 'nastran_rbe_line_color']
 NASTRAN_BOOL_KEYS = [
@@ -322,6 +323,7 @@ class Settings:
         self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH # float
 
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
+        self.displacement_model_scale = DISPLACEMENT_MODEL_SCALE
         self.show_info = True
         self.show_debug = False
         self.show_command = True
@@ -551,6 +553,10 @@ class Settings:
             self.shear_moment_torque_line_width,
             min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
 
+        # displacement_model_scale - unused
+        self._set_setting(settings, setting_keys, ['displacement_model_scale'],
+                          default=DISPLACEMENT_MODEL_SCALE, save=True, auto_type=float)
+
         # default colormap for legend
         self._set_setting(settings, setting_keys, ['colormap'], default=DEFAULT_COLORMAP, save=True)
         if self.colormap not in COLORMAPS:
@@ -707,6 +713,10 @@ class Settings:
         settings.setValue('shear_moment_torque_point_size', self.shear_moment_torque_point_size)
         settings.setValue('shear_moment_torque_line_width', self.shear_moment_torque_line_width)
 
+        # float
+        settings.setValue('displacement_model_scale', self.displacement_model_scale)
+
+        # logging
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
         settings.setValue('show_command', self.show_command)
