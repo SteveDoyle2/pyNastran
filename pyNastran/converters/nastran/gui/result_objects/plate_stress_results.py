@@ -12,6 +12,7 @@ from .nodal_averaging import nodal_average, nodal_combine_map, derivation_map
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateArray
 
 
@@ -147,6 +148,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
 
         # local case object
         #self.cases = cases
+        assert isinstance(result, dict), result
         self.result = result
 
         self.data_type = case.data.dtype.str # '<c8', '<f4'
@@ -215,6 +217,53 @@ class PlateStrainStressResults2(VectorResultsCommon):
             self.headers = ['PlateStrain2'] * ntimes
         str(self)
 
+    @classmethod
+    def load_from_code(cls,
+                       subcase_id: int,
+                       model: BDF,
+                       model_results: OP2,
+                       element_id: np.ndarray,
+                       #cases: list[RealPlateArray],
+                       #subcase_key: int,
+                       is_stress: bool,
+                       eid_to_nid_map: dict[int, list[int]],
+                       #is_variable_data_format: bool=False,
+                       #prefix='stress',
+                       require_results: bool=True):
+        """the intention of this method is to not use the gui"""
+        subcase_key0 = (subcase_id, -1)
+        plate_cases, subcase_id = get_real_plate_cases(
+            element_id,
+            model_results,
+            #subcase_key0,
+            subcase_id,
+            is_stress=True,
+            prefix='',
+            require_results=require_results)
+
+        # get the xyzs
+        out = model.get_xyz_in_coord_array(
+            cid=0, fdtype='float64', idtype='int64')
+        nid_cp_cd, xyz_cid, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
+        node_id = nid_cp_cd[:, 0]
+        #------------------------------------------
+        out = plate_cases_to_iresult(plate_cases, is_stress)
+        iresult_to_title_annotation_map, is_fiber_distance, word, max_sheari = out
+
+        #------------------------------------------
+        title = 'title'
+        obj = PlateStrainStressResults2(
+            subcase_id,
+            model,
+            node_id,
+            element_id,
+            plate_cases,
+            iresult_to_title_annotation_map, title,
+            is_fiber_distance,
+            eid_to_nid_map,
+            is_variable_data_format=False,  # ???
+            set_max_min=False)
+        return obj
 
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
@@ -573,7 +622,8 @@ class PlateStrainStressResults2(VectorResultsCommon):
         if self.is_dense:
             return data
 
-        if self.get_location(0, '') == 'node':
+        location = self.get_location(0, '')
+        if location == 'node':
             nnode = len(self.node_id)
             result_out = np.full(nnode, np.nan, dtype=data.dtype)
             result_out[self.inode] = data
@@ -916,3 +966,152 @@ def _check_sidebar_args(plate: PlateStrainStressResults2,
     assert min_max_method in min_max_methods, min_max_method
     assert nodal_combine in combine_methods, nodal_combine
     return transform, min_max_method, nodal_combine
+
+def get_real_plate_cases(element_id: np.ndarray,
+                         model: OP2,
+                         key,
+                         is_stress: bool,
+                         prefix: str='',
+                         require_results: bool=True) -> tuple[list, int]:
+    """
+    Parameters
+    ----------
+    key : subcase id or tuple[subcase_id, analysis_code, ...]
+        subcase_id: source of subcase_id
+        analysis_code: unused here, but used somewhere else...
+    element_id : np.ndarray
+        the elements in the model to consider
+        - may be all the elements in the model
+        - may be a subset of the plate elements
+    prefix: str; default=''
+        ''                   : get stress or strain
+        'modal_contribution' : get model_contribution.stress or model_contribution.strain
+        #'stress', 'model_contribution.stress', 'strain', 'model_contribution.strain'
+    is_stress : bool
+        flag for selecting stress/strain
+
+    Returns
+    -------
+    plate_cases : list[PlateStressArray] | list[PlateStrainArray]
+        the results to add
+    subcase_id : int
+        #an echo of key if key is subcase_id
+        otherwise, pulls out the subcase id
+
+    """
+    plates, word, subcase_id, analysis_code = _get_plates(
+        model, key, is_stress, prefix)
+
+    plate_cases = []
+    if len(plates) == 0:
+        if require_results:
+            raise RuntimeError('no results found')
+        return plate_cases, subcase_id
+
+    for iplate, result in enumerate(plates):
+        # if result:
+        # print(f'keys[{iplate}] = {result.keys()}')
+        if key not in result:
+            print(f'key={key!r} not found in result')
+            continue
+        plate_case = result[key]
+        if plate_case.is_complex:
+            continue
+        eids = np.unique(plate_case.element_node[:, 0])
+        common_eids = np.intersect1d(element_id, eids)
+        if len(common_eids) == 0:
+            continue
+        # ieids = np.unique(np.searchsorted(element_id, eids))
+        # if element_id[ieids[0]] != eids[0]
+        plate_cases.append(plate_case)
+
+    if len(plate_cases) == 0  and require_results:
+        raise RuntimeError('no results found')
+    return plate_cases, subcase_id
+
+def _get_plates(model: OP2,
+                key: tuple[int, int],
+                is_stress: bool,
+                prefix: str) -> tuple[str, list, int, int]:
+    if isinstance(key, int):
+        subcase_id = key
+        analysis_code = -1
+    else:
+        subcase_id = key[0]
+        analysis_code = key[1]
+        #print("***stress eids=", eids)
+
+    assert isinstance(prefix, str), f'prefix={prefix}'
+    if prefix == 'modal_contribution':
+        results = model.op2_results.modal_contribution
+        preword = 'Modal Contribution '
+    elif prefix == '':
+        if is_stress:
+            results = model.op2_results.stress
+        else:
+            results = model.op2_results.strain
+        preword = ''
+    else:  # pragma: no cover
+        raise NotImplementedError(f'prefix={prefix}')
+
+    if is_stress:
+        plates = [
+            results.ctria3_stress, results.cquad4_stress,
+            results.ctria6_stress, results.cquad8_stress,
+            results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
+        ]
+        word = preword + 'Stress'
+    else:
+        plates = [
+            results.ctria3_strain, results.cquad4_strain,
+            results.ctria6_strain, results.cquad8_strain,
+            results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
+        ]
+        word = preword + 'Strain'
+
+    plates2 = [plate for plate in plates if len(plate)]
+    return plates2, word, subcase_id, analysis_code
+
+def plate_cases_to_iresult(plate_cases: list,
+                           is_stress: bool) -> tuple[dict[int, tuple[str, str]],
+                                                     bool, str, Union[int, str]]:
+    plate_case = plate_cases[0]
+    is_fiber_distance = plate_case.is_fiber_distance
+    is_von_mises = plate_case.is_von_mises
+    assert isinstance(is_von_mises, bool), is_von_mises
+    von_misesi = 7 if is_von_mises else 'von_mises'
+    max_sheari = 7 if not is_von_mises else 'max_shear'
+    # print(case_headers)
+    if is_stress:
+        # [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
+        iresult_to_title_annotation_map = {
+            # iresult: (sidebar_label, annotation)
+            0: ('FiberDistance', 'Fiber Distance'),
+            1: ('Normal XX', 'XX'),
+            2: ('Normal YY', 'YY'),
+            3: ('Shear XY', 'XY'),
+            4: ('Theta', 'Theta'),
+            5: ('Max Principal', 'Max Principal'),
+            6: ('Min Principal', 'Min Principal'),
+            'abs_principal': ('Abs Principal', 'Abs Principal'),
+            von_misesi: ('von Mises', 'von Mises'),  # the magnitude is large
+            max_sheari: ('Max Shear', 'Max Shear'),  # the magnitude is large
+        }
+        word = 'Stress'
+    else:
+        iresult_to_title_annotation_map = {
+            # iresult: (sidebar_label, annotation)
+            # 'fiber_curvature' : 'FiberCurvature',
+            0: ('FiberDistance', 'Fiber Distance'),
+            1: ('Normal XX', 'XX'),
+            2: ('Normal YY', 'YY'),
+            3: ('Shear XY', 'XY'),
+            4: ('Theta', 'Theta'),
+            5: ('Max Principal', 'Max Principal'),
+            6: ('Min Principal', 'Min Principal'),
+            'abs_principal': ('Abs Principal', 'Abs Principal'),
+            von_misesi: ('von Mises', 'von Mises'),  # the magnitude is small
+            max_sheari: ('Max Shear', 'Max Shear'),  # the magnitude is small
+        }
+        word = 'Strain'
+    return iresult_to_title_annotation_map, is_fiber_distance, word, max_sheari

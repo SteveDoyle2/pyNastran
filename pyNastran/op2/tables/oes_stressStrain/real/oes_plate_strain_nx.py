@@ -1,8 +1,11 @@
 # coding: utf-8
 #pylint disable=C0103
+from itertools import count
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
@@ -187,65 +190,58 @@ class RealCPLSTRNPlateArray(OES_Object):
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
-        msg, nnodes, cen = _get_plate_msg(self)
-        asdf
+        msg, nnodes, cen = _get_clpstsn_msg(self)
 
         ## write the f06
-        #ntimes = self.data.shape[0]
+        ntimes = self.data.shape[0]
 
-        #eids = self.element_node[:, 0]
-        #nids = self.element_node[:, 1]
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
 
-        ##cen_word = 'CEN/%i' % nnodes
+        #'    ELEMENT'
+        #'      ID      GRID-ID       NORMAL-X          NORMAL-Y          NORMAL-Z           SHEAR           VON MISES'
+        #'0        72    CEN 0     -2.420339E-02      0.0               1.499626E-02     -1.436477E-02      2.429825E-02'
+        #'                  53     -3.316031E-02      0.0               2.198507E-02     -1.747013E-02      3.360480E-02'
+        #'                  39     -2.398538E-02      0.0               1.464934E-02     -8.596349E-03      2.306218E-02'
+        #'                  38     -1.546447E-02      0.0               8.354364E-03     -1.702782E-02      1.706980E-02'
+        #cen_word = 'CEN/%i' % nnodes
         #cen_word = cen
-        #for itime in range(ntimes):
-            #dt = self._times[itime]
-            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            #f06_file.write(''.join(header + msg))
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f06_file.write(''.join(header + msg))
 
-            ##print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            ##[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-            #fiber_dist = self.data[itime, :, 0]
-            #oxx = self.data[itime, :, 1]
-            #oyy = self.data[itime, :, 2]
-            #txy = self.data[itime, :, 3]
-            #angle = self.data[itime, :, 4]
-            #majorP = self.data[itime, :, 5]
-            #minorP = self.data[itime, :, 6]
-            #ovm = self.data[itime, :, 7]
+            #[oxx, oyy, ozz, shear, ovm]
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            ozz = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            ovm = self.data[itime, :, 4]
 
-            #for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 #count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
-                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
-                #ilayer = i % 2
-                ## tria3
-                #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
-                    #if ilayer == 0:
-                        #f06_file.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
-                            #eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    #else:
-                        #f06_file.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
-                            #'', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+            for (i, eid, nid, oxxi, oyyi, ozzi, txyi, ovmi) in zip(
+                 count(), eids, nids, oxx, oyy, ozz, txy, ovm):
+                [oxxi, oyyi, ozzi, txyi, ovmi] = write_floats_13e(
+                [oxxi, oyyi, ozzi, txyi, ovmi])
 
-                #elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
-                    ## bilinear
-                    #if nid == 0 and ilayer == 0:  # CEN
-                        #f06_file.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
-                            #eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    #elif ilayer == 0:
-                        #f06_file.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
-                            #'', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    #elif ilayer == 1:
-                        #f06_file.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
-                            #'', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                #else:
-                    #raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+                if self.element_type in [271, 272, 273, 274]:  # CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8
+                    if nid == 0:
+                        #'    ELEMENT'
+                        #'      ID      GRID-ID       NORMAL-X          NORMAL-Y          NORMAL-Z           SHEAR           VON MISES'
+                        #'0        72    CEN 0     -2.420339E-02      0.0               1.499626E-02     -1.436477E-02      2.429825E-02')
+                        #'                  53     -3.316031E-02      0.0               2.198507E-02     -1.747013E-02      3.360480E-02'
+                        #'                  39     -2.398538E-02      0.0               1.464934E-02     -8.596349E-03      2.306218E-02'
+                        #'                  38     -1.546447E-02      0.0               8.354364E-03     -1.702782E-02      1.706980E-02'
+                        f06_file.write(f'0  {eid}    CEN 0     {oxxi}     {oyyi}     {ozzi}     {txyi}     {ovmi}\n')
+                    else:
+                        f06_file.write(f'            {nid}     {oxxi}     {oyyi}     {ozzi}     {txyi}     {ovmi}\n')
+                else:
+                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
 
-            #f06_file.write(page_stamp % page_num)
-            #page_num += 1
-        #return page_num - 1
+            f06_file.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 class RealCPLSTRNPlateStressNXArray(RealCPLSTRNPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -310,7 +306,7 @@ def _get_clpstsn_msg(self):
         msg = cplstn3_msg
         nnodes = 3
         cen = 'CEN/3'
-    elif self.element_type == 271:
+    elif self.element_type == 272:
         msg = cplstn4_msg
         nnodes = 4
         cen = 'CEN/4'

@@ -683,3 +683,51 @@ def setup_centroid_node_data(cases: list[RealSolidArray],
 
     #intersect_eids, ieid_filter, nelement_filtered, is_filter = filter_ids(element_id, centroid_eids)
     return centroid_eids, centroid_data, element_node, node_data
+
+def solid_cases_to_iresult(solid_cases: list,
+                           is_stress: bool) -> tuple[dict[int, tuple[str, str]],
+                                                     str, Union[int, str]]:
+    solid_case = solid_cases[0]
+    #solid_case_headers = solid_case.get_headers()
+    is_von_mises = solid_case.is_von_mises
+    assert isinstance(is_von_mises, bool), is_von_mises
+    von_misesi = 9 if is_von_mises else 'von_mises'
+    max_sheari = 9 if not is_von_mises else 'max_shear'
+
+    if is_stress:
+        #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
+        iresult_to_title_annotation_map = {
+            # iresult: (sidebar_label, annotation)
+            0: ('Normal XX', 'XX'),
+            1: ('Normal YY', 'YY'),
+            2: ('Normal ZZ', 'ZZ'),
+            3: ('Shear XY', 'XY'),
+            4: ('Shear YZ', 'YZ'),
+            5: ('Shear XZ', 'XZ'),
+
+            6: ('Max Principal', 'Max Principal'),
+            8: ('Min Principal', 'Min Principal'),
+            7: ('Mid Principal', 'Mid Principal'),
+            #'abs_principal': ('sAbs Principal', 'Abs Principal'),
+            von_misesi: ('von Mises', 'von Mises'), # the magnitude is large
+            max_sheari: ('Max Shear', 'Max Shear'), # the magnitude is large
+        }
+        word = 'Stress'
+    else:
+        iresult_to_title_annotation_map = {
+            # iresult: (sidebar_label, annotation)
+            0: ('Normal XX', 'XX'),
+            1: ('Normal YY', 'YY'),
+            2: ('Normal ZZ', 'ZZ'),
+            3: ('Shear XY', 'XY'),
+            4: ('Shear YZ', 'YZ'),
+            5: ('Shear XZ', 'XZ'),
+
+            6: ('Max Principal', 'Max Principal'),
+            8: ('Min Principal', 'Min Principal'),
+            7: ('Mid Principal', 'Mid Principal'),
+            von_misesi: ('von Mises', 'von Mises'), # the magnitude is small
+            max_sheari: ('Max Shear', 'Max Shear'), # the magnitude is small
+        }
+        word = 'Strain'
+    return iresult_to_title_annotation_map, word, max_sheari

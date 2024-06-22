@@ -188,7 +188,7 @@ class OBC:
                    #1.4111075535750908e-42, 1044905.9375, 0.0, 0.0, 15922.9609375)
         dt = op2.nonlinear_factor
 
-        is_vectorized = False
+        is_vectorized = True
         if op2.use_vector and is_vectorized:
             # POINT ID. TYPE  PRESSURE  S1  S2  S3
             itime = obj.itime
@@ -197,15 +197,15 @@ class OBC:
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nnodes, 4)
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nnodes, 5)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 #obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nnodes, 4)
-            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nnodes, 5)
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 1:].copy()
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -222,6 +222,6 @@ class OBC:
             #self.show_data(data)
 
         #if self._table4_count == 0:
-        op2.log.warning(f'{op2.table_name} no output for "Contact Pressure and Tractions"; ndata={ndata}')
         #self._table4_count += 1
+        assert n == ndata
         return ndata

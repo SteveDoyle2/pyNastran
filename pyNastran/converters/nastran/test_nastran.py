@@ -2,6 +2,7 @@
 import os
 import unittest
 import numpy as np
+from pathlib import Path
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -31,7 +32,7 @@ from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import
 
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 DIRNAME = os.path.dirname(__file__)
 RED = (1., 0., 0.)
 
@@ -64,6 +65,7 @@ class TestNastranGUIObjects(unittest.TestCase):
         #print(list(results.eigenvectors.keys()))
         disp = results.eigenvectors[complex_mode]
         dxyz = disp #.data
+
         obj = DisplacementResults2(
             subcase_id,
             node_ids,
@@ -144,6 +146,56 @@ class TestNastranGUIObjects(unittest.TestCase):
         methods = force_obj.get_methods(itime, res_name)
         arrow_scale = force_obj.get_default_arrow_scale(itime, res_name)
         assert np.allclose(arrow_scale, 1.3849555), arrow_scale
+
+    def test_plate_wingbox(self):
+        dirname = MODEL_PATH / 'wingbox'
+        bdf_filename = dirname / 'wingbox_stitched_together-000.bdf'
+        op2_filename = dirname / 'wingbox_stitched_together-000.op2'
+        model = read_bdf(bdf_filename, debug=False)
+        element_id = np.array(list(model.elements), dtype='int32')
+
+        model_results = read_op2(op2_filename, debug=None)
+        subcase_id = 1
+
+        eid_to_nid_map = {}
+        for eid, elem in model.elements.items():
+            eid_to_nid_map[eid] = elem.nodes
+
+        is_stress = True
+        obj = PlateStrainStressResults2.load_from_code(
+            subcase_id, model, model_results, element_id,
+            is_stress, eid_to_nid_map,
+            #is_variable_data_format=False,
+            require_results=True,
+        )
+        assert obj.nodal_combine == 'Centroid', obj.nodal_combine
+        str(obj)
+        assert obj.is_complex == False
+        itime = 0
+        res_name = (itime, 2, 'header')
+        obj.get_default_min_max(itime, res_name)
+        obj.get_min_max(itime, res_name)
+        obj.get_methods(itime, res_name)
+        obj.get_phase(itime, res_name)
+        obj.get_scale(itime, res_name)
+        obj.get_annotation(itime, res_name)
+        obj.get_case_flag(itime, res_name)
+        obj.get_default_legend_title(itime, res_name)
+        obj.get_default_phase(itime, res_name)
+        obj.get_default_scale(itime, res_name)
+        obj.get_default_arrow_scale(itime, res_name)
+        obj.get_case_flag(itime, res_name)
+        obj.get_fringe_result(itime, res_name)
+        all_ids, ids = obj.get_location_arrays()
+        obj.set_sidebar_args(
+             itime, res_name,
+             min_max_method='', # Absolute Max
+             transform='', # Material
+             methods_keys=None,
+             # unused
+             nodal_combine='', # Centroid
+        )
+
 
 
 class FakeCase:

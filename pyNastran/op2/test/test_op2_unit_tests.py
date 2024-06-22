@@ -887,12 +887,12 @@ class TestNX(Tester):
         log = get_logger(level='warning')
         exclude_results = None  #['*cplstn3*']
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=False, write_op2=False, write_hdf5=False, # IS_H5PY
+                write_f06=True, write_op2=False, write_hdf5=False, # IS_H5PY
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results,
                 short_stats=False,
-                compare=False, debug=False, binary_debug=True,
+                compare=False, debug=True, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
