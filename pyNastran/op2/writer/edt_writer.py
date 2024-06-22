@@ -781,7 +781,7 @@ def write_spline3(model: Union[BDF, OP2Geom], name: str,
         spline = model.splines[spline_id]
         usage = spline.usage.encode('ascii')
         datai = [spline.eid, spline.caero, spline.box_id, spline.components, usage]
-        fmt = 0endian + b'4i 8s'
+        fmt = endian + b'4i 8s'
         for nid, comp, coeff in zip(spline.nodes, spline.displacement_components, spline.coeffs):
             fmt += b'2if'
             datai.extend([nid, comp, coeff])
