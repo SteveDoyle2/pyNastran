@@ -1813,6 +1813,7 @@ EDT_MAP = {
     'SPLINE2': write_spline2,
     #'SPLINE3': write_spline3,
     'SPLINE4': write_spline4,
+    'AESURF': write_aesurf,
     'AESURFS': write_aesurfs,
     'AESTAT': write_aestat,
     'AELINK': write_aelink,
