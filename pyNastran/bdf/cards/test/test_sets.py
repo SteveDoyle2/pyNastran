@@ -14,9 +14,9 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 class TestSets(unittest.TestCase):
 
     def test_set1_01(self):
-        bdf = BDF(debug=False)
+        model = BDF(debug=False)
         lines = ['SET1,    1100,    100,     101']
-        card = bdf._process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -67,9 +67,9 @@ class TestSets(unittest.TestCase):
 
     def test_set2_01(self):
         """checks the SET2 card"""
-        bdf = BDF(debug=False)
+        model = BDF(debug=False)
         lines = ['SET2,     110,      10,   -0.1,    1.1,   -0.1,     1.1']
-        card = bdf._process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -81,20 +81,21 @@ class TestSets(unittest.TestCase):
         card2.write_card(size, 'dummy')
         card2.raw_fields()
 
-        card3 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
+        card3 = model.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
         card3.write_card(size, 'dummy')
         card3.raw_fields()
+        save_load_deck(model, run_test_bdf=False, run_remove_unused=False)
 
     def test_set2_02(self):
         """checks the SET2 card"""
-        bdf = BDF(debug=True)
+        model = BDF(debug=True)
 
-        set2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
-        caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1., [.0, 1., .0], 1.)
-        spline2 = bdf.add_spline2(10, 10, 10, 11, 110)
-        bdf.pop_parse_errors()
+        set2 = model.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
+        caero = model.add_caero4(10, 10, [.0, .0, .0], 1., [.0, 1., .0], 1.)
+        spline2 = model.add_spline2(10, 10, 10, 11, 110)
+        model.pop_parse_errors()
 
-        spline2.cross_reference(bdf)
+        spline2.cross_reference(model)
 
         self.assertEqual(spline2.setg_ref, set2)
         self.assertEqual(set2.macro_ref, caero)
@@ -112,6 +113,7 @@ class TestSets(unittest.TestCase):
         set3a.write_card()
         set3a.validate()
         set3b.validate()
+        save_load_deck(model, run_test_bdf=False, run_remove_unused=False)
         save_load_deck(model)
 
     def test_set3_02(self):

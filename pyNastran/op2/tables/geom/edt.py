@@ -1453,7 +1453,8 @@ class EDT:
             #ctype: good
             #area_op: good
             #sk_neps/olvpang;  Default=60.0
-            inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang, search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes = out
+            (inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang,
+             search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes) = out
             inter = reshape_bytes_block_size(inter_bytes, self.size)
             infor = reshape_bytes_block_size(infor_bytes, self.size)
             method = reshape_bytes_block_size(method_bytes, self.size)
@@ -1715,7 +1716,7 @@ class EDT:
                 desc = 'RBEin'
             elif desc_int == 6:
                 desc = 'RBEex'
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(desc_int)
 
             assert min(elements) > 0, elements
@@ -1961,7 +1962,6 @@ class EDT:
         9 A           RS Coefficient of the constraint relationship
         Words 7 thru 9 repeat until -1 occurs
         """
-
         spline3
         #structi = Struct(op2._endian + b'4i 8s 2if')
 
@@ -2005,7 +2005,7 @@ class EDT:
         10 NELEM        I Number of elements for FPS on x-axis
         11 MELEM        I Number of elements for FPS on y-axis
         12 FTYPE        I Radial interpolation function for METHOD=RIS  (not in NX)
-        13 RCORE       RS Radius of radial interpolation function      (not in NX)
+        13 RCORE       RS Radius of radial interpolation function       (not in NX)
 
         """
         op2: OP2Geom = self.op2

@@ -1413,7 +1413,7 @@ class EDT:
                 desc = 'RBEin'
             elif desc_int == 6:
                 desc = 'RBEex'
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(desc_int)
 
             assert min(elements) > 0, elements
@@ -1710,7 +1710,7 @@ class EDT:
         10 NELEM        I Number of elements for FPS on x-axis
         11 MELEM        I Number of elements for FPS on y-axis
         12 FTYPE        I Radial interpolation function for METHOD=RIS  (not in NX)
-        13 RCORE       RS Radius of radial interpolation function      (not in NX)
+        13 RCORE       RS Radius of radial interpolation function       (not in NX)
 
         """
         op2 = self.op2

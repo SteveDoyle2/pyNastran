@@ -40,7 +40,7 @@ elif qt_version == 'pyside6':
     import PySide6
 elif qt_version == 'pyqt6':
     import PyQt6
-else:
+else:  # pragma: no cover
     raise NotImplementedError(qt_version)
 
 from qtpy import QtCore
