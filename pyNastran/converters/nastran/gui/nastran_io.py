@@ -3567,7 +3567,8 @@ def _create_masses(gui: MainWindow,
                                nodes: np.ndarray) -> None:
         #if not create_secondary_actors:
             #return
-        if not gui.settings.nastran_settings.nastran_is_3d_bars_update:
+        nastran_settings: NastranSettings = gui.settings.nastran_settings
+        if not nastran_settings.is_3d_bars_update:
             return
         mass_grid = gui.alt_grids['conm2']
         update_mass_grid(model, mass_grid, points, node_ids, nodes)

@@ -17,6 +17,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 col_axis = 1
+DERIVATION_METHODS = list(derivation_map.keys())
+
+NODAL_COMBINE_TRANSFORMS = [
+    'Centroid', 'Absolute Max', 'Mean', 'Min', 'Max',
+    'Std. Dev.', 'Difference']
+NODAL_COMBINES = []
 class PlateStrainStressResults2(VectorResultsCommon):
     def __init__(self,
                  subcase_id: int,
@@ -265,6 +271,56 @@ class PlateStrainStressResults2(VectorResultsCommon):
             set_max_min=False)
         return obj
 
+    def set_centroid(self,
+                     top_bottom_both: str='Both',
+                     min_max_method: str='Absolute Max') -> None:
+        """elemental -> nodal"""
+        self._set_top_bottom_both(top_bottom_both)
+        self._set_derivation_method(min_max_method)
+        self.transform = 'Material'
+        self.nodal_combine = 'Centroid'
+
+    def set_corner(self,
+                   top_bottom_both: str='Both',
+                   min_max_method: str='Absolute Max',
+                   nodal_combine_method: str='Mean') -> None:
+        """elemental -> nodal"""
+        self._set_top_bottom_both(top_bottom_both)
+        self._set_derivation_method(min_max_method)
+        assert nodal_combine_method.title() != 'Centroid', f'nodal_combine_method={nodal_combine_method}'
+        self.transform = 'Material'
+        self._set_nodal_combine_method(nodal_combine_method)
+
+    def _set_top_bottom_both(self, top_bottom_both: str) -> None:
+        top_bottom_both = top_bottom_both.lower()
+        assert top_bottom_both in {'top', 'bottom', 'both'}, top_bottom_both
+        if top_bottom_both == 'both':
+            layer_indices = (0, 1)
+        elif top_bottom_both == 'bottom':
+            layer_indices = (0,)
+        elif top_bottom_both == 'top':
+            layer_indices = (1,)
+        self.layer_indices = layer_indices
+
+    def _set_nodal_combine_method(self, nodal_combine_method: str) -> None:
+       nodal_combine_method = nodal_combine_method.title()
+       assert nodal_combine_method in NODAL_COMBINE_TRANSFORMS, f'nodal_combine_method={nodal_combine_method!r}'
+       self.nodal_combine = nodal_combine_method
+
+    def _set_derivation_method(self, min_max_method: str) -> None:
+        """elemental -> nodal"""
+        min_max_method = min_max_method.title()
+        assert min_max_method in DERIVATION_METHODS, f'min_max_method={min_max_method!r}'
+        self.min_max_method = min_max_method
+
+    def set_location_both(self) -> None:
+        self.layer_indices = [0, 1]
+    def set_location_top(self) -> None:
+        self.layer_indices = [1]
+    def set_location_bottom(self) -> None:
+        self.layer_indices = [0]
+    def set_min_max_method(self, method: str) -> None:
+        self.min_max_method = method
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
         return out
@@ -340,7 +396,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         return True, out
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
-        return True, ['Centroid', 'Absolute Max', 'Mean', 'Min', 'Max', 'Std. Dev.', 'Difference']
+        return True, NODAL_COMBINE_TRANSFORMS
 
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:

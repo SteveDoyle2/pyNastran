@@ -168,11 +168,11 @@ class TestNastranGUIObjects(unittest.TestCase):
             #is_variable_data_format=False,
             require_results=True,
         )
-        assert obj.nodal_combine == 'Centroid', obj.nodal_combine
         str(obj)
         assert obj.is_complex == False
         itime = 0
         res_name = (itime, 2, 'header')
+        obj.get_fringe_vector_result(itime, res_name)
         obj.get_default_min_max(itime, res_name)
         obj.get_min_max(itime, res_name)
         obj.get_methods(itime, res_name)
@@ -185,8 +185,39 @@ class TestNastranGUIObjects(unittest.TestCase):
         obj.get_default_scale(itime, res_name)
         obj.get_default_arrow_scale(itime, res_name)
         obj.get_case_flag(itime, res_name)
-        obj.get_fringe_result(itime, res_name)
         all_ids, ids = obj.get_location_arrays()
+
+        obj.set_centroid(top_bottom_both='Both',
+                         min_max_method='Absolute Max')
+        assert obj.nodal_combine == 'Centroid', obj.nodal_combine
+        obj.get_fringe_result(itime, res_name)
+
+        obj.set_centroid(top_bottom_both='Top',
+                         min_max_method='Absolute Max')  # doesn't matter
+        assert obj.nodal_combine == 'Centroid', obj.nodal_combine
+        obj.get_fringe_result(itime, res_name)
+
+        obj.set_corner(top_bottom_both='both',
+                       min_max_method='absolute max',
+                       nodal_combine_method='mean')
+        assert obj.nodal_combine == 'Mean', obj.nodal_combine
+        obj.get_fringe_result(itime, res_name)
+
+        obj.set_corner(top_bottom_both='Both',
+                       min_max_method='Max',
+                       nodal_combine_method='Absolute Max')
+        obj.get_fringe_result(itime, res_name)
+
+        obj.set_corner(top_bottom_both='Both',
+                       min_max_method='Min',
+                       nodal_combine_method='Min')
+        obj.get_fringe_result(itime, res_name)
+
+        obj.set_corner(top_bottom_both='Both',
+                       min_max_method='Max',
+                       nodal_combine_method='Max')
+        obj.get_fringe_result(itime, res_name)
+
         obj.set_sidebar_args(
              itime, res_name,
              min_max_method='', # Absolute Max
@@ -196,6 +227,63 @@ class TestNastranGUIObjects(unittest.TestCase):
              nodal_combine='', # Centroid
         )
 
+    def test_solid_bending(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        model = read_bdf(bdf_filename, debug=False)
+        node_id = np.array(list(model.nodes), dtype='int32')
+        element_id = np.array(list(model.elements), dtype='int32')
+
+        model_results = read_op2(op2_filename, debug=None)
+        subcase_id = 1
+
+        cases = [
+            model_results.op2_results.stress.ctetra_stress[subcase_id],
+        ]
+        result = {2 : 'asdf'}
+        title = '???'
+        obj = SolidStrainStressResults2(
+            subcase_id,
+            model,
+            node_id,
+            element_id,
+            cases,
+            result,
+            title,
+            #data_format: str = '%g',
+            #is_variable_data_format=False,
+            #nlabels=None, labelsize=None, ncolors=None,
+            #colormap='',
+            #set_max_min=False,
+            #uname='SolidStressStrainResults2',
+        )
+        str(obj)
+        is_stress = True
+        obj = SolidStrainStressResults2.load_from_code(
+            subcase_id, model, model_results, element_id,
+            is_stress,
+            #is_variable_data_format=False,
+            require_results=True,
+        )
+
+        assert obj.is_complex == False
+        itime = 0
+        res_name = (itime, 2, 'header')
+        obj.get_fringe_vector_result(itime, res_name)
+        obj.get_default_min_max(itime, res_name)
+        obj.get_min_max(itime, res_name)
+        obj.get_methods(itime, res_name)
+        obj.get_phase(itime, res_name)
+        obj.get_scale(itime, res_name)
+        obj.get_annotation(itime, res_name)
+        obj.get_case_flag(itime, res_name)
+        obj.get_default_legend_title(itime, res_name)
+        obj.get_default_phase(itime, res_name)
+        obj.get_default_scale(itime, res_name)
+        obj.get_default_arrow_scale(itime, res_name)
+        obj.get_case_flag(itime, res_name)
+        all_ids, ids = obj.get_location_arrays()
+        obj.get_fringe_result(itime, res_name)
 
 
 class FakeCase:

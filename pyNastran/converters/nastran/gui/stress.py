@@ -25,7 +25,7 @@ from pyNastran.converters.nastran.gui.result_objects.layered_table_results impor
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import (
     PlateStrainStressResults2, get_real_plate_cases, plate_cases_to_iresult, _get_plates)
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import (
-    SolidStrainStressResults2, solid_cases_to_iresult)
+    SolidStrainStressResults2, get_real_solid_cases, solid_cases_to_iresult, _get_solids)
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
 
@@ -1282,22 +1282,16 @@ def get_solid_stress_strains2(cases: CasesDict,
     """
     if not use_new_sidebar_objects:  # pragma: no cover
         return icase
-    solids, word, subcase_id, analysis_code = _get_solids(
-        model, key, is_stress, prefix)
 
-    solid_cases = []
-    for solid_case in solids:
-        if solid_case.is_complex:
-            continue
-        solid_eids = np.unique(solid_case.element_node[:, 0])
-        common_eids = np.intersect1d(element_id, solid_eids)
-        if len(common_eids) == 0:
-            continue
-        solid_cases.append(solid_case)
+    solid_cases, subcase_id = get_real_solid_cases(
+        element_id, model,
+        key, is_stress, prefix,
+        require_results=False)
 
     if len(solid_cases) == 0:
         return icase
 
+    solid_case = solid_cases[0]
     iresult_to_title_annotation_map, word, max_sheari = solid_cases_to_iresult(solid_cases, is_stress)
 
     if not use_new_terms:
@@ -1336,41 +1330,6 @@ def get_solid_stress_strains2(cases: CasesDict,
             icase += 1
     return icase
 
-def _get_solids(results: OP2,
-                key,
-                is_stress: bool,
-                prefix: str) -> tuple[str, list, int, int]:
-    analysis_code = key[1]
-    #print("***stress eids=", eids)
-    subcase_id = key[0]
-    #if prefix == 'modal_contribution':
-        #results = model.op2_results.modal_contribution
-        #preword = 'Modal Contribution '
-    #elif prefix == '':
-        #results = model
-        #preword = ''
-    #else:  # pragma: no cover
-        #raise NotImplementedError(prefix)
-
-    if is_stress:
-        stress = results.op2_results.stress
-        cards = [
-            stress.ctetra_stress, stress.cpenta_stress, stress.chexa_stress, # stress.cpyram_stress,
-        ]
-        word = 'Stress'
-    else:
-        strain = results.op2_results.strain
-        cards = [
-            strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
-        ]
-        word = 'Strain'
-
-    cards2 = []
-    for result in cards:
-        if key not in result:
-            continue
-        cards2.append(result[key])
-    return cards2, word, subcase_id, analysis_code
 
 @nocrash_log
 def get_solid_stress_strains(cases: CasesDict,

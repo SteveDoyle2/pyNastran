@@ -12,6 +12,7 @@ from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_3d, max_shear
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
     CaseTuple = tuple[int, int, str]
 
@@ -152,6 +153,52 @@ class SolidStrainStressResults2(VectorResultsCommon):
         else:
             self.headers = ['SolidStrain2'] * ntimes
         str(self)
+
+    @classmethod
+    def load_from_code(cls,
+                       subcase_id: int,
+                       model: BDF,
+                       model_results: OP2,
+                       element_id: np.ndarray,
+                       is_stress: bool,
+                       #is_variable_data_format: bool=False,
+                       #prefix='stress',
+                       require_results: bool=True):
+        """the intention of this method is to not use the gui"""
+        solid_cases, subcase_id = get_real_solid_cases(
+            element_id,
+            model_results,
+            subcase_id,
+            is_stress=True,
+            prefix='',
+            require_results=require_results)
+
+        # get the xyzs
+        out = model.get_xyz_in_coord_array(
+            cid=0, fdtype='float64', idtype='int64')
+        nid_cp_cd, xyz_cid, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
+        node_id = nid_cp_cd[:, 0]
+        #------------------------------------------
+        out = solid_cases_to_iresult(solid_cases, is_stress)
+        iresult_to_title_annotation_map, word, max_sheari = out
+
+        #------------------------------------------
+        title = 'title'
+        obj = SolidStrainStressResults2(
+            subcase_id,
+            model,
+            node_id,
+            element_id,
+            solid_cases,
+            iresult_to_title_annotation_map, title,
+            is_variable_data_format=False,  # ???
+            set_max_min=False)
+        # data_format: str = '%g',
+        # nlabels = None, labelsize = None, ncolors = None,
+        # colormap: str = '',
+        # uname: str = 'SolidStressStrainResults2'):
+
+        return obj
 
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         layers = list(self.layer_map.values())
@@ -624,7 +671,6 @@ def get_solid_result(result: dict[Union[int, str], Any],
 def setup_centroid_node_data(cases: list[RealSolidArray],
                              element_id: np.ndarray) -> tuple[np.ndarray, np.ndarray,
                                                               np.ndarray, np.ndarray]:
-
     # setup the node mapping
     centroid_data_list = []
     centroid_elements_list = []
@@ -731,3 +777,65 @@ def solid_cases_to_iresult(solid_cases: list,
         }
         word = 'Strain'
     return iresult_to_title_annotation_map, word, max_sheari
+
+
+def get_real_solid_cases(element_id: np.ndarray,
+                         model: OP2,
+                         key: int,
+                         is_stress: bool=True,
+                         prefix: str='',
+                         require_results: bool=True) -> tuple[list, int]:
+    assert isinstance(require_results, bool), require_results
+    solids, word, subcase_id, analysis_code = _get_solids(
+        model, key, is_stress, prefix)
+
+    solid_cases = []
+    for solid_case in solids:
+        if solid_case.is_complex:
+            continue
+        solid_eids = np.unique(solid_case.element_node[:, 0])
+        common_eids = np.intersect1d(element_id, solid_eids)
+        if len(common_eids) == 0:
+            continue
+        solid_cases.append(solid_case)
+    return solid_cases, subcase_id
+
+def _get_solids(results: OP2,
+                key,
+                is_stress: bool,
+                prefix: str) -> tuple[str, list, int, int]:
+    if isinstance(key, tuple):
+        analysis_code = key[1]
+        #print("***stress eids=", eids)
+        subcase_id = key[0]
+    else:
+        subcase_id = key
+        analysis_code = -1
+    #if prefix == 'modal_contribution':
+        #results = model.op2_results.modal_contribution
+        #preword = 'Modal Contribution '
+    #elif prefix == '':
+        #results = model
+        #preword = ''
+    #else:  # pragma: no cover
+        #raise NotImplementedError(prefix)
+
+    if is_stress:
+        stress = results.op2_results.stress
+        cards = [
+            stress.ctetra_stress, stress.cpenta_stress, stress.chexa_stress, # stress.cpyram_stress,
+        ]
+        word = 'Stress'
+    else:
+        strain = results.op2_results.strain
+        cards = [
+            strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
+        ]
+        word = 'Strain'
+
+    cards2 = []
+    for result in cards:
+        if key not in result:
+            continue
+        cards2.append(result[key])
+    return cards2, word, subcase_id, analysis_code
