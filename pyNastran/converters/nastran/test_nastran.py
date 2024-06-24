@@ -27,7 +27,7 @@ from pyNastran.converters.nastran.gui.result_objects.layered_table_results impor
 from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
-from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2, DERIVATION_METHODS as shell_derivation_methods
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 
 
@@ -147,6 +147,28 @@ class TestNastranGUIObjects(unittest.TestCase):
         arrow_scale = force_obj.get_default_arrow_scale(itime, res_name)
         assert np.allclose(arrow_scale, 1.3849555), arrow_scale
 
+        force_obj.get_imin_imax(itime, res_name)
+
+        force_obj.get_default_phase(itime, res_name)
+        force_obj.set_phase(itime, res_name, 90.)
+
+        force_obj.set_data_format(itime, res_name, '%g')
+        force_obj.get_default_data_format(itime, res_name)
+
+        force_obj.get_nlabels_labelsize_ncolors_colormap(itime, res_name)
+        force_obj.set_nlabels_labelsize_ncolors_colormap(
+            itime, res_name, nlabels=8, labelsize=8, ncolors=8, colormap='jet')
+
+        force_obj.get_default_legend_title(itime, res_name)
+        force_obj.get_annotation(itime, res_name)
+
+        force_obj.get_fringe_result_dense(itime, res_name)
+        force_obj.get_fringe_vector_result(itime, res_name)
+
+        force_obj.get_scale(itime, res_name)
+        force_obj.get_arrow_scale(itime, res_name)
+        force_obj.set_arrow_scale(itime, res_name, 4.0)
+
     def test_plate_wingbox(self):
         dirname = MODEL_PATH / 'wingbox'
         bdf_filename = dirname / 'wingbox_stitched_together-000.bdf'
@@ -160,6 +182,15 @@ class TestNastranGUIObjects(unittest.TestCase):
         eid_to_nid_map = {}
         for eid, elem in model.elements.items():
             eid_to_nid_map[eid] = elem.nodes
+
+        is_stress = False
+        obj2 = PlateStrainStressResults2.load_from_code(
+            subcase_id, model, model_results, element_id,
+            is_stress, eid_to_nid_map,
+            #is_variable_data_format=False,
+            require_results=True,
+        )
+        str(obj2)
 
         is_stress = True
         obj = PlateStrainStressResults2.load_from_code(
@@ -187,12 +218,18 @@ class TestNastranGUIObjects(unittest.TestCase):
         obj.get_case_flag(itime, res_name)
         all_ids, ids = obj.get_location_arrays()
 
-        obj.set_centroid(top_bottom_both='Both',
-                         min_max_method='Absolute Max')
+        for method in shell_derivation_methods:
+            obj.set_centroid(top_bottom_both='Both',
+                             min_max_method=method)
+            assert obj.nodal_combine == 'Centroid', obj.nodal_combine
+            obj.get_fringe_result(itime, res_name)
+
+        obj.set_centroid(top_bottom_both='Top',
+                         min_max_method='Absolute Max')  # doesn't matter
         assert obj.nodal_combine == 'Centroid', obj.nodal_combine
         obj.get_fringe_result(itime, res_name)
 
-        obj.set_centroid(top_bottom_both='Top',
+        obj.set_centroid(top_bottom_both='Bottom',
                          min_max_method='Absolute Max')  # doesn't matter
         assert obj.nodal_combine == 'Centroid', obj.nodal_combine
         obj.get_fringe_result(itime, res_name)
@@ -203,20 +240,11 @@ class TestNastranGUIObjects(unittest.TestCase):
         assert obj.nodal_combine == 'Mean', obj.nodal_combine
         obj.get_fringe_result(itime, res_name)
 
-        obj.set_corner(top_bottom_both='Both',
-                       min_max_method='Max',
-                       nodal_combine_method='Absolute Max')
-        obj.get_fringe_result(itime, res_name)
-
-        obj.set_corner(top_bottom_both='Both',
-                       min_max_method='Min',
-                       nodal_combine_method='Min')
-        obj.get_fringe_result(itime, res_name)
-
-        obj.set_corner(top_bottom_both='Both',
-                       min_max_method='Max',
-                       nodal_combine_method='Max')
-        obj.get_fringe_result(itime, res_name)
+        for method in shell_derivation_methods:
+            obj.set_corner(top_bottom_both='Both',
+                           min_max_method=method,
+                           nodal_combine_method=method)
+            obj.get_fringe_result(itime, res_name)
 
         obj.set_sidebar_args(
              itime, res_name,
@@ -285,6 +313,44 @@ class TestNastranGUIObjects(unittest.TestCase):
         all_ids, ids = obj.get_location_arrays()
         obj.get_fringe_result(itime, res_name)
 
+    def test_layered_table(self):
+        """tests LayeredTableResults"""
+        subcase_id = 1
+        eid_max = 5
+        nlayers = 2
+        headers = ['asdf']
+        eids = np.arange(1, eid_max + 1)
+        ntimes = 1
+        neids = eid_max
+        nmethods = 2
+        scalars = np.random.random((ntimes, neids, nlayers, nmethods))
+        methods = ['a', 'b']
+        obj = LayeredTableResults(subcase_id, headers, eids, eid_max, scalars,
+                 methods,
+                 data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 set_max_min=False, uname='LayeredTableResults')
+        str(obj)
+        itime = 0
+        ilayer = 1
+        imethod = 1
+        header = 'asdf'
+        i = 0
+        res_name = (itime, ilayer, imethod, header)
+        obj.get_fringe_result(i, res_name)
+
+        obj.get_fringe_vector_result(itime, res_name)
+        obj.get_default_min_max(itime, res_name)
+        obj.get_min_max(itime, res_name)
+        obj.get_methods(itime, res_name)
+        obj.get_phase(itime, res_name)
+        obj.get_scale(itime, res_name)
+        obj.get_annotation(itime, res_name)
+        obj.get_default_legend_title(itime, res_name)
+        obj.get_default_phase(itime, res_name)
+        obj.get_default_scale(itime, res_name)
+        obj.get_default_arrow_scale(itime, res_name)
+        #ll_ids, ids = obj.get_location_arrays()
 
 class FakeCase:
     def __init__(self, times: np.ndarray):

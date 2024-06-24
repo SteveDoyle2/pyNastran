@@ -6,11 +6,11 @@ from pyNastran.gui.gui_objects.table import Table
 
 
 class LayeredTableResults(Table):
-    def __init__(self, subcase_id, headers, eids, eid_max, scalars,
+    def __init__(self, subcase_id: int, headers, eids, eid_max: int, scalars,
                  methods,
                  data_formats=None,
-                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 set_max_min=False, uname='LayeredTableResults'):
+                 nlabels=None, labelsize=None, ncolors=None, colormap: str='jet',
+                 set_max_min=False, uname: str='LayeredTableResults'):
         """this is a centroidal result
 
         Parameters

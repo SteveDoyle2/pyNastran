@@ -274,7 +274,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
     def set_centroid(self,
                      top_bottom_both: str='Both',
                      min_max_method: str='Absolute Max') -> None:
-        """elemental -> nodal"""
+        """elemental"""
         self._set_top_bottom_both(top_bottom_both)
         self._set_derivation_method(min_max_method)
         self.transform = 'Material'
@@ -313,14 +313,6 @@ class PlateStrainStressResults2(VectorResultsCommon):
         assert min_max_method in DERIVATION_METHODS, f'min_max_method={min_max_method!r}'
         self.min_max_method = min_max_method
 
-    def set_location_both(self) -> None:
-        self.layer_indices = [0, 1]
-    def set_location_top(self) -> None:
-        self.layer_indices = [1]
-    def set_location_bottom(self) -> None:
-        self.layer_indices = [0]
-    def set_min_max_method(self, method: str) -> None:
-        self.min_max_method = method
     def _get_default_tuple_indices(self):
         out = tuple(np.array(self._get_default_layer_indicies()) - 1)
         return out
@@ -1068,7 +1060,6 @@ def get_real_plate_cases(element_id: np.ndarray,
         # if result:
         # print(f'keys[{iplate}] = {result.keys()}')
         if key not in result:
-            print(f'key={key!r} not found in result')
             continue
         plate_case = result[key]
         if plate_case.is_complex:
