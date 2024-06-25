@@ -6,7 +6,9 @@ from pyNastran.gui.gui_objects.table import Table
 
 
 class LayeredTableResults(Table):
-    def __init__(self, subcase_id: int, headers, eids, eid_max: int, scalars,
+    def __init__(self, subcase_id: int, headers: list[str],
+                 eids: np.ndarray, eid_max: int,
+                 scalars: np.ndarray,
                  methods,
                  data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap: str='jet',

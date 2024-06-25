@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.femutils.utils import pivot_table, unique2d
+from pyNastran.femutils.utils import unique2d # pivot_table,
 
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.op2.op2_interface.op2_classes import (
@@ -20,13 +20,15 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidAr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
 
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
-from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.layered_table_results import (
+    LayeredTableResults)
 
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import (
     PlateStrainStressResults2, get_real_plate_cases, plate_cases_to_iresult, _get_plates)
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import (
     SolidStrainStressResults2, get_real_solid_cases, solid_cases_to_iresult, _get_solids)
-from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import (
+    CompositeStrainStressResults2, get_composite_methods, _composite_method_map)
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
 
 if TYPE_CHECKING: # pragma: no cover
@@ -871,6 +873,7 @@ def get_plate_stress_strains2(cases: CasesDict,
 def _stack_composite_results(model: OP2, log: SimpleLogger,
                              is_stress: bool,
                              key=None):
+
     if is_stress:
         stress = model.op2_results.stress
         case_map = {
@@ -1026,19 +1029,7 @@ def get_composite_plate_stress_strains2(cases: CasesDict,
         if key not in keys_map:
             keys_map[key] = value
 
-    case = cases2[key]
-    case_headers = case.get_headers()
-    word, method_map = _composite_method_map(is_stress)
-    methods = [method_map[headeri] for headeri in case_headers]
-
-    # verify we don't crash when we try to pivot later
-    # why does this happen???
-    _datai = case.data[0, :, 0]
-    _eids = case.element_layer[:, 0]
-    _layer = case.element_layer[:, 1]
-    unused_mytable, unused_myrows = pivot_table(_datai, _eids, _layer, shape=1)
-    utable = unique2d(case.element_layer)
-    assert np.array_equal(case.element_layer, utable)
+    case, method_map, methods, word = get_composite_methods(key, cases2, is_stress)
 
     if len(case._times) != case.data.shape[0]:
         return icase
@@ -1099,6 +1090,7 @@ def get_composite_plate_stress_strains(cases: CasesDict,
     """
     if not use_old_sidebar_objects:  # pragma: no cover
         return icase
+
     case_map, keys_map2, cases2 = _stack_composite_results(
         model, log, is_stress, key=key)
     if len(case_map) == 0:
@@ -1146,7 +1138,7 @@ def get_composite_plate_stress_strains(cases: CasesDict,
 
     case_headers = case.get_headers()
     #print('case_headers =', case_headers, vm_word)
-    word, method_map = _composite_method_map(is_stress)
+    method_map, word = _composite_method_map(is_stress)
     methods = [method_map[headeri] for headeri in case_headers]
 
     #headersi = case.get_headers()
@@ -1218,42 +1210,6 @@ def get_composite_plate_stress_strains(cases: CasesDict,
                 icase += 1
     #assert len(cases) == icase
     return icase
-
-def _composite_method_map(is_stress: bool,
-                          ) -> tuple[str, dict[str, str]]:
-    if is_stress:
-        word = 'Stress'
-        method_map = {
-            #'fiber_distance' : 'FiberDist.',
-            'o11' : 'Stress 11',
-            'o22' : 'Stress 22',
-            't12' : 'Stress 12',
-            't1z' : 'Stress 1Z',
-            't2z' : 'Stress 2Z',
-            'angle' : 'Theta',
-            'major' : 'Max Principal',
-            'minor' : 'Min Principal',
-            'max_shear' : 'Max Shear',
-            #'von_mises' : 'von Mises',
-        }
-    else:
-        word = 'Strain'
-        method_map = {
-            #'fiber_distance' : 'FiberDist.',
-            'e11' : 'Strain 11',
-            'e22' : 'Strain 22',
-            'e12' : 'Strain 12',
-            'e1z' : 'Strain 1Z',
-            'e2z' : 'Strain 2Z',
-            'angle' : 'Theta',
-            'major' : 'Max Principal',
-            'minor' : 'Min Principal',
-            'max_shear' : 'Max Shear',
-            #'von_mises' : 'von Mises',
-        }
-    #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
-    #methods = case_headers
-    return word, method_map
 
 @nocrash_log
 def get_solid_stress_strains2(cases: CasesDict,

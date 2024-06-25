@@ -24,9 +24,10 @@ from pyNastran.converters.tecplot.tecplot_to_nastran import nastran_tables_to_te
 
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
+from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2, _composite_method_map
+
 from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
-from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2, DERIVATION_METHODS as shell_derivation_methods
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 
@@ -39,6 +40,9 @@ RED = (1., 0., 0.)
 
 class TestNastranGUIObjects(unittest.TestCase):
     """tests:
+    - real
+     - CompositeStrainStressResults2
+     - LayeredTableResults (old)
     - complex
      - DisplacementResults2
      - ForceResults2
@@ -313,8 +317,68 @@ class TestNastranGUIObjects(unittest.TestCase):
         all_ids, ids = obj.get_location_arrays()
         obj.get_fringe_result(itime, res_name)
 
+    def test_layered_table2(self):
+        """tests CompositeStrainStressResults2"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        model = read_bdf(bdf_filename, debug=False)
+
+        #out = model.get_displacement_index_xyz_cp_cd()
+        #icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        #node_ids = nid_cp_cd[:, 0]
+        #xyz_cid0 = xyz_cp
+
+        model_results = read_op2(op2_filename, debug=None)
+        title = 'title'
+        subcase_id = 1
+        element_id = np.array(list(model.elements))
+        result = {
+            0: 'aaa',
+            1: 'bbb',
+        }
+        case = model_results.op2_results.strain.cquad4_composite_strain[subcase_id]
+        obj = CompositeStrainStressResults2(
+            subcase_id,
+            model_results,
+            element_id, # : np.ndarray
+            case, # RealCompositePlateArray
+            result, # str
+            title, # : str
+            data_format='%g',
+            is_variable_data_format=False,
+            nlabels=None, labelsize=None, ncolors=None,
+            colormap='',
+            set_max_min=False,
+            uname='CompositeStressResults2')
+        str(obj)
+
+        itime = 0
+        ilayer = 1
+        #imethod = 1
+        header = 'asdf'
+        i = 0
+        res_name = (itime, ilayer, header)
+        obj.get_fringe_result(i, res_name)
+
+        obj.get_fringe_vector_result(itime, res_name)
+        obj.get_default_min_max(itime, res_name)
+        obj.get_min_max(itime, res_name)
+        obj.get_methods(itime, res_name)
+        obj.get_phase(itime, res_name)
+        obj.get_scale(itime, res_name)
+        obj.get_annotation(itime, res_name)
+        obj.get_default_legend_title(itime, res_name)
+        obj.get_default_phase(itime, res_name)
+        obj.get_default_scale(itime, res_name)
+        obj.get_default_arrow_scale(itime, res_name)
+
+
     def test_layered_table(self):
         """tests LayeredTableResults"""
+
+        word, method_map = _composite_method_map(is_stress=True)
+        word, method_map = _composite_method_map(is_stress=False)
+
         subcase_id = 1
         eid_max = 5
         nlayers = 2
@@ -331,6 +395,7 @@ class TestNastranGUIObjects(unittest.TestCase):
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='LayeredTableResults')
         str(obj)
+
         itime = 0
         ilayer = 1
         imethod = 1

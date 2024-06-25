@@ -1,10 +1,9 @@
 from __future__ import annotations
-from collections import defaultdict
 import numpy as np
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
-from pyNastran.femutils.utils import pivot_table, abs_nan_min_max, safe_nanstd # abs_min_max
+from pyNastran.femutils.utils import pivot_table, unique2d, abs_nan_min_max, safe_nanstd # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from .vector_results import VectorResultsCommon, filter_ids
@@ -25,7 +24,7 @@ class CompositeStrainStressResults2(VectorResultsCommon):
                  model: BDF,
                  element_id: np.ndarray,
                  case: RealCompositePlateArray,
-                 result: str,
+                 result: dict[int, str],
                  title: str,
                  #dim_max: float=1.0,
                  data_format: str='%g',
@@ -69,37 +68,7 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         """
         title = ''
         ntitles = 9
-        if case.is_stress:
-            iresult_map = {
-                0: 'o11',
-                1: 'o22',
-                3: 't12',
-                4: 't1z',
-                5: 't2z',
-                6: 'angle',
-                7: 'major',
-                8: 'minor',
-                9: 'von_mises',
-
-                10: 'max_shear',
-                11: 'fiber_distance',
-                12: 'fiber_curvature',
-            }
-        else:
-            iresult_map = {
-                0: 'e11',
-                1: 'e22',
-                3: 'e12',
-                4: 'e1z',
-                5: 'e2z',
-                6: 'angle',
-                7: 'major',
-                8: 'minor',
-                9: 'von_mises',
-                10: 'max_shear',
-                11: 'fiber_distance',
-                12: 'fiber_curvature',
-            }
+        iresult_map = _get_iresult_map(case.is_stress)
 
         VectorResultsCommon.__init__(
             self, subcase_id, title,
@@ -437,7 +406,13 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #title = f'{self.title} {method}'
         results = list(self.result.values())
-        return results[iresult]
+        try:
+            result = results[iresult]
+        except IndexError:  # pragma: no cover
+            print(results)
+            print(iresult)
+            raise
+        return result
 
     def _get_real_data(self, case_tuple: CaseTuple) -> np.ndarray:
         eids, data = self._get_fringe_sparse_centroidal(case_tuple)
@@ -668,3 +643,91 @@ class CompositeStrainStressResults2(VectorResultsCommon):
         msg += f'    data_format={self.data_formats!r}\n'
         msg += f'    uname={self.uname!r}\n'
         return msg
+
+def get_composite_methods(key: int,
+                          cases2: dict[int, Any],
+                          is_stress: bool) -> tuple[Any, dict[str, str], list[str], str]:
+    case = cases2[key]
+    case_headers = case.get_headers()
+    method_map, word = _composite_method_map(is_stress)
+    methods = [method_map[headeri] for headeri in case_headers]
+
+    # verify we don't crash when we try to pivot later
+    # why does this happen???
+    _datai = case.data[0, :, 0]
+    _eids = case.element_layer[:, 0]
+    _layer = case.element_layer[:, 1]
+    unused_mytable, unused_myrows = pivot_table(_datai, _eids, _layer, shape=1)
+    utable = unique2d(case.element_layer)
+    assert np.array_equal(case.element_layer, utable)
+    return case, method_map, methods, word
+
+def _composite_method_map(is_stress: bool,
+                          ) -> tuple[dict[str, str], str]:
+    if is_stress:
+        word = 'Stress'
+        method_map = {
+            #'fiber_distance' : 'FiberDist.',
+            'o11' : 'Stress 11',
+            'o22' : 'Stress 22',
+            't12' : 'Stress 12',
+            't1z' : 'Stress 1Z',
+            't2z' : 'Stress 2Z',
+            'angle' : 'Theta',
+            'major' : 'Max Principal',
+            'minor' : 'Min Principal',
+            'max_shear' : 'Max Shear',
+            #'von_mises' : 'von Mises',
+        }
+    else:
+        word = 'Strain'
+        method_map = {
+            #'fiber_distance' : 'FiberDist.',
+            'e11' : 'Strain 11',
+            'e22' : 'Strain 22',
+            'e12' : 'Strain 12',
+            'e1z' : 'Strain 1Z',
+            'e2z' : 'Strain 2Z',
+            'angle' : 'Theta',
+            'major' : 'Max Principal',
+            'minor' : 'Min Principal',
+            'max_shear' : 'Max Shear',
+            #'von_mises' : 'von Mises',
+        }
+    #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
+    #methods = case_headers
+    return method_map, word
+
+def _get_iresult_map(is_stress: bool) -> dict[str, str]:
+    if is_stress:
+        iresult_map = {
+            0: 'o11',
+            1: 'o22',
+            3: 't12',
+            4: 't1z',
+            5: 't2z',
+            6: 'angle',
+            7: 'major',
+            8: 'minor',
+            9: 'von_mises',
+
+            10: 'max_shear',
+            11: 'fiber_distance',
+            12: 'fiber_curvature',
+        }
+    else:
+        iresult_map = {
+            0: 'e11',
+            1: 'e22',
+            3: 'e12',
+            4: 'e1z',
+            5: 'e2z',
+            6: 'angle',
+            7: 'major',
+            8: 'minor',
+            9: 'von_mises',
+            10: 'max_shear',
+            11: 'fiber_distance',
+            12: 'fiber_curvature',
+        }
+    return iresult_map
