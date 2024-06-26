@@ -347,7 +347,7 @@ def set_spc_mpc_suport_grid(model: BDF,
     spc_to_subcase = defaultdict(list)
     mpc_to_subcase = defaultdict(list)
     #suport1_to_subcase = defaultdict(list)
-    if 0:
+    if 0:  # pragma: no cover
         for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
                 spc_id = subcase.get_parameter('SPC')[0]
@@ -378,23 +378,24 @@ def set_spc_mpc_suport_grid(model: BDF,
                 spc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
             spc_names += self._fill_spc(spc_id, spc_name, model, nid_to_pid_map)
 
-        for mpc_id in chain(model.mpcs, model.mpcadds):
-            depname = 'MPC=%i_dependent' % mpc_id
-            indname = 'MPC=%i_independent' % mpc_id
-            linename = 'MPC=%i_lines' % mpc_id
-            if mpc_id in mpc_to_subcase:
-                subcases = mpc_to_subcase[mpc_id]
-                mpc_name = ': Subcases='
-                mpc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
-                depname += mpc_name
-                indname += mpc_name
-                linename += mpc_name
+        if nastran_settings.is_rbe:
+            for mpc_id in chain(model.mpcs, model.mpcadds):
+                depname = 'MPC=%i_dependent' % mpc_id
+                indname = 'MPC=%i_independent' % mpc_id
+                linename = 'MPC=%i_lines' % mpc_id
+                if mpc_id in mpc_to_subcase:
+                    subcases = mpc_to_subcase[mpc_id]
+                    mpc_name = ': Subcases='
+                    mpc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
+                    depname += mpc_name
+                    indname += mpc_name
+                    linename += mpc_name
 
-        lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
-        lines2 = list(lines)
-        mpc_names += self._fill_dependent_independent(
-            mpc_id, model, lines2,
-            depname, indname, linename, idtype)
+            lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
+            lines2 = list(lines)
+            mpc_names += self._fill_dependent_independent(
+                mpc_id, model, lines2,
+                depname, indname, linename, idtype)
 
     if 0:  # pragma: no cover
         for subcase_id, subcase in sorted(model.subcases.items()):
@@ -420,7 +421,7 @@ def set_spc_mpc_suport_grid(model: BDF,
 
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
-                    if nmpcs:
+                    if nmpcs and is_rbe:
                         lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
                         lines2 = list(lines)
                         depname = 'mpc_id=%i_dependent' % mpc_id

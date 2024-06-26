@@ -27,6 +27,8 @@ if IS_MATPLOTLIB:
     plt.switch_backend('Agg')
 
 import pyNastran
+from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 from pyNastran.f06.utils import (
     split_float_colons, split_int_colon,
     cmd_line_plot_flutter, cmd_line as cmd_line_f06)
@@ -479,6 +481,19 @@ class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.bdf')
+        caero_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm_caero.bdf')
+        model = read_bdf(bdf_filename)
+        export_caero_mesh(
+            model,
+            caero_bdf_filename=caero_filename,
+            is_subpanel_model=True,
+            pid_method='caero',
+            write_panel_xyz=True)
+        model2 = read_bdf(bdf_filename)
+        #print(f'nnodes = {len(model2.nodes)}')
+        #print(f'nelements = {len(model2.elements)}')
+
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
         trim_results = read_f06_trim(f06_filename,
                                      log=None, nlines_max=1_000_000, debug=None)
@@ -487,6 +502,16 @@ class TestF06Utils(unittest.TestCase):
         assert len(trim_results.controller_state.keys()) == 2
         assert len(trim_results.trim_variables.keys()) == 2
         assert len(trim_results.structural_monitor_loads.keys()) == 2
+        keys = list(trim_results.aero_pressure)
+        key0 = keys[0]
+        #print(f'keys = {list(trim_results.aero_pressure.keys())}')
+        eids, press = trim_results.aero_pressure[key0]
+        nids, force = trim_results.aero_force[key0]
+        #print(eids)
+        #print(press)
+        #print(f'npressure = {len(press)}')
+        #print(f'nforce = {len(force)}')
+
 
     def test_f06_trim_aerobeam(self):
         """tests read_f06_trim"""

@@ -1,3 +1,4 @@
+import os.path
 import sys
 from cpylog import SimpleLogger
 import pyNastran
@@ -47,8 +48,9 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     caero_bdf_filename = data['--output']
+    base = os.path.splitext(bdf_filename)
     if caero_bdf_filename is None:
-        caero_bdf_filename = 'caero.bdf'
+        caero_bdf_filename = base + '.caero.bdf'
     is_subpanel_model = data['--subpanels']
 
     pid_method = 'aesurf'

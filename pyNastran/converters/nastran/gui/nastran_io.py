@@ -8,7 +8,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -1215,6 +1215,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         TODO: consider changing the varying ids to huh???
         """
         gui: MainWindow = self.gui
+        nastran_settings: NastranSettings = gui.settings.nastran_settings
         spc_names = []
         mpc_names = []
         suport_names = []
@@ -1245,7 +1246,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if 'MPC' in subcase:
                 mpc_id = subcase.get_parameter('MPC')[0]
                 if mpc_id is not None:
-
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
@@ -1259,23 +1259,24 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 spc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
             spc_names += self._fill_spc(spc_id, spc_name, model, nid_to_pid_map)
 
-        for mpc_id in chain(model.mpcs, model.mpcadds):
-            depname = 'MPC=%i_dependent' % mpc_id
-            indname = 'MPC=%i_independent' % mpc_id
-            linename = 'MPC=%i_lines' % mpc_id
-            if mpc_id in mpc_to_subcase:
-                subcases = mpc_to_subcase[mpc_id]
-                mpc_name = ': Subcases='
-                mpc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
-                depname += mpc_name
-                indname += mpc_name
-                linename += mpc_name
+        if nastran_settings.is_rbe:
+            for mpc_id in chain(model.mpcs, model.mpcadds):
+                depname = f'MPC={mpc_id:d}_dependent'
+                indname = f'MPC={mpc_id:d}_independent'
+                linename = f'MPC={mpc_id:d}_lines'
+                if mpc_id in mpc_to_subcase:
+                    subcases = mpc_to_subcase[mpc_id]
+                    mpc_name = ': Subcases='
+                    mpc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
+                    depname += mpc_name
+                    indname += mpc_name
+                    linename += mpc_name
 
-            lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
-            lines2 = list(lines)
-            mpc_names += self._fill_dependent_independent(
-                mpc_id, model, lines2,
-                depname, indname, linename, idtype)
+                lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
+                lines2 = list(lines)
+                mpc_names += self._fill_dependent_independent(
+                    mpc_id, model, lines2,
+                    depname, indname, linename, idtype)
 
         if 0:  # pragma: no cover
             for subcase_id, subcase in sorted(model.subcases.items()):
@@ -1339,8 +1340,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
-        settings: NastranSettings = gui.settings.nastran_settings
-        if len(rigid_lines):
+        if nastran_settings.is_rbe and len(rigid_lines):
             # handle RBEs without MPCs
             mpc_id = 0
             depname = 'rigid_dependent'

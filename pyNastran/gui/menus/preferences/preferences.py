@@ -144,6 +144,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_bar_axes = data['nastran_is_bar_axes']
         self._nastran_create_coords = data['nastran_create_coords']
         self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
+        self._nastran_is_rbe = data['nastran_is_rbe']
 
         self._nastran_stress = data['nastran_stress']
         self._nastran_plate_stress = data['nastran_plate_stress']
@@ -373,6 +374,10 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
         self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
         self.nastran_is_shell_mcids_checkbox.setChecked(self._nastran_is_shell_mcids)
+
+        self.nastran_is_rbe_checkbox = QCheckBox('RBEs')
+        self.nastran_is_rbe_checkbox.setToolTip('Create MPC/RBE2/RBE3 dependent and indepdent nodes and lines')
+        self.nastran_is_rbe_checkbox.setChecked(self._nastran_is_rbe)
 
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
@@ -685,6 +690,9 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_shell_mcids_checkbox, irow, 0)
         irow += 1
 
+        grid_nastran.addWidget(self.nastran_is_rbe_checkbox, irow, 0)
+        irow += 1
+
         grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
         grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 1)
         irow += 1
@@ -766,6 +774,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
         self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
         self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
+        self.nastran_is_rbe_checkbox.clicked.connect(partial(on_nastran, self, 'is_rbe'))
 
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)

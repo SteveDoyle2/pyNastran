@@ -114,6 +114,7 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_bar_axes',
     'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
     'nastran_is_shell_mcids',
+    'nastran_is_rbe',
 
     'nastran_displacement', 'nastran_velocity', 'nastran_acceleration', 'nastran_eigenvector',
     'nastran_spc_force', 'nastran_mpc_force', 'nastran_applied_load',
@@ -154,6 +155,7 @@ class NastranSettings:
         self.create_coords = True
         self.is_bar_axes = True
         self.is_shell_mcids = True
+        self.is_rbe = True
 
         self.stress = True
         self.spring_stress = True
