@@ -1189,10 +1189,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             return wrapper
         return decorator
 
-    @deprecated('set_cards', 'enable_cards', '1.4')
-    def set_cards(self, cards: Sequence[str]) -> None:
-        self.enable_cards(cards)
-
     def set_error_storage(self, nparse_errors: int=100, stop_on_parsing_error: bool=True,
                           nxref_errors: int=100, stop_on_xref_error: bool=True) -> None:
         """

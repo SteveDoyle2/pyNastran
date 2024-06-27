@@ -1950,7 +1950,7 @@ class SET1(VectorizedBaseCard):
         set_card.is_skin = self.is_skin[i]
 
         inid = self.inid # [i, :]
-        set_card.dims = hslice_by_idim(i, inid, self.ids)
+        set_card.ids = hslice_by_idim(i, inid, self.ids)
 
         set_card.num_ids = self.num_ids[i]
         #assert isinstance(prop.ndim, np.ndarray), prop.ndim

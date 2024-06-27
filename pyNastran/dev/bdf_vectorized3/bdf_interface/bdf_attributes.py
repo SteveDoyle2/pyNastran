@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import zip_longest
 import numpy as np
-from typing import TYPE_CHECKING, Set, Optional, Any
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.params import PARAM, MDLPRM
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
@@ -1045,11 +1045,17 @@ class BDFAttributes:
         return boundary_conditions
 
     @property
+    def setx_cards(self) -> list[Any]:
+        """handles SET1-SET4 cards."""
+        sets = [
+            self.set1, self.set3,
+            self.set2, self.set4,]
+        return sets
+
+    @property
     def set_cards(self) -> list[Any]:
         """handles ASET/ASET1, ..."""
         sets = [
-            self.set1, self.set3,
-            self.set2, self.set4,
             self.aset, self.bset, self.cset, self.qset,
             self.omit, self.uset,
         ]
@@ -1065,20 +1071,20 @@ class BDFAttributes:
         return sesets
 
     @property
-    def aero_elements(self) -> list[Any]:
+    def aero_element_cards(self) -> list[Any]:
         elements = [
             self.caero1, self.caero2, self.caero3, self.caero4, self.caero5,
             self.caero7,
         ]
         return elements
     @property
-    def aero_properties(self) -> list[Any]:
+    def aero_property_cards(self) -> list[Any]:
         properties = [
             self.paero1, self.paero2, self.paero3, self.paero4, self.paero5,
         ]
         return properties
     @property
-    def aero_splines(self) -> list[Any]:
+    def aero_spline_cards(self) -> list[Any]:
         splines = [
             self.spline1, self.spline2, self.spline3,
             self.spline4, self.spline5,
@@ -1086,7 +1092,7 @@ class BDFAttributes:
         return splines
 
     @property
-    def aero_loads(self) -> list[Any]:
+    def aero_load_cards(self) -> list[Any]:
         loads = [
             self.gust, self.csschd, self.trim, # self.trim2,
             self.diverg,
@@ -1099,9 +1105,9 @@ class BDFAttributes:
             self.aecomp, self.aecompl, self.aesurf, self.aesurfs, self.aestat,
             self.aelist, self.aeparm, self.aelink,
             self.aefact, self.flfact, self.flutter,
-            ] + self.aero_elements + \
-            self.aero_properties + self.aero_splines + self.monitor_point_cards + \
-            self.aero_loads
+            ] + self.aero_element_cards + \
+            self.aero_property_cards + self.aero_spline_cards + self.monitor_point_cards + \
+            self.aero_load_cards
         return aero
 
     @property
@@ -1171,7 +1177,7 @@ class BDFAttributes:
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \
         self.plot_element_cards + self.thermal_element_cards + self.bolt_cards + \
-        self.thermal_boundary_condition_cards + self.set_cards + self.seset_cards + \
+        self.thermal_boundary_condition_cards + self.setx_cards + self.set_cards + self.seset_cards + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card
@@ -1754,7 +1760,7 @@ class BDFAttributes:
             volume += volumei.sum()
         return volume
 
-    def quality(self, cards_to_read: Optional[Set[str]]=None):
+    def quality(self, cards_to_read: Optional[set[str]]=None):
         """
         cards_to_read is intended for the gui, which doesn't support
         every card and also masses, which don't have results and so are not

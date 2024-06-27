@@ -2,6 +2,7 @@
 # pylint: disable=R0914
 """tests aero cards"""
 import os
+from pathlib import Path
 from collections import defaultdict
 import unittest
 from io import StringIO
@@ -12,6 +13,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard, read_bdf # CORD2R, SET1,
+from pyNastran.dev.bdf_vectorized3.bdf_interface.set_methods import SetMethods
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import run_bdf
 
 from pyNastran.dev.bdf_vectorized3.cards.aero import (
@@ -40,7 +42,7 @@ if IS_MATPLOTLIB:
 
 
 ROOTPATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
+MODEL_PATH = Path(os.path.join(ROOTPATH, '..', 'models'))
 TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
 
 COMMENT_BAD = 'this is a bad comment'
@@ -72,6 +74,91 @@ class TestAero(unittest.TestCase):
      * PAERO1 / PAERO2 / PAERO3
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
+    def test_cpmopt(self):
+        bdf_filename = MODEL_PATH / 'aero' / 'cpmopt.bdf'
+        model = read_bdf(bdf_filename)
+        methods = SetMethods(model)
+        mset = methods.get_mset()
+        rset0 = methods.get_rset()
+        spline_nodes = methods.get_spline_nodes()
+        assert len(model.mpc) == 0
+        expected_spline_nodes = [2, 3, 4, 5, 6, 7, 98, 99]
+        assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
+
+    def test_freedlm(self):
+        bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
+        model = read_bdf(bdf_filename)
+        methods = SetMethods(model)
+        mset = methods.get_mset()
+        rset0 = methods.get_rset()
+        spline_nodes = methods.get_spline_nodes()
+        assert len(model.mpc) == 0
+        expected_spline_nodes = [
+             12022, 20003, 20012, 20019, 20022, 20029, 20030, 20037, 20039, 20046, 20049, 20056, 20058, 20065, 20067,
+             20074, 20078, 20079, 20086, 20095, 20104, 20112, 20123, 20134, 20152, 20160, 21003, 21010, 21012, 21019,
+             21022, 21029, 21030, 21037, 21039, 21046, 21049, 21056, 21058, 21065, 21067, 21074, 21078, 21079, 21086,
+             21095, 21112, 21123, 21134, 21144, 21152, 21157, 21160, 22009, 22010, 22011, 22012, 22013, 22014, 22015,
+             22016, 22017, 22018, 22019, 22020, 22021, 22022, 22023, 22024, 22025, 22026, 22027, 22028, 22029, 22030,
+             22031, 22032, 22033, 22034, 22035, 22036, 22037, 22038, 22039, 22040, 22041, 22042, 22043, 22044, 22045,
+             22046, 22047, 22048, 22049, 22050, 22051, 22052, 22053, 22054, 22055, 22056, 22057, 22058, 22059, 22060,
+             22061, 22062, 22063, 22064, 22065, 22066, 22067, 22068, 22069, 22070, 22071, 22072, 22073, 22075, 22076,
+             22077, 22078, 22079, 22080, 22081, 22083, 22084, 22085, 22086, 22087, 22088, 22090, 22091, 22092, 22093,
+             22094, 22102, 22103, 22104, 22105, 22106, 22107, 22108, 22109, 22110, 22111, 22112, 22113, 22114, 22115,
+             22116, 22117, 22118, 22119, 22120, 22121, 22122, 22123, 22124, 22125, 22126, 22127, 22128, 22129, 22130,
+             22131, 22132, 22133, 22134, 22135, 22136, 22137, 23030, 23032, 23034, 23036, 23037, 23038, 23040, 23042,
+             23044, 23045, 23046, 23048, 23052, 23053, 23054, 23056, 23058, 23061, 23062, 23064, 23066, 23068, 23070,
+             23072, 23074, 23076, 23078, 23080, 23082, 23084, 23085, 23086, 23088, 23092, 23094, 23096, 23100, 23102,
+             23105, 23107, 23109, 23110, 23119, 23121, 23124, 23131, 23135, 23136, 23138, 23140, 23141, 23143, 23145,
+             23146, 23153, 23154, 23155, 23156, 23157, 23159, 23160, 23164, 23165, 23166, 23167, 23168, 23170, 23171,
+             23172, 23173, 23174, 23175, 23176, 23177, 23178, 23179, 23180, 23181, 23182, 23183, 23184, 23186, 23189,
+             23190, 23191, 23192, 23193, 23194, 23195, 23201, 23202, 23209, 23210, 23211, 23212, 23213, 23214, 23215,
+             23216, 23217, 23218, 23220, 30003, 30004, 30008, 30009, 30010, 30503, 30504, 30508, 30509, 30510, 31001,
+             31002, 31003, 31004, 31005, 31006, 31007, 31008, 31009, 31012, 31501, 31502, 31503, 31504, 31505, 31506,
+             31507, 31508, 31509, 31512, 40002, 40003, 40006, 40011, 40017, 40025, 40031, 40035, 40039, 40501, 40502,
+             40503, 40504, 40507, 40508, 40511, 40514, 40518, 40519, 40520, 40521, 40522, 40523, 40524, 40525, 40526,
+             40527, 40528, 40529, 40530, 45001, 45009, 45019, 45020, 45021, 45026, 45502, 45503, 45506, 45507, 45508,
+             45509, 45511, 45514, 45516, 45518, 45519, 45520, 45521, 45522, 45523, 45524, 50003, 50007, 50013, 50018,
+             50023, 50025, 50026, 50027, 50503, 50507, 50513, 50518, 50523, 50525, 50526, 51001, 51002, 51003, 51004,
+             51005, 51006, 51007, 51008, 51009, 51010, 51011, 51012, 51013, 51014, 51015, 51016, 51018, 51019, 51020,
+             51024, 51025, 51026, 51027, 51029, 51031, 51032, 51501, 51502, 51504, 51505, 51506, 51508, 51509, 51510,
+             51511, 51513, 51514, 51516, 51517, 51518, 51520, 51522, 51524, 51525, 51526, 51529, 60002, 60004, 60005,
+             60006, 60007, 60010, 60011, 60012, 60019, 60502, 60505, 60506, 60507, 60510, 60511, 60512, 60519, 61001,
+             61003, 61006, 61007, 61008, 61009, 61501, 61503, 61504, 61505, 61506, 61507, 61509,
+        ]
+        assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
+    def test_bwb(self):
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model = read_bdf(bdf_filename)
+        methods = SetMethods(model)
+
+        case = model.case_control_deck
+        expected_rset = [[2357, 35]]
+
+        for subcase_id, subcase in model.subcases.items():
+            if 'MPC' in subcase:
+                mpc_id, junk = subcase['MPC']
+                mset = methods.get_mset(mpc_id, include_rbe=False)
+            if 'SUPORT1' in subcase:
+                suport1_id, junk = subcase['SUPORT1']
+                rset = methods.get_rset(suport1_id)
+                #print(model.suport.get_stats())
+                #print(rset)
+                assert np.array_equal(rset, expected_rset), rset
+
+        #print(f'rset: {rset}')
+        rset0 = methods.get_rset()
+        assert rset0.shape == (0, 2), rset0.shape
+
+        spline_nodes = methods.get_spline_nodes()
+        #print('spline_nodes =', spline_nodes)
+        assert len(spline_nodes) == 46, len(spline_nodes)
+        expected_spline_nodes = [
+            1023, 1116, 1151, 1196, 1201, 1234, 1252, 1274, 1315, 1317, 1327,
+            1373, 1393, 1402, 1445, 1477, 1487, 1507, 1530, 1532, 1564, 1571,
+            1679, 1698, 1782, 1828, 1878, 1886, 1926, 2011, 2018, 2060, 2350,
+            2352, 2589, 10004, 10019, 10079, 10213, 20035, 20040, 20885,
+            20899, 21133, 21265, 21787]
+        assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes
 
     def test_aestat_1(self):
         log = SimpleLogger(level='warning')
