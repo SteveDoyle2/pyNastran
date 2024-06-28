@@ -830,12 +830,12 @@ class TestShells(unittest.TestCase):
         model.setup()
 
         pcomp = model.pcomp.slice_card_by_property_id(pid)
-        assert pcomp.total_thickness() == sum(thicknesses), thicknesses
+        assert np.allclose(pcomp.total_thickness(), sum(thicknesses)), f'total={pcomp.total_thickness()}; thicknesses={thicknesses} sum={sum(thicknesses)}'
         assert np.allclose(pcomp.thickness, [0.1, 0.2, 0.3]), pcomp.thickness
         assert np.allclose(pcomp.theta, [0., 0., 0.]), pcomp.theta
 
         pcomp.lam[0] = 'SYM'
-        assert pcomp.total_thickness() == sum(thicknesses)*2, thicknesses
+        assert np.allclose(pcomp.total_thickness(), sum(thicknesses)*2), thicknesses
 
         #assert np.allclose(pcomp.get_thicknesses(), [0.1, 0.2, 0.3, 0.3, 0.2, 0.1]), pcomp.get_thicknesses()
         #assert np.allclose(pcomp.get_thetas(), [0., 0., 0., 0., 0., 0.]), pcomp.get_thetas()

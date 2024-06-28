@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 class SetMethods:
     def __init__(self, model: BDF):
         self.model = model
+
     def get_sset(self, suport_id: int=0) -> np.ndarray:
         model = self.model
         nid_dof_list = []
