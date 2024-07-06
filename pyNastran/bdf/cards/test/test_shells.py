@@ -273,6 +273,10 @@ class TestShells(unittest.TestCase):
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
 
+        nid = 1
+        normal = [0., 0., 1.]
+        model.add_snorm(nid, normal, comment='snorm')
+
         # get node IDs without cross referencing
         eids = [10]
         nids = model.get_node_ids_with_elements(eids)

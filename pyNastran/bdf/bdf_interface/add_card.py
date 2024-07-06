@@ -3444,8 +3444,10 @@ class AddMaterial:
         self._add_methods._add_creep_material_object(mat)
         return mat
 
-    def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
-                 Sc=0.0, Ss=0.0, mcsid=0, comment='') -> MAT1:
+    def add_mat1(self, mid: int, E: float, G: float, nu: float,
+                 rho: float=0.0, a: float=0.0, tref: float=0.0, ge: float=0.0,
+                 St: float=0.0, Sc: float=0.0, Ss: float=0.0,
+                 mcsid: int=0, comment: str='') -> MAT1:
         """
         Creates a MAT1 card
 
@@ -9002,10 +9004,28 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_dmig_object(dmig)
         return dmig
 
+    def add_dmi_w2gj(self, tin: int, tout: int, nrows: int,
+                GCj, GCi, Real, comment: str='') -> DMI:
+        """Creates a DMI,W2GJ card"""
+        name = 'W2GJ'
+        form = 'rectangular'
+        ncols = 1
+        dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
+                  comment=comment)
+        self._add_methods._add_dmi_object(dmi)
+        return dmi
+
     def add_dmi(self, name: str, form: int, tin: int, tout: int, nrows: int, ncols: int,
                 GCj, GCi,
-                Real, Complex=None, comment='') -> DMI:
-        """Creates a DMI card"""
+                Real, Complex=None, comment: str='') -> DMI:
+        """Creates a DMI card
+
+        1 : 'square',
+        2 : 'rectangular', # 9 ???
+        3 : 'diagonal',
+        6 : 'symmetric',
+        9 : 'identity',
+        """
         dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
                   Complex, comment=comment)
         self._add_methods._add_dmi_object(dmi)

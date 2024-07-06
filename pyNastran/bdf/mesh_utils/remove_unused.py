@@ -593,7 +593,7 @@ def remove_unused(bdf_filename: str,
                     log.warning('skipping AELIST in MONPNT1/AECOMP')
                 elif aecomp.list_type == 'CAERO':
                     log.warning('skipping CAERO in MONPNT1/AECOMP')
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(aecomp)
         elif card_type in {'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'}:
             # freq_id exists, but we shouldn't be getting rid of it
@@ -601,7 +601,15 @@ def remove_unused(bdf_filename: str,
         #    for freq_id,
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
-        else:
+        elif card_type == 'SNORM':
+            for nid in ids:
+                card = model.normals[nid]
+                #nid: 1
+                #cid: 0
+                #normal: array([0., 0., 1.])
+                nids_used.add(card.nid)
+                cids_used.add(card.cid)
+        else:  # pragma: no cover
             raise NotImplementedError(card_type)
 
 

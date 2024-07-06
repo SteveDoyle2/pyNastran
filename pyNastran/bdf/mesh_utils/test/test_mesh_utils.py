@@ -125,6 +125,27 @@ class TestMeshUtils(unittest.TestCase):
         _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
         assert coplanar_elements == {2, 3}, coplanar_elements
 
+    def test_force_to_pressures(self):
+        log = SimpleLogger(level='warning')
+
+        model = BDF(debug=False, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        # area = 0.5
+        model.add_ctria3(1, 1, [1, 2, 3])
+        model.add_pshell(1, 1, t=0.1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+        force_to_pressure(model, clear_model=False)
+
+        #force = 3.0
+        # pressure = 6.0
+        model.add_force(1, 1, 1.0, [0., 0., 1.])
+        model.add_force(1, 2, 1.0, [0., 0., 1.])
+        model.add_force(1, 3, 1.0, [0., 0., 1.])
+        force_to_pressure(model, clear_model=True)
+
+
     def test_free_edges(self):
         """Finds the free_edges
 
@@ -146,6 +167,11 @@ class TestMeshUtils(unittest.TestCase):
 
         edges1 = free_edges(model, eids=None, maps=None)
         edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3), (1, 3)]
+        assert edges2 == [(1, 2), (2, 3), (1, 3)]
+
+        edges1 = free_edges(model, eids=[1], maps=None)
+        edges2 = non_paired_edges(model, eids=[1], maps=None)
         assert edges1 == [(1, 2), (2, 3), (1, 3)]
         assert edges2 == [(1, 2), (2, 3), (1, 3)]
 
@@ -395,6 +421,14 @@ class TestMeshUtils(unittest.TestCase):
         #               main structure will be pid=1
         #    'caero' : write the CAERO1 as the property id
         #    'paero' : write the PAERO1 as the property id
+        model = read_bdf(bdf_filename)
+        tin = tout = 'float32'
+        nrows = 1
+        GCj = [101]
+        GCi = [1]
+        Real = [np.radians(5.)]
+        model.add_dmi_w2gj(tin, tin, nrows, GCj, GCi, Real)
+        #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf', '--pid', 'aesurf', '--subpanels']
         cmd_line(argv=argv, quiet=True)
 
