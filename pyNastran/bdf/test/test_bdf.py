@@ -2274,7 +2274,7 @@ def get_test_bdf_usage_args_examples(encoding):
 
 def main(argv=None):
     """The main function for the command line ``test_bdf`` script."""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     data = test_bdf_argparse(argv)

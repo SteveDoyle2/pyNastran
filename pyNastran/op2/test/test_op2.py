@@ -828,7 +828,7 @@ def set_versions(op2s: list[OP2],
 
 def main(argv=None, show_args: bool=True) -> None:
     """the interface for test_op2"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
     data = get_test_op2_data(argv)
 

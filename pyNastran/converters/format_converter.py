@@ -328,7 +328,7 @@ def run_format_converter(fmt1: str, fname1: str,
 
 def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet: str=False) -> None:
     """Interface for format_converter"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
     format1_dev = ', abaqus, vrml' if DEV else ''
 

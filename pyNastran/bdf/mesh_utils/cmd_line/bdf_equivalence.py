@@ -9,25 +9,26 @@ from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tri
 
 def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_equivalence_nodes"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     from docopt import docopt
     msg = (
         'Usage:\n'
-        '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n'
+        '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf equivalence -h | --help\n'
         '  bdf equivalence -v | --version\n'
         '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-        "  EQ_TOL            the spherical equivalence tolerance\n"
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n'
+        '  EQ_TOL            the spherical equivalence tolerance\n'
+        '  --punch           flag to identify a *.pch/*.inc file\n'
         #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
         '\n'
 
         'Options:\n'
-        "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        '  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -52,13 +53,15 @@ def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
         dirname = os.path.dirname(bdf_filename_out)
 
     tol = float(data['EQ_TOL'])
+    punch = data['--punch']
     size = 16
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
     level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
-    bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+    log = SimpleLogger(level=level, encoding='utf-8')
+    model = read_bdf(bdf_filename, xref=True, punch=punch, log=log, debug=True)
+    bdf_equivalence_nodes(model, bdf_filename_out, tol,
                           renumber_nodes=False,
                           neq_max=10, xref=True,
                           node_set=None, size=size,

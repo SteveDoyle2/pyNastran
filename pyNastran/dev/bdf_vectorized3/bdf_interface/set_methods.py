@@ -9,10 +9,11 @@ class SetMethods:
     def __init__(self, model: BDF):
         self.model = model
 
-    def get_sset(self, suport_id: int=0) -> np.ndarray:
+    def get_sset(self, spc_id: int=0,
+                 include_grid_ps: bool=True) -> np.ndarray:
         model = self.model
         nid_dof_list = []
-        if self.model.grid.has_ps():
+        if include_grid_ps and self.model.grid.has_ps():
             ps = self.model.grid.ps
             ips = np.where(ps > 0)[0]
             if len(ips):
@@ -20,6 +21,22 @@ class SetMethods:
                 dof = ps[ips]
                 nid_dofi = np.column_stack([nids, dof])
                 nid_dof_list.append(nid_dofi)
+
+        if spc_id in model.spcadd.spc_id:
+            aaa
+
+        spc_cards = [card for card in model.spc_cards if len(card)]
+        for spc in spc_cards:
+            if spc_id in spc.spc_id:
+                card = spc.slice_card_by_id(spc_id)
+                if card.type == 'SPC1':
+                    for dof, (i0, i1) in zip(card.components, card.inode):
+                        nids = card.node_id[i0:i1]
+                        dofs = np.ones(len(nids)) * dof
+                        nid_dofi = np.column_stack([nids, dofs])
+                        nid_dof_list.append(nid_dofi)
+                else:
+                    raise RuntimeError(card.get_stats())
 
         nid_dof = _nid_dof(nid_dof_list)
         return nid_dof

@@ -7,7 +7,7 @@ from pyNastran.utils.convert import convert_altitude, convert_velocity
 
 def cmd_line_create_flutter(argv=None, quiet: bool=False):
     """command line interface to flip_shell_normals"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     from docopt import docopt
@@ -35,7 +35,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         '  alt, ALT1, ALT2     altitude;            units = [m, ft, kft]\n'
         '  eas, EAS1, EAS2     equivalent airspeed; units = [m/s, cm/s, in/s, ft/s, knots]\n'
         '  tas, TAS1, EAS2     true airspeed;       units = [m/s, cm/s, in/s, ft/s, knots]\n'
-        '  mach, MACH1, MACH2  mach number;         units = [none]\n'
+        '  mach, MACH1, MACH2  mach number;         units = [none, na]\n'
         '  SWEEP_UNIT          the unit for sweeping across\n'
         "  N                   the number of points in the sweep\n"
         '  alt, mach           the parameter to be held constant when sweeping (alt, mach)\n'
@@ -64,6 +64,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
+    argv = [str(arg) for arg in argv]
     cmd = ' '.join(argv[1:])
     data = docopt(msg, version=ver, argv=argv[1:])
 
@@ -73,7 +74,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     import numpy as np
     from pyNastran.bdf.bdf import BDF
     ALT_UNITS = ['m', 'ft', 'kft']
-    VELOCITY_UNITS = ['m/s', 'cm/s', 'in/s', 'ft/s', 'knots']
+    VELOCITY_UNITS = ['m/s', 'cm/s', 'mm/s', 'in/s', 'ft/s', 'knots']
 
     size = 16
     if data['--size']:
@@ -110,8 +111,8 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         alt = convert_altitude(alt, alt_unit, alt_units)
     elif const_type == 'mach':
         mach = const_value
-        assert const_unit == 'none', f'const_unit={const_unit!r}; allowed=[none]'
-    else:
+        assert const_unit in {'none', 'na'}, f'const_unit={const_unit!r}; allowed=[none]'
+    else:  # pragma: no cover
         raise NotImplementedError(const_type)
 
     eas_units = ''

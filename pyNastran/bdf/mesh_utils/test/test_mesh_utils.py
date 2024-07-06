@@ -21,15 +21,22 @@ from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.make_half_model import make_half_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.bdf.mesh_utils.utils import cmd_line
+from pyNastran.bdf.mesh_utils.utils import cmd_line, CMD_MAPS
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
 from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
 from pyNastran.bdf.mesh_utils.free_edges import free_edges, non_paired_edges
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
+from pyNastran.bdf.mesh_utils.breakdowns import (
+    get_mass_breakdown, get_area_breakdown, get_length_breakdown,
+    get_volume_breakdown, get_thickness_breakdown,
+    get_material_mass_breakdown_table, get_property_mass_breakdown_table)
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
+from pyNastran.bdf.mesh_utils.cmd_line.bdf_merge import cmd_line_merge
 
+
+TEST_DIR = (Path(__file__) / '..').resolve()
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 BWB_PATH = MODEL_PATH / 'bwb'
@@ -42,6 +49,47 @@ DIRNAME = Path(os.path.dirname(__file__))
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
+
+    def test_flutter(self):
+        """tests a flutter sweep"""
+        #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
+        # [-o OUT_BDF_FILENAME] [--size SIZE | --clean]
+        bdf_filename_out = TEST_DIR / 'test_flutter.bdf'
+
+        #bdf flutter english_in mach .05 0.5       101 alt 2500
+        args = [
+            'bdf', 'flutter', 'english_in',
+            'mach', '0.05', '0.5', '21',
+            'alt', '2500', 'ft',
+        ]
+        cmd_line(args, quiet=True)
+        args = [
+            'bdf', 'flutter', 'english_in',
+            'alt', -10_000, 100_000, 'ft', 41,
+            'mach', 0.8, 'NA',
+            '-o', bdf_filename_out,
+            '--clean',
+            '--eas_limit', 1000, 'knots',
+        ]
+        cmd_line(args, quiet=True)
+
+        args = [
+            'bdf', 'flutter', 'si_mm',
+            'tas', 50, 1000, 'ft/s', 11,
+            'alt', 0, 'm',
+            '-o', bdf_filename_out,
+            '--clean',
+            '--eas_limit', 1000, 'knots',
+        ]
+        cmd_line(args, quiet=True)
+
+        args = [
+            'bdf', 'flutter', 'si_mm',
+            'eas', 50, 1000, 'ft/s', 11,
+            'mach', 0.8, 'none',
+            '-o', bdf_filename_out,
+        ]
+        cmd_line(args, quiet=True)
 
     def test_coplanar_triangles(self):
         """tests find_coplanar_triangles
@@ -87,13 +135,15 @@ class TestMeshUtils(unittest.TestCase):
         1-----2
         """
         log = SimpleLogger(level='warning')
-        model = BDF(debug=True, log=log, mode='msc')
+        model = BDF(debug=False, log=log, mode='msc')
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
         model.add_grid(4, [0., 1., 0.])
         model.add_grid(5, [1., 1., 1.])  # 1,3,5
         model.add_ctria3(1, 1, [1, 2, 3])
+
+
         edges1 = free_edges(model, eids=None, maps=None)
         edges2 = non_paired_edges(model, eids=None, maps=None)
         assert edges1 == [(1, 2), (2, 3), (1, 3)]
@@ -112,6 +162,27 @@ class TestMeshUtils(unittest.TestCase):
         edges2 = non_paired_edges(model, eids=None, maps=None)
         assert edges1 == [(1, 2), (2, 3),         (3, 4), (1, 4), (3, 5), (1, 5)], edges1
         assert edges2 == [(1, 2), (2, 3), (1, 3), (3, 4), (1, 4), (3, 5), (1, 5)], edges2
+
+        bdf_filename = TEST_DIR / 'test_free_edges.bdf'
+        model.write_bdf(bdf_filename)
+        args = ['bdf', 'collapse_quads', str(bdf_filename), '--punch', '--size', '16']
+        cmd_line(args, quiet=True)
+
+        bdf_filename = TEST_DIR / 'test_free_edges_quad.bdf'
+        bdf_filename_out = TEST_DIR / 'test_free_edges_quad.bdf'
+        model.add_grid(100, [0., 0., 0.])
+        model.add_cquad4(100, 1, [1, 2, 3, 1])
+        model.write_bdf(bdf_filename)
+        args2 = ['bdf', 'collapse_quads', str(bdf_filename), '--punch',
+                '-o', str(bdf_filename_out)]
+        cmd_line(args2, quiet=True)
+
+        #bdf flip_shell_normals IN_BDF_FILENAME[-o OUT_BDF_FILENAME] [--punch][--zero_zoffset]
+        args3 = ['bdf', 'flip_shell_normals', str(bdf_filename_out), '--punch']
+        cmd_line(args3, quiet=True)
+
+        args4 = ['bdf', 'remove_unused', str(bdf_filename_out), '--punch']
+        cmd_line(args4, quiet=True)
 
     def test_free_faces(self):
         """CTETRA10"""
@@ -254,6 +325,20 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = os.path.join(DIRNAME, 'test_structured_chexas.bdf')
         model.write_bdf(bdf_filename)
 
+    def test_breakdown_01(self):
+        """run the various breakdowns"""
+        log = SimpleLogger(level='error')
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+
+        model = read_bdf(bdf_filename, log=log)
+        get_mass_breakdown(model)
+        get_area_breakdown(model)
+        get_length_breakdown(model)
+        get_volume_breakdown(model)
+        get_thickness_breakdown(model)
+        get_material_mass_breakdown_table(model)
+        get_property_mass_breakdown_table(model)
+
     def test_merge_01(self):
         """merges multiple bdfs into a single deck"""
         log = SimpleLogger(level='error')
@@ -267,6 +352,9 @@ class TestMeshUtils(unittest.TestCase):
 
         bdf_filenames1 = [bdf_filename1, bdf_filename2]
         bdf_filenames2 = [bdf_filename1, bdf_filename2, bdf_filename3, bdf_filename4]
+
+        args = ['bdf', 'merge', '--debug'] + [str(pathi) for pathi in bdf_filenames1]
+        cmd_line_merge(args, quiet=True)
         bdf_merge(bdf_filenames1, bdf_filename_out=bdf_filename_out1,
                   renumber=True, encoding=None, size=8, is_double=False,
                   cards_to_skip=None, log=log)
@@ -290,44 +378,9 @@ class TestMeshUtils(unittest.TestCase):
         with self.assertRaises(SystemExit):
             cmd_line(argv=['bdf'], quiet=True)
 
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'export_caero_mesh'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'convert'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'scale'], quiet=True)
-
-        #with self.assertRaises(SystemExit):
-            #cmd_line(argv=['bdf', 'bin'])
-
-        #with self.assertRaises(SystemExit):
-            #cmd_line(argv=['bdf', 'filter'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'mirror'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'renumber'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'equivalence'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'free_faces'], quiet=True)
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'merge'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'export_caero_mesh'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'transform'])
-
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'export_mcids'])
+        for cmd in CMD_MAPS:
+            with self.assertRaises(SystemExit):
+                cmd_line(argv=['bdf', cmd], quiet=True)
 
     def test_export_caero_mesh_caero5_wtfact(self):
         """tests multiple ``bdf`` tools"""
@@ -368,9 +421,9 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
         with self.assertRaises(SystemExit):
-            cmd_line(argv=argv[:1])
+            cmd_line(argv=argv[:1], quiet=True)
         with self.assertRaises(SystemExit):
-            cmd_line(argv=argv[:2])
+            cmd_line(argv=argv[:2], quiet=True)
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',

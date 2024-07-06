@@ -854,6 +854,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         # 2/4/6/... - spline panels
         iaero = 2
         for spline_id, spline in sorted(model.splines.items()):
+            # SPLINE2 -> spline2
+            # SPLINE3_ZONEA -> spline3
+            spline_type = spline.type.lower().split('_')[0]
+
             setg_ref = spline.setg_ref
             if setg_ref is None:
                 msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
@@ -878,7 +882,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             # such that we have z fighting, so based on the aero index,
             # we calculate a z offset.
             zfighting_offset = 0.0001 * (iaero + 1)
-            grid_name = f'spline_{spline_id:d}_structure_points'
+            grid_name = f'{spline_type}_{spline_id:d}_structure_points'
             gui.create_alternate_vtk_grid(
                 grid_name, color=BLUE_FLOAT, opacity=1.0, point_size=5,
                 representation='point', is_visible=False)
@@ -887,7 +891,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 grid_name, structure_points, model, msg, store_msg=True)
 
             zfighting_offset = 0.0001 * (iaero + 2)
-            grid_name = f'spline_{spline_id:d}_boxes'
+            grid_name = f'{spline_type}_{spline_id:d}_boxes'
             gui.create_alternate_vtk_grid(
                 grid_name, color=BLUE_FLOAT, opacity=0.3,
                 line_width=4,

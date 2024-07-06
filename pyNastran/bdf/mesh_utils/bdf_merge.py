@@ -104,8 +104,9 @@ def bdf_merge(bdf_filenames: list[str],
         #'mid' : max(model.material_ids),
     #}
     bdf_filename0 = bdf_filenames[0]
+    bdf_filenames_other = bdf_filenames[1:]
     model = get_bdf_model(
-        bdf_filename, xref=True,
+        bdf_filename0, xref=True,
         cards_to_skip=cards_to_skip, validate=False,
         log=log, debug=False)
     #if isinstance(bdf_filename0, BDF):
@@ -126,7 +127,7 @@ def bdf_merge(bdf_filenames: list[str],
         'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros', 'splines',
     ]
     mappers = []
-    for bdf_filename in bdf_filenames[1:]:
+    for bdf_filename in bdf_filenames_other:
         starting_id_dict = get_renumber_starting_ids_from_model(model)
         #for param, val in sorted(starting_id_dict.items()):
             #print('  %-3s %s' % (param, val))
@@ -175,8 +176,8 @@ def bdf_merge(bdf_filenames: list[str],
                         #print('   %s' % key)
             else:  # pragma: no cover
                 raise NotImplementedError(type(data1))
-    #if bdf_filenames_out:
-        #model.write_bdf(bdf_filenames_out, size=size)
+    #if bdf_filename_out:
+        #model.write_bdf(bdf_filename_out, size=size)
 
     mapper_renumber = None
     if renumber:

@@ -871,11 +871,11 @@ class FLUTTER(BaseCard):
 
     def make_flfacts_eas_sweep_constant_mach(self, model: BDF, mach, eass,
                                              gamma: float=1.4,
-                                             alt_units='m',
-                                             velocity_units='m/s',
-                                             density_units='kg/m^3',
-                                             eas_units='m/s',
-                                             pressure_units='Pa'):
+                                             alt_units: str='m',
+                                             velocity_units: str='m/s',
+                                             density_units: str='kg/m^3',
+                                             eas_units: str='m/s',
+                                             pressure_units: str='Pa'):
         """
         eas = tas * sqrt(rho/rho0)
         ainf*Minf = V
@@ -895,7 +895,8 @@ class FLUTTER(BaseCard):
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units,
-            pressure_units=pressure_units)
+            #pressure_units=pressure_units,
+        )
         machs2 = machs[:len(rho)]
         assert len(rho) == len(machs2)
 

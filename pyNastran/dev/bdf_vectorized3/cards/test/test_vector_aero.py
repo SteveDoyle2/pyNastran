@@ -77,22 +77,19 @@ class TestAero(unittest.TestCase):
     def test_cpmopt(self):
         bdf_filename = MODEL_PATH / 'aero' / 'cpmopt.bdf'
         model = read_bdf(bdf_filename)
+        check_set_methods(model)
         methods = SetMethods(model)
-        mset = methods.get_mset()
-        rset0 = methods.get_rset()
         spline_nodes = methods.get_spline_nodes()
-        assert len(model.mpc) == 0
         expected_spline_nodes = [2, 3, 4, 5, 6, 7, 98, 99]
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
 
     def test_freedlm(self):
         bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
         model = read_bdf(bdf_filename)
+
+        check_set_methods(model)
         methods = SetMethods(model)
-        mset = methods.get_mset()
-        rset0 = methods.get_rset()
         spline_nodes = methods.get_spline_nodes()
-        assert len(model.mpc) == 0
         expected_spline_nodes = [
              12022, 20003, 20012, 20019, 20022, 20029, 20030, 20037, 20039, 20046, 20049, 20056, 20058, 20065, 20067,
              20074, 20078, 20079, 20086, 20095, 20104, 20112, 20123, 20134, 20152, 20160, 21003, 21010, 21012, 21019,
@@ -126,26 +123,19 @@ class TestAero(unittest.TestCase):
              61003, 61006, 61007, 61008, 61009, 61501, 61503, 61504, 61505, 61506, 61507, 61509,
         ]
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
+
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = read_bdf(bdf_filename)
         methods = SetMethods(model)
 
-        case = model.case_control_deck
+        check_set_methods(model)
         expected_rset = [[2357, 35]]
-
-        for subcase_id, subcase in model.subcases.items():
-            if 'MPC' in subcase:
-                mpc_id, junk = subcase['MPC']
-                mset = methods.get_mset(mpc_id, include_rbe=False)
-            if 'SUPORT1' in subcase:
-                suport1_id, junk = subcase['SUPORT1']
-                rset = methods.get_rset(suport1_id)
-                #print(model.suport.get_stats())
-                #print(rset)
-                assert np.array_equal(rset, expected_rset), rset
+        rset = methods.get_rset(suport_id=1)
+        assert np.array_equal(rset, expected_rset), rset
 
         #print(f'rset: {rset}')
+        sset0 = methods.get_sset()
         rset0 = methods.get_rset()
         assert rset0.shape == (0, 2), rset0.shape
 
@@ -3408,6 +3398,26 @@ def _setup_aero_plot(fig_id: Optional[int]=None) -> tuple[Any, Any]:
         ax.set_xlabel('X')
         ax.grid()
     return fig, ax
+
+def check_set_methods(model: BDF) -> None:
+    methods = SetMethods(model)
+    mset0 = methods.get_mset()
+    sset0 = methods.get_sset()
+    rset0 = methods.get_rset()
+
+    case = model.case_control_deck
+    for subcase_id, subcase in model.subcases.items():
+        if 'MPC' in subcase:
+            mpc_id, junk = subcase['MPC']
+            mset = methods.get_mset(mpc_id, include_rbe=False)
+        if 'SPC' in subcase:
+            spc_id, junk = subcase['SPC']
+            sset = methods.get_sset(spc_id, include_grid_ps=False)
+        if 'SUPORT1' in subcase:
+            suport1_id, junk = subcase['SUPORT1']
+            rset = methods.get_rset(suport1_id)
+            #print(model.suport.get_stats())
+            #print(rset)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

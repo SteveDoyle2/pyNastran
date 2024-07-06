@@ -34,7 +34,7 @@ def merge_tecplot_files(tecplot_filenames: list[str],
 
 def merge_tecplot(argv: Optional[list[str]] = None, log=None) -> Tecplot:
     import sys
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv[1:]
 
     msg = (

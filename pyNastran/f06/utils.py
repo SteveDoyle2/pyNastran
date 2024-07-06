@@ -38,7 +38,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     """the interface to ``f06 plot_145`` on the command line"""
     import os
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
     msg = (
         USAGE_145 +
@@ -342,7 +342,7 @@ def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
                                log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_145`` on the command line"""
     from pyNastran.f06.dev.read_sol_200 import plot_sol_200
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
     msg = (
         USAGE_200 +
@@ -408,7 +408,7 @@ def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
 def cmd_line(argv=None, plot: bool=True, show: bool=True,
              log: Optional[SimpleLogger]=None) -> None:
     """the interface to ``f06`` on the command line"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     msg = (

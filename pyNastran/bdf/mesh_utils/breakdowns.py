@@ -304,13 +304,21 @@ def get_area_breakdown(model: BDF,
     return pids_to_area
 
 
-def get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False):
-    skip_props = {'PBAR', 'PBARL', 'PROD', 'PSOLID', 'PBUSH', 'PBUSH1D', 'PGAP', 'PRAC2D', 'PRAC3D'}
+def get_thickness_breakdown(model: BDF,
+                            property_ids=None,
+                            stop_if_no_thickness: bool=False):
+    skip_props = {
+        'PBAR', 'PBARL', 'PROD', 'PSOLID', 'PBUSH', 'PBUSH1D',
+        'PGAP', 'PRAC2D', 'PRAC3D'}
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_thickness,
         msg=' which is required by get_thickness_breakdown')
+
     pids_to_thickness = {}
     for pid, eids in pid_eids.items():
+        if len(eids) == 0:
+            continue
+
         prop = model.properties[pid]
         thickness_ = []
         if prop.type in skip_props:
@@ -327,7 +335,8 @@ def get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False
                     print(elem)
                     raise
         else:  # pragma: no cover
-            print('prop\n%s' % prop)
+            print(f'prop\n%s' % prop)
+            print(f'eids = {eids}\n')
             eid0 = eids[0]
             elem = model.elements[eid0]
             msg = str(prop) + str(elem)

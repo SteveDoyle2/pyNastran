@@ -6,14 +6,14 @@ from .utils import filter_no_args
 
 def cmd_line_export_caero_mesh(argv=None, quiet=False):
     """command line interface to export_caero_mesh"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     from docopt import docopt
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--subpanels] [--pid PID]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -24,6 +24,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
 
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
+        '  --punch                                   flag to identify a *.pch/*.inc file\n'
         '  --subpanels                               write the subpanels (default=False)\n'
         '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
         '\n'
@@ -47,6 +48,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         print(data)
     #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
+    punch = data['--punch']
     caero_bdf_filename = data['--output']
     base = os.path.splitext(bdf_filename)
     if caero_bdf_filename is None:
@@ -87,6 +89,6 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     ]
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-    model = read_bdf(bdf_filename, log=log, skip_cards=skip_cards)
+    model = read_bdf(bdf_filename, punch=punch, log=log, skip_cards=skip_cards)
     export_caero_mesh(model, caero_bdf_filename,
                       is_subpanel_model=is_subpanel_model, pid_method=pid_method)

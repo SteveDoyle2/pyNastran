@@ -212,6 +212,7 @@ def abs_max_min_global(values):
         don't input mixed types
 
     nvalues >= 1
+      >>> from pyNastran.op2.vector_utils import abs_max_min_global
       >>> element1 = [0.0, -1.0, 2.0]  # 2.0
       >>> element2 = [0.0, -3.0, 2.0]  # -3.0
       >>> values = abs_max_min_global([element1, element2])
@@ -253,14 +254,14 @@ def abs_max_min_global(values):
     return values2[j]
 
 
-def abs_max_min_vector(values):
+def abs_max_min_vector(values: np.ndarray) -> np.ndarray:
     """
     This is useful for figuring out principal stresses across multiple
     elements.
 
     Parameters
     ----------
-    values: ndarray/listtuple
+    values: ndarray/list/tuple
         an array of values, where the rows are iterated over
         and the columns are going to be compressed
 
@@ -275,11 +276,12 @@ def abs_max_min_vector(values):
         don't input mixed types
 
     ::
+       >>> from pyNastran.op2.vector_utils import abs_max_min_vector
        >>> element1 = [0.0,  1.0, 2.0]  # 2.0
        >>> element2 = [0.0, -1.0, 2.0]  # 2.0
        >>> element3 = [0.0, -3.0, 2.0]  # -3.0
-       >>> values = [element1 element2, element3]
-       >>> values0 = abs_max_min_vectorized(values)
+       >>> values = [element1, element2, element3]
+       >>> values0 = abs_max_min_vector(values)
        >>> values0
        [2.0, 2.0, -3.0]
 
@@ -311,12 +313,12 @@ def abs_max_min_vector(values):
         j = np.where(absolute_max == abs_vals[:, i])[0][0]
 
         # get the raw value from the absoluted value, so:
-        # value = npabs(raw_value)
+        # value = np.abs(raw_value)
         outs[i] = maxs_mins[j, i]
     return outs
 
 
-def abs_max_min(values, global_abs_max=True):
+def abs_max_min(values: np.ndarray, global_abs_max: bool=True):
     """
     Gets the maximum value of x and -x.
     This is used for getting the max/min principal stress.
@@ -473,7 +475,6 @@ def transform_force_moment(force_in_local, moment_in_local,
     #debug = True
     assert nid_cd.shape[0] == force_in_local.shape[0]
     dtype = force_in_local.dtype
-    #dtype = 'float64'
 
     force_in_local_sum = force_in_local.sum(axis=0)
     force_out = np.zeros(force_in_local.shape, dtype=dtype)
