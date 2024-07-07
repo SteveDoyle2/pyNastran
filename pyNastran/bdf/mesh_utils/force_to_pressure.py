@@ -96,7 +96,7 @@ def force_to_pressure(bdf_filename: Union[str, BDF], bdf_filename_out=None,
             #print(f'force  = {forcei}')
             force_normal = forcei * normal
             force_mag = np.linalg.norm(force_normal)
-            if pressure == 0.0:
+            if force_mag == 0.0:
                 continue
 
             pressure = force_mag / area

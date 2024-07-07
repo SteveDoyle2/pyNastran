@@ -50,6 +50,27 @@ DIRNAME = Path(os.path.dirname(__file__))
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
 
+    def test_dvxrel(self):
+        from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_ctria3(1, 1, [1, 2, 3])
+        model.add_pshell(1, 1, 0.1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+
+        oid = 1
+        prop_type = 'PSHELL'
+        pid = 1
+        pname = 'T'
+        desvar_ids = [1]
+        coeffs = [1.0]
+        model.add_dvprel1(oid, prop_type, pid, pname, desvar_ids, coeffs)
+        model.add_desvar(1, 'T1', 1.0, )
+        properties = np.array(list(model.properties))
+        nelements = len(model.elements)
+        get_dvprel_ndarrays(model, nelements, properties)
     def test_flutter(self):
         """tests a flutter sweep"""
         #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
