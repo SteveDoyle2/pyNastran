@@ -64,7 +64,7 @@ def determine_format(input_filename: str,
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
-            'avl', 'vtk',
+            'avl', 'vtk', 'fld',
         ]
         if DEV:
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
@@ -461,7 +461,7 @@ def _validate_format(input_formats: list[str]) -> None:
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'avl', 'vtk',
+        'avl', 'vtk', 'fld',
         None,  # I think None is for the null case
     ]
 

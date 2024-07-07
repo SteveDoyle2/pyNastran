@@ -139,6 +139,7 @@ class MainWindow(GuiCommon, NastranIO):
             'usm3d',  # results
             'avl', # no results
             'vrml', # no results
+            'fld',
             'vtk',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)

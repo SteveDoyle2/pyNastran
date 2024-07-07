@@ -21,6 +21,12 @@ except ModuleNotFoundError:  # pragma: no cover
     pass
 
 try:
+    from pyNastran.converters.fld.fld_io import FLD_IO
+    CLASS_MAP['fld'] = FLD_IO
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+
+try:
     from pyNastran.converters.stl.stl_io import STL_IO
     CLASS_MAP['stl'] = STL_IO
 except ModuleNotFoundError:  # pragma: no cover

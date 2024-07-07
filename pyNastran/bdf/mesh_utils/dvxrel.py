@@ -7,8 +7,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_dvprel_ndarrays(model: BDF, nelements: int, pids: np.ndarray,
-                        fdtype: str='float32', idtype: str='int32') -> dict[str, Any]:
+def get_dvprel_ndarrays(model: BDF,
+                        nelements: int, pids: np.ndarray,
+                        fdtype: str='float32',
+                        idtype: str='int32') -> dict[str, Any]:
     """
     Creates arrays for dvprel results
 
@@ -38,6 +40,7 @@ def get_dvprel_ndarrays(model: BDF, nelements: int, pids: np.ndarray,
             the max values of the variable
 
     """
+    assert len(pids) == nelements, f'len(pids)={len(pids)} != nelements={nelements}'
     dvprel_dict = {}
     def get_dvprel_data(key):
         if key in dvprel_dict:

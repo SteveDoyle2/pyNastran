@@ -58,17 +58,22 @@ class TestMeshUtils(unittest.TestCase):
         model.add_grid(3, [1., 1., 0.])
         model.add_ctria3(1, 1, [1, 2, 3])
         model.add_pshell(1, 1, 0.1)
+        model.add_pshell(2, 1, 0.1)
         model.add_mat1(1, 3.0e7, None, 0.3)
 
         oid = 1
         prop_type = 'PSHELL'
         pid = 1
+        pid2 = 2
         pname = 'T'
         desvar_ids = [1]
         coeffs = [1.0]
-        model.add_dvprel1(oid, prop_type, pid, pname, desvar_ids, coeffs)
-        model.add_desvar(1, 'T1', 1.0, )
-        properties = np.array(list(model.properties))
+        model.add_dvprel1(oid, prop_type, pid, pname,
+                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
+        model.add_dvprel1(oid+1, prop_type, pid2, pname,
+                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
+        model.add_desvar(1, 'T1', 1.0, xlb=0.5, xub=1.5)
+        properties = np.array([1])
         nelements = len(model.elements)
         get_dvprel_ndarrays(model, nelements, properties)
     def test_flutter(self):
