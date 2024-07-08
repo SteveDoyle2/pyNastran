@@ -26,8 +26,8 @@ Multi-segment beams are IntegratedLineProperty objects.
 from math import sqrt, ceil
 from typing import Any
 
-from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, argmax, argmin, arange)
+from numpy import (float32, float64, complex64, complex128,
+                   allclose)
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -91,9 +91,9 @@ def get_abs_index(data: np.ndarray,
     nvalues = data.shape[axis]
     # isubcase, nelements
     axis2 = abs(axis - 1)
-    i = argmax(abs(data), axis=axis2)
+    i = np.argmax(abs(data), axis=axis2)
     assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
-    k = arange(nvalues, dtype='int32')
+    k = np.arange(nvalues, dtype='int32')
     return data[i[:], k], i
 
 def get_max_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray]:
@@ -116,9 +116,9 @@ def get_max_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray
     nvalues = data.shape[axis]
     # isubcase, nelements
     axis2 = abs(axis - 1)
-    i = argmax(data, axis=axis2)
+    i = np.argmax(data, axis=axis2)
     assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
-    k = arange(nvalues, dtype='int32')
+    k = np.arange(nvalues, dtype='int32')
     return data[i[:], k], i
 
 def get_min_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray]:
@@ -140,9 +140,9 @@ def get_min_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray
     """
     nvalues = data.shape[axis]
     axis2 = abs(axis - 1)
-    i = argmin(data, axis=axis2)
+    i = np.argmin(data, axis=axis2)
     assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
-    k = arange(nvalues, dtype='int32')
+    k = np.arange(nvalues, dtype='int32')
     return data[i[:], k], i
 
 
@@ -170,7 +170,7 @@ def integrate_unit_line(x: list[float], y: list[float]) -> float:
 
         #f = np.interp(_xi, x, y, left=y[0], right=y[-1])
         out = quad(np.interp, 0., 1., args=(x, y, y[0], y[-1]))
-    except Exception:
+    except Exception:  # pragma: no cover
         # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]
@@ -270,12 +270,14 @@ def is_float_ranged(a: float,
     return True
 
 
-def print_annotated_matrix(A: np.ndarray, row_names=None, col_names=None, tol=1e-8):
+def print_annotated_matrix(A: np.ndarray,
+                           row_names=None, col_names=None,
+                           tol: np.ndarray=1e-8):
     """
     Takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
-    B = array(A)
+    B = np.array(A)
     if row_names is None:
         row_names = [i for i in range(B.shape[0])]
 
@@ -283,6 +285,7 @@ def print_annotated_matrix(A: np.ndarray, row_names=None, col_names=None, tol=1e
     row_fmt = '%%-%ss' % rwidth
 
     header = ''
+    float_fmt = '%8.6f'
     if col_names is not None:
         col_name_list = [str(col_names[i]) for i in col_names]
         cwidth = max([len(name) for name in col_name_list])
@@ -310,10 +313,14 @@ def list_print(list_a,
                float_fmt: str='%-3.2g',
                zero_fmt: str='    0') -> str:
     """prints a list / numpy array in a readable format"""
+    if list_a is None:
+        return 'None'
     if len(list_a) == 0:
         return '[]'
 
     def _print(a) -> str:
+        if a is None:
+            return 'None'
         if isinstance(a, str):
             return a
         for i, j in ((float, float_fmt), (float32, float_fmt),
@@ -361,7 +368,7 @@ def list_print(list_a,
     #return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
 
 
-Area = lambda a, b: 0.5 * norm(cross(a, b))
+Area = lambda a, b: 0.5 * norm(np.cross(a, b))
 
 def gauss(n: int) -> tuple[Any, Any]:  # pragma: no cover
     r"""

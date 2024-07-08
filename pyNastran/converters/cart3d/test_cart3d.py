@@ -58,6 +58,9 @@ class TestCart3d(unittest.TestCase):
         assert len(cart3d.elements) == 6, 'nelements=%s' % len(cart3d.elements)
         assert len(cart3d.regions) == 6, 'nregions=%s' % len(cart3d.regions)
         assert len(cart3d.loads) == 0, 'nloads=%s' % len(cart3d.loads)
+
+        edges = cart3d.get_free_edges(cart3d.elements)
+        assert len(edges) == 8, len(edges)
         os.remove(out_name)
 
         argv = ['format_converter', 'cart3d', infile_name, 'cart3d', out_name, '-b']

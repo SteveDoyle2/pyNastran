@@ -1,11 +1,14 @@
+from pathlib import PurePath
 import numpy as np
 
 from pyNastran.converters.stl.stl import STL, read_stl
 from pyNastran.converters.cart3d.cart3d import Cart3D
+from pyNastran.utils import PathLike
 
 
-def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
-                  is_binary=False, float_fmt='%6.7f'):
+def stl_to_cart3d(stl_filename: PathLike, cart3d_filename=None,
+                  log=None, debug=False,
+                  is_binary: bool=False, float_fmt: str='%6.7f') -> Cart3D:
     """
     Converts a Cart3D object to STL format.
 
@@ -31,11 +34,11 @@ def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
         an STL object
 
     """
-    if isinstance(stl_filename, str):
+    if isinstance(stl_filename, (str, PurePath)):
         stl = read_stl(stl_filename, log=log, debug=debug)
     elif isinstance(stl_filename, STL):
         stl = stl_filename
-    else:
+    else:  # pragma: no cover
         raise TypeError('stl_filename must be a string or STL; type=%s' % type(stl_filename))
 
     cart3d = Cart3D(log=log, debug=debug)

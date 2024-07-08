@@ -497,6 +497,7 @@ def _read_results_ascii(i: int, infile: TextIO,
                 #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
                     #pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
         #print("pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p))
+    #self.loads = self._calculate_results(result_names, results)
     return results, result_names
 
 

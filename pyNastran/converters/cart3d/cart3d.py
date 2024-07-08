@@ -19,12 +19,12 @@ Defines:
 import sys
 from math import ceil
 from collections import defaultdict
-from typing import Union, Optional
+from typing import Optional, Any
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 
-from pyNastran.utils import is_binary_file, _filename
+from pyNastran.utils import PathLike, is_binary_file, _filename
 from pyNastran.converters.cart3d.cart3d_reader_writer import (
     Cart3dReaderWriter, _write_cart3d_binary, _write_cart3d_ascii)
 
@@ -34,7 +34,7 @@ class Cart3D(Cart3dReaderWriter):
     is_structured = False
     is_outward_normals = True
 
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug: bool=False):
         Cart3dReaderWriter.__init__(self, log=log, debug=debug)
         self.loads = {}
         self.points = None
@@ -50,7 +50,8 @@ class Cart3D(Cart3dReaderWriter):
         ])
         #print(self.elements.shape)
 
-    def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
+    def make_mirror_model(self, nodes, elements, regions, loads,
+                          axis: str='y', tol: float=0.000001) -> None:
         """
         Makes a full cart3d model about the given axis.
 
@@ -136,7 +137,7 @@ class Cart3D(Cart3dReaderWriter):
         #self.log.info('---finished make_mirror_model---')
         #return (nodes2, elements2, regions2, loads2)
 
-    def make_half_model(self, axis: str='y', remap_nodes: bool=True):
+    def make_half_model(self, axis: str='y', remap_nodes: bool=True) -> tuple[Any, Any, Any, Any, Any]:
         """
         Makes a half model from a full model
 
@@ -630,7 +631,8 @@ class Cart3D(Cart3dReaderWriter):
         return nnormals
 
 
-def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None) -> Cart3D:
+def read_cart3d(cart3d_filename: PathLike,
+                log=None, debug=False, result_names=None) -> Cart3D:
     """loads a Cart3D file"""
     model = Cart3D(log=log, debug=debug)
     model.read_cart3d(cart3d_filename, result_names)
@@ -790,7 +792,7 @@ def _get_area_vector(nodes: np.ndarray,
 
     return n
 
-def _get_ax(axis: Union[str, int], log: SimpleLogger) -> tuple[int, int]:
+def _get_ax(axis: str | int, log: SimpleLogger) -> tuple[int, int]:
     """helper method to convert an axis_string into an integer"""
     if isinstance(axis, str):
         axis = axis.lower().strip()

@@ -93,11 +93,11 @@ def list_print(lst: list[Any], float_fmt: str='%-4.2f') -> str:
             print("parameter = %r" % val)
             raise
 
+    if len(lst) == 0:
+        return '[]'
+
     try:
         # TODO: remove try block and fix bug in OP2 code or add a warning message
-        if len(lst) == 0:
-            return '[]'
-
         if isinstance(lst, np.ndarray) and lst.ndim == 2:
             row, col = lst.shape
             return (

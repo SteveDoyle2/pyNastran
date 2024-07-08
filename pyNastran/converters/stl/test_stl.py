@@ -48,12 +48,24 @@ class TestSTL(unittest.TestCase):
 
         stl = read_stl(stl_filename, log=log, debug=False)
         stl.get_normals_at_nodes()
+        area = stl.get_area(stl.elements)
+        stl.flip_normals()
+        stl.equivalence_nodes(tol=0.0)
+
         scale = 1.0
         stl.scale_nodes(scale)
         stl.shift_nodes(0., 0., 0.)
         stl.log.info('end of shift')
 
         axes = 'xy'
+        stl.flip_axes(axes, scale)
+        stl.flip_axes(axes, scale)  # flip back
+
+        axes = 'xz'
+        stl.flip_axes(axes, scale)
+        stl.flip_axes(axes, scale)  # flip back
+
+        axes = 'yz'
         stl.flip_axes(axes, scale)
         stl.flip_axes(axes, scale)  # flip back
         stl.log.info('end of flip')

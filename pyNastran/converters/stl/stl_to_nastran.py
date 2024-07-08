@@ -1,25 +1,28 @@
+from pathlib import PurePath
 from pyNastran.converters.stl.stl import STL
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.utils import PathLike
 
-
-def stl_to_nastran_filename(stl_filename, bdf_filename,
-                            nnodes_offset=0, nelements_offset=0,
-                            pid=100, mid=200,
-                            size=8, is_double=False,
-                            log=None):
+def stl_to_nastran_filename(stl_filename: PathLike | STL,
+                            bdf_filename: PathLike,
+                            nnodes_offset: int=0, nelements_offset: int=0,
+                            pid: int=100, mid: int=200,
+                            size: int=8, is_double: bool=False,
+                            log=None) -> None:
     return stl_to_nastran(stl_filename, bdf_filename, nnodes_offset=nnodes_offset,
                           nelements_offset=nelements_offset,
                           pid=pid, mid=mid, size=size,
                           is_double=is_double, log=log)
 
-def stl_to_nastran(stl_filename, bdf_filename,
-                   nnodes_offset=0, nelements_offset=0,
-                   pid=100, mid=200,
-                   size=8, is_double=False,
-                   log=None):
-    if isinstance(stl_filename, str):
+def stl_to_nastran(stl_filename: PathLike | STL,
+                   bdf_filename: PathLike,
+                   nnodes_offset: int=0, nelements_offset: int=0,
+                   pid: int=100, mid: int=200,
+                   size: int=8, is_double: bool=False,
+                   log=None) -> None:
+    if isinstance(stl_filename, (str, PurePath)):
         model = STL(log=log)
         model.read_stl(stl_filename)
     elif isinstance(stl_filename, STL):
@@ -40,19 +43,19 @@ def stl_to_nastran(stl_filename, bdf_filename,
             print_card = print_card_16
         else:
             print_card = print_card_double
-    else:
+    else:  # pragma: no cover
         raise RuntimeError('size=%r' % size)
 
-    with open(bdf_filename, 'w') as bdf:
-        bdf.write('CEND\n')
+    with open(bdf_filename, 'w') as bdf_file:
+        bdf_file.write('CEND\n')
         #bdf.write('LOAD = %s\n' % load_id)
-        bdf.write('BEGIN BULK\n')
+        bdf_file.write('BEGIN BULK\n')
         nid2 = 1
         unused_magnitude = 100.
 
         for x, y, z in model.nodes:
             card = ['GRID', nid, cid, x, y, z]
-            bdf.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))
 
             #nx, ny, nz = nodal_normals[nid2 - 1]
             #card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]
@@ -65,38 +68,17 @@ def stl_to_nastran(stl_filename, bdf_filename,
         elements = model.elements + (nnodes_offset + 1)
         for (n1, n2, n3) in elements:
             card = ['CTRIA3', eid, pid, n1, n2, n3]
-            bdf.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
             eid += 1
 
         t = 0.1
         card = ['PSHELL', pid, mid, t]
-        bdf.write(print_card_8(card))
+        bdf_file.write(print_card_8(card))
 
         E = 1e7
         G = None
         nu = 0.3
         card = ['MAT1', mid, E, G, nu]
-        bdf.write(print_card_8(card))
-        bdf.write('ENDDATA\n')
-    return bdf
-
-
-#def main():  # pragma: no cover
-    #import os
-
-    #import pyNastran
-    #root_path = pyNastran.__path__[0]
-    #print("root_path = %s" % root_path)
-
-    #from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
-
-    #cart3d_filename = os.path.join(root_path, 'converters', 'cart3d', 'threePlugs_bin.tri')
-    #stl_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.stl')
-    #bdf_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.bdf')
-
-    #cart3d_to_stl_filename(cart3d_filename, stl_filename)
-    #stl_to_nastran(stl_filename, bdf_filename)
-
-
-#if __name__ == '__main__':  # pragma: no cover
-    #main()
+        bdf_file.write(print_card_8(card))
+        bdf_file.write('ENDDATA\n')
+    return
