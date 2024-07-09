@@ -1440,7 +1440,7 @@ class Add0dElements:
         return prop
 
     def add_cgap(self, eid: int, pid: int, nids: list[int],
-                 x: Optional[list[int]], g0: Optional[int],
+                 x: Optional[list[float]], g0: Optional[int],
                  cid: Optional[int]=None, comment: str='') -> CGAP:
         """
         Creates a CGAP card
