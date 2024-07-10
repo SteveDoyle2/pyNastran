@@ -41,6 +41,7 @@ FORMAT_TO_EXTENSION = {
     'avl' : ['.avl'],
     'vrml' : ['.wrl'],
     'vtk' : ['.vtk', '.vtu'],
+    'fld' : ['.fld'],
     #'abaqus' : []
 
     # no duplicate extensions are allowed; use the explicit --format option
@@ -60,11 +61,11 @@ def determine_format(input_filename: str,
     if allowed_formats is None:
         # used to include None...
         allowed_formats = [
-            'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
+            'nastran', 'stl', 'cart3d', 'fld', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
-            'avl', 'vtk', 'fld',
+            'avl', 'vtk',
         ]
         if DEV:
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
@@ -457,11 +458,11 @@ def _update_format(argdict: dict[str, Any],
 def _validate_format(input_formats: list[str]) -> None:
     # None is for custom geometry
     allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
+        'nastran', 'stl', 'cart3d', 'fld', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'avl', 'vtk', 'fld',
+        'avl', 'vtk',
         None,  # I think None is for the null case
     ]
 

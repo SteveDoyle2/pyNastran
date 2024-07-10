@@ -285,7 +285,9 @@ class CGAP(Element):
             raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
                 self.type, cp_name))
 
-    def __init__(self, eid, pid, nids, x, g0, cid=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 x: Optional[list[float]], g0: Optional[int],
+                 cid: Optional[int]=None, comment: str=''):
         """
         Creates a CGAP card
 

@@ -126,6 +126,7 @@ class MainWindow(GuiCommon, NastranIO):
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
+            'fld',
             'degen_geom',
             'fast',
             'lawgs',
@@ -139,7 +140,6 @@ class MainWindow(GuiCommon, NastranIO):
             'usm3d',  # results
             'avl', # no results
             'vrml', # no results
-            'fld',
             'vtk',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)

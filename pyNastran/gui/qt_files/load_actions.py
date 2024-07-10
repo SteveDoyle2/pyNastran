@@ -117,7 +117,10 @@ class LoadActions(BaseGui):
 
             try:
                 time0 = time_module.time()
+                #print(gui.format_class_map)
 
+                # the nastran format is a special snowflake and needs direct access to the base gui
+                # the other classes should be in format_class_map
                 if geometry_format2 in gui.format_class_map:
                     # initialize the class
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
@@ -130,8 +133,9 @@ class LoadActions(BaseGui):
                     has_results = load_function2(infile_name, name=name, plot=plot)
                     self.model_objs[name] = cls
                 else:
-                    #  nastran
-                    assert 'nastran' in geometry_format2
+                    # nastran
+                    #assert 'nastran' in geometry_format2, geometry_format2
+                    print(load_function)
                     has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
 
                 dt = time_module.time() - time0

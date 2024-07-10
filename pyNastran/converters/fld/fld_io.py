@@ -31,7 +31,10 @@ class FLD_IO:
         model = read_fld(fld_filename, log=self.gui.log, debug=False)
         #self.model_type = model.model_type
         nodes = model.xyzp[:, :3]
-        pressure = model.xyzp[:, 3:]
+
+        # support multiple results
+        results = model.xyzp[:, 3:] 
+        pressure = results[:, -1]
 
         nnodes = len(nodes)
         nelements = nnodes
