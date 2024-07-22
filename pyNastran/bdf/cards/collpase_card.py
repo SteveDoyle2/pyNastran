@@ -39,7 +39,7 @@ def collapse_thru_by(fields: list[int], get_packs: bool=False) -> list[list[int]
     return fields2
 
 
-def collapse_thru_by_float(fields: list[float]) -> list[Union[int, str]]:
+def collapse_thru_by_float(fields: list[float]) -> list[int | str]:
     _check_sort_fields(fields)
     packs = condense(fields)
     fields2 = build_thru_float(packs)
@@ -336,7 +336,7 @@ def build_thru(packs, max_dv: Optional[int]=None, nthru: Optional[int]=None):
     return fields
 
 
-def build_thru_float(packs: list[list[int]], max_dv: Optional[int]=None) -> list[Union[int, str]]:
+def build_thru_float(packs: list[list[int]], max_dv: Optional[int]=None) -> list[int | str]:
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the

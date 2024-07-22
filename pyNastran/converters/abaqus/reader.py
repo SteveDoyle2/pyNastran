@@ -88,7 +88,7 @@ def read_cload(iline: int, line0: str,
     buoyancy at various nodes or node sets.
     """
     log.debug(f'read_cload {line0!r}')
-    cload: list[tuple[Union[int, str], int, float]] = []
+    cload: list[tuple[int | str, int, float]] = []
     while '*' not in line0:
         sline = line0.split(',')
         assert len(sline) == 3, sline

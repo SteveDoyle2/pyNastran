@@ -820,8 +820,8 @@ class GuiQtCommon(GuiAttributes):
 
     def cycle_results_explicit(self, case=None,
                                explicit: bool=True,
-                               min_value: Optional[Union[int, float]]=None,
-                               max_value: Optional[Union[int, float]]=None,
+                               min_value: Optional[int | float]=None,
+                               max_value: Optional[int | float]=None,
                                show_msg: bool=True,
                                update: bool=True) -> int:
         """
@@ -920,8 +920,8 @@ class GuiQtCommon(GuiAttributes):
                   explicit: bool=False,
                   cycle: bool=False,
                   skip_click_check: bool=False,
-                  min_value: Optional[Union[int, float]]=None,
-                  max_value: Optional[Union[int, float]]=None,
+                  min_value: Optional[int | float]=None,
+                  max_value: Optional[int | float]=None,
                   is_legend_shown: Optional[bool]=None,
                   show_msg: bool=True,
                   update: bool=True) -> Optional[int]:

@@ -1254,14 +1254,14 @@ def _write_distributed_loads(model: Abaqus,
                 raise RuntimeError(dloadi)
     return load_id
 
-def _get_nodes(model: Abaqus, nid: Union[int, str]) -> list[int]:
+def _get_nodes(model: Abaqus, nid: int | str) -> list[int]:
     if isinstance(nid, integer_types):
         nids = [nid]
     else:
         nids = model.node_sets[nid.lower()]
     return nids
 
-def _get_elements(model: Abaqus, eid: Union[int, str]) -> list[int]:
+def _get_elements(model: Abaqus, eid: int | str) -> list[int]:
     if isinstance(eid, integer_types):
         eids = [eid]
     else:
@@ -1271,7 +1271,7 @@ def _get_elements(model: Abaqus, eid: Union[int, str]) -> list[int]:
 def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
                           quiet: bool=False) -> None:
     """Interface for abaqus_to_nastran"""
-    if argv is None:
+    if argv is None:  # pragma: no cover
         argv = sys.argv
 
     default_encoding = sys.getdefaultencoding()

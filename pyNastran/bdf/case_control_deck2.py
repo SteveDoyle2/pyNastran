@@ -113,7 +113,7 @@ class CaseControlDeck:
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
-        self.reject_lines = []  # type: list[str]
+        self.reject_lines: list[str] = []
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -121,7 +121,7 @@ class CaseControlDeck:
         self._begin_count = 0
 
         self.lines = lines
-        self.subcases = {0: Subcase(id=0)}  # type: dict[int, Subcase]
+        self.subcases: dict[int, Subcase] = {0: Subcase(id=0)}
         try:
             self._read(self.lines)
         except Exception:
@@ -941,9 +941,9 @@ def _parse_entry(self, lines: list[str],
             #value = obj
             #param_type = 'OBJ-type'
         #else:
-        key = value.key  # type: str
-        options = obj.set_id  # type: list[int]
-        value = obj.value  # type: int
+        key: str = value.key
+        options: list[int] = obj.set_id
+        value: int = obj.value
         param_type = 'SET-type'
 
     elif line_upper.startswith('SETS DEFINITION'):

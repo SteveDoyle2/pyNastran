@@ -64,7 +64,7 @@ class CBEAM(LineElement):
         17:'sa', 18:'sb',
     }
 
-    def _get_field_helper(self, n: int) -> Union[int, float]:
+    def _get_field_helper(self, n: int) -> int | float:
         if n == 11:
             value = self.wa[0]
         elif n == 12:

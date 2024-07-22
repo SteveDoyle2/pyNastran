@@ -1224,7 +1224,7 @@ def oes_cbar_real_16(op2: OP2, data: bytes,
 
 
 def oes_weldp_msc_real_8(op2: OP2, data: bytes,
-                         obj: Union[int, float],
+                         obj: int | float,
                          nelements: int, ntotal: int, dt: Any) -> int:
     #'    ELEMENT          AXIAL         MAX  STRESS      MIN  STRESS      MAX  STRESS      MIN  STRESS        MAXIMUM          BEARING '
     #'      ID             STRESS           END-A            END-A            END-B            END-B        SHEAR  STRESS       STRESS'
@@ -1302,7 +1302,7 @@ def oes_weldp_msc_complex_15(op2: OP2,
 
 
 def oes_fastp_msc_real_7(op2: OP2, data: bytes,
-                         obj: Union[int, float],
+                         obj: int | float,
                          nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'6f', op2.size)

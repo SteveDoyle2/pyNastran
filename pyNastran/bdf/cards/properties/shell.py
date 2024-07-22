@@ -80,7 +80,7 @@ class CompositeShellProperty(Property):
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_structure(rhos)
 
-    def Thickness(self, iply: Union[int, str]='all', tflag: int=1, tscales=None):
+    def Thickness(self, iply: int | str='all', tflag: int=1, tscales=None):
         return self.get_thickness(iply)
 
     def Nsm(self) -> float:
@@ -268,7 +268,7 @@ class CompositeShellProperty(Property):
         mid = self.Mid(iply) #self.mids[iply]
         return mid
 
-    def get_thickness(self, iply: Union[int, str]='all') -> float:
+    def get_thickness(self, iply: int | str='all') -> float:
         """
         Gets the thickness of the :math:`i^{th}` ply.
 

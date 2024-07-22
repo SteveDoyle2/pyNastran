@@ -1505,7 +1505,7 @@ class CQUAD4(ShellElement):
         return quad_quality_nodes(self.model.grid, self.nodes)
 
 def _set_shell(elem, eid: int, pid: int, nids: list[int],
-               theta_mcid: Union[int, str], zoffset: float, tflag: int):
+               theta_mcid: int | str, zoffset: float, tflag: int):
     elem.element_id = np.hstack([elem.element_id, eid])
     elem.property_id = np.hstack([elem.property_id, pid])
     elem.nodes = np.vstack([elem.nodes, nids])

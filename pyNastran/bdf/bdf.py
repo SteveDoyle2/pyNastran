@@ -24,7 +24,7 @@ from collections import defaultdict
 import traceback
 
 from typing import (
-    Sequence, Optional, Union, Any, cast, TYPE_CHECKING)
+    Sequence, Optional, Any, cast, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -206,8 +206,7 @@ from .bdf_interface.pybdf import (
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
-CORD = Union[CORD1R, CORD1C, CORD1S,
-             CORD2R, CORD2C, CORD2S]
+CORD = CORD1R | CORD1C | CORD1S | CORD2R | CORD2C | CORD2S
 
 REMOVED_CARDS = {
     'ADAPT',
@@ -519,7 +518,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: Union[str, bool, None]=True,
+    def __init__(self, debug: str | bool | None=True,
                  log: Optional[SimpleLogger]=None,
                  mode: str='msc') -> None:
         """
@@ -547,8 +546,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.use_new_deck_parser = False
 
         # file management parameters
-        self.active_filenames = []  # type: list[str]
-        self.active_filename = None  # type: Optional[str]
+        self.active_filenames: list[str] = []
+        self.active_filename: Optional[str] = None
         self.include_dir = ''
         self.dumplines = False
 
@@ -1616,7 +1615,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
-        cards_list = []  # type: list[Any]
+        cards_list: list[Any] = []
         cards_dict: dict[str, list[Any]] = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
@@ -1863,7 +1862,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.sol_method = None
 
     def update_card(self, card_name: str, icard: int, ifield: int,
-                    value: Union[int, float, str]) -> None:
+                    value: int | float | str) -> None:
         """
         Updates a Nastran card based on standard Nastran optimization names
 
@@ -1924,7 +1923,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         obj.update_field(ifield, value)
         return obj
 
-    def set_dynamic_syntax(self, dict_of_vars: dict[str, Union[int, float, str]]) -> None:
+    def set_dynamic_syntax(self, dict_of_vars: dict[str, int | float | str]) -> None:
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
@@ -2984,7 +2983,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> Union[DMI, DMIJ, DMIJI, DMIK]:
+    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> DMI | DMIJ | DMIJI | DMIK:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
@@ -3557,7 +3556,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         is_acoustic = nacoustic > 0
         return is_acoustic
 
-    def get_bdf_stats(self, return_type: str='string') -> Union[str, list[str]]:
+    def get_bdf_stats(self, return_type: str='string') -> str | list[str]:
         """
         Print statistics for the BDF
 
@@ -4381,7 +4380,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #return False
         #return True
 
-    def _parse_primary_file_header(self, bdf_filename: Union[str, StringIO]) -> None:
+    def _parse_primary_file_header(self, bdf_filename: str | StringIO) -> None:
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
 
@@ -4809,15 +4808,15 @@ class BDF(BDF_):
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
         #: stores SPOINT, GRID cards
-        self.nodes = {}  # type: dict[int, Any]
+        self.nodes: dict[int, Any] = {}
 
         # loads
         #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
         #: PLOAD, PLOAD2, PLOAD4, SLOAD
         #: GMLOAD, SPCD, DEFORM,
         #: QVOL
-        self.loads = {}  # type: dict[int, list[Any]]
-        self.load_combinations = {}  # type: dict[int, list[Any]]
+        self.loads: dict[int, list[Any]] = {}
+        self.load_combinations: dict[int, list[Any]] = {}
 
     def __deepcopy__(self, memo: dict[str, Any]):
         """performs a deepcopy"""
@@ -5036,8 +5035,8 @@ def _set_nodes(model: BDF,
                idtype: str, fdtype: str):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
-    nids_cd_transform = defaultdict(list)  # type: dict[int, np.ndarray]
-    nids_cp_transform = defaultdict(list)  # type: dict[int, np.ndarray]
+    nids_cd_transform: dict[int, np.ndarray] = defaultdict(list)
+    nids_cp_transform: dict[int, np.ndarray] = defaultdict(list)
     nxyz = nnodes + nspoints + nepoints + ngridb
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)

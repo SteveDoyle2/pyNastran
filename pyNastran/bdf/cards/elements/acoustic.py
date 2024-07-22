@@ -596,8 +596,8 @@ class ACPLNW(BaseCard):
         return ACPLNW(sid, form, scale, real, imag, cid1, xyz, cid2, nxyz)
 
     def __init__(self, sid: int, form: str, scale: float,
-                 real: Union[int, float],
-                 imag: Union[int, float],
+                 real: int | float,
+                 imag: int | float,
                  cid1: int, xyz: list[float],
                  cid2: int, nxyz: list[float], comment: str=''):
         """

@@ -881,7 +881,7 @@ class EditGeometryProperties(PyDialog):
             self.close()
             #self.destroy()
 
-def rounded_int(value: Union[int, float]) -> int:
+def rounded_int(value: int | float) -> int:
     """rounds a value that *should* be an integer"""
     return int(round(value, 0))
 

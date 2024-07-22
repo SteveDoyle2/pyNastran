@@ -1002,7 +1002,7 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
-def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
+def get_times_dtype(nonlinear_factor: int | float, size: int,
                     analysis_code_fmt=None) -> tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):

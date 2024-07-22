@@ -538,7 +538,7 @@ class CTRIA3(TriShell):
         #self.tflag = tflag
 
     def __init__(self, eid: int, pid: int, nids: list[int],
-                 zoffset: float=0., theta_mcid: Union[int, float]=0.0,
+                 zoffset: float=0., theta_mcid: int | float=0.0,
                  tflag: int=0,
                  T1: Optional[float]=None,
                  T2: Optional[float]=None,

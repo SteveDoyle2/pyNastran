@@ -83,7 +83,7 @@ class AECOMP(BaseCard):
         return AECOMP(name, list_type, lists, comment='')
 
     def __init__(self, name: str, list_type: list[str],
-                 lists: Union[int, list[int]],
+                 lists: int | list[int],
                  comment: str='') -> None:
         """
         Creates an AECOMP card
@@ -473,7 +473,7 @@ class AELINK(BaseCard):
         linking_coefficients = [1., 2.]
         return AELINK(aelink_id, label, independent_labels, linking_coefficients, comment='')
 
-    def __init__(self, aelink_id: Union[int, str],
+    def __init__(self, aelink_id: int | str,
                  label: str, independent_labels: list[str],
                  linking_coefficients: list[float],
                  comment: str='') -> None:
@@ -4297,8 +4297,8 @@ class MONPNT3(BaseCard):
                        cp=0, cd=None, xflag=None, comment='')
 
     def __init__(self, name: str, label: str, axes: str,
-                 grid_set_group: Union[int, str],
-                 elem_set_group: Union[int, str],
+                 grid_set_group: int | str,
+                 elem_set_group: int | str,
                  xyz: list[float],
                  cp: int=0, cd=None, xflag=None, comment=''):
         """

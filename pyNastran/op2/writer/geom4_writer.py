@@ -258,7 +258,7 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     if max_nid > MAX_32_BIT_INT:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
-    data = []  # type: list[Union[int, float]]
+    data: list[int | float] = []
     if nastran_format == 'msc':
         # MSC
         # SPC(5501,55,16) - Record 44
@@ -379,7 +379,7 @@ def _write_rbe2(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
             is_alpha = True
 
     key = (6901, 69, 295)
-    fields = []  # type: list[Union[int, float]]
+    fields: list[int | float] = []
     fmt = endian
     if is_tref:
         for rbe2 in cards:
@@ -424,7 +424,7 @@ def _write_rbe3(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     # TODO: alpha is not supported in the writer
     # TODO: tref is not supported in the writer
     key = (7101, 71, 187)
-    fields = []  # type: list[Union[int, float]]
+    fields: list[int | float] = []
     fmt = endian
     for rbe3 in cards:
         fieldsi = [rbe3.eid, rbe3.refgrid, int(rbe3.refc)]
@@ -459,7 +459,7 @@ def _write_rbar(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     """writes an RBAR"""
     # MSC
     key = (6601, 66, 292)
-    fields = []  # type: list[Union[int, float]]
+    fields: list[int | float] = []
     if nastran_format == 'msc':
         fmt = endian + b'7if' * ncards
         for rbar in cards:

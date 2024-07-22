@@ -1771,7 +1771,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_cquad4(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0.0, zoffset: float=None,
+                   theta_mcid: int | float=0.0, zoffset: float=None,
                    tflag: int=0, T1=None, T2=None, T3=None, T4=None,
                    comment: str='') -> int:
         """
@@ -1846,7 +1846,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_cquad8(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0., zoffset: float=0.,
+                   theta_mcid: int | float=0., zoffset: float=0.,
                    tflag: int=0, T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
         """
         Creates a CQUAD8 card
@@ -1883,7 +1883,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_cquad(self, eid: int, pid: int, nids: list[int],
-                  theta_mcid: Union[int, float]=0., comment: str='') -> int:
+                  theta_mcid: int | float=0., comment: str='') -> int:
         """
         Creates a CQUAD card
 
@@ -1909,7 +1909,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_ctriar(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0.0, zoffset: float=0.0,
+                   theta_mcid: int | float=0.0, zoffset: float=0.0,
                    tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> int:
         """
         Creates a CTRIAR card
@@ -1946,7 +1946,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_cquadr(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0.0, zoffset: float=0., tflag: int=0,
+                   theta_mcid: int | float=0.0, zoffset: float=0., tflag: int=0,
                    T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
         """
         Creates a CQUADR card
@@ -3879,7 +3879,7 @@ class AddOptimization(BDFAttributes):
                                   validate=validate, comment=comment)
         return dvcrel
 
-    def add_dvprel1(self, dvprel_id: int, prop_type: str, pid: int, pname_fid: Union[int, str],
+    def add_dvprel1(self, dvprel_id: int, prop_type: str, pid: int, pname_fid: int | str,
                     desvar_ids: list[int],
                     coeffs: list[float],
                     p_min=None, p_max: float=1e20, c0: float=0.0,
@@ -3919,7 +3919,7 @@ class AddOptimization(BDFAttributes):
         return dvprel
 
     def add_dvprel2(self, dvprel_id: int, prop_type: str, pid: int,
-                    pname_fid: Union[int, str], deqation: int,
+                    pname_fid: int | str, deqation: int,
                     dvids: list[int]=None,
                     labels: list[str]=None,
                     p_min: Optional[float]=None, p_max: float=1.0e20,
@@ -4132,7 +4132,7 @@ class AddOptimization(BDFAttributes):
         dconadd = self.dconadd.add(dconstr_id, dconstrs, comment=comment)
         return dconadd
 
-    def add_doptprm(self, params: dict[str, Union[int, float]], comment: str='') -> DOPTPRM:
+    def add_doptprm(self, params: dict[str, int | float], comment: str='') -> DOPTPRM:
         """Creates a DOPTPRM card"""
         doptprm = DOPTPRM(params, comment=comment)
         self._add_methods._add_doptprm_object(doptprm)
@@ -4972,7 +4972,7 @@ class AddThermal(BDFAttributes):
     def add_qvect(self, sid: int, q0: float, eids: list[int],
                   t_source: float=None,
                   ce: int=0,
-                  vector_tableds: list[Union[int, float]]=0.0,
+                  vector_tableds: list[int | float]=0.0,
                   control_id: int=0, comment: str='') -> int:
         """
         Creates a QVECT card
@@ -5653,7 +5653,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self.grdset = grdset
         return grdset
 
-    def add_seqgp(self, nids: list[int], seqids: list[Union[int, float]],
+    def add_seqgp(self, nids: list[int], seqids: list[int | float],
                   comment: str='') -> SEQGP:
         """
         Creates the SEQGP card
@@ -5760,7 +5760,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_param_object(param)
         return param
 
-    def add_mdlprm(self, mdlprm_dict: dict[str, Union[int, float]],
+    def add_mdlprm(self, mdlprm_dict: dict[str, int | float],
                    comment: str='') -> MDLPRM:
         """
         Creates a MDLPRM card
@@ -6189,7 +6189,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return elem
 
     def add_cquadx(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0., comment: str='') -> int:
+                   theta_mcid: int | float=0., comment: str='') -> int:
         """Creates a CQUADX card"""
         elem = self.cquadx.add(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
         return elem
@@ -6475,10 +6475,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return load
 
     def add_rload1(self, sid: int, excite_id: int,
-                   delay: Union[int, float]=0,
-                   dphase: Union[int, float]=0,
-                   tc: Union[int, float]=0,
-                   td: Union[int, float]=0,
+                   delay: int | float=0,
+                   dphase: int | float=0,
+                   tc: int | float=0,
+                   td: int | float=0,
                    load_type='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD1 card, which defines a frequency-dependent load
@@ -6521,10 +6521,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return load
 
     def add_rload2(self, sid: int, excite_id: int,
-                   delay: Union[int, float]=0,
-                   dphase: Union[int, float]=0,
-                   tb: Union[int, float]=0,
-                   tphi: Union[int, float]=0,
+                   delay: int | float=0,
+                   dphase: int | float=0,
+                   tb: int | float=0,
+                   tphi: int | float=0,
                    load_type: str='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD2 card, which defines a frequency-dependent load
@@ -6664,9 +6664,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return dload
 
     def add_acsrce(self, sid: int, excite_id: int, rho: float, b: float,
-                   delay: Union[int, float]=0,
-                   dphase: Union[int, float]=0,
-                   power: Union[int, float]=0,
+                   delay: int | float=0,
+                   dphase: int | float=0,
+                   power: int | float=0,
                    comment: str='') -> int:
         """
         Creates an ACSRCE card

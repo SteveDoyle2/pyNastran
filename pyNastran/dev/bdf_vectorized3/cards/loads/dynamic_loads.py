@@ -888,10 +888,10 @@ class RLOAD1(VectorizedBaseCard):
         load.tabled_d_float = self.tabled_d_float[i]
 
     def add(self, sid: int, excite_id: int,
-            delay: Union[int, float]=0,
-            dphase: Union[int, float]=0,
-            tc: Union[int, float]=0,
-            td: Union[int, float]=0,
+            delay: int | float=0,
+            dphase: int | float=0,
+            tc: int | float=0,
+            td: int | float=0,
             load_type='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD1 card, which defines a frequency-dependent load
@@ -1130,10 +1130,10 @@ class RLOAD2(VectorizedBaseCard):
         load.tabled_phi_float = self.tabled_phi_float[i]
 
     def add(self, sid: int, excite_id: int,
-            delay: Union[int, float]=0,
-            dphase: Union[int, float]=0,
-            tb: Union[int, float]=0,
-            tphi: Union[int, float]=0,
+            delay: int | float=0,
+            dphase: int | float=0,
+            tb: int | float=0,
+            tphi: int | float=0,
             load_type: str='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD2 card, which defines a frequency-dependent load
@@ -2321,7 +2321,7 @@ class QVECT(VectorizedBaseCard):
     def add(self, sid: int, q0: float, eids: list[int],
             t_source: float=None,
             ce: int=0,
-            vector_tableds: list[Union[int, float]]=0.0,
+            vector_tableds: list[int | float]=0.0,
             control_id: int=0, comment: str='') -> int:
         """
         Creates a QVECT card
@@ -2526,9 +2526,9 @@ class ACSRCE(VectorizedBaseCard):
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, excite_id: int, rho: float, b: float,
-            delay: Union[int, float]=0,
-            dphase: Union[int, float]=0,
-            power: Union[int, float]=0,
+            delay: int | float=0,
+            dphase: int | float=0,
+            power: int | float=0,
             comment: str='') -> int:
         """
         Creates an ACSRCE card
@@ -2729,7 +2729,8 @@ class ACSRCE(VectorizedBaseCard):
         dphases = array_int_float(self.dphase_int, self.dphase_float, size=size, is_double=False)
         powers = array_int_float(self.power_int, self.power_float, size=size, is_double=False)
         bs = array_float(self.b, size=size, is_double=False)
-        rhos = array_float(self.rho, size=size, is_double=False)        for sid, excite_id, delay, dphase, power, b, rho in zip_longest(load_ids, excite_ids,
+        rhos = array_float(self.rho, size=size, is_double=False)
+        for sid, excite_id, delay, dphase, power, b, rho in zip_longest(load_ids, excite_ids,
                                                                         delays, dphases, powers,
                                                                         bs, rhos):
             list_fields = ['ACSRCE', sid, excite_id, delay, dphase,
@@ -2886,13 +2887,13 @@ class RANDPS(VectorizedBaseCard):
         #return force_moment
 
 
-def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: Union[int, float]) -> None:
+def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: int | float) -> None:
     if isinstance(value, int):
         array_int[i] = value
     else:
         array_float[i] = value
 
-def _write_int_float(value_int: int, value_float: float) -> Union[int, float]:
+def _write_int_float(value_int: int, value_float: float) -> int | float:
     if value_int > 0:
         value = value_int
     else:

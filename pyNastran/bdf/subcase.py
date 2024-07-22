@@ -518,7 +518,7 @@ class Subcase:
                   for param_name in param_names]
         return exists
 
-    def __getitem__(self, param_name: str) -> tuple[Union[int, str], list[Any]]:
+    def __getitem__(self, param_name: str) -> tuple[int | str, list[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -644,7 +644,7 @@ class Subcase:
         return value, options
 
     def get_parameter(self, param_name: str, msg: str='',
-                      obj: bool=False) -> tuple[Union[int, str], list[Any]]:
+                      obj: bool=False) -> tuple[int | str, list[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -730,7 +730,7 @@ class Subcase:
         assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
         self.add(key, value, [], 'STRESS-type')
 
-    def add_result_type(self, key: str, value: Union[int, str],
+    def add_result_type(self, key: str, value: int | str,
                         options: list[str]) -> None:
         """
         Simple way to add something of the form:
@@ -1130,7 +1130,7 @@ class Subcase:
         list_before = []
         set_keys = []
         for (i, entry) in enumerate(lst):
-            key = entry[0]  # type: str
+            key: str = entry[0]
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
                     key = 0

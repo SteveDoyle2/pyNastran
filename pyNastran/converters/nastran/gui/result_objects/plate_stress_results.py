@@ -552,7 +552,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         #return self._get_real_data(itime)
 
     def _get_nodal_result(self, itime: int,
-                          iresult: Union[int, str],
+                          iresult: int | str,
                           ilayer: np.ndarray) -> np.ndarray:
         #(ntime, neidsi_nnode, nlayer, nresult) = node_data.shape
         node_data = self.node_data
@@ -619,7 +619,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         return data2
 
     def _get_centroid_result(self, itime: int,
-                             iresult: Union[int, str],
+                             iresult: int | str,
                              ilayer: np.ndarray) -> np.ndarray:
         centroid_data = self.centroid_data
         #(ntime, neidsi_nnode, nlayer, nresult) = centroid_data.shape
@@ -799,7 +799,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
 
 
 def get_plate_result(result: dict[str, Any],
-                     iresult: Union[int, str], index: int):
+                     iresult: int | str, index: int):
     """
     values
     0=title, 'annotation'
@@ -1121,7 +1121,7 @@ def _get_plates(model: OP2,
 
 def plate_cases_to_iresult(plate_cases: list,
                            is_stress: bool) -> tuple[dict[int, tuple[str, str]],
-                                                     bool, str, Union[int, str]]:
+                                                     bool, str, int | str]:
     plate_case = plate_cases[0]
     is_fiber_distance = plate_case.is_fiber_distance
     is_von_mises = plate_case.is_von_mises

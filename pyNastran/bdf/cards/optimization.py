@@ -2576,7 +2576,7 @@ class DRESP2(OptConstraint):
     type = 'DRESP2'
 
     def __init__(self, dresp_id: int, label: str,
-                 dequation: Union[int, str],
+                 dequation: int | str,
                  region: int, params,
                  method: str='MIN',
                  c1: float=1., c2: float=0.005, c3: float=10.,
@@ -2893,7 +2893,7 @@ class DRESP2(OptConstraint):
         self.dequation = self.DEquation()
         self.dequation_ref = None
 
-    def DEquation(self) -> Union[int, str]:
+    def DEquation(self) -> int | str:
         if self.dequation_ref is None:
             return self.dequation
         return self.dequation_ref.equation_id

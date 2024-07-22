@@ -399,7 +399,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         return data
 
     def _get_centroid_result(self, itime: int,
-                             iresult: Union[int, str]) -> np.ndarray:
+                             iresult: int | str) -> np.ndarray:
         """
         Centroid
         Derive and no Averaging
@@ -441,7 +441,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         return data
 
     def _get_nodal_result(self, itime: int,
-                          iresult: Union[int, str]) -> np.ndarray:
+                          iresult: int | str) -> np.ndarray:
         ioxx = 0
         ioyy = 1
         iozz = 2
@@ -657,8 +657,8 @@ class SolidStrainStressResults2(VectorResultsCommon):
         return msg
 
 
-def get_solid_result(result: dict[Union[int, str], Any],
-                     iresult: Union[int, str], index: int) -> str:
+def get_solid_result(result: dict[int | str, Any],
+                     iresult: int | str, index: int) -> str:
     """
     values
     0=title, 'annotation'
@@ -732,7 +732,7 @@ def setup_centroid_node_data(cases: list[RealSolidArray],
 
 def solid_cases_to_iresult(solid_cases: list,
                            is_stress: bool) -> tuple[dict[int, tuple[str, str]],
-                                                     str, Union[int, str]]:
+                                                     str, int | str]:
     solid_case = solid_cases[0]
     #solid_case_headers = solid_case.get_headers()
     is_von_mises = solid_case.is_von_mises

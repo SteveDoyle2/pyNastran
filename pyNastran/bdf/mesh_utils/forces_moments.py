@@ -117,9 +117,9 @@ def get_forces_moments_array(model: BDF,
     nodes = model.nodes
 
     log = model.log
-    debugs_list = []    # type: list[str]
-    warnings_list = []  # type: list[str]
-    errors_list = []    # type: list[str]
+    debugs_list: list[str] = []
+    warnings_list: list[str] = []
+    errors_list: list[str] = []
     for load, scale in zip(loads, scale_factors):
         load_type = load.type
         if load_type in loads_to_skip:

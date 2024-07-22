@@ -69,7 +69,7 @@ def parse_patran_syntax(node_sets: str, pound: Optional[int]=None) -> np.ndarray
         return np.array([], dtype='int32')
 
     snodes = node_sets.split()
-    nodes = []  # type: list[int]
+    nodes: list[int] = []
     for snode in snodes:
         _apply_comma_colon_int_node(nodes, snode)
     return np.unique(nodes)
@@ -196,7 +196,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
     .. warning:: case sensitive
 
     """
-    data = {}  # type: dict[str, list[int]]
+    data: dict[str, list[int]] = {}
     try:
         snodes = node_sets.split()
     except AttributeError:
@@ -323,14 +323,14 @@ def parse_patran_syntax_dict_map(node_sets: str,
 
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
-    update_type_map = {}  # type: dict[str, str]
+    update_type_map: dict[str, str] = {}
     for key, value in type_map.items():
         if key in update_type_map:
             assert update_type_map[key] == value
         update_type_map[key.upper()] = value
 
     dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
-    dict_temp = {}  # type: dict[str, np.ndarray]
+    dict_temp: dict[str, np.ndarray] = {}
     for key_in, value in sorted(dict_in.items()):
         key_in2 = key_in.upper()
         if key_in2 in update_type_map:
@@ -343,7 +343,7 @@ def parse_patran_syntax_dict_map(node_sets: str,
         else:
             print('skipping key=%r while parsing %s' % (key_in, msg))
 
-    dict_out = {}  # type: dict[str, np.ndarray]
+    dict_out: dict[str, np.ndarray] = {}
     for key, value_list in dict_temp.items():
         if len(value_list) == 1:
             value = value_list[0]

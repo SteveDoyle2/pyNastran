@@ -3250,8 +3250,8 @@ class AddAcoustic:
         return acmodl
 
     def add_acplnw(self, sid: int, form: str, scale: float,
-                   real: Union[int, float],
-                   imag: Union[int, float],
+                   real: int | float,
+                   imag: int | float,
                    cid1: int, xyz: list[float],
                    cid2: int, nxyz: list[float], comment: str='') -> None:
         #acoustic
@@ -5612,7 +5612,7 @@ class AddOptimization:
         return dresp
 
     def add_dresp2(self, dresp_id: int, label: str,
-                   dequation: Union[int, str],
+                   dequation: int | str,
                    region: int, params,
                    method: str='MIN', c1: float=1., c2: float=0.005, c3: float=10.,
                    validate: bool=True, comment: str='') -> DRESP2:
@@ -5730,7 +5730,7 @@ class AddOptimization:
         self._add_methods._add_dvcrel_object(dvcrel)
         return dvcrel
 
-    def add_dvprel1(self, oid: int, prop_type: str, pid: int, pname_fid: Union[int, str],
+    def add_dvprel1(self, oid: int, prop_type: str, pid: int, pname_fid: int | str,
                     dvids: list[int],
                     coeffs: list[float],
                     p_min=None, p_max: float=1e20, c0: float=0.0,
@@ -5771,7 +5771,7 @@ class AddOptimization:
         return dvprel
 
     def add_dvprel2(self, oid: int, prop_type: str, pid: int,
-                    pname_fid: Union[int, str], deqation: int,
+                    pname_fid: int | str, deqation: int,
                     dvids: list[int]=None,
                     labels: list[str]=None,
                     p_min: Optional[float]=None, p_max: float=1.0e20,
@@ -5989,7 +5989,7 @@ class AddOptimization:
         self._add_methods._add_dconstr_object(dconadd)
         return dconadd
 
-    def add_doptprm(self, params: dict[str, Union[int, float]], comment='') -> DOPTPRM:
+    def add_doptprm(self, params: dict[str, int | float], comment='') -> DOPTPRM:
         """Creates a DOPTPRM card"""
         doptprm = DOPTPRM(params, comment=comment)
         self._add_methods._add_doptprm_object(doptprm)
@@ -6094,7 +6094,7 @@ class AddOptimization:
         MSC 2001
         """
         fields = ['DVSET', vid, dv_type, field, pref, alpha] + pids
-        self.reject_card_lines('DVSET', print_card_(fields).split('\n'), show_log=False)
+        self.reject_card_lines('DVSET', print_card_8(fields).split('\n'), show_log=False)
 
     def add_dvar(self, bid: int, label: str, vids: list[float], deltab: float=0.02):
         """
@@ -6124,11 +6124,11 @@ class AddOptimization:
 
         """
         fields = ['DVAR', bid, label, deltab] + vids
-        self.reject_card_lines('DVAR', print_card_(fields).split('\n'), show_log=False)
+        self.reject_card_lines('DVAR', print_card_8(fields).split('\n'), show_log=False)
 
     def add_bndgrid(self, components: str, values: list[int], comment: str='') -> None:
         fields = ['BNDGRID', components] + values
-        self.reject_card_lines('BNDGRID', print_card_(fields).split('\n'), show_log=False)
+        self.reject_card_lines('BNDGRID', print_card_8(fields).split('\n'), show_log=False)
 
 class AddSuperelements:
     def add_sebset(self, seid: int, ids: list[int], components, comment='') -> Union[SEBSET, SEBSET1]:
@@ -6348,7 +6348,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self.grdset = grdset
         return grdset
 
-    def add_seqgp(self, nids: list[int], seqids: list[Union[int, float]],
+    def add_seqgp(self, nids: list[int], seqids: list[int | float],
                   comment: str='') -> SEQGP:
         """
         Creates the SEQGP card
@@ -6459,7 +6459,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_param_object(param)
         return param
 
-    def add_mdlprm(self, mdlprm_dict: dict[str, Union[int, float]],
+    def add_mdlprm(self, mdlprm_dict: dict[str, int | float],
                    comment: str='') -> MDLPRM:
         """
         Creates a MDLPRM card
@@ -7069,8 +7069,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         darea = DAREA(sid, nid, component, scale, comment=comment)
         self._add_methods._add_darea_object(darea)
 
-    def add_tload1(self, sid: int, excite_id: int, tid: Union[int, float],
-                   delay: Union[int, float]=0, Type: str='LOAD',
+    def add_tload1(self, sid: int, excite_id: int, tid: int | float,
+                   delay: int | float=0, Type: str='LOAD',
                    us0: float=0.0, vs0: float=0.0,
                    comment: str='') -> TLOAD1:
         """
@@ -8909,7 +8909,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['EXTRN']
         for nid, comp in zip(nids, comps):
             fields.extend([nid, comp])
-        self.reject_card_lines('EXTRN', print_card_(fields).split('\n'), show_log=False)
+        self.reject_card_lines('EXTRN', print_card_8(fields).split('\n'), show_log=False)
 
     def add_cmfree(self, eid, s, s2, y, n) -> None:
         fields = ['CMFREE', eid, s, s2, y, n]
@@ -9032,7 +9032,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         return dmi
 
     def add_dense_dmi(self, name: str, myarray: np.ndarray,
-                      form: Union[int, str],
+                      form: int | str,
                       tin=None, tout=None,
                       validate: bool=True):
         """default for tin/tout = myarray.dtype

@@ -1135,12 +1135,12 @@ class GRID(BaseCard):
         self.cd = cd
         self.ps = ps
         self.seid = seid
-        self.cp_ref = None # type: Coord
-        self.cd_ref = None # type: Coord
-        self.elements_ref = None # type: list[Element]
+        self.cp_ref: Coord = None
+        self.cd_ref: Coord = None
+        self.elements_ref: list[Element] = None
 
     @classmethod
-    def add_op2_data(cls, data: list[Union[int, float]], comment: str='') -> GRID:
+    def add_op2_data(cls, data: list[int | float], comment: str='') -> GRID:
         """
         Adds a GRID card from the OP2.
 
@@ -1415,7 +1415,7 @@ class GRID(BaseCard):
             return self.xyz
         # a matrix global->local matrix is found
         msg = ', which is required by GRID nid=%s' % (self.nid)
-        coord_b = model.Coord(cid, msg=msg) # type: CORDx
+        coord_b: CORDx = model.Coord(cid, msg=msg)
         return self.get_position_wrt_coord_ref(coord_b)
 
     def get_position_wrt_coord_ref(self, coord_out: CORDx) -> np.ndarray:
@@ -1734,7 +1734,7 @@ class POINT(BaseCard):
         return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data: list[Union[int, float]], comment: str='') -> POINT:
+    def add_op2_data(cls, data: list[int | float], comment: str='') -> POINT:
         """
         Adds a POINT card from the OP2
 

@@ -131,7 +131,7 @@ def split_filename_into_tokens(include_dir: str, filename: str,
 
 def split_tokens(tokens: tuple[str], is_windows: bool) -> list[str]:
     """converts a series of path tokens into a joinable path"""
-    tokens2 = [] # type: list[str]
+    tokens2: list[str] = []
     is_mac_linux = not is_windows
     for itoken, token in enumerate(tokens):
         # this is technically legal...

@@ -10,7 +10,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.dmig import dtype_to_tin_tout_str
 from pyNastran.bdf.field_writer import print_card_8, print_card_16, print_card_double
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, object_stats
 sparse_types = (scipy.sparse.coo_matrix, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
@@ -35,7 +35,7 @@ class Matrix:
         similar to a DMIG.  A non-matpool matrix is similar to a DMI.
 
     """
-    def __init__(self, name: str, form: Union[int, str],
+    def __init__(self, name: str, form: int | str,
                  data: Optional[Union[np.ndarray, scipy.sparse.coo_matrix]]=None):
         """
         Initializes a Matrix
@@ -160,6 +160,15 @@ class Matrix:
             #f06.write(str(matrix))
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
         mat.write(np.compat.asbytes('\n\n'))
+
+    def get_stats(self, mode: str='public', keys_to_skip=None,
+                  filter_properties: bool=False):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['object_methods', 'object_attributes',]
+        return object_stats(self, mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                            filter_properties=filter_properties)
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,
                           filter_properties: bool=False):

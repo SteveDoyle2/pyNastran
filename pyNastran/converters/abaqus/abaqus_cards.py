@@ -545,7 +545,7 @@ class Step:
         self.boundaries: list[Boundary] = boundaries
         self.node_output = node_output
         self.element_output = element_output
-        self.cloads: list[tuple[Union[int, str], int, float]] = cloads
+        self.cloads: list[tuple[int | str, int, float]] = cloads
         self.dloads = dloads
         self.frequencies = frequencies
         assert isinstance(cloads, list), cloads

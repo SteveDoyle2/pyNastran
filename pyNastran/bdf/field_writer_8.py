@@ -197,7 +197,7 @@ def print_float_8(value: float) -> str:
     return field
 
 
-#def print_float_or_int_8(value: Union[int, float]) - str:
+#def print_float_or_int_8(value: int | float) - str:
     #"""
     #Prints a 8-character width field
 

@@ -50,7 +50,7 @@ class RANDPS(RandomLoad):
 
     def __init__(self, sid: int,
                  j: int, k: int, x: float=0., y: float=0.,
-                 tid: Union[int, float]=0, comment: str=''):
+                 tid: int | float=0, comment: str=''):
         """
         Creates a RANDPS card
 

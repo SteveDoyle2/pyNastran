@@ -127,7 +127,7 @@ class CQUAD1(QuadShell):
         assert len(nids) == 4, nids
         self.nodes = self.prepare_node_ids(nids)
         self.theta = theta
-        self.theta_ref = None  # type: Optional[Any]
+        self.theta_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -351,7 +351,7 @@ class CTRSHL(TriShell):
         assert len(nids) == 6, nids
         self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 6
-        self.theta_ref = None  # type: Optional[Any]
+        self.theta_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 6, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))

@@ -906,7 +906,7 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
     else:  # pragma: no cover
         raise NotImplementedError(name)
 
-def get_theta_from_theta_mcid(theta_mcid: Union[int, float]) -> float:
+def get_theta_from_theta_mcid(theta_mcid: int | float) -> float:
     """the theta/mcid field is stored in a strange way"""
     if isinstance(theta_mcid, integer_types):
         theta = 512. * (theta_mcid + 1)

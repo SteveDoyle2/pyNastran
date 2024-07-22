@@ -1950,7 +1950,7 @@ class DVPREL1(VectorizedBaseCard):
         self.desvar_id = np.array([], dtype='int32')
         self.coefficients = np.array([], dtype='float64')
 
-    def add(self, oid: int, prop_type: str, pid: int, pname_fid: Union[int, str],
+    def add(self, oid: int, prop_type: str, pid: int, pname_fid: int | str,
             desvar_ids: list[int],
             coeffs: list[float],
             p_min=None, p_max: float=1e20, c0: float=0.0,
@@ -2249,7 +2249,7 @@ class DVPREL2(VectorizedBaseCard):
         self.labels = np.array([], dtype='|U8')
 
     def add(self, dvprel_id: int, prop_type: str, pid: int,
-            pname_fid: Union[int, str], deqation: int,
+            pname_fid: int | str, deqation: int,
             desvars: list[int]=None,
             labels: list[str]=None,
             p_min: Optional[float]=None, p_max: float=1.0e20,

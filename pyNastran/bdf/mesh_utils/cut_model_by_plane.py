@@ -1320,7 +1320,7 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas,
         eids, length, centroid)
 
     # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    I = np.zeros((len(area), 6), dtype='float64') # type: np.ndarray
+    I: np.ndarray = np.zeros((len(area), 6), dtype='float64')
 
     # (Ex, Ey, Gxy)
     Ex = E[:, 0]

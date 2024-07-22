@@ -246,7 +246,7 @@ class BCBODY(BaseCard):
 
     def __init__(self, contact_id: int, bsid: int,
                  dim: str='3D', behav: str='DEFORM',
-                 istype: int=0, fric: Union[int, float]=0, idispl: int=0, comment=''):
+                 istype: int=0, fric: int | float=0, idispl: int=0, comment=''):
         if comment:
             self.comment = comment
         self.contact_id = contact_id

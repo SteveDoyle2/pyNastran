@@ -31,8 +31,8 @@ class BDFCard:
         if has_none:
             long_fields = [print_field_16(field).strip() for field in card]
             card = wipe_empty_fields(long_fields)
-        self.card = card  # type: list[Optional[str]]
-        self.nfields = len(self.card)  # type: int
+        self.card: list[Optional[str]] = card
+        self.nfields: int = len(self.card)
 
     def pop(self) -> Optional[str]:
         """card.pop()"""
@@ -175,4 +175,3 @@ class BDFCard:
         except IndexError:
             pass
         return default
-

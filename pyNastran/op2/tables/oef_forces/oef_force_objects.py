@@ -1180,7 +1180,7 @@ class RealRodForceArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
-    def add_sort1(self, dt: Union[int, float], eid: int, axial: float, torque: float) -> None:
+    def add_sort1(self, dt: int | float, eid: int, axial: float, torque: float) -> None:
         """unvectorized method for adding SORT1 transient data"""
         assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
@@ -1191,7 +1191,7 @@ class RealRodForceArray(RealForceObject):
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def add_sort2(self, dt: Union[int, float], eid: int, axial: float, torque: float) -> None:
+    def add_sort2(self, dt: int | float, eid: int, axial: float, torque: float) -> None:
         """unvectorized method for adding SORT2 transient data"""
         assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)

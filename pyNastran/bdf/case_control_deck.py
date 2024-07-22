@@ -1057,9 +1057,9 @@ def parse_entry(lines: list[str],
             #value = obj
             #param_type = 'OBJ-type'
         #else:
-        key = value.key  # type: str
-        options = obj.set_id  # type: list[int]
-        value = obj.value  # type: int
+        key: str = value.key
+        options: list[int] = obj.set_id
+        value: int = obj.value
         param_type = 'SET-type'
 
     #elif line_upper.startswith(CHECK_CARD_NAMES) and self.use_card_dict:

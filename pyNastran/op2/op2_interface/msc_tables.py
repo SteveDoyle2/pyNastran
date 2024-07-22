@@ -258,7 +258,7 @@ MSC_ELEMENTS = {
     243 : 'CPYRAM?',
 }
 
-MSC_GEOM_TABLES = [
+MSC_GEOM_TABLES: list[bytes] = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
     # GEOM4 - Table of Bulk Data entry images related to constraints, degree-of-freedom membership and rigid element connectivity.
     b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
@@ -297,7 +297,7 @@ MSC_GEOM_TABLES = [
     b'CASEXX',
 ]
 
-MSC_MATRIX_TABLES = [
+MSC_MATRIX_TABLES: list[bytes] = [
     # 2020
     b'MATB', b'MATK4', b'MATP', b'MUG1', b'MUG1O', # b'TQG1', # b'TUG1',
     #b'MUG1B',
@@ -386,7 +386,7 @@ MSC_MATRIX_TABLES = [
     b'FEFFMOD',  #  think this is right
 ] # type: list[bytes]
 
-MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
+MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
     b'QUALINFO',
 
@@ -668,7 +668,7 @@ if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no co
             _MSG += '%s = %s\n' % (key, cvaluei)
     raise RuntimeError(_MSG)
 
-MSC_TABLE_CONTENT = {
+MSC_TABLE_CONTENT: dict[int, str] = {
     # dmap 2014
     0: '',
     1: 'OUG - Displacement vector',
@@ -718,8 +718,8 @@ MSC_TABLE_CONTENT = {
     #55: 'OGMPF2M - ???',
     56: 'OESRT - Ply strength ratios???',
     89: 'OESRT - Ply strength ratios',
-} # type: dict[int, str]
-MSC_OEF_REAL_MAPPER = {
+}
+MSC_OEF_REAL_MAPPER: dict[int, int] = {
     1: 3,   # CROD
     2: 1 + (10 - 1) * 11,  # CBEAM
     3: 3,   # CTUBE
