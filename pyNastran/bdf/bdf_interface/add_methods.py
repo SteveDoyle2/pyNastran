@@ -911,11 +911,7 @@ class AddMethods:
     def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:
         """adds a load object to a load case"""
         key = load.sid
-        if key in self.model.load_combinations:
-            self.model.load_combinations[key].append(load)
-        else:
-            self.model.load_combinations[key] = [load]
-            self.model._type_to_id_map[load.type].append(key)
+        _add_value_to_dict(self.model.load_combinations, key, load, self.model._type_to_id_map)
 
     def _add_load_object(self, load: Union[FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                            PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
@@ -925,50 +921,30 @@ class AddMethods:
                                            GMLOAD]) -> None:
         """adds a load object to a load case"""
         key = load.sid
-        if key in self.model.loads:
-            self.model.loads[key].append(load)
-        else:
-            self.model.loads[key] = [load]
-            self.model._type_to_id_map[load.type].append(key)
+        _add_value_to_dict(self.model.loads, key, load, self.model._type_to_id_map)
 
     def _add_dload_object(self, load: DLOAD) -> None:
         """adds a dload object to a load case"""
         key = load.sid
-        if key in self.model.dloads:
-            self.model.dloads[key].append(load)
-        else:
-            self.model.dloads[key] = [load]
-            self.model._type_to_id_map[load.type].append(key)
+        _add_value_to_dict(self.model.dloads, key, load, self.model._type_to_id_map)
 
     def _add_dload_entry(self, dload: Union[ACSRCE, RANDPS, RANDT1,
                                             TLOAD1, TLOAD2, RLOAD1, RLOAD2,
                                             QVECT]) -> None:
         """adds a sub-dload object to a load case"""
         key = dload.sid
-        if key in self.model.dload_entries:
-            self.model.dload_entries[key].append(dload)
-        else:
-            self.model.dload_entries[key] = [dload]
-            self.model._type_to_id_map[dload.type].append(key)
+        _add_value_to_dict(self.model.dload_entries, key, load, self.model._type_to_id_map)
 
     def _add_lseq_object(self, load: LSEQ) -> None:
         """adds a LSEQ object to a load case"""
         key = load.sid
-        if key in self.model.load_combinations:
-            self.model.load_combinations[key].append(load)
-        else:
-            self.model.load_combinations[key] = [load]
-            self.model._type_to_id_map[load.type].append(key)
+        _add_value_to_dict(self.model.load_combinations, key, load, self.model._type_to_id_map)
 
     def _add_thermal_load_object(self, load: Union[TEMP, TEMPB3, QHBDY, QBDY1, QBDY2, QBDY3]) -> None:
         # same function at the moment...
         key = load.sid
         assert key > 0, 'key=%s; load=%s\n' % (key, load)
-        if key in self.model.loads:
-            self.model.loads[key].append(load)
-        else:
-            self.model.loads[key] = [load]
-            self.model._type_to_id_map[load.type].append(key)
+        _add_value_to_dict(self.model.loads, key, load, self.model._type_to_id_map)
 
     def _add_phbdy_object(self, prop: PHBDY) -> None:
         key = prop.pid
@@ -1035,52 +1011,28 @@ class AddMethods:
 
     def _add_thermal_bc_object(self, bc: Union[CONV, CONVM, RADM, TEMPBC], key) -> None:
         assert key > 0
-        if key in self.model.bcs:
-            self.model.bcs[key].append(bc)
-        else:
-            self.model.bcs[key] = [bc]
-            self.model._type_to_id_map[bc.type].append(key)
+        _add_value_to_dict(self.model.bcs, key, bc, self.model._type_to_id_map)
 
     def _add_constraint_mpc_object(self, constraint: MPC) -> None: # MPCAX
         key = constraint.conid
-        if key in self.model.mpcs:
-            self.model.mpcs[key].append(constraint)
-        else:
-            self.model.mpcs[key] = [constraint]
-            self.model._type_to_id_map[constraint.type].append(key)
+        _add_value_to_dict(self.model.mpcs, key, constraint, self.model._type_to_id_map)
 
     def _add_constraint_mpcadd_object(self, constraint: MPCADD) -> None:
         key = constraint.conid
-        if key in self.model.mpcadds:
-            self.model.mpcadds[key].append(constraint)
-        else:
-            self.model.mpcadds[key] = [constraint]
-            self.model._type_to_id_map[constraint.type].append(key)
+        _add_value_to_dict(self.model.mpcadds, key, constraint, self.model._type_to_id_map)
 
     def _add_constraint_spc_object(self, constraint: Union[SPC, SPC1, SPCAX, GMSPC]) -> None:
         key = constraint.conid
-        if key in self.model.spcs:
-            self.model.spcs[key].append(constraint)
-        else:
-            self.model.spcs[key] = [constraint]
-            self.model._type_to_id_map[constraint.type].append(key)
+        _add_value_to_dict(self.model.spcs, key, constraint, self.model._type_to_id_map)
 
     def _add_constraint_spcadd_object(self, constraint: SPCADD) -> None:
         key = constraint.conid
-        if key in self.model.spcadds:
-            self.model.spcadds[key].append(constraint)
-        else:
-            self.model.spcadds[key] = [constraint]
-            self.model._type_to_id_map[constraint.type].append(key)
+        _add_value_to_dict(self.model.spcadds, key, constraint, self.model._type_to_id_map)
 
     def _add_constraint_spcoff_object(self, constraint: Union[SPCOFF, SPCOFF1]) -> None:
         """dumb key, but good enough..."""
         key = constraint.type
-        if key in self.model.spcoffs:
-            self.model.spcoffs[key].append(constraint)
-        else:
-            self.model.spcoffs[key] = [constraint]
-            self.model._type_to_id_map[constraint.type].append(key)
+        _add_value_to_dict(self.model.spcoffs, key, constraint, self.model._type_to_id_map)
 
     def _add_sesuport_object(self, se_suport: Union[SESUP, SESUPORT]) -> None:
         """adds an SESUPORT"""
@@ -1836,3 +1788,14 @@ class AddMethods:
         else:
             self.model.boltfor[boltfor.sid] = boltfor
             self.model._type_to_id_map[boltfor.type].append(key)
+
+def _add_value_to_dict(result: dict[int, Any], key: int, card: Any,
+                       mapper: dict[str, set[int]]) -> None:
+    mapperi = mapper[card.type]
+    if key not in result:
+        result[key] = [card]
+        mapperi.append(key)
+    else:
+        result[key].append(card)
+        if key not in mapperi:
+            mapperi.append(key)

@@ -698,7 +698,7 @@ def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=N
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return svalue
 
-def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float]:
+def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> int | float:
     """
     Casts a value to an integer/double
 
@@ -787,7 +787,7 @@ def integer_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, str]:
+def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> int | str:
     """
     Casts a value to an integer/string
 

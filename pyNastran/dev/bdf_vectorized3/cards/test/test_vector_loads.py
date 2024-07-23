@@ -329,6 +329,23 @@ class TestLoads(unittest.TestCase):
         assert np.allclose(force_moment_expected, force_moment)
         save_load_deck(model)
 
+    def test_force_moment_type(self):
+        lines = [
+            'FORCE   1001    47              1.0     444.    555.    666.',
+            'MOMENT  1001    47              1.0     777.    888.    999.',
+        ]
+        from pyNastran.bdf.bdf import BDF
+        model = BDF(debug=False)
+        for line in lines:
+            sline = line.split()
+            model.add_card_lines([line], sline[0])
+        assert len(model.card_count) == 2
+        assert len(model.get_cards_by_card_types(["FORCE"])['FORCE']) == 1
+        assert len(model.get_cards_by_card_types(["MOMENT"])['MOMENT']) == 1
+        assert len(model.get_cards_by_card_types(["FORCE", "MOMENT"])) == 2
+        #print("FORCES:", model.get_cards_by_card_types(["FORCE"])["FORCE"])
+        #print("MOMENTS:", model.get_cards_by_card_types(["MOMENT"])["MOMENT"])
+
     def test_pload2_01(self):
         """tests a PLOAD2"""
         model = BDF(debug=False)

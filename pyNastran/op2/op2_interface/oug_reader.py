@@ -27,7 +27,7 @@ def read_real_table_static(op2: OP2, obj: Any, flag:str,
         n += ntotal
     return n
 
-def read_real_table_sort1(op2: OP2, obj: Any, dt: Union[int, float], flag: str,
+def read_real_table_sort1(op2: OP2, obj: Any, dt: int | float, flag: str,
                           data: bytes, nnodes: int, ntotal: int) -> int:
     n = 0
     assert nnodes > 0, nnodes
@@ -45,7 +45,7 @@ def read_real_table_sort1(op2: OP2, obj: Any, dt: Union[int, float], flag: str,
         n += ntotal
     return n
 
-def read_complex_table_sort1_mag(op2: OP2, obj: Any, dt: Union[int, float], flag: str,
+def read_complex_table_sort1_mag(op2: OP2, obj: Any, dt: int | float, flag: str,
                                  data: bytes, nnodes: int, ntotal: int) -> int:
     n = 0
     fmt = mapfmt(op2._endian + b'2i12f', op2.size)
@@ -67,7 +67,7 @@ def read_complex_table_sort1_mag(op2: OP2, obj: Any, dt: Union[int, float], flag
         n += ntotal
     return n
 
-def read_complex_table_sort1_imag(op2: OP2, obj: Any, dt: Union[int, float], flag: str,
+def read_complex_table_sort1_imag(op2: OP2, obj: Any, dt: int | float, flag: str,
                                   data: bytes, nnodes: int, ntotal: int) -> int:
     n = 0
     fmt = mapfmt(op2._endian + b'2i12f', op2.size)
