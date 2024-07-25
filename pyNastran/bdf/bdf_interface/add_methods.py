@@ -933,7 +933,7 @@ class AddMethods:
                                             QVECT]) -> None:
         """adds a sub-dload object to a load case"""
         key = dload.sid
-        _add_value_to_dict(self.model.dload_entries, key, load, self.model._type_to_id_map)
+        _add_value_to_dict(self.model.dload_entries, key, dload, self.model._type_to_id_map)
 
     def _add_lseq_object(self, load: LSEQ) -> None:
         """adds a LSEQ object to a load case"""

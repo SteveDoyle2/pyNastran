@@ -1,7 +1,7 @@
 """defines the BDF attributes"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import Optional, Any, Union, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from numpy import array
 #from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
@@ -81,18 +81,20 @@ if TYPE_CHECKING:  # pragma: no cover
         CREEP,
         MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATDMG,
         NXSTRAT,
-        PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
+        PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
 
         PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
         SUPORT, SUPORT1,
         BOLT, BOLTFOR, BOLTSEQ,
         PELAST, PDAMPT, PBUSHT, TIC,
+
+        CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
     )
-    #Coord = Union[CORD1R, CORD1C, CORD1S,
-    #              CORD2R, CORD2C, CORD2S]
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
+    Coord = CORD1R | CORD1C | CORD1S | \
+            CORD2R | CORD2C | CORD2S
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
 
@@ -463,12 +465,12 @@ class BDFAttributes:
         self.normals: dict[int, SNORM] = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
-        self.rigid_elements = {}  # type: dict[int, Any]
+        self.rigid_elements: dict[int, RBE1 | RBE2 | RBE3 | RBAR | RBAR1 | RJOINT] = {}
         #: stores PLOTELs
-        self.plotels = {}  # type: Optional[PLOTEL]
+        self.plotels: dict[int, PLOTEL] = {}
 
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
-        self.masses: dict[int, Any] = {}
+        self.masses: dict[int, CONM1 | CONM2 | CMASS1 | CMASS2 | CMASS3 | CMASS4 | CMASS5] = {}
         #: stores PMASS
         self.properties_mass: dict[int, PMASS] = {}
 
@@ -481,10 +483,10 @@ class BDFAttributes:
         self.properties: dict[int, Any] = {}
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
-        self.materials: dict[int, Any] = {}
+        self.materials: dict[int, MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11] = {}
 
         #: defines the MAT4, MAT5
-        self.thermal_materials: dict[int, Any] = {}
+        self.thermal_materials: dict[int, MAT4 | MAT5] = {}
 
         #: defines the MATHE, MATHP
         self.hyperelastic_materials: dict[int, Any] = {}
@@ -512,10 +514,10 @@ class BDFAttributes:
         self.tics: dict[int, TIC] = {}
 
         # stores DLOAD entries.
-        self.dloads: dict[int, Any] = {}
+        self.dloads: dict[int, DLOAD] = {}
         # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
         #        and QVECT entries.
-        self.dload_entries: dict[int, Any] = {}
+        self.dload_entries: dict[int, ACSRCE | RLOAD1 | RLOAD2 | TLOAD1 | TLOAD2 | ACSRCE | QVECT] = {}
 
         #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
@@ -526,7 +528,7 @@ class BDFAttributes:
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords: dict[int, Any] = {0 : coord}
-        self.MATCID = {}
+        self.MATCID: dict[int, MATCID] = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -535,12 +537,12 @@ class BDFAttributes:
         self.se_suport: list[Any] = []
 
         #: stores SPC, SPC1, SPCAX, GMSPC
-        self.spcs: dict[int, list[Any]] = {}
+        self.spcs: dict[int, list[SPC | SPC1 | SPCAX]] = {}
         #: stores SPCADD
         self.spcadds: dict[int, list[SPCADD]] = {}
-        self.spcoffs: dict[int, list[Any]] = {}
+        self.spcoffs: dict[int, list[SPCOFF | SPCOFF1]] = {}
 
-        self.mpcs: dict[int, list[Any]] = {}
+        self.mpcs: dict[int, list[MPC]] = {}
         self.mpcadds: dict[int, list[MPCADD]] = {}
 
         # --------------------------- dynamic ----------------------------
@@ -553,7 +555,7 @@ class BDFAttributes:
         self.pelast: dict[int, PELAST] = {}
 
         #: frequencies
-        self.frequencies: dict[int, list[Any]] = {}
+        self.frequencies: dict[int, list[FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5]] = {}
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
@@ -564,17 +566,17 @@ class BDFAttributes:
         self.dmik: dict[str, DMIK] = {}
         self.dmiax: dict[str, DMIAX] = {}
         self.dti: dict[str, Any] = {}
-        self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
+        self._dmig_temp: dict[str, list[str]] = defaultdict(list)
 
         # ----------------------------------------------------------------
         #: SETy
-        self.sets: dict[int, Any] = {}
-        self.asets: list[Any] = []
-        self.omits: list[Any] = []
-        self.bsets: list[Any] = []
-        self.csets: list[Any] = []
-        self.qsets: list[Any] = []
-        self.usets: dict[str, Any] = {}
+        self.sets: dict[int, SET1 | SET3] = {}
+        self.asets: list[ASET | ASET1] = []
+        self.omits: list[OMIT | OMIT1] = []
+        self.bsets: list[BSET | BSET1] = []
+        self.csets: list[CSET | CSET1] = []
+        self.qsets: list[QSET | QSET1] = []
+        self.usets: dict[str, USET | USET1] = {}
 
         #: SExSETy
         self.se_bsets: list[Any] = []
@@ -598,10 +600,10 @@ class BDFAttributes:
         self.tables: dict[int, TABLES1] = {}
 
         # TABLEDx
-        self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
+        self.tables_d: dict[int, TABLED1 | TABLED2 | TABLED3 | TABLED4] = {}
 
         # TABLEMx
-        self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
+        self.tables_m: dict[int, TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4] = {}
 
         #: random_tables
         self.random_tables: dict[int, Any] = {}
@@ -610,9 +612,9 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
-        self.methods: dict[int, Union[EIGR, EIGRL, EIGB]] = {}
+        self.methods: dict[int, EIGR | EIGRL | EIGB] = {}
         # EIGC, EIGP methods
-        self.cMethods: dict[int, Union[EIGC, EIGP]] = {}
+        self.cMethods: dict[int, EIGC | EIGP] = {}
 
         # ---------------------------- optimization --------------------------
         # optimization
@@ -622,15 +624,15 @@ class BDFAttributes:
         self.topvar: dict[int, TOPVAR] = {}
         self.ddvals: dict[int, DDVAL] = {}
         self.dlinks: dict[int, DLINK] = {}
-        self.dresps: dict[int, Union[DRESP1, DRESP2, DRESP3]] = {}
+        self.dresps: dict[int, DRESP1 | DRESP2 | DRESP3] = {}
 
         self.dtable: Optional[DTABLE] = None
         self.dequations: dict[int, DEQATN] = {}
 
         #: stores DVPREL1, DVPREL2...might change to DVxRel
-        self.dvprels: dict[int, Union[DVPREL1, DVPREL2]] = {}
-        self.dvmrels: dict[int, Union[DVMREL1, DVMREL2]] = {}
-        self.dvcrels: dict[int, Union[DVCREL1, DVCREL2]] = {}
+        self.dvprels: dict[int, DVPREL1 | DVPREL2] = {}
+        self.dvmrels: dict[int, DVMREL1 | DVMREL2] = {}
+        self.dvcrels: dict[int, DVCREL1 | DVCREL2] = {}
         self.dvgrids: dict[int, DVGRID] = {}
         self.doptprm: Optional[DOPTPRM] = None
         self.dscreen: dict[int, DSCREEN] = {}
@@ -638,7 +640,7 @@ class BDFAttributes:
         # nx optimization
         self.group : dict[int, GROUP]= {}
         self.dmncon: dict[int, DMNCON] = {}
-        self.dvtrels: dict[int, Union[DVTREL1, DVTREL2]] = {}
+        self.dvtrels: dict[int, DVTREL1 | DVTREL2] = {}
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
@@ -646,7 +648,7 @@ class BDFAttributes:
         #: stores NLPARM
         self.nlparms: dict[int, NLPARM] = {}
         #: stores TSTEPs, TSTEP1s
-        self.tsteps: dict[int, Union[TSTEP, TSTEP1]] = {}
+        self.tsteps: dict[int, TSTEP | TSTEP1] = {}
         #: stores TSTEPNL
         self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
@@ -655,7 +657,7 @@ class BDFAttributes:
         self.delays: dict[int, DELAY] = {}
 
         #: stores ROTORD, ROTORG
-        self.rotors: dict[int, Union[ROTORD, ROTORG]] = {}
+        self.rotors: dict[int, ROTORD | ROTORG] = {}
 
         self.acplnw: dict[int, ACPLNW] = {}
         self.amlreg: dict[int, AMLREG] = {}
@@ -664,11 +666,11 @@ class BDFAttributes:
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
-        self.caeros: dict[int, Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]] = {}
+        self.caeros: dict[int, CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5] = {}
         #: stores PAEROx
-        self.paeros: dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]] = {}
+        self.paeros: dict[int, PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5] = {}
         # stores MONPNT1
-        self.monitor_points: list[Union[MONPNT1, MONPNT2, MONPNT3]] = []
+        self.monitor_points: list[MONPNT1 | MONPNT2 | MONPNT3] = []
 
         #: stores AECOMP
         self.aecomps: dict[int, AECOMP] = {}
@@ -690,7 +692,7 @@ class BDFAttributes:
         self.csschds: dict[int, CSSCHD] = {}
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines: dict[int, Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]] = {}
+        self.splines: dict[int, SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5] = {}
         self.zona = ZONA(self)
 
         # axisymmetric
@@ -713,7 +715,7 @@ class BDFAttributes:
         self.aeros: Optional[AEROS] = None
 
         #: stores TRIM, TRIM2
-        self.trims: dict[int, Union[TRIM, TRIM2]] = {}
+        self.trims: dict[int, TRIM | TRIM2] = {}
 
         #: stores DIVERG
         self.divergs: dict[int, DIVERG] = {}
@@ -729,7 +731,7 @@ class BDFAttributes:
         self.flutters: dict[int, FLUTTER] = {}
 
         #: mkaeros
-        self.mkaeros: list[Union[MKAERO1, MKAERO2]] = []
+        self.mkaeros: list[MKAERO1 | MKAERO2] = []
 
         # ------ SOL 146 ------
         #: stores GUST cards
@@ -738,12 +740,12 @@ class BDFAttributes:
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs: dict[int, Union[CONV, RADBC]] = {}
+        self.bcs: dict[int, CONV | RADBC] = {}
 
         #: stores PHBDY
         self.phbdys: dict[int, PHBDY] = {}
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties: dict[int, Union[PCONV, PCONVM]] = {}
+        self.convection_properties: dict[int, PCONV | PCONVM] = {}
         #: stores TEMPD
         self.tempds: dict[int, TEMPD] = {}
 
@@ -774,7 +776,7 @@ class BDFAttributes:
 
         #--------------------------superelements------------------------------
         self.setree: dict[int, SETREE] = {}
-        self.senqset: dict[int, Union[SENQSET, SENQSET1]] = {}
+        self.senqset: dict[int, SENQSET | SENQSET1] = {}
         self.sebulk: dict[int, SEBULK] = {}
         self.sebndry: dict[int, SEBNDRY] = {}
         self.release: dict[int, RELEASE] = {}
@@ -795,7 +797,7 @@ class BDFAttributes:
         self.boltld = {}
         # ---------------------------------------------------------------------
         self.model_groups: dict[int, ModelGroup] = {}
-        self._type_to_id_map = defaultdict(list)  # type: dict[int, list[Any]]
+        self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
         self._slot_to_type_map = {
             'params' : ['PARAM'],
             'mdlprm': ['MDLPRM'],
@@ -1343,7 +1345,7 @@ class BDFAttributes:
             wtmass = param.values[0]
         return wtmass
 
-    def set_param(self, key: str, values: Union[int, float, str, list[float]], comment: str='') -> None:
+    def set_param(self, key: str, values: int | float | str | list[float], comment: str='') -> None:
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]
@@ -1354,8 +1356,8 @@ class BDFAttributes:
         else:
             self.add_param(key, values, comment=comment)
 
-    def get_param(self, key: str, default: Union[int, float, str, list[float]]
-                  ) -> Union[int, float, str, list[float]]:
+    def get_param(self, key: str, default: int | float | str | list[float]
+                  ) -> int | float | str | list[float]:
         """gets a param card"""
         key = key.upper()
         if key in self.params:
