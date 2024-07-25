@@ -1,0 +1,54 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$pyNastran: nnodes=77
+$pyNastran: nelements=124
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+ECHO = NONE
+SUBCASE 1
+    DISPLACEMENT(SORT1,REAL) = ALL
+    LOAD = 1
+    SPC = 1
+    SPCFORCES(SORT1,REAL) = ALL
+    STRESS(SORT1,REAL,VONMISES,BILIN) = ALL
+    SUBTITLE = Default
+BEGIN BULK
+$PARAMS
+PARAM       POST      -1
+$NODES
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+GRID           1              0.      0.      0.
+GRID           2            100.      0.      0.
+GRID           3            100.     50.      0.
+$ELEMENTS
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+CTRIA3        29       1       1       2       3      
+$PROPERTIES
+$ Elements and Element Properties for region : Composite_Shell_Props
+$ Composite Property Reference Material: T300_lay-up
+$ Composite Material Description :
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+PCOMP    1                       50.     TSAI    20.
+         2       .33     90.      YES     
+         2       .33     90.       YES
+         2       .33     90.      YES
+         
+$ Referenced Material Records
+$ Material Record : ud_t300_n5208
+$ Description of Material : Date: 06-Apr-95           Time: 15:23:46
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+MAT8     2       181000. 10300.  .28     7170.   7170.   5000.   1.6-9
+         2.-8    2.25-5  20.     1500.   1500.   40.     246.    68.
+*                       -3.359-6
+*
+$LOADS
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+LOAD           1      1.      1.       2
+$-------+-------+-------+-------+-------+-------+-------+-------+-------+-------
+FORCE          2       3              1.      0.      0.      1.
+SPCADD         1       2
+SPC1           2  123456       1      2
+ENDDATA
