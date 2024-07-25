@@ -117,11 +117,11 @@ except ModuleNotFoundError:  # pragma: no cover
 
 #---------------------------------------------------------------------
 # pynastrangui-1.4.0-dev includes obj, but not others below line
-try:
-    from pyNastran2.nastran_io2 import Nastran2
-    CLASS_MAP['nastran2'] = Nastran2
-except ModuleNotFoundError:  # pragma: no cover
-    pass
+#try:
+#    from pyNastran2.nastran_io2 import Nastran2
+#    CLASS_MAP['nastran2'] = Nastran2
+#except ModuleNotFoundError:  # pragma: no cover
+#    pass
 
 try:
     from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3

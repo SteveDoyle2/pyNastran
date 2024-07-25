@@ -650,7 +650,7 @@ def get_composite_methods(key: int,
     case = cases2[key]
     case_headers = case.get_headers()
     method_map, word = _composite_method_map(is_stress)
-    methods = [method_map[headeri] for headeri in case_headers]
+    methods = [method_map[headeri] for headeri in case_headers if headeri in method_map]
 
     # verify we don't crash when we try to pivot later
     # why does this happen???
@@ -677,7 +677,7 @@ def _composite_method_map(is_stress: bool,
             'major' : 'Max Principal',
             'minor' : 'Min Principal',
             'max_shear' : 'Max Shear',
-            #'von_mises' : 'von Mises',
+            'von_mises' : 'von Mises',
         }
     else:
         word = 'Strain'
@@ -692,7 +692,7 @@ def _composite_method_map(is_stress: bool,
             'major' : 'Max Principal',
             'minor' : 'Min Principal',
             'max_shear' : 'Max Shear',
-            #'von_mises' : 'von Mises',
+            'von_mises' : 'von Mises',
         }
     #methods = ['fiber_distance'] + [method_map[headeri] for headeri in case_headers]
     #methods = case_headers

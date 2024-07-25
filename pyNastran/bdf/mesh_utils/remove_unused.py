@@ -122,7 +122,7 @@ def remove_unused(bdf_filename: str,
         'CGEN', 'NXSTRAT',
 
         # axisymmetric
-        'FORCEAX',
+        'FORCEAX', 'PRESAX',
 
         # acoustic
         'PACABS', 'PMIC', 'MATPOR', 'AMLREG', 'CAABSF', 'MICPNT',
@@ -156,6 +156,7 @@ def remove_unused(bdf_filename: str,
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD', 'CLOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
+        'TEMPRB',
         # msgmesh
         #'GMLOAD',
     }
@@ -609,6 +610,8 @@ def remove_unused(bdf_filename: str,
                 #normal: array([0., 0., 1.])
                 nids_used.add(card.nid)
                 cids_used.add(card.cid)
+            #for nid in ids:
+
         else:  # pragma: no cover
             raise NotImplementedError(card_type)
 
@@ -876,11 +879,21 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, eids_used, cids
             elif load.type in ['LOAD', 'LSEQ', 'LOADCYN']:
                 pass
             elif load.type in ['QVOL', 'TEMPRB']:
+                # eids: [1901, 1902, 1903, 6901, 11901]
+                # sid: 2
+                # ta: 100.0
+                # tai: [100.0, 100.0, 100.0, 100.0]
+                # tb: 100.0
+                # tbi: [100.0, 100.0, 100.0, 100.0]
+                # tp1: [None, None]
+                # tp2: [None, None]
+                # type: 'TEMPRB'
+                #
                 # eids
                 pass
             elif load.type in ['TEMPAX']:
                 pass # not done...
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(load)
 
 def _store_dresp1(model: BDF, ids, nids_used, pids_used, dresps_used):

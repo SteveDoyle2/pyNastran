@@ -54,7 +54,8 @@ def nocrash_log(func):
             if stop_on_failure:
                 raise
             ncases2 = len(cases)
-            icase += ncases2 - ncases
+            # TODO: was icase += ncases2 - ncases; explicitly pass icase?
+            icase = ncases2 - ncases
         return icase
     return wrapper
 

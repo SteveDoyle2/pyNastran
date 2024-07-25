@@ -1755,6 +1755,22 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
 
+    def test_gui_pcomp_01(self):
+        """tests composite von mises cquad4"""
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pcomp', 'pcomp_cquad4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pcomp', 'pcomp_cquad4.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pcomp_02(self):
+        """tests composite von mises ctria3"""
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pcomp', 'pcomp_ctria3.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pcomp', 'pcomp_ctria3.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
     def test_gui_superelement_1(self):
         """tests flyswatter"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter_renumber.bdf')
