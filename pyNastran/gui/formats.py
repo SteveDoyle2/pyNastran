@@ -130,7 +130,7 @@ except ModuleNotFoundError:  # pragma: no cover
     raise
 
 try:
-    from pyNastran.converters.fluent.fluent import FluentIO
+    from pyNastran.converters.fluent.fluent_io import FluentIO
     CLASS_MAP['Fluent'] = FluentIO
 except ModuleNotFoundError:  # pragma: no cover
     pass
