@@ -129,6 +129,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     raise
 
+try:
+    from pyNastran.converters.fluent.fluent import FluentIO
+    CLASS_MAP['Fluent'] = FluentIO
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+
 if DEV:
     try:
         from pyNastran.dev.h5.h5_nastran_io import H5NastranIO

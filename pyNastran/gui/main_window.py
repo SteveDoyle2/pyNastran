@@ -126,7 +126,7 @@ class MainWindow(GuiCommon, NastranIO):
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
-            'fld',
+            'fld', 'fluent',
             'degen_geom',
             'fast',
             'lawgs',

@@ -44,6 +44,8 @@ FORMAT_TO_EXTENSION = {
     'avus' : ['.grd'],
     'avl' : ['.avl'],
     'vrml' : ['.wrl'],
+    'fld' : ['.fld'],
+    'fluent': ['.vrt', '.cel', '.daten'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],
