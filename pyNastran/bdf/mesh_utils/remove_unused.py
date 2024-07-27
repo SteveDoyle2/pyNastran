@@ -156,7 +156,7 @@ def remove_unused(bdf_filename: str,
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD', 'CLOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
-        'TEMPRB',
+        'TEMPRB', 'RANDT1',
         # msgmesh
         #'GMLOAD',
     }
