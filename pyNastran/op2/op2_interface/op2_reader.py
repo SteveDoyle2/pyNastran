@@ -2926,7 +2926,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        last_table_name : bytes; default=Noen
+        last_table_name : bytes; default=None
             the last table name
 
         Returns
@@ -3777,6 +3777,7 @@ class OP2Reader:
                 raise
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             op2.isubtable -= 1
+            #self.log.debug(f'op2.isubtable = {op2.isubtable}')
 
             iloc = op2.f.tell()
             if op2._nastran_format == 'optistruct' and 0:
@@ -3789,6 +3790,7 @@ class OP2Reader:
                 if not outi[1] == op2.isubtable:
                     self.log.warning(f'outi={outi} isubtable={op2.isubtable:d}')
             else:
+                #self.show(4 * 3 * 3, types='i')
                 #self.show_ndata(36, types='i', force=False, endian=None)
                 try:
                     self.read_3_markers([op2.isubtable, 1, 0])
@@ -3816,6 +3818,7 @@ class OP2Reader:
                         #self.show(200)
                         #break
                     raise
+            #self.show_ndata(100, types='ifs')
             markers = self.get_nmarkers(1, rewind=True)
 
         if self.is_debug_file:
