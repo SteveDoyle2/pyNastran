@@ -393,6 +393,7 @@ class RealStrainEnergyArray(BaseElement):
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
+        msg.append(f'  etotpos={self.etotpos}; etotneg={self.etotneg}; thresh={self.thresh}\n')
         msg.append(f'  element: [{ntimes_word:s}, nelements]; eid=100000000 -> total\n')
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
@@ -512,11 +513,18 @@ class RealStrainEnergyArray(BaseElement):
         # ''
         # '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
 
+        if self.analysis_code in {1, 5, 6, 10}: # statics, frequency, transient, nonlinear statics
+            subcase_mode = 'SUBCASE'
+        elif self.analysis_code in {2, 9}:  # modes, complex modes
+            subcase_mode = 'MODE'
+        else:  # pragma: no cover
+            raise NotImplementedError(self.code_information())
+
         msg_temp = (
             '                                           E L E M E N T   S T R A I N   E N E R G I E S\n'
             ' \n'
-            '                ELEMENT-TYPE = %s               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   %s\n'
-            '                   MODE        %8i            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   %s\n'
+            '                ELEMENT-TYPE = %-4s                * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =  %s\n'
+            '                %-8s       %8i            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =  %s\n'
             '0\n'
             '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
         )
@@ -526,8 +534,8 @@ class RealStrainEnergyArray(BaseElement):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            total_energy = 0.
-            total_set_energy = 0.
+            total_energy = write_float_13e(self.etotpos)
+            total_set_energy = write_float_13e(self.etotpos)
 
             eids = self.element[itime, :]
             # energy, percent, density
@@ -541,8 +549,8 @@ class RealStrainEnergyArray(BaseElement):
             #total_set_energy = energy[itotal]
             #total_percent = percent.sum()
 
-
-            msg_temp2 = [msg_temp % (self.element_name, total_energy, itime + 1, total_set_energy)]
+            msg_temp2 = [msg_temp % (self.element_name, total_energy,
+                                     subcase_mode, itime + 1, total_set_energy)]
             f06_file.write(''.join(header + msg_temp2))
 
 
@@ -580,8 +588,8 @@ class RealStrainEnergyArray(BaseElement):
             break
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
-                  is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file, op2_ascii, itable: int, new_result, date,
+                  is_mag_phase: bool=False, endian: str='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -608,7 +616,7 @@ class RealStrainEnergyArray(BaseElement):
         elif eids_dtype_kind == 'U':
             apply_device_code = False
             struct1 = Struct(endian + b'4s 3f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f'{self.class_name}: element.dtype.kind = {eids_dtype_kind!r}')
 
 

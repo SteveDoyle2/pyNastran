@@ -243,7 +243,7 @@ class ONR:
         elif op2.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             op2.time = op2.add_data_parameter(data, 'time', b'f', 5)  ## time step
             op2.data_names = op2.apply_data_code_value('data_names', ['time'])
-        else:
+        else:  # pragma: no cover
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                op2.analysis_code)
 
@@ -420,7 +420,7 @@ class ONR:
             op2._analysis_code_fmt = b'i'
             op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
             op2.apply_data_code_value('analysis_method', 'lsdvmn')
-        else:
+        else:  # pragma: no cover
             msg = 'invalid analysis_code...analysis_code=%s' % op2.analysis_code
             raise RuntimeError(msg)
 
@@ -452,7 +452,7 @@ class ONR:
                 msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(op2.table_code)
         return n
 
@@ -467,7 +467,7 @@ class ONR:
         element_name = op2.data_code['element_name']
         try:
             result_name = RESULT_NAME_MAP[element_name]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise NotImplementedError('element_name1=%r element_name=%r' % (element_name, op2.data_code['element_name']))
         prefix, postfix = self.get_onr_prefix_postfix()
         result_name = prefix + result_name + postfix
@@ -508,9 +508,9 @@ class ONR:
 
             if op2.is_debug_file:
                 op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write(f'  cap = {ndata:d}  # assume 1 cap when there could have been multiple\n')
                 op2.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
-                op2.binary_debug.write('  nelements=%i\n' % nelements)
+                op2.binary_debug.write(f'  nelements={nelements:d}\n')
 
             if op2.is_optistruct:
                 op2.use_vector = False
@@ -616,21 +616,8 @@ class ONR:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(op2._endian + b'i4f')
-                for unused_i in range(nelements):
-                    edata = data[n:n+20]
-                    out = s.unpack(edata)
-                    (eid_device, energyr, energyi, percent, density) = out
-                    eid = eid_device // 10
-                    #if is_magnitude_phase:
-                        #energy = polar_to_real_imag(energyr, energyi)
-                    #else:
-                        #energy = complex(energyr, energyi)
-
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
-                    obj.add_sort1(dt, eid, energyr, energyi, percent, density)
-                    n += ntotal
+                n = complex_strain_energy_5(op2, data, op2.sort_method,
+                                            self.size, n, ntotal, nelements, dt)
 
         elif op2.format_code == 1 and op2.num_wide == 6:  ## TODO: figure this out...
             ntotal = 24
@@ -717,6 +704,31 @@ class ONR:
             #raise NotImplementedError(op2.code_information())
         return n
 
+
+def complex_strain_energy_5(op2, data, sort_method,
+                            size, n, ntotal, nelements, dt) -> int:
+    obj: RealStrainEnergyArray = op2.obj
+
+    #fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
+    fmt = op2._endian + b'i4f'
+    struct1 = Struct(fmt)
+    for unused_i in range(nelements):
+        edata = data[n:n + 20]
+        out = struct1.unpack(edata)
+        (eid_device, energyr, energyi, percent, density) = out
+        eid = eid_device // 10
+        # if is_magnitude_phase:
+        # energy = polar_to_real_imag(energyr, energyi)
+        # else:
+        # energy = complex(energyr, energyi)
+
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+        obj.add_sort1(dt, eid, energyr, energyi, percent, density)
+        n += ntotal
+    return n
+
+
 def real_strain_energy_4(op2: OP2,
                          data: bytes,
                          sort_method: int,
@@ -734,7 +746,7 @@ def real_strain_energy_4(op2: OP2,
     """
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
     struct1 = Struct(fmt)
-    obj = op2.obj  # type: RealStrainEnergyArray
+    obj: RealStrainEnergyArray = op2.obj
 
     if op2.is_optistruct:
         fmt2 = mapfmt(op2._endian + op2._analysis_code_fmt + b'2f i', size)
@@ -797,7 +809,7 @@ def real_strain_energy_4(op2: OP2,
 
 def complex_strain_energy_4(op2, data, sort_method,
                             size, n, ntotal, nnodes, dt):
-    obj = op2.obj  # type: ComplexStrainEnergyArray
+    obj: ComplexStrainEnergyArray = op2.obj
     s = Struct(op2._endian + b'8s3f')
     for unused_i in range(nnodes):
         edata = data[n:n+20]

@@ -185,13 +185,13 @@ K4HH    - Modal Structural Damping Matrix
 """
 GEOM_TABLES = MSC_GEOM_TABLES + NX_GEOM_TABLES
 
-AUTODESK_MATRIX_TABLES = [
+AUTODESK_MATRIX_TABLES: list[bytes] = [
     #b'BELM',
     b'KELM',
     #b'MELM',
-] # type: list[bytes]
+]
 # this will be split later
-TEST_MATRIX_TABLES = [b'ATB', b'BTA', b'MYDOF']
+TEST_MATRIX_TABLES: list[bytes] = [b'ATB', b'BTA', b'MYDOF']
 
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + TEST_MATRIX_TABLES + [b'MEFF']
@@ -1930,6 +1930,12 @@ class OP2_Scalar(OP2Common, FortranFormat):
         h5_file : h5File; default=None
             None : ???
             h5File : ???
+        table_style_int : int; default=0 -> use mode
+            A 32-bit table like the 'GEOM1   ' table takes 8 bytes to write.
+            A 64-bit table can be written like:
+             1: 'GEOM1           '  (default for MSC)
+             2: 'GEOM    1       '  (default for NX)
+            Ideally this gets removed in the future...
 
         +--------------+-----------------------+
         | op2_filename | Description           |
@@ -1984,6 +1990,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
                              'No tables exist...check for a license issue')
 
         #=================
+        table_style_int = 2
+        if self.factor == 2 and table_style_int > 0:
+            self.is_interlaced = table_style_int == 2
         table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
         if table_name is None:
             raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
@@ -2209,7 +2218,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     '  model.set_additional_result_tables_to_read(methods_dict)\n'
                     "  methods_dict = {\n"
                     "      b'OUGV1' : [method3, method4],\n"
-                    "      b'GEOM4SX' : [method3, method4],\n"
+                    "      Gb'GEOM4SX' : [method3, method4],\n"
                     "      b'OES1X1' : False,\n"
                     '  }\n\n'
 
