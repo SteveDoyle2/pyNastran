@@ -68,7 +68,7 @@ class FluentIO:
             quad_pressure = results[iquad]
             region = np.hstack([tris[:, 1], quads[:, 1],])
             pressure = np.hstack([tri_pressure, quad_pressure])
-        
+
             ntri = len(tris)
             nquad = len(quads)
             nelement = ntri + nquad
@@ -85,7 +85,7 @@ class FluentIO:
 
         points = numpy_to_vtk_points(nodes)
         if is_list:
-            _create_elements_list(grid, elements_list)
+            _create_elements_list(grid, node_ids, elements_list)
         else:
             _create_elements(grid, model.tris[:, 2:]-1, model.quads[:, 2:]-1)
 
@@ -124,7 +124,7 @@ class FluentIO:
         log.info(f'finished')
 
     def _fill_fluent_case(self, cases: dict[int, Any], ID: int,
-                          node_ids: np.ndarray, 
+                          node_ids: np.ndarray,
                           element_ids: np.ndarray,
                           region: np.ndarray,
                           pressure: np.ndarray) -> None:
@@ -154,26 +154,31 @@ class FluentIO:
         ]
         return form, cases
 
-def _create_elements_list(grid, elements_list: list[list[int]]):
-        for facei in elements_list:
-            face = np.array(facei, dtype='int32')
-            if len(face) == 3:
-                elem = vtkTriangle()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, face[0]-1)
-                epoints.SetId(1, face[1]-1)
-                epoints.SetId(2, face[2]-1)
-                grid.InsertNextCell(5, epoints)
-            elif len(face) == 4:
-                elem = vtkQuad()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, face[0]-1)
-                epoints.SetId(1, face[1]-1)
-                epoints.SetId(2, face[2]-1)
-                epoints.SetId(3, face[3]-1)
-                grid.InsertNextCell(9, epoints)
-            else:
-                raise RuntimeError(face)
+def _create_elements_list(grid,
+                          node_ids: np.ndarray,
+                          elements_list: list[list[int]]):
+    assert np.array_equal(node_ids, np.unique(node_ids))
+    nid_to_index = {nid : i for i, nid in enumerate(node_ids)}
+
+    for facei in elements_list:
+        face = np.array(facei, dtype='int32')
+        if len(face) == 3:
+            elem = vtkTriangle()
+            epoints = elem.GetPointIds()
+            epoints.SetId(0, nid_to_index[face[0]])
+            epoints.SetId(1, nid_to_index[face[1]])
+            epoints.SetId(2, nid_to_index[face[2]])
+            grid.InsertNextCell(5, epoints)
+        elif len(face) == 4:
+            elem = vtkQuad()
+            epoints = elem.GetPointIds()
+            epoints.SetId(0, nid_to_index[face[0]])
+            epoints.SetId(1, nid_to_index[face[1]])
+            epoints.SetId(2, nid_to_index[face[2]])
+            epoints.SetId(3, nid_to_index[face[3]])
+            grid.InsertNextCell(9, epoints)
+        else:  # pragma: no cover
+            raise RuntimeError(face)
 
 def _create_elements(grid, tris: np.ndarray, quads: np.ndarray) -> None:
     if len(quads):

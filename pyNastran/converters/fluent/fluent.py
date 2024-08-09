@@ -20,14 +20,14 @@ class Fluent:
 
         (quads, tris), (element_ids, region, elements_list) = read_cell(cell_filename)
         node, xyz = read_vrt(vrt_filename)
-        element_id, results = read_daten(daten_filename, scale=1.0)
+        element_id, pressure, titles, results = read_daten(daten_filename, scale=1.0)
 
         #tri_centroid, tri_pressure = tri_split(xyz, tris, element_id, results)
         #quad_centroid, quad_pressure = quad_split(xyz, quads, element_id, results)
         self.node_id = node
         self.xyz = xyz
         self.element_id = element_id
-        self.results = results
+        self.results = pressure
         self.quads = quads
         self.tris = tris
 
@@ -56,10 +56,16 @@ def read_daten(daten_filename: Path,
         element_id_list.append(eid)
         data_list.append(datai)
     element_id = np.array(element_id_list, dtype='int32')
-    pressure = np.array(data_list, dtype='float64')[:, -1]
+
+    titles_sline1 = lines[0].split('#')[1].strip().split(',')
+    titles_sline2 = [val.strip() for val in titles_sline1]
+    titles = np.array(titles_sline2)
+
+    results = np.array(data_list, dtype='float64')
+    pressure = results[:, -1]
     if scale != 1.0:
         pressure *= scale
-    return element_id, pressure
+    return element_id, pressure, titles, results
 
 def read_vrt(vrt_filename):
     """
@@ -70,7 +76,7 @@ def read_vrt(vrt_filename):
     """
     with open(vrt_filename, 'r') as vrt_file:
         lines = vrt_file.readlines()
-    
+
     node_id_list = []
     xyz_list = []
     for i, line in enumerate(lines[2:]):
@@ -147,8 +153,10 @@ PROSTAR_CELL
 
     quads = np.array(quad_list, dtype='int32')
     tris = np.array(tri_list, dtype='int32')
-    assert tris.shape[1] == 2+3, (tris.shape, quads.shape)
-    assert quads.shape[1] == 2+4, (tris.shape, quads.shape)
+    if len(tri_list):
+        assert tris.shape[1] == 2+3, (tris.shape, quads.shape)
+    if len(quad_list):
+        assert quads.shape[1] == 2+4, (tris.shape, quads.shape)
 
 
     element_ids = np.array(element_ids_list, dtype='int32')
