@@ -109,7 +109,7 @@ def remove_unused(bdf_filename: str,
     # this are things that haven't been referenced yet
     not_implemented_types = {
         # not checked------------------------------------------
-        'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', # 'CONV',
+        'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONVM', # 'CONV',
         'QVOL', 'PCONVM', # 'PCONV',
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
