@@ -1057,7 +1057,7 @@ def _write_xyz_results_block(tecplot_file: TextIO,
     # for ivar in range(nnodes_per_element):
 
     nvar_node = zone_results.shape[1]
-    nvar_element = element_results.shape[1]
+    nvar_element = element_results.shape[1] if element_results is not None else 0
     for ivar in ivars:
         #tecplot_file.write('# ivar=%i\n' % ivar)
         if ivar < nvar_node:
