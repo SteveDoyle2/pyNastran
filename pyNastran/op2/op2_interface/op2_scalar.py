@@ -1990,7 +1990,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
                              'No tables exist...check for a license issue')
 
         #=================
-        table_style_int = 2
+        #table_style_int = 2
+        table_style_int = 0
         if self.factor == 2 and table_style_int > 0:
             self.is_interlaced = table_style_int == 2
         table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
