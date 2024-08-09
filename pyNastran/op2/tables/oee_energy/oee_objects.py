@@ -214,6 +214,13 @@ class RealStrainEnergyArray(BaseElement):
                                   title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
         #data_code['loadIDs'] = [0] # TODO: ???
+        nmodes = data.shape[0]
+        etot = data.sum(axis=0)
+        assert data.ndim == 3, data.shape
+        assert len(etot) == nmodes, etot
+        assert nmodes == 1, data.shape
+        data_code['etotpos'] = etot # TODO: is this the right axis?
+        data_code['etotneg'] = etot * 0.
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 
