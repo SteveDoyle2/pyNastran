@@ -19,7 +19,7 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
         'VARIABLES': variables,
         'ZONETYPE': zonetype,
     })
-    if 0:  # pragma: no cover
+    if 1:  # pragma: no cover
         print(model.points.shape)
         print(model.elements.shape)
         print(model.regions.shape)
