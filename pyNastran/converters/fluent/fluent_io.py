@@ -42,16 +42,14 @@ class FluentIO:
         #self.tris = tris
 
         # support multiple results
+        titles = model.titles
         results = model.results
-        log.info(f'results.shape = {results.shape}')
-        #pressure = results[:, -1]
-        results = results.ravel()
+        log.debug(f'results.shape = {results.shape}')
 
         if 1:
             element_ids = model.element_ids
             region = model.region
             elements_list = model.elements_list
-            pressure = results
             nelement = len(element_ids)
             is_list = True
         else:
@@ -116,10 +114,10 @@ class FluentIO:
         ID = 1
 
         form, cases = self._fill_fluent_case(
-            cases, ID, node_ids, element_ids, region, pressure)
+            cases, ID, node_ids, element_ids, region, results, titles)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        log.info(f'running _finish_results_io2')
+        log.debug(f'running _finish_results_io2')
         self.gui._finish_results_io2(model_name, form, cases)
         log.info(f'finished')
 
@@ -127,7 +125,8 @@ class FluentIO:
                           node_ids: np.ndarray,
                           element_ids: np.ndarray,
                           region: np.ndarray,
-                          pressure: np.ndarray) -> None:
+                          results: np.ndarray,
+                          titles: np.ndarray) -> None:
         """adds the sidebar results"""
         self.gui.isubcase_name_map[ID] = ('Fluent', '')
         #colormap = 'jet'
@@ -139,19 +138,26 @@ class FluentIO:
                             location='centroid', scalar=element_ids)
         region_res = GuiResult(ID, header='Region', title='Region',
                                location='centroid', scalar=region)
-        pressure_res = GuiResult(ID, header='Pressure', title='Pressure',
-                                 location='centroid', scalar=pressure)
         cases[icase] = (nid_res, (itime, 'NodeID'))
         cases[icase + 1] = (eid_res, (itime, 'ElementID'))
         cases[icase + 2] = (region_res, (itime, 'Region'))
-        cases[icase + 3] = (pressure_res, (itime, 'Pressure'))
 
         form = [
             ('NodeID', icase, []),
             ('ElementID', icase + 1, []),
             ('Region', icase + 2, []),
-            ('Pressure', icase + 3, []),
         ]
+        icase += 3
+
+        for i, title in enumerate(titles[1:]):
+            result = results[:, i]
+            pressure_res = GuiResult(ID, header=title, title=title,
+                                     location='centroid', scalar=result)
+            cases[icase] = (pressure_res, (itime, title))
+            formi = (title, icase, [])
+            form.append(formi)
+            icase += 1
+
         return form, cases
 
 def _create_elements_list(grid,

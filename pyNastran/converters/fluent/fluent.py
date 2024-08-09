@@ -13,21 +13,21 @@ class Fluent:
         vrt_filename = base + '.vrt'
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
-        #fld_filename = base + '.fld'
         assert os.path.exists(vrt_filename)
         assert os.path.exists(daten_filename), daten_filename
         assert os.path.exists(cell_filename), cell_filename
 
         (quads, tris), (element_ids, region, elements_list) = read_cell(cell_filename)
         node, xyz = read_vrt(vrt_filename)
-        element_id, pressure, titles, results = read_daten(daten_filename, scale=1.0)
+        element_id, titles, results = read_daten(daten_filename, scale=1.0)
 
         #tri_centroid, tri_pressure = tri_split(xyz, tris, element_id, results)
         #quad_centroid, quad_pressure = quad_split(xyz, quads, element_id, results)
         self.node_id = node
         self.xyz = xyz
         self.element_id = element_id
-        self.results = pressure
+        self.titles = titles
+        self.results = results
         self.quads = quads
         self.tris = tris
 
@@ -62,10 +62,9 @@ def read_daten(daten_filename: Path,
     titles = np.array(titles_sline2)
 
     results = np.array(data_list, dtype='float64')
-    pressure = results[:, -1]
     if scale != 1.0:
-        pressure *= scale
-    return element_id, pressure, titles, results
+        results *= scale
+    return element_id, titles, results
 
 def read_vrt(vrt_filename):
     """

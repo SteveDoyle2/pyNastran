@@ -80,6 +80,7 @@ class Zone:
         self.strand_id = -1
         self.headers_dict = TecplotDict()
         self.zone_data = np.zeros((0, 0), dtype='float32')
+        self.element_data = np.zeros((0, 0), dtype='float32')
         self.tet_elements = np.zeros((0, 4), dtype='int32')
         self.hexa_elements = np.zeros((0, 8), dtype='int32')
         self.quad_elements = np.zeros((0, 4), dtype='int32')
@@ -111,11 +112,12 @@ class Zone:
                           zone_type: str,
                           data_packing: str,
                           strand_id: int,
-                          tris=None,
-                          quads=None,
-                          tets=None,
-                          hexas=None,
-                          zone_data=None):
+                          tris: Optional[np.ndarray]=None,
+                          quads: Optional[np.ndarray]=None,
+                          tets: Optional[np.ndarray]=None,
+                          hexas: Optional[np.ndarray]=None,
+                          zone_data: Optional[np.ndarray]=None,
+                          element_data: Optional[np.ndarray]=None):
         assert isinstance(log, SimpleLogger), log
         assert isinstance(header_dict, dict), header_dict
         assert isinstance(variables, list), variables
@@ -146,10 +148,13 @@ class Zone:
         nxyz = zone.nxyz
 
         nvars = len(variables)
-        nvars_actual = zone_data.shape[1]
+        nvars_node_actual = zone_data.shape[1]
+        nvars_element_actual = 0 if element_data is None else element_data.shape[1]
+        nvars_actual = nvars_node_actual + nvars_element_actual
         if not nvars == nvars_actual:
             raise RuntimeError(f'variables={variables} nvars={nvars}; '
                                f'nodal_results.shape={zone_data.shape} nxyz={nxyz}\n'
+                               f'nvars_node_actual={nvars_node_actual:d} nvars_element_actual={nvars_element_actual:d}\n'
                                f'nvars={nvars} nvars_actual={nvars_actual}')
 
         #zone_data = _add_rho_uvw(zone_data, variables)
@@ -160,6 +165,7 @@ class Zone:
         zone_data = _add_mixture_Cv(zone_data, variables)
 
         zone.zone_data = zone_data
+        zone.element_data = element_data
         header_dict['variables'] = variables
 
         #zone.headers_dict = copy.copy(header_dict)
@@ -278,7 +284,7 @@ class Zone:
             zone_type_int = 4
         elif zonetype == 'FEBRICK':
             zone_type_int = 5
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(zonetype)
         return zone_type_int
 
@@ -531,7 +537,25 @@ class Zone:
         msg = 'ZONE '
         self.log.debug(f'is_points = {is_points}')
         datapacking = 'POINT' if  is_points else 'BLOCK'
-        msg += f' T=\"{self.title}\", n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
+        nvar_node = self.zone_data.shape[1]
+        nvar_element = 0 if self.element_data is None else self.element_data.shape[1]
+
+        # varlocation=([1,2]=nodal,[3]=cellcentered)
+        nodaL_var_list = list(range(1, nvar_node+1))
+        element_var_list = list(range(nvar_node+1, nvar_node+nvar_element+1))
+        if nvar_node and nvar_element:
+            var_location = f'VARLOCATION=({nodaL_var_list}=NODAL,{element_var_list}=CELLCENTERED)'
+        elif nvar_node:
+            var_location = ''
+        elif nvar_element:
+            var_location = f'VARLOCATION=({element_var_list}=CELLCENTERED)'
+        else:  # pramga: no cover
+            raise RuntimeError((nvar_node, nvar_element))
+
+        msg += (
+                f' T=\"{self.title}\", n={nnodes:d}, e={nelements:d}, '
+            f'ZONETYPE={zone_type}, DATAPACKING={datapacking}{var_location}\n'
+        )
         tecplot_file.write(msg)
 
         ivars_array = np.asarray(ivars, dtype='int32')
@@ -668,7 +692,7 @@ class Zone:
                 tecplot_file, self.zone_data, ivars)
         else:
             _write_xyz_results_block(
-                tecplot_file, self.zone_data, ivars)
+                tecplot_file, self.zone_data, self.element_data, ivars)
 
     def write_structured_zone(self, tecplot_file: TextIO, ivars: list[int],
                               log: SimpleLogger, headers_dict: dict[str, Any],
@@ -1026,14 +1050,20 @@ def _write_xyz_results_point(tecplot_file: TextIO,
 
 def _write_xyz_results_block(tecplot_file: TextIO,
                              zone_results: np.ndarray,
+                             element_results: np.ndarray,
                              ivars: np.ndarray) -> None:
     """TODO: hasn't been tested for 2d?"""
     #print('nnodes_per_element =', nnodes_per_element)
     # for ivar in range(nnodes_per_element):
 
+    nvar_node = zone_results.shape[1]
+    nvar_element = element_results.shape[1]
     for ivar in ivars:
         #tecplot_file.write('# ivar=%i\n' % ivar)
-        vals = zone_results[:, ivar].ravel()
+        if ivar < nvar_node:
+            vals = zone_results[:, ivar].ravel()
+        else:
+            vals = element_results[:, ivar-nvar_node].ravel()
         msg = ''
         for ival, val in enumerate(vals):
             msg += ' %15.9E' % val

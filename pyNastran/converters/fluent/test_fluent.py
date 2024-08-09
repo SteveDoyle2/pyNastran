@@ -9,7 +9,7 @@ import numpy as np
 #from cpylog import get_logger
 
 import pyNastran
-from pyNastran.converters.fluent.fluent import read_vrt, read_cell, read_daten
+from pyNastran.converters.fluent.fluent import read_vrt, read_cell, read_daten, read_fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
 warnings.simplefilter('always')
@@ -66,7 +66,7 @@ class TestFluent(unittest.TestCase):
             daten_file.write("""# Shell Id, Cf Components X, Cf Components Y, Cf Components Z, Pressure Coefficient
          1       0.00158262927085      -0.00013470219276       0.00033890815696      -0.09045402854837
    4175456       0.00005536470364      -0.00050913009274       0.00226408640311      -0.44872838534457""")
-        element_id, pressure, titles, results = read_daten(daten_filename, scale=2.0)
+        element_id, titles, results = read_daten(daten_filename, scale=2.0)
         assert len(element_id) == 2, element_id
         assert np.array_equal(element_id, [1, 4175456]), element_id
 
@@ -80,7 +80,8 @@ class TestFluent(unittest.TestCase):
         node_id, xyz = read_vrt(vrt_filename)
         assert len(xyz) == 10135, xyz.shape
         (quads, tris), (element_ids, regions, elements_list) = read_cell(cel_filename)
-        element_id, pressure, titles, results = read_daten(daten_filename, scale=2.0)
+        element_id, titles, results = read_daten(daten_filename, scale=2.0)
+        model = read_fluent(vrt_filename)
 
 def main():  # pragma: no cover
     import time
