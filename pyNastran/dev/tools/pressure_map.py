@@ -78,9 +78,9 @@ def pressure_map(aero_filename: PathLike,
 
     tree = _get_tree(aero_xyz_nodal)
     if map_location == 'centroid':
-        unued_deq, ieq = tree.query(structure_centroids, k=1)
+        unused_deq, ieq = tree.query(structure_centroids, k=1)
     elif map_location == 'node':
-        unued_deq, ieq = tree.query(structure_xyz, k=4)
+        unused_deq, ieq = tree.query(structure_xyz, k=4)
     else:  # pragma: no cover
         raise RuntimeError(map_location)
 
@@ -101,6 +101,33 @@ def pressure_map(aero_filename: PathLike,
         mapped_structure_elements = structure_nodes[istructure]
         for eid, pressure in zip(mapped_structure_elements, aero_pressure_centroidal):
             model2.add_pload2(output_sid, eids=[eid], pressure=pressure)
+    elif map_type == 'force_moment':
+        aero_pressure_centroidal = aero_Cp_centroidal[iaero] * scale
+        aero_force_centroidal = aero_pressure_centroidal * aero_area
+        mapped_structure_nodes = structure_nodes[istructure]
+
+        forces_temp = defaultdict(array3)
+        nforce_total = defaultdict(int)
+        for nid, force in zip(mapped_structure_nodes, aero_force_centroidal):
+            forces_temp[nid] += force
+            nforce_total[nid] += 1
+
+        #       3
+        #      /|\
+        #     / | \
+        #    /  c  \
+        #   / /   \ \
+        #  1---------2
+        #
+        # s: semiperimeter
+        a = np.linalg.norm(n2 - n1)
+        b = np.linalg.norm(n3 - n2)
+        c = np.linalg.norm(n1 - n3)
+        s = 0.5 * (a + b + c)
+        A = np.sqrt(s * (s-a) * (s-b) * (s-c))
+        for nid, force in zip(mapped_structure_nodes, aero_force_centroidal):
+            forces_temp[nid] += force * dist / dist_total
+            nforce_total[nid] += 1
     elif map_type == 'force':
         aero_pressure_centroidal = aero_Cp_centroidal[iaero] * scale
         aero_force_centroidal = aero_pressure_centroidal * aero_area

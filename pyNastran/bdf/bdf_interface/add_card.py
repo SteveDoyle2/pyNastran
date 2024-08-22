@@ -7404,7 +7404,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_load_object(load)
         return load
 
-    def add_force(self, sid, node, mag, xyz, cid=0, comment='') -> FORCE:
+    def add_force(self, sid: int, node: int, mag: float, xyz: np.ndarray,
+                  cid: int=0, comment: str='') -> FORCE:
         """
         Creates a FORCE card
 

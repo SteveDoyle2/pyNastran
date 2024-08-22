@@ -386,7 +386,7 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
         'CHEXA1' : (8, 8),
         'CHEXA20' : (20, 20),
     }
-    skip_cards = ['CAABSF']
+    skip_cards = ['CAABSF', 'GENEL']
     #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
     etypes_mixed_nodes = set(list(nnodes_map.keys()))
 
