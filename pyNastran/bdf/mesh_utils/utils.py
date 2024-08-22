@@ -560,10 +560,9 @@ def cmd_line_mirror(argv=None, quiet: bool=False) -> None:
     if not quiet:  # pragma: no cover
         print(data)
 
-    log.debug(f'plane = {plane!r}')
     size = 16
-
     bdf_filename, punch, log = _get_bdf_filename_punch_log(data, quiet)
+    log.debug(f'plane = {plane!r}')
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'mirrored.bdf'
