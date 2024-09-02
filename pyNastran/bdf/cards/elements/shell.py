@@ -92,9 +92,9 @@ def _triangle_area_centroid_normal(nodes, card):
     except FloatingPointError as error:
         #CTRIA3     20152     701   20174   20175   20176    8020
         #vector: [ 0.  0.  0.]; length: 0.0
-            #[207.42750549, 0.0, -0.22425441]
-            #[207.42750549, 0.0, 0.00631836]
-            #[207.42750549, 0.0, 0.69803673]
+        #   [207.42750549, 0.0, -0.22425441]
+        #   [207.42750549, 0.0, 0.00631836]
+        #   [207.42750549, 0.0, 0.69803673]
         msg = error.message # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
         msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())
@@ -122,6 +122,7 @@ def _normal(a, b):
                f'a = {a}\nb = {b}\nnormal = {normal}\n')
         raise RuntimeError(msg)
     return normal
+
 
 def _normal4(n1, n2, n3, n4, card):
     """Finds the unit normal vector of 2 vectors"""
@@ -227,7 +228,7 @@ class ShellElement(Element):
             msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
-    def Mass_breakdown(self) -> float:
+    def Mass_breakdown(self) -> tuple[float, float]:
         r"""
         .. math:: m = \frac{m}{A} A  \f]
 
@@ -482,8 +483,8 @@ class CTRIA3(TriShell):
     """
     type = 'CTRIA3'
     _field_map = {
-        1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'tflag',
-        11:'T1', 12:'T2', 13:'T3'}
+        1: 'eid', 2: 'pid', 6: 'theta_mcid', 7: 'zoffset', 10: 'tflag',
+        11: 'T1', 12: 'T2', 13: 'T3'}
     cp_name_map = {
         'T1' : 'T1',
         'T2' : 'T2',
@@ -626,7 +627,7 @@ class CTRIA3(TriShell):
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
-    def add_card(cls: Any, card: str, comment: str=''):
+    def add_card(cls: Any, card: BDFCard, comment: str=''):
         """
         Adds a CTRIA3 card from ``BDF.add_card(...)``
 
@@ -670,7 +671,7 @@ class CTRIA3(TriShell):
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
-    def add_card_lax(cls: Any, card: str, comment: str=''):
+    def add_card_lax(cls: Any, card: BDFCard, comment: str=''):
         """
         Adds a CTRIA3 card from ``BDF.add_card(...)``
 
@@ -878,7 +879,7 @@ class CPLSTx3(TriShell):
 
     """
     type = 'CPLSTN3'
-    _field_map = {1: 'eid', 2:'pid', 6:'theta', }
+    _field_map = {1: 'eid', 2: 'pid', 6: 'theta', }
 
     def _update_field_helper(self, n, value):
         if n == 3:
@@ -1312,8 +1313,8 @@ class CTRIA6(TriShell):
             assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-            if not self.pid_ref.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%d self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if self.pid_ref.type not in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -1426,7 +1427,7 @@ class CTRIA6(TriShell):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
-        if size == 8 or len(card) == 8: # to last node
+        if size == 8 or len(card) == 8:  # to last node
             msg = self.comment + print_card_8(card)
         else:
             msg = self.comment + print_card_16(card)
@@ -1447,8 +1448,9 @@ class CTRIAR(TriShell):
 
     """
     type = 'CTRIAR'
-    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                 tflag=0, T1=None, T2=None, T3=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: float|int=0.0, zoffset: float=0.0,
+                 tflag: int=0, T1=None, T2=None, T3=None, comment: str=''):
         """
         Creates a CTRIAR card
 
@@ -1458,12 +1460,12 @@ class CTRIAR(TriShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : list[int, int, int]
+        nids : list[int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
             plane.  Requires MID1 and MID2.
-        theta_mcid : float; default=0.0
+        theta_mcid : float|int; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
@@ -1971,7 +1973,8 @@ class QuadShell(ShellElement):
 
     def _dxyz_centroid_normal_xyz1_xyz2(self,
                                         normal=None,
-                                        xyz1234=None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+                                        xyz1234=None) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                               np.ndarray, np.ndarray]:
         if normal is None:
             normal = self.Normal() # k = kmat
 
@@ -2189,7 +2192,7 @@ class CSHEAR(QuadShell):
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' % (i, nid)
 
         if xref:
             assert self.pid_ref.type in ['PSHEAR'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
@@ -2289,8 +2292,8 @@ class CQUAD4(QuadShell):
         'T3' : 'T3',
         'T4' : 'T4',
     }
-    _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
-                  10:'tflag', 11:'T1', 12:'T2', 13:'T3'}
+    _field_map = {1: 'eid', 2: 'pid', 7: 'theta_mcid', 8: 'zoffset',
+                  10: 'tflag', 11: 'T1', 12: 'T2', 13: 'T3'}
     _properties = ['cp_name_map', '_field_map']
 
     def _update_field_helper(self, n, value):
@@ -4957,7 +4960,7 @@ class SNORM(BaseCard):
         normal = [0.1, 0.4, 0.3]
         return SNORM(nid, normal, cid=0, comment='')
 
-    def __init__(self, nid, normal, cid=0, comment=''):
+    def __init__(self, nid: int, normal: list[float], cid: int=0, comment: str=''):
         """
         Creates an SNORM card
 
@@ -4967,7 +4970,7 @@ class SNORM(BaseCard):
             node id
         cid : int
             coordinate system
-        normal : list[float, float, float]
+        normal : list[float]
             normal vector
         comment : str; default=''
             a comment for the card

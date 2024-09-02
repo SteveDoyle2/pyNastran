@@ -57,7 +57,8 @@ class CELAS1(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CELAS1 card
 
@@ -67,7 +68,7 @@ class CELAS1(SpringElement):
             element id
         pid : int
             property id (PELAS)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2

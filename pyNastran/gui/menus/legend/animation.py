@@ -121,16 +121,22 @@ class AnimationWindow(PyDialog):
 
         self.is_gui = False
         self.gui = None
+
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
             self.gui: MainWindow = self.win_parent.win_parent
 
-        icase_max = 1000
-        if is_gui_parent:
-            self.is_gui = True
-            self.gui = self.win_parent
-            icase_max = max(self.gui.result_cases)  # TODO: update 1000
+        if 0:  # pragma: no cover
+            icase_max = 1000
+            if is_gui_parent:
+                self.is_gui = True
+                #self.gui = self.win_parent
+                icase_max = max(self.gui.result_cases)  # TODO: update 1000
+        else:
+            icase_max = 1000
+            if self.is_gui:
+                icase_max = max(self.gui.result_cases)
 
         self.icase_fringe_edit.setRange(0, icase_max)
         self.icase_disp_edit.setRange(1, icase_max)

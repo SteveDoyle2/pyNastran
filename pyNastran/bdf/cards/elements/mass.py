@@ -92,7 +92,7 @@ class CMASS1(PointMassElement):
             element id
         pid : int
             property id (PMASS)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -244,12 +244,12 @@ class CMASS1(PointMassElement):
     def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
-    def grid_component(self) -> list[int, int, int, int]:
+    def grid_component(self) -> tuple[tuple[int, int], tuple[int, int]]:
         g1 = 0 if self.nodes[0] is None else self.G1()
         g2 = 0 if self.nodes[1] is None else self.G2()
         c1 = 0 if self.c1 is None else self.c1
         c2 = 0 if self.c2 is None else self.c2
-        return [(g1, c1), (g2, c2)]
+        return ((g1, c1), (g2, c2))
 
     @property
     def node_ids(self):
@@ -308,7 +308,8 @@ class CMASS2(PointMassElement):
         nids = [1, 2]
         return CMASS2(eid, mass, nids, c1=0, c2=0, comment='')
 
-    def __init__(self, eid, mass, nids, c1, c2, comment=''):
+    def __init__(self, eid: int, mass: float, nids: list[int],
+                 c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CMASS2 card
 
@@ -318,9 +319,9 @@ class CMASS2(PointMassElement):
             element id
         mass : float
             mass
-        nids : list[int, int]
+        nids : list[int]
             node ids
-        c1 / c2 : int; default=None
+        c1 / c2 : int; default=0
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
@@ -358,7 +359,7 @@ class CMASS2(PointMassElement):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CMASS2 card from ``BDF.add_card(...)``
 
@@ -373,9 +374,9 @@ class CMASS2(PointMassElement):
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', 0.)
         g1 = integer_or_blank(card, 3, 'g1')
-        c1 = integer_or_blank(card, 4, 'c1')
+        c1 = integer_or_blank(card, 4, 'c1', default=0)
         g2 = integer_or_blank(card, 5, 'g2')
-        c2 = integer_or_blank(card, 6, 'c2')
+        c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CMASS2 card) = {len(card):d}\ncard={card}'
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
@@ -428,15 +429,15 @@ class CMASS2(PointMassElement):
         assert isinstance(eid, integer_types), 'eid=%r' % eid
         assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
-        assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
-        assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
+        assert isinstance(c1, integer_types), 'c1=%r' % c1
+        assert isinstance(c2, integer_types), 'c2=%r' % c2
 
-    def grid_component(self) -> list[int, int, int, int]:
+    def grid_component(self) -> tuple[tuple[int, int], tuple[int, int]]:
         g1 = 0 if self.nodes[0] is None else self.G1()
         g2 = 0 if self.nodes[1] is None else self.G2()
-        c1 = 0 if self.c1 is None else self.c1
-        c2 = 0 if self.c2 is None else self.c2
-        return [(g1, c1), (g2, c2)]
+        c1 = self.c1
+        c2 = self.c2
+        return ((g1, c1), (g2, c2))
 
     @property
     def node_ids(self):
@@ -560,7 +561,7 @@ class CMASS3(PointMassElement):
         nids = [1, 2]
         return CMASS3(eid, pid, nids, comment='')
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CMASS3 card
 
@@ -570,7 +571,7 @@ class CMASS3(PointMassElement):
             element id
         pid : int
             property id (PMASS)
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -713,7 +714,7 @@ class CMASS4(PointMassElement):
         nids = [1, 2]
         return CMASS4(eid, pid, nids, comment='')
 
-    def __init__(self, eid, mass, nids, comment=''):
+    def __init__(self, eid: int, mass: float, nids: list[int], comment: str=''):
         """
         Creates a CMASS4 card
 
@@ -723,7 +724,7 @@ class CMASS4(PointMassElement):
             element id
         mass : float
             SPOINT mass
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card

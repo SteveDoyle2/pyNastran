@@ -21,7 +21,7 @@ from __future__ import annotations
 import math
 from itertools import count
 from collections import defaultdict, namedtuple
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -82,7 +82,7 @@ class AECOMP(BaseCard):
         lists = [1]
         return AECOMP(name, list_type, lists, comment='')
 
-    def __init__(self, name: str, list_type: list[str],
+    def __init__(self, name: str, list_type: str,
                  lists: int | list[int],
                  comment: str='') -> None:
         """
@@ -259,7 +259,7 @@ class AECOMPL(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         name = 'HORIZ'
-        labels = 'ELEV'
+        labels = ['ELEV']
         return AECOMPL(name, labels, comment='')
 
     def __init__(self, name: str,
@@ -572,7 +572,7 @@ class AELINK(BaseCard):
         """
         msg = ', which is required by:\n%s' % str(self)
         if self.aelink_id not in {0, 'ALWAYS'}:
-            sid_ref = model.Trim(self.aelink_id, msg=msg)
+            trim_ref = model.Trim(self.aelink_id, msg=msg)
 
         aesurf_names = {aesurf.label for aesurf in model.aesurf.values()}
         aparam_names = {aeparam.label for aeparam in model.aeparams.values()}
@@ -584,12 +584,11 @@ class AELINK(BaseCard):
                                f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
         elif is_aesurf:
             self.dependent_label_ref = model.AESurf(self.dependent_label,
-                                                    msg='dependent_label={self.dependent_label!r}; '+ msg)
+                                                    msg='dependent_label={self.dependent_label!r}; ' + msg)
         elif is_aeparam:
             self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
         else:
             raise RuntimeError(f'dependent_label={self.dependent_label} is not an AESURF or AEPARM\n{self}')
-
 
         self.independent_labels_ref = []
         for independent_label in self.independent_labels:
@@ -909,7 +908,7 @@ class AESURF(BaseCard):
         return AESURF(aesurf_id, label, cid1, aelist_id1,
                       cid2=None, aelist_id2=None, eff=1.0, ldw='LDW',
                       crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
-                      hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
+                      hmllim=None, hmulim=None, tqllim=0, tqulim=0, comment='')
 
     def __init__(self, aesurf_id: int, label: str, cid1: int, aelist_id1: int,
                  cid2: Optional[int]=None, aelist_id2: Optional[int]=None,
@@ -917,9 +916,9 @@ class AESURF(BaseCard):
                  crefc: float=1.0, crefs: float=1.0,
                  pllim: float=-np.pi/2., pulim: float=np.pi/2.,
                   # hinge moment lower/upper limits
-                 hmllim: Optional[int]=None, hmulim: Optional[int]=None,
+                 hmllim: Optional[float]=None, hmulim: Optional[float]=None,
                   # TABLEDi deflection limits vs. dynamic pressure
-                 tqllim: Optional[int]=None, tqulim: Optional[int]=None,
+                 tqllim: int=0, tqulim: int=0,
                  comment='') -> None:
         """
         Creates an AESURF card, which defines a control surface
@@ -947,7 +946,7 @@ class AESURF(BaseCard):
         hmllim / hmulim : float; default=None
             Lower/Upper hinge moment limits for the control surface in
             force-length units
-        tqllim / tqulim : int; default=None
+        tqllim / tqulim : int; default=0
             Set identification numbers of TABLEDi entries that provide the
             lower/upper deflection limits for the control surface as a
             function of the dynamic pressure
@@ -1045,10 +1044,14 @@ class AESURF(BaseCard):
         pllim = double_or_blank(card, 11, 'pllim', default=-np.pi / 2.)
         pulim = double_or_blank(card, 12, 'pulim', default=np.pi / 2.)
 
+        # hinge moment limit
         hmllim = double_or_blank(card, 13, 'hmllim')
         hmulim = double_or_blank(card, 14, 'hmulim')
-        tqllim = integer_or_blank(card, 15, 'tqllim')
-        tqulim = integer_or_blank(card, 16, 'tqulim')
+
+        # lower and upper deflection limits for the control surface as a
+        # function of the dynamic pressure.
+        tqllim = integer_or_blank(card, 15, 'tqllim', default=0)
+        tqulim = integer_or_blank(card, 16, 'tqulim', default=0)
         assert len(card) <= 17, f'len(AESURF card) = {len(card):d}\ncard={card}'
         return AESURF(aesurf_id, label, cid1, alid1, cid2, alid2, eff, ldw,
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
@@ -1115,9 +1118,9 @@ class AESURF(BaseCard):
         self.aelist_id1_ref = model.AELIST(self.aelist_id1)
         if self.aelist_id2:
             self.aelist_id2_ref = model.AELIST(self.aelist_id2)
-        if self.tqllim is not None:
+        if self.tqllim:  # integer
             self.tqllim_ref = model.TableD(self.tqllim)
-        if self.tqulim is not None:
+        if self.tqulim:  # integer
             self.tqulim_ref = model.TableD(self.tqulim)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -1130,9 +1133,9 @@ class AESURF(BaseCard):
         if self.aelist_id2:
             self.aelist_id2_ref = model.safe_aelist(self.aelist_id2, self.aesurf_id, xref_errors, msg=msg)
 
-        if self.tqllim is not None:
+        if self.tqllim:  # integer
             self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesurf_id, xref_errors, msg=msg)
-        if self.tqulim is not None:
+        if self.tqulim:  # integer
             self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesurf_id, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -1196,10 +1199,13 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -np.pi / 2.)
         pulim = set_blank_if_default(self.pulim, np.pi / 2.)
 
+        tqllim = set_blank_if_default(self.tqllim, 0)
+        tqulim = set_blank_if_default(self.tqulim, 0)
+
         list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.Aelist_id1(),
                        self.Cid2(), self.Aelist_id2(), eff, ldw, crefc, crefs,
-                       pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
-                       self.tqulim]
+                       pllim, pulim, self.hmllim, self.hmulim, tqllim,
+                       tqulim]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1251,7 +1257,7 @@ class AESURFS(BaseCard):
         return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid: int, label: str,
-                 list1: list[int], list2: list[int],
+                 list1: int, list2: int,
                  comment: str='') -> None:
         """
         Creates an AESURFS card
@@ -1523,11 +1529,11 @@ class CAERO1(BaseCard):
         self.p4 = np.asarray(self.p4)
 
     def __init__(self, eid: int, pid: int, igroup: int,
-                   p1: NDArray3float, x12: float,
-                   p4: NDArray3float, x43: float,
-                   cp: int=0,
-                   nspan: int=0, lspan: int=0,
-                   nchord: int=0, lchord: int=0, comment: str=''):
+                 p1: NDArray3float, x12: float,
+                 p4: NDArray3float, x43: float,
+                 cp: int=0,
+                 nspan: int=0, lspan: int=0,
+                 nchord: int=0, lchord: int=0, comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -1883,7 +1889,7 @@ class CAERO1(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
 
-    def update(self, maps):
+    def update(self, maps: dict[str, dict[int, int]]) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1950,6 +1956,14 @@ class CAERO1(BaseCard):
             p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
+
+    def area(self) -> float:
+        p1, p2, p3, p4 = self.get_points()
+        a = p3 - p1
+        b = p4 - p2
+        area = np.linalg.norm(np.cross(a, b))
+        assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
+        return area
 
     def span_split(self, span_percentage: float) -> tuple[CAERO1, CAERO1]:
         """
@@ -2097,8 +2111,8 @@ class CAERO1(BaseCard):
 
         # LE
         caero_a = CAERO1(eid_a, pid, igroup, p1, x1_12, p14, x14_c,
-                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_a, lchord=lchord,
-                        comment=comment_a)
+                         cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_a, lchord=lchord,
+                         comment=comment_a)
         caero_b = CAERO1(eid_b, pid, igroup, p14, x14_c, p4, x4_43,
                          cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord_a, lchord=lchord,
                          comment=comment_b)
@@ -2892,6 +2906,7 @@ class CAERO2(BaseCard):
                 dxyz[i, :] = xr * L
             ystation = dxyz[:, 1]
             zstation = dxyz[:, 2]
+        #get_xyz_station_2d(self):
 
         # I think this just lets you know what directions it can pivot in
         # and therefore doesn't affect visualization
@@ -2975,10 +2990,11 @@ class CAERO3(BaseCard):
         return CAERO3(eid, pid, list_w, p1, x12, p4, x43,
                       cp=0, list_c1=None, list_c2=None, comment='')
 
-    def __init__(self, eid, pid, list_w,
-                 p1, x12, p4, x43,
-                 cp=0, list_c1=None, list_c2=None,
-                 comment=''):
+    def __init__(self, eid: int, pid: int, list_w: int,
+                 p1: np.ndarray, x12: float,
+                 p4: np.ndarray, x43: float,
+                 cp: int=0, list_c1=None, list_c2=None,
+                 comment: str=''):
         """
         Creates a CAERO2 card, which defines a wing with a wing break/cant.
 
@@ -3158,6 +3174,14 @@ class CAERO3(BaseCard):
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
         p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
+
+    def area(self) -> float:
+        p1, p2, p3, p4 = self.get_points()
+        a = p3 - p1
+        b = p4 - p2
+        area = np.linalg.norm(np.cross(a, b))
+        assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
+        return area
 
     def panel_points_elements(self):
         """
@@ -3876,7 +3900,7 @@ class CAERO5(BaseCard):
 
         return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
-    def c1_c2(self, mach):
+    def c1_c2(self, mach: float):
         p1, unused_p2, unused_p3, p4 = self.get_points()
         #i = p2 - p1
         #ihat = i / norm(i)
@@ -3889,6 +3913,8 @@ class CAERO5(BaseCard):
         # b = L * cos(Lambda)
         # ci = L * sin(Lambda)
 
+        c1 = None
+        c2 = None
         if self.ntheory == 0:
             # piston theory
             pass

@@ -78,7 +78,7 @@ class CROD(RodElement):
         h5_file.create_dataset('pid', data=pids)
         h5_file.create_dataset('nodes', data=nodes)
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CROD card
 
@@ -88,7 +88,7 @@ class CROD(RodElement):
             element id
         pid : int
             property id (PROD)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         comment : str; default=''
             a comment for the card
