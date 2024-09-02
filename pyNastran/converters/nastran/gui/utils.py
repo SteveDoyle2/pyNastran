@@ -5,7 +5,7 @@ import numpy as np
 from cpylog import properties as log_properties
 from pyNastran.bdf.cards.elements.shell import ShellElement
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, CTRIA3, CTRIA6, CQUAD4, CQUAD8, CQUADR, CQUAD
+    from pyNastran.bdf.bdf import BDF, CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, CQUADR, CQUAD
 
 def get_shell_material_coord(element: Union[CTRIA3, CTRIA6, CTRIAR,
                                             CQUAD4, CQUAD8, CQUADR, CQUAD]) -> tuple[int, float]:

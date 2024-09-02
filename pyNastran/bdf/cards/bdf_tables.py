@@ -68,6 +68,15 @@ class Table(BaseCard):
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
 
+    def plot(self, figure_id=None):
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figure_id)
+        ax = fig.gca()
+        ax.suptitle(f'{self.type}: {self.tid}')
+        ax.plot(self.x, self.y)
+        ax.grid(True)
+        return fig, ax
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:

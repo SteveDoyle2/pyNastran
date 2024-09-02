@@ -8,7 +8,7 @@ from itertools import count
 from typing import Optional, Union, Any
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types, integer_string_types
+from pyNastran.utils.numpy_utils import integer_types #, integer_string_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -949,10 +949,10 @@ class AddBolts:
                        s_nos: list[int],
                        b_ids: list[int],
                        n_incs: Optional[list[int]]=None,
-                       comment: str='') -> BOLT:
-        bolt = BOLTSEQ(sid, s_nos, b_ids, n_incs=n_incs, comment=comment)
-        self._add_methods._add_boltseq_object(bolt)
-        return bolt
+                       comment: str='') -> BOLTSEQ:
+        boltseq = BOLTSEQ(sid, s_nos, b_ids, n_incs=n_incs, comment=comment)
+        self._add_methods._add_boltseq_object(boltseq)
+        return boltseq
 
     def add_boltfor_nx(self, sid: int, load_value: float, bolt_ids: list[int],
                        comment: str='') -> BOLTFOR:
@@ -1075,7 +1075,7 @@ class Add0dElements:
             element id
         mass : float
             mass
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
@@ -1098,7 +1098,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PMASS)
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1119,7 +1119,7 @@ class Add0dElements:
             element id
         mass : float
             SPOINT mass
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1165,7 +1165,7 @@ class Add0dElements:
             TABLEDx that defines k vs. frequency
         tgeid : int; default=0
             TABLEDx that defines ge vs. frequency
-        s : float; default=0.
+        tknid : float; default=0.
             TABLEDx that defines force vs. displacement
         comment : str; default=''
             a comment for the card
@@ -1186,7 +1186,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PELAS)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -1210,7 +1210,7 @@ class Add0dElements:
             element id
         k : float
             spring stiffness
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
             node ids
         c1 / c2 : int; default=0
@@ -1238,7 +1238,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PELAS)
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1259,7 +1259,7 @@ class Add0dElements:
             element id
         k : float
             spring stiffness
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1280,7 +1280,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PDAMP)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -1303,7 +1303,7 @@ class Add0dElements:
             element id
         b : float
             damping
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
             node ids
         c1 / c2 : int; default=0
@@ -1327,7 +1327,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PDAMP)
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1348,7 +1348,7 @@ class Add0dElements:
             element id
         b : float
             damping
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1369,7 +1369,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PDAMP5)
-        nids : list[int, int]
+        nids : list[int]
             GRID/SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1409,7 +1409,7 @@ class Add0dElements:
             element id
         pid : int
             property id (PVISC)
-        nids : list[int, int]
+        nids : list[int]
             GRID ids
         comment : str; default=''
             a comment for the card
@@ -1451,7 +1451,7 @@ class Add0dElements:
             Element ID
         pid : int
             Property ID (PGAP)
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
         x : list[float, float, float]
             Components of the orientation vector,
@@ -1578,7 +1578,7 @@ class Add1dElements:
             element id
         mid : int
             material id
-        nids : list[int, int]
+        nids : list[int]
             node ids
         A : float; default=0.
             area
@@ -1606,7 +1606,7 @@ class Add1dElements:
             element id
         pid : int
             property id (PROD)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -1629,7 +1629,7 @@ class Add1dElements:
            material id
         A : float
            area
-        J : float; default=0.
+        j : float; default=0.
            polar moment of inertia
         c : float; default=0.
            stress factor
@@ -1653,7 +1653,7 @@ class Add1dElements:
             element id
         pid : int
             property id
-        nids : list[int, int]
+        nids : list[int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -1739,9 +1739,7 @@ class Add1dElements:
         ----------
         pid : int
             property id
-        mid : int
-            material id
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
         x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
@@ -1828,7 +1826,7 @@ class Add1dElements:
             property id
         mid : int
             material id
-        area : float
+        A : float
             area
         i1, i2, i12, j : float
             moments of inertia
@@ -1894,7 +1892,7 @@ class Add1dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cbeam(self, eid, pid, nids,
+    def add_cbeam(self, eid: int, pid: int, nids: list[int],
                   x: Optional[list[float]], g0: Optional[int],
                   offt='GGG', bit=None,
                   pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='') -> CBEAM:
@@ -1905,9 +1903,7 @@ class Add1dElements:
         ----------
         pid : int
             property id
-        mid : int
-            material id
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
         x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
@@ -2278,7 +2274,7 @@ class Add1dElements:
             Element id
         pid : int
             Property id (PBUSH)
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
             The nodes may be coincident, but then cid is required.
         x : list[float, float, float]; None
@@ -2373,7 +2369,7 @@ class Add1dElements:
                           m11: float, m22: float,
                           k12: float, k21: float,
                           b12: float, b21: float,
-                          m12: float, m21: float, comment: str='') -> None:
+                          m12: float, m21: float, comment: str='') -> PBUSH2D:
         """
         MSC only card
 
@@ -2466,7 +2462,7 @@ class Add2dElements:
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : list[int, int, int]
+        nids : list[int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -3025,7 +3021,7 @@ class AddRigidElements:
         ----------
         eid : int
             element id
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
         cma / cmb : str; default=''
             dependent DOFs
@@ -3153,7 +3149,7 @@ class AddRigidElements:
         ----------
         eid : int
             element id
-        nids : list[int, int]
+        nids : list[int]
             node ids; connected grid points at ends A and B
         cna / cnb : str
             independent DOFs in '123456'
@@ -3219,7 +3215,7 @@ class AddRigidElements:
             GRID/ELEM
         shell/solid_eid : int; default=None
             the shell/solid element id (if rigid_type=ELEM)
-        shell/solid_grids : list[int, int]; default=None
+        shell/solid_grids : list[int]; default=None
             the shell/solid node ids (if rigid_type=GRID)
         comment : str; default=''
             a comment for the card
@@ -4843,8 +4839,10 @@ class AddAero:
     def add_aesurf(self, aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
                    eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
                    pllim=-np.pi/2., pulim=np.pi/2.,
-                   hmllim=None, hmulim=None, # hinge moment lower/upper limits
-                   tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
+                   # hinge moment lower/upper limits
+                   hmllim: Optional[float]=None, hmulim: Optional[float]=None,
+                   # TABLEDi deflection limits vs. dynamic pressure
+                   tqllim: int=None, tqulim: int=0,
                    comment='') -> AESURF:
         """
         Creates an AESURF card, which defines a control surface
@@ -4869,10 +4867,10 @@ class AddAero:
             reference area for the control surface
         pllim / pulim : float; default=-pi/2 / pi/2
             Lower/Upper deflection limits for the control surface in radians
-        hmllim / hmulim : float; default=None
+        hmllim / hmulim : Optional[float]; default=None
             Lower/Upper hinge moment limits for the control surface in
             force-length units
-        tqllim / tqulim : int; default=None
+        tqllim / tqulim : int; default=0
             Set identification numbers of TABLEDi entries that provide the
             lower/upper deflection limits for the control surface as a
             function of the dynamic pressure

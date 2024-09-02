@@ -52,7 +52,7 @@ def _read_f06_matrices(f06_file: TextIO,
     i = 0
     debug = False
     tables = {}
-    matrices = {} # defaultdict(list)
+    matrices = {}
     iblank_count = 0
     while True:
         line = f06_file.readline()
@@ -83,11 +83,13 @@ def _read_f06_matrices(f06_file: TextIO,
         if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
             Mhh, Bhh, Khh = _read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
-            matrices['MHH'].append(np.diag(Mhh[isort]))
-            matrices['BHH'].append(np.diag(Bhh[isort]))
-            matrices['KHH'].append(np.diag(Khh[isort]))
+            #matrices['MHH'].append(np.diag(Mhh[isort]))
+            #matrices['BHH'].append(np.diag(Bhh[isort]))
+            #matrices['KHH'].append(np.diag(Khh[isort]))
+            matrices['MHH'] = np.diag(Mhh[isort])
+            matrices['BHH'] = np.diag(Bhh[isort])
+            matrices['KHH'] = np.diag(Khh[isort])
             del line_strip, Mhh, Bhh, Khh
-
 
         if line.startswith('0    TABLE'):
             table_name, table, line, i = _read_table(f06_file, line, i, log)
@@ -96,7 +98,7 @@ def _read_f06_matrices(f06_file: TextIO,
             debug = False
         elif line.startswith('0      MATRIX '):
             matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
-            assert isinstance(matrix, scipy.sparse.coo_matrix)
+            assert isinstance(matrix, (np.ndarray, scipy.sparse.coo_matrix))
 
             if matrix_name not in matrices:
                 matrices[matrix_name] = []
@@ -128,6 +130,10 @@ def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.nd
         else:
             matrix0 = list_matrices[0]
             if isinstance(matrix0, np.ndarray):
+                if list_matrices.ndim == 2:
+                    matrices2[key] = list_matrices
+                    continue
+
                 try:
                     matrix = np.stack(list_matrices, axis=2)
                 except ValueError:  # pragma: no cover
@@ -247,6 +253,7 @@ def _read_matrix(f06_file: TextIO,
             line = f06_file.readline()
             i += 1
             continue
+
         # column header
         # 0COLUMNS       3 THRU       3 ARE NULL.
         #
@@ -265,8 +272,12 @@ def _read_matrix(f06_file: TextIO,
         assert line.strip() == 'ROW', line
 
         line = f06_file.readline().rstrip()
-        assert ')' in line, line
         i += 1
+        while ')' not in line:
+            line = f06_file.readline().rstrip()
+            i += 1
+        assert ')' in line, line
+
         row_lines = [line]
         while ')' in line:
             line = f06_file.readline().rstrip()
@@ -280,7 +291,7 @@ def _read_matrix(f06_file: TextIO,
             row_indexi, datai = _parse_complex_row_lines(row_lines)
         elif is_real:
             row_indexi, datai = _parse_real_row_lines(row_lines)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(is_complex)
         #print(column)
         ndatai = len(datai)
@@ -313,7 +324,7 @@ def _read_matrix(f06_file: TextIO,
     return table_name, matrix, line, i
 
 
-def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
+def _parse_complex_row_lines(lines: list[str]) -> tuple[np.ndarray, np.ndarray]:
     """
     1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
     6) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
@@ -351,7 +362,7 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
     return row_index, data
 
 
-def _parse_real_row_lines(lines: list[str]) -> tuple[int, int]:
+def _parse_real_row_lines(lines: list[str]) -> tuple[np.ndarray, np.ndarray]:
     """
     1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01
     """

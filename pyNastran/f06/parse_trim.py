@@ -5,6 +5,10 @@ import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import print_bad_path
 
+TrimVariable = tuple[int, str, str, float, str]
+ControllerState = dict[str, float]
+TrimVariables = dict[str, TrimVariable]
+
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
 
 WRITE_FILE = False
@@ -59,6 +63,7 @@ class MonitorLoads:
         msg = f'MonitorLoads; n={len(self.name)}'
         return msg
 
+
 class TrimResults:
     def __init__(self):
         # aero_pressure[(subcase, subtitle)] = (grid_id, loads)
@@ -72,8 +77,7 @@ class TrimResults:
         self.controller_state: dict[int, ControllerState] = {}
 
         # trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
-        TrimVariables = dict[str, TrimVariable]
-        self.trim_variables: dict[int, TrimVariables] = {} # TODO: not supported
+        self.trim_variables: dict[int, TrimVariables] = {}  # TODO: not supported
 
     def __repr__(self) -> str:
         msg = (
@@ -92,8 +96,6 @@ class TrimResults:
             msg += '\n  len(aero_pressure) = 0'
         return msg
 
-TrimVariable = tuple[int, str, str, float, str]
-ControllerState = dict[str, float]
 
 def read_f06_trim(f06_filename: str,
                   log: Optional[SimpleLogger]=None,
@@ -473,6 +475,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     f06_file.seek(seek1)
     return line_end, iend
 
+
 def _remove_intermediate_spaces(line_in: str) -> str:
     """
     Simplifies parsing of the following line
@@ -493,6 +496,7 @@ def _remove_intermediate_spaces(line_in: str) -> str:
     while ' =' in line or '= ' in line or '  ' in line:
         line = line.replace(' =', '=').replace('= ', '=').replace('  ', ' ')
     return line
+
 
 def _get_controller_state(header_lines: list[str]) -> ControllerState:
     controller_state: ControllerState = {}

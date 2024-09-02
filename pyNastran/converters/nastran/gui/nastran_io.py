@@ -115,7 +115,7 @@ from .utils import (
     #build_offset_normals_dims,
     build_map_centroidal_result,
     get_nastran_gui_layer_word, check_for_missing_control_surface_boxes,
-    get_elements_nelements_unvectorized, # sget_shell_material_coord,
+    get_elements_nelements_unvectorized, # get_shell_material_coord,
     make_nid_map, store_warning)
 from .menus.setup_model_sidebar import ModelSidebar
 from .nastran_io_utils import (
