@@ -1,5 +1,7 @@
 # encoding: utf-8
 import os
+from typing import Any
+
 import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
@@ -13,13 +15,48 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.utils import print_bad_path
+from pyNastran.converters.cart3d.cart3d import read_cart3d
+from pyNastran.converters.tecplot.tecplot import read_tecplot
+
 
 PKG_PATH = pyNastran.__path__[0]
 CART3D_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models', 'threePlugs.a.tri')
+TECPLOT_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models', 'ascii', 'point_febrick_3d_02.dat')
 NASTRAN_PATH = os.path.join(PKG_PATH, '..', 'models', 'bwb', 'bwb_saero.bdf')
 
 ELEMENT_ID_OPTIONS = ['CSV File', 'Load ID']
+#AERO_FORMATS = ['Cart3D', 'Fund3D', 'Fluent Vrt', 'Fluent Press', 'Tecplot']
 AERO_VARIABLE_STR = 'Define the Pressure or Cp (Coefficient of Pressure)'
+AERO_FILE_EXTENSION = {
+    'Cart3D' : ['triq'],
+    'Fund3D': ['triq'],
+    'Fluent Vrt': ['vrt'],
+    'Fluent Press': ['pres'],
+    'Tecplot': ['dat', 'plt'],
+}
+STRUCTURE_FILE_EXTENSION = {
+    'Nastran' : ['bdf', 'pch'],
+}
+AERO_FORMATS = list(AERO_FILE_EXTENSION)
+
+
+def get_aero_model(aero_filename: str, aero_format: str) -> tuple[Any, list[str]]:
+    variables = []
+    if aero_format == 'Cart3D':
+        model = read_cart3d(aero_filename)
+        variables = list(model.loads)
+    # elif aero_format == 'Fund3D':
+    #     return None, []
+    # elif aero_format == 'Fluent Vrt':
+    #     pass
+    # elif aero_format == 'Fluent Press':
+    #     pass
+    elif aero_format == 'Tecplot':
+        model = read_tecplot(aero_filename)
+    else:  # pragma: no cover
+        return None, []
+        #raise NotImplementedError(aero_format)
+    return model, variables
 
 
 class PressureMap(PyDialog):
@@ -65,7 +102,7 @@ class PressureMap(PyDialog):
 
         self.aero_format_label = QLabel('Aero Format:')
         self.aero_format = QComboBox(self)
-        self.aero_format.addItems(['Cart3d', 'Fund3D', 'Fluent vrt', 'Fluent press', 'Tecplot'])
+        self.aero_format.addItems(AERO_FORMATS)
 
         self.aero_filename_label = QLabel('Aero File:', self)
         self.aero_filename = QLineEdit(self)
@@ -144,7 +181,7 @@ class PressureMap(PyDialog):
         self.pressure_filename = QLineEdit(self)
         self.pressure_filename.setText('pressure.bdf')
         self.pressure_filename.setToolTip('Path to the Pressure File')
-        self.pressure_filename_button = QPushButton('PLoad...')
+        self.pressure_filename_load_button = QPushButton('PLoad...')
 
         self.structure_load_id_label = QLabel('Load ID:')
         self.structure_load_id = QIntEdit('1')
@@ -270,7 +307,7 @@ class PressureMap(PyDialog):
 
         grid2.addWidget(self.pressure_filename_label, irow, 0)
         grid2.addWidget(self.pressure_filename, irow, 1)
-        grid2.addWidget(self.pressure_filename_button, irow, 2)
+        grid2.addWidget(self.pressure_filename_load_button, irow, 2)
         irow += 1
 
         grid2.addWidget(self.structure_load_id_label, irow, 0)
@@ -282,22 +319,48 @@ class PressureMap(PyDialog):
     def set_connections(self):
         self.load_aero_button.clicked.connect(self.on_aero)
         self.load_structure_button.clicked.connect(self.on_structure)
+        self.aero_filename_load_button.clicked.connect(self.on_aero_load)
+        self.structure_filename_load_button.clicked.connect(self.on_structure_load)
+        self.pressure_filename_load_button.clicked.connect(self.on_pressure_load)
 
         return
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
 
+    def on_aero_load(self):
+        aero_format = self.aero_format.currentText()
+        if aero_format == 'Cart3D':
+            aero_filename = (CART3D_PATH)
+        if aero_format == 'Tecplot':
+            aero_filename = TECPLOT_PATH
+        else:  # pragma: no cover
+            return
+            #raise NotImplementedError(aero_format)
+        self.aero_filename.setText(aero_filename)
+        #self._on_file_load(f'Load Existing {aero_format} Aero Model', AERO_FILE_EXTENSION)
+
+    def on_structure_load(self):
+        self._on_file_load('Load Existing Nastran Structure Model', STRUCTURE_FILE_EXTENSION)
+
+    def on_pressure_load(self):
+        self._on_file_load('Load Pressure Nastran File', STRUCTURE_FILE_EXTENSION)
+
+    def _on_file_load(self, title: str, file_extensions: dict[str, list[str]]) -> str:
+        """TODO: implement this..."""
+        return ''
+
     def on_aero(self):
-        from pyNastran.converters.cart3d.cart3d import read_cart3d
-        cart3d_filename, aero_passed = check_path(self.aero_filename)
+        aero_filename, aero_passed = check_path(self.aero_filename)
         if not aero_passed:
             self.load_aero_button.setStyleSheet('QPushButton {color: red; font-weight: bold;}')
             self.load_aero_button.setToolTip("Couldn't find Aero File")
             self.aero_variable.setToolTip(f'{AERO_VARIABLE_STR}\nLoad the Aero File')
             return
-        model = read_cart3d(cart3d_filename)
-        variables = list(model.loads)
+
+        aero_format = self.aero_format.currentText()
+        aero_model, variables = get_aero_model(aero_filename, aero_format)
+
         if not list(variables):
             self.load_aero_button.setStyleSheet('QPushButton {color: red; font-weight: bold;}')
             self.load_aero_button.setToolTip('No variables found in Aero File')
@@ -317,6 +380,7 @@ class PressureMap(PyDialog):
             #self.eid_csv_filename.setEnabled(False)
             self.eid_load_id_pulldown.setEnabled(False)
             return
+
         model = read_bdf(bdf_filename)
         load_ids = list(model.loads) + list(model.load_combinations)
         uload_ids = np.unique(load_ids)
