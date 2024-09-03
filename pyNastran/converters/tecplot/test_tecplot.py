@@ -43,6 +43,9 @@ class TestTecplot(unittest.TestCase):
             log.info(f'read {fname!r}')
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
+            model.is2d
+            model.is3d
+            model.result_variables
             model.write_tecplot_ascii(ascii_plt)
             model.write_tecplot_binary(binary_plt)
             read_tecplot(ascii_plt, log=log)
@@ -72,6 +75,9 @@ class TestTecplot(unittest.TestCase):
             log.info(f'read {fname}')
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
+            model.is2d
+            model.is3d
+            model.result_variables
             assert model.zones[0].is_structured, f'{fname} {model.zones[0]}'
             model.write_tecplot_ascii(ascii_plt)
             #model.write_tecplot_binary(binary_plt)
@@ -127,6 +133,9 @@ class TestTecplot(unittest.TestCase):
             log.info(f'read {fname}')
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
+            model.is2d
+            model.is3d
+            model.result_variables
             assert model.zones[0].is_unstructured, f'{fname} {model.zones[0]}'
             model.write_tecplot_ascii(ascii_plt)
             model.write_tecplot_binary(binary_plt)
@@ -182,11 +191,14 @@ class TestTecplot(unittest.TestCase):
         #tecplot_filename1 = os.path.join(MODEL_PATH, 'ascii', 'humanoid_tri.dat')
 
         tecplot_filename2 = os.path.join(MODEL_PATH, 'ascii', 'tria_split.plt')
-        tecplot = read_tecplot(tecplot_filename1, log=log)
+        model = read_tecplot(tecplot_filename1, log=log)
         #type_limit = ('tri')
-        tecplot.demote_elements()
-        tecplot.split_elements(ntri_nodes=3)
-        tecplot.write_tecplot_binary(tecplot_filename2)
+        model.demote_elements()
+        model.split_elements(ntri_nodes=3)
+        model.write_tecplot_binary(tecplot_filename2)
+        model.is2d
+        model.is3d
+        model.result_variables
 
     def test_tecplot_ctria3(self):
         """CTRIA3 elements"""

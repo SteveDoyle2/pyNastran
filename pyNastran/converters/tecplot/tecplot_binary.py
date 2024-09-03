@@ -89,8 +89,8 @@ class Base:
                               keys_to_skip=keys_to_skip)
 
     def object_stats(obj: Any, mode: str='public',
-                 keys_to_skip: Optional[list[str]]=None,
-                 filter_properties: bool=False) -> str:
+                     keys_to_skip: Optional[list[str]]=None,
+                     filter_properties: bool=False) -> str:
         """Prints out an easy to read summary of the object"""
         return object_stats(obj,
                             mode=mode,
@@ -325,7 +325,6 @@ class TecplotBinary(Base):
         zone.headers_dict['DATAPACKING']
         self.variables = zone.variables
         del self.f
-
 
 def _write_binary_zone_headers(model: TecplotBinary,
                                tecplot_file: BinaryIO,
@@ -1504,4 +1503,3 @@ def _write_ndata(file_obj: BinaryIO, f, n: int, types: str='ifs', endian: str='<
     data = file_obj.read(n)
     file_obj.seek(nold)
     return _write_data(f, data, types=types, endian=endian)
-

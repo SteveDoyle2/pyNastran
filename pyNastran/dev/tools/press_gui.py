@@ -53,6 +53,8 @@ def get_aero_model(aero_filename: str, aero_format: str) -> tuple[Any, list[str]
     #     pass
     elif aero_format == 'Tecplot':
         model = read_tecplot(aero_filename)
+        #print(model.object_stats())
+        variables = model.result_variables
     else:  # pragma: no cover
         return None, []
         #raise NotImplementedError(aero_format)

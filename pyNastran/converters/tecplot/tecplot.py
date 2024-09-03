@@ -72,6 +72,26 @@ class Tecplot(TecplotBinary):
         """gets the number of zones"""
         return len(self.zones)
 
+    @property
+    def is3d(self) -> bool:
+        zone: Zone = self.zones[0]
+        return zone.is_3d
+    @property
+    def is2d(self) -> bool:
+        zone: Zone = self.zones[0]
+        return zone.is_2d
+
+    @property
+    def result_variables(self) -> list[str]:
+        if self.is3d:
+            result_variables = self.variables[3:]
+        elif self.is2d:
+            result_variables = self.variables[2:]
+        else:
+            #print(self.object_stats())
+            raise RuntimeError(self)
+        return result_variables
+
     def read_tecplot(self, tecplot_filename: PathLike,
                      filetype: str='guess',
                      zones_to_exclude: Optional[list[int]] = None,
