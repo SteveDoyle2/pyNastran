@@ -17,6 +17,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
 from pyNastran.utils import print_bad_path
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.dev.tools.pressure_map import get_aero_model
 
 
 PKG_PATH = pyNastran.__path__[0]
@@ -38,27 +39,6 @@ STRUCTURE_FILE_EXTENSION = {
     'Nastran' : ['bdf', 'pch'],
 }
 AERO_FORMATS = list(AERO_FILE_EXTENSION)
-
-
-def get_aero_model(aero_filename: str, aero_format: str) -> tuple[Any, list[str]]:
-    variables = []
-    if aero_format == 'Cart3D':
-        model = read_cart3d(aero_filename)
-        variables = list(model.loads)
-    # elif aero_format == 'Fund3D':
-    #     return None, []
-    # elif aero_format == 'Fluent Vrt':
-    #     pass
-    # elif aero_format == 'Fluent Press':
-    #     pass
-    elif aero_format == 'Tecplot':
-        model = read_tecplot(aero_filename)
-        #print(model.object_stats())
-        variables = model.result_variables
-    else:  # pragma: no cover
-        return None, []
-        #raise NotImplementedError(aero_format)
-    return model, variables
 
 
 class PressureMap(PyDialog):

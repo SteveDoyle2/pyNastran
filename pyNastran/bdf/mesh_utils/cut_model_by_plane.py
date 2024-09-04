@@ -150,10 +150,10 @@ def get_stations(model: BDF,
     print(stations)
 
     """
-    p1 = np.asarray(p1) # start
-    p2 = np.asarray(p2) # xz-plane
-    p3 = np.asarray(p3) # end point
-    zaxis = np.asarray(zaxis)
+    p1 = np.asarray(p1).astype('float64') # start
+    p2 = np.asarray(p2).astype('float64') # xz-plane
+    p3 = np.asarray(p3).astype('float64') # end point
+    zaxis = np.asarray(zaxis).astype('float64')
 
     # define a local coordinate system
     xyz1, xyz2, unused_z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
@@ -221,7 +221,8 @@ def get_stations(model: BDF,
 
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
-def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[Any, Any, Any, Any]:
+def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[np.ndarray, np.ndarray,
+                                                         list[tuple[int, int, int]], list[int]]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -256,7 +257,7 @@ def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[Any, Any, Any, Any]:
     #edge_to_eid_map = out['edge_to_eid_map']
     return nids, xyz_cid0, faces, face_eids
 
-def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord: CORD2R, tol,
+def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord: CORD2R, tol: float,
                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
                             csv_filename=None,
                             plane_bdf_filename='plane_face.bdf',
@@ -301,7 +302,8 @@ def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord: CORD2R, tol,
     return unique_geometry_array, unique_results_array, rods_array
 
 
-def export_face_cut(csv_filename: str, geometry_arrays, results_arrays, header: str='') -> None:
+def export_face_cut(csv_filename: str, geometry_arrays, results_arrays,
+                    header: str='') -> None:
     """
     Writes a face cut file of the format:
 
@@ -337,7 +339,7 @@ def export_face_cut(csv_filename: str, geometry_arrays, results_arrays, header: 
                        footer='', comments='# ') # , encoding=None # numpy 1.14
             csv_file.write('\n')
 
-def _determine_cord2r(origin, zaxis, xzplane):
+def _determine_cord2r(origin: np.ndarray, zaxis: np.ndarray, xzplane: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     k = zaxis / np.linalg.norm(zaxis)
     iprime = xzplane / np.linalg.norm(xzplane)
     j = np.cross(k, iprime)
@@ -359,6 +361,8 @@ def _project_z_axis(p1: NDArray3float,
     j /= |j|
     i = k × j
     """
+    p1 = np.asarray(p1).astype('float64') # origin
+    p2 = np.asarray(p2).astype('float64') # xz-plane
     x = p2 - p1
     norm_x = np.linalg.norm(x)
     if norm_x == 0.:
@@ -389,8 +393,8 @@ def _project_vectors(p1: NDArray3float,
     j /= |j|
     i = k × j
     """
-    x = p2
-    origin = p1
+    x = p2.astype('float64')
+    origin = p1.astype('float64')
 
     norm_z =  np.linalg.norm(z_global)
     if norm_z == 0.:
@@ -448,9 +452,9 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     origin, zaxis, xzplane : (3,) float ndarray
         the CORD2R-ready coordinate system
     """
-    p1 = np.asarray(p1) # origin
-    p2 = np.asarray(p2) # xz-plane
-    zaxis = np.asarray(zaxis)
+    p1 = np.asarray(p1).astype('float64') # origin
+    p2 = np.asarray(p2).astype('float64') # xz-plane
+    zaxis = np.asarray(zaxis).astype('float64')
     #print("coord:")
     #print('  p1 =', p1)
     #print('  p2 =', p2)
@@ -499,7 +503,9 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #return local_points_dict, global_points_dict, result_dict
     #return NotImplementedError()
 
-def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol: float,
+def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
+                             faces, face_eids,
+                             coord: Coord, tol: float,
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
                              plane_bdf_filename: str='plane_face.bdf',
                              plane_bdf_filename2: str='plane_face2.bdf',
@@ -615,7 +621,8 @@ def split_to_trias(model: BDF) -> None:
         elements2[elem_b.eid] = elem_b
     model.elements = elements2
 
-def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
+def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
+                faces, face_eids, nodal_result,
                 coord: Coord, # CORD2R,
                 plane_atol: float=1e-5,
                 skip_cleanup: bool=True,
