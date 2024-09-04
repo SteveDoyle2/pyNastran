@@ -386,11 +386,11 @@ class TestNastranGUI(unittest.TestCase):
         model_name = 'main'
 
 
-        p1 = [0., 0., 0.]
-        p3 = [1., 0., 0.]
+        p1 = [0, 0, 0]
+        p3 = [1, 0, 0]
 
-        p2 = [0., 1., 0.]
-        zaxis = [0., 0., 1.]
+        p2 = [0, 1, 0]
+        zaxis = [0, 0, 1]
 
         test.shear_moment_torque_obj.setup_model_data(model_name)
         force_sum, moment_sum = test.shear_moment_torque_obj.plot_shear_moment_torque(
@@ -404,10 +404,10 @@ class TestNastranGUI(unittest.TestCase):
         assert np.allclose(np.abs(force_sum).max(), 0.000732421875), np.abs(force_sum).max()
         assert np.allclose(np.abs(moment_sum).max(), 0.000244140625), np.abs(moment_sum).max()
 
-        p1 = np.array([0., 0., 0.]) # origin
-        p2 = np.array([1., 0., 0.]) # xaxis
-        p3 = np.array([1., 0., 0.]) # end
-        zaxis = np.array([0., 0., 1.])
+        p1 = np.array([0, 0, 0]) # origin
+        p2 = np.array([1, 0, 0]) # xaxis
+        p3 = np.array([1, 0, 0]) # end
+        zaxis = np.array([0, 0, 1])
         #idir = 0
         test.shear_moment_torque_obj.plot_shear_moment_torque(
             icase_gpforce,

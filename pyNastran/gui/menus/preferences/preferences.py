@@ -189,14 +189,6 @@ class PreferencesWindow(PyDialog):
         self.font_size_edit.setRange(FONT_SIZE_MIN, FONT_SIZE_MAX)
 
         #-----------------------------------------------------------------------
-        self.startup_directory_label = QLabel('Remember Last Directory:')
-        self.startup_directory_checkbox = QCheckBox(self)
-        self.startup_directory_checkbox.setChecked(self.use_startup_directory)
-        self.startup_directory_checkbox.setToolTip('True: Remember the last directory when saving\n'
-                                                   'False: Start from local directory')
-        #self.startup_directory_button = QPushButton('...')
-
-        #-----------------------------------------------------------------------
         # Corner Text Color
         self.corner_text_size_label = QLabel('Corner Text Size:')
         self.corner_text_size_edit = QSpinBox(self)
@@ -519,10 +511,6 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.font_size_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.startup_directory_label, irow, 0)
-        grid.addWidget(self.startup_directory_checkbox, irow, 1)
-        irow += 1
-
         grid.addWidget(self.gradient_scale_label, irow, 0)
         grid.addWidget(self.gradient_scale_checkbox, irow, 1)
         irow += 1
@@ -803,8 +791,6 @@ class PreferencesWindow(PyDialog):
         """creates the actions for the menu"""
         self.font_size_edit.valueChanged.connect(self.on_font)
 
-        self.startup_directory_checkbox.clicked.connect(self.on_startup_directory_checked)
-
         self.annotation_size_edit.editingFinished.connect(self.on_annotation_size)
         self.annotation_size_edit.valueChanged.connect(self.on_annotation_size)
         self.annotation_color_edit.clicked.connect(self.on_annotation_color)
@@ -853,12 +839,6 @@ class PreferencesWindow(PyDialog):
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
 
-    def on_startup_directory_checked(self):
-        """opens a folder dialog"""
-        is_checked = self.startup_directory_checkbox.isCheckable()
-        if self.win_parent is not None:
-            self.nastran_settings.use_startup_directory = is_checked
-
     def on_reset_defaults(self):
         """reset all of the preferences to their defaults"""
         self.on_font(FONT_SIZE)
@@ -868,7 +848,6 @@ class PreferencesWindow(PyDialog):
         self.on_default_coord_scale()
         self.on_default_coord_text_scale()
         self.on_default_corner_text_size()
-        self.startup_directory_checkbox.setChecked(True)
 
         self.magnify_edit.setValue(MAGNIFY)
         self.picker_size_edit.setValue(self._picker_size)
