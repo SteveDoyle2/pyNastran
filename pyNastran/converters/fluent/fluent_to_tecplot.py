@@ -28,11 +28,8 @@ def fluent_to_tecplot(fluent_filename: PathLike,
     tecplot.log = fluent_model.log
 
     # drop the element id
-    #variables = ['Region'] + titles[1:].tolist()
     variables = ['X', 'Y', 'Z', 'Region'] + titles[1:].tolist()
     nvars = len(variables)
-    #print('variables = ', variables)
-    #print('nvars = ', nvars)
 
     data_packing = 'BLOCK'  # don't remember what this is
     name = '???'
@@ -48,10 +45,7 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         tri_eids = tris[:, 0]
         tri_regions = tris[:, 1].reshape(ntri, 1)
         tri_nodes = tris[:, 2:]
-        #itri_nodes = np.searchsorted(node_id, tri_nodes)
-        #inid = np.unique(itri_nodes.ravel())
-        #jtri_nodes = np.searchsorted(inid, itri_nodes)
-        #print(f'itri_nodes.min() = {itri_nodes.min()}')
+
         unodes = np.unique(tri_nodes.ravel())
         inid = np.searchsorted(node_id, unodes)
         jtri_nodes = np.searchsorted(unodes, tri_nodes)
@@ -60,11 +54,8 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         ires_tri = np.searchsorted(element_id, tri_eids)
         res_tri = results[ires_tri, :]
         assert res_tri.ndim == 2, res_tri.shape
-        #print('ires_tri.shape = ', ires_tri.shape)
-        #print('res_tri.shape = ', res_tri.shape)
-        #print('tri_regions.shape = ', tri_regions.shape)
         res_tri = np.column_stack((tri_regions, res_tri))
-        assert res_tri.shape == (ntri, nvars-3) #, (tri_regions.shape, res_tri.shape, res_tri2.shape)
+        assert res_tri.shape == (ntri, nvars-3)
         del tris
         tri_zone = Zone.set_zone_from_360(
             log, header_dict, variables,
