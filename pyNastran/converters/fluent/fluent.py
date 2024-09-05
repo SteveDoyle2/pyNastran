@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
 import numpy as np
+from cpylog import SimpleLogger, get_logger2 # get_logger,
 
 
 class Fluent:
-    def __init__(self, log=None):
-        self.log = log
+    def __init__(self, log=None, debug=True):
+        self.log = get_logger2(log=log, debug=True)
 
     def read_fluent(self, fluent_filename: str):
         base, ext = os.path.splitext(fluent_filename)
@@ -64,6 +65,9 @@ def read_daten(daten_filename: Path,
     results = np.array(data_list, dtype='float64')
     if scale != 1.0:
         results *= scale
+
+    # we drop the element_id from the check
+    assert results.shape[1] == len(titles)-1, f'shape={str(results.shape)}; titles={titles}'
     return element_id, titles, results
 
 def read_vrt(vrt_filename):

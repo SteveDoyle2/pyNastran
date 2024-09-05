@@ -11,6 +11,7 @@ import numpy as np
 import pyNastran
 from pyNastran.converters.fluent.fluent import read_vrt, read_cell, read_daten, read_fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
+from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
 
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -75,6 +76,7 @@ class TestFluent(unittest.TestCase):
         vrt_filename = BWB_PATH / 'bwb_saero.vrt'
         cel_filename = BWB_PATH / 'bwb_saero.cel'
         daten_filename = BWB_PATH / 'bwb_saero.daten'
+        tecplot_filename = BWB_PATH / 'bwb_saero.plt'
         nastran_to_fluent(nastran_filename, vrt_filename)
 
         node_id, xyz = read_vrt(vrt_filename)
@@ -82,6 +84,10 @@ class TestFluent(unittest.TestCase):
         (quads, tris), (element_ids, regions, elements_list) = read_cell(cel_filename)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename)
+
+        tecplot = fluent_to_tecplot(vrt_filename)
+        with self.assertRaises(RuntimeError):
+            tecplot.write_tecplot(tecplot_filename)
 
 def main():  # pragma: no cover
     import time
