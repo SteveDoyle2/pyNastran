@@ -544,11 +544,11 @@ class Zone:
         nodaL_var_list = list(range(1, nvar_node+1))
         element_var_list = list(range(nvar_node+1, nvar_node+nvar_element+1))
         if nvar_node and nvar_element:
-            var_location = f'VARLOCATION=({nodaL_var_list}=NODAL,{element_var_list}=CELLCENTERED)'
+            var_location = f',VARLOCATION=({nodaL_var_list}=NODAL,{element_var_list}=CELLCENTERED)'
         elif nvar_node:
             var_location = ''
         elif nvar_element:
-            var_location = f'VARLOCATION=({element_var_list}=CELLCENTERED)'
+            var_location = f',VARLOCATION=({element_var_list}=CELLCENTERED)'
         else:  # pramga: no cover
             raise RuntimeError((nvar_node, nvar_element))
 

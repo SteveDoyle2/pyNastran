@@ -85,9 +85,7 @@ class TestFluent(unittest.TestCase):
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename)
 
-        tecplot = fluent_to_tecplot(vrt_filename)
-        with self.assertRaises(RuntimeError):
-            tecplot.write_tecplot(tecplot_filename)
+        tecplot = fluent_to_tecplot(vrt_filename, tecplot_filename)
 
 def main():  # pragma: no cover
     import time

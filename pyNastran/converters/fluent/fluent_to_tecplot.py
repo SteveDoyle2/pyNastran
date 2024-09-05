@@ -8,9 +8,11 @@ from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 def fluent_to_tecplot(fluent_filename: PathLike,
                       tecplot_filename: PathLike='') -> Tecplot:
     """
-    TODO: not tested
-    TODO: probably need to consider non-sequential node ids
-    TODO: filter unused nodes in
+    not well tested
+
+    considers:
+      - non-sequential node ids
+      - filters unused nodes
     """
     fluent_model = read_fluent(fluent_filename)
     log = fluent_model.log
@@ -46,6 +48,15 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         tri_eids = tris[:, 0]
         tri_regions = tris[:, 1].reshape(ntri, 1)
         tri_nodes = tris[:, 2:]
+        #itri_nodes = np.searchsorted(node_id, tri_nodes)
+        #inid = np.unique(itri_nodes.ravel())
+        #jtri_nodes = np.searchsorted(inid, itri_nodes)
+        #print(f'itri_nodes.min() = {itri_nodes.min()}')
+        unodes = np.unique(tri_nodes.ravel())
+        inid = np.searchsorted(node_id, unodes)
+        jtri_nodes = np.searchsorted(unodes, tri_nodes)
+        #-------------
+
         ires_tri = np.searchsorted(element_id, tri_eids)
         res_tri = results[ires_tri, :]
         assert res_tri.ndim == 2, res_tri.shape
@@ -59,10 +70,10 @@ def fluent_to_tecplot(fluent_filename: PathLike,
             log, header_dict, variables,
             name, zonetype, data_packing,
             strand_id,
-            tris=tri_nodes + 1,
+            tris=jtri_nodes,
             quads=None,
             tets=None, hexas=None,
-            zone_data=xyz,
+            zone_data=xyz[inid, :],
             element_data=res_tri)
         tecplot.zones.append(tri_zone)
 
@@ -76,6 +87,12 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         quad_eids = quads[:, 0]
         quad_regions = quads[:, 1].reshape(nquad, 1)
         quad_nodes = quads[:, 2:]
+
+        unodes = np.unique(quad_nodes.ravel())
+        inid = np.searchsorted(node_id, unodes)
+        jquad_nodes = np.searchsorted(unodes, quad_nodes)
+        #-------------
+
         ires_quad = np.searchsorted(element_id, quad_eids)
         res_quad = results[ires_quad, :]
         assert res_quad.ndim == 2, res_quad.shape
@@ -87,13 +104,12 @@ def fluent_to_tecplot(fluent_filename: PathLike,
             name, zonetype, data_packing,
             strand_id,
             tris=None,
-            quads=quad_nodes + 1,
+            quads=jquad_nodes,
             tets=None, hexas=None,
-            zone_data=xyz,
+            zone_data=xyz[inid, :],
             element_data=res_quad)
         tecplot.zones.append(quad_zone)
 
     if tecplot_filename:
-        # TODO: fails b/c nodes aren't sequential?
         tecplot.write_tecplot(tecplot_filename)
     return tecplot
