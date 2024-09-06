@@ -1,16 +1,17 @@
 import os
 from pathlib import Path
+from typing import Any
+
 import numpy as np
 from cpylog import SimpleLogger, get_logger2 # get_logger,
-
+from pyNastran.utils import PathLike
 
 class Fluent:
-    def __init__(self, log=None, debug=True):
-        self.log = get_logger2(log=log, debug=True)
+    def __init__(self, log=None, debug: bool=True):
+        self.log = get_logger2(log=log, debug=debug)
 
-    def read_fluent(self, fluent_filename: str):
+    def read_fluent(self, fluent_filename: PathLike) -> None:
         base, ext = os.path.splitext(fluent_filename)
-        #case = os.path.basename(vrt_filename)
         vrt_filename = base + '.vrt'
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
@@ -34,11 +35,51 @@ class Fluent:
 
         self.element_ids = element_ids
         self.region = region
+        # TDOO: should be removed, but it's way easier to add to the gui
         self.elements_list = elements_list
         #self.tri_pressure = tri_
 
+    def write_fluent(self, fluent_filename: str) -> None:
+        base, ext = os.path.splitext(fluent_filename)
+        vrt_filename = base + '.vrt'
+        daten_filename = base + '.daten'
+        cell_filename = base + '.cel'
 
-def read_daten(daten_filename: Path,
+        #(quads, tris), (element_ids, region, elements_list)
+        # node, xyz = read_vrt(vrt_filename)
+        # element_id, titles, results = read_daten(daten_filename, scale=1.0)
+        write_cell(cell_filename, self.quads, self.tris)
+        write_vrt(vrt_filename, self.node_id, self.xyz)
+
+        elements_list = []
+        results_list = []
+        if len(self.tris):
+            itri = np.searchsorted(self.element_id, self.tris[:, 0])
+            elements_list.append(self.element_id[itri])
+            results_list.append(self.results[itri, :])
+
+        if len(self.quads):
+            iquad = np.searchsorted(self.element_id, self.quads[:, 0])
+            elements_list.append(self.element_id[iquad])
+            results_list.append(self.results[iquad, :])
+        element_id = np.hstack(elements_list)
+        results = np.vstack(results_list)
+        write_daten(daten_filename, element_id, self.titles, results)
+
+def write_daten(daten_filename: PathLike,
+                element_id: np.ndarray, titles: np.ndarray,
+                results: np.ndarray) -> None:
+    assert len(titles) > 1, titles
+    titles = titles[1:]
+    ntitles = len(titles)
+    title_str = '# Shell Id, ' + ', '.join(list(titles)) + '\n'
+    fmt = '%-8d' + ' %15s' * ntitles + '\n'
+    with open(daten_filename, 'w') as daten_file:
+        daten_file.write(title_str)
+        for eid, res in zip(element_id, results.tolist()):
+            daten_file.write(fmt % tuple([eid] + res))
+
+def read_daten(daten_filename: PathLike,
                scale: float=1.0) -> tuple[np.ndarray, np.ndarray]:
     """
     # Shell Id, Cf Components X, Cf Components Y, Cf Components Z, Pressure Coefficient
@@ -70,7 +111,17 @@ def read_daten(daten_filename: Path,
     assert results.shape[1] == len(titles)-1, f'shape={str(results.shape)}; titles={titles}'
     return element_id, titles, results
 
-def read_vrt(vrt_filename):
+def write_vrt(vrt_filename: PathLike, node_id: str, xyz: np.ndarray) -> None:
+    title_str = 'PROSTAR_VERTEX\n'
+    title_str += '4000         0         0         0         0         0         0         0\n'
+    fmt = '%-8d' + ' %15s' * 3 + '\n'
+    with open(vrt_filename, 'w') as vrt_file:
+        vrt_file.write(title_str)
+        for nid, (x, y, z) in zip(node_id, xyz):
+            vrt_file.write(fmt % (nid, x, y, z))
+    return
+
+def read_vrt(vrt_filename: PathLike) -> tuple[np.ndarray, np.ndarray]:
     """
      PROSTAR_VERTEX
      4000         0         0         0         0         0         0         0
@@ -91,7 +142,34 @@ def read_vrt(vrt_filename):
     xyz = np.array(xyz_list, dtype='float64')
     return node_id, xyz
 
-def read_cell(cell_filename):
+def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> None:
+    title_str = 'PROSTAR_CELL\n'
+    title_str += '4000         0         0         0         0         0         0         0\n'
+    dim_fmt  = '%-8d %8s %8s %8d %8s\n'
+    tri_fmt  = '%-8d %8s %8s %8s\n'
+    quad_fmt = '%-8d %8s %8s %8s %8s\n'
+    with open(vrt_filename, 'w') as cel_file:
+        # row1 = [eid, dim, pid, 3, 4]
+        # row2 = [eid, n1, n2, n3, n4]
+        cel_file.write(title_str)
+        for eid, pid, n1, n2, n3 in zip(tris[:, 0], tris[:, 1],
+                                        tris[:, 2], tris[:, 3], tris[:, 4]):
+            # {eid}      {dim}      {pid}          3          4
+            # {eid}        407        406        472        473  #  nnodes = dim
+
+            #cel_file.write(f'{eid}          3            {dim}         {pid}         4\n'
+            #               f'{eid}          {n1}          {n2}          {n3}\n')
+            cel_file.write(dim_fmt % (eid, '3', '3', pid, '4'))
+            cel_file.write(tri_fmt % (eid, n1, n2, n3))
+
+        for eid, pid, n1, n2, n3, n4 in zip(quads[:, 0], quads[:, 1],
+                                            quads[:, 2], quads[:, 3], quads[:, 4], quads[:, 5]):
+            cel_file.write(dim_fmt % (eid, '3', '4', pid, '4'))
+            cel_file.write(quad_fmt % (eid, n1, n2, n3, n4))
+    return
+
+def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
+                                                tuple[Any]]:
     """
 PROSTAR_CELL
      4000         0         0         0         0         0         0         0
@@ -117,7 +195,7 @@ PROSTAR_CELL
         sline2 = lines[i+1].strip().split()
         #print(sline1)
         #print(sline2)
-       # print('---')
+        #print('---')
 
         idi1, *ids1 = sline1
         idi2, *ids2 = sline2
@@ -148,7 +226,7 @@ PROSTAR_CELL
             tri_list.append(ids)
         elif dim == 4:
             quad_list.append(ids)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(dim)
         assert nids1 in {4}, ids1
         assert nids2 in {3, 4}, ids2
@@ -201,7 +279,7 @@ def quad_split(xyz: np.ndarray,
     quad_pressure = results[ieid]
     return quad_centroid, quad_pressure
 
-def read_fluent(fluent_filename: str, log=None, debug: bool=False) -> Fluent:
+def read_fluent(fluent_filename: PathLike, log=None, debug: bool=False) -> Fluent:
     model = Fluent(log=log)
     model.read_fluent(fluent_filename)
     return model

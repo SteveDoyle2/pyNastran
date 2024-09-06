@@ -12,6 +12,7 @@ import pyNastran
 from pyNastran.converters.fluent.fluent import read_vrt, read_cell, read_daten, read_fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
+from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -73,6 +74,7 @@ class TestFluent(unittest.TestCase):
 
     def test_nastran_to_fluent(self):
         nastran_filename = BWB_PATH / 'bwb_saero.bdf'
+        vrt_filename2 = BWB_PATH / 'bwb_saero2.vrt'
         vrt_filename = BWB_PATH / 'bwb_saero.vrt'
         cel_filename = BWB_PATH / 'bwb_saero.cel'
         daten_filename = BWB_PATH / 'bwb_saero.daten'
@@ -84,8 +86,11 @@ class TestFluent(unittest.TestCase):
         (quads, tris), (element_ids, regions, elements_list) = read_cell(cel_filename)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename)
+        model.write_fluent(vrt_filename2)
+        model2 = read_fluent(vrt_filename2)
 
         tecplot = fluent_to_tecplot(vrt_filename, tecplot_filename)
+        #read_tecplot(tecplot_filename)  # TODO: fix tecplot parsing; the file is correct...
 
 def main():  # pragma: no cover
     import time
