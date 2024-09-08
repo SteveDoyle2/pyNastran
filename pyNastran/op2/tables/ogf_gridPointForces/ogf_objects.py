@@ -1616,6 +1616,8 @@ class ComplexGridPointForcesArray(GridPointForces):
         headers = self.get_headers()
         #name = self.name
         if self.is_unique:
+            data_frame = self._build_unique_dataframe(headers)
+            '''
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
             #nvalues = ntimes * nnodes
@@ -1628,6 +1630,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             df3.columns = headers
             data_frame = df1.join([df2, df3])
             #print(data_frame)
+            '''
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
@@ -1646,6 +1649,53 @@ class ComplexGridPointForcesArray(GridPointForces):
             #print(self.data_frame)
         self.data_frame = data_frame
 
+    def _build_unique_dataframe(self, headers: list[str]):
+        import pandas as pd
+        ntimes = self.data.shape[0]
+        nnodes = self.data.shape[1]
+        #nvalues = ntimes * nnodes
+        node_element = self.node_element.reshape((ntimes * nnodes, 2))
+        if self.nonlinear_factor not in (None, np.nan):
+            column_names, column_values = self._build_dataframe_transient_header()
+            #column_names = column_names[0]
+            #column_values = column_values[0]
+
+            column_values2 = []
+            for value in column_values:
+                values2 = []
+                for valuei in value:
+                    values = np.ones(nnodes) * valuei
+                    values2.append(values)
+                values3 = np.vstack(values2).ravel()
+                column_values2.append(values3)
+            df1 = pd.DataFrame(column_values2).T
+            df1.columns = column_names
+            #df1.columns.names = column_names
+            #self.data_frame.columns.names = column_names
+
+            df2 = pd.DataFrame(node_element)
+            df2.columns = ['NodeID', 'ElementID']
+            df3 = pd.DataFrame(self.element_names.ravel())
+            df3.columns = ['ElementType']
+
+            dfs = [df2, df3]
+            for i, header in enumerate(headers):
+                df = pd.DataFrame(self.data[:, :, i].ravel())
+                df.columns = [header]
+                dfs.append(df)
+            data_frame = df1.join(dfs)
+            #print(self.data_frame)
+        else:
+            df1 = pd.DataFrame(node_element)
+            df1.columns = ['NodeID', 'ElementID']
+            df2 = pd.DataFrame(self.element_names[0, :])
+            df2.columns = ['ElementType']
+            df3 = pd.DataFrame(self.data[0])
+            df3.columns = headers
+            data_frame = df1.join([df2, df3])
+            #print(data_frame)
+        return data_frame
+    
     def _build_dataframe(self):
         """::
         major-axis - the axis
