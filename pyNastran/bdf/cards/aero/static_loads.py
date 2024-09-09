@@ -24,6 +24,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class AEROS(Aero):
@@ -730,7 +731,9 @@ class TRIM(BaseCard):
         uxs = [1.0]
         return TRIM(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
 
-    def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
+    def __init__(self, sid: int, mach: float, q: float,
+                 labels: list[str], uxs: list[float], aeqr: float=1.0,
+                 comment: str=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
 
@@ -783,11 +786,13 @@ class TRIM(BaseCard):
             msg = 'not all labels are unique; labels=%s' % str(self.labels)
             raise RuntimeError(msg)
         if len(self.labels) != len(self.uxs):
-            msg = 'nlabels=%s != nux=%s; labels=%s uxs=%s' % (
+            msg = 'nlabels=%d != nux=%d; labels=%s uxs=%s' % (
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
             raise RuntimeError(msg)
 
-    def verify_trim(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
+    def verify_trim(self, suport, suport1,
+                    aestats, aeparms, aelinks,
+                    aesurf, xref=True):
         """
         Magic function that makes TRIM cards not frustrating.
 
@@ -901,34 +906,37 @@ class TRIM(BaseCard):
                     nsuport1_dofs += 1
             suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
 
+        trim_labels = self.labels
         aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
         aestat_labels = [aestat.label for aestat in aestats.values()]
         aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
         naestat = len(aestat_labels)
-        ntrim = len(self.labels)
-        trim_aesurf_common = list(set(self.labels).intersection(set(aesurf_names)))
+        ntrim = len(trim_labels)
+        trim_aesurf_common = list(set(trim_labels).intersection(set(aesurf_names)))
         trim_aesurf_common.sort()
         ntrim_aesurfs = len(trim_aesurf_common)
         naesurf = len(aesurf_names)
         naeparm = len(aeparm_labels)
 
-        aelinksi = []
+        aelink_labels = []
         if 0 in aelinks:
-            aelinksi += [aelink.label for aelink in aelinks[0]]
+            aelink_labels += [aelink.label for aelink in aelinks[0]]
         #if 'ALWAYS' in aelinks:
-            #aelinksi += [aelink.label for aelink in aelinks['ALWAYS']]
+            #aelink_labels += [aelink.label for aelink in aelinks['ALWAYS']]
 
         if self.sid in aelinks:
-            aelinksi += [aelink.label for aelink in aelinks[self.sid]]
-        naelink = len(aelinksi)
+            aelink_labels += [aelink.label for aelink in aelinks[self.sid]]
+        naelink = len(aelink_labels)
 
 
         ntrim_aesurf = 0
         labels = aestat_labels + aesurf_names + aeparm_labels
         msg = ''
-        for label in self.labels:
+        for label in trim_labels:
             if label not in labels:
-                msg += 'TRIM label=%r is not defined\n' % label
+                msg += f'TRIM label={label!r} is not defined\n'
+            if label in aelink_labels:
+                msg += f'TRIM label={label!r} is dependent on an AELINK and indepedent on the TRIM card\n'
 
             if label in aesurf_names:
                 #print('AESTAT/AESURF label = %r' % label)
@@ -984,8 +992,8 @@ class TRIM(BaseCard):
                 f'  +naesurf = {naesurf}; {aesurf_names}\n'
                 f'  +naeparm = {naeparm}; {aeparm_labels}\n'
                 f'  +0*2*ntrim_aesurf? = {2*ntrim_aesurf} -> 0; {trim_aesurf_common}\n'
-                f'  -ntrim = {ntrim}; {self.labels}\n'
-                f'  -naelink = {naelink}; {aelinksi}\n'
+                f'  -ntrim = {ntrim}; {trim_labels}\n'
+                f'  -naelink = {naelink}; {aelink_labels}\n'
                 f'  -nsuport_dofs = {nsuport_dofs}\n'
                 f'  -nsuport1_dofs = {nsuport1_dofs}\n'
                 f'{suport_dof_msg2}\n\n'

@@ -527,12 +527,12 @@ class AELINK(BaseCard):
             assert self.aelink_id >= 0, f"aelink_id={self.aelink_id} and must be greater than or equal to 0 (or 'ALWAYS')"
 
         if len(self.independent_labels) != len(self.linking_coefficients):
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+            msg = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
                 len(self.independent_labels), len(self.linking_coefficients),
                 self.independent_labels, self.linking_coefficients, str(self))
             raise RuntimeError(msg)
         if len(self.independent_labels) == 0:
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+            msg = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
                 len(self.independent_labels), len(self.linking_coefficients),
                 self.independent_labels, self.linking_coefficients, str(self))
             raise RuntimeError(msg)
