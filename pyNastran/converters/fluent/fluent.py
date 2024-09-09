@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2 # get_logger,
-from pyNastran.utils import PathLike
+from pyNastran.utils import PathLike, print_bad_path
 
 class Fluent:
     def __init__(self, log=None, debug: bool=True):
@@ -15,9 +15,9 @@ class Fluent:
         vrt_filename = base + '.vrt'
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
-        assert os.path.exists(vrt_filename)
-        assert os.path.exists(daten_filename), daten_filename
-        assert os.path.exists(cell_filename), cell_filename
+        assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
+        assert os.path.exists(daten_filename), print_bad_path(daten_filename)
+        assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
         (quads, tris), (element_ids, region, elements_list) = read_cell(cell_filename)
         node, xyz = read_vrt(vrt_filename)
