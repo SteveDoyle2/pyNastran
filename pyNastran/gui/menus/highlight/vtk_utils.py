@@ -46,6 +46,9 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
 
     """
     ids = vtkIdFilter()
+    if grid is None:
+        return ids
+
     if isinstance(grid, vtkUnstructuredGrid):
         # this is typically what's called in the gui
         ids.SetInputData(grid)
@@ -56,7 +59,7 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
         ids.SetCellIds(cell_data)
         ids.SetPointIds(point_data)
     else:  # pragma: no cover
-        raise NotImplementedError(ids)
+        raise NotImplementedError(type(grid))
 
     #self.is_eids = False
     #print('is_eids=%s is_nids=%s' % (is_eids, is_nids))

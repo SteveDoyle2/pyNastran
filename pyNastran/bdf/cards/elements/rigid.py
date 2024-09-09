@@ -1312,6 +1312,9 @@ class RBE3(RigidElement):
         self.weights = weights
         self.comps = comps
         # allow for Gijs as a list or list of lists
+        if len(Gijs) == 0:
+            raise RuntimeError(f'RBE3 eid={eid}; Gijs is be empty')
+
         if isinstance(Gijs[0], integer_types):
             Gijs2 = []
             for Gij in Gijs:
