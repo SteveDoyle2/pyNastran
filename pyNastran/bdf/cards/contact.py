@@ -52,7 +52,7 @@ glue:
 
 """
 from __future__ import annotations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (

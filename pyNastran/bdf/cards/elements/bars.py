@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import cast, Union, Optional, Any, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -1824,7 +1824,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
-def get_bar_vector(model: BDF, elem: Union[CBAR, CBEAM],
+def get_bar_vector(model: BDF, elem: CBAR | CBEAM,
                    node1: GRID, node2: GRID,
                    xyz1: np.ndarray) -> tuple[np.ndarray,
                                               int, Coord,

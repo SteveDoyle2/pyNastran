@@ -36,7 +36,7 @@ The superelement sets start with SE:
 
 """
 from __future__ import annotations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
@@ -69,7 +69,7 @@ class Set(BaseCard):
         self.ids = list(set(self.ids))
         self.ids.sort()
 
-    def repr_fields(self)-> list[Optional[Union[int, float, str]]]:
+    def repr_fields(self)-> list[Optional[int | float | str]]:
         list_fields = self.raw_fields()
         return list_fields
 

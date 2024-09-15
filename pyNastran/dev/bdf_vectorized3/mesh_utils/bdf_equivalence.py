@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 
-BDF_FILETYPE = Union[BDF, str, StringIO, PurePath]
+BDF_FILETYPE = BDF | str | StringIO | PurePath
 def get_bdf_model(bdf_filename: BDF_FILETYPE,
                   xref: bool=True,
                   cards_to_skip=None,

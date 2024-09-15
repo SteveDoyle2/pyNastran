@@ -9,7 +9,7 @@ Defines:
 from __future__ import annotations
 from itertools import count
 from collections import defaultdict
-from typing import cast, Optional, Union, Any, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
@@ -22,7 +22,7 @@ CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, NSM1, CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3
-    Element = Union[CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3]
+    Element = CQUAD4 | CBAR | CBEAM | CROD | CONROD | CTRIA3
 
 NO_MASS = {
     # has mass

@@ -1,6 +1,5 @@
 from io import StringIO
 from pathlib import PurePath
-from typing import Union
 from pyNastran.bdf.bdf import BDF
 
 #def get_model(bdf_filename):
@@ -14,7 +13,7 @@ from pyNastran.bdf.bdf import BDF
         #model = bdf_filename
     #return model
 
-BDF_FILETYPE = Union[BDF, str, StringIO, PurePath]
+BDF_FILETYPE = BDF | str | StringIO | PurePath
 def get_bdf_model(bdf_filename: BDF_FILETYPE,
                   xref: bool=True,
                   cards_to_skip=None,

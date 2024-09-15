@@ -18,7 +18,7 @@ from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 #from abc import abstractproperty, abstractmethod
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -3353,4 +3353,4 @@ def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
     return xyz
 
 
-CORDx = Union[CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S]
+CORDx = CORD1R | CORD1C | CORD1S | CORD2R | CORD2C | CORD2S

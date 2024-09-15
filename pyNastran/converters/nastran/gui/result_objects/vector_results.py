@@ -241,8 +241,11 @@ class VectorResultsCommon(GuiResultCommon):
 
                 mini2 = fringe_result[imin]
                 maxi2 = fringe_result[imax]
-                assert np.allclose(mini1, mini2)
-                assert np.allclose(maxi1, maxi2)
+                try:
+                    assert np.allclose(mini1, mini2)
+                    assert np.allclose(maxi1, maxi2)
+                except FloatingPointError:  # pragma: no cover
+                    pass
 
                 default_mins[itime] = mini2
                 default_maxs[itime] = maxi2

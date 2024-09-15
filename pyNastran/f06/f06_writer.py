@@ -503,7 +503,7 @@ class F06Writer(OP2_F06_Common):
                 f06, page_stamp=page_stamp, page_num=page_num)
             log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
-        with open(matrix_filename, 'wb') as mat_file:
+        with open(matrix_filename, 'w') as mat_file:
             for name, matrix in self.matrices.items():  #type: Matrix
                 matrix = cast(Matrix, matrix)
                 if name == 'MP3F':

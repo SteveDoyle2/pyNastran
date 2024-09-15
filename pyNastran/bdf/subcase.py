@@ -1,7 +1,7 @@
 """Subcase creation/extraction class"""
 from __future__ import annotations
 import getpass
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 #import numpy as np
 from numpy import ndarray
 

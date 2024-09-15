@@ -1,6 +1,6 @@
 """Defines the Matrix class"""
 from __future__ import annotations
-from typing import Callable, Union, Optional, Any, TYPE_CHECKING
+from typing import Callable, Optional, TextIO, Any, TYPE_CHECKING
 from itertools import count
 import scipy.sparse
 #from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
@@ -36,7 +36,7 @@ class Matrix:
 
     """
     def __init__(self, name: str, form: int | str,
-                 data: Optional[Union[np.ndarray, scipy.sparse.coo_matrix]]=None):
+                 data: Optional[np.ndarray | scipy.sparse.coo_matrix]=None):
         """
         Initializes a Matrix
 
@@ -95,7 +95,7 @@ class Matrix:
         if not isinstance(self.data, sparse_types):
             return
 
-        matrix = sparse_symmetric_to_rectangular(self.data, log)
+        matrix = sparse_symmetric_to_rectangular(self.name, self.data, log)
         self.data = matrix
 
         # matrix is symmetric, but is not stored as symmetric
@@ -136,9 +136,9 @@ class Matrix:
             raise NotImplementedError(type(matrix))
         self.data_frame = data_frame
 
-    def write(self, mat, print_full: bool=True) -> None:
+    def write(self, mat: TextIO, print_full: bool=True) -> None:
         """writes to the F06"""
-        mat.write(np.compat.asbytes(str(self) + '\n'))
+        mat.write(str(self) + '\n')
 
         matrix = self.data
         if self.data is None:
@@ -148,18 +148,18 @@ class Matrix:
         if isinstance(matrix, scipy.sparse.coo_matrix):
             if print_full:
                 for row, col, value in zip(matrix.row, matrix.col, matrix.data):
-                    mat.write(np.compat.asbytes("(%d, %d) %s\n" % (row, col, value)))
+                    mat.write(f'({row:d}, {col:d}) {value}\n')
             else:
                 mat.write(str(matrix))
         else:
-            mat.write(np.compat.asbytes('name=%r; shape=%s; form=%d; Type=%r\n' % (
+            mat.write('name=%r; shape=%s; form=%d; Type=%r\n' % (
                 self.name, str(self.data.shape).replace('L', ''),
-                self.form, self.shape_str)))
+                self.form, self.shape_str))
             if print_full:
                 np.savetxt(mat, self.data, fmt='%.18e', delimiter=',')
             #f06.write(str(matrix))
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
-        mat.write(np.compat.asbytes('\n\n'))
+        mat.write('\n\n')
 
     def get_stats(self, mode: str='public', keys_to_skip=None,
                   filter_properties: bool=False):
@@ -412,7 +412,7 @@ class Matrix:
         return msg
 
 
-def sparse_symmetric_to_rectangular(matrix: sparse_types, log: SimpleLogger):
+def sparse_symmetric_to_rectangular(name: str, matrix: sparse_types, log: SimpleLogger):
     # get the upper and lower triangular matrices
     upper_tri = scipy.sparse.triu(matrix)
     lower_tri = scipy.sparse.tril(matrix)
@@ -436,7 +436,7 @@ def sparse_symmetric_to_rectangular(matrix: sparse_types, log: SimpleLogger):
             matrix = upper_tri + upper_tri_t - diagi
         else:
             log.warning(
-                f'Matrix {self.name!r} marked as symmetric does not contain '
+                f'Matrix {name!r} marked as symmetric does not contain '
                 'symmetric data.  Data will be symmetrized by averaging.')
             matrix = (matrix + matrix.T) / 2.
     elif lnnz > 0:

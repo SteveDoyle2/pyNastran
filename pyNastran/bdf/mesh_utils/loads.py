@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
@@ -24,7 +24,7 @@ def isnan(value):
     return value is None or np.isnan(value)
 
 def sum_forces_moments(model: BDF,
-                       p0: Union[int, np.ndarray],
+                       p0: int | np.ndarray,
                        loadcase_id: int,
                        cid: int=0,
                        include_grav: bool=False,
@@ -330,7 +330,7 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
     return
 
 def sum_forces_moments_elements(model: BDF,
-                                p0: Union[int, np.ndarray],
+                                p0: int | np.ndarray,
                                 loadcase_id: int,
                                 eids: list[int], nids: list[int],
                                 cid: int=0,

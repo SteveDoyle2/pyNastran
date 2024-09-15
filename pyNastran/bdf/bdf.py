@@ -4601,7 +4601,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
         return cards_out
 
-    def create_subcases(self, subcase_ids: Union[int, list[int], None]=None) -> dict[int, Subcase]:
+    def create_subcases(self, subcase_ids: Optional[int | list[int]]=None) -> dict[int, Subcase]:
         """creates a series of subcases"""
         if subcase_ids is None:
             subcase_ids = []
@@ -5077,8 +5077,8 @@ def _bool(value) -> bool:
     return True if value == 'true' else False
 
 
-def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
-                                                  CORD2R, CORD2C, CORD2S]],
+def _get_coords_to_update(coords: dict[int, CORD1R | CORD1C | CORD1S |
+                                            CORD2R | CORD2C | CORD2S],
                           cps_to_check: list[int],
                           cps_checked: list[int],
                           nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:

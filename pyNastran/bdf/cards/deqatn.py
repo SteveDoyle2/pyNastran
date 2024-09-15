@@ -7,7 +7,7 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
 import re
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 from numpy import (
     cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,
@@ -572,7 +572,7 @@ def _setup_deqatn(equation_id: int,
 
 def fortran_to_python(deqatn_id: int,
                       lines: list[str],
-                      default_values: dict[str, Union[float, np.ndarray]],
+                      default_values: dict[str, float | np.ndarray],
                       comment: str='') -> tuple[str, int, str]:
     """
     Creates the python function

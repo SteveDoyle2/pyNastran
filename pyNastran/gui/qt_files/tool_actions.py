@@ -787,7 +787,7 @@ def _export_case(name: str,
                   f'for {fname!r}')
         return is_failed, ''
     try:
-        np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+        np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')
     except UnicodeEncodeError:  # pragma: no cover
         try:
             np.savetxt(fname, out_data, delimiter=',', header=header, fmt='%s')

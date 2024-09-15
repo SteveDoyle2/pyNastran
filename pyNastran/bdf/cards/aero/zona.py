@@ -190,7 +190,7 @@ class ZONA:
             'TRIMVAR', 'TRIMLNK', 'FLUTTER']
         self.model.cards_to_read.update(set(cards))
 
-    def _add_panlst_object(self, panlst: Union[PANLST1, PANLST3]) -> None:
+    def _add_panlst_object(self, panlst: PANLST1 |PANLST3) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         assert panlst.eid not in self.panlsts
         assert panlst.eid > 0

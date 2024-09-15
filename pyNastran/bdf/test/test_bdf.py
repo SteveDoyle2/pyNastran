@@ -11,7 +11,7 @@ import os
 import sys
 import traceback
 import warnings
-from typing import Optional, Union, Any, cast
+from typing import Optional, Any, cast
 from io import StringIO
 
 import numpy as np
@@ -64,7 +64,7 @@ MESH_OPT_CARDS = [
     'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT', # 'EQUIV',
     'PVAL', 'GMCURV', 'GMSURF',
 ]
-FREQS = Union[FREQ1, FREQ2, FREQ3, FREQ4, FREQ5]
+FREQS = FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5
 class MeshOptimizationError(RuntimeError):
     pass
 
@@ -76,9 +76,9 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       punch: bool=False,
                       nastran: str='',
                       encoding: Optional[str]=None,
-                      size: Union[int, list[int], None]=None,
-                      post: Union[int, list[int], None]=None,
-                      is_double: Union[bool, list[bool], None]=None,
+                      size: int | list[int] | None=None,
+                      post: int | list[int] | None=None,
+                      is_double: bool | list[bool] | None=None,
                       sum_load: bool=True,
                       run_mass: bool=True,
                       dev: bool=True,
