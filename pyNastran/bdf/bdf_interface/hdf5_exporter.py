@@ -14,7 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 # dict[key] : [value1, value2, ...]
-dict_int_list_obj_attrs = [
+dict_int_list_obj_attrs: list[str] = [
     'spcs', 'spcadds',
     'mpcs', 'mpcadds',
     'loads', 'load_combinations',
@@ -30,7 +30,7 @@ dict_int_list_obj_attrs = [
 ]
 
 # dict[key] : value
-dict_int_obj_attrs = [
+dict_int_obj_attrs: list[str] = [
     # are handled explicitly----
     #'elements',
     #'nodes',
@@ -107,7 +107,7 @@ dict_int_obj_attrs = [
     'cyjoin',
 ]
 
-scalar_obj_keys = [
+scalar_obj_keys: list[str] = [
     # required----
     'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
     'acmodl', 'modtrak',
@@ -117,7 +117,7 @@ scalar_obj_keys = [
     #'zona',
 ]
 
-scalar_keys = [
+scalar_keys: list[str] = [
     # handled separately----
     #'cards_to_read',
 
@@ -166,7 +166,7 @@ LIST_KEYS = [
     #'special_cards',
 ]
 
-LIST_OBJ_KEYS = [  ## TODO: not done
+LIST_OBJ_KEYS: list[str] = [  ## TODO: not done
     # TODO: required
     'asets', 'bsets', 'csets', 'omits', 'qsets',
     'mkaeros',

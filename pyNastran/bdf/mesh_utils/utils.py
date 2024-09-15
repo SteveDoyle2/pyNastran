@@ -35,6 +35,7 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
+from .cmd_line.bdf_diff import cmd_line_diff
 from .cmd_line.bdf_merge import cmd_line_merge
 from .cmd_line.bdf_equivalence import cmd_line_equivalence
 from .cmd_line.export_caero_mesh import cmd_line_export_caero_mesh
@@ -1376,6 +1377,7 @@ def _union(xval, iunion, ix):
 
 
 CMD_MAPS = {
+    'diff': cmd_line_diff,
     'merge': cmd_line_merge,
     'equivalence': cmd_line_equivalence,
     'renumber': cmd_line_renumber,
@@ -1418,6 +1420,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
 
     msg = (
         'Usage:\n'
+        '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME1 [--punch]\n'
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL [--punch]\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
@@ -1444,6 +1447,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
 
     msg += (
         #'\n'
+        '  bdf diff               -h | --help\n'
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'

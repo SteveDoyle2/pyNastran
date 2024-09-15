@@ -71,7 +71,7 @@ class Subcase:
         187: 101,
     }
 
-    def __init__(self, id=0):
+    def __init__(self, id: int=0):
         self.id = id
         self.params = {}
         self.sol = None

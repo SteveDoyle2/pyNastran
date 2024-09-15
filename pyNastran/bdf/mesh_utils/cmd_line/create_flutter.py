@@ -18,6 +18,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         # CONST_TYPEs = [mach, alt]
 
         # CONST_TYPE = mach
+        #'  bdf flutter gui\n'
         '  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
         '  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
         '  bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
@@ -32,6 +33,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         '\n'
 
         'Positional Arguments:\n'
+        #'  gui                 enables the gui\n'
         '  alt, ALT1, ALT2     altitude;            units = [m, ft, kft]\n'
         '  eas, EAS1, EAS2     equivalent airspeed; units = [m/s, cm/s, in/s, ft/s, knots]\n'
         '  tas, TAS1, EAS2     true airspeed;       units = [m/s, cm/s, in/s, ft/s, knots]\n'
@@ -64,9 +66,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    argv = [str(arg) for arg in argv]
-    cmd = ' '.join(argv[1:])
-    data = docopt(msg, version=ver, argv=argv[1:])
+    if 'gui' in argv:
+        from pyNastran.bdf.mesh_utils.cmd_line.gui_flutter import cmd_line_gui
+        data = cmd_line_gui()
+    else:
+        argv = [str(arg) for arg in argv]
+        cmd = ' '.join(argv[1:])
+        data = docopt(msg, version=ver, argv=argv[1:])
 
     if not quiet:  # pragma: no cover
         print(data)

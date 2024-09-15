@@ -34,6 +34,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 from pyNastran.bdf.mesh_utils.cmd_line.bdf_merge import cmd_line_merge
+from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
 
 
 TEST_DIR = (Path(__file__) / '..').resolve()
@@ -50,8 +51,14 @@ DIRNAME = Path(os.path.dirname(__file__))
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
 
+    def test_bdf_diff(self):
+        """tests bdf_diff"""
+        bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
+        args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
+        cmd_line(args, quiet=True)
+
     def test_dvxrel(self):
-        from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -76,6 +83,7 @@ class TestMeshUtils(unittest.TestCase):
         properties = np.array([1])
         nelements = len(model.elements)
         get_dvprel_ndarrays(model, nelements, properties)
+
     def test_flutter(self):
         """tests a flutter sweep"""
         #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
