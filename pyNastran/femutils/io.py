@@ -14,7 +14,7 @@ from itertools import count
 
 import numpy as np
 from numpy.lib._iotools import _is_string_like
-from numpy.compat import asstr, asunicode
+#from numpy.compat import asstr, asunicode
 
 from pyNastran.utils import is_file_obj, _filename
 
@@ -267,8 +267,9 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
                 raise RuntimeError(msg)
     return X
 
-def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
-                 footer='', comments='# ', encoding=None):
+def savetxt_nice(fname: str, X, fmt: str='%.18e', delimiter: str=' ',
+                 newline: str='\n', header: str='',
+                 footer: str='', comments: str='# ', encoding=None):
     """
     Save an array to a text file.  This is 95% a backport of numpy 1.15.1's
     savetxt.  It does not support:
@@ -393,9 +394,11 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
 
     """
     # Py3 conversions first
-    if isinstance(fmt, bytes):
-        fmt = asstr(fmt)
-    delimiter = asstr(delimiter)
+    assert isinstance(fmt, str), fmt
+    assert isinstance(delimiter, str), delimiter
+    #if isinstance(fmt, bytes):
+        #fmt = asstr(fmt)
+    #delimiter = asstr(delimiter)
 
     class WriteWrap:
         """Convert to unicode in py2 or to bytes on bytestream inputs."""
@@ -416,8 +419,9 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
             else:
                 self.fh.write(v.encode(self.encoding))
 
-        def write_normal(self, v):
-            self.fh.write(asunicode(v))
+        def write_normal(self, v: str):
+            #self.fh.write(asunicode(v))
+            self.fh.write(v)
 
         def first_write(self, v):
             try:

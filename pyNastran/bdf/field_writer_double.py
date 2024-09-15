@@ -3,7 +3,7 @@ Defines functions for double precision 16 character field writing.
 """
 import sys
 import warnings
-from typing import Union
+from typing import Optional
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
@@ -30,7 +30,7 @@ def print_scientific_double(value: float) -> str:
     return field
 
 
-def print_field_double(value: Union[int, float, str, None]) -> str:
+def print_field_double(value: Optional[int | float | str]) -> str:
     """
     Prints a 16-character width field
 
@@ -51,7 +51,8 @@ def print_field_double(value: Union[int, float, str, None]) -> str:
     return field
 
 
-def print_card_double(fields: list[Union[int, float, str, None]], wipe_fields: bool=True) -> str:
+def print_card_double(fields: list[Optional[int | float | str]],
+                      wipe_fields: bool=True) -> str:
     """
     Prints a nastran-style card with 16-character width fields.
 

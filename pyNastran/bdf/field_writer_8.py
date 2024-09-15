@@ -1,7 +1,7 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
 import warnings
-from typing import Union, Any
+from typing import Optional, Any
 from numpy import float32, float64, isnan
 
 
@@ -26,7 +26,7 @@ def is_same(value1: Any, value2: Any) -> bool:
     return False
 
 
-def set_blank_if_default(value: Any, default: Any) -> Union[int, float, str, None]:
+def set_blank_if_default(value: Any, default: Any) -> Optional[int | float | str]:
     """
     Used when setting the output data of a card to clear default values
 
@@ -45,7 +45,7 @@ def set_blank_if_default(value: Any, default: Any) -> Union[int, float, str, Non
     return None if is_same(value, default) else value
 
 
-def set_default_if_blank(value: Any, default: Any) -> Union[int, float, str]:
+def set_default_if_blank(value: Any, default: Any) -> int | float | str:
     """
     Used when initializing a card and the default value isn't set
     Used on PBARL"""
@@ -221,7 +221,7 @@ def print_float_8(value: float) -> str:
     #return field
 
 
-def print_field_8(value: Union[int, float, str, None]) -> str:
+def print_field_8(value: Optional[int | float | str]) -> str:
     """
     Prints a 8-character width field
 
@@ -250,7 +250,7 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
     return field
 
 
-def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
+def print_card_8(fields: list[Optional[int | float | str]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
 
@@ -303,7 +303,7 @@ def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
     return out
 
 
-def print_int_card(fields: list[Union[int, float, str, None]]) -> str:
+def print_int_card(fields: list[Optional[int | float | str]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
     All fields (other than the first field) must be integers.

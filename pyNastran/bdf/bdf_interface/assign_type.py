@@ -1279,7 +1279,7 @@ def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
 
 
 def interpret_value(value_raw: Optional[str],
-                    card: Union[str, BDFCard]='') -> Union[int, float, str, None]:
+                    card: Union[str, BDFCard]='') -> Optional[int | float | str]:
     """
     Converts a value from nastran format into python format.
 

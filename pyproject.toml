@@ -112,7 +112,7 @@ classifiers = [
 dependencies = [
     #"numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
     #"numpy>=1.26.0,<1.27; python_version=='3.12'",
-    'numpy<2',
+    'numpy<3',
     'scipy<2',
     'matplotlib',
     'cpylog>=1.4.0',
@@ -136,7 +136,7 @@ gui_pyqt5 = [
     'vtk>=9.0', # rendering library
     'qtpy',
     'imageio < 3.0',
-    'pillow >= 5.2.0, !=7.1.0',
+    'pillow >= 8.4.0',  # 2021/10
 ]
 gui_pyside2 = [
     'pandas>=1.0,<3.0',
@@ -145,7 +145,7 @@ gui_pyside2 = [
     'vtk>=9.0', # rendering library
     'qtpy',
     'imageio < 3.0',
-    'pillow >= 5.2.0, !=7.1.0',
+    'pillow >= 8.4.0',
 ]
 #gui = gui_pyside2
 

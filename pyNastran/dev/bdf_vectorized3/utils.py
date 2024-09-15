@@ -1,6 +1,6 @@
 import sys
 import warnings
-from typing import Union
+from typing import Optional
 
 import numpy as np
 from numpy import float32, float64
@@ -22,7 +22,7 @@ def hstack_msg(mylist, msg: str, min_size: int=0) -> np.ndarray:
         raise ValueError(f'empty list; {msg}')
     return stacked
 
-def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
+def print_card_8(fields: list[Optional[int | float | str]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
 
@@ -74,7 +74,7 @@ def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
     out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
 
-def print_field_8(value: Union[int, float, str, None]) -> str:
+def print_field_8(value: Optional[int | float | str]) -> str:
     """
     Prints a 8-character width field
 

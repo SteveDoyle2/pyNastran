@@ -905,8 +905,8 @@ class DRESP1(VectorizedBaseCard):
 
     def add(self, dresp_id: int, label: str,
             response_type: str, property_type: str, region: str,
-            atta: Union[int, float, str, None],
-            attb: Union[int, float, str, None],
+            atta: Optional[int | float | str],
+            attb: Optional[int | float | str],
             atti: list[Union[int, float, str]],
             validate: bool=True, comment: str='') -> int:
         """

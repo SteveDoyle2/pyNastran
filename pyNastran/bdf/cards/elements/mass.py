@@ -14,7 +14,7 @@ All mass elements are PointMassElement and Element objects.
 """
 from __future__ import annotations
 import warnings
-from typing import Union, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -37,7 +37,7 @@ class PointMassElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def repr_fields(self) -> list[Union[int, float, str, None]]:
+    def repr_fields(self) -> list[Optional[int | float | str]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
