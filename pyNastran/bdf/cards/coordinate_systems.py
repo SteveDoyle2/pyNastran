@@ -250,8 +250,8 @@ class Coord(BaseCard):
             assert len(self.e3) == 3, self.e3
         except AssertionError:
             msg = 'Invalid Vector Length\n'
-            msg += "type = %s\n" % (self.type)
-            msg += "cid  = %s\n" % (self.cid)
+            msg += f"type = {self.type}\n"
+            msg += f"cid  = {self.cid:d}\n"
             msg += "e1 = %s\n" % str(self.e1)
             msg += "e2 = %s\n" % str(self.e2)
             msg += "e3 = %s\n" % str(self.e3)
@@ -304,8 +304,8 @@ class Coord(BaseCard):
             #print("e12 = %s" % e12)
         except TypeError:
             msg = ''
-            msg += "\ntype = %s\n" % (self.type)
-            msg += "\ncid  = %s\n" % (self.cid)
+            msg += f"\ntype = {self.type}\n"
+            msg += f"\ncid  = {self.cid:d}\n"
             msg += "e1 = %s\n" % str(e1)
             msg += "e2 = %s\n" % str(e2)
             msg += "e3 = %s\n" % str(e3)
@@ -316,7 +316,7 @@ class Coord(BaseCard):
             self.k = normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.cid))
+            print(f"Cp  = {self.cid}")
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -333,7 +333,7 @@ class Coord(BaseCard):
             self.j = normalize(np.cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.cid))
+            print(f"Cp  = {self.cid}")
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -1963,11 +1963,11 @@ class Cord2x(Coord):
         origin : (3,) ndarray
              defines the location of the origin in the global coordinate frame
         xaxis : (3,) ndarray
-            defines the x axis (default=None)
+            defines the x-axis (default=None)
         yaxis : (3,) ndarray
-            defines the y axis (default=None)
+            defines the y-axis (default=None)
         zaxis : (3,) ndarray
-            defines the z axis (default=None)
+            defines the z-axis (default=None)
 
         Notes
         -----
@@ -2143,7 +2143,7 @@ class Cord2x(Coord):
         Parameters
         ----------
         xref : bool
-            has this model been cross referenced
+            has this model been cross-referenced
 
         """
         cid = self.Cid()
@@ -2216,7 +2216,7 @@ class Cord2x(Coord):
 
     def cross_reference(self, model: BDF) -> None:
         """
-        Cross links the card so referenced cards can be extracted directly
+        Cross-links the card so referenced cards can be extracted directly
 
         Parameters
         ----------

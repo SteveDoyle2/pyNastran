@@ -23,7 +23,7 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
-# testing these imports are up to date
+# test imports
 # if something is imported and tested, it should be removed from here
 from pyNastran.bdf.mesh_utils.shift import update_nodes
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
@@ -194,7 +194,7 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     #
     # Surface warping factor for a quadrilateral is defined to be the distance of the corner points of the
     # element to the mean plane of the grid points divided by the average of the element diagonal
-    # lengths. For flat elements (such that all of the grid points lie in a plane), this factor is zero.
+    # lengths. For flat elements (such that all the grid points lie in a plane), this factor is zero.
 
     defaults = {
         '--skew': 70.,
@@ -847,8 +847,8 @@ def cmd_line_scale(argv=None, quiet=False) -> None:
     if not quiet:  # pragma: no cover
         print(args)
 
-    scales = []
-    terms = []
+    scales: list[float] = []
+    terms: list[str] = []
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
     if bdf_filename_out is None:
@@ -1495,6 +1495,6 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
 if __name__ == '__main__':  # pragma: no cover
     # for the exe, we pass all the args, but we hack them to have the bdf prefix
     from copy import deepcopy
-    argv = deepcopy(sys.argv)
-    argv[0] = 'bdf'
-    cmd_line(argv=argv)
+    argv_root = deepcopy(sys.argv)
+    argv_root[0] = 'bdf'
+    cmd_line(argv=argv_root)

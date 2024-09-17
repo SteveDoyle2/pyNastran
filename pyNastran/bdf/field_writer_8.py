@@ -199,7 +199,7 @@ def print_float_8(value: float) -> str:
 
 #def print_float_or_int_8(value: int | float) - str:
     #"""
-    #Prints a 8-character width field
+    #Prints an 8-character width field
 
     #Parameters
     #----------
@@ -223,7 +223,7 @@ def print_float_8(value: float) -> str:
 
 def print_field_8(value: Optional[int | float | str]) -> str:
     """
-    Prints a 8-character width field
+    Prints an 8-character width field
 
     Parameters
     ----------
@@ -377,7 +377,7 @@ def print_int_card_blocks(fields_blocks: list[Any]) -> str:
     Returns
     -------
     msg : str
-        the field blocks as a 8-character width Nastran card
+        the field blocks as an 8-character width Nastran card
 
     .. note:: Blanks are allowed in the False block.
 
