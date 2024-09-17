@@ -51,8 +51,14 @@ DIRNAME = Path(os.path.dirname(__file__))
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
 
+    def test_bdf_stats(self):
+        """tests ```bdf stats```"""
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        args = ['bdf', 'stats', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
     def test_bdf_diff(self):
-        """tests bdf_diff"""
+        """tests ```bdf diff```"""
         bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
         bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
@@ -384,6 +390,12 @@ class TestMeshUtils(unittest.TestCase):
 
         bdf_filename = os.path.join(DIRNAME, 'test_structured_chexas.bdf')
         model.write_bdf(bdf_filename)
+
+    def test_bdf_delete_bad_shells(self):
+        """tests ```bdf delete_bad_shells```"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'delete_bad_shells', str(bdf_filename)]
+        cmd_line(args, quiet=True)
 
     def test_breakdown_01(self):
         """run the various breakdowns"""

@@ -1420,17 +1420,17 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
 
     msg = (
         'Usage:\n'
-        '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME1 [--punch]\n'
+        '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL [--punch]\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf remove_unused               IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
-        f'  bdf delete_bad_shells           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] {SHELL_QUALITY}\n'
+       f'  bdf delete_bad_shells           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] {SHELL_QUALITY}\n'
         '  bdf collapse_quads              IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--size SIZE]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--tol TOL]\n'
         '  bdf convert                     IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
-        f'  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] {SCALES}\n'
+       f'  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] {SCALES}\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
         '  bdf flutter                     UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE | --clean]'
@@ -1465,8 +1465,8 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf filter             -h | --help\n'
         '  bdf flutter            -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
-        '  bdf split_cbars_by_pin_flags  -h | --help\n'
-        '  bdf stats              -h | --help\n'
+        '  bdf split_cbars_by_pin_flags    -h | --help\n'
+        '  bdf stats                       -h | --help\n'
     )
     if dev:
         msg += (

@@ -15,7 +15,7 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     import pyNastran
     msg = (
         "Usage:\n"
-        '  bdf diff IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch] [--debug]\n'
+        '  bdf diff IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
         '  bdf diff -h | --help\n'
         '  bdf diff -v | --version\n'
         '\n'
@@ -48,8 +48,9 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     bdf_filename2 = data['IN_BDF_FILENAME2']
 
     #bdf_filename_out = data['--output']
-    debug = data['--debug']
-    assert debug in {True, False}, debug
+    #debug = data['--debug']
+    #assert debug in {True, False}, debug
+    debug = False
     # if bdf_filename_out is None:
     #     bdf_filename_out = 'merged.bdf'
 
