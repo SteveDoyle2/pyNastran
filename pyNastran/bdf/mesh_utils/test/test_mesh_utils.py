@@ -48,9 +48,7 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 DIRNAME = Path(os.path.dirname(__file__))
 
 
-class TestMeshUtils(unittest.TestCase):
-    """various mesh_utils tests"""
-
+class TestMeshUtilsCmdLine(unittest.TestCase):
     def test_bdf_stats(self):
         """tests ```bdf stats```"""
         bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
@@ -64,33 +62,7 @@ class TestMeshUtils(unittest.TestCase):
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
         cmd_line(args, quiet=True)
 
-    def test_dvxrel(self):
-        model = BDF(debug=False)
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_ctria3(1, 1, [1, 2, 3])
-        model.add_pshell(1, 1, 0.1)
-        model.add_pshell(2, 1, 0.1)
-        model.add_mat1(1, 3.0e7, None, 0.3)
-
-        oid = 1
-        prop_type = 'PSHELL'
-        pid = 1
-        pid2 = 2
-        pname = 'T'
-        desvar_ids = [1]
-        coeffs = [1.0]
-        model.add_dvprel1(oid, prop_type, pid, pname,
-                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
-        model.add_dvprel1(oid+1, prop_type, pid2, pname,
-                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
-        model.add_desvar(1, 'T1', 1.0, xlb=0.5, xub=1.5)
-        properties = np.array([1])
-        nelements = len(model.elements)
-        get_dvprel_ndarrays(model, nelements, properties)
-
-    def test_flutter(self):
+    def test_bdf_flutter(self):
         """tests a flutter sweep"""
         #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
         # [-o OUT_BDF_FILENAME] [--size SIZE | --clean]
@@ -130,61 +102,6 @@ class TestMeshUtils(unittest.TestCase):
             '-o', bdf_filename_out,
         ]
         cmd_line(args, quiet=True)
-
-    def test_coplanar_triangles(self):
-        """tests find_coplanar_triangles
-
-        4-----3
-        |   / |
-        |  /  |
-        | /   |
-        1-----2
-        """
-        log = SimpleLogger(level='warning')
-        model = BDF(debug=True, log=log, mode='msc')
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-        model.add_ctria3(1, 1, [1, 2, 3])
-        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
-        assert coplanar_elements == set([]), coplanar_elements
-
-        model.add_ctria3(2, 1, [2, 3, 1])
-        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
-        assert coplanar_elements == {2}, coplanar_elements
-
-        model.add_ctria3(3, 1, [3, 2, 1])
-        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
-        assert coplanar_elements == {2, 3}, coplanar_elements
-
-        _junk, coplanar_elements = find_coplanar_triangles(model, eids=[2, 3])
-        assert coplanar_elements == {3}, coplanar_elements
-
-        model.add_cquad4(4, 1, [1, 2, 3, 4])
-        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
-        assert coplanar_elements == {2, 3}, coplanar_elements
-
-    def test_force_to_pressures(self):
-        log = SimpleLogger(level='warning')
-
-        model = BDF(debug=False, log=log, mode='msc')
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        # area = 0.5
-        model.add_ctria3(1, 1, [1, 2, 3])
-        model.add_pshell(1, 1, t=0.1)
-        model.add_mat1(1, 3.0e7, None, 0.3)
-        force_to_pressure(model, clear_model=False)
-
-        #force = 3.0
-        # pressure = 6.0
-        model.add_force(1, 1, 1.0, [0., 0., 1.])
-        model.add_force(1, 2, 1.0, [0., 0., 1.])
-        model.add_force(1, 3, 1.0, [0., 0., 1.])
-        force_to_pressure(model, clear_model=True)
-
 
     def test_free_edges(self):
         """Finds the free_edges
@@ -255,12 +172,214 @@ class TestMeshUtils(unittest.TestCase):
         #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
         #with self.assertRaises(SystemExit):
             #cmd_line(argv=['bdf', 'free_faces'])
-
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         #log = SimpleLogger(level='info', encoding='utf-8')
         skin_filename = os.path.join(DIRNAME, 'skin.bdf')
         cmd_line(argv=['bdf', 'free_faces', bdf_filename, skin_filename], quiet=True)
         os.remove(skin_filename)
+
+    def test_exit(self):
+        """tests totally failing to run"""
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf'], quiet=True)
+
+        for cmd in CMD_MAPS:
+            with self.assertRaises(SystemExit):
+                cmd_line(argv=['bdf', cmd], quiet=True)
+
+    def test_export_caero_mesh_caero5_wtfact(self):
+        """tests multiple ``bdf`` tools"""
+        path = MODEL_PATH / 'aero'
+        bdf_filename = str(path / 'ha145z.bdf')
+        #bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
+        #is_subpanel_model : bool; default=True
+        #    True : write the subpanels as CQUAD4s
+        #    False : write the macro elements as CQUAD4s
+        #pid_method : str; default='aesurf'
+        #    'aesurf' : write the referenced AESURF as the property ID
+        #               main structure will be pid=1
+        #    'caero' : write the CAERO1 as the property id
+        #    'paero' : write the PAERO1 as the property id
+        model = read_bdf(bdf_filename)
+        tin = tout = 'float32'
+        nrows = 1
+        GCj = [101]
+        GCi = [1]
+        Real = [np.radians(5.)]
+        model.add_dmi_w2gj(tin, tin, nrows, GCj, GCi, Real)
+        #print(model.caeros)
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf', '--pid', 'aesurf', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf', '--pid', 'aesurf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.caero.bdf', '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf', '--pid', 'paero']
+        cmd_line(argv=argv, quiet=True)
+
+    def test_export_caero_mesh_w2gj(self):
+        path = MODEL_PATH / 'aero'
+        bdf_filename = str(path / 'cpmopt.bdf')
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+
+    def test_export_caero_mesh(self):
+        """tests multiple ``bdf`` tools"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=argv[:1], quiet=True)
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=argv[:2], quiet=True)
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',
+                '--pid', 'aesurf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf', '--subpanels',
+                '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf', '--subpanels',
+                '--pid', 'paero']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
+
+        #bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]
+        argv = ['bdf', 'mirror', 'caero.bdf', '-o', 'caero2.bdf', '--plane', 'xz', '--tol', '1e-5']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'equivalence', 'caero2.bdf', '0.001', '-o', 'caero3.bdf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'merge', 'caero2.bdf', 'caero2.bdf', '-o', 'caero3_merged.bdf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'renumber', 'caero3.bdf', 'caero4.bdf', '--size', '8']
+        cmd_line(argv=argv, quiet=True)
+
+        #bdf transform IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--shift XYZ]
+        argv = ['bdf', 'transform', 'caero4.bdf', '-o', 'caero5.bdf', '--shift', '0,0,20.']
+        cmd_line(argv=argv, quiet=True)
+
+        #'  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
+        argv = ['bdf', 'convert', 'caero5.bdf',
+                '-o', 'caero6.bdf',
+                '--in_units', 'in,lbm', '--out_units', 'ft,lbm']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'scale', 'caero6.bdf',
+                #'-o', 'caero6.bdf',
+                '--length', '0.5', '--time', '1.', '--mass', str(0.5**3.)]
+        cmd_line(argv=argv, quiet=True)
+
+        os.remove('caero.bdf')
+        os.remove('caero2.bdf')
+        os.remove('caero3.bdf')
+        os.remove('caero3_merged.bdf')
+        os.remove('caero4.bdf')
+        os.remove('caero5.bdf')
+        os.remove('caero6.bdf')
+        #os.remove('caero5.scaled.bdf')
+        os.remove('caero6.scaled.bdf')
+        os.remove('caero_aesurf.bdf')
+        os.remove('caero_caero.bdf')
+        os.remove('caero_paero.bdf')
+        os.remove('caero_no_sub.bdf')
+
+
+
+class TestMeshUtils(unittest.TestCase):
+    """various mesh_utils tests"""
+
+    def test_dvxrel(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_ctria3(1, 1, [1, 2, 3])
+        model.add_pshell(1, 1, 0.1)
+        model.add_pshell(2, 1, 0.1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+
+        oid = 1
+        prop_type = 'PSHELL'
+        pid = 1
+        pid2 = 2
+        pname = 'T'
+        desvar_ids = [1]
+        coeffs = [1.0]
+        model.add_dvprel1(oid, prop_type, pid, pname,
+                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
+        model.add_dvprel1(oid+1, prop_type, pid2, pname,
+                          desvar_ids, coeffs, p_min=0.4, p_max=2.0)
+        model.add_desvar(1, 'T1', 1.0, xlb=0.5, xub=1.5)
+        properties = np.array([1])
+        nelements = len(model.elements)
+        get_dvprel_ndarrays(model, nelements, properties)
+
+    def test_coplanar_triangles(self):
+        """tests find_coplanar_triangles
+
+        4-----3
+        |   / |
+        |  /  |
+        | /   |
+        1-----2
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=True, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_ctria3(1, 1, [1, 2, 3])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == set([]), coplanar_elements
+
+        model.add_ctria3(2, 1, [2, 3, 1])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2}, coplanar_elements
+
+        model.add_ctria3(3, 1, [3, 2, 1])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2, 3}, coplanar_elements
+
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=[2, 3])
+        assert coplanar_elements == {3}, coplanar_elements
+
+        model.add_cquad4(4, 1, [1, 2, 3, 4])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2, 3}, coplanar_elements
+
+    def test_force_to_pressures(self):
+        log = SimpleLogger(level='warning')
+
+        model = BDF(debug=False, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        # area = 0.5
+        model.add_ctria3(1, 1, [1, 2, 3])
+        model.add_pshell(1, 1, t=0.1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+        force_to_pressure(model, clear_model=False)
+
+        #force = 3.0
+        # pressure = 6.0
+        model.add_force(1, 1, 1.0, [0., 0., 1.])
+        model.add_force(1, 2, 1.0, [0., 0., 1.])
+        model.add_force(1, 3, 1.0, [0., 0., 1.])
+        force_to_pressure(model, clear_model=True)
 
     def test_structured_cquads(self):
         """tests create_structured_cquad4s"""
@@ -444,124 +563,6 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out1)
         os.remove(bdf_filename_out2)
         os.remove(bdf_filename_out3)
-
-    def test_exit(self):
-        """tests totally failing to run"""
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf'], quiet=True)
-
-        for cmd in CMD_MAPS:
-            with self.assertRaises(SystemExit):
-                cmd_line(argv=['bdf', cmd], quiet=True)
-
-    def test_export_caero_mesh_caero5_wtfact(self):
-        """tests multiple ``bdf`` tools"""
-        path = MODEL_PATH / 'aero'
-        bdf_filename = str(path / 'ha145z.bdf')
-        #bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
-        #is_subpanel_model : bool; default=True
-        #    True : write the subpanels as CQUAD4s
-        #    False : write the macro elements as CQUAD4s
-        #pid_method : str; default='aesurf'
-        #    'aesurf' : write the referenced AESURF as the property ID
-        #               main structure will be pid=1
-        #    'caero' : write the CAERO1 as the property id
-        #    'paero' : write the PAERO1 as the property id
-        model = read_bdf(bdf_filename)
-        tin = tout = 'float32'
-        nrows = 1
-        GCj = [101]
-        GCi = [1]
-        Real = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tin, nrows, GCj, GCi, Real)
-        #print(model.caeros)
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf', '--pid', 'aesurf', '--subpanels']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf', '--pid', 'aesurf']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.caero.bdf', '--pid', 'caero']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf', '--pid', 'paero']
-        cmd_line(argv=argv, quiet=True)
-
-    def test_export_caero_mesh_w2gj(self):
-        path = MODEL_PATH / 'aero'
-        bdf_filename = str(path / 'cpmopt.bdf')
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero', '--subpanels']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero']
-        cmd_line(argv=argv, quiet=True)
-
-    def test_export_caero_mesh(self):
-        """tests multiple ``bdf`` tools"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=argv[:1], quiet=True)
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=argv[:2], quiet=True)
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',
-                '--pid', 'aesurf']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf', '--subpanels',
-                '--pid', 'caero']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf', '--subpanels',
-                '--pid', 'paero']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
-        cmd_line(argv=argv, quiet=True)
-
-        #bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]
-        argv = ['bdf', 'mirror', 'caero.bdf', '-o', 'caero2.bdf', '--plane', 'xz', '--tol', '1e-5']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'equivalence', 'caero2.bdf', '0.001', '-o', 'caero3.bdf']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'merge', 'caero2.bdf', 'caero2.bdf', '-o', 'caero3_merged.bdf']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'renumber', 'caero3.bdf', 'caero4.bdf', '--size', '8']
-        cmd_line(argv=argv, quiet=True)
-
-        #bdf transform IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--shift XYZ]
-        argv = ['bdf', 'transform', 'caero4.bdf', '-o', 'caero5.bdf', '--shift', '0,0,20.']
-        cmd_line(argv=argv, quiet=True)
-
-        #'  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
-        argv = ['bdf', 'convert', 'caero5.bdf',
-                '-o', 'caero6.bdf',
-                '--in_units', 'in,lbm', '--out_units', 'ft,lbm']
-        cmd_line(argv=argv, quiet=True)
-
-        argv = ['bdf', 'scale', 'caero6.bdf',
-                #'-o', 'caero6.bdf',
-                '--length', '0.5', '--time', '1.', '--mass', str(0.5**3.)]
-        cmd_line(argv=argv, quiet=True)
-
-        os.remove('caero.bdf')
-        os.remove('caero2.bdf')
-        os.remove('caero3.bdf')
-        os.remove('caero3_merged.bdf')
-        os.remove('caero4.bdf')
-        os.remove('caero5.bdf')
-        os.remove('caero6.bdf')
-        #os.remove('caero5.scaled.bdf')
-        os.remove('caero6.scaled.bdf')
-        os.remove('caero_aesurf.bdf')
-        os.remove('caero_caero.bdf')
-        os.remove('caero_paero.bdf')
-        os.remove('caero_no_sub.bdf')
 
     def test_export_mcids(self):
         """creates material coordinate systems"""
@@ -913,7 +914,6 @@ class TestMeshUtils(unittest.TestCase):
     def test_mirror_tetra(self):
         """tests mirroring a chexa"""
         model = BDF(debug=False, log=None, mode='msc')
-
         model.add_grid(11, [0., 0., 0.])
         model.add_grid(12, [1., 0., 0.])
         model.add_grid(13, [0., 1, 0.])
