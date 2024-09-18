@@ -506,6 +506,7 @@ class DIT:
         struct_f = Struct(op2._endian + b'f') if size == 4 else Struct(op2._endian + b'd')
         ntotal1 = 40 * self.factor
         ntotal2 = 36 * self.factor
+        edata = b''
         try:
             while ndata - n >= ntotal1:
                 edata = data[n:n + ntotal1]

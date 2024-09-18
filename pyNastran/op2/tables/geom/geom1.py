@@ -402,7 +402,7 @@ class GEOM1:
                    0.0, 0.0, 0.0,
                    0.0, 0.0, 1.875)
         """
-        op2: OP2Geom = self.op2
+        #op2: OP2Geom = self.op2
         n = self._read_cordx(data, n, cord_type=2, cord_n=2)
         return n
 

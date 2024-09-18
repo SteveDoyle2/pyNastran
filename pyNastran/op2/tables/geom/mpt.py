@@ -293,7 +293,7 @@ class MPT:
         #    op2.card_count['MAT2'] = ncards
         #return n
 
-    def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
+    def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> tuple[int, list[MAT2]]:
         op2: OP2Geom = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(op2._endian + mapfmt(b'i15fi', self.size))
@@ -322,7 +322,7 @@ class MPT:
         return n, mats
 
 
-    def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
+    def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> tuple[int, list[MAT2]]:
         """
         MAT2 MID   G11  G12  G13  G22  G23  G33  RHO
              A1    A2   A3   TREF GE   ST   SC   SS
@@ -629,7 +629,7 @@ class MPT:
                                   #'CTRIA6', CTRIA6, self.add_op2_element)
         return n
 
-    def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
+    def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> tuple[int, list[MAT10]]:
         op2: OP2Geom = self.op2
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(op2._endian + b'i4f', self.size))
@@ -654,7 +654,7 @@ class MPT:
             materials.append(mat)
         return n, materials
 
-    def _read_mat10_24(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
+    def _read_mat10_24(self, material: MAT10, data: bytes, n: int) -> tuple[int, list[MAT10]]:
         """
         1 MID   I  Material identification number
         2 BULK  RS Bulk modulus
@@ -1203,7 +1203,7 @@ class MPT:
 
         return n
 
-    def _read_matt9_224(self, card_obj, data: bytes, n: int) -> int:
+    def _read_matt9_224(self, card_obj, data: bytes, n: int) -> tuple[int, list[MATT9]]:
         r"""
         Word Name Type Description
         1 MID    I Material identification number
@@ -1289,7 +1289,7 @@ class MPT:
             n += ntotal
         return n, materials
 
-    def _read_matt9_140(self, card_obj, data: bytes, n: int) -> int:
+    def _read_matt9_140(self, card_obj, data: bytes, n: int) -> tuple[int, list[MATT9]]:
         """
         Word Name Type Description
         1 MID    I Material identification number

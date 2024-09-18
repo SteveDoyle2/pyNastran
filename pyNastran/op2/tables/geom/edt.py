@@ -191,7 +191,7 @@ class EDT:
             eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x1, x2, x3, cid = out
             option = reshape_bytes_block_size(option_bytes, size=self.size)
             x = [x1, x2, x3]
-            spline_blend = op2.add_sblnd1(eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid)
+            spline_blend = op2.add_sblnd1(eid, eid1, eid2, option, w1, aero_grid, d1, d2, x, cid)
             str(spline_blend)
             n += ntotal
         return n
@@ -1990,7 +1990,7 @@ class EDT:
         #n = self._read_spline4_nx(data, n)
         #return n
 
-    def _read_spline4_nx_44(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, SPLINE4]:
+    def _read_spline4_nx_44(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, list[SPLINE4]]:
         """
         MSC 2018.2
 
@@ -2034,7 +2034,7 @@ class EDT:
         op2.to_nx(' because SPLINE4-NX was found')
         return n, splines
 
-    def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, SPLINE4]:
+    def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, list[SPLINE4]]:
         """
         MSC 2018.2
 
@@ -2128,8 +2128,8 @@ class EDT:
         assert ndatai % ntotal == 0, ndatai % ntotal
         if self.size == 4:
             structi = Struct(op2._endian + b'4i 2f i 3f 8s8s fif')
-        else:
-            asdf
+        else:  # pragma: no cover
+            raise RuntimeError(self.size)
             #structi = Struct(op2._endian + b'5q 2d q 2d 16s')
 
         splines = []
@@ -2150,6 +2150,8 @@ class EDT:
             dtor = dtorzy
             if ftype_int == 2:
                 ftype = 'WF2'
+            else:  # pragma: no cover
+                raise RuntimeError(ftype_int)
             spline = SPLINE5(
                 eid, caero, aelist, setg, thx, thy,
                 dz=dz, dtor=dtor, cid=cid,
@@ -2192,8 +2194,8 @@ class EDT:
         assert ndatai % ntotal == 0, ndatai % ntotal
         if self.size == 4:
             structi = Struct(op2._endian + b'4i 2f i 3f 8s8s f')
-        else:
-            asdf
+        else:  # pragma: no cover
+            raise RuntimeError(self.size)
             #structi = Struct(op2._endian + b'5q 2d q 2d 16s')
 
         splines = []

@@ -238,13 +238,15 @@ class CONTACT:
 
         #print(istart)
         #print(iend)
+        params = {}
+        contact_id = 0
         for i0, i1 in zip(istart, iend):
             strings = data[n+i0*size:n+i1*size]
             intsi = ints[i0:i1]
             floatsi = floats[i0:i1]
             contact_id = intsi[0]
             #print(contact_id, strings)
-            j = 4
+            #j = 4
             nj = (len(intsi) - 1) // 4
             jn = 1
             j = size
