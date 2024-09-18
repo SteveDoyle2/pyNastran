@@ -574,7 +574,8 @@ class OES(OP2Common2):
         #if op2.is_debug_file:
             #op2.binary_debug.write('  element_name = %r\n' % op2.element_name)
         #print "element_name =", op2.element_name
-        assert op2.is_strain is True, op2.code_information()
+        if not op2.is_optistruct:
+            assert op2.is_strain is True, op2.code_information()
         op2.data_code['is_stress_flag'] = False
         op2.data_code['is_strain_flag'] = True
 
@@ -6122,7 +6123,12 @@ class OES(OP2Common2):
         except KeyError:  # pragma: no cover
             raise KeyError(op2.code_information())
 
-        if op2.is_stress:
+        if op2.is_optistruct:
+            is_stress = ('stress' in prefix)
+        else:
+            is_stress = op2.is_stress
+
+        if is_stress:
             stress_strain = 'stress'
             obj_vector_real = RealCompositePlateStressArray
             obj_vector_strength = RealCompositePlateStressStrengthRatioArray
@@ -6135,6 +6141,9 @@ class OES(OP2Common2):
             #obj_vector_complex = ComplexCompositePlateStrainArray
             #obj_vector_random = RandomCompositePlateStrainArray
             layered_cls = ComplexLayeredCompositeStrainArray
+
+        if op2._results.is_not_saved(prefix.rstrip('.')):
+            return ndata, None, None
 
         result_name = prefix + f'{element_name}_composite_{stress_strain}' + postfix
         if op2._results.is_not_saved(result_name):

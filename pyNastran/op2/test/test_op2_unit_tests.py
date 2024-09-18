@@ -416,6 +416,25 @@ class TestOptistructOP2(Tester):
         assert len(op2.grid_point_forces) == 0
         os.remove(debug_file)
 
+    def test_optistruct_2(self):
+        op2_filename = MODEL_PATH / 'optistruct' / 'composite_plate_2022.op2'
+        make_geom = True
+        write_bdf = False
+        write_f06 = True
+        log = get_logger(level='warning')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2_geom(op2_filename, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=make_geom, write_bdf=write_bdf,
+            write_f06=write_f06,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True)
+
+
 
 class TestNASA95OP2(Tester):
     """various OP2 tests"""

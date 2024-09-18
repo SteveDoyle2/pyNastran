@@ -1,7 +1,7 @@
 """defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
@@ -1412,7 +1412,7 @@ class DYNAMICS(GeomCommon):
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
 
-    def _read_randps_nx(self, data: bytes, n: int) -> int:
+    def _read_randps_nx(self, data: bytes, n: int) -> tuple[int, list]:
         """
         RANDPS(2107,21,195)
 
@@ -1448,7 +1448,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RANDPS', nentries)
         return n, []
 
-    def _read_randps_msc(self, data: bytes, n: int) -> int:
+    def _read_randps_msc(self, data: bytes, n: int) -> tuple[int, list[None]]:
         """
         RANDPS(2107,21,195)
 
@@ -1484,7 +1484,8 @@ class DYNAMICS(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  RANDPS=%s\n' % str(out))
             #op2.log.debug('  RANDPS=%s\n' % str(out))
-            op2.add_randps(sid, j, k, x=x, y=y, tid=tid)
+            randps = op2.add_randps(sid, j, k, x=x, y=y, tid=tid)
+            #cards.append(randps)
             n += ntotal
         op2.increase_card_count('RANDPS', nentries)
         return n, []
@@ -1521,7 +1522,7 @@ class DYNAMICS(GeomCommon):
                                              'RLOAD1', op2._add_methods._add_dload_entry)
         return n
 
-    def _read_rload1_nx(self, data: bytes, n: int) -> int:
+    def _read_rload1_nx(self, data: bytes, n: int) -> tuple[int, list[RLOAD1]]:
         """
         RLOAD1(5107,51,131) - Record 26
 
@@ -1650,9 +1651,10 @@ class DYNAMICS(GeomCommon):
             out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
             if op2.is_debug_file:
+                tau = 0.
                 op2.binary_debug.write('  RLOAD2=%s\n' % str(out))
                 assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
-                                               f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
+                                               f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} dphasei={dphasei}')
 
             tb = tbi
             tp = tpi
@@ -1728,7 +1730,7 @@ class DYNAMICS(GeomCommon):
             #raise
         return n
 
-    def _read_rgyro_36(self, card_obj, data: bytes, n: int) -> int:
+    def _read_rgyro_36(self, card_obj, data: bytes, n: int) -> tuple[int, list]:
         """
         RGYRO(1507,15,40) - Record 17
 
@@ -1763,7 +1765,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('RGYRO', nentries)
         return n, cards
 
-    def _read_rgyro_52(self, card_obj, data: bytes, n: int) -> int:
+    def _read_rgyro_52(self, card_obj, data: bytes, n: int) -> tuple[int, list]:
         """
         RGYRO(10701, 107, 117) - Record 17
 
@@ -1926,11 +1928,11 @@ class DYNAMICS(GeomCommon):
             'RSPINT', self._add_rspint_obj)
         return n
 
-    def _add_rspint_obj(self, rspints: list[int]):
+    def _add_rspint_obj(self, rspints: list[int]) -> None:
         """TODO: remove this..."""
         pass
 
-    def _read_rspint_32(self, data: bytes, n: int) -> int:
+    def _read_rspint_32(self, data: bytes, n: int) -> tuple[int, list[None]]:
         r"""
         RSPINT(11001,110,310) - Record 31
 
@@ -1988,7 +1990,7 @@ class DYNAMICS(GeomCommon):
             rspints.append(rspint)
         return n, rspints
 
-    def _read_rspint_56(self, data: bytes, n: int) -> int:
+    def _read_rspint_56(self, data: bytes, n: int) -> tuple[int, list[None]]:
         r"""
         RSPINT(11001,110,310) - Record 31
 

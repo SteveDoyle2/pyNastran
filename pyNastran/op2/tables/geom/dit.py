@@ -567,7 +567,7 @@ class DIT:
             #20.0    100      30.0    120     60.0    130    ENDT
         #TABLED5 2000
             #20.0    200      30.0    220     60.0    230    ENDT
-
+        edata = b''
         try:
             while ndata - n >= ntotal1:
                 edata = data[n:n + ntotal1]
