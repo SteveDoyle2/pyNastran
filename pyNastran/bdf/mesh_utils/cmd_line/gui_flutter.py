@@ -2,13 +2,18 @@
 import os
 from typing import Any
 
-#import numpy as np
+from PIL.ImageChops import constant
+import numpy as np
+from cpylog import SimpleLogger
 #from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
     QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
 )
+from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
+from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float, QLINEEDIT_GOOD
+
 #import pyNastran
 #from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
@@ -27,9 +32,29 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
+from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
+from pyNastran.bdf.bdf import BDF
+
+
 #from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import VELOCITY_UNITS, ALTITUDE_UNITS
 VELOCITY_UNITS = ['knots', 'ft/s', 'in/s', 'm/s', 'cm/s', 'mm/s']
 ALTITUDE_UNITS = ['ft', 'm']
+UNIT_SYSTEMS_MAP = {
+    'in-slinch-s (English-in)': 'english_in',
+    'ft-slug-s (English)' : 'english',
+    'm-kg-s (SI)' : 'si',
+    'mm-Mg-s (SI-mm)' : 'si_mm',
+}
+UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())[
+
+CONSTANT_TYPE_MAP = {
+    'Mach': 'mach',
+    'Altitude': 'alt',
+    'Velocity': 'vel',
+    'Equivalent Airspeed' : 'eas',
+}
+# same as const formats
+SWEEP_FORMATS = list(CONSTANT_TYPE_MAP.keys())
 
 
 class FlutterGui(PyDialog):
@@ -91,6 +116,59 @@ class FlutterGui(PyDialog):
         else:  # pragma: no cover
             raise NotImplementedError(constant)
 
+    def on_apply(self) -> None:
+        sweep_method_unmapped = self.sweep_pulldown.currentText()
+        constant_type_unmapped = self.constant_pulldown.currentText()
+        unit_system_unmapped = self.unit_system_pulldown.currentText()
+        constant_unit = self.constant_unit_pulldown.currentText()
+        sweep_unit = self.sweep_unit_pulldown.currentText()
+        npoints = self.n_value.value()
+
+        sweep_method = CONSTANT_TYPE_MAP[sweep_method_unmapped]
+        constant_type = CONSTANT_TYPE_MAP[constant_type_unmapped]
+        units_out = UNIT_SYSTEMS_MAP[unit_system_unmapped]
+
+        value1, value1_flag = check_float(self.sweep1_value)
+        value2, value2_flag = check_float(self.sweep2_value)
+        const_value, const_value_flag = check_float(self.constant_value)
+        eas_limit = 1000
+        eas_units = 'm/s'
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        size = 8
+        clean = False
+        bdf_filename_out = ''
+        cmd = ''
+
+        model, density_units, velocity_units = create_flutter(
+            log,
+            sweep_method, value1, value2, sweep_unit, npoints,
+            constant_type, const_value, constant_unit,
+            eas_limit=eas_limit, eas_units=eas_units,
+            units_out=units_out,
+            size=size, clean=clean,
+            bdf_filename_out=bdf_filename_out,
+            comment=cmd)
+        sid = 1
+        flfact_rho = sid + 1
+        flfact_mach = sid + 2
+        flfact_velocity = sid + 3
+        flfact_eas = sid + 4
+        rho = model.flfacts[flfact_rho].factors
+        mach = model.flfacts[flfact_mach].factors
+        velocity = model.flfacts[flfact_velocity].factors
+        eas = model.flfacts[flfact_eas].factors
+        data = np.column_stack([rho, mach, velocity, eas])
+
+        labels = [
+            f'Density ({density_units})',
+            'Mach',
+            f'Velocity ({velocity_units})',
+            f'EAS ({eas_units})',
+        ]
+        dlg = ResultsDialog(self, data, labels,
+                            title='Atmsospere Table')
+        dlg.show()
+
     def create_widgets(self):
         """creates the display window"""
         # window text size
@@ -99,7 +177,6 @@ class FlutterGui(PyDialog):
 
         # self.font_size_edit.setValue(self._default_font_size)
         # self.font_size_edit.setRange(FONT_SIZE_MIN, FONT_SIZE_MAX)
-        SWEEP_FORMATS = ['Mach', 'Equivalent Airspeed', 'Velocity', 'Altitude']
         self.sweep_label = QLabel('Sweep:')
         self.sweep_pulldown = QComboBox(self)
         self.sweep_pulldown.addItems(SWEEP_FORMATS)
@@ -112,6 +189,10 @@ class FlutterGui(PyDialog):
         self.sweep2_value = QFloatEdit('0.99')
         self.sweep2_value.setToolTip('Ending Value')
 
+        self.unit_system_label = QLabel('Unit System:', self)
+        self.unit_system_pulldown = QComboBox(self)
+        self.unit_system_pulldown.addItems(UNIT_SYSTEMS)
+        self.unit_system_pulldown.setItemText(1, UNIT_SYSTEMS[1])
 
         self.sweep_unit_label = QLabel('Unit:', self)
         self.sweep_unit_pulldown = QComboBox(self)
@@ -228,11 +309,15 @@ class FlutterGui(PyDialog):
             grid.addWidget(self.aero_filename, irow, 1)
             grid.addWidget(self.aero_filename_load, irow, 2)
             irow += 1
+
+            grid.addWidget(self.unit_system_label, irow, 0)
+            grid.addWidget(self.unit_system_pulldown, irow, 1)
         return grid
 
     def set_connections(self):
         self.sweep_pulldown.currentIndexChanged.connect(self.on_sweep_pulldown)
         self.constant_pulldown.currentIndexChanged.connect(self.on_constant_pulldown)
+        self.apply_button.clicked.connect(self.on_apply)
 
 
 

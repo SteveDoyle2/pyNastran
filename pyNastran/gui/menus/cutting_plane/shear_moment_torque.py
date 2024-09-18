@@ -21,12 +21,13 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox,
-    QFrame, QTableWidget, QTableWidgetItem, QDialog, QHeaderView)
+    QFrame)
 
 from qtpy.QtGui import QColor# , QHeaderView
 
 
 from pyNastran.utils.locale import func_str
+from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import (
     QElementLineEdit, QElementTextEdit, # QNodeLineEdit
@@ -54,35 +55,6 @@ CID_GLOBAL_STR = '0/Global'
 IS_TIME = False
 MAX_LENGTH = 100_000
 USE_LINE_EDIT = True
-
-class ResultsDialog(QDialog):
-    def __init__(self, win_parent,
-                 data: np.ndarray,
-                 labels: list[str],
-                 title: str='Results'):
-        super().__init__(win_parent)
-
-        self.setWindowTitle(title)
-        nrows, ncolumns = data.shape
-
-        table_widget = QTableWidget(self)
-        table_widget.setRowCount(nrows)
-        table_widget.setColumnCount(ncolumns)
-        table_widget.setHorizontalHeaderLabels(labels)
-        self.table_widget = table_widget
-
-        header = table_widget.horizontalHeader()
-        for irow, row in enumerate(data):
-            for jcol, value in enumerate(row):
-                obj = QTableWidgetItem(str(value))
-                table_widget.setItem(irow, jcol, obj)
-            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-
-        vbox = QVBoxLayout(self)
-        vbox.addWidget(table_widget)
-        self.setLayout(vbox)
-        self.show()
 
 
 class ShearMomentTorqueWindow(PyDialog):

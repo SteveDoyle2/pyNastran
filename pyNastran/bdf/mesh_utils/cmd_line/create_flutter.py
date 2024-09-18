@@ -1,11 +1,29 @@
+from __future__ import annotations
 import sys
-from typing import Any
+from typing import Any, TYPE_CHECKING
+import numpy as np
+
 from cpylog import SimpleLogger
 from .utils import filter_no_args
 from pyNastran.utils.convert import convert_altitude, convert_velocity
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
+UNITS_MAP = {
+    # units must be consistent
+    #
+    # (alt, velocity, density, eas, pressure)
+    'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots', 'psi'),
+    'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots', 'psf'),
+    'si': ('m', 'm/s', 'kg/m^3', 'm/s', 'Pa'),
+    'si_mm': ('m', 'mm/s', 'Mg/mm^3', 'mm/s', 'MPa'),
+}
+
+ALT_UNITS = ['m', 'ft', 'kft']
+VELOCITY_UNITS = ['m/s', 'cm/s', 'mm/s', 'in/s', 'ft/s', 'knots']
 
 
-def cmd_line_create_flutter(argv=None, quiet: bool=False):
+def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     """command line interface to flip_shell_normals"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -77,30 +95,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     if not quiet:  # pragma: no cover
         print(data)
 
-    import numpy as np
-    from pyNastran.bdf.bdf import BDF
-    ALT_UNITS = ['m', 'ft', 'kft']
-    VELOCITY_UNITS = ['m/s', 'cm/s', 'mm/s', 'in/s', 'ft/s', 'knots']
-
     size = 16
     if data['--size']:
         size = _int(data, '--size')
 
-    units = data['UNITS']
-    units_map = {
-        # units must be consistent
-        #
-        # (alt, velocity, density, eas, pressure)
-        'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots', 'psi'),
-        'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots', 'psf'),
-        'si': ('m', 'm/s', 'kg/m^3', 'm/s', 'Pa'),
-        'si_mm': ('m', 'mm/s', 'Mg/mm^3', 'mm/s', 'MPa'),
-    }
-    try:
-        unitsi = units_map[units.lower()]
-    except KeyError:
-        raise NotImplementedError(units)
-    alt_units, velocity_units, density_units, eas_units_default, pressure_units = unitsi
+    units_out = data['UNITS']
+    if units_out.lower() not in UNITS_MAP:  # pragma: no cover
+        raise NotImplementedError(units_out)
 
     npoints = _int(data, 'N')
     clean = data['--clean']
@@ -110,6 +111,70 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     assert const_type in {'alt', 'mach', 'eas', 'tas'}, f'const_type={const_type!r}'
     const_value = _float(data, 'CONST_VAL')
     const_unit = data['CONST_UNIT'].lower()
+
+    eas_units = ''
+    eas_limit = 1_000_000.
+    if data['--eas_limit']:
+        eas_limit = _float(data, 'EAS')
+        eas_units = data['EAS_UNITS']
+        assert eas_units not in {None, ''}, eas_units
+        eas_units = eas_units.lower()
+        #assert eas_units in VELOCITY_UNITS, f'eas_unit={eas_unit!r}; allowed={VELOCITY_UNITS}'
+
+    sweep_unit = ''
+    if data['alt']:
+        sweep_method = 'alt'
+        value1 = _float(data, 'ALT1')
+        value2 = _float(data, 'ALT2')
+        sweep_unit = data['SWEEP_UNIT'].lower()
+    elif data['mach']:
+        sweep_method = 'mach'
+        value1 = _float(data, 'MACH1')
+        value2 = _float(data, 'MACH2')
+    elif data['eas']:
+        sweep_method = 'eas'
+        value1 = _float(data, 'EAS1')
+        value2 = _float(data, 'EAS2')
+        sweep_unit = data['SWEEP_UNIT'].lower()
+    elif data['tas']:
+        sweep_method = 'tas'
+        value1 = _float(data, 'TAS1')
+        value2 = _float(data, 'TAS2')
+        sweep_unit = data['SWEEP_UNIT'].lower()
+    else:  # pragma: no cover
+        raise NotImplementedError(data)
+
+    #alts = np.linspace(alt1, alt2, num=npoints)
+
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = 'flutter_cards.inc'
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    create_flutter(log,
+                   sweep_method, value1, value2, sweep_unit, npoints,
+                   const_type, const_value, const_unit,
+                   eas_limit=eas_limit, eas_units=eas_units,
+                   units_out=units_out,
+                   size=size, clean=clean,
+                   bdf_filename_out=bdf_filename_out,
+                   comment=cmd)
+    if not quiet:
+        print(cmd)
+
+def create_flutter(log: SimpleLogger,
+                   sweep_method: str, value1: float, value2: float, sweep_unit: str, npoints: int,
+                   const_type: str, const_value: float, const_unit: str,
+                   eas_limit=1_000_000, eas_units: str='m/s',
+                   units_out: str='si',
+                   size: int=8,
+                   clean: bool=False,
+                   bdf_filename_out: str='flutter_cards.inc',
+                   comment: str='') -> tuple[BDF, str, str]:
+
+    unitsi = UNITS_MAP[units_out.lower()]
+    alt_units, velocity_units, density_units, eas_units_default, pressure_units = unitsi
     if const_type == 'alt':
         alt = const_value
         alt_unit = const_unit
@@ -121,59 +186,28 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     else:  # pragma: no cover
         raise NotImplementedError(const_type)
 
-    eas_units = ''
-    eas_limit = 1_000_000.
-    if data['--eas_limit']:
-        eas_limit = _float(data, 'EAS')
-        eas_units = data['EAS_UNITS']
-        assert eas_units not in {None, ''}, eas_units
-        eas_units = eas_units.lower()
-        #assert eas_units in VELOCITY_UNITS, f'eas_unit={eas_unit!r}; allowed={VELOCITY_UNITS}'
-
-    sweep_method = ''
-    sweep_unit = ''
-    if data['alt']:
-        sweep_method = 'alt'
-        alt1 = _float(data, 'ALT1')
-        alt2 = _float(data, 'ALT2')
-        alts = np.linspace(alt1, alt2, num=npoints)
-        sweep_unit = data['SWEEP_UNIT'].lower()
+    sweep_unit = sweep_unit.lower()
+    values = np.linspace(value1, value2, num=npoints)
+    if sweep_method == 'alt':
         assert sweep_unit in ALT_UNITS, f'sweep_unit={sweep_unit!r}; allowed={ALT_UNITS}'
-        alts = convert_altitude(alts, sweep_unit, alt_units)
+        alts = convert_altitude(values, sweep_unit, alt_units)
 
-    elif data['mach']:
-        sweep_method = 'mach'
-        mach1 = _float(data, 'MACH1')
-        mach2 = _float(data, 'MACH2')
-        machs = np.linspace(mach1, mach2, num=npoints)
-
-    elif data['eas']:
-        sweep_method = 'eas'
-        eas1 = _float(data, 'EAS1')
-        eas2 = _float(data, 'EAS2')
-        eass = np.linspace(eas1, eas2, num=npoints)
-        eas_units = data['SWEEP_UNIT'].lower()
+    elif sweep_method == 'mach':
+        machs = values
+    elif sweep_method == 'eas':
+        eass = values
+        eas_units = sweep_unit
         #assert sweep_unit in VELOCITY_UNITS, f'sweep_unit={sweep_unit!r}; allowed={VELOCITY_UNITS}'
         #eass = convert_velocity(eass, sweep_unit, velocity_units)
 
-    elif data['tas']:
-        sweep_method = 'tas'
-        tas1 = _float(data, 'TAS1')
-        tas2 = _float(data, 'TAS2')
-        tass = np.linspace(tas1, tas2, num=npoints)
-        sweep_unit = data['SWEEP_UNIT'].lower()
+    elif sweep_method == 'tas':
         assert sweep_unit in VELOCITY_UNITS, f'sweep_unit={sweep_unit!r}; allowed={VELOCITY_UNITS}'
-        tass = convert_velocity(tass, sweep_unit, velocity_units)
-    else:
-        raise NotImplementedError(data)
+        tass = convert_velocity(values, sweep_unit, velocity_units)
+    else:  # pragma: no cover
+        raise NotImplementedError(sweep_method)
 
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'flutter_cards.inc'
-
-    #from io import StringIO
-    level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    #------------------------------------------------------------------
+    from pyNastran.bdf.bdf import BDF
     model = BDF(log=log)
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                             nxref_errors=100, stop_on_xref_error=False)
@@ -266,28 +300,28 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         raise NotImplementedError((sweep_method, const_type))
 
     model.punch = True
-    flutter.comment = cmd
-    if clean:
-        # makes a "clean" deck by writing the data in small field
-        # we take advantage of truncation to get a more readable deck
-        #
-        # the downsides are we have to write twice and we lose extra precision
-        model.write_bdf(bdf_filename_out, encoding=None, size=8,
-                        nodes_size=None, elements_size=None, loads_size=None,
-                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+    flutter.comment = comment
+    if bdf_filename_out:
+        if clean:
+            # makes a "clean" deck by writing the data in small field
+            # we take advantage of truncation to get a more readable deck
+            #
+            # the downsides are we have to write twice and we lose extra precision
+            model.write_bdf(bdf_filename_out, encoding=None, size=8,
+                            nodes_size=None, elements_size=None, loads_size=None,
+                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
-        model2 = BDF(log=log)
-        model2.read_bdf(bdf_filename_out, validate=True, xref=False, punch=True, read_includes=True,
-                       save_file_structure=False, encoding=None)
-        model2.write_bdf(bdf_filename_out, encoding=None, size=16,
-                        nodes_size=None, elements_size=None, loads_size=None,
-                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
-    else:
-        model.write_bdf(bdf_filename_out, encoding=None, size=size,
-                        nodes_size=None, elements_size=None, loads_size=None,
-                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
-    if not quiet:
-        print(cmd)
+            model2 = BDF(log=log)
+            model2.read_bdf(bdf_filename_out, validate=True, xref=False, punch=True, read_includes=True,
+                           save_file_structure=False, encoding=None)
+            model2.write_bdf(bdf_filename_out, encoding=None, size=16,
+                            nodes_size=None, elements_size=None, loads_size=None,
+                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+        else:
+            model.write_bdf(bdf_filename_out, encoding=None, size=size,
+                            nodes_size=None, elements_size=None, loads_size=None,
+                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+    return model, density_units, velocity_units
 
 def _float(data: dict[str, Any], name: str):
     svalue = data[name]
