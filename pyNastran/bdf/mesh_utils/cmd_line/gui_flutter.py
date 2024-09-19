@@ -41,11 +41,11 @@ VELOCITY_UNITS = ['knots', 'ft/s', 'in/s', 'm/s', 'cm/s', 'mm/s']
 ALTITUDE_UNITS = ['ft', 'm']
 UNIT_SYSTEMS_MAP = {
     'in-slinch-s (English-in)': 'english_in',
-    'ft-slug-s (English)' : 'english',
+    'ft-slug-s (English-ft)' : 'english_ft',
     'm-kg-s (SI)' : 'si',
     'mm-Mg-s (SI-mm)' : 'si_mm',
 }
-UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())[
+UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())
 
 CONSTANT_TYPE_MAP = {
     'Mach': 'mach',
@@ -64,6 +64,7 @@ class FlutterGui(PyDialog):
         performs type checks
         """
         PyDialog.__init__(self, data, win_parent)
+        self.log = SimpleLogger(level='debug', encoding='utf-8')
         self._updated_preference = False
         self.dim_max = 8
 
@@ -76,6 +77,11 @@ class FlutterGui(PyDialog):
 
     def on_sweep_pulldown(self) -> None:
         sweep = get_combo_box_text(self.sweep_pulldown)
+        constant = get_combo_box_text(self.constant_pulldown)
+        is_eas_enabled = (sweep != 'Equivalent Airspeed') and (constant != 'Equivalent Airspeed')
+        self.eas_limit_value.setEnabled(is_eas_enabled)
+        self.eas_limit_unit_pulldown.setEnabled(is_eas_enabled)
+
         if sweep == 'Mach':
             self.sweep_unit_pulldown.clear()
             self.sweep_unit_pulldown.addItems(['-'])
@@ -95,7 +101,11 @@ class FlutterGui(PyDialog):
             raise NotImplementedError(sweep)
 
     def on_constant_pulldown(self) -> None:
+        sweep = get_combo_box_text(self.sweep_pulldown)
         constant = get_combo_box_text(self.constant_pulldown)
+        is_eas_enabled = (sweep != 'Equivalent Airspeed') and (constant != 'Equivalent Airspeed')
+        self.eas_limit_value.setEnabled(is_eas_enabled)
+        self.eas_limit_unit_pulldown.setEnabled(is_eas_enabled)
 
         # SWEEP_FORMATS = ['Mach', 'Equivalent Airspeed', 'Velocity', 'Altitude']
         if constant == 'Mach':
@@ -122,32 +132,58 @@ class FlutterGui(PyDialog):
         unit_system_unmapped = self.unit_system_pulldown.currentText()
         constant_unit = self.constant_unit_pulldown.currentText()
         sweep_unit = self.sweep_unit_pulldown.currentText()
+        eas_units = self.eas_limit_unit_pulldown.currentText()
         npoints = self.n_value.value()
 
         sweep_method = CONSTANT_TYPE_MAP[sweep_method_unmapped]
         constant_type = CONSTANT_TYPE_MAP[constant_type_unmapped]
         units_out = UNIT_SYSTEMS_MAP[unit_system_unmapped]
 
+        # if sweep_method == 'mach':
+        #     sweep_unit = ''
+
         value1, value1_flag = check_float(self.sweep1_value)
         value2, value2_flag = check_float(self.sweep2_value)
         const_value, const_value_flag = check_float(self.constant_value)
-        eas_limit = 1000
-        eas_units = 'm/s'
-        log = SimpleLogger(level='debug', encoding='utf-8')
         size = 8
         clean = False
-        bdf_filename_out = ''
-        cmd = ''
+        bdf_filename_out = self.aero_filename.text()
 
-        model, density_units, velocity_units = create_flutter(
-            log,
-            sweep_method, value1, value2, sweep_unit, npoints,
-            constant_type, const_value, constant_unit,
-            eas_limit=eas_limit, eas_units=eas_units,
-            units_out=units_out,
-            size=size, clean=clean,
-            bdf_filename_out=bdf_filename_out,
-            comment=cmd)
+        # bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT
+        # bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
+        # bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
+        # bdf flutter UNITS mach MACH1 MACH2            N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
+        # ...  [-o OUT_BDF_FILENAME] [--size SIZE | --clean]
+        eas_str = ''
+        if (sweep_method != 'eas') and (constant != 'eas'):
+            eas_limit, eas_limit_flag = check_float(self.eas_limit_value)
+            eas_str = f'--eas_limit {eas_limit} {eas_units}'
+            is_passed = value1_flag and value2_flag and const_value_flag and eas_limit_flag
+        else:
+            is_passed = value1_flag and value2_flag and const_value_flag
+
+        if not is_passed:
+            return
+
+        cmd = (
+            f'bdf flutter {units_out} '
+            f'{sweep_method} {value1} {value2} {sweep_unit} {npoints} '
+            f'{constant_type} {unit_system_unmapped} {eas_str}'
+        )
+
+        try:
+            model, density_units, velocity_units = create_flutter(
+                self.log,
+                sweep_method, value1, value2, sweep_unit, npoints,
+                constant_type, const_value, constant_unit,
+                eas_limit=eas_limit, eas_units=eas_units,
+                units_out=units_out,
+                size=size, clean=clean,
+                bdf_filename_out=bdf_filename_out,
+                comment=cmd)
+        except:
+            self.log.error('Unhandled exception')
+            return
         sid = 1
         flfact_rho = sid + 1
         flfact_mach = sid + 2
@@ -166,7 +202,7 @@ class FlutterGui(PyDialog):
             f'EAS ({eas_units})',
         ]
         dlg = ResultsDialog(self, data, labels,
-                            title='Atmsospere Table')
+                            title='Atmosphere Table')
         dlg.show()
 
     def create_widgets(self):
@@ -189,7 +225,7 @@ class FlutterGui(PyDialog):
         self.sweep2_value = QFloatEdit('0.99')
         self.sweep2_value.setToolTip('Ending Value')
 
-        self.unit_system_label = QLabel('Unit System:', self)
+        self.unit_system_label = QLabel('Output Unit System:', self)
         self.unit_system_pulldown = QComboBox(self)
         self.unit_system_pulldown.addItems(UNIT_SYSTEMS)
         self.unit_system_pulldown.setItemText(1, UNIT_SYSTEMS[1])
@@ -203,6 +239,8 @@ class FlutterGui(PyDialog):
         self.n_label = QLabel('Number of Points:', self)
         self.n_value = QSpinBox(self)
         self.n_value.setValue(20)
+        self.n_value.setMinimum(2)
+        self.n_value.setMaximum(1001)
         self.n_value.setToolTip('Number of Points')
 
         self.constant_label = QLabel('Sweep:')
@@ -222,6 +260,14 @@ class FlutterGui(PyDialog):
         self.aero_filename.setText('flutter_cards.bdf')
         self.aero_filename.setToolTip('Path to the Flutter File')
         self.aero_filename_load = QPushButton('Load...')
+
+        # ------------------------------------------------------------------
+        self.eas_limit_label = QLabel('EAS Limit:', self)
+        self.eas_limit_value = QFloatEdit('1000')
+        self.eas_limit_value.setToolTip('Equivalent Airspeed Limit; V_EAS = V_TAS * sqrt(rho/rho0)')
+        self.eas_limit_unit_pulldown = QComboBox(self)
+        self.eas_limit_unit_pulldown.addItems(VELOCITY_UNITS)
+        self.eas_limit_unit_pulldown.setItemText(0, VELOCITY_UNITS[0])
 
         # ------------------------------------------------------------------
         # closing
@@ -302,9 +348,13 @@ class FlutterGui(PyDialog):
             grid.addWidget(self.constant_pulldown, irow, 0)
             grid.addWidget(self.constant_value, irow, 1)
             grid.addWidget(self.constant_unit_pulldown, irow, 2)
-
             irow += 1
 
+            grid.addWidget(self.eas_limit_label, irow, 0)
+            grid.addWidget(self.eas_limit_value, irow, 1)
+            grid.addWidget(self.eas_limit_unit_pulldown, irow, 2)
+            irow += 1
+            #-----------------------------------------------------
             grid.addWidget(self.aero_filename_label, irow, 0)
             grid.addWidget(self.aero_filename, irow, 1)
             grid.addWidget(self.aero_filename_load, irow, 2)
@@ -312,6 +362,7 @@ class FlutterGui(PyDialog):
 
             grid.addWidget(self.unit_system_label, irow, 0)
             grid.addWidget(self.unit_system_pulldown, irow, 1)
+            irow += 1
         return grid
 
     def set_connections(self):
