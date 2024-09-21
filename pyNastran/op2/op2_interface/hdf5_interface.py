@@ -151,9 +151,9 @@ def _cast(h5_result_attr):
         return None
 
     if len(h5_result_attr.shape) == 0:
-        out = np.array(h5_result_attr).tolist()
+        out = np.asarray(h5_result_attr, copy=True).tolist()
         return out
-    out = np.array(h5_result_attr)
+    out = np.asarray(h5_result_attr, copy=True, like=None)
     #assert not isinstance(out, str), out
     return out
 
@@ -163,13 +163,13 @@ def _cast_str(h5_result_attr, encoding: str) -> list[str]:
         return None
 
     if len(h5_result_attr.shape) == 0:
-        out = np.array(h5_result_attr).tolist()
+        out = np.asarray(h5_result_attr, copy=True, like=None).tolist()
         if isinstance(out, bytes):
             out = out.decode(encoding)
         return out
         #raise NotImplementedError(h5_result_attr.dtype)
     else:
-        out = np.array(h5_result_attr)
+        out = np.asarray(h5_result_attr, copy=True)
     out2 = [outi.decode(encoding) if isinstance(outi, bytes) else outi
             for outi in out]
     return out2

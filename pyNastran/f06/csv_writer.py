@@ -20,6 +20,7 @@ from pyNastran.utils import PathLike, PurePath
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
+    from pyNastran.op2.tables.onmd import NormalizedMassDensity
 
 def make_csv_header() -> str:
     #spaces = ''
@@ -477,7 +478,7 @@ class CSVWriter:
         normalized_mass_density = model.op2_results.responses.normalized_mass_density
         if normalized_mass_density is None:
             return
-        normalized_mass_density0 = normalized_mass_density[0]  # type: NormalizedMassDensity
+        normalized_mass_density0: NormalizedMassDensity = normalized_mass_density[0]
 
         csv.write('NORMALIZED MASS DENSITY HISTORY\n')
         for mass in normalized_mass_density0:

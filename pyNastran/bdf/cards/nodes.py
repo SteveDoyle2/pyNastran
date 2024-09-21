@@ -45,10 +45,11 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 
 #u = str
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf import BDF
-    from pyNastran.bdf.cards.coordinate_systems import CORDx
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.coordinate_systems import Coord, CORDx
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.nptyping_interface import NDArray3float
+    from pyNastran.bdf.cards.base_card import Element
     #from pyNastran.bdf.bdf_interface.typing import Coord, Element
 
 
@@ -1382,7 +1383,7 @@ class GRID(BaseCard):
         """see get_position_wrt"""
         if cid == self.cp: # same coordinate system
             return self.xyz
-        msg = ', which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % self.nid
 
         # converting the xyz point arbitrary->global
         cp_ref = model.Coord(self.cp, msg=msg)
@@ -1705,8 +1706,8 @@ class POINT(BaseCard):
         self.cp_ref = None
 
     def validate(self) -> None:
-        assert self.nid > 0, 'nid=%s' % (self.nid)
-        assert self.cp >= 0, 'cp=%s' % (self.cp)
+        assert self.nid > 0, 'nid=%s' % self.nid
+        assert self.cp >= 0, 'cp=%s' % self.cp
         assert len(self.xyz) == 3
 
     @classmethod

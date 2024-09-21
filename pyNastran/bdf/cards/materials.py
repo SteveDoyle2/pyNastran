@@ -1694,9 +1694,14 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        if self.mid in model.MATT5:
-            self.matt5 = self.Matt5()
+        self.matt5 = self.Matt5()
         self.matt5_ref = None
+
+    def Matt5(self) -> int:
+        # TODO: not sure...what's the priority?
+        if self.matt5_ref is not None:
+            return self.matt5_ref
+        return self.mid
 
     def Rho(self):
         return self.rho
