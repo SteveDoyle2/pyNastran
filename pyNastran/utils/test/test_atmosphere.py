@@ -9,7 +9,7 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_density, get_alt_for_pressure,
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
-    atm_unit_reynolds_number, atm_unit_reynolds_number2,
+    atm_unit_reynolds_number,
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_alt,
@@ -611,27 +611,27 @@ class TestAtm(unittest.TestCase):
             (40., 1532035.46128),
             (50., 949974.915093)]
         for alt, re_expected in targets:
-            rel_a = atm_unit_reynolds_number2(alt*1000., mach)
+            rel_a = atm_unit_reynolds_number(alt*1000., mach)
             assert np.allclose(rel_a, re_expected, atol=1e-3), 'rel_a=%s re_expected=%s' % (rel_a, re_expected)
 
-            rel_b = atm_unit_reynolds_number2(alt, mach, alt_units='kft', reynolds_units='1/ft')
+            rel_b = atm_unit_reynolds_number(alt, mach, alt_units='kft', reynolds_units='1/ft')
             assert np.allclose(rel_b, re_expected, atol=1e-3), 'rel_b=%s re_expected=%s' % (rel_b, re_expected)
 
     def test_sweep_eas_mach(self):
         eass = np.linspace(0., 1000., num=101, dtype='float64')
-        neas = len(eass)
+        #neas = len(eass)
 
-        mach = 0.5
-        machs = np.ones(neas, dtype='float64') * mach
+        machi = 0.5
+        #machs = np.ones(neas, dtype='float64') * mach
         rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
-            machs, eass, gamma=1.4,
+            machi, eass, gamma=1.4,
             velocity_units='ft/s', density_units='slug/ft^3',
             alt_units='ft',
             #pressure_units='psf',
             eas_units='knots')
 
         rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
-            mach, alts,
+            machi, alts,
             eas_limit=1000000,
             velocity_units='ft/s', density_units='slug/ft^3',
             alt_units='ft',
@@ -642,14 +642,14 @@ class TestAtm(unittest.TestCase):
         #assert np.allclose(velocity1, velocity2)
         #-----------------------------------------------
         rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
-            machs, eass, gamma=1.4,
+            machi, eass, gamma=1.4,
             velocity_units='m/s', density_units='kg/m^3',
             alt_units='m',
             #pressure_units='psf',
             eas_units='m/s')
 
         rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
-            mach, alts,
+            machi, alts,
             eas_limit=1000000,
             velocity_units='m/s', density_units='kg/m^3',
             alt_units='ft',

@@ -59,7 +59,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         '  SWEEP_UNIT          the unit for sweeping across\n'
         "  N                   the number of points in the sweep\n"
         '  alt, mach           the parameter to be held constant when sweeping (alt, mach)\n'
-        '  CONST_VAL           the value corresponding to CONST_TYPE'
+        '  CONST_VAL           the value corresponding to CONST_TYPE\n'
         "  CONST_UNIT          the unit for the altitude that is held constant\n"
         '\n'
 
@@ -85,7 +85,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     #    '--nerrors' : [int, 100],
     #}
     if 'gui' in argv:
-        from pyNastran.bdf.mesh_utils.cmd_line.gui_flutter import cmd_line_gui
+        from pyNastran.bdf.mesh_utils.gui_tools.gui_flutter import cmd_line_gui
         data = cmd_line_gui()
     else:
         argv = [str(arg) for arg in argv]
@@ -183,8 +183,14 @@ def create_flutter(log: SimpleLogger,
     elif const_type == 'mach':
         mach = const_value
         assert const_unit in {'none', 'na'}, f'const_unit={const_unit!r}; allowed=[none]'
+    elif const_type == 'eas':
+        eas = const_value
+        assert const_unit in VELOCITY_UNITS, f'const_unit={const_unit!r}; allowed={VELOCITY_UNITS}'
+    elif const_type == 'tas':
+        tas = const_value
+        assert const_unit in VELOCITY_UNITS, f'const_unit={const_unit!r}; allowed={VELOCITY_UNITS}'
     else:  # pragma: no cover
-        raise NotImplementedError(const_type)
+        raise NotImplementedError(f'const_type={const_type} is not supported')
 
     sweep_unit = sweep_unit.lower()
     values = np.linspace(value1, value2, num=npoints)
@@ -203,6 +209,9 @@ def create_flutter(log: SimpleLogger,
     elif sweep_method == 'tas':
         assert sweep_unit in VELOCITY_UNITS, f'sweep_unit={sweep_unit!r}; allowed={VELOCITY_UNITS}'
         tass = convert_velocity(values, sweep_unit, velocity_units)
+    elif sweep_method == 'alt':
+        assert sweep_unit in ALT_UNITS, f'sweep_unit={sweep_unit!r}; allowed={ALT_UNITS}'
+        alts = convert_altitude(values, sweep_unit, alt_units)
     else:  # pragma: no cover
         raise NotImplementedError(sweep_method)
 
@@ -229,23 +238,30 @@ def create_flutter(log: SimpleLogger,
         eas_units = eas_units_default
 
     log.info(f'sweep_method={sweep_method!r}')
-    log.info(f'  alt_units={alt_units!r}')
-    log.info(f'  velocity_units={velocity_units!r}')
-    log.info(f'  density_units={density_units!r}')
-    log.info(f'  eas_units={eas_units!r}')
+    log.debug(f'  alt_units={alt_units!r}')
+    log.debug(f'  velocity_units={velocity_units!r}')
+    log.debug(f'  density_units={density_units!r}')
+    log.debug(f'  eas_units={eas_units!r}')
     #del alt_unit
 
     # option 1: overwrite the eas/tas/alt unit...would work for alt
     #           we'll overwrite the
     # option 2: pass another flag in...I don't wanna
     pairs = [
+        # sweep, const
         ('eas', 'alt'),
+        ('eas', 'mach'),
         ('mach', 'alt'),
         ('alt', 'mach'),
         ('tas', 'alt'),
-        ('eas', 'mach'),
-        #('tas', 'mach'),
+        #('tas', 'mach'),  # undefined b/c sos doesn't map 1:1 to alt
+
+        # new
+        #('tas', 'eas'),  # kind of dumb, but should work...
+        ('alt', 'tas'),
+        #('alt', 'eas'), # kind of dumb
     ]
+
     assert alt_units != '', alt_units
     assert velocity_units != '', velocity_units
     assert density_units != '', density_units
@@ -287,12 +303,43 @@ def create_flutter(log: SimpleLogger,
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
+    elif sweep_method == 'alt' and const_type == 'tas':
+        flutter.make_flfacts_alt_sweep_constant_tas(
+            model, tas, alts,
+            alt_units=alt_units,
+            eas_limit=eas_limit,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
     elif sweep_method == 'tas' and const_type == 'alt':
-        #velocity_units = sweep_unit
         flutter.make_flfacts_tas_sweep_constant_alt(
             model, alt, tass,
             alt_units=alt_units,
             eas_limit=eas_limit,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+    #elif sweep_method == 'tas' and const_type == 'mach':
+        # undefined b/c sos doesn't map 1:1 to alt
+        #flutter.make_flfacts_tas_sweep_constant_mach(
+            #model, mach, tass,
+            #alt_units=alt_units,
+            #eas_limit=eas_limit,
+            #velocity_units=velocity_units,
+            #density_units=density_units,
+            #eas_units=eas_units)
+    #elif sweep_method == 'tas' and const_type == 'eas':
+        #flutter.make_flfacts_tas_sweep_constant_eas(
+            #model, eas, tass,
+            #alt_units=alt_units,
+            #eas_limit=eas_limit,
+            #velocity_units=velocity_units,
+            #density_units=density_units,
+            #eas_units=eas_units)
+    elif sweep_method == 'alt' and const_type == 'eas':
+        flutter.make_flfacts_alt_sweep_constant_eas(
+            model, eas, alts,
+            alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
