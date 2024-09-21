@@ -26,6 +26,7 @@ from pyNastran.utils.atmosphere import (
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_tas_sweep_constant_alt,
+    make_flfacts_alt_sweep_constant_tas,
     atm_density, _velocity_factor)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
@@ -693,20 +694,6 @@ class FLUTTER(BaseCard):
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
 
-    def make_flfacts_eas_sweep(self, model: BDF,
-                               alt: float, eass: list[float],
-                               alt_units: str='m',
-                               velocity_units: str='m/s',
-                               density_units: str='kg/m^3',
-                               eas_units: str='m/s') -> None:
-        self.deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4')
-        self.make_flfacts_eas_sweep_constant_alt(
-            model, alt, eass,
-            alt_units=alt_units,
-            velocity_units=velocity_units,
-            density_units=density_units,
-            eas_units=eas_units)
-
     def make_flfacts_eas_sweep_constant_alt(self, model: BDF,
                                             alt: float, eass: list[float],
                                             alt_units: str='m',
@@ -763,7 +750,8 @@ class FLUTTER(BaseCard):
         model.add_flfact(flfact_eas, eass, comment=comment)
 
     def make_flfacts_alt_sweep_constant_mach(self,
-                                             model: BDF, mach, alts,
+                                             model: BDF,
+                                             mach: float, alts: np.ndarray,
                                              eas_limit: float=1000.,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
@@ -809,8 +797,57 @@ class FLUTTER(BaseCard):
         comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
         model.add_flfact(flfact_alt, alts2, comment=comment)
 
+    def make_flfacts_alt_sweep_constant_tas(self,
+                                            model: BDF,
+                                            tas: float, alts: np.ndarray,
+                                            eas_limit: float=1000.,
+                                            alt_units: str='m',
+                                            velocity_units: str='m/s',
+                                            density_units: str='kg/m^3',
+                                            eas_units: str='m/s') -> tuple[Any, Any, Any]:
+        """untested"""
+        alts.sort()
+        alts = alts[::-1]
+        rho, mach, velocity = make_flfacts_alt_sweep_constant_tas(
+            tas, alts,
+            alt_units=alt_units,
+            eas_limit=eas_limit,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+
+
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        flfact_eas = self.sid + 4
+        #flfact_alt = self.sid + 5
+
+        #alts2 = alts[:len(rho)]
+        #assert len(rho) == len(alts2)
+        comment = ' density: min=%.3e max=%.3e %s; alt min=%.0f max=%.0f %s' % (
+            rho.min(), rho.max(), density_units,
+            alts.min(), alts.min(), alt_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
+        model.add_flfact(flfact_mach, mach, comment=' Mach: %s' % mach.min())
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
+
+        # eas in velocity units
+        rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+        eas = velocity * np.sqrt(rho / rho0)
+        kvel = _velocity_factor(velocity_units, eas_units)
+
+        eas_in_eas_units = eas * kvel
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
+        model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+
     def make_flfacts_tas_sweep_constant_alt(self,
-                                            model: BDF, alt: float, tass,
+                                            model: BDF,
+                                            alt: float, tass: np.ndarray,
                                             eas_limit: float=1000.,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
@@ -856,20 +893,9 @@ class FLUTTER(BaseCard):
         #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
         #model.add_flfact(flfact_alt, alts2, comment=comment)
 
-    def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
-                                velocity_units='m/s',
-                                density_units='kg/m^3',
-                                eas_units='m/s') -> None:
-        self.deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4')
-        self.make_flfacts_mach_sweep_constant_alt(
-            model, alt, machs,
-            eas_limit=eas_limit,
-            alt_units=alt_units,
-            velocity_units=velocity_units,
-            density_units=density_units,
-            eas_units=eas_units)
 
-    def make_flfacts_eas_sweep_constant_mach(self, model: BDF, mach, eass,
+    def make_flfacts_eas_sweep_constant_mach(self, model: BDF,
+                                             mach: float, eass: np.ndarray,
                                              gamma: float=1.4,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
@@ -886,10 +912,10 @@ class FLUTTER(BaseCard):
             = Minf * sqrt(gamma*p_inf/rho0)
         """
         neas = len(eass)
-        machs = mach * np.ones(neas)
+        #machs = mach * np.ones(neas)
 
-        rho, mach, velocity, alts = make_flfacts_eas_sweep_constant_mach(
-            machs, eass,
+        rho, machs, velocity, alts = make_flfacts_eas_sweep_constant_mach(
+            mach, eass,
             gamma=gamma,
             alt_units=alt_units,
             velocity_units=velocity_units,
@@ -910,8 +936,8 @@ class FLUTTER(BaseCard):
             alts.min(), alts.max(), alt_units,
         )
         model.add_flfact(flfact_rho, rho, comment=comment)
-        comment = ' Mach: min=%s max=%s' % (mach.min(), mach.max())
-        model.add_flfact(flfact_mach, mach, comment=comment)
+        comment = ' Mach: min=%s max=%s' % (machs.min(), machs.max())
+        model.add_flfact(flfact_mach, machs, comment=comment)
         comment = ' velocity: min=%.3f max=%.3f %s' % (
             velocity.min(), velocity.max(), velocity_units)
         model.add_flfact(flfact_velocity, velocity, comment=comment)

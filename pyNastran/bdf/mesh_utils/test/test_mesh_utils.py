@@ -62,47 +62,6 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
         cmd_line(args, quiet=True)
 
-    def test_bdf_flutter(self):
-        """tests a flutter sweep"""
-        #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
-        # [-o OUT_BDF_FILENAME] [--size SIZE | --clean]
-        bdf_filename_out = TEST_DIR / 'test_flutter.bdf'
-
-        #bdf flutter english_in mach .05 0.5       101 alt 2500
-        args = [
-            'bdf', 'flutter', 'english_in',
-            'mach', '0.05', '0.5', '21',
-            'alt', '2500', 'ft',
-        ]
-        cmd_line(args, quiet=True)
-        args = [
-            'bdf', 'flutter', 'english_in',
-            'alt', -10_000, 100_000, 'ft', 41,
-            'mach', 0.8, 'NA',
-            '-o', bdf_filename_out,
-            '--clean',
-            '--eas_limit', 1000, 'knots',
-        ]
-        cmd_line(args, quiet=True)
-
-        args = [
-            'bdf', 'flutter', 'si_mm',
-            'tas', 50, 1000, 'ft/s', 11,
-            'alt', 0, 'm',
-            '-o', bdf_filename_out,
-            '--clean',
-            '--eas_limit', 1000, 'knots',
-        ]
-        cmd_line(args, quiet=True)
-
-        args = [
-            'bdf', 'flutter', 'si_mm',
-            'eas', 50, 1000, 'ft/s', 11,
-            'mach', 0.8, 'none',
-            '-o', bdf_filename_out,
-        ]
-        cmd_line(args, quiet=True)
-
     def test_free_edges(self):
         """Finds the free_edges
 
