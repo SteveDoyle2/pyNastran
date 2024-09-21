@@ -5,8 +5,11 @@ from typing import Any
 from PIL.ImageChops import constant
 import numpy as np
 from cpylog import SimpleLogger
+from cpylog.html_utils import str_to_html
 #from qtpy import QtGui
+from qtpy import QtCore
 from qtpy.QtWidgets import (
+    QMainWindow,
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
     QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
@@ -16,6 +19,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
 
 #import pyNastran
 #from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.menus.application_log import ApplicationLogWidget
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 #from pyNastran.gui.utils.qt.checks.qlineedit import (
 #    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
@@ -36,6 +40,8 @@ from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
 from pyNastran.bdf.bdf import BDF
 
 
+USE_WIN = False
+
 #from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import VELOCITY_UNITS, ALTITUDE_UNITS
 VELOCITY_UNITS = ['knots', 'ft/s', 'in/s', 'm/s', 'cm/s', 'mm/s']
 ALTITUDE_UNITS = ['ft', 'm']
@@ -50,7 +56,7 @@ UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())
 CONSTANT_TYPE_MAP = {
     'Mach': 'mach',
     'Altitude': 'alt',
-    'Velocity': 'vel',
+    'Velocity': 'tas',
     'Equivalent Airspeed' : 'eas',
 }
 # same as const formats
@@ -66,12 +72,23 @@ class FlutterGui(PyDialog):
         PyDialog.__init__(self, data, win_parent)
         self.log = SimpleLogger(level='debug', encoding='utf-8')
         self._updated_preference = False
-        self.dim_max = 8
+        self.dim_max = 10
 
-        self.setWindowTitle('Flutter Gui')
+        self.setWindowTitle('Flutter Cards')
         self.create_widgets()
+
+        self.log = None
+
+        self.html_logging = True
+        self._start_logging()
+        #if self.html_logging is True:
+        self.log_dock_widget = ApplicationLogWidget(self)
+        self.log_widget = self.log_dock_widget.log_widget
+        #self.win.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
+
         self.create_layout()
         self.set_connections()
+
         # self.on_font(self.font_size)
         # self.show()
 
@@ -145,15 +162,21 @@ class FlutterGui(PyDialog):
         value1, value1_flag = check_float(self.sweep1_value)
         value2, value2_flag = check_float(self.sweep2_value)
         const_value, const_value_flag = check_float(self.constant_value)
-        size = 8
-        clean = False
-        bdf_filename_out = self.aero_filename.text()
+
+        is_large = self.large_field_checkbox.isChecked()
+        clean = self.clean_checkbox.isChecked()
+        size = 16 if is_large else 8
+        bdf_filename_out = os.path.abspath(self.aero_filename.text())
 
         # bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT
         # bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
         # bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
         # bdf flutter UNITS mach MACH1 MACH2            N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
         # ...  [-o OUT_BDF_FILENAME] [--size SIZE | --clean]
+
+        # the defaults for create_flutter
+        eas_limit = 1_000_000
+        eas_units = 'm/s'
         eas_str = ''
         if (sweep_method != 'eas') and (constant != 'eas'):
             eas_limit, eas_limit_flag = check_float(self.eas_limit_value)
@@ -162,14 +185,33 @@ class FlutterGui(PyDialog):
         else:
             is_passed = value1_flag and value2_flag and const_value_flag
 
+        if sweep_method == constant_type:
+            self.log.error(f'sweep_method=constant_type; sweep_method={sweep_method} constant_type={constant_type}')
+            # self.sweep_pulldown.setColor
+            # self.constant_unit_pulldown.setColor
+            if is_passed:
+                return
+
         if not is_passed:
+            self.log.error('Invalid parsing')
             return
+
+        size_str = '--clean' if clean else f'--size {size}'
+        sweep_unit2 = ''
+        if sweep_unit != '-':
+            sweep_unit2 = f' {sweep_unit}'
 
         cmd = (
             f'bdf flutter {units_out} '
-            f'{sweep_method} {value1} {value2} {sweep_unit} {npoints} '
-            f'{constant_type} {unit_system_unmapped} {eas_str}'
-        )
+            f'{sweep_method} {value1} {value2}{sweep_unit2} {npoints} '
+            f'{constant_type} {units_out} {eas_str} {size_str}'
+        ).rstrip()
+        if bdf_filename_out:
+            cmd += f' --output {bdf_filename_out!r}'
+        self.log.info(cmd)
+
+        if constant_unit == '-':
+            constant_unit = 'none'
 
         try:
             model, density_units, velocity_units = create_flutter(
@@ -181,8 +223,8 @@ class FlutterGui(PyDialog):
                 size=size, clean=clean,
                 bdf_filename_out=bdf_filename_out,
                 comment=cmd)
-        except:
-            self.log.error('Unhandled exception')
+        except Exception as error:
+            self.log.error(str(error))
             return
         sid = 1
         flfact_rho = sid + 1
@@ -207,13 +249,14 @@ class FlutterGui(PyDialog):
 
     def create_widgets(self):
         """creates the display window"""
+        #self.win = QMainWindow(self)
         # window text size
         # self.font_size_label = QLabel('Font Size:')
         # self.font_size_edit = QSpinBox(self)
 
         # self.font_size_edit.setValue(self._default_font_size)
         # self.font_size_edit.setRange(FONT_SIZE_MIN, FONT_SIZE_MAX)
-        self.sweep_label = QLabel('Sweep:')
+        self.sweep_label = QLabel('Sweep Method:')
         self.sweep_pulldown = QComboBox(self)
         self.sweep_pulldown.addItems(SWEEP_FORMATS)
 
@@ -243,7 +286,7 @@ class FlutterGui(PyDialog):
         self.n_value.setMaximum(1001)
         self.n_value.setToolTip('Number of Points')
 
-        self.constant_label = QLabel('Sweep:')
+        self.constant_label = QLabel('Constant Type:')
         self.constant_pulldown = QComboBox(self)
         self.constant_pulldown.addItems(SWEEP_FORMATS)
         self.constant_pulldown.setItemText(1, SWEEP_FORMATS[1])
@@ -261,6 +304,11 @@ class FlutterGui(PyDialog):
         self.aero_filename.setToolTip('Path to the Flutter File')
         self.aero_filename_load = QPushButton('Load...')
 
+        self.flutter_id_label = QLabel('Flutter File:')
+        self.flutter_id_value = QIntEdit('10')
+        self.flutter_id_value.setToolTip('ID of the FLUTTER card')
+        self.large_field_checkbox = QCheckBox('Large Field')
+        self.clean_checkbox = QCheckBox('Clean')
         # ------------------------------------------------------------------
         self.eas_limit_label = QLabel('EAS Limit:', self)
         self.eas_limit_value = QFloatEdit('1000')
@@ -297,7 +345,14 @@ class FlutterGui(PyDialog):
         vbox.addStretch()
         # vbox.addLayout(ok_cancel_box)
         vbox.addWidget(ok_widget)
-        self.setLayout(vbox)
+        if USE_WIN:
+            self.win.setLayout(vbox)
+            main_vbox = QVBoxLayout(self)
+            main_vbox.addWidget(self.win)
+            self.setLayout(main_vbox)
+        else:
+            vbox.addWidget(self.log_dock_widget)
+            self.setLayout(vbox)
 
     def _create_aero_grid(self):
         grid = QGridLayout(self)
@@ -360,6 +415,14 @@ class FlutterGui(PyDialog):
             grid.addWidget(self.aero_filename_load, irow, 2)
             irow += 1
 
+            grid.addWidget(self.flutter_id_label, irow, 0)
+            grid.addWidget(self.flutter_id_value, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.large_field_checkbox, irow, 0)
+            grid.addWidget(self.clean_checkbox, irow, 1)
+            irow += 1
+
             grid.addWidget(self.unit_system_label, irow, 0)
             grid.addWidget(self.unit_system_pulldown, irow, 1)
             irow += 1
@@ -369,6 +432,74 @@ class FlutterGui(PyDialog):
         self.sweep_pulldown.currentIndexChanged.connect(self.on_sweep_pulldown)
         self.constant_pulldown.currentIndexChanged.connect(self.on_constant_pulldown)
         self.apply_button.clicked.connect(self.on_apply)
+
+    def _start_logging(self) -> None:
+        if self.log is not None:
+            return
+        if self.html_logging is True:
+            log = SimpleLogger(
+                level='debug', encoding='utf-8',
+                log_func=lambda w, x, y, z: self._logg_msg(w, x, y, z))
+            # logging needs synchronizing, so the messages from different
+            # threads would not be interleave
+            self.log_mutex = QtCore.QReadWriteLock()
+        else:
+            log = SimpleLogger(
+                level='debug', encoding='utf-8',
+                #log_func=lambda x, y: print(x, y)  # no colorama
+            )
+        self.log = log
+
+    def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
+        """
+        Add message to log widget trying to choose right color for it.
+
+        Parameters
+        ----------
+        log_type : str
+            {DEBUG, INFO, ERROR, COMMAND, WARNING} or prepend 'GUI '
+        filename : str
+            the active file
+        lineno : int
+            line number
+        msg : str
+            message to be displayed
+        """
+        if not self.html_logging:
+            # standard logger
+            name = '%-8s' % (log_type + ':')
+            filename_n = '%s:%s' % (filename, lineno)
+            msg2 = ' %-28s %s\n' % (filename_n, msg)
+            print(name, msg2)
+            return
+
+        # if 'DEBUG' in log_type and not self.settings.show_debug:
+        #     return
+        # elif 'INFO' in log_type and not self.settings.show_info:
+        #     return
+        # elif 'COMMAND' in log_type and not self.settings.show_command:
+        #     return
+        # elif 'WARNING' in log_type and not self.settings.show_warning:
+        #     return
+        # elif 'ERROR' in log_type and not self.settings.show_error:
+        #     return
+
+        if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
+            log_type = log_type[4:] # drop the GUI
+
+        html_msg = str_to_html(log_type, filename, lineno, msg)
+
+        self._log_msg(html_msg)
+
+    def _log_msg(self, msg: str) -> None:
+        """prints an HTML log message"""
+        self.log_mutex.lockForWrite()
+        text_cursor = self.log_widget.textCursor()
+        end = text_cursor.End
+        text_cursor.movePosition(end)
+        text_cursor.insertHtml(msg)
+        self.log_widget.ensureCursorVisible() # new message will be visible
+        self.log_mutex.unlock()
 
 
 

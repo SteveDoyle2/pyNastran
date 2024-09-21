@@ -208,7 +208,7 @@ class TestNodes(unittest.TestCase):
                 pass
         dt_instance = time.time() - time1
         #print('dt_type=%.4f dt_instance=%.4f' % (dt_type, dt_instance))
-        log = SimpleLogger(level='debug', encoding='utf-8', log_func=None)
+        log = SimpleLogger(level='debug', encoding='utf-8')
         msg = ("flip the way you do type checking; card.type == 'GRID' "
                "is faster than isinstance(card, GRID); dt_instance=%s dt_type=%s" % (dt_instance, dt_type))
         if dt_instance < dt_type:

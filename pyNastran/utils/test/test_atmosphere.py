@@ -14,6 +14,8 @@ from pyNastran.utils.atmosphere import (
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_mach,
+    sutherland_viscoscity,
+    _reynolds_factor,
 )
 
 from pyNastran.utils.convert import (
@@ -438,7 +440,7 @@ class TestAtm(unittest.TestCase):
             atm_unit_reynolds_number(55000., 2.4, alt_units='ft', reynolds_units='1/mm')
 
     def test_equiv_airspeed(self):
-        """tests atm_equivalent_airspeed"""
+        """tests ``atm_equivalent_airspeed``"""
         alt = 0.
         mach = 1.
         veq1 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s')
@@ -459,6 +461,21 @@ class TestAtm(unittest.TestCase):
         veq4 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='mm/s')
         assert np.allclose(veq4, 340.0184647740884 * 1000)
 
+    def test_reynolds_factor(self):
+        """tests ``test_reynolds_factor``"""
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/m'), 1)
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/ft'), 1)
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/in'), 1)
+
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/ft'), 0.3048)
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/in'), 0.3048/12)
+
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/m'), 1/0.3048)
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/in'), 1/12)
+
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/m'), 12/0.3048)
+        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/ft'), 12)
+
     def test_atm_kinematic_viscosity_nu(self):
         """tests ``atm_kinematic_viscosity_mu``"""
         mu = atm_kinematic_viscosity_nu(10., alt_units='kft', visc_units='ft^2/s')
@@ -466,6 +483,22 @@ class TestAtm(unittest.TestCase):
 
         mu = atm_kinematic_viscosity_nu(5000., alt_units='m', visc_units='m^2/s')
         self.assertEqual(mu, 2.204293839480214e-05)
+
+    def test_atm_dynamic_viscosity_mu(self):
+        """tests ``test_atm_dynamic_viscosity_mu``"""
+        mu1 = atm_dynamic_viscosity_mu(0., alt_units='ft', visc_units='(N*s)/m^2')
+        mu2 = atm_dynamic_viscosity_mu(300., alt_units='kft', visc_units='(N*s)/m^2')
+        self.assertEqual(mu1, 1.7881345434714084e-05), mu1
+        self.assertEqual(mu2, 1.3111218182081286e-05), mu2
+
+    def test_sutherland_viscoscity(self):
+        """temperature (input) in rankine"""
+        mu1 = sutherland_viscoscity(0)
+        mu2 = sutherland_viscoscity(100)
+        mu3 = sutherland_viscoscity(6000)  # rankine
+        self.assertEqual(mu1, 0.0), mu1
+        self.assertEqual(mu2, 8.0382436e-08), mu2
+        self.assertEqual(mu3, 1.7019982955940058e-06), mu3
 
     def test_get_alt_for_density(self):
         """tests ``get_alt_for_density``"""

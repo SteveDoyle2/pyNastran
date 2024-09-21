@@ -13,6 +13,7 @@ from pyNastran.bdf.cards.aero.zona import ZONA
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.model_group import ModelGroup
+    from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11
     from pyNastran.bdf import (
         # BDF,
         CaseControlDeck,
@@ -79,7 +80,9 @@ if TYPE_CHECKING:  # pragma: no cover
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
 
         CREEP,
-        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATDMG,
+        MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MATCID,
+        #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
+        MATDMG,
         NXSTRAT,
         PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMADD,
@@ -89,7 +92,16 @@ if TYPE_CHECKING:  # pragma: no cover
         BOLT, BOLTFOR, BOLTSEQ,
         PELAST, PDAMPT, PBUSHT, TIC,
 
-        CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+        CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S,
+        RBE1, RBE2, RBE3, RBAR, RBAR1, RJOINT,
+        DLOAD, ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2,
+        DAREA, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
+        QVECT,
+        CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2,
+        SET1, SET3,
+        ASET, BSET, CSET, QSET, OMIT, USET,
+        ASET1, BSET1, CSET1, QSET1, OMIT1, USET1,
+        SPC, SPC1, SPCAX, SPCADD, SPCOFF, SPCOFF1, MPC, MPCADD,
     )
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
@@ -110,6 +122,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_mystran = False
         self.is_nasa95 = False
+        self.is_optistruct = False
         self.is_zona = False
         self.save_file_structure = False
         self.is_superelements = False
@@ -1221,7 +1234,7 @@ class BDFAttributes:
         return self._sol
 
     @sol.setter
-    def sol(self, sol: int) -> int:
+    def sol(self, sol: int) -> None:
         """sets the solution (e.g. 101, 103)"""
         self._sol = sol
         if len(self.executive_control_lines) == 0:

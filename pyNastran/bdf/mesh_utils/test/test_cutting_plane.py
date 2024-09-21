@@ -171,7 +171,7 @@ class TestCuttingPlane(unittest.TestCase):
 
     def test_cut_plate(self):
         """mode 10 is a sine wave"""
-        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
         op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
         model = read_bdf(bdf_filename, log=log)
@@ -213,7 +213,7 @@ class TestCuttingPlane(unittest.TestCase):
 
     def _test_cut_box(self):  # pragma: no cover
         """recover element ids"""
-        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        log = SimpleLogger(level='warning', encoding='utf-8')
         #bdf_filename = r'SEction_1_box.bdf'  # x-axis
         #normal_plane = np.array([1., 0., 0.])
         bdf_filename = 'Section_1_box_4.bdf'  # y-axis
@@ -231,7 +231,7 @@ class TestCuttingPlane(unittest.TestCase):
 
     def test_cut_bwb(self):
         """recover element ids"""
-        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        log = SimpleLogger(level='warning', encoding='utf-8')
         is_bwb = True
         if is_bwb:
             bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
@@ -276,7 +276,7 @@ class TestCuttingPlane(unittest.TestCase):
 
     def test_cut_plate_eids(self):
         """recover element ids"""
-        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
         model = read_bdf(bdf_filename, log=log)
         nnodes = len(model.nodes)

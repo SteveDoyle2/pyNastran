@@ -48,7 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class BDF2:
     def __init__(self):
-        self.log = SimpleLogger(level='debug', encoding='utf-8', log_func=None)
+        self.log = SimpleLogger(level='debug', encoding='utf-8')
         self.card_count = {}
         self.CTRIA3 = None
         self.CQUAD4 = None
@@ -105,7 +105,7 @@ class pyNastranH5:
         }
         self.subcases = subcases
         self.results = {}
-        self.log = SimpleLogger(level='debug', encoding='utf-8', log_func=None)
+        self.log = SimpleLogger(level='debug', encoding='utf-8')
 
     def read_h5_nastran(self, h5_filename: str,
                         subcases: Optional[list[int]]=None) -> None:

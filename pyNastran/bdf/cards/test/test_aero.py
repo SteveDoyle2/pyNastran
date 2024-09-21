@@ -3002,7 +3002,7 @@ class TestAero(unittest.TestCase):
 
     def test_zona_1(self):
         """zona explicit test"""
-        log = SimpleLogger(level='error', encoding='utf-8', log_func=None)  # lots of zona errors
+        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
@@ -3015,7 +3015,7 @@ class TestAero(unittest.TestCase):
 
     def test_zona_2(self):
         """zona explicit test"""
-        log = SimpleLogger(level='error', encoding='utf-8', log_func=None)  # lots of zona errors
+        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
