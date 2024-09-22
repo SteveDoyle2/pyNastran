@@ -4,11 +4,57 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
-    write_patran_syntax_dict, split_eids_along_nids)
+    write_patran_syntax_dict, split_eids_along_nids,
+    parse_femap_syntax,
+    get_femap_property_comments_dict, get_femap_material_comments_dict)
 
 class TestBdfUtils(unittest.TestCase):
+    def test_get_femap_comments_dict(self):
+        """tests:
+          - ``get_femap_property_comments_dict``
+          - ``get_femap_material_comments_dict``
+        """
+        model = BDF(log=False)
+        model.add_pshell(2, 1, 0.1, comment='Femap Property: fake property')
+        model.add_mat1(1, 3.0e7, None, 0.3, comment= 'Femap Material: fake material')
+        model.add_mat1(2, 3.0e7, None, 0.3, comment= 'other comment')
+        model.add_mat1(3, 3.0e7, None, 0.3, comment= '')
+        #word = 'Femap Material'
+        get_femap_property_comments_dict(model.properties)
+        out = get_femap_material_comments_dict(model.materials)
+        #{1: 'fake material'}
+        print(out)
+
+    def test_femap_syntax(self):
+        """tests ``parse_femap_syntax``"""
+        lines = [
+            'Add            1646           0           1',
+        ]
+        out = parse_femap_syntax(lines)
+        expected = np.array([1646])
+        assert len(out) == len(expected)
+        assert np.array_equal(out, expected)
+
+        lines = [
+            'Add            1422        1502           1',
+        ]
+        out = parse_femap_syntax(lines)
+        expected = np.array(list(range(1422, 1502+1)))
+        assert len(out) == len(expected)
+        assert np.array_equal(out, expected)
+
+        lines = [
+            'Add            1646           0           1',
+            'Add            1422        1502           1',
+            'Add            1505        1645           1',
+        ]
+        out = parse_femap_syntax(lines)
+        expected = np.unique([1646] + list(range(1422, 1502+1)) + list(range(1505, 1645+1)))
+        assert len(out) == len(expected)
+        assert np.array_equal(out, expected)
+
     def test_utils_parse_patran_syntax(self):
-        """tests parse_patran_syntax"""
+        """tests ``parse_patran_syntax``"""
         msg = '1:10  14:20:2  50:40:-1'
         output = parse_patran_syntax(msg, pound=None)
         expected = np.array(

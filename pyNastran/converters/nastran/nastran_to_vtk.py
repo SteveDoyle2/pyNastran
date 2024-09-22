@@ -218,7 +218,7 @@ def _save_layered_table_results(icase, case: LayeredTableResults,
     except TypeError as error:
         msg = (f'itime={itime!r} ilayer={ilayer!r} imethod={imethod}\n'
                f'case.form_names={case.form_names}')
-        raise error(msg)
+        raise TypeError(msg)
 
     #for method in case.methods:
     titlei =  f'icase={icase}; {form_name}_subcase={case.subcase_id}'

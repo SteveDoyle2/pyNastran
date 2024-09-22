@@ -31,6 +31,11 @@ def parse_femap_syntax(lines: list[str]) -> np.ndarray:
     Add            1422        1502           1
     Add            1505        1645           1
 
+    Returns
+    -------
+    out : (n,) int np.ndarray
+        sorted ids
+
     .. note:: A list of lines is expected
     """
     assert isinstance(lines, list), lines
