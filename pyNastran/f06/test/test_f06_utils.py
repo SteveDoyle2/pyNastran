@@ -38,6 +38,8 @@ from pyNastran.f06.parse_flutter import (
 )
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
+from pyNastran.op2.op2 import OP2
+
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = pyNastran.__path__[0]
@@ -45,6 +47,33 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestFlutter(unittest.TestCase):
+
+    def test_make_grid_point_singularity_table(self):
+        model = OP2()
+        failed = [
+            (1,1),(1,2),(1,7),
+            (2,1),(2,2),(2,7),
+        ]
+        msg = '\n'.join(model.make_grid_point_singularity_table(failed).split('\n')[:-2]) + '\n'
+        expected = (
+            '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
+            '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
+            '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
+            '                                1        G      1         0.00E+00          B        F         SB       SB   *\n'
+            '                                1        G      2         0.00E+00          B        F         SB       SB   *\n'
+            '                                1        G      7         0.00E+00          B        F         SB       SB   *\n'
+            '                                2        G      1         0.00E+00          B        F         SB       SB   *\n'
+            '                                2        G      2         0.00E+00          B        F         SB       SB   *\n'
+            '                                2        G      7         0.00E+00          B        F         SB       SB   *\n'
+            #'1                                                                           JANUARY   1, 2000  pyNastran v1.5.0+dev.140b9348d  PAGE     1\n'
+        )
+        #print(msg)
+        assert msg == expected
+
+        failed = []
+        msg = model.make_grid_point_singularity_table(failed)
+        assert msg == '', msg
+        #print(msg)
 
     def test_f06_pt145(self):
         """tests read_f06_trim"""

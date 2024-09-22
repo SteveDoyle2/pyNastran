@@ -20,6 +20,7 @@ defines:
 """
 from __future__ import annotations
 import os
+import copy
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
@@ -573,9 +574,13 @@ class Settings:
             #screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
-        recent_files = self.recent_files
+        recent_files = copy.deepcopy(self.recent_files)
+        if recent_files is None:
+            # gui
+            recent_files = []
+
         try:
-            recent_files = settings.value("recent_files", default=self.recent_files)
+            recent_files = settings.value("recent_files", default=recent_files)
         except (TypeError, AttributeError):
             pass
         if not isinstance(recent_files, int):

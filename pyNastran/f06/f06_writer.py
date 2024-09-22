@@ -275,7 +275,7 @@ class F06Writer(OP2_F06_Common):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(title, today, build=None)
 
-    def make_grid_point_singularity_table(self, failed) -> str:
+    def make_grid_point_singularity_table(self, failed: list[tuple[int, int]]) -> str:
         """
         creates a grid point singularity table
 
@@ -292,7 +292,8 @@ class F06Writer(OP2_F06_Common):
             for (nid, dof) in failed:
                 msg += '                         %8s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
         else:
-            msg += 'No constraints have been applied...\n'
+            #msg += 'No constraints have been applied...\n'
+            return ''
 
         page_stamp = self.make_stamp(self.title, self.date)
         msg += page_stamp % self.page_num

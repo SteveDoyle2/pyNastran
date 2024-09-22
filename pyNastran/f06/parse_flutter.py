@@ -527,7 +527,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                        png_filename=filenamei, show=False, clear=clear, close=close)
 
 
-def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
+def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):  # pragma: no cover
     str(flutter)
     isave, ifilter = (
         _find_modes_to_keep(flutter, log, tol=1e-8))
@@ -580,7 +580,7 @@ def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
 
 def _find_modes_to_keep(flutter: FlutterResponse,
                         log: SimpleLogger,
-                        tol: float=1e-8) -> tuple[np.ndarray, np.ndarray]:
+                        tol: float=1e-8) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover
     """
     FlutterResponse:
         subcase= 1
