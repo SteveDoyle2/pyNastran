@@ -124,15 +124,15 @@ def print_bad_path(path: PathLike) -> str:
     #raw_path = path
     if isinstance(path, PurePath):
         path = str(path)
-    if len(path) > 255:
-        path = os.path.abspath(_filename(path))
-        npath = os.path.dirname(path)
-        res = [path]
-        while path != npath:
-            path, npath = npath, os.path.dirname(npath)
-            res.append(path)
-        msg = {True: 'passed', False: 'failed'}
-        return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i[4:]) for i in res])
+    #if len(path) > 255:
+        #path = os.path.abspath(_filename(path))
+        #npath = os.path.dirname(path)
+        #res = [path]
+        #while path != npath:
+            #path, npath = npath, os.path.dirname(npath)
+            #res.append(path)
+        #msg = {True: 'passed', False: 'failed'}
+        #return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i[4:]) for i in res])
 
     path = os.path.abspath(path)
     npath = os.path.dirname(path)
@@ -149,8 +149,8 @@ def _filename(filename: str) -> str:
 
     .. warning:: This might be Windows specific.
     """
-    if len(filename) > 255:
-        return '\\\\?\\' + filename
+    #if len(filename) > 255:
+        #return '\\\\?\\' + filename
     return filename
 
 def __object_attr(obj: Any,
@@ -370,7 +370,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
         try:
             #filename = os.path.basename(frame.f_globals['__file__'])
             filename = os.path.basename(inspect.getfile(code))
-        except Exception:
+        except Exception:  # pragma: no cover
             print(code)
             raise
 
@@ -382,9 +382,9 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
             break
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
-    user_name = getpass.getuser()
+    #user_name = getpass.getuser()
     if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
-    elif user_name not in ['travis']:
-        warnings.warn(msg, DeprecationWarning)
+    #elif user_name not in ['travis']:
+    warnings.warn(msg, DeprecationWarning)

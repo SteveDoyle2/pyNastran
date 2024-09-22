@@ -745,47 +745,6 @@ def sutherland_viscoscity(T: float) -> float:
     return viscosity
 
 
-def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
-                                         eas_limit: float=1000.,
-                                         alt_units: str='m',
-                                         velocity_units: str='m/s',
-                                         density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    """
-    Makes a sweep across altitude for a constant Mach number.
-
-    Parameters
-    ----------
-    mach : float
-        Mach Number \f$ M \f$
-    alts : list[float]
-        Altitude in alt_units
-    eas_limit : float
-        Equivalent airspeed limiter in eas_units
-    alt_units : str; default='m'
-        the altitude units; ft, kft, m
-    velocity_units : str; default='m/s'
-        the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
-    density_units : str; default='kg/m^3'
-        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
-    eas_units : str; default='m/s'
-        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
-
-    """
-    rho, sos = _get_rho_sos_for_alts(
-        alts, alt_units=alt_units,
-        density_units=density_units,
-        velocity_units=velocity_units)
-    machs = np.ones(len(alts)) * mach
-    velocity = sos * machs
-    rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
-                                      alt_units=alt_units,
-                                      density_units=density_units,
-                                      velocity_units=velocity_units,
-                                      eas_units=eas_units,)
-    return rho, machs, velocity
-
-
 def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                         eas_limit: float=1000.,
                                         alt_units: str='m',
@@ -816,7 +775,8 @@ def _make_flfacts_tas_sweep_constant_eas(eas: float, tass: np.ndarray,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # pragma: no cover
+                                         eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray,
+                                                                        np.ndarray]:  # pragma: no cover
     """
     Veas = Vtas*sqrt(rho/rho0)
     Veas/Vtas = sqrt(rho/rho0)
@@ -843,7 +803,8 @@ def _make_flfacts_alt_sweep_constant_eas(eas: float, alts: np.ndarray,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+                                         eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray,
+                                                                        np.ndarray]:  # pragma: no cover
     """
     Veas = Vtas * sqrt(rho/rho0)
     Vtas = Veas * sqrt(rho0/rho)
@@ -866,7 +827,8 @@ def make_flfacts_alt_sweep_constant_tas(tas: float, alts: np.ndarray,
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
                                         eas_limit: float=1000.,
-                                        eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+                                        eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray,
+                                                                       np.ndarray]:    # pragma: no cover
     """
     Veas = Vtas * sqrt(rho/rho0)
     Vtas = Veas * sqrt(rho0/rho)
@@ -930,14 +892,14 @@ def make_flfacts_mach_sweep_constant_alt(alt: float, machs: list[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def make_flfacts_alt_sweep_constant_mach(mach: float, alts: list[float],
+def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
                                          eas_limit: float=1000.,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
                                          eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
-    Makes a sweep across Mach number for a constant altitude.
+    Makes a sweep across altitude for a constant Mach number.
 
     Parameters
     ----------
@@ -961,7 +923,6 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: list[float],
         alts, alt_units=alt_units,
         density_units=density_units,
         velocity_units=velocity_units)
-
     velocity = sos * mach
     machs = np.ones(len(alts)) * mach
     rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
