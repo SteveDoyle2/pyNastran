@@ -174,7 +174,9 @@ class BDFMethods(BDFAttributes):
 
 
 
-    def get_element_faces(self, element_ids: Optional[list[int]]=None, allow_blank_nids: bool=True) -> Any:
+    def get_element_faces(self,
+                          element_ids: Optional[list[int]]=None,
+                          allow_blank_nids: bool=True) -> Any:
         """
         Gets the elements and faces that are skinned from solid elements.
         This includes internal faces, but not existing shells.

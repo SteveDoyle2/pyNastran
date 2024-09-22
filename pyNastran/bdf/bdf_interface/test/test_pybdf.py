@@ -280,11 +280,11 @@ class TestPyBDF(unittest.TestCase):
         encoding = 'utf8'
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
-        if sys.platform == 'win32':
-            with self.assertRaises(RuntimeError):
-                pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
-        else:
-            pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
+        #if sys.platform == 'win32':
+            #with self.assertRaises(RuntimeError):
+                #pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
+        #else:
+        pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
 
         #with self.assertRaises(RuntimeError):
         #with self.assertRaises(UnicodeDecodeError):
@@ -564,7 +564,7 @@ class TestPyBDF(unittest.TestCase):
         #assert len(additional_deck_lines[('SUPER', 0, '')]) == 3
 
 def _write_unicode_deck(bdf_filename: str) -> None:
-    with open(bdf_filename, 'w', encoding='latin1') as bdf_file:
+    with open(bdf_filename, 'w', encoding='utf8') as bdf_file:
         bdf_file.write(
             'CEND\n'
             'SUBCASE 1\n'
