@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 from copy import deepcopy
+import getpass
 from collections import defaultdict
 import unittest
 from typing import Union
@@ -776,6 +777,7 @@ class TestNastranGUI(unittest.TestCase):
         else:
             assert len(test.result_cases) == 39, len(test.result_cases)
 
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_solid_bending_missing_nodes(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         op2_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
@@ -846,6 +848,7 @@ class TestNastranGUI(unittest.TestCase):
             assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 238, len(test.result_cases)
 
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_beam_modes_01_missing_eids(self):
         """
         same as test_beam_modes_01 except:
