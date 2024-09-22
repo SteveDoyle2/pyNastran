@@ -273,20 +273,7 @@ class TestPyBDF(unittest.TestCase):
     def test_unicode_errors1(self):
         """tests some error handling"""
         bdf_filename = 'unicode.bdf'
-        with open(bdf_filename, 'w') as bdf_file:
-            bdf_file.write(
-                'CEND\n'
-                'SUBCASE 1\n'
-                '  DISP = ALL\n'
-                'BEGIN BULK\n'
-                'GRID,1,,0.,0.,0.\n'
-                'GRID.2,,1.,0.,0.\n'
-                'GRID,3,,1.,1.,0.\n'
-                'GRID,4,,0.,1.,0.\n'
-                '$ helló wörld from two\n'
-                'CQUAD4,1,2,3,4,5',
-                #'ENDDATA'
-            )
+        _write_unicode_deck(bdf_filename)
 
         read_includes = True
         dumplines = True
@@ -306,20 +293,7 @@ class TestPyBDF(unittest.TestCase):
     def test_unicode_errors2(self):
         """tests some error handling"""
         bdf_filename = 'unicode.bdf'
-        with open(bdf_filename, 'w') as bdf_file:
-            bdf_file.write(
-                'CEND\n'
-                'SUBCASE 1\n'
-                '  DISP = ALL\n'
-                'BEGIN BULK\n'
-                'GRID,1,,0.,0.,0.\n'
-                'GRID.2,,1.,0.,0.\n'
-                'GRID,3,,1.,1.,0.\n'
-                'GRID,4,,0.,1.,0.\n'
-                '$ helló wörld from two\n'
-                'CQUAD4,1,2,3,4,5',
-                #'ENDDATA'
-            )
+        _write_unicode_deck(bdf_filename)
 
         read_includes = True
         dumplines = True
@@ -588,6 +562,23 @@ class TestPyBDF(unittest.TestCase):
         #assert len(additional_deck_lines) == 2, additional_deck_lines
         #assert len(additional_deck_lines[('SUPER', 1, '')]) == 1
         #assert len(additional_deck_lines[('SUPER', 0, '')]) == 3
+
+def _write_unicode_deck(bdf_filename: str) -> None:
+    with open(bdf_filename, 'w', encoding='latin1') as bdf_file:
+        bdf_file.write(
+            'CEND\n'
+            'SUBCASE 1\n'
+            '  DISP = ALL\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID.2,,1.,0.,0.\n'
+            'GRID,3,,1.,1.,0.\n'
+            'GRID,4,,0.,1.,0.\n'
+            '$ helló wörld from two\n'
+            'CQUAD4,1,2,3,4,5',
+            #'ENDDATA'
+        )
+
 
 if __name__ == '__main__':   # pragma: no cover
     unittest.main()

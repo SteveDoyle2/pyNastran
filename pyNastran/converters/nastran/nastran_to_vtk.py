@@ -213,7 +213,13 @@ def _save_layered_table_results(icase, case: LayeredTableResults,
     #k = t0 + nmethods * ilayer + imethod
     #method = case.methods[imethod]
     #form_index = case.get_form_index(key, name)
-    form_name = case.form_names[itime, ilayer, imethod]
+    try:
+        form_name = case.form_names[itime, ilayer, imethod]
+    except TypeError as error:
+        msg = (f'itime={itime!r} ilayer={ilayer!r} imethod={imethod}\n'
+               f'case.form_names={case.form_names}')
+        raise error(msg)
+
     #for method in case.methods:
     titlei =  f'icase={icase}; {form_name}_subcase={case.subcase_id}'
     method = case.get_methods(key, name)[0]
