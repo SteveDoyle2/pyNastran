@@ -71,6 +71,8 @@ def save_nastran_results(gui: NastranGUI,
             continue
 
         if isinstance(case, LayeredTableResults):
+            if len(case.form_names) == 0:
+                continue
             vtk_array = _save_layered_table_results(icase, case,
                                                     key, index_name, used_titles,
                                                     point_data, cell_data, log)
@@ -197,7 +199,8 @@ def _save_simple_table_results(icase: int,
     add_vtk_array(case.location, point_data, cell_data, vtk_array)
     #log.warning(f'skipping SimpleTableResults {case}')
 
-def _save_layered_table_results(icase, case: LayeredTableResults,
+def _save_layered_table_results(icase: int,
+                                case: LayeredTableResults,
                                 key: int,
                                 index_name: tuple[int, tuple[int, int, int, str]],
                                 used_titles: set[str],
