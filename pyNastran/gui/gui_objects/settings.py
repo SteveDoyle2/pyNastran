@@ -585,8 +585,11 @@ class Settings:
             pass
         if not isinstance(recent_files, int):
             # yeah seriously...it just returns 0
-            recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
-                             if os.path.exists(fname)]
+            try:
+                recent_files2 = [(fname, fmt) for (fname, fmt) in recent_files
+                                 if os.path.exists(fname)]
+            except TypeError:
+                raise TypeError(f'recent_files = {recent_files}')
 
             #  only save 10 files
             self.recent_files = recent_files2[:NFILES_TO_SAVE]
