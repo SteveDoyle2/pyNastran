@@ -574,15 +574,16 @@ class Settings:
             #screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
-        recent_files = copy.deepcopy(self.recent_files)
-        if recent_files is None:
-            # gui
-            recent_files = []
-
+        recent_files_og = copy.deepcopy(self.recent_files)
         try:
-            recent_files = settings.value("recent_files", default=recent_files)
+            recent_files = settings.value("recent_files", default=recent_files_og)
         except (TypeError, AttributeError):
-            pass
+            recent_files = recent_files_og
+
+        if recent_files is None:
+            recent_files = []
+            self.recent_files = recent_files
+
         if not isinstance(recent_files, int):
             # yeah seriously...it just returns 0
             try:
