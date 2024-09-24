@@ -27,7 +27,7 @@ from pyNastran.utils.convert import (
     _density_factor, _velocity_factor, _force_factor,
     _temperature_factor,
 )
-class TestConvert(unittest.TestCase):
+class TestAtmConvert(unittest.TestCase):
     """various unit conversion tests"""
 
     def test_length(self):

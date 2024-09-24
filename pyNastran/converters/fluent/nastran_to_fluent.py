@@ -1,8 +1,9 @@
 import os
 from pyNastran.bdf.bdf import read_bdf
+from cpylog import SimpleLogger
 
-def nastran_to_fluent(nastran_filename: str, fluent_filename: str):
-    model = read_bdf(nastran_filename)
+def nastran_to_fluent(nastran_filename: str, fluent_filename: str, log: SimpleLogger=None):
+    model = read_bdf(nastran_filename, log=log)
     vrt_filename = os.path.splitext(fluent_filename)[0] + '.vrt'
     cel_filename = os.path.splitext(fluent_filename)[0] + '.cel'
     daten_filename = os.path.splitext(fluent_filename)[0] + '.daten'

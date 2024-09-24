@@ -46,7 +46,7 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
-class TestFlutter(unittest.TestCase):
+class TestF06Flutter(unittest.TestCase):
 
     def test_make_grid_point_singularity_table(self):
         model = OP2()
