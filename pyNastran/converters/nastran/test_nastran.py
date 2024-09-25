@@ -503,9 +503,16 @@ class TestNastran(unittest.TestCase):
         assert len(cart3d.elements) == 1
 
         bdf_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.bdf')
+        bdf_filename2 = os.path.join(DIRNAME, 'nastran_to_cart3d_2.bdf')
         model.write_bdf(bdf_filename)
         cart3d_filename = os.path.join(DIRNAME, 'nastran_to_cart3d.tri')
         nastran_to_cart3d_filename(bdf_filename, cart3d_filename)
+
+        args = ['format_converter', 'nastran', bdf_filename, 'cart3d', cart3d_filename, '--scale', '2.0']
+        cmd_line_format_converter(args, quiet=True)
+
+        args = ['format_converter', 'nastran', bdf_filename, 'nastran', bdf_filename2]
+        cmd_line_format_converter(args, quiet=True)
 
     def test_nastran_to_tecplot(self):
         """tests a large number of elements and results in SOL 101"""

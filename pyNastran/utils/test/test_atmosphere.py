@@ -7,6 +7,7 @@ from pyNastran.utils.atmosphere import (
     atm_pressure, atm_velocity, atm_mach, atm_equivalent_airspeed,
     atm_dynamic_viscosity_mu, atm_kinematic_viscosity_nu,
     get_alt_for_density, get_alt_for_pressure,
+    get_alt_for_mach_eas,
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
     atm_unit_reynolds_number,
@@ -514,6 +515,18 @@ class TestAtm(unittest.TestCase):
             alt2 = get_alt_for_density(rho2, density_units='kg/m^3', alt_units='kft', tol=tol)
             #self.assertAlmostEqual(alt, alt_target)
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+
+    def test_get_alt_for_mach_eas(self):
+        """tests ``get_alt_for_mach_eas``"""
+        mach = 0.8
+        eas_target = 500. # knots
+        alt_expected = 3067.215571329515  # ft
+        alt = get_alt_for_mach_eas(mach, eas_target, alt_units='ft', eas_units='knots', tol=1e-12)
+        assert np.allclose(alt, alt_expected)
+        #print(f'alt={alt}')
+        eas = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='knots')
+        #print(f'eas={eas}')
+        assert np.allclose(eas, eas_target)
 
     def test_get_alt_for_pressure(self):
         """tests ``get_alt_for_pressure``"""

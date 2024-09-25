@@ -245,6 +245,74 @@ def _feet_to_alt_units(alt_units: str) -> float:
         raise RuntimeError(f'alt_units={alt_units!r} is not valid; use [m, ft, kft]')
     return factor
 
+def get_alt_for_mach_eas(mach: float,
+                         eas: float, eas_units: str='knots',
+                         alt_units: str='ft',
+                         nmax: int=20, tol: float=5.) -> float:
+    """
+    Gets the altitude associated with an equivalent airspped.
+
+    Parameters
+    ----------
+    mach : float
+        the Mach number
+    eas : float
+        the equivalent airspeed in eas_units
+    eas_units : str; default='knots'
+        the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    nmax : int; default=20
+        max number of iterations for convergence
+    tol : float; default=5.
+        altitude tolerance in alt_units
+
+    Returns
+    -------
+    alt : float
+        the altitude in alt_units
+
+    """
+    eas = convert_velocity(eas, eas_units, 'ft/s')
+    tol = convert_altitude(tol, alt_units, 'ft')
+    dalt = 500.
+    alt_old = 0.
+    alt_final = 5000.
+    n = 0
+
+    # Newton's method
+    while abs(alt_final - alt_old) > tol and n < nmax:
+        alt_old = alt_final
+        alt1 = alt_old
+        alt2 = alt_old + dalt
+        eas1 = atm_equivalent_airspeed(alt1, mach, alt_units='ft', eas_units='ft/s')
+        eas2 = atm_equivalent_airspeed(alt2, mach, alt_units='ft', eas_units='ft/s')
+
+        # y = (y2-y1)/(x2-x1)*(x-x1) + y1
+        # y = m * (x-x1) + y1
+        m = dalt / (eas2 - eas1)
+        alt_final = m * (eas - eas1) + alt1
+        n += 1
+
+    if n > nmax - 1:
+        print(f'n = {n}')
+    #if abs(alt_final - alt_old) > tol:
+        #raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
+                           #'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
+
+    alt_final = convert_altitude(alt_final, 'ft', alt_units)
+    return alt_final
+
+def _feet_to_alt_units(alt_units: str) -> float:
+    """helper method"""
+    if alt_units == 'm':
+        factor = 0.3048
+    elif alt_units == 'ft':
+        factor = 1.
+    else:  # pragma: no cover
+        raise RuntimeError(f'alt_units={alt_units!r} is not valid; use [m, ft, kft]')
+    return factor
+
 def atm_temperature(alt: float,
                     alt_units: str='ft',
                     temperature_units: str='R') -> float:
@@ -812,7 +880,7 @@ def _make_flfacts_alt_sweep_constant_eas(eas: float, alts: np.ndarray,
     Mach = Vtas / sos = Veas/sos * sqrt(rho0/rho)
     """
     eas_velocity_units = convert_velocity(eas, eas_units, velocity_units)
-    rho, sos = _get_rho_sos_for_alts(
+    rho, sos = _rho_sos_for_alts(
         alts, alt_units=alt_units,
         density_units=density_units,
         velocity_units=velocity_units)
@@ -835,7 +903,7 @@ def make_flfacts_alt_sweep_constant_tas(tas: float, alts: np.ndarray,
     Vtas = sos * Mach
     Mach = Vtas / sos = Veas/sos * sqrt(rho0/rho)
     """
-    rho, sos = _get_rho_sos_for_alts(
+    rho, sos = _rho_sos_for_alts(
         alts, alt_units=alt_units,
         density_units=density_units,
         velocity_units=velocity_units)
@@ -919,7 +987,7 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
         the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
     """
-    rho, sos = _get_rho_sos_for_alts(
+    rho, sos = _rho_sos_for_alts(
         alts, alt_units=alt_units,
         density_units=density_units,
         velocity_units=velocity_units)
@@ -1096,7 +1164,7 @@ def _limit_eas(rho: NDArrayNfloat, machs: NDArrayNfloat, velocity: NDArrayNfloat
                                    eas_limit, eas_units))
     return rho, machs, velocity
 
-def _get_rho_sos_for_alts(alts: np.ndarray,
+def _rho_sos_for_alts(alts: np.ndarray,
                           alt_units: str='m',
                           density_units: str='kg/m^3',
                           velocity_units: str='m/s') -> tuple[np.ndarray, np.ndarray]:
