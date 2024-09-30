@@ -59,6 +59,10 @@ class TestCart3d(unittest.TestCase):
         assert len(cart3d.regions) == 6, 'nregions=%s' % len(cart3d.regions)
         assert len(cart3d.loads) == 0, 'nloads=%s' % len(cart3d.loads)
 
+        response = np.sin(cart3d.points[:, 0])
+        yslices = np.array([0.])
+        cart3d.cut_model_node(response, yslices)
+
         edges = cart3d.get_free_edges(cart3d.elements)
         assert len(edges) == 8, len(edges)
         os.remove(out_name)

@@ -4,7 +4,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import cast, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 import matplotlib
@@ -16,6 +16,7 @@ if qt_version == 'pyside2':
                        #'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf',
                        #'ps', 'svg', 'template']
     #raise NotImplementedError(qt_version)
+import matplotlib.pyplot as plt
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import _p1_p2_zaxis_to_cord2r
@@ -35,7 +36,7 @@ class CuttingPlaneObject(BaseGui):
         self._cutting_plane_window_shown = False
         self._cutting_plane_window = None
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int):
         """sets the font size for the preferences window"""
         if self._cutting_plane_window_shown:
             self._cutting_plane_window.set_font_size(font_size)
@@ -75,9 +76,11 @@ class CuttingPlaneObject(BaseGui):
             'close' : False,
         }
         if not self._cutting_plane_window_shown:
-            self._cutting_plane_window = CuttingPlaneWindow(data, win_parent=self.gui)
+            self._cutting_plane_window = CuttingPlaneWindow(
+                data, self.make_cutting_plane_from_data,
+                self.gui)
             self._cutting_plane_window.show()
-            self._cutting_plane_window = True
+            self._cutting_plane_window_shown = True
             self._cutting_plane_window.exec_()
         else:
             self._cutting_plane_window.activateWindow()
@@ -94,7 +97,7 @@ class CuttingPlaneObject(BaseGui):
         else:
             self._cutting_plane_window.activateWindow()
 
-    def make_cutting_plane_from_data(self, data):
+    def make_cutting_plane_from_data(self, data: dict[str, Any]):
         """Creates a cutting plane of the aero_model for the active plot result"""
         model_name = data['model_name']
         #model = self.models[model_name]
@@ -110,7 +113,7 @@ class CuttingPlaneObject(BaseGui):
         csv_filename = None
         if 'csv_filename' in data:
             csv_filename = data['csv_filename']
-        self.gui.make_cutting_plane(
+        self.make_cutting_plane(
             model_name,
             p1, p2, zaxis,
             method=method,
@@ -125,15 +128,22 @@ class CuttingPlaneObject(BaseGui):
                            p2: np.ndarray,
                            zaxis: np.ndarray,
                            method: str='Z-Axis Projection',
-                           cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                           ytol=1., plane_atol=1e-5,
-                           plane_color=None, plane_opacity: float=0.5,
-                           csv_filename=None,
-                           show=True, stop_on_failure=False):
+                           cid_p1: int=0,
+                           cid_p2: int=0,
+                           cid_p3: int=0,
+                           cid_zaxis: int=0,
+                           ytol: float=1.,
+                           plane_atol: float=1e-5,
+                           plane_color=None,
+                           plane_opacity: float=0.5,
+                           csv_filename: Optional[str]=None,
+                           show: bool=True,
+                           stop_on_failure: bool=False):
         """Creates a cutting plane of the aero_model for the active plot result
 
         Plane Actor is drawn in the i-k plane
         """
+        gui = self.gui
         if plane_color is None:
             plane_color = PURPLE_FLOAT
 
@@ -144,19 +154,43 @@ class CuttingPlaneObject(BaseGui):
 
         model = gui.models[model_name]
         class_name = model.__class__.__name__
-        if class_name in ['BDF', 'OP2Geom']:
+        if class_name in {'BDF', 'OP2Geom'}:
             out = model.get_displacement_index_xyz_cp_cd()
             unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             nids = nid_cp_cd[:, 0]
             xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform,
                 cid=0)
+        # elif class_name in {'Cart3D'}:
+        #     xyz_cid0 = model.points
+        # elif class_name in {'Fluent'}:
+        #     xyz_cid0 = model.xyz
         else:
-            msg = f'{class_name!r} is not supported'
-            log.error(msg)
-            if stop_on_failure:
-                raise RuntimeError(msg)
-            return
+            model_obj = gui.load_actions.model_objs['main']
+            model = model_obj.model
+            if model is None:
+                msg = f'{class_name!r} is not supported'
+                log.error(msg)
+                if stop_on_failure:
+                    raise RuntimeError(msg)
+                return
+
+            class_name = model.__class__.__name__
+            if not hasattr(model, 'cut_model_node'):  # pragma: no cover
+                raise NotImplementedError(model)
+            #if not hasattr(model, 'cut_model_centroid'):  # pragma: no cover
+                #raise NotImplementedError(res_format)
+
+            if class_name in {'Cart3D'}:
+                origin = np.array([0., 0., 0.])
+                zaxis = np.array([0., 0., 1.])
+                xzplane = np.array([1., 0., 0.])
+                model.coords = {
+                    0: CORD2R(0, origin, zaxis, xzplane),
+                }
+                xyz_cid0 = model.points
+            else:  # pragma: no cover
+                raise RuntimeError(class_name)
 
         #xyz_min, xyz_max = model.xyz_limits
         xyz_min = xyz_cid0.min(axis=0)
@@ -228,7 +262,7 @@ class CuttingPlaneObject(BaseGui):
                 title = obj.titles[0]
             elif hasattr(obj, 'title'):
                 title = obj.title
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(obj)
         except Exception: # pragma: no cover
             print(f'icase={gui.icase_fringe}\n{obj}')
@@ -254,14 +288,52 @@ class CuttingPlaneObject(BaseGui):
         if title in ['Cp']:
             invert_yaxis = True
 
-        cut_and_plot_model(title, p1, p2, zaxis,
-                           model, coord, nodal_result,
-                           log,
-                           ytol,
-                           plane_atol=plane_atol,
-                           csv_filename=csv_filename,
-                           invert_yaxis=invert_yaxis,
-                           cut_type='edge', show=show)
+        class_name = model.__class__.__name__
+        if class_name == {'BDF', 'OP2Geom'}:
+            cut_and_plot_model(title, p1, p2, zaxis,
+                               model, coord, nodal_result,
+                               log, ytol,
+                               plane_atol=plane_atol,
+                               csv_filename=csv_filename,
+                               invert_yaxis=invert_yaxis,
+                               cut_type='edge', show=show)
+        else:
+            xyz_rel = (xyz_cid0 - coord.origin[np.newaxis, :]) @ coord.beta()
+            yslices = np.array([0.])
+            if location == 'centroid':
+                xyz_rel2, res2 = model.cut_model_centroid(
+                    nodal_result, xyz=xyz_rel)
+            else:
+                xyz_rel2, res2 = model.cut_model_node(
+                    nodal_result, yslices, xyz=xyz_rel)
+
+            fig1 = plt.figure()
+            fig2 = plt.figure()
+            fig3 = plt.figure()
+            ax1 = fig1.gca()
+            ax2 = fig2.gca()
+            ax3 = fig3.gca()
+            xs = xyz_rel2[:, 0]
+            ys = xyz_rel2[:, 1]
+            zs = xyz_rel2[:, 2]
+
+            ax1.plot(xs, zs, 'o')
+            ax2.plot(xs, res2, 'o', label=title)
+
+            ax1.set_xlabel('X Coord')
+            ax1.set_ylabel('Z Coord')
+
+            ax2.set_xlabel('X Coord')
+            ax2.set_ylabel(title)
+
+            ax3.plot(ys, zs, 'o')
+            ax3.set_xlabel('Y Coord')
+            ax3.set_ylabel('Z Coord')
+            ax1.grid(True)
+            ax2.grid(True)
+            ax3.grid(True)
+            plt.show()
+
 
     #def create_plane_actor(self,
                            #xyz1: np.ndarray,

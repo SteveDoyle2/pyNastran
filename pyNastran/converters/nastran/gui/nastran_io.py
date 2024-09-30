@@ -3011,10 +3011,12 @@ class NastranIO(NastranIO_):
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', 'Ctrl+T',
              'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu, is_visible),
+            #('cutting_plane', 'Cutting Plane...', 'python48.png', None,
+             #'Creates a Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu, is_visible),
             ('create_coord', 'Create Coordinate System...', 'coord.png', '', 'Creates a Coordinate System', self.on_create_coord, is_visible),
         ]
         items = (
-            'shear_moment_torque',
+            'shear_moment_torque', #'cutting_plane',
             #'create_coord',  # not done
         )
         gui.menu_tools.setEnabled(True)

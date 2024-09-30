@@ -40,6 +40,52 @@ class Cart3D(Cart3dReaderWriter):
         self.points = None
         self.elements = None
 
+    def cut_model_centroid(self, result: np.ndarray,
+                           yslices: np.ndarray,
+                           xyz=None) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover
+        if xyz is None:
+            xyz = self.points
+        ys = xyz[:, 1]
+        nelements = len(self.elements)
+        y_elements = ys[self.elements]
+
+        # grab all nodes where an element y value is 0.
+        y_max = y_elements.max(axis=1)
+        y_min = y_elements.min(axis=1)
+        assert len(y_max) == nelements, (len(y_max), nelements)
+        ieid = np.where((y_min <= 0.) & (y_max > 0.))[0]
+        assert len(ieid) <= nelements, (len(ieid), nelements)
+        nodes = self.elements[ieid, :]
+        #inodes = np.unique(nodes.ravel())
+
+        xyz1 = xyz[nodes[:,0], :]
+        xyz2 = xyz[nodes[:,1], :]
+        xyz3 = xyz[nodes[:,2], :]
+
+        centroid = (xyz1 + xyz2 + xyz3) / 3
+        return centroid, result[ieid]
+
+    def cut_model_node(self, result: np.ndarray,
+                       yslices: np.ndarray,
+                       xyz=None) -> tuple[np.ndarray, np.ndarray]:
+        if xyz is None:
+            xyz = self.points
+        ys = xyz[:, 1]
+        nelements = len(self.elements)
+        y_elements = ys[self.elements]
+
+        # grab all nodes where an element y value is 0.
+        y_max = y_elements.max(axis=1)
+        y_min = y_elements.min(axis=1)
+        assert len(y_max) == nelements, (len(y_max), nelements)
+
+        ieid = np.where((y_min <= 0.) & (y_max > 0.))[0]
+        assert len(ieid) <= nelements, (len(ieid), nelements)
+        nodes = self.elements[ieid, :]
+        inodes = np.unique(nodes.ravel())
+        return xyz[inodes, :], result[inodes]
+
+
     def flip_model(self) -> None:
         """flip the model about the y-axis"""
         self.points[:, 1] *= -1.

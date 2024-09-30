@@ -531,7 +531,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
-            'set_preferences', '', #'cutting_plane',
+            'set_preferences', '', 'cutting_plane',
             'camera_reset', '',
             'wireframe', 'surface', 'edges', 'edges_black', '',
             'label_clear', 'label_reset', '',

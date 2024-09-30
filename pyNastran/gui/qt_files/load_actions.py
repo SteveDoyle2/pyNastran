@@ -298,19 +298,20 @@ class LoadActions(BaseGui):
             the path to the results file
 
         """
-        geometry_format = self.gui.format
-        if self.gui.format is None:
+        gui: MainWindow = self.gui
+        geometry_format = gui.format
+        if gui.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
-            self.gui.log_error(msg)
+            gui.log_error(msg)
             return
             #raise RuntimeError(msg)
 
         if out_filename in [None, False]:
-            title = 'Select a Results File for %s' % self.gui.format
+            title = 'Select a Results File for %s' % gui.format
             wildcard = None
             load_function = None
 
-            for fmt in self.gui.fmts:
+            for fmt in gui.fmts:
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
                 if geometry_format == fmt_name:
                     wildcard = _reswild
@@ -318,17 +319,17 @@ class LoadActions(BaseGui):
                     break
             else:
                 msg = f'format={geometry_format!r} is not supported'
-                self.gui.log_error(msg)
+                gui.log_error(msg)
                 raise RuntimeError(msg)
 
             if wildcard is None:
                 msg = f'format={geometry_format!r} has no method to load results'
-                self.gui.log_error(msg)
+                gui.log_error(msg)
                 return
             out_filename = self.create_load_file_dialog(wildcard, title)[1]
         else:
 
-            for fmt in self.gui.fmts:
+            for fmt in gui.fmts:
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
                 #print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
                 if fmt_name == geometry_format:
@@ -337,20 +338,21 @@ class LoadActions(BaseGui):
             else:
                 msg = (f'format={geometry_format!r} is not supported.  '
                        'Did you load a geometry model?')
-                self.gui.log_error(msg)
+                gui.log_error(msg)
                 raise RuntimeError(msg)
 
         if out_filename == '':
             return
         if isinstance(out_filename, str):
             out_filename = [out_filename]
+
         for out_filenamei in out_filename:
             if not os.path.exists(out_filenamei):
                 msg = f'result file={out_filenamei!r} does not exist'
-                self.gui.log_error(msg)
+                gui.log_error(msg)
                 return
                 #raise IOError(msg)
-            self.gui.last_dir = os.path.split(out_filenamei)[0]
+            gui.last_dir = os.path.split(out_filenamei)[0]
 
             name = 'main'
             if name in self.model_objs:
@@ -363,17 +365,17 @@ class LoadActions(BaseGui):
                 load_function(out_filenamei)
             except Exception: #  as e
                 msg = traceback.format_exc()
-                self.gui.log_error(msg)
+                gui.log_error(msg)
                 print(msg)
                 return
                 #raise
 
-            self.gui.out_filename = out_filenamei
-            msg = '%s - %s - %s' % (self.gui.format, self.gui.infile_name, out_filenamei)
-            self.gui.window_title = msg
+            gui.out_filename = out_filenamei
+            msg = '%s - %s - %s' % (gui.format, gui.infile_name, out_filenamei)
+            gui.window_title = msg
             print("self.load_actions.on_load_results(%r)" % out_filenamei)
-            self.gui.out_filename = out_filenamei
-            self.gui.log_command("self.on_load_results(%r)" % out_filenamei)
+            gui.out_filename = out_filenamei
+            gui.log_command("self.on_load_results(%r)" % out_filenamei)
 
     #---------------------------------------------------------------------------
     def on_load_custom_results(self, out_filename=None,

@@ -11,7 +11,7 @@ from pyNastran.gui.qt_files.colors import (
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
-from pyNastran.converters.cart3d.cart3d import read_cart3d
+from pyNastran.converters.cart3d.cart3d import read_cart3d, Cart3D
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry
 
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
@@ -23,6 +23,7 @@ class Cart3dIO:
     def __init__(self, gui):
         self.gui = gui
         self.data_map = None
+        self.mdoel = Cart3D()
 
     def get_cart3d_wildcard_geometry_results_functions(self):
         """
@@ -38,22 +39,22 @@ class Cart3dIO:
         #if model_name != 'main':
             #return
         #return self._remove_old_geometry(filename)
-
-        self.gui.eid_map = {}
-        self.gui.nid_map = {}
+        gui = self.gui
+        gui.eid_map = {}
+        gui.nid_map = {}
         if filename is None:
             self.gui.scalar_bar_actor.VisibilityOff()
             skip_reading = True
         else:
-            self.gui.turn_corner_text_off()
-            self.gui.grid.Reset()
+            gui.turn_corner_text_off()
+            gui.grid.Reset()
 
-            self.gui.result_cases = {}
-            self.gui.ncases = 0
+            gui.result_cases = {}
+            gui.ncases = 0
             try:
-                del self.gui.case_keys
-                del self.gui.icase
-                del self.gui.isubcase_name_map
+                del gui.case_keys
+                del gui.icase
+                del gui.isubcase_name_map
             except Exception:
                 # print("cant delete geo")
                 pass
@@ -61,10 +62,11 @@ class Cart3dIO:
             #print(dir(self))
             skip_reading = False
         #self.scalar_bar_actor.VisibilityOff()
-        self.gui.scalar_bar_actor.Modified()
+        gui.scalar_bar_actor.Modified()
         return skip_reading
 
-    def load_cart3d_geometry(self, cart3d_filename, name='main', plot=True):
+    def load_cart3d_geometry(self, cart3d_filename: str,
+                             name: str='main', plot=True):
         """
         The entry point for Cart3d geometry loading.
 
@@ -83,21 +85,22 @@ class Cart3dIO:
         if skip_reading:
             return
 
-        self.gui.eid_maps[name] = {}
-        self.gui.nid_maps[name] = {}
-        model = read_cart3d(cart3d_filename, log=self.gui.log, debug=False)
+        gui = self.gui
+        gui.eid_maps[name] = {}
+        gui.nid_maps[name] = {}
+        model = read_cart3d(cart3d_filename, log=gui.log, debug=False)
         self.model = model
-        self.gui.model_type = 'cart3d'
+        gui.model_type = 'cart3d'
         nodes = model.nodes
         elements = model.elements
         regions = model.regions
         loads = model.loads
 
-        self.gui.nnodes = model.npoints
-        self.gui.nelements = model.nelements
+        gui.nnodes = model.npoints
+        gui.nelements = model.nelements
 
-        grid = self.gui.grid
-        grid.Allocate(self.gui.nelements, 1000)
+        grid = gui.grid
+        grid.Allocate(gui.nelements, 1000)
 
         #if 0:
             #fraction = 1. / self.nnodes  # so you can color the nodes by ID
@@ -112,10 +115,10 @@ class Cart3dIO:
         dim_max = (mmax - mmin).max()
         xmax, ymax, zmax = mmax
         xmin, ymin, zmin = mmin
-        self.gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
-        self.gui.create_global_axes(dim_max)
+        gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
@@ -128,8 +131,8 @@ class Cart3dIO:
         self._create_cart3d_free_edges(model, nodes, elements)
 
 
-        self.gui.scalar_bar_actor.VisibilityOn()
-        self.gui.scalar_bar_actor.Modified()
+        gui.scalar_bar_actor.VisibilityOn()
+        gui.scalar_bar_actor.Modified()
 
         assert loads is not None
         if 'Mach' in loads:
@@ -137,19 +140,19 @@ class Cart3dIO:
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.gui.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
+        gui.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
 
-        icase = self.gui.get_new_icase()
+        icase = gui.get_new_icase()
         form, cases, icase, node_ids, element_ids, data_map_dict = _fill_cart3d_geometry_objects(
             cases, ID, nodes, elements, regions, model, model_name, icase=icase)
         if model_name != 'main':
             #print('icase1a =', len(self.gui.result_cases))
             #print('icase1b =', len(cases))
-            self.gui.update_result_cases(cases)
-            self.gui.result_cases.update(cases)
-            form = self.gui.get_form() + form
+            gui.update_result_cases(cases)
+            gui.result_cases.update(cases)
+            form = gui.get_form() + form
 
         self.data_map = data_map_dict
 
@@ -158,13 +161,16 @@ class Cart3dIO:
         #mach = None
         _fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
 
-        self.gui.node_ids = node_ids
-        self.gui.element_ids = element_ids
+        gui.node_ids = node_ids
+        gui.element_ids = element_ids
         build_map_centroidal_result(model)
-        self.gui._finish_results_io2(model_name, form, cases)
+        gui._finish_results_io2(model_name, form, cases)
 
-    def _create_box(self, cart3d_filename, ID, form, cases, icase, regions, model_name):
+    def _create_box(self, cart3d_filename, ID, form, cases,
+                    icase: int, regions, model_name):
         """creates the bounding box for boundary conditions"""
+        gui = self.gui
+        log = gui.log
         dirname = os.path.dirname(os.path.abspath(cart3d_filename))
         input_c3d_filename = os.path.join(dirname, 'input.c3d')
         input_cntl_filename = os.path.join(dirname, 'input.cntl')
@@ -176,7 +182,7 @@ class Cart3dIO:
         bcs = None
         if os.path.exists(input_cntl_filename):
             cntl = read_input_cntl(input_cntl_filename,
-                                   log=self.gui.log, debug=self.gui.debug)
+                                   log=log, debug=gui.debug)
             mach, alpha, beta, unused_gamma = cntl.get_flow_conditions()
             (unused_bc_xmin, unused_bc_xmax,
              unused_bc_ymin, unused_bc_ymax,
@@ -193,7 +199,7 @@ class Cart3dIO:
                     ('Pressure', icase + 5, []),
                 ]
                 icase += 5
-                nelements = self.gui.nelements
+                nelements = gui.nelements
                 rho = np.full(nelements, np.nan, dtype='float32')
                 xvel = np.full(nelements, np.nan, dtype='float32')
                 yvel = np.full(nelements, np.nan, dtype='float32')
@@ -247,7 +253,7 @@ class Cart3dIO:
                 cases[icase + 5] = (pressure_res, (ID, 'Pressure'))
                 form.append((get_name('Boundary Conditions', model_name), None, bc_form))
         else:
-            self.gui.log.warning('input_cntl_filename doesnt exist = %s' % input_cntl_filename)
+            log.warning('input_cntl_filename doesnt exist = %s' % input_cntl_filename)
 
 
         if os.path.exists(input_c3d_filename):
@@ -259,17 +265,17 @@ class Cart3dIO:
             # ymin, ymax
             # zmin, zmax
             nodes, elements = read_input_c3d(input_c3d_filename, stack=True,
-                                             log=self.gui.log, debug=self.gui.debug)
+                                             log=log, debug=gui.debug)
 
             #print('name=%r model_name=%r' % (self.gui.name, model_name))
-            box_name = get_name('box', self.gui.name)
-            self.gui.set_quad_grid(box_name, nodes, elements,
-                                   color=RED_FLOAT, line_width=1, opacity=1.)
+            box_name = get_name('box', gui.name)
+            gui.set_quad_grid(box_name, nodes, elements,
+                              color=RED_FLOAT, line_width=1, opacity=1.)
 
             #-------------------------------------------------------------------
             # put in multiple groups
             nodes, elements = read_input_c3d(input_c3d_filename, stack=False,
-                                             log=self.gui.log, debug=self.gui.debug)
+                                             log=log, debug=gui.debug)
 
             inflow_nodes = []
             inflow_elements = []
@@ -299,7 +305,7 @@ class Cart3dIO:
                 # 1 = SYMMETRY
                 # 2 = INFLOW  (specify all)
                 # 3 = OUTFLOW (simple extrap)
-                self.gui.log.info('bcsi = %s' % bcsi)
+                log.info('bcsi = %s' % bcsi)
                 nnodes = nodesi.shape[0]
                 bc = bcsi
                 if bc is None:  # fake case
@@ -346,29 +352,29 @@ class Cart3dIO:
                 nodes = vstack(farfield_nodes)
                 elements = vstack(farfield_elements)
                 name = get_name('farfield', self.gui.name)
-                self.gui.set_quad_grid(name, nodes, elements, color=BLUE_FLOAT,
-                                       line_width=1, opacity=1.)
+                gui.set_quad_grid(name, nodes, elements, color=BLUE_FLOAT,
+                                  line_width=1, opacity=1.)
 
             if isymmetry:
                 nodes = vstack(symmetry_nodes)
                 elements = vstack(symmetry_elements)
                 name = get_name('symmetry', self.gui.name)
-                self.gui.set_quad_grid(name, nodes, elements, color=GREEN_FLOAT,
-                                       line_width=1, opacity=1.)
+                gui.set_quad_grid(name, nodes, elements, color=GREEN_FLOAT,
+                                  line_width=1, opacity=1.)
 
             if iinflow:
                 nodes = vstack(inflow_nodes)
                 elements = vstack(inflow_elements)
                 name = get_name('inflow', self.gui.name)
-                self.gui.set_quad_grid(name, nodes, elements, color=RED_FLOAT,
-                                       line_width=1, opacity=1.)
+                gui.set_quad_grid(name, nodes, elements, color=RED_FLOAT,
+                                  line_width=1, opacity=1.)
 
             if ioutflow:
                 nodes = vstack(outflow_nodes)
                 elements = vstack(outflow_elements)
                 name = get_name('outflow', self.gui.name)
-                self.gui.set_quad_grid(name, nodes, elements, color=YELLOW_FLOAT,
-                                       line_width=1, opacity=1.)
+                gui.set_quad_grid(name, nodes, elements, color=YELLOW_FLOAT,
+                                  line_width=1, opacity=1.)
 
             #i = 0
             #for nodesi, elementsi in zip(nodes, elements):
@@ -376,23 +382,24 @@ class Cart3dIO:
                                    #line_width=1, opacity=1.)
                 #i += 1
         else:
-            self.gui.log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
+            log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
         return mach, alpha, beta
 
-    def _create_cart3d_free_edges(self, model, nodes, elements):
+    def _create_cart3d_free_edges(self, model: Cart3D, nodes, elements):
         """creates the free edges to help identify unclosed models"""
         free_edges_array = model.get_free_edges(elements)
         nfree_edges = len(free_edges_array)
 
-        name = get_name('free_edges', self.gui.name)
+        gui = self.gui
+        name = get_name('free_edges', gui.name)
         if nfree_edges:
             npoints = 2 * nfree_edges
-            if name not in self.gui.alt_grids:
-                self.gui.create_alternate_vtk_grid(
+            if name not in gui.alt_grids:
+                gui.create_alternate_vtk_grid(
                     name, color=PINK_FLOAT, line_width=3, opacity=1.0,
                     representation='surface')
 
-            alt_grid = self.gui.alt_grids[name]
+            alt_grid = gui.alt_grids[name]
             etype = 3  # vtkLine().GetCellType()
             elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
             create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
@@ -406,11 +413,11 @@ class Cart3dIO:
             # TODO: clear free edges
             pass
 
-        if name in self.gui.alt_grids:
-            self.gui._add_alt_actors(self.gui.alt_grids)
-            self.gui.geometry_actors[name].Modified()
-            if hasattr(self.gui.geometry_actors[name], 'Update'):
-                self.gui.geometry_actors[name].Update()
+        if name in gui.alt_grids:
+            gui._add_alt_actors(gui.alt_grids)
+            gui.geometry_actors[name].Modified()
+            if hasattr(gui.geometry_actors[name], 'Update'):
+                gui.geometry_actors[name].Update()
 
     def clear_cart3d(self):
         pass

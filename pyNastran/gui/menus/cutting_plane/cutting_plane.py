@@ -48,12 +48,14 @@ class CuttingPlaneWindow(PyDialog):
     |    Apply OK Cancel     |
     +------------------------+
     """
-    def __init__(self, data, win_parent=None, show_tol=True):
+    def __init__(self, data, callback,
+                 win_parent=None, show_tol=True):
         """
         Saves the data members from data and
         performs type checks
         """
         PyDialog.__init__(self, data, win_parent)
+        self.callback = callback
 
         self._updated_preference = False
 
@@ -141,17 +143,17 @@ class CuttingPlaneWindow(PyDialog):
         self.p2_cid_pulldown.setToolTip('Defines the coordinate system for Point P2')
         self.zaxis_cid_pulldown.setToolTip('Defines the coordinate system for the Z Axis')
 
-        self.p1_x_edit = QFloatEdit('')
-        self.p1_y_edit = QFloatEdit('')
-        self.p1_z_edit = QFloatEdit('')
+        self.p1_x_edit = QFloatEdit('0.0')
+        self.p1_y_edit = QFloatEdit('0.0')
+        self.p1_z_edit = QFloatEdit('0.0')
 
-        self.p2_x_edit = QFloatEdit('')
-        self.p2_y_edit = QFloatEdit('')
-        self.p2_z_edit = QFloatEdit('')
+        self.p2_x_edit = QFloatEdit('0.0')
+        self.p2_y_edit = QFloatEdit('1.0')
+        self.p2_z_edit = QFloatEdit('0.0')
 
-        self.zaxis_x_edit = QFloatEdit('')
-        self.zaxis_y_edit = QFloatEdit('')
-        self.zaxis_z_edit = QFloatEdit('')
+        self.zaxis_x_edit = QFloatEdit('1.0')
+        self.zaxis_y_edit = QFloatEdit('0.0')
+        self.zaxis_z_edit = QFloatEdit('0.0')
 
         self.ytol_label = QLabel('Y Tolerance:')
         self.zero_tol_label = QLabel('Zero Tolerance:')
@@ -542,7 +544,8 @@ class CuttingPlaneWindow(PyDialog):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
-            self.win_parent.make_cutting_plane_from_data(self.out_data)
+            #callback = make_cutting_plane_from_data
+            self.callback(self.out_data)
         return passed
 
     def on_ok(self):
@@ -613,7 +616,9 @@ def main():  # pragma: no cover
         'name' : 'main',
 
     }
-    main_window = CuttingPlaneWindow(data, show_tol=True)
+    def func(*args):
+        pass
+    main_window = CuttingPlaneWindow(data, func, show_tol=True)
     main_window.show()
     # Enter the main loop
     app.exec_()

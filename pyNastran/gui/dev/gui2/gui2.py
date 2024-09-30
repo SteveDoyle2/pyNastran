@@ -441,7 +441,7 @@ class MainWindow2(QMainWindow):
 
         menu_view = [
             'wireframe', 'surface', 'camera_reset', '',
-            'set_preferences', #'cutting_plane',
+            'set_preferences', 'cutting_plane',
             '',
             'label_clear', 'label_reset', '',
             'legend', 'animation', 'geo_properties',
