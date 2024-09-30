@@ -1,5 +1,8 @@
 """Plots a model cutting plane"""
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
 import numpy as np
+
 from pyNastran.utils import int_version
 try:
     import matplotlib.pyplot as plt
@@ -13,14 +16,23 @@ except ModuleNotFoundError:  # pragma: no cover
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, export_face_cut)
 
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF, CORD2R
 
-def cut_and_plot_model(title, p1, p2, zaxis,
-                       model, coord, nodal_result,
-                       log, ytol,
-                       plane_atol=1e-5,
-                       csv_filename=None,
-                       invert_yaxis=False,
-                       cut_type='edge', plot=True, show=True):
+def cut_and_plot_model(title: str,
+                       p1: np.ndarray,
+                       p2: np.ndarray,
+                       zaxis: np.ndarray,
+                       model: BDF, coord: CORD2R,
+                       nodal_result: np.ndarray,
+                       log: SimpleLogger,
+                       ytol: float,
+                       plane_atol: float=1e-5,
+                       csv_filename: Optional[str]=None,
+                       invert_yaxis: bool=False,
+                       cut_type: str='edge',
+                       plot: bool=True, show: bool=True):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -63,14 +75,16 @@ def cut_and_plot_model(title, p1, p2, zaxis,
         local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, ytol,
             nodal_result, plane_atol=plane_atol, csv_filename=csv_filename_edge)
+
         if len(local_points_array) == 0:
             log.error('No elements were piereced.  Check your cutting plane.')
             return
         if plot or csv_filename:
-            plot_cutting_plane_edges(title, p1, p2, zaxis,
-                                     local_points_array, global_points_array, result_array,
-                                     csv_filename=csv_filename, invert_yaxis=invert_yaxis,
-                                     plot=plot, show=show)
+            plot_cutting_plane_edges(
+                title, p1, p2, zaxis,
+                local_points_array, global_points_array, result_array,
+                csv_filename=csv_filename, invert_yaxis=invert_yaxis,
+                plot=plot, show=show)
     elif cut_type == 'face':
         csv_filename_face = None
         if csv_filename:
@@ -82,15 +96,22 @@ def cut_and_plot_model(title, p1, p2, zaxis,
 
         plot_cutting_plane_faces(title, p1, p2, zaxis,
                                  geometry_arrays, results_arrays,
-                                 csv_filename=csv_filename, invert_yaxis=invert_yaxis,
+                                 csv_filename=csv_filename,
+                                 invert_yaxis=invert_yaxis,
                                  show=show)
     else:  # pragma: no cover
         raise NotImplementedError(f'cut_type={cut_type!r} and must be [edge, face]')
 
 
-def plot_cutting_plane_faces(title, p1, p2, zaxis,
-                             geometry_arrays, result_arrays,
-                             csv_filename=None, invert_yaxis=False, show=True):
+def plot_cutting_plane_faces(title: str,
+                             p1: np.ndarray,
+                             p2: np.ndarray,
+                             zaxis: np.ndarray,
+                             geometry_arrays: np.ndarray,
+                             result_arrays: np.ndarray,
+                             csv_filename: Optional[str]=None,
+                             invert_yaxis: bool=False,
+                             show: bool=True):
     """for faces"""
     try:
         local_x = result_arrays[:, 0]
@@ -146,11 +167,20 @@ def plot_cutting_plane_faces(title, p1, p2, zaxis,
     #with open(csv_filename, 'w') as csv_file:
     #np.savetxt(csv_filename, result_arrays[0], delimiter=',', header=header, comments='# ',
     #           encoding=None)
-    export_face_cut(csv_filename, geometry_arrays, result_arrays, header=header)
+    export_face_cut(csv_filename, geometry_arrays, result_arrays,
+                    header=header)
 
-def plot_cutting_plane_edges(title, p1, p2, zaxis,
-                             local_points_array, global_points_array, result_array,
-                             csv_filename=None, invert_yaxis=False, plot=True, show=True):
+def plot_cutting_plane_edges(title: str,
+                             p1: np.ndarray,
+                             p2: np.ndarray,
+                             zaxis: np.ndarray,
+                             local_points_array: np.ndarray,
+                             global_points_array: np.ndarray,
+                             result_array: np.ndarray,
+                             csv_filename: Optional[str]=None,
+                             invert_yaxis: bool=False,
+                             plot: bool=True,
+                             show: bool=True):
     """for edges"""
     local_x = local_points_array[:, 0]
 

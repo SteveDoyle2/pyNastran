@@ -93,9 +93,13 @@ def _setup_edges(bdf_filename: str) -> tuple[NDArrayNint, NDArrayN3float, NDArra
 def _cut_model(nids: NDArrayNint,
                xyz_cp: NDArrayN3float,
                edges: NDArrayN2int,
-               view_up: NDArray3float, p1: NDArray3float, p2: NDArray3float,
+               view_up: NDArray3float,
+               p1: NDArray3float,
+               p2: NDArray3float,
                tol: float,
-               nodal_result, plane_atol=1e-5, plane_bdf_filename=None):
+               nodal_result: np.ndarray,
+               plane_atol: float=1e-5,
+               plane_bdf_filename: Optional[str]=None):
     """
     Helper method for cut_edge_model_by_axes
 
@@ -153,9 +157,14 @@ def _cut_model(nids: NDArrayNint,
         plane_atol=plane_atol, plane_bdf_filename=plane_bdf_filename)
     return local_points_array, global_points_array, result_array
 
-def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
-                             nodal_result, plane_atol=1e-5,
-                             plane_bdf_filename=None):
+def _cut_edge_model_by_coord(nids: np.ndarray,
+                             xyz_cid0: np.ndarray,
+                             edges: np.ndarray,
+                             coord: CORD2R,
+                             tol: float,
+                             nodal_result: np.ndarray,
+                             plane_atol: float=1e-5,
+                             plane_bdf_filename: Optional[str]=None):
     """
     Cuts a Nastran model with a cutting plane
 

@@ -152,6 +152,19 @@ class CuttingPlaneObject(BaseGui):
         gui: MainWindow = self.gui
         log = gui.log
 
+        try:
+            model_objs = gui.load_actions.model_objs
+        except AttributeError:
+            log.error('Load a model')
+            return
+
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([1., 0., 0.])
+        default_coords = {
+            0: CORD2R(0, origin, zaxis, xzplane),
+        }
+
         model = gui.models[model_name]
         class_name = model.__class__.__name__
         if class_name in {'BDF', 'OP2Geom'}:
@@ -166,7 +179,7 @@ class CuttingPlaneObject(BaseGui):
         # elif class_name in {'Fluent'}:
         #     xyz_cid0 = model.xyz
         else:
-            model_obj = gui.load_actions.model_objs['main']
+            model_obj = model_objs['main']
             model = model_obj.model
             if model is None:
                 msg = f'{class_name!r} is not supported'
@@ -177,20 +190,14 @@ class CuttingPlaneObject(BaseGui):
 
             class_name = model.__class__.__name__
             if not hasattr(model, 'cut_model_node'):  # pragma: no cover
-                raise NotImplementedError(model)
+                log.error(f'Cutting plane is not supported for {class_name}.')
+                #raise NotImplementedError(model)
+                return
             #if not hasattr(model, 'cut_model_centroid'):  # pragma: no cover
                 #raise NotImplementedError(res_format)
 
-            if class_name in {'Cart3D'}:
-                origin = np.array([0., 0., 0.])
-                zaxis = np.array([0., 0., 1.])
-                xzplane = np.array([1., 0., 0.])
-                model.coords = {
-                    0: CORD2R(0, origin, zaxis, xzplane),
-                }
-                xyz_cid0 = model.points
-            else:  # pragma: no cover
-                raise RuntimeError(class_name)
+            model.coords = default_coords
+            xyz_cid0 = get_xyz_cid0(model, class_name)
 
         #xyz_min, xyz_max = model.xyz_limits
         xyz_min = xyz_cid0.min(axis=0)
@@ -306,33 +313,7 @@ class CuttingPlaneObject(BaseGui):
             else:
                 xyz_rel2, res2 = model.cut_model_node(
                     nodal_result, yslices, xyz=xyz_rel)
-
-            fig1 = plt.figure()
-            fig2 = plt.figure()
-            fig3 = plt.figure()
-            ax1 = fig1.gca()
-            ax2 = fig2.gca()
-            ax3 = fig3.gca()
-            xs = xyz_rel2[:, 0]
-            ys = xyz_rel2[:, 1]
-            zs = xyz_rel2[:, 2]
-
-            ax1.plot(xs, zs, 'o')
-            ax2.plot(xs, res2, 'o', label=title)
-
-            ax1.set_xlabel('X Coord')
-            ax1.set_ylabel('Z Coord')
-
-            ax2.set_xlabel('X Coord')
-            ax2.set_ylabel(title)
-
-            ax3.plot(ys, zs, 'o')
-            ax3.set_xlabel('Y Coord')
-            ax3.set_ylabel('Z Coord')
-            ax1.grid(True)
-            ax2.grid(True)
-            ax3.grid(True)
-            plt.show()
+            plot_cuts(title, xyz_rel2, res2)
 
 
     #def create_plane_actor(self,
@@ -368,3 +349,41 @@ class CuttingPlaneObject(BaseGui):
         #plane_actor.VisibilityOn()
         #gui.rend.Render()
         #return plane_actor, prop
+
+def get_xyz_cid0(model, class_name: str) -> np.ndarray:
+    if class_name in {'Cart3D'}:
+        xyz_cid0 = model.points
+    else:  # pragma: no cover
+        raise RuntimeError(class_name)
+    return xyz_cid0
+
+
+def plot_cuts(title: str,
+              xyz_rel2: np.ndarray,
+              res2: np.ndarray) -> None:
+    fig1 = plt.figure()
+    fig2 = plt.figure()
+    fig3 = plt.figure()
+    ax1 = fig1.gca()
+    ax2 = fig2.gca()
+    ax3 = fig3.gca()
+    xs = xyz_rel2[:, 0]
+    ys = xyz_rel2[:, 1]
+    zs = xyz_rel2[:, 2]
+
+    ax1.plot(xs, zs, 'o')
+    ax2.plot(xs, res2, 'o', label=title)
+
+    ax1.set_xlabel('X Coord')
+    ax1.set_ylabel('Z Coord')
+
+    ax2.set_xlabel('X Coord')
+    ax2.set_ylabel(title)
+
+    ax3.plot(ys, zs, 'o')
+    ax3.set_xlabel('Y Coord')
+    ax3.set_ylabel('Z Coord')
+    ax1.grid(True)
+    ax2.grid(True)
+    ax3.grid(True)
+    plt.show()
