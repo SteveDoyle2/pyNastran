@@ -1695,7 +1695,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             data_frame = df1.join([df2, df3])
             #print(data_frame)
         return data_frame
-    
+
     def _build_dataframe(self):
         """::
         major-axis - the axis
@@ -1985,12 +1985,12 @@ class ComplexGridPointForcesArray(GridPointForces):
                         #str(self.data.shape), itime, str(ieids)))
 
                     #[t1, t2, t3, r1, r2, r3]
-                    t1 = self.data[itime, :, 0]
-                    t2 = self.data[itime, :, 1]
-                    t3 = self.data[itime, :, 2]
-                    r1 = self.data[itime, :, 3]
-                    r2 = self.data[itime, :, 4]
-                    r3 = self.data[itime, :, 5]
+                    #t1 = self.data[itime, :, 0]
+                    #t2 = self.data[itime, :, 1]
+                    #t3 = self.data[itime, :, 2]
+                    #r1 = self.data[itime, :, 3]
+                    #r2 = self.data[itime, :, 4]
+                    #r3 = self.data[itime, :, 5]
 
                     zero = ' '
                     for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(

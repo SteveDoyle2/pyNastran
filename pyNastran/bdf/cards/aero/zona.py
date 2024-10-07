@@ -376,7 +376,7 @@ class ZONA:
         for unused_aesurf_name, aesurfi in sorted(model.aesurf.items()):
             aelist, aesurfi2 = aesurfi.convert_to_nastran(model, aesurf_id, aelist_id)
             aelists[aelist.sid] = aelist
-            aesurf[aesurfi2.aesid] = aesurfi2
+            aesurf[aesurfi2.aesurf_id] = aesurfi2
             aesurf_id += 1
             aelist_id += 1
         return aesurf, aelists

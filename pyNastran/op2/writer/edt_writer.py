@@ -895,7 +895,7 @@ def write_aesurf(model: Union[BDF, OP2Geom], name: str,
 
         #print(aesurf.get_stats())
         data = [
-            aesurf.aesid, label_bytes,
+            aesurf.aesurf_id, label_bytes,
             aesurf.cid1, aesurf.aelist_id1,
             cid2, aelist_id2,
             aesurf.eff, ldw_int,
