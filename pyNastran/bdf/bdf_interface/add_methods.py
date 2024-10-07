@@ -492,7 +492,7 @@ class AddMethods:
             self.model.nsmadds[key] = [nsmadd]
             self.model._type_to_id_map[nsmadd.type].append(key)
 
-    def _add_mass_object(self, mass: CMASS1, CMASS2 | CMASS3 | CMASS4 |
+    def _add_mass_object(self, mass: CMASS1 | CMASS2 | CMASS3 | CMASS4 |
                                      CONM1 | CONM2, allow_overwrites: bool=False) -> None:
         key = mass.eid
         model = self.model
