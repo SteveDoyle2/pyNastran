@@ -895,8 +895,8 @@ def _insert_tri_nodes(nodes: dict[int, GRID],
         else:
             # this diagonal is added in reverse
             nids_set2 = nids_set[::-1]
-            for i in range(nnodes_to_add_with_ends):
-                nids_array[i, i] = nids_set2[i]
+            for j in range(nnodes_to_add_with_ends):
+                nids_array[j, j] = nids_set2[j]
             #nids_array[, ::-1] = nids_set
         if debug:
             print(f'{flag}i={i} nids={nids_set} edge={edge} fwd_edge={fwd_edge}')

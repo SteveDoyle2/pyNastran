@@ -197,7 +197,7 @@ class AddCard(BDFAttributes):
 
     def _add_aesurf_object(self, aesurf):
         """adds an AESURF object"""
-        key = aesurf.aesid
+        key = aesurf.aesurf_id
         assert key not in self.aesurf, '\naesurf=\n%s old=\n%s' % (
             aesurf, self.aesurf[key])
         assert key >= 0

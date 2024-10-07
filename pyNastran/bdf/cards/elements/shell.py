@@ -46,7 +46,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, PCOMP, PCOMPG, PSHELL
     from pyNastran.nptyping_interface import NDArray3float
 
-__all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
+__all__ = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'SNORM',
+           'CSHEAR',
            'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR',
            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
