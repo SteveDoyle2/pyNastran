@@ -24,6 +24,7 @@ RESULT_NAME_MAP = {
     'TRIA3FD' : 'ctria3_strain_energy',
     'TRIA6' : 'ctria6_strain_energy',
     'TRIAX6' : 'ctriax6_strain_energy',
+    'CTRIA6N' : 'ctria6_strain_energy', # per JG
     'TRIAR' : 'ctriar_strain_energy',
     'TRIAX3FD' : 'ctriax_strain_energy',
     'TRIAXFD' : 'ctriax_strain_energy',
@@ -32,6 +33,7 @@ RESULT_NAME_MAP = {
     'QUADFD' : 'cquad4_strain_energy',
     'QUAD4FD' : 'cquad4_strain_energy',
     'QUAD8' : 'cquad8_strain_energy',
+    'CQUAD8N' : 'cquad8_strain_energy', # guessed per JG
     # TODO: this will probably be a problem someday...cquad8_nonlinear_strain_energy
     'QUAD8N' : 'cquad8_strain_energy',
 
@@ -442,7 +444,7 @@ class ONR:
         op2._read_title(data)
         op2._write_debug_bits()
 
-    def _read_onr1_4(self, data: bytes, ndata: int):
+    def _read_onr1_4(self, data: bytes, ndata: int) -> int:
         """
         reads ONRGY1 subtable 4
         """
@@ -456,7 +458,7 @@ class ONR:
             raise NotImplementedError(op2.table_code)
         return n
 
-    def _read_element_strain_energy(self, data: bytes, ndata: int):
+    def _read_element_strain_energy(self, data: bytes, ndata: int) -> int:
         """
         table_code = 19
         """
@@ -663,7 +665,7 @@ class ONR:
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = op2.obj.add_new_eid_sort1(out)
                     if op2.is_debug_file:
-                        op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                        op2.binary_debug.write('  eid=%s; %s\n' % (eid, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif op2.format_code in [2, 3] and op2.num_wide == 4:
@@ -705,8 +707,9 @@ class ONR:
         return n
 
 
-def complex_strain_energy_5(op2, data, sort_method,
-                            size, n, ntotal, nelements, dt) -> int:
+def complex_strain_energy_5(op2: OP2, data: bytes, sort_method: int,
+                            size: int, n: int,
+                            ntotal: int, nelements: int, dt) -> int:
     obj: RealStrainEnergyArray = op2.obj
 
     #fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
@@ -807,8 +810,9 @@ def real_strain_energy_4(op2: OP2,
             n += ntotal
     return n
 
-def complex_strain_energy_4(op2, data, sort_method,
-                            size, n, ntotal, nnodes, dt):
+def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
+                            size: int, n: int,
+                            ntotal: int, nnodes: int, dt) -> int:
     obj: ComplexStrainEnergyArray = op2.obj
     s = Struct(op2._endian + b'8s3f')
     for unused_i in range(nnodes):

@@ -94,7 +94,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
     keys = list(nid_to_eid_map.keys())
     all_nids_to_check = set(keys)
     key0 = keys[0]
-    nids_to_check = set([key0])
+    nids_to_check = {key0}
     if debug:  # pragma: no cover
         print('all_nids_to_check= ', all_nids_to_check)
     body_eids = {ibody : set()}

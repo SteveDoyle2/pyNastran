@@ -1149,7 +1149,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if cards is None:
             return
         elif isinstance(cards, str):
-            disable_set = set([cards])
+            disable_set = {cards}
         else:
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)

@@ -47,7 +47,7 @@ def get_oml_eids(bdf_filename: str | BDF | PurePath | StringIO,
     #2818 # close
 
     #eids_oml = np.array([eid_start])
-    eids_oml = set([eid_start])
+    eids_oml = {eid_start}
     #---------------------------------
     theta_tol = np.radians(theta_tol)
 
@@ -75,7 +75,7 @@ def get_oml_eids(bdf_filename: str | BDF | PurePath | StringIO,
             etypes_skipped.add(elem.type)
 
     #eid_starts = eids_oml.tolist()
-    eids_next = set([eid_start])
+    eids_next = {eid_start}
     while eids_next:
         eid_starts = deepcopy(eids_next)
         eids_oml_start = deepcopy(eids_oml)

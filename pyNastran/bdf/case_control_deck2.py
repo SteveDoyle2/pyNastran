@@ -517,6 +517,7 @@ class CaseControlDeck:
 
         """
         isubcase = 0
+        log = self.log
         lines = _clean_lines(lines)
         self.output_lines = []
         i = 0
@@ -531,11 +532,11 @@ class CaseControlDeck:
                 lines2.append(lines[i])
                 #comment = lines[i][72:]
             (unused_j, fail_flag, key, value, options, param_type) = _parse_entry(
-                lines2, self.log, debug=self.debug)
+                lines2, log, debug=self.debug)
             i += 1
 
             if fail_flag:
-                self.log.warning(f'skipping Case Control line {i}: {line!r}')
+                log.warning(f'skipping Case Control line {i}: {line!r}')
                 continue
 
             line_upper = line.upper()

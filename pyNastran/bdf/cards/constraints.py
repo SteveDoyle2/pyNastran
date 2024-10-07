@@ -1259,36 +1259,6 @@ class SPCOFF(Constraint):
         assert len(card) > 1, f'len(SPCOFF card) = {len(card):d}\ncard={card}'
         return SPCOFF(nodes, components, comment=comment)
 
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a SPCOFF card from the OP2
-
-        Parameters
-        ----------
-        data : list[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-
-        """
-        nodes = [data[0]]
-        components = data[1]
-        assert 0 <= components <= 123456, data
-        enforced = [data[2]]
-        assert nodes[0] > 0, data
-        components_str = str(components)
-        assert len(components_str) <= 6, data
-        components = [components_str]
-        #if components[0] == 0:
-            #components[0] = 0
-        #if components[0] == 16:
-            #components[0] = '16'
-        #else:
-            #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
-        #assert 0 < components[0] > 1000, data
-        return SPCOFF(nodes, components, enforced, comment=comment)
-
     @property
     def constraints(self):
         return self.components

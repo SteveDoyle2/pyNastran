@@ -1060,22 +1060,9 @@ class AESURF(BaseCard):
     @property
     def aesid(self) -> int:
         return self.aesurf_id
-    @property
-    def alid1(self) -> int:
-        return self.aelist_id1
-    @property
-    def alid2(self) -> int:
-        return self.aelist_id2
-
     @aesid.setter
     def aesid(self, aesid: int) -> None:
         self.aesurf_id = aesid
-    @alid1.setter
-    def alid1(self, alid1: int) -> None:
-        self.aelist_id1 = alid1
-    @aesid.setter
-    def alid2(self, alid2: int) -> None:
-        self.aelist_id2 = alid2
 
     #@property
     #def aesid_ref(self):
@@ -1161,9 +1148,9 @@ class AESURF(BaseCard):
         if self.cid2:
             self.cid2 = coord_map[self.cid2]
 
-        self.alid1 = aelist_map[self.alid1]
-        if self.alid2:
-            self.alid2 = aelist_map[self.alid2]
+        self.aelist_idid1 = aelist_map[self.aelist_idid1]
+        if self.aelist_id2:
+            self.aelist_id2 = aelist_map[self.alid2]
 
     def raw_fields(self):
         """

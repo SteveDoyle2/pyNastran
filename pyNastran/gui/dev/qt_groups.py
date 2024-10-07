@@ -106,9 +106,9 @@ def _check_add(self, res_format, name, element_id=None, property_id=None, coord_
 
 def _add_coord_id(self, name, coord_id):
     if coord_id is None:
-        coord_id = set([0])
+        coord_id = {0}
     elif isinstance(coord_id, int):
-        coord_id = set([coord_id])
+        coord_id = {coord_id}
     else:
         for cid in coord_id:
             assert isinstance(cid, int), type(cid)

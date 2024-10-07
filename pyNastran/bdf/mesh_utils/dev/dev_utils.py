@@ -325,7 +325,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     for starting_eid, theta_tol in zip(starting_eids, theta_tols):
         print('starting_eid = %s' % starting_eid)
         group = set()
-        check = set([starting_eid])
+        check = {starting_eid}
         while check:
             eid = next(iter(check))
             #print('  eid = %s' % eid)

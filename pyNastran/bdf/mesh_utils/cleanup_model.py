@@ -243,7 +243,7 @@ def remove_element_chain(model: BDF,
                          nodes_all: set[int],
                          element_types: Union[str, set[str]]) -> tuple[set[int], list[int]]:
     if isinstance(element_types, str):
-        element_types = set([element_types])
+        element_types = {element_types}
     eids_to_delete = []
     nodes_all2 = set([])
     for eid, elem in model.elements.items():
