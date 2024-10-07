@@ -222,7 +222,7 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-#def field(card: BDFCard, ifield: int, fieldname: str) -> Optional[Union[int, float, str]]:
+#def field(card: BDFCard, ifield: int, fieldname: str) -> Optional[int | float | str]:
     #"""
     #Parameters
     #----------
@@ -244,7 +244,7 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     #return integer_double_string_or_blank(card, ifield, fieldname, default=None)
 
 def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type (BDFCard, int, str, Union[int, float, str]) -> Optional[Union[int, float, str]]
+    # type (BDFCard, int, str, int | float | str) -> Optional[int | float | str]
     """
     Parameters
     ----------
@@ -916,7 +916,7 @@ def _get_dtype(value):
     return dtype
 
 
-def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float, str]:
+def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> int | float | str:
     """
     Casts a value to an integer/double/string
 

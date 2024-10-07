@@ -147,7 +147,7 @@ class BDFCard:
         return out
 
     def field(self, i: int,
-              default: Optional[Union[int, float, str]]=None) -> Optional[Union[int, float, str]]:
+              default: Optional[int | float | str]=None) -> Optional[int | float | str]:
         """
         Gets the ith field on the card
 

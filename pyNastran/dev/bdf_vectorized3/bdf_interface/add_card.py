@@ -72,9 +72,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class AddCoords(BDFAttributes):
     def add_cord2r(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
@@ -102,9 +102,9 @@ class AddCoords(BDFAttributes):
         return coord
 
     def add_cord2c(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
@@ -133,9 +133,9 @@ class AddCoords(BDFAttributes):
         return coord
 
     def add_cord2s(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2C card, which defines a spherical coordinate
@@ -3673,7 +3673,7 @@ class AddOptimization(BDFAttributes):
                    response_type: str, property_type: str, region: str,
                    atta: Optional[int | float | str],
                    attb: Optional[int | float | str],
-                   atti: list[Union[int, float, str]],
+                   atti: list[int | float | str],
                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DRESP1 card.
@@ -5577,11 +5577,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self.setup(run_geom_check=run_geom_check)
         #self.log.warning('no xref')
 
-    def add_param(self, key: str, values: list[Union[int, float, str]],
+    def add_param(self, key: str, values: list[int | float | str],
                   comment: str='') -> PARAM:
         return self._add_param_nastran(key, values, comment=comment)
 
-    def _add_param_nastran(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_nastran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM:
         """
         Creates a PARAM card
@@ -5737,11 +5737,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         #self._add_load_object(load)
         #return load
 
-    def add_param(self, key: str, values: list[Union[int, float, str]],
+    def add_param(self, key: str, values: list[int | float | str],
                   comment: str='') -> PARAM:
         return self._add_param_nastran(key, values, comment=comment)
 
-    def _add_param_nastran(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_nastran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM:
         """
         Creates a PARAM card
@@ -5781,7 +5781,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return mdlprm
 
 
-    def _add_param_mystran(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_mystran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM_MYSTRAN:
         """
         Creates a PARAM card
@@ -5800,7 +5800,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_param_object(param)
         return param
 
-    def _add_param_nasa95(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_nasa95(self, key: str, values: list[int | float | str],
                           comment: str='') -> PARAM_NASA95:
         """
         Creates a PARAM card

@@ -273,7 +273,8 @@ class AddMethods:
         self.model._type_to_id_map[ringfl.type].append(key)
         self.model._is_axis_symmetric = True
 
-    def _add_ringax_object(self, ringax: Union[RINGAX, POINTAX], allow_overwrites: bool=False) -> None:
+    def _add_ringax_object(self, ringax: RINGAX | POINTAX,
+                           allow_overwrites: bool=False) -> None:
         """adds a RINGAX card"""
         key = ringax.nid
         model = self.model
@@ -471,7 +472,7 @@ class AddMethods:
         """adds a DOPTPRM"""
         self.model.doptprm = doptprm
 
-    def _add_nsm_object(self, nsm: Union[NSM, NSM1, NSML, NSML1], allow_overwrites: bool=False) -> None:
+    def _add_nsm_object(self, nsm: NSM | NSM1 | NSML | NSML1, allow_overwrites: bool=False) -> None:
         """adds an nsm object to a nsm set"""
         key = nsm.sid
         assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
@@ -491,8 +492,8 @@ class AddMethods:
             self.model.nsmadds[key] = [nsmadd]
             self.model._type_to_id_map[nsmadd.type].append(key)
 
-    def _add_mass_object(self, mass: Union[CMASS1, CMASS2, CMASS3, CMASS4,
-                                           CONM1, CONM2], allow_overwrites: bool=False) -> None:
+    def _add_mass_object(self, mass: CMASS1, CMASS2 | CMASS3 | CMASS4 |
+                                     CONM1 | CONM2, allow_overwrites: bool=False) -> None:
         key = mass.eid
         model = self.model
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
@@ -507,9 +508,9 @@ class AddMethods:
         """.. warning:: can dampers have the same ID as a standard element?"""
         return self._add_element_object(elem, allow_overwrites)
 
-    def _add_rigid_element_object(self, elem: Union[RBAR, RBAR1,
-                                                    RBE1, RBE2, RBE3,
-                                                    RROD, RSPLINE, RSSCON],
+    def _add_rigid_element_object(self, elem: RBAR | RBAR1 |
+                                              RBE1 | RBE2 | RBE3 |
+                                              RROD | RSPLINE | RSSCON,
                                   allow_overwrites: bool=False) -> None:
         key = elem.eid
         model = self.model
@@ -519,7 +520,7 @@ class AddMethods:
         model.rigid_elements[key] = elem
         model._type_to_id_map[elem.type].append(key)
 
-    def _add_thermal_element_object(self, elem: Union[CHBDYE, CHBDYG, CHBDYP]) -> None:
+    def _add_thermal_element_object(self, elem: CHBDYE | CHBDYG | CHBDYP) -> None:
         """same as add_element at the moment..."""
         self._add_element_object(elem)
 

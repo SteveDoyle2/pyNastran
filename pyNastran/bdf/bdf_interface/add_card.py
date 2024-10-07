@@ -752,9 +752,9 @@ CARD_MAP = {
 
 class AddCoords:
     def add_cord2r(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
@@ -782,9 +782,9 @@ class AddCoords:
         return coord
 
     def add_cord2c(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
@@ -812,9 +812,9 @@ class AddCoords:
         return coord
 
     def add_cord2s(self, cid: int,
-                   origin: Optional[Union[list[float], NDArray3float]],
-                   zaxis: Optional[Union[list[float], NDArray3float]],
-                   xzplane: Optional[Union[list[float], NDArray3float]],
+                   origin: Optional[list[float] | NDArray3float],
+                   zaxis: Optional[list[float] | NDArray3float],
+                   xzplane: Optional[list[float] | NDArray3float],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
@@ -2842,7 +2842,7 @@ class Add2dElements:
 
 
 class Add3dElements:
-    def add_ctetra(self, eid, pid, nids, comment='') -> Union[CTETRA4, CTETRA10]:
+    def add_ctetra(self, eid, pid, nids, comment='') -> CTETRA4 | CTETRA10:
         """
         Creates a CTETRA4/CTETRA10
 
@@ -2865,7 +2865,7 @@ class Add3dElements:
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_cpyram(self, eid, pid, nids, comment='') -> Union[CPYRAM5, CPYRAM13]:
+    def add_cpyram(self, eid, pid, nids, comment='') -> CPYRAM5 | CPYRAM13:
         """
         Creates a CPYRAM5/CPYRAM13
 
@@ -5526,7 +5526,7 @@ class AddOptimization:
                    response_type: str, property_type: str, region: int,
                    atta: Optional[int | float | str],
                    attb: Optional[int | float | str],
-                   atti: list[Union[int, float, str]],
+                   atti: list[int | float | str],
                    validate: bool=True, comment: str='') -> DRESP1:
         """
         Creates a DRESP1 card.
@@ -6434,11 +6434,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         #self._add_load_object(load)
         #return load
 
-    def add_param(self, key: str, values: list[Union[int, float, str]],
+    def add_param(self, key: str, values: list[int | float | str],
                   comment: str='') -> PARAM:
         return self._add_param_nastran(key, values, comment=comment)
 
-    def _add_param_nastran(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_nastran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM:
         """
         Creates a PARAM card
@@ -6478,7 +6478,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         return mdlprm
 
 
-    def _add_param_mystran(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_mystran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM_MYSTRAN:
         """
         Creates a PARAM card
@@ -6497,7 +6497,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_param_object(param)
         return param
 
-    def _add_param_nasa95(self, key: str, values: list[Union[int, float, str]],
+    def _add_param_nasa95(self, key: str, values: list[int | float | str],
                           comment: str='') -> PARAM_NASA95:
         """
         Creates a PARAM card

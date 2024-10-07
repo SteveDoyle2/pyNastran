@@ -45,7 +45,7 @@ class CaseInsensitiveDictAlternates(dict):
             return val_in
         return key in self._key_map
 
-    def __getitem__(self, key: str) -> Union[int, float, str]:
+    def __getitem__(self, key: str) -> int | float | str:
         key_upper = key.upper()
         key2 = self._key_map.get(key_upper, key_upper)
         #print(f'key_upper={key_upper} key2={key2}')

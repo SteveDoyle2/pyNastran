@@ -691,7 +691,7 @@ class PCOMP(CompositeShellProperty):
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
     def update_by_pname_fid(self, pname_fid: Union[str, int],
-                            value: Union[int, float, str]) -> None:
+                            value: int | float | str) -> None:
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
         elif pname_fid == 'Z0':

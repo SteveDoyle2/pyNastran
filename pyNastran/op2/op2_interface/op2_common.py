@@ -415,7 +415,7 @@ class OP2Common(Op2Codes, F06Writer):
             raise IndexError(msg)
         return value
 
-    def apply_data_code_value(self, name: str, value: Union[int, float, str]) -> None:
+    def apply_data_code_value(self, name: str, value: int | float | str) -> None:
         self.data_code[name] = value
 
     def setNullNonlinearFactor(self) -> None:

@@ -1791,7 +1791,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.sol_method = None
 
     def update_card(self, card_name: str, icard: int, ifield: int,
-                    value: Union[int, float, str]) -> None:
+                    value: int | float | str) -> None:
         """
         Updates a Nastran card based on standard Nastran optimization names
 
@@ -1852,7 +1852,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         obj.update_field(ifield, value)
         return obj
 
-    def set_dynamic_syntax(self, dict_of_vars: dict[str, Union[int, float, str]]) -> None:
+    def set_dynamic_syntax(self, dict_of_vars: dict[str, int | float | str]) -> None:
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.

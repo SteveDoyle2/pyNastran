@@ -1031,10 +1031,10 @@ class AESURF(BaseCard):
         label = string(card, 2, 'label')
 
         cid1 = integer(card, 3, 'cid1')
-        alid1 = integer(card, 4, 'alid1')
+        aelist_id1 = integer(card, 4, 'alid1')
 
         cid2 = integer_or_blank(card, 5, 'cid2')
-        alid2 = integer_or_blank(card, 6, 'alid2')
+        aelist_id2 = integer_or_blank(card, 6, 'alid2')
 
         eff = double_or_blank(card, 7, 'eff', default=1.0)
         ldw = string_or_blank(card, 8, 'ldw', default='LDW')
@@ -1053,20 +1053,9 @@ class AESURF(BaseCard):
         tqllim = integer_or_blank(card, 15, 'tqllim', default=0)
         tqulim = integer_or_blank(card, 16, 'tqulim', default=0)
         assert len(card) <= 17, f'len(AESURF card) = {len(card):d}\ncard={card}'
-        return AESURF(aesurf_id, label, cid1, alid1, cid2, alid2, eff, ldw,
+        return AESURF(aesurf_id, label, cid1, aelist_id1, cid2, aelist_id2, eff, ldw,
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
                       tqllim, tqulim, comment=comment)
-
-    @property
-    def aesid(self) -> int:
-        return self.aesurf_id
-    @aesid.setter
-    def aesid(self, aesid: int) -> None:
-        self.aesurf_id = aesid
-
-    #@property
-    #def aesid_ref(self):
-        #return self.aesurf_ref
 
     def Cid1(self) -> int:
         if self.cid1_ref is not None:

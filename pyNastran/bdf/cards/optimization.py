@@ -1287,7 +1287,7 @@ class DOPTPRM(OptConstraint):
             params[param] = val
         return DOPTPRM(params, comment=comment)
 
-    def raw_fields(self) -> list[Union[int, float, str]]:
+    def raw_fields(self) -> list[int | float | str]:
         list_fields = ['DOPTPRM']
         for param, val in sorted(self.params.items()):
             list_fields += [param, val]
@@ -1843,8 +1843,8 @@ class DRESP1(OptConstraint):
                  response_type: str,
                  property_type: str,
                  region: int,
-                 atta: Optional[Union[int, float, str]],
-                 attb: Optional[Union[int, float, str]],
+                 atta: Optional[int | float | str],
+                 attb: Optional[int | float | str],
                  atti: list[int],
                  comment: str='', validate: bool=False):
         """

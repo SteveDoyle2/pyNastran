@@ -10,7 +10,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 
 
-def expand_thru_case_control(data_in: list[Union[int, float, str]]) -> list[int]:
+def expand_thru_case_control(data_in: list[int | float | str]) -> list[int]:
     """
     Expands a case control SET card
 
