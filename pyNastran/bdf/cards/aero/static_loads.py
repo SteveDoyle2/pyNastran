@@ -378,9 +378,10 @@ class CSSCHD(Aero):
     """
     type = 'CSSCHD'
     _field_map = {
-        1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
+        1: 'sid', 2:'aesurf_id', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
-    _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz', 'is_symmetric_xy', 'is_symmetric_xz'] ## TODO: remove these
+    _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz',
+                   'is_symmetric_xy', 'is_symmetric_xz'] ## TODO: remove these
 
     @classmethod
     def _init_from_empty(cls):
@@ -424,21 +425,7 @@ class CSSCHD(Aero):
         self.lmach_ref = None
         self.lschd_ref = None
 
-    @property
-    def aesid(self) -> int:
-        return self.aesurf_id
-    @aesid.setter
-    def aesid(self, aesid: int) -> None:
-        self.aesurf_id = aesid
-
-    @property
-    def aesid_ref(self):
-        return self.aesurf_ref
-    @aesid_ref.setter
-    def aesid_ref(self, aesid_ref: int) -> None:
-        self.aesurf_ref = aesid_ref
-
-    def validate(self):
+    def validate(self) -> None:
         if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
             raise TypeError('lalpha=%r must be an int or None' % self.lalpha)
 
@@ -451,7 +438,7 @@ class CSSCHD(Aero):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CSSCHD card from ``BDF.add_card(...)``
 
@@ -472,7 +459,7 @@ class CSSCHD(Aero):
         return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         sid = data[0]
         aesurf_id = data[1]   # AESURF
         lalpha = data[2]      # AEFACT
@@ -509,36 +496,36 @@ class CSSCHD(Aero):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        self.aesurf_id = self.AESid()
+        self.aesurf_id = self.AESurf()
         self.lalpha = self.LAlpha()
         self.lmach = self.LMach()
         self.lschd = self.LSchd()
-        self.aesid_ref = None
+        self.aesurf_ref = None
         self.lalpha_ref = None
         self.lmach_ref = None
         self.lschd_ref = None
 
-    def AESid(self):
-        if self.aesid_ref is not None:
-            return self.aesid_ref.aesid
-        return self.aesid
+    def AESurf(self) -> int:
+        if self.aesurf_ref is not None:
+            return self.aesurf_ref.aesurf_id
+        return self.aesurf_id
 
-    def LAlpha(self):
+    def LAlpha(self) -> int:
         if self.lalpha_ref is not None:
             return self.lalpha_ref.sid
         return self.lalpha
 
-    def LMach(self):
+    def LMach(self) -> int:
         if self.lmach_ref is not None:
             return self.lmach_ref.sid
         return self.lmach
 
-    def LSchd(self):
+    def LSchd(self) -> int:
         if self.lschd_ref is not None:
             return self.lschd_ref.sid
         return self.lschd
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -548,7 +535,7 @@ class CSSCHD(Aero):
             the fields that define the card
 
         """
-        list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
+        list_fields = ['CSSCHD', self.sid, self.AESurf(), self.LAlpha(),
                        self.LMach(), self.LSchd()]
         return list_fields
 
