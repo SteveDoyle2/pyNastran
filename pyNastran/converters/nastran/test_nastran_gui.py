@@ -420,16 +420,15 @@ class TestNastranGUI(unittest.TestCase):
             csv_filename=None, show=False, stop_on_failure=True)
 
         if IS_CUTTING_PLANE:
-            with self.assertRaises(TypeError):
-                # we need to set the case to a grid point force result
-                test.cutting_plane_obj.make_cutting_plane(
-                    model_name,
-                    p1, p2, zaxis,
-                    method='Z-Axis Projection',
-                    cid_p1=0, cid_p2=0, cid_zaxis=0,
-                    ytol=1., plane_atol=1e-5,
-                    plane_color=None, plane_opacity=0.5,
-                    csv_filename=None, show=False, stop_on_failure=True)
+            # we need to set the case to a grid point force result
+            test.cutting_plane_obj.make_cutting_plane(
+                model_name,
+                p1, p2, zaxis,
+                method='Z-Axis Projection',
+                cid_p1=0, cid_p2=0, cid_zaxis=0,
+                ytol=1., plane_atol=1e-5,
+                plane_color=None, plane_opacity=0.5,
+                csv_filename=None, show=False, stop_on_failure=True)
 
         # setting the case to a grid point force result
         test.icase_fringe = icase_gpforce
